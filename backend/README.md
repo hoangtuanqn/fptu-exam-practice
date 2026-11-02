@@ -23,10 +23,11 @@ src/
   routes/        khai báo URL + gắn middleware
   middlewares/   auth, phân quyền, validate, rate limit, xử lý lỗi
   controllers/   đọc request đã validate → gọi service → trả response
-  services/      nghiệp vụ (đăng nhập, ví, nạp tiền, đối soát SePay)
+  services/      nghiệp vụ (đăng nhập, ví, nạp tiền, đối soát SePay, nhập đề)
+    crawler/     scraper FuOverflow (thread, bình luận, tải ảnh WebP), không biết gì về Express hay DB
   repositories/  truy vấn Prisma, không chứa nghiệp vụ
   rules/         zod schema của request, AppError, ResponseClient
-  jobs/          cron job
+  jobs/          cron job đối soát SePay, worker nền crawl đề
   seeders/       tạo admin đầu tiên
 ```
 
@@ -42,10 +43,12 @@ Response: `{ status, message, data, meta? }`. Gửi token bằng header `Authori
 | Auth | `POST /auth/register`, `POST /auth/login`, `GET /auth/me` |
 | User | `GET/PATCH /users/me`, `PATCH /users/me/password`, `GET /users/me/transactions` |
 | Nạp tiền | `GET /deposits/info`, `POST /deposits {amount}`, `GET /deposits`, `GET /deposits/:id` |
+| Đề thi | `POST /crawl-jobs {url}`, `GET /crawl-jobs/:id`, `GET /exams/:id` (cần đăng nhập) |
 | Admin | `GET /admin/dashboard` |
 | | `GET /admin/users`, `GET/PATCH /admin/users/:id`, `POST /admin/users/:id/balance` |
 | | `GET /admin/deposits`, `GET /admin/bank-transactions` |
 | | `GET/PUT /admin/settings/sepay`, `GET /admin/sepay/status`, `POST /admin/sepay/sync` |
+| | `GET/PUT /admin/settings/crawler` |
 
 ## Nạp tiền SePay
 
@@ -58,3 +61,15 @@ An toàn tiền bạc:
 - `bank_transactions.sepay_id` là unique → một giao dịch không bao giờ được cộng hai lần, dù cron và nút "Chạy ngay" chạy cùng lúc.
 - Chiếm lệnh, ghi giao dịch và cộng ví nằm trong một DB transaction; một bước lỗi thì cả ba huỷ.
 - Số dư đổi bằng `increment` ở DB và mọi thay đổi đều có một dòng trong `wallet_transactions`.
+
+## Nhập đề từ FuOverflow
+
+1. Admin nhập cookie đăng nhập FuOverflow ở `PUT /admin/settings/crawler` (ảnh gốc chỉ tải được khi đã đăng nhập; cookie gắn với IP và User-Agent nên User-Agent phải trùng trình duyệt đã lấy cookie).
+2. User gọi `POST /crawl-jobs {url}`. Chữ ký của đề là **thread ID** lấy từ link, nên mọi biến thể link (`?utm=`, `/page-2`, `/latest`, `/threads/7094/`) cùng ra một đề.
+   - Đề đã có trong DB → trả `200 {existed: true, examId}`, không crawl lại.
+   - Đang có lượt crawl cùng thread → dùng lại lượt đó.
+   - Ngược lại tạo `crawl_jobs` (QUEUED), trả `202` ngay.
+3. Worker nền (`jobs/crawl.worker.ts`) lấy từng job: đọc thread → tải ảnh, đổi WebP vào `STORAGE_DIR/exams/<threadId>/` → lấy bình luận → ghi `exams`, `exam_questions`, `exam_comments` trong một transaction. Mỗi bước cập nhật `crawl_jobs.stage` để client hiển thị. Server tắt giữa chừng thì job `RUNNING` được xếp lại khi khởi động.
+4. Client poll `GET /crawl-jobs/:id` đến khi `DONE`, rồi `GET /exams/:id` (ảnh phục vụ tại `/api/v1/files/...`).
+
+Đáp án: crawler chưa xác định được đáp án đúng nên mọi câu tạm là `A` (`exam_questions.answer`, hằng `DEFAULT_ANSWER`). Bình luận của người dùng FuOverflow đã lưu ở `exam_comments` để làm logic suy ra đáp án sau.
