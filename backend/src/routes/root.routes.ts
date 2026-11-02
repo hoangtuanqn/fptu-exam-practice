@@ -1,4 +1,5 @@
 import { Router } from "express";
+import adminRouter from "./admin.routes";
 import authRouter from "./auth.routes";
 import userRouter from "./user.routes";
 
@@ -10,5 +11,6 @@ rootRouter.get("/health", (_req, res) => {
 
 rootRouter.use("/auth", authRouter);
 rootRouter.use("/users", userRouter);
+rootRouter.use("/admin", adminRouter);
 
 export default rootRouter;
