@@ -1,4 +1,6 @@
 import { Eye, RotateCcw } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
+import { SignUpCta } from "../landing/SignUpCta";
 import { MAX_SCORE, PASS_SCORE } from "../../config/scoring";
 import { formatDuration, formatScore } from "../../utils/format";
 import type { GradeResult } from "../../utils/grade";
@@ -16,6 +18,7 @@ interface Props {
 
 // Bảng điểm sau khi nộp
 export function ResultDialog({ result, elapsed, onReview, onRetry }: Props) {
+  const { user } = useAuth();
   const passed = result.score >= PASS_SCORE;
   const tone = result.total === 0 ? "neutral" : passed ? "success" : "danger";
 
@@ -47,6 +50,14 @@ export function ResultDialog({ result, elapsed, onReview, onRetry }: Props) {
 
       {result.total === 0 && (
         <p className="mt-4 text-center text-xs text-slate-500">Chưa có đáp án trong ans.txt nên không thể chấm điểm.</p>
+      )}
+
+      {!user && (
+        <div className="mt-5 rounded-xl bg-brand-50 p-4">
+          <div className="text-sm font-medium text-brand-900">Bạn vừa dùng hết lượt thử miễn phí</div>
+          <p className="mb-3 mt-1 text-xs text-slate-600">Đăng ký miễn phí để tiếp tục luyện đề không giới hạn.</p>
+          <SignUpCta />
+        </div>
       )}
 
       <ModalActions>
