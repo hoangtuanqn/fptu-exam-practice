@@ -9,6 +9,8 @@ export const depositRepository = {
   create: (data: { userId: number; code: string; amount: number; expiresAt: Date }) =>
     prisma.depositOrder.create({ data }),
 
+  countByStatus: () => prisma.depositOrder.groupBy({ by: ["status"], _count: { _all: true } }),
+
   findByCode: (db: Db, code: string) => db.depositOrder.findUnique({ where: { code } }),
 
   // Chiếm lệnh bằng điều kiện ở DB: chỉ một tiến trình đổi được sang PAID, các tiến trình khác nhận count = 0
