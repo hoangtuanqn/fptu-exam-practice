@@ -8,7 +8,9 @@ export interface Brand {
   tagline: string;
   description: string; // mô tả cho SEO và khi chia sẻ link
   siteUrl: string; // địa chỉ website thật (để trống nếu chưa có); dùng cho ảnh bìa khi chia sẻ
-  companyUrl: string; // trang chủ công ty; có thì footer hiện liên kết
+  companyUrl: string; // trang chủ công ty (tuỳ chọn); không có thì liên kết về Facebook
+  facebookUrl: string; // fanpage công ty
+  founder: string; // người sáng lập, hiện ở footer
   themeColor: string; // màu thanh trình duyệt trên điện thoại
   title: string; // tiêu đề tab, ghép từ product + company
 }
@@ -17,11 +19,13 @@ type Env = Record<string, string | undefined>;
 
 const DEFAULTS = {
   company: "MST Software",
-  product: "Luyện đề",
+  product: "Luyện thi FE FPTU",
   tagline: "MMO Solution",
-  description: "Luyện đề trắc nghiệm từ thư mục ảnh, chấm điểm thang 10, nạp tiền nhanh. Phát triển bởi MST Software.",
+  description: "Luyện thi FE FPTU: làm đề trắc nghiệm từ thư mục ảnh, chấm điểm thang 10. Phát triển bởi MST Software.",
   siteUrl: "",
   companyUrl: "",
+  facebookUrl: "https://facebook.com/mstsoftware.vn",
+  founder: "Phạm Hoàng Tuấn",
   themeColor: "#0b1730",
 };
 
@@ -37,6 +41,8 @@ export function loadBrand(env: Env): Brand {
     description: pick("VITE_APP_DESCRIPTION", DEFAULTS.description),
     siteUrl: pick("VITE_SITE_URL", DEFAULTS.siteUrl).replace(/\/$/, ""),
     companyUrl: pick("VITE_COMPANY_URL", DEFAULTS.companyUrl),
+    facebookUrl: pick("VITE_FACEBOOK_URL", DEFAULTS.facebookUrl),
+    founder: pick("VITE_FOUNDER", DEFAULTS.founder),
     themeColor: pick("VITE_THEME_COLOR", DEFAULTS.themeColor),
     title: `${product} | ${company}`,
   };
