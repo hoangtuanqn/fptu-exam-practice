@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import type { ErrorRequestHandler, RequestHandler } from "express";
 import { ZodError } from "zod";
 import { isProd } from "../configs/env";
@@ -19,6 +20,12 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
 
   if (err instanceof AppError) {
     res.status(err.status).json({ status: false, message: err.message, errors: err.errors });
+    return;
+  }
+
+  // Vi phạm unique ở DB (race condition mà bước kiểm tra trước không bắt được)
+  if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+    res.status(HTTP_STATUS.CONFLICT).json({ status: false, message: "Dữ liệu đã tồn tại" });
     return;
   }
 
