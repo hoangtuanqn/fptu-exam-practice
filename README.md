@@ -30,7 +30,7 @@ npm run dev
 
 - **Tên sản phẩm/công ty, mô tả, màu thanh trình duyệt:** sửa `frontend/brand.config.ts` hoặc đặt biến `VITE_*` trong `frontend/.env` (mẫu ở `.env.example`). Sửa một lần là đổi cả tiêu đề tab, thẻ chia sẻ link, header, trang đăng nhập và footer.
 - **Logo, favicon, ảnh bìa:** thay file cùng tên trong `frontend/public/` (`brand/logo-*.png`, `favicon.ico`, `icon-*.png`, `og-cover.jpg`).
-- **Màu chủ đạo:** sửa bảng `--color-brand-*` ở đầu `frontend/src/index.css`.
+- **Màu chủ đạo, font, quy tắc dùng logo:** xem [`BRAND.md`](BRAND.md). Sửa bảng `--color-*` ở đầu `frontend/src/index.css`.
 
 Vite chuyển tiếp `/api` sang `localhost:8000` nên không cần cấu hình CORS khi phát triển.
 

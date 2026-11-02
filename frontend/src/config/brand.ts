@@ -8,4 +8,5 @@ export const logos = {
   mark: "/brand/logo-mark.png", // chỉ chữ MST, dùng ở header
   fullOnLight: "/brand/logo-full.png", // có chữ SOFTWARE.VN màu đen, cho nền sáng
   fullOnDark: "/brand/logo-full-light.png", // chữ trắng, cho nền tối
+  partner: "/brand/fuoverflow.webp", // logo đối tác kho đề
 } as const;
