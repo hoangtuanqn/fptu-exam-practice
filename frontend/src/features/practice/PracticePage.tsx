@@ -57,7 +57,7 @@ export default function PracticePage() {
       {hasQuiz ? (
         <QuizWorkspace quiz={quiz} zoomOpen={zoomOpen} onZoomChange={setZoomOpen} />
       ) : (
-        <Landing onPick={pick} userName={user?.fullName} trialUsed={trial.used} />
+        <Landing onPick={pick} onImported={(exam) => quiz.loadExam(exam.questions, exam.title)} userName={user?.fullName} trialUsed={trial.used} />
       )}
     </div>
   );
