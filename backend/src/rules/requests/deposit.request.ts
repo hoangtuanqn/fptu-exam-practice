@@ -10,5 +10,10 @@ export const listDepositsQuery = paginationQuery.extend({
   userId: z.coerce.number().int().positive().optional(), // chỉ admin được dùng
 });
 
+export const listBankTxQuery = paginationQuery.extend({
+  status: z.enum(["MATCHED", "UNMATCHED"]).optional(),
+});
+
+export type ListBankTxQuery = z.infer<typeof listBankTxQuery>;
 export type CreateDepositBody = z.infer<typeof createDepositBody>;
 export type ListDepositsQuery = z.infer<typeof listDepositsQuery>;

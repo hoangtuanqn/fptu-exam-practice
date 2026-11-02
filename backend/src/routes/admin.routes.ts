@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { adminUserController } from "../controllers/admin.user.controllers";
-import { listDepositsQuery } from "../rules/requests/deposit.request";
+import { listBankTxQuery, listDepositsQuery } from "../rules/requests/deposit.request";
+import { adminSepayController } from "../controllers/admin.sepay.controllers";
 import { adminDepositController } from "../controllers/admin.deposit.controllers";
 import { adminSettingController } from "../controllers/admin.setting.controllers";
 import { authenticate, requireAdmin } from "../middlewares/auth.middlewares";
@@ -24,6 +25,10 @@ adminRouter.post(
 );
 
 adminRouter.get("/deposits", validate(listDepositsQuery, "query"), adminDepositController.list);
+
+adminRouter.get("/sepay/status", adminSepayController.status);
+adminRouter.post("/sepay/sync", adminSepayController.syncNow);
+adminRouter.get("/bank-transactions", validate(listBankTxQuery, "query"), adminSepayController.bankTransactions);
 
 adminRouter.get("/settings/sepay", adminSettingController.getSepay);
 adminRouter.put("/settings/sepay", validate(updateSepayBody), adminSettingController.updateSepay);
