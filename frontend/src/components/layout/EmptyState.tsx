@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { FolderOpen } from "lucide-react";
+import { brand } from "../../config/brand";
 import { readDroppedFolder } from "../../utils/readDroppedFolder";
 import { FolderInput, type PickFolder } from "./FolderInput";
 
@@ -43,6 +44,17 @@ export function EmptyState({ onPick }: { onPick: PickFolder }) {
 └─ ans.txt     dòng N = đáp án câu N
                (nhiều đáp án: A C D)`}
         </pre>
+
+        <p className="mt-6 text-center text-xs text-slate-400">
+          Phát triển bởi{" "}
+          {brand.companyUrl ? (
+            <a href={brand.companyUrl} target="_blank" rel="noreferrer" className="font-medium text-brand-700 hover:underline">
+              {brand.company}
+            </a>
+          ) : (
+            <span className="font-medium text-slate-500">{brand.company}</span>
+          )}
+        </p>
       </div>
     </div>
   );

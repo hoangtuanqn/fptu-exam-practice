@@ -1,7 +1,10 @@
-import { Award, BookOpenCheck, Clock, RotateCcw, Send } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Award, Clock, RotateCcw, Send } from "lucide-react";
 import type { Mode } from "../../types";
+import { brand } from "../../config/brand";
 import { getModeConfig } from "../../config/modes";
 import { formatDuration } from "../../utils/format";
+import { Logo } from "../brand/Logo";
 import { Button } from "../ui/Button";
 import type { PickFolder } from "./FolderInput";
 import { FolderPicker } from "./FolderPicker";
@@ -26,10 +29,11 @@ export function Header({ title, mode, loaded, submitted, elapsed, onPick, onSubm
   return (
     <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-slate-200 bg-white px-4">
       <div className="flex min-w-0 items-center gap-3">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-900 text-white">
-          <BookOpenCheck size={16} />
-        </div>
-        <div className="truncate font-serif text-lg font-semibold text-slate-900">{loaded && title ? title : "Luyện đề"}</div>
+        <Link to="/" className="shrink-0" title={brand.company}>
+          <Logo className="h-7" />
+        </Link>
+        <span className="h-5 w-px shrink-0 bg-slate-200" />
+        <div className="truncate font-serif text-lg font-semibold text-slate-900">{loaded && title ? title : brand.product}</div>
       </div>
 
       <div className="flex shrink-0 items-center gap-2">
