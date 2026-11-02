@@ -11,6 +11,7 @@ export interface Brand {
   companyUrl: string; // trang chủ công ty (tuỳ chọn); không có thì liên kết về Facebook
   facebookUrl: string; // fanpage công ty
   founder: string; // người sáng lập, hiện ở footer
+  coFounders: string[]; // đồng sáng lập (VITE_CO_FOUNDERS, cách nhau bằng dấu phẩy)
   themeColor: string; // màu thanh trình duyệt trên điện thoại
   title: string; // tiêu đề tab, ghép từ product + company
 }
@@ -26,6 +27,7 @@ const DEFAULTS = {
   companyUrl: "",
   facebookUrl: "https://facebook.com/mstsoftware.vn",
   founder: "Phạm Hoàng Tuấn",
+  coFounders: "Vũ Việt Quang, Mai Trung Hậu",
   themeColor: "#0b1730",
 };
 
@@ -43,6 +45,10 @@ export function loadBrand(env: Env): Brand {
     companyUrl: pick("VITE_COMPANY_URL", DEFAULTS.companyUrl),
     facebookUrl: pick("VITE_FACEBOOK_URL", DEFAULTS.facebookUrl),
     founder: pick("VITE_FOUNDER", DEFAULTS.founder),
+    coFounders: pick("VITE_CO_FOUNDERS", DEFAULTS.coFounders)
+      .split(",")
+      .map((n) => n.trim())
+      .filter(Boolean),
     themeColor: pick("VITE_THEME_COLOR", DEFAULTS.themeColor),
     title: `${product} | ${company}`,
   };
