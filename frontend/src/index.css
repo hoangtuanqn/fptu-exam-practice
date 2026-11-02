@@ -2,26 +2,31 @@
 
 @theme {
   --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  /* Cả site dùng Inter (nhúng từ Google Fonts trong index.html). Giữ tên font-serif để các tiêu đề cũ tự đổi theo. */
+  --font-serif: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
 
-  /* BẢNG MÀU THƯƠNG HIỆU MST: lấy từ dải gradient xanh dương → cyan của logo.
-     Đổi màu cả site chỉ cần sửa các dòng dưới đây. 900 là navy nền tối (khớp icon), 600 là xanh logo. */
-  --color-brand-50: #eef5ff;
-  --color-brand-100: #dbe9ff;
-  --color-brand-200: #bad5ff;
-  --color-brand-300: #8bb8ff;
-  --color-brand-400: #4d92ff;
-  --color-brand-500: #1a73ff;
-  --color-brand-600: #0066ff;
-  --color-brand-700: #0a4fcc;
-  --color-brand-800: #10316b;
-  --color-brand-900: #0b1730;
+  /* BẢNG MÀU THƯƠNG HIỆU MST: đo trực tiếp từ logo (xem BRAND.md ở thư mục gốc).
+     Đổi màu cả site chỉ cần sửa các dòng dưới đây. */
+  --color-brand-50: #eef6ff;
+  --color-brand-100: #d9ebff;
+  --color-brand-200: #b3d6ff;
+  --color-brand-300: #80b8ff;
+  --color-brand-400: #3399ff; /* xanh nhạt của các ô pixel trong logo */
+  --color-brand-500: #1a80ff;
+  --color-brand-600: #0066ff; /* XANH CHÍNH của logo */
+  --color-brand-700: #0052cc;
+  --color-brand-800: #0f3a8a;
+  --color-brand-900: #0b1730; /* navy nền tối (header tối, khối CTA, nút), hợp với nền ảnh mockup logo */
 
-  /* Cyan nhấn của logo, dùng tiết kiệm (đường kẻ, nhãn nhỏ trên nền tối) */
+  /* Cyan ở giữa dải chuyển sắc của logo, và đầu cuối nhạt của dải đó */
   --color-accent: #00c8ff;
+  --color-accent-soft: #90e5ff;
 
-  /* Nền xám xanh rất nhạt, hợp tông xanh của logo */
-  --color-paper: #f3f6fb;
+  /* Chữ đen của bản logo đầy đủ (SOFTWARE.VN) */
+  --color-ink: #101010;
+
+  /* Nền vùng tô nhạt, cùng sắc xanh với logo */
+  --color-paper: #f0f6ff;
 
   --animate-fade-in: fade-in 0.22s ease-out;
   @keyframes fade-in {
