@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+
+  /* Xanh navy học thuật: màu nhấn chính của toàn bộ giao diện */
+  --color-brand-50: #f1f4f9;
+  --color-brand-100: #e1e7f1;
+  --color-brand-200: #c3cfe3;
+  --color-brand-300: #9aafcf;
+  --color-brand-400: #6c88b5;
+  --color-brand-500: #4a6a9c;
+  --color-brand-600: #37507d;
+  --color-brand-700: #2c4066;
+  --color-brand-800: #1f2f4f;
+  --color-brand-900: #16223b;
+
+  /* Nền giấy ấm, dịu mắt khi học lâu */
+  --color-paper: #f5f4f0;
+
+  --animate-fade-in: fade-in 0.22s ease-out;
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+/* Tailwind v4 để nút mang con trỏ mặc định; đặt lại thành bàn tay cho mọi nút bấm được */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+
+  /* Viền focus rõ ràng cho người dùng bàn phím */
+  :focus-visible {
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: 2px;
+  }
+}
+
+body {
+  @apply bg-paper text-slate-800 antialiased;
+}
+
+/* Thanh cuộn mảnh, kín đáo */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
