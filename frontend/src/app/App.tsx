@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Route, Routes } from "react-router-dom";
-import { History, Landmark, LayoutDashboard, Receipt, Settings, UserRound, Users, Wallet } from "lucide-react";
+import { DatabaseZap, History, Landmark, LayoutDashboard, Receipt, Settings, UserRound, Users, Wallet } from "lucide-react";
 import { PanelLayout, type NavItem } from "@/shared/layout/PanelLayout";
 import { Loading } from "@/shared/ui/Feedback";
 import LoginPage from "@/features/auth/pages/LoginPage";
@@ -20,6 +20,7 @@ const UsersPage = lazy(() => import("@/features/admin/pages/UsersPage"));
 const DepositsPage = lazy(() => import("@/features/admin/pages/DepositsPage"));
 const BankTransactionsPage = lazy(() => import("@/features/admin/pages/BankTransactionsPage"));
 const SettingsPage = lazy(() => import("@/features/admin/pages/SettingsPage"));
+const CrawlerPage = lazy(() => import("@/features/admin/pages/CrawlerPage"));
 
 const ACCOUNT_NAV: NavItem[] = [
   { to: "/account", label: "Tổng quan", icon: LayoutDashboard, end: true },
@@ -34,6 +35,7 @@ const ADMIN_NAV: NavItem[] = [
   { to: "/admin/deposits", label: "Lệnh nạp tiền", icon: Receipt },
   { to: "/admin/bank-transactions", label: "Giao dịch ngân hàng", icon: Landmark },
   { to: "/admin/settings", label: "Cấu hình SePay", icon: Settings },
+  { to: "/admin/crawler", label: "Cấu hình crawl", icon: DatabaseZap },
 ];
 
 export default function App() {
@@ -63,6 +65,7 @@ export default function App() {
             <Route path="deposits" element={<DepositsPage />} />
             <Route path="bank-transactions" element={<BankTransactionsPage />} />
             <Route path="settings" element={<SettingsPage />} />
+            <Route path="crawler" element={<CrawlerPage />} />
           </Route>
         </Route>
 
