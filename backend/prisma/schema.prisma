@@ -29,8 +29,33 @@ model User {
   updatedAt DateTime   @updatedAt @map("updated_at")
 
   walletTransactions WalletTransaction[]
+  depositOrders      DepositOrder[]
 
   @@map("users")
+}
+
+enum DepositStatus {
+  PENDING
+  PAID
+  EXPIRED
+}
+
+// Lệnh nạp tiền: người dùng chuyển khoản kèm `code` trong nội dung để hệ thống đối soát
+model DepositOrder {
+  id        Int           @id @default(autoincrement())
+  userId    Int           @map("user_id")
+  code      String        @unique @db.VarChar(30)
+  amount    Int
+  status    DepositStatus @default(PENDING)
+  expiresAt DateTime      @map("expires_at")
+  paidAt    DateTime?     @map("paid_at")
+  createdAt DateTime      @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+  @@index([status, expiresAt])
+  @@map("deposit_orders")
 }
 
 // Cấu hình dạng key-value, admin sửa được trên panel (SePay, cron, ...)
