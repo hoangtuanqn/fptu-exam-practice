@@ -66,17 +66,17 @@ enum BankTxStatus {
 
 // Giao dịch ngân hàng lấy từ SePay. `sepayId` unique để cùng một giao dịch không bao giờ cộng tiền hai lần
 model BankTransaction {
-  id             Int            @id @default(autoincrement())
-  sepayId        String         @unique @map("sepay_id") @db.VarChar(40)
+  id             Int          @id @default(autoincrement())
+  sepayId        String       @unique @map("sepay_id") @db.VarChar(40)
   gateway        String?
-  accountNumber  String?        @map("account_number")
-  content        String         @db.Text
-  amountIn       Int            @map("amount_in")
-  referenceCode  String?        @map("reference_code")
-  transactionAt  DateTime       @map("transaction_at")
+  accountNumber  String?      @map("account_number")
+  content        String       @db.Text
+  amountIn       Int          @map("amount_in")
+  referenceCode  String?      @map("reference_code")
+  transactionAt  DateTime     @map("transaction_at")
   status         BankTxStatus
-  depositOrderId Int?           @unique @map("deposit_order_id")
-  createdAt      DateTime       @default(now()) @map("created_at")
+  depositOrderId Int?         @unique @map("deposit_order_id")
+  createdAt      DateTime     @default(now()) @map("created_at")
 
   depositOrder DepositOrder? @relation(fields: [depositOrderId], references: [id])
 
@@ -112,4 +112,84 @@ model WalletTransaction {
 
   @@index([userId, createdAt])
   @@map("wallet_transactions")
+}
+
+// Đề thi lấy từ FuOverflow. `threadId` là chữ ký của đề: nhập lại cùng thread (dù link khác) không tạo bản mới
+model Exam {
+  id             Int       @id @default(autoincrement())
+  threadId       String    @unique @map("thread_id") @db.VarChar(20)
+  title          String    @db.VarChar(255)
+  sourceUrl      String    @map("source_url") @db.VarChar(500)
+  author         String?   @db.VarChar(100)
+  postedAt       DateTime? @map("posted_at")
+  totalQuestions Int       @map("total_questions")
+  createdById    Int?      @map("created_by_id")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  questions ExamQuestion[]
+  crawlJobs CrawlJob[]
+
+  @@map("exams")
+}
+
+// Mỗi ảnh là một câu hỏi. `answer` tạm là "A" cho đến khi có logic xác định đáp án đúng
+model ExamQuestion {
+  id          Int     @id @default(autoincrement())
+  examId      Int     @map("exam_id")
+  number      Int
+  name        String  @db.VarChar(100)
+  imagePath   String  @map("image_path") @db.VarChar(255)
+  sourceImage String  @map("source_image") @db.VarChar(500)
+  mediaUrl    String? @map("media_url") @db.VarChar(500)
+  answer      String  @default("A") @db.VarChar(20)
+
+  exam     Exam          @relation(fields: [examId], references: [id], onDelete: Cascade)
+  comments ExamComment[]
+
+  @@unique([examId, number])
+  @@map("exam_questions")
+}
+
+// Bình luận dưới ảnh trên FuOverflow (thường là đáp án do người dùng đề xuất)
+model ExamComment {
+  id          Int       @id @default(autoincrement())
+  questionId  Int       @map("question_id")
+  externalId  String    @map("external_id") @db.VarChar(30)
+  author      String    @db.VarChar(100)
+  authorScore String?   @map("author_score") @db.VarChar(20)
+  postedAt    DateTime? @map("posted_at")
+  text        String    @db.Text
+  url         String    @db.VarChar(500)
+
+  question ExamQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+  @@map("exam_comments")
+}
+
+enum CrawlJobStatus {
+  QUEUED
+  RUNNING
+  DONE
+  FAILED
+}
+
+// Một lượt nhập đề: tạo ở trạng thái QUEUED, worker nền nhận và cập nhật `stage` theo từng bước
+model CrawlJob {
+  id         Int            @id @default(autoincrement())
+  threadId   String         @map("thread_id") @db.VarChar(20)
+  userId     Int            @map("user_id")
+  status     CrawlJobStatus @default(QUEUED)
+  stage      String?        @db.VarChar(120)
+  error      String?        @db.Text
+  examId     Int?           @map("exam_id")
+  createdAt  DateTime       @default(now()) @map("created_at")
+  startedAt  DateTime?      @map("started_at")
+  finishedAt DateTime?      @map("finished_at")
+
+  exam Exam? @relation(fields: [examId], references: [id])
+
+  @@index([threadId, status])
+  @@index([status, createdAt])
+  @@map("crawl_jobs")
 }
