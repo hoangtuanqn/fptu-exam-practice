@@ -28,5 +28,28 @@ model User {
   createdAt DateTime   @default(now()) @map("created_at")
   updatedAt DateTime   @updatedAt @map("updated_at")
 
+  walletTransactions WalletTransaction[]
+
   @@map("users")
+}
+
+enum TransactionType {
+  DEPOSIT
+  ADMIN_ADJUST
+}
+
+// Sổ cái ví: mỗi lần số dư đổi là một dòng (amount âm = trừ tiền)
+model WalletTransaction {
+  id           Int             @id @default(autoincrement())
+  userId       Int             @map("user_id")
+  type         TransactionType
+  amount       Int
+  balanceAfter Int             @map("balance_after")
+  note         String?
+  createdAt    DateTime        @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+  @@map("wallet_transactions")
 }
