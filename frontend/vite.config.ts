@@ -24,6 +24,8 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react(), tailwindcss(), brandHtml],
+    // "@/shared/ui/Button" = src/shared/ui/Button (Vite hiểu "/src" là thư mục src của dự án)
+    resolve: { alias: { "@": "/src" } },
     // Gọi /api/... từ trình duyệt, Vite chuyển tiếp sang backend (tránh CORS khi phát triển)
     server: { proxy: { "/api": "http://localhost:8000" } },
   };
