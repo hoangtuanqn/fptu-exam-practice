@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+
+  /* BẢNG MÀU THƯƠNG HIỆU MST: lấy từ dải gradient xanh dương → cyan của logo.
+     Đổi màu cả site chỉ cần sửa các dòng dưới đây. 900 là navy nền tối (khớp icon), 600 là xanh logo. */
+  --color-brand-50: #eef5ff;
+  --color-brand-100: #dbe9ff;
+  --color-brand-200: #bad5ff;
+  --color-brand-300: #8bb8ff;
+  --color-brand-400: #4d92ff;
+  --color-brand-500: #1a73ff;
+  --color-brand-600: #0066ff;
+  --color-brand-700: #0a4fcc;
+  --color-brand-800: #10316b;
+  --color-brand-900: #0b1730;
+
+  /* Cyan nhấn của logo, dùng tiết kiệm (đường kẻ, nhãn nhỏ trên nền tối) */
+  --color-accent: #00c8ff;
+
+  /* Nền xám xanh rất nhạt, hợp tông xanh của logo */
+  --color-paper: #f3f6fb;
+
+  --animate-fade-in: fade-in 0.22s ease-out;
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+/* Tailwind v4 để nút mang con trỏ mặc định; đặt lại thành bàn tay cho mọi nút bấm được */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+
+  /* Viền focus rõ ràng cho người dùng bàn phím */
+  :focus-visible {
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: 2px;
+  }
+}
+
+body {
+  @apply bg-paper text-slate-800 antialiased;
+}
+
+/* Thanh cuộn mảnh, kín đáo */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
