@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { adminUserController } from "../controllers/admin.user.controllers";
+import { adminSettingController } from "../controllers/admin.setting.controllers";
 import { authenticate, requireAdmin } from "../middlewares/auth.middlewares";
+import { updateSepayBody } from "../rules/requests/setting.request";
 import { validate } from "../middlewares/validate.middlewares";
 import { adjustBalanceBody, idParam, listUsersQuery, updateUserBody } from "../rules/requests/admin.request";
 
@@ -18,5 +20,8 @@ adminRouter.post(
   validate(adjustBalanceBody),
   adminUserController.adjustBalance,
 );
+
+adminRouter.get("/settings/sepay", adminSettingController.getSepay);
+adminRouter.put("/settings/sepay", validate(updateSepayBody), adminSettingController.updateSepay);
 
 export default adminRouter;

@@ -33,6 +33,15 @@ model User {
   @@map("users")
 }
 
+// Cấu hình dạng key-value, admin sửa được trên panel (SePay, cron, ...)
+model Setting {
+  key       String   @id @db.VarChar(100)
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("settings")
+}
+
 enum TransactionType {
   DEPOSIT
   ADMIN_ADJUST
