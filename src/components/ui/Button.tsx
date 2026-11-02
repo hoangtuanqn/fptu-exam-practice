@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes } from "react";
 
-type Variant = "primary" | "secondary";
+type Variant = "primary" | "secondary" | "danger" | "ghost";
 type Size = "md" | "sm";
 
 interface StyleOptions {
@@ -13,6 +13,8 @@ interface StyleOptions {
 const VARIANTS: Record<Variant, string> = {
   primary: "bg-brand-900 text-white hover:bg-brand-800",
   secondary: "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50",
+  danger: "bg-rose-600 text-white hover:bg-rose-700",
+  ghost: "text-slate-600 hover:bg-slate-100",
 };
 const SIZES: Record<Size, string> = {
   md: "px-4 py-2",
