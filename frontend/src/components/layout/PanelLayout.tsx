@@ -2,6 +2,7 @@ import { Link, NavLink, Outlet } from "react-router-dom";
 import type { LucideIcon } from "lucide-react";
 import { brand } from "../../config/brand";
 import { Logo } from "../brand/Logo";
+import { Footer } from "./Footer";
 import { UserMenu } from "./UserMenu";
 
 export interface NavItem {
@@ -55,6 +56,7 @@ export function PanelLayout({ title, items }: { title: string; items: NavItem[] 
           </div>
         </main>
       </div>
+      <Footer />
     </div>
   );
 }

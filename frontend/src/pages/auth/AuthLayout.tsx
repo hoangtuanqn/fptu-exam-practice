@@ -1,9 +1,14 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Logo } from "../../components/brand/Logo";
+import { Footer } from "../../components/layout/Footer";
 import { brand } from "../../config/brand";
 
-const POINTS = ["Luyện theo chế độ luyện tập hoặc thi thử", "Chấm điểm thang 10 tự động", "Nạp tiền nhanh qua chuyển khoản"];
+const POINTS = [
+  "Luyện theo chế độ luyện tập hoặc thi thử",
+  "Chấm điểm thang 10 tự động",
+  "Nạp tiền nhanh qua chuyển khoản",
+];
 
 // Khung chung cho đăng nhập/đăng ký: bên trái giới thiệu thương hiệu (ẩn trên điện thoại), bên phải là form
 export function AuthLayout({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {
@@ -33,22 +38,23 @@ export function AuthLayout({ title, subtitle, children }: { title: string; subti
           </ul>
         </div>
 
-        <p className="relative text-xs text-brand-300">
-          © {new Date().getFullYear()} {brand.company}
-        </p>
+        <p className="relative text-xs text-brand-300">Phát triển bởi {brand.company}</p>
       </aside>
 
-      <main className="flex items-center justify-center px-5 py-10">
-        <div className="w-full max-w-sm">
-          <Link to="/" className="mb-8 block w-fit lg:hidden">
-            <Logo className="h-9" />
-          </Link>
+      <div className="flex min-h-screen flex-col">
+        <main className="flex flex-1 items-center justify-center px-5 py-10">
+          <div className="w-full max-w-sm">
+            <Link to="/" className="mb-8 block w-fit lg:hidden">
+              <Logo className="h-9" />
+            </Link>
 
-          <h1 className="font-serif text-3xl font-semibold text-slate-900">{title}</h1>
-          <p className="mt-2 text-sm text-slate-500">{subtitle}</p>
-          <div className="mt-8">{children}</div>
-        </div>
-      </main>
+            <h1 className="font-serif text-3xl font-semibold text-slate-900">{title}</h1>
+            <p className="mt-2 text-sm text-slate-500">{subtitle}</p>
+            <div className="mt-8">{children}</div>
+          </div>
+        </main>
+        <Footer />
+      </div>
     </div>
   );
 }
