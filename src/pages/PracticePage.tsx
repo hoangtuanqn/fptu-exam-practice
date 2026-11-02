@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { useQuiz } from "./hooks/useQuiz";
-import { useQuizShortcuts } from "./hooks/useQuizShortcuts";
-import { EmptyState } from "./components/layout/EmptyState";
-import { Header } from "./components/layout/Header";
-import { QuizDialogs, type SubmitDialog } from "./components/dialogs/QuizDialogs";
-import { QuizWorkspace } from "./components/quiz/QuizWorkspace";
+import { useQuiz } from "../hooks/useQuiz";
+import { useQuizShortcuts } from "../hooks/useQuizShortcuts";
+import { EmptyState } from "../components/layout/EmptyState";
+import { Header } from "../components/layout/Header";
+import { QuizDialogs, type SubmitDialog } from "../components/dialogs/QuizDialogs";
+import { QuizWorkspace } from "../components/quiz/QuizWorkspace";
 
-export default function App() {
+export default function PracticePage() {
   const quiz = useQuiz();
   const [zoomOpen, setZoomOpen] = useState(false);
   const [dialog, setDialog] = useState<SubmitDialog>(null);
