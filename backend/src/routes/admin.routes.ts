@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { adminDashboardController } from "../controllers/admin.dashboard.controllers";
 import { adminUserController } from "../controllers/admin.user.controllers";
 import { listBankTxQuery, listDepositsQuery } from "../rules/requests/deposit.request";
 import { adminSepayController } from "../controllers/admin.sepay.controllers";
@@ -14,7 +15,9 @@ const adminRouter = Router();
 // Toàn bộ /admin/* chỉ dành cho ADMIN
 adminRouter.use(authenticate, requireAdmin);
 
-adminRouter.get("/users", validate(listUsersQuery, "query"), adminUserController.list);
+adminRouter.get("/dashboard", adminDashboardController.overview);
+
+adminRouter.get("/users",validate(listUsersQuery, "query"), adminUserController.list);
 adminRouter.get("/users/:id", validate(idParam, "params"), adminUserController.get);
 adminRouter.patch("/users/:id", validate(idParam, "params"), validate(updateUserBody), adminUserController.update);
 adminRouter.post(

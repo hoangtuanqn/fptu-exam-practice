@@ -9,6 +9,16 @@ export const bankTransactionRepository = {
     return new Set(rows.map((r) => r.sepayId));
   },
 
+  async sumMatched(since?: Date) {
+    const r = await prisma.bankTransaction.aggregate({
+      where: { status: "MATCHED", transactionAt: since && { gte: since } },
+      _sum: { amountIn: true },
+    });
+    return r._sum.amountIn ?? 0;
+  },
+
+  countUnmatched: () => prisma.bankTransaction.count({ where: { status: "UNMATCHED" } }),
+
   create: (db: Db, data: Prisma.BankTransactionUncheckedCreateInput) => db.bankTransaction.create({ data }),
 
   async list(query: PaginationQuery, status?: BankTxStatus) {
