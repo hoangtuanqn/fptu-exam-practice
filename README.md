@@ -45,13 +45,26 @@ Chi tiết API và cách đối soát an toàn: xem [`backend/README.md`](backen
 ## Cấu trúc
 
 ```
-frontend/       Vite + React + TypeScript + Tailwind
-  brand.config.ts  tên và thông tin thương hiệu (sửa một nơi)
-  public/          logo, favicon, ảnh bìa
+frontend/
+  brand.config.ts        tên, slogan, founder, đối tác (sửa một nơi)
+  public/                logo, favicon, ảnh bìa
   src/
-    api/          gọi backend, một file cho mỗi nhóm
-    context/      đăng nhập, thông báo
-    pages/        auth, account, admin và trang luyện đề
-    components/   ui (kit dùng chung), layout, panel, quiz
-backend/        Express + Prisma + MySQL
+    app/                 App (khai báo route), NotFoundPage
+    shared/              dùng chung nhiều tính năng
+      ui/                nút, ô nhập, bảng, thẻ, hộp thoại, công tắc...
+      layout/            Footer, PanelLayout (khung panel), UserMenu
+      brand/             Logo, thông tin thương hiệu
+      api/ hooks/ utils/ context/ types/
+    features/            mỗi tính năng một module, tự chứa code của nó
+      auth/              đăng nhập, đăng ký, AuthContext, chặn route theo quyền
+      practice/          làm đề: PracticePage, components/{quiz,sidebar,dialogs}, hooks, chấm điểm
+      trial/             khách dùng thử 1 lần, hộp thoại mời đăng ký
+      landing/           trang chủ: Landing + components/ (mỗi phần một file) + content.ts (lời)
+      account/           panel người dùng: tổng quan, nạp tiền, giao dịch, hồ sơ
+      admin/             panel quản trị: thành viên, lệnh nạp, SePay
+backend/                 Express + Prisma + MySQL (routes, controllers, services, repositories)
 ```
+
+Quy ước: dùng alias `@/` cho import (`@/shared/ui/Button`). Một `feature` không import ngược từ `feature` khác
+ngoài vài chỗ có chủ đích (ví dụ `landing` dùng `DropZone` của `practice`); code dùng từ hai tính năng trở lên
+thì chuyển vào `shared/`. Màu và font xem [`BRAND.md`](BRAND.md).
