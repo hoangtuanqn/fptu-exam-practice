@@ -9,5 +9,7 @@ export const examImportApi = {
   // Hỏi lại trong lúc AI phân tích đáp án (nhẹ hơn tải cả đề)
   answers: (id: number) =>
     http.get<{ status: ImportedExam["answerStatus"]; answers: { number: number; correct: string[] }[] }>(`/exams/${id}/answers`),
+  // Đề AI giải lỗi: nhờ AI giải lại (có thời gian chờ giữa hai lần)
+  retrySolve: (id: number) => http.post<{ result: string }>(`/exams/${id}/retry-solve`),
   examByThread: (threadId: string) => http.get<ImportedExam>(`/exams/thread/${encodeURIComponent(threadId)}`),
 };

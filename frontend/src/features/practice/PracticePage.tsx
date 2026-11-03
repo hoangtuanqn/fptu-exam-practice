@@ -51,7 +51,7 @@ export default function PracticePage({ threadId }: Props) {
 
   // AI đang phân tích đáp án: hỏi lại định kỳ, có đáp án thì gắn vào đề đang làm (câu đã chọn giữ nguyên).
   // Tiết kiệm: tab đang ẩn thì không hỏi (quay lại tab là hỏi ngay), chờ lâu thì hỏi thưa hơn.
-  const waitingAnswers = quiz.answersPending && quiz.examId !== null;
+  const waitingAnswers = quiz.answerSource === "PENDING" && quiz.examId !== null;
   useEffect(() => {
     if (!waitingAnswers || quiz.examId === null) return;
     const examId = quiz.examId;
@@ -65,9 +65,13 @@ export default function PracticePage({ threadId }: Props) {
         const r = await examImportApi.answers(examId);
         if (stopped || r.status === "PENDING") return;
         stopped = true;
+        if (r.status === "FAILED" || r.status === "DEFAULT") {
+          quiz.markFailed();
+          toast.error("AI chưa phân tích được đáp án của đề này");
+          return;
+        }
         quiz.applyAnswers(r.answers, r.status);
-        if (r.status === "DEFAULT") toast.error("AI chưa phân tích được đáp án, đang dùng đáp án tạm (A)");
-        else toast.success("AI đã phân tích xong đáp án");
+        toast.success("AI đã phân tích xong đáp án, bạn có thể làm bài");
       } catch {
         /* lỗi mạng tạm thời: lần sau hỏi lại */
       }

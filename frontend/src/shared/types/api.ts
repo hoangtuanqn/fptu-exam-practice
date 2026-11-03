@@ -95,7 +95,7 @@ export interface AiAdminConfig {
   apiKeyPreview: string;
 }
 
-export type AnswerSource = "DEFAULT" | "AI" | "MANUAL";
+export type AnswerSource = "PENDING" | "FAILED" | "DEFAULT" | "AI" | "MANUAL";
 
 export interface AdminExam {
   id: number;
