@@ -49,14 +49,14 @@ export function MyExams({ onOpen }: Props) {
           </Link>
         )}
       </div>
-      <ul className="grid gap-2 sm:grid-cols-2">
+      <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         {data.items.map((e) => (
-          <li key={e.id}>
+          <li key={e.id} className="min-w-0">
             <button
               type="button"
               onClick={() => void open(e.id)}
               disabled={openingId !== null}
-              className="flex w-full items-center gap-3 rounded-2xl border border-slate-200/80 bg-white px-4 py-3.5 text-left shadow-soft transition hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-card disabled:opacity-60"
+              className="flex w-full min-w-0 items-center gap-3 rounded-2xl border border-slate-200/80 bg-white px-4 py-3.5 text-left shadow-soft transition hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-card disabled:opacity-60"
             >
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
                 {openingId === e.id ? <Loader2 size={16} className="animate-spin" /> : <BookOpen size={16} />}

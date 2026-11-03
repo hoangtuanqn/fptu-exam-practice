@@ -45,7 +45,22 @@ export default function BankTransactionsPage() {
           <ErrorBox message={error} onRetry={reload} />
         ) : data && data.items.length > 0 ? (
           <>
-            <Table>
+            <ul className="divide-y divide-slate-100 md:hidden">
+              {data.items.map((t) => (
+                <li key={t.id} className="px-4 py-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="whitespace-nowrap text-sm font-semibold tabular-nums text-emerald-700">+{formatMoney(t.amountIn)}</span>
+                    <BankTxBadge value={t.status} />
+                  </div>
+                  <div className="mt-1 break-words text-xs text-slate-700">{t.content || "—"}</div>
+                  <div className="mt-0.5 text-xs text-slate-400">
+                    {t.gateway ?? "—"} · {formatDateTime(t.transactionAt)}
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <div className="hidden md:block">
+              <Table>
               <Thead>
                 <Th>Thời gian</Th>
                 <Th>Nội dung chuyển khoản</Th>
@@ -65,6 +80,7 @@ export default function BankTransactionsPage() {
                 ))}
               </tbody>
             </Table>
+            </div>
             <Pagination meta={data.meta} onPage={setPage} />
           </>
         ) : (

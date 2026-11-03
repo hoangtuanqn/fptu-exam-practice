@@ -17,7 +17,7 @@ export function GuestSync() {
     doneFor.current = user.id;
 
     void (async () => {
-      const claimed = await examLibraryApi.claim().catch(() => ({ claimed: 0 }));
+      const claimed = (await examLibraryApi.claim().catch(() => null)) ?? { claimed: 0 };
       const pending = pendingAttempt.take();
       let saved = false;
       if (pending) {

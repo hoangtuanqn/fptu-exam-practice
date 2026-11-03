@@ -73,12 +73,12 @@ export function StatCard({
   tone?: StatTone;
 }) {
   return (
-    <div className="bg-white p-5">
+    <div className="min-w-0 bg-white p-4 sm:p-5">
       <div className="eyebrow flex items-center gap-2">
         <span className={`h-1.5 w-1.5 rounded-full ${STAT_DOT[tone]}`} />
         {label}
       </div>
-      <div className="mt-3 text-[1.7rem] font-semibold leading-none tabular-nums text-slate-900">{value}</div>
+      <div className="mt-2.5 break-words text-xl font-semibold leading-tight tabular-nums sm:mt-3 sm:text-[1.7rem] text-slate-900">{value}</div>
       {note && <div className="mt-2 text-xs text-slate-500">{note}</div>}
     </div>
   );

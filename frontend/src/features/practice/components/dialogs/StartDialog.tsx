@@ -72,7 +72,8 @@ export function StartDialog({ title, total, graded, replacing, onCancel, onStart
         </Button>
         <Button grow variant="primary" onClick={() => onStart(mode)}>
           <Play size={16} />
-          Bắt đầu làm bài
+          <span className="sm:hidden">Bắt đầu</span>
+          <span className="hidden sm:inline">Bắt đầu làm bài</span>
         </Button>
       </ModalActions>
     </Modal>

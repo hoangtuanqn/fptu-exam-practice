@@ -24,7 +24,7 @@ export function DropZone({ onPick }: { onPick: PickFolder }) {
         }}
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
-        className={`flex cursor-pointer flex-col items-center rounded-2xl border-2 border-dashed px-6 py-9 transition ${
+        className={`flex cursor-pointer flex-col items-center rounded-2xl border-2 border-dashed px-4 py-7 transition sm:px-6 sm:py-9 ${
           dragging ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-slate-50/60 hover:border-brand-400 hover:bg-brand-50/50"
         }`}
       >

@@ -120,7 +120,7 @@ export function PaymentPanel({ code, onClose }: { code: string; onClose: () => v
           Liên kết lệnh nạp <CopyButton text={`${window.location.origin}/deposit/${code}`} label="Sao chép liên kết lệnh nạp" />
         </span>
         <span className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-sm text-amber-700">
-          <Clock size={14} /> Còn <b className="font-mono tabular-nums">{mm}:{ss}</b>
+          <Clock size={14} /> Còn <b className="tabular-nums">{mm}:{ss}</b>
         </span>
       </div>
 

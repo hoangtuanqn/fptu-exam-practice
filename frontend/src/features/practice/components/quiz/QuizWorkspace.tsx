@@ -34,7 +34,7 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange }: Props) {
   return (
     <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
       <Sidebar quiz={quiz} />
-      <main className="flex flex-1 flex-col overflow-y-auto p-3 lg:p-4">
+      <main className="flex flex-1 flex-col overflow-y-auto p-2 sm:p-3 lg:p-4">
         <QuestionCard key={question.number} {...view} onZoom={() => onZoomChange(true)} />
       </main>
 
