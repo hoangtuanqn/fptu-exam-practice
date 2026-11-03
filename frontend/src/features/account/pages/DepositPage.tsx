@@ -46,7 +46,7 @@ export default function DepositPage() {
 
   return (
     <>
-      <PageHeader title="Nạp tiền" description="Chuyển khoản ngân hàng, tiền được cộng tự động sau ít phút." />
+      <PageHeader title="Nạp credit" description="Chuyển khoản ngân hàng (1 ₫ = 1 credit), credit được cộng tự động sau ít phút." />
 
       {activeCode ? (
         <PaymentPanel code={activeCode} onClose={closePayment} />

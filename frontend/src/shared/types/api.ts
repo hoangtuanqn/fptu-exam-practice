@@ -4,7 +4,7 @@ export type Role = "USER" | "ADMIN";
 export type UserStatus = "ACTIVE" | "BANNED";
 export type DepositStatus = "PENDING" | "PAID" | "EXPIRED";
 export type BankTxStatus = "MATCHED" | "UNMATCHED";
-export type TransactionType = "DEPOSIT" | "ADMIN_ADJUST" | "CRAWL_CHARGE" | "CRAWL_REFUND";
+export type TransactionType = "DEPOSIT" | "ADMIN_ADJUST" | "CRAWL_CHARGE" | "CRAWL_REFUND" | "GIFT_CODE";
 
 export interface User {
   id: number;
@@ -19,7 +19,7 @@ export interface User {
 export interface WalletTransaction {
   id: number;
   type: TransactionType;
-  amount: number; // âm = trừ tiền
+  amount: number; // âm = trừ credit
   balanceAfter: number;
   note: string | null;
   createdAt: string;
