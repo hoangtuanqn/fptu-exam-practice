@@ -16,6 +16,12 @@ export const referralRepository = {
   // Gắn người giới thiệu cho người vừa đăng ký
   setReferrer: (db: Db, userId: number, referredById: number) => db.user.update({ where: { id: userId }, data: { referredById } }),
 
+  // Gắn người giới thiệu bằng UPDATE có điều kiện (chỉ khi chưa có ai): bấm hai lần cùng lúc chỉ một lần thắng
+  async setReferrerIfNone(db: Db, userId: number, referredById: number) {
+    const { count } = await db.user.updateMany({ where: { id: userId, referredById: null }, data: { referredById } });
+    return count === 1;
+  },
+
   findReferrerOf: (db: Db, userId: number) => db.user.findUnique({ where: { id: userId }, select: { referredById: true } }),
 
   createReward: (db: Db, data: { referrerId: number; referredId: number; type: ReferralRewardType; amount: number; depositOrderId?: number }) =>

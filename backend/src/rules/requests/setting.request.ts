@@ -52,6 +52,7 @@ export const updateReferralBody = z.object({
   enabled: z.boolean(),
   signupBonus: z.number("Số credit không hợp lệ").int("Phải là số nguyên").min(0, "Tối thiểu 0").max(1_000_000, "Tối đa 1.000.000"),
   referrerSignupBonus: z.number("Số credit không hợp lệ").int("Phải là số nguyên").min(0, "Tối thiểu 0").max(1_000_000, "Tối đa 1.000.000"),
+  claimWindowDays: z.number("Số ngày không hợp lệ").int("Phải là số nguyên").min(0, "Tối thiểu 0").max(365, "Tối đa 365"),
   commissionPercent: z.number("Tỉ lệ không hợp lệ").int("Phải là số nguyên").min(0, "Tối thiểu 0%").max(100, "Tối đa 100%"),
 });
 
