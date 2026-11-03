@@ -78,7 +78,29 @@ export default function UsersPage() {
           <ErrorBox message={error} onRetry={reload} />
         ) : data && data.items.length > 0 ? (
           <div className={loading ? "opacity-60 transition" : "transition"}>
-            <Table>
+            <ul className="divide-y divide-slate-100 md:hidden">
+              {data.items.map((u) => (
+                <li key={u.id}>
+                  <button onClick={() => setSelected(u)} className="flex w-full items-center gap-3 px-4 py-3 text-left transition active:bg-slate-50">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-semibold text-brand-800">{initials(u.fullName)}</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium text-slate-900">{u.fullName}</div>
+                      <div className="truncate text-xs text-slate-500">{u.email}</div>
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                        <RoleBadge value={u.role} />
+                        <UserStatusBadge value={u.status} />
+                      </div>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <div className="whitespace-nowrap text-sm font-semibold tabular-nums text-slate-900">{formatMoney(u.balance)}</div>
+                      <div className="text-xs text-slate-400">{formatDate(u.createdAt)}</div>
+                    </div>
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <div className="hidden md:block">
+              <Table>
               <Thead>
                 <Th>Thành viên</Th>
                 <Th>Vai trò</Th>
@@ -108,6 +130,7 @@ export default function UsersPage() {
                 ))}
               </tbody>
             </Table>
+            </div>
             <Pagination meta={data.meta} onPage={setPage} />
           </div>
         ) : (

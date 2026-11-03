@@ -76,8 +76,6 @@ export default function PracticePage({ threadId }: Props) {
       loadedFor.current = null;
       return;
     }
-    if (loadedFor.current === threadId) return;
-    loadedFor.current = threadId;
 
     let stale = false;
     setOpening(true);
@@ -85,6 +83,7 @@ export default function PracticePage({ threadId }: Props) {
       .examByThread(threadId)
       .then((exam) => {
         if (stale) return;
+        loadedFor.current = threadId; // đã tải xong đề này
         setOpenedThread(exam.threadId);
         const mode = new URLSearchParams(location.search).get("mode");
         if (mode === "practice" || mode === "exam") quiz.openExam(exam.questions, exam.title, exam.id, mode);
