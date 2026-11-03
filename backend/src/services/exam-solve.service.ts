@@ -1,8 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { storageDir } from "../configs/env";
-import { AI_REPORT_FALLBACK_PREFIX } from "../constants/ai";
-import { DEFAULT_ANSWER, EXAM_STORAGE_DIR } from "../constants/crawler";
+import { AI_REPORT_FAILED_PREFIX, AI_RETRY_COOLDOWN_MS } from "../constants/ai";
+import { EXAM_STORAGE_DIR } from "../constants/crawler";
 import { examRepository } from "../repositories/exam.repository";
 import { solveExam } from "./ai/exam-solver.service";
 import { aiSettingService } from "./ai-setting.service";
@@ -16,7 +16,8 @@ const MAX_CONCURRENT = 2;
 
 const waiting: number[] = [];
 const running = new Set<number>();
-const lastError = new Map<number, string>();
+// Lần giải lỗi gần nhất trong lượt chạy này của server (để không tự thử lại, tránh đốt token)
+const lastError = new Map<number, { message: string; at: number }>();
 
 const pump = () => {
   while (running.size < MAX_CONCURRENT && waiting.length > 0) {
@@ -53,18 +54,21 @@ async function run(examId: number) {
   } catch (err) {
     const message = (err as Error).message;
     console.error(`[ai] giải đề ${exam.threadId} lỗi: ${message}`);
-    lastError.set(examId, message);
-    // Đề đang chờ đáp án mà AI lỗi: trả về đáp án tạm (A) để người dùng không phải chờ mãi; giải lại thì giữ đáp án cũ
+    lastError.set(examId, { message, at: Date.now() });
+    // Ghi log lại để tra cứu (cạnh ảnh của đề) và lưu lý do vào báo cáo để admin xem ở trang Đề thi
+    const dir = path.join(storageDir, EXAM_STORAGE_DIR, exam.threadId);
+    await fs.appendFile(path.join(dir, "ai-error.log"), `[${new Date().toISOString()}] ${message}
+`, "utf-8").catch(() => undefined);
+    // Không có đáp án giả: đề chờ AI mà lỗi thì chuyển FAILED (chỉ xem đề). Giải lại một đề đã có đáp án thì giữ đáp án cũ.
     if (wasPending) {
-      const fallback = exam.questions.map(() => DEFAULT_ANSWER);
-      await examRepository.updateAnswers(examId, fallback, "DEFAULT", `${AI_REPORT_FALLBACK_PREFIX}${message}`);
+      await examRepository.updateAnswers(examId, exam.questions.map(() => ""), "FAILED", `${AI_REPORT_FAILED_PREFIX}${message}`);
     }
   }
 }
 
 export const examSolveService = {
   isBusy: (examId: number) => running.has(examId) || waiting.includes(examId),
-  lastError: (examId: number) => lastError.get(examId) ?? null,
+  lastError: (examId: number) => lastError.get(examId)?.message ?? null,
 
   // Xếp đề vào hàng đợi giải. Trả về false nếu đề đã đang chờ hoặc đang giải.
   enqueue(examId: number) {
@@ -83,12 +87,26 @@ export const examSolveService = {
   async upgradeIfNeeded(examId: number) {
     if (this.isBusy(examId) || lastError.has(examId)) return false;
     const exam = await examRepository.findAnswerSource(examId);
-    if (exam?.answerSource !== "DEFAULT") return false;
+    if (exam?.answerSource !== "DEFAULT" && exam?.answerSource !== "FAILED") return false;
     const ai = await aiSettingService.get();
     if (!ai.enabled || !ai.apiKey) return false;
     await examRepository.markPending(examId);
     this.enqueue(examId);
     return true;
+  },
+
+  // Người dùng bấm "Thử lại" trên đề FAILED. Mỗi đề chờ tối thiểu AI_RETRY_COOLDOWN_MS giữa hai lần.
+  async retry(examId: number): Promise<"started" | "busy" | "cooldown" | "not-needed"> {
+    if (this.isBusy(examId)) return "busy";
+    const exam = await examRepository.findAnswerSource(examId);
+    if (exam?.answerSource !== "DEFAULT" && exam?.answerSource !== "FAILED") return "not-needed";
+    const last = lastError.get(examId);
+    if (last && Date.now() - last.at < AI_RETRY_COOLDOWN_MS) return "cooldown";
+    const ai = await aiSettingService.get();
+    if (!ai.enabled || !ai.apiKey) return "not-needed";
+    await examRepository.markPending(examId);
+    this.enqueue(examId);
+    return "started";
   },
 
   // Khởi động lại server giữa chừng thì các đề đang chờ AI được xếp lại hàng

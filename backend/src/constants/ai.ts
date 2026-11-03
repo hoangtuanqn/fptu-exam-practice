@@ -10,7 +10,7 @@ export interface AiConfig {
 export const AI_DEFAULTS: AiConfig = {
   enabled: true, // có khóa Gemini là dùng AI; tắt thủ công ở trang Quản trị nếu cần
   apiKey: "",
-  model: "gemini-2.5-pro",
+  model: "gemini-3.1-pro-preview",
   useSearch: true,
 };
 
@@ -24,4 +24,6 @@ export const AI_TIMEOUT_MS = 6 * 60 * 1000;
 export const AI_RETRIES = 1;
 
 // Ghi chú khi AI không dùng được và đề rơi về đáp án tạm
-export const AI_REPORT_FALLBACK_PREFIX = "AI không giải được đề này, đang dùng đáp án tạm (A). Lý do: ";
+export const AI_REPORT_FAILED_PREFIX = "AI không giải được đề này. Lý do: ";
+// Chờ tối thiểu giữa hai lần người dùng bấm "Thử lại" cùng một đề (tránh đốt token)
+export const AI_RETRY_COOLDOWN_MS = 60 * 1000;

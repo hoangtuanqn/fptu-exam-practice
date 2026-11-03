@@ -57,11 +57,12 @@ export function parseAnswers(text: string, n: number): { answers: string[]; repo
     const normalized = line.toUpperCase().replace(/[.,;]+/g, " ").replace(/\s+/g, " ").trim();
     if (ANSWER_LINE.test(normalized)) return normalized;
     bad.push(i + 1);
-    return "A"; // dạng không phải trắc nghiệm chữ cái: chưa chấm được, tạm A và ghi vào báo cáo
+    return line;
   });
+  // Không điền đáp án giả: có câu không phải đáp án chữ cái thì coi như AI chưa giải xong đề
+  if (bad.length) throw new Error(`AI trả về đáp án không hợp lệ ở câu ${bad.join(", ")}`);
 
   let report = text.slice(0, pick.index).trim();
-  if (bad.length) report += `\n\n[Hệ thống] Các câu có đáp án không phải chữ cái, đã tạm đặt A: ${bad.join(", ")}.`;
   return { answers, report };
 }
 

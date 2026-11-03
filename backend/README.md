@@ -74,7 +74,7 @@ An toàn tiền bạc:
 3. Worker nền (`jobs/crawl.worker.ts`) lấy từng job: đọc thread → tải ảnh, đổi WebP vào `STORAGE_DIR/exams/<threadId>/` → lấy bình luận → ghi `exams`, `exam_questions`, `exam_comments` trong một transaction. Mỗi bước cập nhật `crawl_jobs.stage` để client hiển thị. Server tắt giữa chừng thì job `RUNNING` được xếp lại khi khởi động.
 4. Client poll `GET /crawl-jobs/:id` đến khi `DONE`, rồi `GET /exams/:id` (ảnh phục vụ tại `/api/v1/files/...`).
 
-Đáp án: crawler chưa xác định được đáp án đúng nên mọi câu tạm là `A` (`exam_questions.answer`, hằng `DEFAULT_ANSWER`). Bình luận của người dùng FuOverflow đã lưu ở `exam_comments` để làm logic suy ra đáp án sau.
+Đáp án: do AI (Gemini) giải sau khi lấy đề và lưu vào `exam_questions.answer`. Không có đáp án giả: đề chưa có đáp án (`answer_source` = `PENDING` hoặc `FAILED`) chỉ xem được, chưa làm bài được. Lý do AI lỗi lưu ở `exams.ai_report` và `storage/exams/<threadId>/ai-error.log`.
 
 ## Thư viện đề và lịch sử làm bài
 
