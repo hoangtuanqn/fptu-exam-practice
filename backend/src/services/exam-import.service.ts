@@ -38,7 +38,7 @@ export const examImportService = {
     if (existing) return { examId: existing.id }; // có người nhập xong trước đó
 
     const config = await crawlerSettingService.get();
-    if (!config.cookie) throw new Error("Chưa cấu hình cookie FuOverflow. Admin hãy nhập ở Quản trị → Cấu hình crawl.");
+    if (!config.cookie) throw new Error("Chưa cấu hình cookie FuOverflow. Admin hãy nhập ở Quản trị → Cấu hình lấy đề.");
     const client = createFuoClient(config);
 
     await stage("Đang đọc thread");

@@ -1,0 +1,48 @@
+import { lazy } from "react";
+import { Navigate, Route } from "react-router-dom";
+import { Bot, DatabaseZap, FileText, Landmark, LayoutDashboard, Receipt, Settings, Users } from "lucide-react";
+import type { NavItem } from "@/shared/layout/PanelLayout";
+
+/**
+ * Trang quản trị chia theo module, mỗi module một thư mục trong features/admin:
+ *   overview/  Tổng quan
+ *   users/     Thành viên
+ *   finance/   Lệnh nạp tiền, giao dịch ngân hàng, cấu hình SePay
+ *   content/   Đề thi, cấu hình lấy đề, AI giải đáp án
+ * Menu và đường dẫn khai báo ở đây, thêm trang mới chỉ cần sửa file này.
+ */
+const DashboardPage = lazy(() => import("./overview/DashboardPage"));
+const UsersPage = lazy(() => import("./users/UsersPage"));
+const DepositsPage = lazy(() => import("./finance/DepositsPage"));
+const BankTransactionsPage = lazy(() => import("./finance/BankTransactionsPage"));
+const SepayPage = lazy(() => import("./finance/SepayPage"));
+const ExamsPage = lazy(() => import("./content/ExamsPage"));
+const CrawlerPage = lazy(() => import("./content/CrawlerPage"));
+const AiPage = lazy(() => import("./content/AiPage"));
+
+export const ADMIN_NAV: NavItem[] = [
+  { to: "/admin", label: "Tổng quan", icon: LayoutDashboard, end: true, group: "Chung" },
+  { to: "/admin/users", label: "Thành viên", icon: Users, group: "Người dùng" },
+  { to: "/admin/deposits", label: "Lệnh nạp tiền", icon: Receipt, group: "Tài chính" },
+  { to: "/admin/bank-transactions", label: "Giao dịch ngân hàng", icon: Landmark, group: "Tài chính" },
+  { to: "/admin/sepay", label: "Cấu hình SePay", icon: Settings, group: "Tài chính" },
+  { to: "/admin/exams", label: "Đề thi", icon: FileText, group: "Nội dung & AI" },
+  { to: "/admin/crawler", label: "Cấu hình lấy đề", icon: DatabaseZap, group: "Nội dung & AI" },
+  { to: "/admin/ai", label: "AI giải đáp án", icon: Bot, group: "Nội dung & AI" },
+];
+
+// Các route con của /admin
+export const adminRoutes = (
+  <>
+    <Route index element={<DashboardPage />} />
+    <Route path="users" element={<UsersPage />} />
+    <Route path="deposits" element={<DepositsPage />} />
+    <Route path="bank-transactions" element={<BankTransactionsPage />} />
+    <Route path="sepay" element={<SepayPage />} />
+    <Route path="exams" element={<ExamsPage />} />
+    <Route path="crawler" element={<CrawlerPage />} />
+    <Route path="ai" element={<AiPage />} />
+    {/* Địa chỉ cũ */}
+    <Route path="settings" element={<Navigate to="/admin/sepay" replace />} />
+  </>
+);
