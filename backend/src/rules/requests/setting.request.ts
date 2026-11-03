@@ -48,6 +48,15 @@ export const updateAiBody = z.object({
   useSearch: z.boolean(),
 });
 
+export const updateReferralBody = z.object({
+  enabled: z.boolean(),
+  signupBonus: z.number("Số credit không hợp lệ").int("Phải là số nguyên").min(0, "Tối thiểu 0").max(1_000_000, "Tối đa 1.000.000"),
+  referrerSignupBonus: z.number("Số credit không hợp lệ").int("Phải là số nguyên").min(0, "Tối thiểu 0").max(1_000_000, "Tối đa 1.000.000"),
+  commissionPercent: z.number("Tỉ lệ không hợp lệ").int("Phải là số nguyên").min(0, "Tối thiểu 0%").max(100, "Tối đa 100%"),
+});
+
+export type UpdateReferralBody = z.infer<typeof updateReferralBody>;
+
 export type UpdateAiBody = z.infer<typeof updateAiBody>;
 
 export const updateCrawlerBody = z.object({
