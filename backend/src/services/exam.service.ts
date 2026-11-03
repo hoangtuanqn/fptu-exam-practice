@@ -51,11 +51,23 @@ export const examService = {
       threadId: exam.threadId,
       title: exam.title,
       sourceUrl: exam.sourceUrl,
+      answerStatus: exam.answerSource, // PENDING = AI đang phân tích đáp án, làm bài trước được
       questions: exam.questions.map((q) => ({
         number: q.number,
         imageUrl: imageUrlOf(q.imagePath),
         correct: q.answer.split(/\s+/).filter(Boolean),
       })),
+    };
+  },
+
+  // Giao diện hỏi lại định kỳ trong lúc AI phân tích: chỉ trả trạng thái và đáp án, nhẹ hơn tải cả đề
+  async getAnswers(actor: Actor, id: number) {
+    await this.assertAccess(actor, id);
+    const exam = await examRepository.findAnswers(id);
+    if (!exam) throw AppError.notFound("Không tìm thấy đề");
+    return {
+      status: exam.answerSource,
+      answers: exam.questions.map((q) => ({ number: q.number, correct: q.answer.split(/\s+/).filter(Boolean) })),
     };
   },
 

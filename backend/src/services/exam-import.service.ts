@@ -3,12 +3,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { storageDir } from "../configs/env";
 import { DEFAULT_ANSWER, EXAM_IMAGES_DIR, EXAM_STORAGE_DIR } from "../constants/crawler";
-import { AI_REPORT_FALLBACK_PREFIX } from "../constants/ai";
 import { crawlJobRepository } from "../repositories/crawl-job.repository";
-import { examRepository, isDuplicateThread, type AnswerSource } from "../repositories/exam.repository";
+import { examRepository, isDuplicateThread } from "../repositories/exam.repository";
 import { threadUrl } from "../utils/fuo-url";
-import { solveExam } from "./ai/exam-solver.service";
 import { aiSettingService } from "./ai-setting.service";
+import { examSolveService } from "./exam-solve.service";
 import { writeCommentsFile } from "./crawler/comments-file.service";
 import { collectAllComments } from "./crawler/comment-scraper.service";
 import { createFuoClient } from "./crawler/fuo-client";
@@ -20,7 +19,8 @@ import { crawlerSettingService } from "./crawler-setting.service";
 const imagePathOf = (threadId: string, file: string) => `${EXAM_STORAGE_DIR}/${threadId}/${EXAM_IMAGES_DIR}/${file}`;
 
 /**
- * Chạy trọn một lượt nhập đề: đọc thread -> tải ảnh -> lấy bình luận (ghi comments.txt) -> nhờ AI giải đáp án -> ghi DB.
+ * Chạy trọn một lượt nhập đề: đọc thread -> tải ảnh -> lấy bình luận (ghi comments.txt) -> ghi DB.
+ * AI giải đáp án chạy NỀN sau đó (exam-solve.service), không bắt người dùng chờ.
  *
  * Thư mục của đề: storage/exams/<threadId>/ gồm  images/Q1.webp...  và  comments.txt  (cùng ans.txt, ai-report.md khi AI giải xong).
  * Chỉ ghi DB ở bước cuối nên lỗi giữa chừng không để lại đề dở dang (thư mục đã tạo thì dọn đi).
@@ -50,31 +50,12 @@ export const examImportService = {
         stage(`Đang lấy bình luận ${done}/${total}`),
       );
       const sourceUrl = thread.canonicalUrl ?? threadUrl(threadId);
-      const commentsText = await writeCommentsFile(dir, { title: thread.title, url: sourceUrl }, withComments);
+      await writeCommentsFile(dir, { title: thread.title, url: sourceUrl }, withComments);
 
-      // Đáp án: nhờ AI giải nếu đã bật; lỗi AI không làm hỏng việc lấy đề, chỉ rơi về đáp án tạm và ghi lý do vào báo cáo
-      let answers = withComments.map(() => DEFAULT_ANSWER);
-      let answerSource: AnswerSource = "DEFAULT";
-      let aiReport: string | undefined;
+      // Đáp án: nếu AI đã bật thì để AI giải NỀN sau khi lưu (đề dùng được ngay, đáp án hiện "đang phân tích"),
+      // không thì dùng đáp án tạm. Đáp án rỗng nghĩa là chưa chấm được.
       const ai = await aiSettingService.get();
-      if (ai.enabled && ai.apiKey) {
-        await stage("AI đang giải đáp án (có thể mất vài phút)");
-        try {
-          const solved = await solveExam(ai, {
-            title: thread.title,
-            commentsText,
-            questions: withComments.map(({ image }, i) => ({ name: image.name, file: path.join(dir, EXAM_IMAGES_DIR, downloaded[i]!.file) })),
-          });
-          answers = solved.answers;
-          answerSource = "AI";
-          aiReport = solved.report;
-          await fs.writeFile(path.join(dir, "ans.txt"), `${solved.answers.join("\n")}\n`, "utf-8");
-          await fs.writeFile(path.join(dir, "ai-report.md"), `${solved.report}\n`, "utf-8");
-        } catch (err) {
-          console.error(`[ai] giải đề thread ${threadId} lỗi: ${(err as Error).message}`);
-          aiReport = `${AI_REPORT_FALLBACK_PREFIX}${(err as Error).message}`;
-        }
-      }
+      const useAi = ai.enabled && Boolean(ai.apiKey);
 
       await stage("Đang lưu vào cơ sở dữ liệu");
       const exam = await examRepository.create({
@@ -84,17 +65,17 @@ export const examImportService = {
         author: thread.author,
         postedAt: thread.postedAt,
         createdById: job.userId ?? undefined,
-        answerSource,
-        aiReport,
+        answerSource: useAi ? "PENDING" : "DEFAULT",
         questions: withComments.map(({ image }, i) => ({
           number: i + 1, // thứ tự trong thread = số câu
           name: image.name,
           imagePath: imagePathOf(threadId, downloaded[i]!.file),
           sourceImage: image.url.split("?")[0]!, // bỏ token tạm
           mediaUrl: image.mediaUrl,
-          answer: answers[i]!,
+          answer: useAi ? "" : DEFAULT_ANSWER,
         })),
       });
+      if (useAi) examSolveService.enqueue(exam.id); // sau khi đề đã lưu: AI giải trong nền
       return { examId: exam.id };
     } catch (err) {
       if (isDuplicateThread(err)) {
