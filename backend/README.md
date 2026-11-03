@@ -96,3 +96,10 @@ An toàn tiền bạc:
 - Đề khách lấy nằm trong kho riêng `user_exams.guest_id`; job của khách có `crawl_jobs.guest_id`. Khách **không bị tính phí** (chưa có ví) nhưng chỉ được **1 lượt lấy đề mỗi ngày** (reset 0h giờ Việt Nam, tính cả khi đề đã có sẵn, lượt lỗi không tính), đếm theo `guest_id` từ bảng `crawl_jobs`; hết lượt trả `429` kèm lời mời đăng ký. Thêm lớp chặn theo IP 5 lượt/ngày để chống việc xoá dữ liệu trình duyệt đổi ID khách. Thành viên: mỗi lần lấy trừ phí, giới hạn 10 lượt/giờ/IP.
 - Lịch sử làm bài chỉ cho thành viên. Khách nộp bài thì client giữ bài lại, và sau khi đăng ký/đăng nhập: `POST /exams/claim` chuyển các đề của `guest_id` về tài khoản (đã có thì bỏ qua) rồi bài vừa làm được lưu vào lịch sử.
 - `guest_id` chỉ là danh tính ẩn danh theo trình duyệt, không phải thông tin bí mật: ai biết ID thì xem được kho đề của ID đó. Xoá dữ liệu trình duyệt thì mất kho đề chưa nhận về tài khoản.
+
+## Quên mật khẩu
+
+- `POST /auth/forgot-password {email}`: luôn trả cùng một thông báo (không lộ email nào đã đăng ký). Nếu có tài khoản: tạo token ngẫu nhiên 32 byte, **chỉ lưu băm SHA-256** vào `password_reset_tokens` (hiệu lực `PASSWORD_RESET_EXPIRES_MIN` phút, mặc định 30), rồi gửi email chứa liên kết `CLIENT_URL/reset-password?token=...` ở nền (không chờ SMTP). Cùng một tài khoản chỉ được gửi lại sau 60 giây; giới hạn 5 yêu cầu / 15 phút / IP.
+- `POST /auth/reset-password {token, password}`: token dùng một lần (chiếm bằng điều kiện ở DB nên hai yêu cầu cùng lúc chỉ một cái thành công), đổi mật khẩu và huỷ mọi token còn lại, trong một transaction. Phiên đăng nhập cũ vẫn dùng được tới khi JWT hết hạn.
+- SMTP cấu hình trong `.env` (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, tuỳ chọn `MAIL_FROM`). Gmail: cần "Mật khẩu ứng dụng". Không cấu hình thì server vẫn chạy, yêu cầu quên mật khẩu chỉ ghi log lỗi.
+- Email dựng từ `mail/templates/reset-password.ts` (khung của `FStyle_BTC.html`, đổi sang nhận diện MST Software), banner ở `backend/assets/mail/reset-banner.png` được nhúng thẳng vào thư (cid) nên hiển thị cả khi chạy local.

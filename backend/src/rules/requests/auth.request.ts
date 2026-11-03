@@ -21,5 +21,14 @@ export const loginBody = z.object({
   password: z.string().min(1, "Vui lòng nhập mật khẩu"),
 });
 
+export const forgotPasswordBody = z.object({ email: emailField });
+
+export const resetPasswordBody = z.object({
+  token: z.string().min(20, "Liên kết không hợp lệ").max(200, "Liên kết không hợp lệ"),
+  password: passwordField,
+});
+
+export type ForgotPasswordBody = z.infer<typeof forgotPasswordBody>;
+export type ResetPasswordBody = z.infer<typeof resetPasswordBody>;
 export type RegisterBody = z.infer<typeof registerBody>;
 export type LoginBody = z.infer<typeof loginBody>;
