@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Route, Routes } from "react-router-dom";
-import { DatabaseZap, History, Landmark, LayoutDashboard, Receipt, Settings, UserRound, Users, Wallet } from "lucide-react";
+import { DatabaseZap, History, Landmark, ListChecks, LayoutDashboard, Receipt, Settings, UserRound, Users, Wallet } from "lucide-react";
 import { PanelLayout, type NavItem } from "@/shared/layout/PanelLayout";
 import { Loading } from "@/shared/ui/Feedback";
 import LoginPage from "@/features/auth/pages/LoginPage";
@@ -20,10 +20,13 @@ const UsersPage = lazy(() => import("@/features/admin/pages/UsersPage"));
 const DepositsPage = lazy(() => import("@/features/admin/pages/DepositsPage"));
 const BankTransactionsPage = lazy(() => import("@/features/admin/pages/BankTransactionsPage"));
 const SettingsPage = lazy(() => import("@/features/admin/pages/SettingsPage"));
+const AttemptsPage = lazy(() => import("@/features/history/pages/AttemptsPage"));
+const AttemptDetailPage = lazy(() => import("@/features/history/pages/AttemptDetailPage"));
 const CrawlerPage = lazy(() => import("@/features/admin/pages/CrawlerPage"));
 
 const ACCOUNT_NAV: NavItem[] = [
   { to: "/account", label: "Tổng quan", icon: LayoutDashboard, end: true },
+  { to: "/account/attempts", label: "Lịch sử làm bài", icon: ListChecks },
   { to: "/account/deposit", label: "Nạp tiền", icon: Wallet },
   { to: "/account/transactions", label: "Lịch sử giao dịch", icon: History },
   { to: "/account/profile", label: "Hồ sơ", icon: UserRound },
@@ -52,6 +55,8 @@ export default function App() {
         <Route element={<RequireAuth />}>
           <Route path="/account" element={<PanelLayout title="Tài khoản" items={ACCOUNT_NAV} />}>
             <Route index element={<OverviewPage />} />
+            <Route path="attempts" element={<AttemptsPage />} />
+            <Route path="attempts/:id" element={<AttemptDetailPage />} />
             <Route path="deposit" element={<DepositPage />} />
             <Route path="transactions" element={<TransactionsPage />} />
             <Route path="profile" element={<ProfilePage />} />
