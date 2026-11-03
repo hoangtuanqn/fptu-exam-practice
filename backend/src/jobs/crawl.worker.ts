@@ -1,5 +1,6 @@
 import { crawlJobRepository } from "../repositories/crawl-job.repository";
 import { crawlJobService } from "../services/crawl-job.service";
+import { examService } from "../services/exam.service";
 import { examImportService } from "../services/exam-import.service";
 
 let draining = false;
@@ -13,6 +14,7 @@ const drain = async () => {
     for (let job = await crawlJobRepository.claimNext(); job; job = await crawlJobRepository.claimNext()) {
       try {
         const { examId } = await examImportService.run(job);
+        await examService.addToLibrary(job.userId, examId); // đề vào thư viện của người nhập
         await crawlJobRepository.finish(job.id, { status: "DONE", examId });
         console.log(`[crawl-worker] job ${job.id} (thread ${job.threadId}) xong -> đề ${examId}`);
       } catch (err) {

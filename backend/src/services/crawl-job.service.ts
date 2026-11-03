@@ -4,6 +4,7 @@ import { examRepository } from "../repositories/exam.repository";
 import { AppError } from "../rules/error";
 import type { ImportExamBody } from "../rules/requests/crawl.request";
 import { parseThreadId } from "../utils/fuo-url";
+import { examService } from "./exam.service";
 
 type Listener = () => void;
 const listeners: Listener[] = [];
@@ -20,7 +21,7 @@ export const crawlJobService = {
   /**
    * Nhận link đề. Trả về ngay, việc crawl do worker nền làm:
    * - đề đã có trong DB (cùng thread ID, dù link khác) -> trả luôn examId, không crawl lại
-   * - đang có lượt crawl cùng thread -> dùng lại lượt đó
+   * - chính người này đang có lượt crawl cùng thread -> dùng lại lượt đó
    * - ngược lại -> tạo job mới và đánh thức worker
    */
   async submit(userId: number, { url }: ImportExamBody) {
@@ -28,9 +29,12 @@ export const crawlJobService = {
     if (!threadId) throw new AppError("Link không hợp lệ"); // đã được validate, giữ để thu hẹp kiểu
 
     const exam = await examRepository.findByThreadId(threadId);
-    if (exam) return { existed: true as const, examId: exam.id, title: exam.title };
+    if (exam) {
+      await examService.addToLibrary(userId, exam.id); // đề có sẵn: chỉ cần thêm vào thư viện của người này
+      return { existed: true as const, examId: exam.id, title: exam.title };
+    }
 
-    const active = await crawlJobRepository.findActive(threadId);
+    const active = await crawlJobRepository.findActive(threadId, userId);
     if (active) return { existed: false as const, job: toDto(active) };
 
     const job = await crawlJobRepository.create({ threadId, userId });
