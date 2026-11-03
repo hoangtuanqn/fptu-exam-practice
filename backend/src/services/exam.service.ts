@@ -1,6 +1,7 @@
 import { examAttemptRepository } from "../repositories/exam-attempt.repository";
 import { examRepository } from "../repositories/exam.repository";
 import { userExamRepository } from "../repositories/user-exam.repository";
+import type { Db } from "../repositories/wallet.repository";
 import { AppError } from "../rules/error";
 import { toMeta, type PaginationQuery } from "../utils/pagination";
 
@@ -14,7 +15,7 @@ interface Actor {
 
 export const examService = {
   // Đề nhập xong (hoặc đã có sẵn) đều vào thư viện của người nhập
-  addToLibrary: (userId: number, examId: number) => userExamRepository.add(userId, examId),
+  addToLibrary: (userId: number, examId: number, db?: Db) => userExamRepository.add(userId, examId, db),
 
   // Chỉ chủ thư viện (hoặc admin) được xem/làm đề; người khác nhận 404 như thể đề không tồn tại
   async assertAccess(actor: Actor, examId: number) {
