@@ -66,7 +66,7 @@ export interface AiForm {
 export const adminApi = {
   dashboard: () => http.get<DashboardOverview>("/admin/dashboard"),
 
-  users: (f: UserFilter) => http.list<User>("/admin/users", { ...f, limit: 15 }),
+  users: (f: UserFilter) => http.list<User>("/admin/users", { ...f, limit: PAGE_SIZE }),
   updateUser: (id: number, body: Partial<Pick<User, "fullName" | "role" | "status">>) =>
     http.patch<User>(`/admin/users/${id}`, body),
   adjustBalance: (id: number, body: { amount: number; note: string }) =>
@@ -80,9 +80,9 @@ export const adminApi = {
     http.list<GiftCodeRedemption>(`/admin/gift-codes/${id}/redemptions`, { page, limit: PAGE_SIZE }),
 
   deposits: (page: number, status?: DepositStatus | "") =>
-    http.list<DepositOrder>("/admin/deposits", { page, limit: 15, status }),
+    http.list<DepositOrder>("/admin/deposits", { page, limit: PAGE_SIZE, status }),
   bankTransactions: (page: number, status?: BankTxStatus | "") =>
-    http.list<BankTransaction>("/admin/bank-transactions", { page, limit: 15, status }),
+    http.list<BankTransaction>("/admin/bank-transactions", { page, limit: PAGE_SIZE, status }),
 
   sepayConfig: () => http.get<SepayAdminConfig>("/admin/settings/sepay"),
   saveSepayConfig: (body: SepayForm) => http.put<SepayAdminConfig>("/admin/settings/sepay", body),
@@ -90,7 +90,7 @@ export const adminApi = {
   saveCrawlerConfig: (body: CrawlerForm) => http.put<CrawlerAdminConfig>("/admin/settings/crawler", body),
   aiConfig: () => http.get<AiAdminConfig>("/admin/settings/ai"),
   saveAiConfig: (body: AiForm) => http.put<AiAdminConfig>("/admin/settings/ai", body),
-  exams: (page: number) => http.list<AdminExam>("/admin/exams", { page, limit: 15 }),
+  exams: (page: number) => http.list<AdminExam>("/admin/exams", { page, limit: PAGE_SIZE }),
   solveExam: (id: number) => http.post<null>(`/admin/exams/${id}/solve`),
   examReport: (id: number) => http.get<{ id: number; title: string; aiReport: string | null }>(`/admin/exams/${id}/report`),
   sepayStatus: () => http.get<SyncResult | null>("/admin/sepay/status"),

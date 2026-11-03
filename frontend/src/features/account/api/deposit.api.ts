@@ -1,5 +1,6 @@
 import type { DepositInfo, DepositOrder, DepositPayment, DepositStatus } from "@/shared/types/api";
 import { http } from "@/shared/api/client";
+import { PAGE_SIZE } from "@/shared/api/pagination";
 
 export interface DepositDetail {
   order: DepositOrder;
@@ -17,5 +18,5 @@ export const depositApi = {
   get: (code: string) => http.get<DepositDetail>(`/deposits/${encodeURIComponent(code)}`),
   // Bản xem công khai (không cần đăng nhập): không có thông tin người tạo
   getPublic: (code: string) => http.get<PublicDepositDetail>(`/public/deposits/${encodeURIComponent(code)}`),
-  list: (page = 1, status?: DepositStatus) => http.list<DepositOrder>("/deposits", { page, limit: 10, status }),
+  list: (page = 1, status?: DepositStatus) => http.list<DepositOrder>("/deposits", { page, limit: PAGE_SIZE, status }),
 };

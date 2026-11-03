@@ -13,6 +13,7 @@ import { Empty, ErrorBox, FormError, Loading } from "@/shared/ui/Feedback";
 import { Input } from "@/shared/ui/Input";
 import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
 import { formatCredit, formatDateTime } from "@/shared/utils/formatters";
+import { useClampPage } from "@/shared/hooks/useClampPage";
 
 // Nhập giftcode nhận credit, kèm lịch sử các mã đã nhập
 export default function GiftCodePage() {
@@ -25,6 +26,7 @@ export default function GiftCodePage() {
   const [url, setUrl] = useUrlState({ page: "1" });
   const page = toPage(url.page);
   const history = useApi(() => userApi.myGiftCodes(page), [page]);
+  useClampPage(history.data?.meta, (p) => setUrl({ page: String(p) }));
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();

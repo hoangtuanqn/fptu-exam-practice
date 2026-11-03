@@ -13,6 +13,7 @@ import { useApi } from "@/shared/hooks/useApi";
 import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
 import { useSubmit } from "@/shared/hooks/useSubmit";
 import { formatDateTime, formatMoney } from "@/shared/utils/formatters";
+import { useClampPage } from "@/shared/hooks/useClampPage";
 
 const PRESETS = [50_000, 100_000, 200_000, 500_000, 1_000_000];
 
@@ -28,6 +29,7 @@ export default function DepositPage() {
 
   const info = useApi(() => depositApi.info(), []);
   const orders = useApi(() => depositApi.list(page), [page]);
+  useClampPage(orders.data?.meta, setPage);
 
   const amount = Number(digits || 0);
   const min = info.data?.minDeposit ?? 0;

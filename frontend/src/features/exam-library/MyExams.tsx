@@ -40,8 +40,8 @@ export function MyExams({ onOpen }: Props) {
       <div className="mb-2 flex items-center justify-between">
         <h2 className="text-base font-semibold text-slate-900">{user ? "Đề của tôi" : "Đề bạn đã lấy"}</h2>
         {user ? (
-          <Link to="/account/attempts" className="text-xs font-medium text-brand-700 hover:underline">
-            Lịch sử làm bài
+          <Link to="/account/exams" className="text-xs font-medium text-brand-700 hover:underline">
+            {data.meta.total > data.items.length ? `Xem tất cả ${data.meta.total} đề` : "Kho đề của tôi"}
           </Link>
         ) : (
           <Link to="/register" className="text-xs font-medium text-brand-700 hover:underline">

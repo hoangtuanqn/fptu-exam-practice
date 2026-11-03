@@ -12,6 +12,7 @@ import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { Modal, ModalActions, ModalTitle } from "@/shared/ui/Modal";
 import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
 import { formatDateTime } from "@/shared/utils/formatters";
+import { useClampPage } from "@/shared/hooks/useClampPage";
 
 const SOURCE: Record<AnswerSource, [string, Tone]> = {
   PENDING: ["AI đang giải", "info"],
@@ -43,6 +44,7 @@ export default function ExamsPage() {
   const [url, setUrl] = useUrlState({ page: "1" });
   const page = toPage(url.page);
   const { data, error, loading, reload } = useApi(() => adminApi.exams(page), [page]);
+  useClampPage(data?.meta, (p) => setUrl({ page: String(p) }));
   const [report, setReport] = useState<number | null>(null);
   const [starting, setStarting] = useState<number | null>(null);
 
