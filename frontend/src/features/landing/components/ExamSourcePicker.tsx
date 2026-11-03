@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { MyExams } from "@/features/exam-library/MyExams";
 import { FolderOpen, Link2 } from "lucide-react";
 import type { PickFolder } from "@/features/practice/components/FolderInput";
 import { LinkImport } from "@/features/exam-import/components/LinkImport";
@@ -21,6 +22,7 @@ interface Props {
 // Hai cách vào đề: dán link FuOverflow (server crawl) hoặc mở thư mục có sẵn trên máy
 export function ExamSourcePicker({ onPick, onImported, loggedIn }: Props) {
   const [source, setSource] = useState<Source>(loggedIn ? "link" : "folder");
+  const [libraryKey, setLibraryKey] = useState(0); // đổi key để "Đề của tôi" tải lại sau khi nhập đề mới
 
   return (
     <div className="mt-6">
@@ -44,11 +46,18 @@ export function ExamSourcePicker({ onPick, onImported, loggedIn }: Props) {
 
       {/* Giữ cả hai trong DOM: đang lấy đề mà đổi tab thì tiến trình không bị mất */}
       <div hidden={source !== "link"}>
-        <LinkImport onImported={onImported} />
+        <LinkImport
+          onImported={(exam) => {
+            setLibraryKey((k) => k + 1);
+            onImported(exam);
+          }}
+        />
       </div>
       <div hidden={source !== "folder"}>
         <DropZone onPick={onPick} />
       </div>
+
+      {loggedIn && <MyExams key={libraryKey} onOpen={onImported} />}
     </div>
   );
 }
