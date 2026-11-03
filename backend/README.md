@@ -89,3 +89,10 @@ An toàn tiền bạc:
 - Mỗi lần `POST /crawl-jobs` bị trừ phí, **kể cả đề đã có sẵn** (mở lại từ "Đề của tôi" thì không phải lấy nên không trừ). Trừ tiền và tạo job/thêm vào thư viện nằm trong một DB transaction; không đủ số dư thì `402` và không tạo gì.
 - Người đang có job cùng thread chưa xong gửi lại link thì dùng lại job đó, không trừ thêm.
 - Job lỗi (cookie hết hạn, thread không có ảnh...) được hoàn đúng số tiền đã trừ (`crawl_jobs.charged_amount`), chỉ một lần nhờ điều kiện `status = RUNNING` ở DB. Sổ cái ví có hai loại `CRAWL_CHARGE` và `CRAWL_REFUND`.
+
+## Khách (chưa đăng nhập) lấy đề
+
+- Trình duyệt tự sinh `guest_id` (localStorage) và gửi header `X-Guest-Id` trong mọi request. Khách dùng `POST /crawl-jobs`, `GET /crawl-jobs/:id`, `GET /exams`, `GET /exams/:id` (middleware `identify`: có token thì phải hợp lệ, không có thì cần `X-Guest-Id`).
+- Đề khách lấy nằm trong kho riêng `user_exams.guest_id`; job của khách có `crawl_jobs.guest_id`. Khách **không bị tính phí** (chưa có ví) nhưng bị giới hạn chặt hơn: 3 lượt/giờ/IP (thành viên 10).
+- Lịch sử làm bài chỉ cho thành viên. Khách nộp bài thì client giữ bài lại, và sau khi đăng ký/đăng nhập: `POST /exams/claim` chuyển các đề của `guest_id` về tài khoản (đã có thì bỏ qua) rồi bài vừa làm được lưu vào lịch sử.
+- `guest_id` chỉ là danh tính ẩn danh theo trình duyệt, không phải thông tin bí mật: ai biết ID thì xem được kho đề của ID đó. Xoá dữ liệu trình duyệt thì mất kho đề chưa nhận về tài khoản.
