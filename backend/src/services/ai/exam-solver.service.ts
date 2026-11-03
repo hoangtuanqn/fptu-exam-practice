@@ -1,8 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import sharp from "sharp";
-import { AI_IMAGE_MAX_EDGE, DEFAULT_PROMPT_FILE, type AiConfig } from "../../constants/ai";
+import { DEFAULT_PROMPT_FILE, type AiConfig } from "../../constants/ai";
 import { askClaude, type ClaudeContent } from "./claude.client";
+import { loadImageForAi } from "./image";
 
 export interface SolveQuestion {
   number: number; // số câu trong đề (1..N)
@@ -32,12 +32,6 @@ interface ClaudeOutput {
   answers: ClaudeAnswer[];
 }
 
-const MIME: Record<string, "image/webp" | "image/png" | "image/jpeg"> = {
-  ".webp": "image/webp",
-  ".png": "image/png",
-  ".jpg": "image/jpeg",
-  ".jpeg": "image/jpeg",
-};
 const CHOICE = /^[A-Z](?: [A-Z])*$/;
 
 // Cấu trúc kết quả bắt buộc (structured outputs): Claude luôn trả JSON đúng dạng này, không phải tự cắt chữ từ đoạn văn
@@ -106,20 +100,6 @@ export function validateOutput(out: ClaudeOutput, numbers: number[]): SolveResul
   return { answers, report: `${out.report.trim()}${note}` };
 }
 
-// Ảnh đủ nhỏ thì gửi nguyên bản; lớn hơn thì thu nhỏ về AI_IMAGE_MAX_EDGE (giữ tỉ lệ, WebP chất lượng cao) để bớt token
-async function prepareImage(file: string, mediaType: "image/webp" | "image/png" | "image/jpeg") {
-  const raw = await fs.readFile(file);
-  const meta = await sharp(raw).metadata().catch(() => null);
-  if (!meta?.width || !meta.height || Math.max(meta.width, meta.height) <= AI_IMAGE_MAX_EDGE) {
-    return { mediaType, data: raw.toString("base64") };
-  }
-  const resized = await sharp(raw)
-    .resize({ width: AI_IMAGE_MAX_EDGE, height: AI_IMAGE_MAX_EDGE, fit: "inside", withoutEnlargement: true })
-    .webp({ quality: 90 })
-    .toBuffer();
-  return { mediaType: "image/webp" as const, data: resized.toString("base64") };
-}
-
 /** Gửi toàn bộ ảnh + bình luận cho Claude và đọc lại danh sách đáp án theo cấu trúc cố định. */
 export async function solveExam(config: AiConfig, input: SolveInput): Promise<SolveResult> {
   if (!config.anthropicApiKey) throw new Error("Chưa cấu hình khóa Anthropic");
@@ -130,9 +110,7 @@ export async function solveExam(config: AiConfig, input: SolveInput): Promise<So
     { type: "text", text: `<exam>\nTitle: ${input.title || "(unknown)"}\nNumber of questions (N): ${n}\n</exam>` },
   ];
   for (const q of input.questions) {
-    const mediaType = MIME[path.extname(q.file).toLowerCase()];
-    if (!mediaType) throw new Error(`Định dạng ảnh không được hỗ trợ: ${path.basename(q.file)}`);
-    const image = await prepareImage(q.file, mediaType);
+    const image = await loadImageForAi(q.file);
     content.push({ type: "text", text: `Question ${q.number} (file ${path.basename(q.file)}):` });
     content.push({ type: "image", source: { type: "base64", media_type: image.mediaType, data: image.data } });
   }
