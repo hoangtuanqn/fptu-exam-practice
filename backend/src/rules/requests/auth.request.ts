@@ -14,6 +14,7 @@ export const registerBody = z.object({
   email: emailField,
   fullName: z.string().trim().min(2, "Họ tên tối thiểu 2 ký tự").max(100),
   password: passwordField,
+  referralCode: z.string().trim().toUpperCase().regex(/^[A-Z0-9]{4,12}$/, "Mã giới thiệu không hợp lệ").optional(), // từ liên kết ?ref=
 });
 
 export const loginBody = z.object({

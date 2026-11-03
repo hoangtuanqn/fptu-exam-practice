@@ -18,7 +18,7 @@ export const publicUserSelect = {
 export type PublicUser = Prisma.UserGetPayload<{ select: typeof publicUserSelect }>;
 
 export const userRepository = {
-  findById: (id: number) => prisma.user.findUnique({ where: { id }, select: publicUserSelect }),
+  findById: (id: number, db: Db = prisma) => db.user.findUnique({ where: { id }, select: publicUserSelect }),
 
   // Có password: chỉ dùng nội bộ (đăng nhập, đổi mật khẩu)
   findByEmailWithPassword: (email: string) => prisma.user.findUnique({ where: { email } }),
@@ -61,6 +61,6 @@ export const userRepository = {
     return balance;
   },
 
-  create: (data: { email: string; fullName: string; password: string; role?: Role; status?: UserStatus }) =>
-    prisma.user.create({ data, select: publicUserSelect }),
+  create: (data: { email: string; fullName: string; password: string; role?: Role; status?: UserStatus; referralCode?: string }, db: Db = prisma) =>
+    db.user.create({ data, select: publicUserSelect }),
 };
