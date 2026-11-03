@@ -21,3 +21,11 @@ export interface ImportedExam {
   answerStatus: AnswerSource; // PENDING = AI đang phân tích đáp án
   questions: Question[];
 }
+
+// Sự kiện realtime "exam:answers" (cũng là kết quả GET /exams/:id/answers, không có examId)
+export interface ExamAnswersPayload {
+  examId: number;
+  status: AnswerSource; // PENDING = đang giải, FAILED = lỗi, còn lại = đã có đáp án
+  answerError: string | null; // lời nhắn cho người dùng khi lỗi
+  answers: { number: number; correct: string[] }[];
+}

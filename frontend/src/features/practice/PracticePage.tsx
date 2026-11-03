@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ApiError } from "@/shared/api/client";
-import { examImportApi } from "@/features/exam-import/exam-import.api";
 import { historyApi } from "@/features/history/history.api";
 import { pendingAttempt } from "@/features/guest-sync/pendingAttempt";
+import { examImportApi } from "@/features/exam-import/exam-import.api";
+import { useExamAnswersLive } from "@/features/practice/hooks/useExamAnswersLive";
 import { useToast } from "@/shared/context/ToastContext";
 import { useQuiz } from "@/features/practice/hooks/useQuiz";
 import { useQuizShortcuts } from "@/features/practice/hooks/useQuizShortcuts";
@@ -49,49 +50,17 @@ export default function PracticePage({ threadId }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quiz.submitted, user]);
 
-  // AI đang phân tích đáp án: hỏi lại định kỳ, có đáp án thì gắn vào đề đang làm (câu đã chọn giữ nguyên).
-  // Tiết kiệm: tab đang ẩn thì không hỏi (quay lại tab là hỏi ngay), chờ lâu thì hỏi thưa hơn.
-  const waitingAnswers = quiz.answerSource === "PENDING" && quiz.examId !== null;
-  useEffect(() => {
-    if (!waitingAnswers || quiz.examId === null) return;
-    const examId = quiz.examId;
-    const startedAt = Date.now();
-    let stopped = false;
-    let timer: ReturnType<typeof setTimeout>;
-
-    const tick = async () => {
-      if (stopped || document.hidden) return;
-      try {
-        const r = await examImportApi.answers(examId);
-        if (stopped || r.status === "PENDING") return;
-        stopped = true;
-        if (r.status === "FAILED" || r.status === "DEFAULT") {
-          quiz.markFailed();
-          toast.error("AI chưa phân tích được đáp án của đề này");
-          return;
-        }
-        quiz.applyAnswers(r.answers, r.status);
-        toast.success("AI đã phân tích xong đáp án, bạn có thể làm bài");
-      } catch {
-        /* lỗi mạng tạm thời: lần sau hỏi lại */
-      }
-    };
-    const loop = () => {
-      timer = setTimeout(async () => {
-        await tick();
-        if (!stopped) loop();
-      }, Date.now() - startedAt > 120_000 ? 10_000 : 5_000);
-    };
-    const onVisible = () => !document.hidden && void tick();
-    document.addEventListener("visibilitychange", onVisible);
-    loop();
-    return () => {
-      stopped = true;
-      clearTimeout(timer);
-      document.removeEventListener("visibilitychange", onVisible);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [waitingAnswers, quiz.examId]);
+  // AI đang phân tích đáp án: kết quả (thành công hoặc lỗi) về qua socket ngay khi có.
+  useExamAnswersLive(quiz.examId, quiz.answerSource === "PENDING", (r) => {
+    if (r.status === "PENDING") return; // vẫn đang xử lý: giữ nguyên trạng thái chờ
+    if (r.status === "FAILED" || r.status === "DEFAULT") {
+      quiz.markFailed();
+      toast.error("AI chưa phân tích được đáp án của đề này");
+      return;
+    }
+    quiz.applyAnswers(r.answers, r.status);
+    toast.success("AI đã phân tích xong đáp án, bạn có thể làm bài");
+  });
 
   // Nộp bài xong: thành viên thì ghi vào lịch sử (chỉ với đề của hệ thống; đề mở từ thư mục không có trong DB).
   // Khách thì giữ bài lại, lưu khi họ đăng ký/đăng nhập (xem GuestSync).
