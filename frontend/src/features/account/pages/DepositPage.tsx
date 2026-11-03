@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Loader2, Plus } from "lucide-react";
 import { depositApi } from "@/features/account/api/deposit.api";
 import { DepositStatusBadge } from "@/shared/components/StatusBadge";
@@ -9,14 +10,19 @@ import { Input } from "@/shared/ui/Input";
 import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
 import { PaymentPanel } from "@/features/account/components/PaymentPanel";
 import { useApi } from "@/shared/hooks/useApi";
+import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
 import { useSubmit } from "@/shared/hooks/useSubmit";
 import { formatDateTime, formatMoney } from "@/shared/utils/formatters";
 
 const PRESETS = [50_000, 100_000, 200_000, 500_000, 1_000_000];
 
 export default function DepositPage() {
-  const [page, setPage] = useState(1);
-  const [activeId, setActiveId] = useState<number | null>(null);
+  // Mỗi lệnh nạp có địa chỉ riêng /account/deposit/:code: sao chép gửi đi hoặc mở lại đều đúng lệnh đó
+  const navigate = useNavigate();
+  const { code: activeCode } = useParams(); // mã nạp (ngẫu nhiên), không dùng ID tăng dần để khỏi lộ số lượng lệnh
+  const [url, setUrl] = useUrlState({ page: "1" });
+  const page = toPage(url.page);
+  const setPage = (p: number) => setUrl({ page: String(p) });
   const [digits, setDigits] = useState(""); // chỉ giữ chữ số, hiển thị có dấu chấm ngăn cách
   const { run, loading, error, fieldErrors } = useSubmit();
 
@@ -29,11 +35,11 @@ export default function DepositPage() {
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
-    void run(async () => setActiveId((await depositApi.create(amount)).order.id));
+    void run(async () => navigate(`/account/deposit/${(await depositApi.create(amount)).order.code}`));
   };
 
   const closePayment = () => {
-    setActiveId(null);
+    navigate("/account/deposit");
     setDigits("");
     orders.reload();
   };
@@ -42,8 +48,8 @@ export default function DepositPage() {
     <>
       <PageHeader title="Nạp tiền" description="Chuyển khoản ngân hàng, tiền được cộng tự động sau ít phút." />
 
-      {activeId !== null ? (
-        <PaymentPanel id={activeId} onClose={closePayment} />
+      {activeCode ? (
+        <PaymentPanel code={activeCode} onClose={closePayment} />
       ) : info.loading ? (
         <Loading />
       ) : info.error ? (
@@ -109,11 +115,9 @@ export default function DepositPage() {
                       <DepositStatusBadge value={o.status} />
                     </Td>
                     <Td className="text-right">
-                      {o.status === "PENDING" && new Date(o.expiresAt) > new Date() && (
-                        <Button size="sm" onClick={() => setActiveId(o.id)}>
-                          Thanh toán
-                        </Button>
-                      )}
+                      <Button size="sm" onClick={() => navigate(`/account/deposit/${o.code}`)}>
+                        {o.status === "PENDING" && new Date(o.expiresAt) > new Date() ? "Thanh toán" : "Chi tiết"}
+                      </Button>
                     </Td>
                   </Tr>
                 ))}

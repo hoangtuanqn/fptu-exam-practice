@@ -8,28 +8,20 @@ import { formatMoney } from "@/shared/utils/formatters";
 import { Button } from "@/shared/ui/Button";
 import { Card } from "@/shared/ui/Card";
 import { CopyButton } from "@/shared/ui/CopyButton";
+import { PaymentRow } from "./PaymentRow";
+import { PublicDepositView } from "./PublicDepositView";
+import { ApiError } from "@/shared/api/client";
 import { ErrorBox, Loading } from "@/shared/ui/Feedback";
 
 const POLL_MS = 4000;
 
-function Row({ label, value, copy, strong }: { label: string; value: string; copy?: string; strong?: boolean }) {
-  return (
-    <div className="flex items-center justify-between gap-3 border-b border-slate-100 py-2.5 last:border-0">
-      <span className="text-sm text-slate-500">{label}</span>
-      <span className="flex items-center gap-1 text-right">
-        <span className={`text-sm tabular-nums ${strong ? "font-semibold text-slate-900" : "text-slate-700"}`}>{value}</span>
-        {copy && <CopyButton text={copy} label={`Sao chép ${label.toLowerCase()}`} />}
-      </span>
-    </div>
-  );
-}
-
 // Màn hình chuyển khoản: QR + thông tin, tự hỏi máy chủ mỗi vài giây cho tới khi lệnh được thanh toán hoặc hết hạn
-export function PaymentPanel({ id, onClose }: { id: number; onClose: () => void }) {
+export function PaymentPanel({ code, onClose }: { code: string; onClose: () => void }) {
   const { refresh } = useAuth();
   const toast = useToast();
   const [detail, setDetail] = useState<DepositDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notOwner, setNotOwner] = useState(false); // lệnh không thuộc tài khoản này: chỉ cho xem bản rút gọn
   const notified = useRef(false);
 
   const status = detail?.order.status;
@@ -39,7 +31,7 @@ export function PaymentPanel({ id, onClose }: { id: number; onClose: () => void 
     let stopped = false;
     const load = async () => {
       try {
-        const d = await depositApi.get(id);
+        const d = await depositApi.get(code);
         if (stopped) return;
         setDetail(d);
         setError(null);
@@ -49,7 +41,9 @@ export function PaymentPanel({ id, onClose }: { id: number; onClose: () => void 
           void refresh();
         }
       } catch (err) {
-        if (!stopped) setError(err instanceof Error ? err.message : "Không tải được lệnh nạp");
+        if (stopped) return;
+        if (err instanceof ApiError && err.status === 404) setNotOwner(true);
+        else setError(err instanceof Error ? err.message : "Không tải được lệnh nạp");
       }
     };
     void load();
@@ -61,8 +55,21 @@ export function PaymentPanel({ id, onClose }: { id: number; onClose: () => void 
       clearInterval(timer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, [code]);
 
+  if (notOwner) {
+    return (
+      <div className="space-y-3">
+        <button onClick={onClose} className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800">
+          <ArrowLeft size={16} /> Quay lại
+        </button>
+        <PublicDepositView
+          code={code}
+          note="Lệnh nạp này không thuộc tài khoản của bạn nên thông tin người tạo được ẩn. Bạn chỉ xem được số tiền, trạng thái và thông tin chuyển khoản."
+        />
+      </div>
+    );
+  }
   if (error && !detail) return <ErrorBox message={error} onRetry={onClose} />;
   if (!detail) return <Loading />;
 
@@ -109,6 +116,9 @@ export function PaymentPanel({ id, onClose }: { id: number; onClose: () => void 
         <button onClick={onClose} className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800">
           <ArrowLeft size={16} /> Quay lại
         </button>
+        <span className="inline-flex items-center gap-1 text-xs text-slate-500">
+          Liên kết lệnh nạp <CopyButton text={`${window.location.origin}/deposit/${code}`} label="Sao chép liên kết lệnh nạp" />
+        </span>
         <span className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-sm text-amber-700">
           <Clock size={14} /> Còn <b className="font-mono tabular-nums">{mm}:{ss}</b>
         </span>
@@ -121,11 +131,11 @@ export function PaymentPanel({ id, onClose }: { id: number; onClose: () => void 
         </div>
 
         <div>
-          <Row label="Ngân hàng" value={payment.bankCode} />
-          <Row label="Số tài khoản" value={payment.accountNumber} copy={payment.accountNumber} strong />
-          {payment.accountName && <Row label="Chủ tài khoản" value={payment.accountName} />}
-          <Row label="Số tiền" value={formatMoney(payment.amount)} copy={String(payment.amount)} strong />
-          <Row label="Nội dung" value={payment.content} copy={payment.content} strong />
+          <PaymentRow label="Ngân hàng" value={payment.bankCode} />
+          <PaymentRow label="Số tài khoản" value={payment.accountNumber} copy={payment.accountNumber} strong />
+          {payment.accountName && <PaymentRow label="Chủ tài khoản" value={payment.accountName} />}
+          <PaymentRow label="Số tiền" value={formatMoney(payment.amount)} copy={String(payment.amount)} strong />
+          <PaymentRow label="Nội dung" value={payment.content} copy={payment.content} strong />
 
           <div className="mt-4 rounded-lg bg-brand-50 px-4 py-3 text-sm text-brand-800">
             Nhập <b>đúng nội dung chuyển khoản</b> để được cộng tiền tự động. Trang này sẽ tự cập nhật khi nhận được tiền.

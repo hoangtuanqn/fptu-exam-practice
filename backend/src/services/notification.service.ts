@@ -32,7 +32,7 @@ export const notificationService = {
         accountName: n.payment.accountName,
         expiresAt: n.expiresAt,
         qrUrl: n.payment.qrUrl,
-        orderUrl: `${env.CLIENT_URL}/account/deposit`,
+        orderUrl: `${env.CLIENT_URL}/deposit/${n.code}`,
       });
     });
   },

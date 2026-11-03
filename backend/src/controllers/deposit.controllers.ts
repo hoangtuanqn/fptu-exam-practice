@@ -1,8 +1,7 @@
 import type { Request, Response } from "express";
 import { HTTP_STATUS } from "../constants/httpStatus";
 import { getValidated } from "../middlewares/validate.middlewares";
-import type { IdParam } from "../rules/requests/admin.request";
-import type { CreateDepositBody, ListDepositsQuery } from "../rules/requests/deposit.request";
+import type { CreateDepositBody, DepositCodeParam, ListDepositsQuery } from "../rules/requests/deposit.request";
 import { ResponseClient } from "../rules/response";
 import { depositService } from "../services/deposit.service";
 
@@ -21,8 +20,14 @@ export const depositController = {
     res.json(new ResponseClient({ data: items, meta }));
   },
 
+  // Không cần đăng nhập
+  async getPublic(_req: Request, res: Response) {
+    const { code } = getValidated<DepositCodeParam>(res, "params");
+    res.json(new ResponseClient({ data: await depositService.getPublic(code) }));
+  },
+
   async get(req: Request, res: Response) {
-    const { id } = getValidated<IdParam>(res, "params");
-    res.json(new ResponseClient({ data: await depositService.getOfUser(req.user!.id, id) }));
+    const { code } = getValidated<DepositCodeParam>(res, "params");
+    res.json(new ResponseClient({ data: await depositService.getOfUser(req.user!.id, code) }));
   },
 };
