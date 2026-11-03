@@ -61,6 +61,17 @@ export function useQuiz() {
     setPending({ questions: examQuestions, title: examTitle, examId: id });
   }
 
+  // Mở thẳng vào làm bài, bỏ qua bước xác nhận (khi liên kết đã nói rõ chế độ, ví dụ /exam/12?mode=exam)
+  function openExam(examQuestions: Question[], examTitle: string, id: number, chosenMode: Mode) {
+    setNotFound(false);
+    setPending(null);
+    setQuestions(examQuestions);
+    setTitle(examTitle);
+    setExamId(id);
+    setMode(chosenMode);
+    clearProgress();
+  }
+
   // Bước 2: người dùng xác nhận và chọn chế độ
   function startExam(chosenMode: Mode) {
     if (!pending) return;
@@ -134,6 +145,7 @@ export function useQuiz() {
     result: submitted ? grade(questions, answers) : null,
     loadFolder,
     loadExam,
+    openExam,
     startExam,
     cancelPending,
     dismissNotFound: () => setNotFound(false),

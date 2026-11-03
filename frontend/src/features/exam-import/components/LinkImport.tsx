@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Link2, Loader2 } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { SignUpCta } from "@/features/trial/SignUpCta";
@@ -23,7 +23,9 @@ interface Props {
 // Nhập link đề FuOverflow: server crawl ở nền, ở đây hiện thanh tiến độ và mở đề khi xong
 export function LinkImport({ onImported }: Props) {
   const { user, refresh } = useAuth();
-  const [url, setUrl] = useState("");
+  // /?url=<link FuOverflow> điền sẵn ô nhập; không tự lấy đề vì mỗi lần lấy có thể bị tính phí
+  const [searchParams] = useSearchParams();
+  const [url, setUrl] = useState(searchParams.get("url") ?? "");
   const job = useExamImport();
   const price = useApi(
     () => (user ? examImportApi.price() : Promise.resolve({ price: 0 })),

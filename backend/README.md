@@ -109,3 +109,9 @@ An toàn tiền bạc:
 - Email gửi khi: tạo lệnh nạp (kèm thông tin chuyển khoản và mã QR), tiền nạp khớp lệnh và đã cộng ví, mỗi lần bị trừ phí lấy đề, đặt lại mật khẩu. Tiêu đề dạng `[Luyện thi FE FPTU] Nạp tiền thành công +100.000 ₫ · NAPXXXX` để nhìn hộp thư là biết nội dung chính. Khung chung ở `mail/layout.ts`, nội dung từng thư ở `mail/templates/`, banner ở `assets/mail/`.
 - Thư luôn gửi **sau khi** transaction đã commit và chạy nền (`services/notification.service.ts`); gửi lỗi chỉ ghi log, không ảnh hưởng giao dịch.
 - Cron đối soát SePay nhận 5 trường (tối thiểu 1 phút) hoặc **6 trường có giây ở đầu**, ví dụ `*/10 * * * * *` = mỗi 10 giây. Với 6 trường bước giây tối thiểu 10 (cố định hoặc `*/N`, N >= 10) để không gọi API SePay dồn dập. Các lượt chạy không bao giờ chồng nhau (đang chạy thì lượt sau bỏ qua).
+
+## Liên kết riêng (deep link)
+
+- **Lệnh nạp:** địa chỉ theo **mã nạp** ngẫu nhiên (`NAPK3F9X2QA`), không dùng ID tăng dần để khỏi lộ số lượng lệnh. `GET /deposits/:code` chỉ trả lệnh của chính người gọi. `GET /public/deposits/:code` **không cần đăng nhập** và chỉ trả mã, số tiền, trạng thái, thời hạn, thông tin tài khoản nhận (khi còn chờ); **không có ID, tên hay email** của người tạo; giới hạn 40 lượt/phút/IP chống dò mã. Frontend: `/deposit/:code` (khách xem bản rút gọn; đã đăng nhập thì chuyển sang `/account/deposit/:code`, nếu không phải chủ lệnh vẫn chỉ thấy bản rút gọn).
+- **Đề:** `GET /exams/thread/:threadId` (mã thread FuOverflow, vốn công khai). Frontend `/exam/:threadId` mở đề, `/exam/:threadId?mode=exam|practice` vào thẳng chế độ. Không có đề và có đề nhưng không nằm trong kho của người xem đều trả cùng một lỗi 404.
+- Trang và bộ lọc của các danh sách (`?page=2&status=PAID&q=...`) nằm trên URL nên tải lại hoặc gửi liên kết vẫn giữ nguyên. `/?url=<link FuOverflow>` điền sẵn ô nhập link (không tự lấy đề vì có tính phí).

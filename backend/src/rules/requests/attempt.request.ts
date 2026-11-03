@@ -18,5 +18,8 @@ export const listAttemptsQuery = paginationQuery.extend({
   examId: z.coerce.number().int().positive().optional(),
 });
 
+export const threadParam = z.object({ threadId: z.string().regex(/^\d{1,18}$/, "Mã đề không hợp lệ") });
+
+export type ThreadParam = z.infer<typeof threadParam>;
 export type SubmitAttemptBody = z.infer<typeof submitAttemptBody>;
 export type ListAttemptsQuery = z.infer<typeof listAttemptsQuery>;
