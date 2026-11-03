@@ -1,0 +1,19 @@
+import path from "node:path";
+
+// Thông tin hiện trong email. Giữ khớp với frontend/brand.config.ts
+export const MAIL_BRAND = {
+  company: "MST Software",
+  product: "Luyện thi FE FPTU",
+  tagline: "MMO Solution",
+  founder: "Phạm Hoàng Tuấn",
+  facebookUrl: "https://facebook.com/mstsoftware.vn",
+  // Màu lấy từ BRAND.md
+  blue: "#0066ff",
+  navy: "#0b1730",
+  cyan: "#00c8ff",
+} as const;
+
+// Ảnh banner nằm cạnh mã nguồn (backend/assets/mail), đúng cả khi chạy từ src/ lẫn dist/
+export const MAIL_ASSETS_DIR = path.resolve(__dirname, "../../assets/mail");
+
+export const BANNER_CID = "reset-banner@mst";

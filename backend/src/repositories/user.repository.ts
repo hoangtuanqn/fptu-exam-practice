@@ -49,7 +49,7 @@ export const userRepository = {
   updateProfile: (id: number, data: { fullName: string }) =>
     prisma.user.update({ where: { id }, data, select: publicUserSelect }),
 
-  updatePassword: (id: number, password: string) => prisma.user.update({ where: { id }, data: { password } }),
+  updatePassword: (id: number, password: string, db: Db = prisma) => db.user.update({ where: { id }, data: { password } }),
 
   // Cộng/trừ nguyên tử ở DB (không đọc-rồi-ghi) và trả về số dư mới
   incrementBalance: async (db: Db, id: number, amount: number) => {
