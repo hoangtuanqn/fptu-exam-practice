@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { authApi, type AuthResult } from "./auth.api";
 import { setUnauthorizedHandler, tokenStore } from "@/shared/api/client";
+import { refreshRealtimeAuth } from "@/shared/realtime/socket";
 import type { User } from "@/shared/types/api";
 
 interface AuthState {
@@ -21,11 +22,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(() => {
     tokenStore.clear();
     setUser(null);
+    refreshRealtimeAuth();
   }, []);
 
   const signIn = useCallback(({ token, user }: AuthResult) => {
     tokenStore.set(token);
     setUser(user);
+    refreshRealtimeAuth();
   }, []);
 
   const refresh = useCallback(async () => {
