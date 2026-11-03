@@ -51,7 +51,7 @@ export const examImportService = {
         sourceUrl: thread.canonicalUrl ?? threadUrl(threadId),
         author: thread.author,
         postedAt: thread.postedAt,
-        createdById: job.userId,
+        createdById: job.userId ?? undefined,
         questions: withComments.map(({ image, comments }, i) => ({
           number: i + 1, // thứ tự trong thread = số câu
           name: image.name,

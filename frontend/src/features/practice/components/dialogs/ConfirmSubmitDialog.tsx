@@ -6,12 +6,13 @@ import { Modal, ModalActions, ModalTitle } from "@/shared/ui/Modal";
 interface Props {
   answered: number;
   total: number;
+  savable: boolean; // đề của hệ thống (lưu được lịch sử) hay đề mở từ thư mục
   onCancel: () => void;
   onConfirm: () => void;
 }
 
 // Xác nhận trước khi nộp bài
-export function ConfirmSubmitDialog({ answered, total, onCancel, onConfirm }: Props) {
+export function ConfirmSubmitDialog({ answered, total, savable, onCancel, onConfirm }: Props) {
   const { user } = useAuth();
   const left = total - answered;
 
@@ -32,7 +33,9 @@ export function ConfirmSubmitDialog({ answered, total, onCancel, onConfirm }: Pr
       {!user && (
         <p className="mt-3 flex items-start gap-2 rounded-xl bg-slate-50 px-3 py-2.5 text-xs leading-relaxed text-slate-600">
           <Info size={14} className="mt-0.5 shrink-0 text-brand-600" />
-          Bạn chưa đăng nhập nên kết quả bài này sẽ không được lưu vào lịch sử.
+          {savable
+            ? "Bạn chưa đăng nhập. Sau khi nộp, hãy đăng ký hoặc đăng nhập để bài này được lưu vào lịch sử."
+            : "Đề mở từ thư mục trên máy không được lưu lịch sử. Hãy lấy đề từ link FuOverflow để lưu lại kết quả."}
         </p>
       )}
       <ModalActions>

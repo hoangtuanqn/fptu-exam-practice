@@ -1,25 +1,38 @@
 import { prisma } from "../configs/prisma";
-import type { Db } from "./wallet.repository";
+import type { Owner } from "../utils/actor";
 import { toSkipTake, type PaginationQuery } from "../utils/pagination";
+import type { Db } from "./wallet.repository";
+
+const whereOf = (owner: Owner) => ("userId" in owner ? { userId: owner.userId } : { guestId: owner.guestId });
 
 export const userExamRepository = {
   // Đã có thì bỏ qua, nhập lại cùng đề không lỗi
-  add: (userId: number, examId: number, db: Db = prisma) =>
-    db.userExam.createMany({ data: [{ userId, examId }], skipDuplicates: true }),
+  add: (owner: Owner, examId: number, db: Db = prisma) =>
+    db.userExam.createMany({ data: [{ ...whereOf(owner), examId }], skipDuplicates: true }),
 
-  has: async (userId: number, examId: number) =>
-    (await prisma.userExam.count({ where: { userId, examId } })) > 0,
+  has: async (owner: Owner, examId: number) => (await prisma.userExam.count({ where: { ...whereOf(owner), examId } })) > 0,
 
-  async list(userId: number, query: PaginationQuery) {
+  async list(owner: Owner, query: PaginationQuery) {
+    const where = whereOf(owner);
     const [items, total] = await Promise.all([
       prisma.userExam.findMany({
-        where: { userId },
+        where,
         include: { exam: { select: { id: true, title: true, threadId: true, totalQuestions: true } } },
         orderBy: { id: "desc" },
         ...toSkipTake(query),
       }),
-      prisma.userExam.count({ where: { userId } }),
+      prisma.userExam.count({ where }),
     ]);
     return { items, total };
   },
+
+  // Chuyển toàn bộ đề của khách sang tài khoản (đã có thì bỏ qua) rồi xoá bản của khách, trong một transaction
+  claimGuest: (userId: number, guestId: string) =>
+    prisma.$transaction(async (tx) => {
+      const rows = await tx.userExam.findMany({ where: { guestId }, select: { examId: true } });
+      if (rows.length === 0) return 0;
+      await tx.userExam.createMany({ data: rows.map((r) => ({ userId, examId: r.examId })), skipDuplicates: true });
+      await tx.userExam.deleteMany({ where: { guestId } });
+      return rows.length;
+    }),
 };

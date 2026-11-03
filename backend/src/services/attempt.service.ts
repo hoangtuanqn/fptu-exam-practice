@@ -2,25 +2,22 @@ import { examAttemptRepository } from "../repositories/exam-attempt.repository";
 import { examRepository } from "../repositories/exam.repository";
 import { AppError } from "../rules/error";
 import type { ListAttemptsQuery, SubmitAttemptBody } from "../rules/requests/attempt.request";
+import { isMember, type Actor } from "../utils/actor";
 import { toMeta } from "../utils/pagination";
 import { examService } from "./exam.service";
 import { gradeAttempt, type GradedQuestion } from "./grading.service";
 
-interface Actor {
-  id: number;
-  role: string;
-}
-
 export const attemptService = {
   // Nhận đáp án người dùng chọn, chấm theo đáp án trong DB rồi lưu lịch sử
   async submit(actor: Actor, examId: number, body: SubmitAttemptBody) {
+    if (!isMember(actor.owner)) throw AppError.unauthorized(); // lịch sử chỉ dành cho thành viên
     await examService.assertAccess(actor, examId);
     const questions = await examRepository.findQuestionsForGrading(examId);
     if (questions.length === 0) throw AppError.notFound("Không tìm thấy đề");
 
     const grade = gradeAttempt(questions, body.answers);
     return examAttemptRepository.create({
-      userId: actor.id,
+      userId: actor.owner.userId,
       examId,
       mode: body.mode,
       score: grade.score,

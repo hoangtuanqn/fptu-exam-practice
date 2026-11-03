@@ -6,6 +6,7 @@ import { Loading } from "@/shared/ui/Feedback";
 import LoginPage from "@/features/auth/pages/LoginPage";
 import RegisterPage from "@/features/auth/pages/RegisterPage";
 import NotFoundPage from "./NotFoundPage";
+import { GuestSync } from "@/features/guest-sync/GuestSync";
 import PracticePage from "@/features/practice/PracticePage";
 import { GuestOnly, RequireAuth } from "@/features/auth/guards";
 
@@ -44,6 +45,7 @@ const ADMIN_NAV: NavItem[] = [
 export default function App() {
   return (
     <Suspense fallback={<Loading />}>
+      <GuestSync />
       <Routes>
         <Route path="/" element={<PracticePage />} />
 
