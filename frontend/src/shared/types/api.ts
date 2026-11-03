@@ -4,7 +4,7 @@ export type Role = "USER" | "ADMIN";
 export type UserStatus = "ACTIVE" | "BANNED";
 export type DepositStatus = "PENDING" | "PAID" | "EXPIRED";
 export type BankTxStatus = "MATCHED" | "UNMATCHED";
-export type TransactionType = "DEPOSIT" | "ADMIN_ADJUST" | "CRAWL_CHARGE" | "CRAWL_REFUND" | "GIFT_CODE" | "REPORT_REWARD" | "EXPLAIN_CHARGE" | "EXPLAIN_REFUND";
+export type TransactionType = "DEPOSIT" | "ADMIN_ADJUST" | "CRAWL_CHARGE" | "CRAWL_REFUND" | "GIFT_CODE" | "REPORT_REWARD" | "EXPLAIN_CHARGE" | "EXPLAIN_REFUND" | "REFERRAL_BONUS" | "REFERRAL_COMMISSION";
 
 export interface User {
   id: number;
@@ -214,4 +214,45 @@ export interface MyAnswerReport {
   reviewNote: string | null;
   createdAt: string;
   exam: { title: string; threadId: string };
+}
+
+// ----- Giới thiệu thành viên
+export interface ReferralSettings {
+  enabled: boolean;
+  signupBonus: number; // credit người mới nhận khi đăng ký qua mã
+  referrerSignupBonus: number; // credit người giới thiệu nhận khi có người đăng ký
+  commissionPercent: number; // % số tiền người được giới thiệu nạp
+}
+
+export interface ReferralSummary {
+  referred: number;
+  signupBonusPaid: number;
+  commissionPaid: number;
+}
+
+// Một cặp người giới thiệu - người được giới thiệu (admin xem)
+export interface AdminReferral {
+  id: number;
+  fullName: string;
+  email: string;
+  joinedAt: string;
+  referrer: { id: number; fullName: string; email: string } | null;
+  earned: number; // tổng credit người giới thiệu đã nhận từ người này
+}
+
+// Người mà một thành viên đã giới thiệu (email đã che bớt)
+export interface ReferredMember {
+  id: number;
+  name: string;
+  email: string;
+  joinedAt: string;
+  earned: number;
+}
+
+export interface ReferralOverview {
+  code: string;
+  program: { enabled: boolean; signupBonus: number; commissionPercent: number };
+  stats: { referred: number; earned: number };
+  items: ReferredMember[];
+  meta: PageMeta;
 }
