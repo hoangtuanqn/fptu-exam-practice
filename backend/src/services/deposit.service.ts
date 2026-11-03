@@ -1,6 +1,7 @@
 import { randomInt } from "node:crypto";
 import type { DepositOrder } from "@prisma/client";
 import type { SepayConfig } from "../constants/sepay";
+import { prisma } from "../configs/prisma";
 import { depositRepository } from "../repositories/deposit.repository";
 import { AppError } from "../rules/error";
 import type { CreateDepositBody, ListDepositsQuery } from "../rules/requests/deposit.request";
@@ -88,11 +89,32 @@ export const depositService = {
   },
 
   // Người dùng poll endpoint này để biết đã nhận tiền chưa
-  async getOfUser(userId: number, id: number) {
-    const order = await depositRepository.findByIdOfUser(id, userId);
+  async getOfUser(userId: number, code: string) {
+    const order = await depositRepository.findByCodeOfUser(code, userId);
     if (!order) throw AppError.notFound("Không tìm thấy lệnh nạp");
     const payment = order.status === "PENDING" ? toPayment(await settingService.getSepay(), order) : undefined;
     return { order, payment };
+  },
+
+  // Xem lệnh nạp mà không cần đăng nhập (ví dụ người khác chuyển khoản hộ). Chỉ trả những gì cần để thanh toán:
+  // mã, số tiền, trạng thái, thời hạn và thông tin tài khoản nhận. TUYỆT ĐỐI không có ID, tên, email của người tạo.
+  async getPublic(code: string) {
+    const order = await depositRepository.findByCode(prisma, code);
+    if (!order) throw AppError.notFound("Không tìm thấy lệnh nạp");
+
+    const expired = order.status === "EXPIRED" || (order.status === "PENDING" && order.expiresAt <= new Date());
+    const status = expired ? "EXPIRED" : order.status;
+    return {
+      order: {
+        code: order.code,
+        amount: order.amount,
+        status,
+        createdAt: order.createdAt,
+        expiresAt: order.expiresAt,
+        paidAt: order.paidAt,
+      },
+      payment: status === "PENDING" ? toPayment(await settingService.getSepay(), order) : undefined,
+    };
   },
 
   async list(query: ListDepositsQuery, userId?: number) {

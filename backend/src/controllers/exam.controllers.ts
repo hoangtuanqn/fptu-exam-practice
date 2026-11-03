@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import { HTTP_STATUS } from "../constants/httpStatus";
 import { getValidated } from "../middlewares/validate.middlewares";
 import type { IdParam } from "../rules/requests/admin.request";
-import type { SubmitAttemptBody } from "../rules/requests/attempt.request";
+import type { SubmitAttemptBody, ThreadParam } from "../rules/requests/attempt.request";
 import { ResponseClient } from "../rules/response";
 import { attemptService } from "../services/attempt.service";
 import { examService } from "../services/exam.service";
@@ -23,6 +23,11 @@ export const examController = {
   async claim(req: Request, res: Response) {
     const data = await examService.claimGuestLibrary(req.user!.id, req.guestId);
     res.json(new ResponseClient({ data }));
+  },
+
+  async getByThread(req: Request, res: Response) {
+    const { threadId } = getValidated<ThreadParam>(res, "params");
+    res.json(new ResponseClient({ data: await examService.getDetailByThread(actorOf(req), threadId) }));
   },
 
   async submitAttempt(req: Request, res: Response) {

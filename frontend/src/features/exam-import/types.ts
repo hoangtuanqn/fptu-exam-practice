@@ -15,6 +15,7 @@ export type SubmitResult = { existed: true; examId: number; title: string } | { 
 
 export interface ImportedExam {
   id: number;
+  threadId: string; // mã thread FuOverflow, dùng trong địa chỉ /exam/:threadId
   title: string;
   questions: Question[];
 }

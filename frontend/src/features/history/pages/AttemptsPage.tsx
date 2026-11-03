@@ -1,10 +1,10 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { History } from "lucide-react";
 import { historyApi } from "@/features/history/history.api";
 import { formatDuration, formatScore } from "@/features/practice/utils/format";
 import { PASS_SCORE } from "@/features/practice/config/scoring";
 import { getModeConfig } from "@/features/practice/config/modes";
+import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
 import { useApi } from "@/shared/hooks/useApi";
 import { Badge } from "@/shared/ui/Badge";
 import { Card, PageHeader } from "@/shared/ui/Card";
@@ -14,7 +14,9 @@ import { formatDateTime } from "@/shared/utils/formatters";
 
 export default function AttemptsPage() {
   const navigate = useNavigate();
-  const [page, setPage] = useState(1);
+  const [url, setUrl] = useUrlState({ page: "1" });
+  const page = toPage(url.page);
+  const setPage = (p: number) => setUrl({ page: String(p) });
   const { data, error, loading, reload } = useApi(() => historyApi.list(page), [page]);
 
   return (

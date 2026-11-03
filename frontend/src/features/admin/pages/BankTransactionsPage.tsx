@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
 import { Landmark } from "lucide-react";
 import { adminApi } from "@/features/admin/api/admin.api";
 import { BankTxBadge } from "@/shared/components/StatusBadge";
 import { Card, PageHeader } from "@/shared/ui/Card";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
+import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
 import { Segmented } from "@/shared/ui/Segmented";
 import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
 import { useApi } from "@/shared/hooks/useApi";
@@ -11,9 +11,11 @@ import type { BankTxStatus } from "@/shared/types/api";
 import { formatDateTime, formatMoney } from "@/shared/utils/formatters";
 
 export default function BankTransactionsPage() {
-  const [status, setStatus] = useState<BankTxStatus | "">("");
-  const [page, setPage] = useState(1);
-  useEffect(() => setPage(1), [status]);
+  const [url, setUrl] = useUrlState({ status: "", page: "1" });
+  const status = url.status as BankTxStatus | "";
+  const page = toPage(url.page);
+  const setPage = (p: number) => setUrl({ page: String(p) });
+  const setStatus = (v: BankTxStatus | "") => setUrl({ status: v, page: "1" });
 
   const { data, error, loading, reload } = useApi(() => adminApi.bankTransactions(page, status), [page, status]);
 

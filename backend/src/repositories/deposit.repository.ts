@@ -30,7 +30,8 @@ export const depositRepository = {
     return count;
   },
 
-  findByIdOfUser: (id: number, userId: number) => prisma.depositOrder.findFirst({ where: { id, userId } }),
+  // Tra theo mã nạp và luôn kèm userId: người khác biết mã cũng không xem được lệnh của bạn
+  findByCodeOfUser: (code: string, userId: number) => prisma.depositOrder.findFirst({ where: { code, userId } }),
 
   countPending: (userId: number) => prisma.depositOrder.count({ where: { userId, status: "PENDING" } }),
 

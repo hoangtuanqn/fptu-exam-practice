@@ -108,7 +108,7 @@ export default function OverviewPage() {
             <ul className="divide-y divide-slate-200">
               {library.data.items.map((e, i) => (
                 <li key={e.id}>
-                  <Link to={`/?exam=${e.id}`} className="flex items-center gap-4 px-5 py-3 transition hover:bg-slate-50">
+                  <Link to={`/exam/${e.threadId}`} className="flex items-center gap-4 px-5 py-3 transition hover:bg-slate-50">
                     <span className="w-6 shrink-0 text-xs text-slate-400">{String(i + 1).padStart(2, "0")}</span>
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-medium text-slate-900">{e.title}</div>

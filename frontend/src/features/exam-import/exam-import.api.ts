@@ -6,4 +6,5 @@ export const examImportApi = {
   price: () => http.get<{ price: number }>("/crawl-jobs/price"),
   job: (id: number) => http.get<CrawlJob>(`/crawl-jobs/${id}`),
   exam: (id: number) => http.get<ImportedExam>(`/exams/${id}`),
+  examByThread: (threadId: string) => http.get<ImportedExam>(`/exams/thread/${encodeURIComponent(threadId)}`),
 };

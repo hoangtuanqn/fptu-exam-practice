@@ -40,7 +40,8 @@ export function renderOrderEmail(i: OrderEmailInput) {
 
   return {
     html: renderLayout({
-      title: "LỆNH NẠP TIỀN ĐANG CHỜ THANH TOÁN",
+      eyebrow: "THANH TOÁN",
+      title: "Lệnh nạp tiền đang chờ thanh toán",
       preheader: `Chuyển khoản ${formatMoney(i.amount)} với nội dung ${i.code} trước ${formatDateTimeVN(i.expiresAt)}.`,
       banner: MAIL_BANNERS.order,
       bodyHtml,
@@ -94,7 +95,8 @@ export function renderDepositEmail(i: DepositEmailInput) {
 
   return {
     html: renderLayout({
-      title: "NẠP TIỀN THÀNH CÔNG",
+      eyebrow: "THANH TOÁN",
+      title: "Nạp tiền thành công",
       preheader: `Đã cộng ${formatMoney(i.amount)} vào ví. Số dư hiện tại: ${formatMoney(i.balanceAfter)}.`,
       banner: MAIL_BANNERS.deposit,
       bodyHtml,
@@ -145,7 +147,8 @@ export function renderChargeEmail(i: ChargeEmailInput) {
 
   return {
     html: renderLayout({
-      title: "BIÊN LAI PHÍ LẤY ĐỀ",
+      eyebrow: "BIÊN LAI",
+      title: "Phí lấy đề",
       preheader: `Đã trừ ${formatMoney(i.amount)} cho lần lấy đề. Số dư còn lại: ${formatMoney(i.balanceAfter)}.`,
       banner: MAIL_BANNERS.charge,
       bodyHtml,
