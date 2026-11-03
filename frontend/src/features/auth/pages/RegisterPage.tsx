@@ -47,7 +47,7 @@ export default function RegisterPage() {
       const { fullName, email, password } = form;
       signIn(await authApi.register({ fullName, email, password, referralCode: referralCodeStore.get() ?? undefined }));
       referralCodeStore.clear();
-      toast.success("Đăng ký thành công");
+      toast.success("Đăng ký thành công. Hãy kiểm tra email để xác minh tài khoản.");
     });
   };
 

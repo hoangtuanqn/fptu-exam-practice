@@ -13,6 +13,7 @@ import { Logo } from "@/shared/brand/Logo";
 import { formatCredit, initials } from "@/shared/utils/formatters";
 import { Footer } from "./Footer";
 import { UserMenu } from "./UserMenu";
+import { VerifyEmailNotice } from "@/features/verify-email/VerifyEmailNotice";
 
 export interface NavItem {
   to: string;
@@ -222,6 +223,8 @@ export function PanelLayout({
             <UserMenu />
           </div>
         </header>
+
+        <VerifyEmailNotice />
 
         <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
           <div
