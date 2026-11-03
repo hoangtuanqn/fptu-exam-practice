@@ -4,6 +4,7 @@ import { storageDir } from "../configs/env";
 import { AI_REPORT_FAILED_PREFIX, aiReady, AI_RETRY_COOLDOWN_MS } from "../constants/ai";
 import { EXAM_STORAGE_DIR } from "../constants/crawler";
 import { realtimeHub } from "../realtime/hub";
+import { compactCommentsText } from "./crawler/comments-file.service";
 import { examRepository } from "../repositories/exam.repository";
 import { solveExam } from "./ai/exam-solver.service";
 import { aiSettingService } from "./ai-setting.service";
@@ -39,7 +40,8 @@ async function run(examId: number) {
   try {
     const ai = await aiSettingService.get();
     const dir = path.join(storageDir, EXAM_STORAGE_DIR, exam.threadId);
-    const commentsText = await fs.readFile(path.join(dir, "comments.txt"), "utf-8").catch(() => null);
+    const rawComments = await fs.readFile(path.join(dir, "comments.txt"), "utf-8").catch(() => null);
+    const commentsText = rawComments ? compactCommentsText(rawComments) : null; // bản gọn cho AI, tệp gốc giữ nguyên
     const solved = await solveExam(ai, {
       title: exam.title,
       commentsText,
