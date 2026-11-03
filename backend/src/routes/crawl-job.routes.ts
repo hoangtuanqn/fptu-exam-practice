@@ -5,19 +5,20 @@ import { identify } from "../middlewares/auth.middlewares";
 import { validate } from "../middlewares/validate.middlewares";
 import { idParam, importExamBody } from "../rules/requests/crawl.request";
 
-// Mỗi lượt nhập đề là một chuỗi request sang FuOverflow nên giới hạn theo IP: thành viên 10 lượt/giờ,
-// khách (không bị tính phí) chặt hơn: 3 lượt/giờ
-const limiter = (limit: number, skip: (user: unknown) => boolean, who: string) =>
+// Mỗi lượt nhập đề là một chuỗi request sang FuOverflow nên có thêm lớp giới hạn theo IP:
+// thành viên 10 lượt/giờ; khách 5 lượt/ngày (chặn việc xoá dữ liệu trình duyệt để đổi ID khách,
+// còn giới hạn 1 lượt/ngày chính xác theo ID khách nằm ở crawl-job.service)
+const limiter = (windowMs: number, limit: number, skip: (user: unknown) => boolean, who: string) =>
   rateLimit({
-    windowMs: 60 * 60 * 1000,
+    windowMs,
     limit,
     skip: (req) => skip(req.user),
     standardHeaders: true,
     legacyHeaders: false,
     message: { status: false, message: `${who} nhập đề quá nhiều lần, vui lòng thử lại sau` },
   });
-const memberLimiter = limiter(10, (user) => !user, "Bạn");
-const guestLimiter = limiter(3, (user) => !!user, "Khách");
+const memberLimiter = limiter(60 * 60 * 1000, 10, (user) => !user, "Bạn");
+const guestLimiter = limiter(24 * 60 * 60 * 1000, 5, (user) => !!user, "Khách");
 
 const crawlJobRouter = Router();
 

@@ -2,16 +2,22 @@ import type { CrawlJob } from "@prisma/client";
 import { prisma } from "../configs/prisma";
 import { crawlJobRepository } from "../repositories/crawl-job.repository";
 import { examRepository } from "../repositories/exam.repository";
+import { HTTP_STATUS } from "../constants/httpStatus";
 import { AppError } from "../rules/error";
 import type { ImportExamBody } from "../rules/requests/crawl.request";
 import { isMember, type Actor } from "../utils/actor";
 import { parseThreadId } from "../utils/fuo-url";
+import { startOfVnDay } from "../utils/time";
 import { crawlerSettingService } from "./crawler-setting.service";
 import { examService } from "./exam.service";
 import { walletService } from "./wallet.service";
 
 type Listener = () => void;
 const listeners: Listener[] = [];
+
+const GUEST_DAILY_LIMIT = 1;
+export const GUEST_LIMIT_MESSAGE =
+  "Bạn đã hết lượt lấy đề miễn phí hôm nay. Đăng ký tài khoản để lấy thêm đề, lưu kho riêng và theo dõi lịch sử làm bài nhé!";
 
 const toDto = (job: CrawlJob) => ({
   id: job.id,
@@ -42,7 +48,13 @@ export const crawlJobService = {
     const active = await crawlJobRepository.findActive(threadId, owner);
     if (active) return { existed: false as const, job: toDto(active), charged: 0 };
 
-    // Khách chưa có ví nên không bị tính phí (chỉ bị giới hạn số lượt theo IP ở route)
+    // Khách: miễn phí nhưng chỉ 1 lượt mỗi ngày (tính cả lúc đề đã có sẵn), hết lượt thì mời đăng ký
+    if (!isMember(owner)) {
+      const used = await crawlJobRepository.countGuestFetchesSince(owner.guestId, startOfVnDay());
+      if (used >= GUEST_DAILY_LIMIT) throw new AppError(GUEST_LIMIT_MESSAGE, HTTP_STATUS.TOO_MANY_REQUESTS);
+    }
+
+    // Khách chưa có ví nên không bị tính phí
     const fetchPrice = isMember(owner) ? (await crawlerSettingService.get()).fetchPrice : 0;
     const exam = await examRepository.findByThreadId(threadId);
 
@@ -57,6 +69,13 @@ export const crawlJobService = {
       }
       if (exam) {
         await examService.addToLibrary(owner, exam.id, tx);
+        if (!isMember(owner)) {
+          // Ghi lại lượt lấy của khách để đếm giới hạn ngày
+          await crawlJobRepository.create(
+            { threadId, ...owner, chargedAmount: 0, status: "DONE", examId: exam.id, finishedAt: new Date() },
+            tx,
+          );
+        }
         return { existed: true as const, examId: exam.id, title: exam.title, charged: fetchPrice };
       }
       const job = await crawlJobRepository.create({ threadId, ...owner, chargedAmount: fetchPrice }, tx);
