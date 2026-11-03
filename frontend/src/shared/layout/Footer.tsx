@@ -7,7 +7,7 @@ export function Footer() {
   const home = brand.companyUrl || brand.facebookUrl;
 
   return (
-    <footer className="shrink-0 border-t border-slate-200/70 bg-white/60">
+    <footer className="mt-auto shrink-0 border-t border-slate-200/70 bg-white/60">
       <div className="mx-auto flex max-w-5xl flex-col gap-4 px-6 py-6 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
         <div className="flex items-center gap-4">
           <a href={home} target="_blank" rel="noreferrer" title={brand.company} className="shrink-0">
