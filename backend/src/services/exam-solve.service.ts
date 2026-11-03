@@ -3,6 +3,7 @@ import path from "node:path";
 import { storageDir } from "../configs/env";
 import { AI_REPORT_FAILED_PREFIX, aiReady, AI_RETRY_COOLDOWN_MS } from "../constants/ai";
 import { EXAM_STORAGE_DIR } from "../constants/crawler";
+import { realtimeHub } from "../realtime/hub";
 import { examRepository } from "../repositories/exam.repository";
 import { solveExam } from "./ai/exam-solver.service";
 import { aiSettingService } from "./ai-setting.service";
@@ -50,6 +51,7 @@ async function run(examId: number) {
     await fs.writeFile(path.join(dir, "ans.txt"), `${solved.answers.join("\n")}\n`, "utf-8");
     await fs.writeFile(path.join(dir, "ai-report.md"), `${solved.report}\n`, "utf-8");
     lastError.delete(examId);
+    void realtimeHub.publishExam(examId);
     console.log(`[ai] đề ${exam.threadId} đã có đáp án (${solved.answers.length} câu)`);
   } catch (err) {
     const message = (err as Error).message;
@@ -63,6 +65,7 @@ async function run(examId: number) {
     if (wasPending) {
       await examRepository.updateAnswers(examId, exam.questions.map(() => ""), "FAILED", `${AI_REPORT_FAILED_PREFIX}${message}`);
     }
+    void realtimeHub.publishExam(examId); // báo lỗi cho người đang mở đề ngay lập tức
   }
 }
 
@@ -91,6 +94,7 @@ export const examSolveService = {
     const ai = await aiSettingService.get();
     if (!aiReady(ai)) return false;
     await examRepository.markPending(examId);
+    void realtimeHub.publishExam(examId);
     this.enqueue(examId);
     return true;
   },
@@ -105,6 +109,7 @@ export const examSolveService = {
     const ai = await aiSettingService.get();
     if (!aiReady(ai)) return "not-needed";
     await examRepository.markPending(examId);
+    void realtimeHub.publishExam(examId);
     this.enqueue(examId);
     return "started";
   },
