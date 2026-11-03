@@ -35,7 +35,6 @@ sysctl -q -p /etc/sysctl.d/99-swappiness.conf
 
 step "Cập nhật hệ thống và cài gói nền"
 apt-get -o DPkg::Lock::Timeout=900 update -y
-apt-get -o DPkg::Lock::Timeout=900 upgrade -y
 apt-get -o DPkg::Lock::Timeout=900 install -y curl ca-certificates gnupg git nginx ufw mysql-server certbot python3-certbot-nginx
 
 step "Cài Node.js 22 (kho NodeSource)"
