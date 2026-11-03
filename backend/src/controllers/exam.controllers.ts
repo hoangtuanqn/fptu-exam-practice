@@ -25,6 +25,16 @@ export const examController = {
     res.json(new ResponseClient({ data }));
   },
 
+  async answers(req: Request, res: Response) {
+    const { id } = getValidated<IdParam>(res, "params");
+    res.json(new ResponseClient({ data: await examService.getAnswers(actorOf(req), id) }));
+  },
+
+  async retrySolve(req: Request, res: Response) {
+    const { id } = getValidated<IdParam>(res, "params");
+    res.json(new ResponseClient({ data: await examService.retrySolve(actorOf(req), id) }));
+  },
+
   async getByThread(req: Request, res: Response) {
     const { threadId } = getValidated<ThreadParam>(res, "params");
     res.json(new ResponseClient({ data: await examService.getDetailByThread(actorOf(req), threadId) }));

@@ -12,6 +12,8 @@ const examRouter = Router();
 examRouter.get("/", identify, validate(paginationQuery, "query"), examController.listMine);
 examRouter.post("/claim", authenticate, examController.claim);
 examRouter.get("/thread/:threadId", identify, validate(threadParam, "params"), examController.getByThread);
+examRouter.get("/:id/answers", identify, validate(idParam, "params"), examController.answers);
+examRouter.post("/:id/retry-solve", identify, validate(idParam, "params"), examController.retrySolve);
 examRouter.get("/:id", identify, validate(idParam, "params"), examController.get);
 examRouter.post("/:id/attempts", authenticate, validate(idParam, "params"), validate(submitAttemptBody), examController.submitAttempt);
 

@@ -1,3 +1,4 @@
+import { realtimeHub } from "../realtime/hub";
 import { crawlJobRepository } from "../repositories/crawl-job.repository";
 import { crawlJobService } from "../services/crawl-job.service";
 import { examService } from "../services/exam.service";
@@ -12,14 +13,17 @@ const drain = async () => {
   draining = true;
   try {
     for (let job = await crawlJobRepository.claimNext(); job; job = await crawlJobRepository.claimNext()) {
+      void realtimeHub.publishJob(job.id); // QUEUED -> RUNNING
       try {
         const { examId } = await examImportService.run(job);
         await examService.addToLibrary(job.userId !== null ? { userId: job.userId } : { guestId: job.guestId! }, examId); // đề vào thư viện của người nhập
         await crawlJobRepository.finish(job.id, { status: "DONE", examId });
+        void realtimeHub.publishJob(job.id);
         console.log(`[crawl-worker] job ${job.id} (thread ${job.threadId}) xong -> đề ${examId}`);
       } catch (err) {
         const message = (err as Error).message;
         await crawlJobService.fail(job, message); // đánh dấu lỗi + hoàn phí
+        void realtimeHub.publishJob(job.id);
         console.error(`[crawl-worker] job ${job.id} lỗi: ${message}`);
       }
     }

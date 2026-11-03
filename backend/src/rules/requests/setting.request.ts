@@ -39,6 +39,16 @@ export const updateSepayBody = z.object({
 
 export type UpdateSepayBody = z.infer<typeof updateSepayBody>;
 
+export const updateAiBody = z.object({
+  enabled: z.boolean(),
+  anthropicApiKey: z.string().trim().max(300).optional(), // để trống = giữ khóa cũ
+  claudeModel: z.string().trim().regex(/^[a-z0-9][a-z0-9.\-]{2,60}$/i, "Tên model không hợp lệ, ví dụ claude-haiku-5-5"),
+  effort: z.enum(["low", "medium", "high", "xhigh", "max"]),
+  useSearch: z.boolean(),
+});
+
+export type UpdateAiBody = z.infer<typeof updateAiBody>;
+
 export const updateCrawlerBody = z.object({
   cookie: z.string().trim().max(8000).optional(), // để trống = giữ cookie cũ
   userAgent: z.string().trim().max(500),

@@ -2,14 +2,23 @@ import { examAttemptRepository } from "../repositories/exam-attempt.repository";
 import { examRepository } from "../repositories/exam.repository";
 import { userExamRepository } from "../repositories/user-exam.repository";
 import type { Db } from "../repositories/wallet.repository";
+import { examSolveService } from "./exam-solve.service";
 import { AppError } from "../rules/error";
 import { isMember, type Actor, type Owner } from "../utils/actor";
+import { failedMessage, toAnswersPayload } from "../utils/exam-answers";
 import { toMeta, type PaginationQuery } from "../utils/pagination";
 
 // Ảnh được phục vụ tĩnh tại /api/v1/files (xem app.ts)
 const imageUrlOf = (imagePath: string) => `/api/v1/files/${imagePath}`;
 
 export const examService = {
+  // Người dùng bấm "Thử lại" trên đề FAILED (có thời gian chờ giữa hai lần để không đốt token)
+  async retrySolve(actor: Actor, id: number) {
+    await this.assertAccess(actor, id);
+    const result = await examSolveService.retry(id);
+    if (result === "cooldown") throw AppError.conflict("Vừa thử lại xong, vui lòng đợi ít phút rồi thử lại");
+    return { result };
+  },
   // Đề nhập xong (hoặc đã có sẵn) đều vào kho của người nhập: thành viên hoặc khách
   addToLibrary: (owner: Owner, examId: number, db?: Db) => userExamRepository.add(owner, examId, db),
 
@@ -44,6 +53,7 @@ export const examService = {
   // Dạng giống đề mở từ thư mục: mỗi câu có số, ảnh và đáp án đúng (có thể nhiều đáp án, cách nhau bằng dấu cách)
   async getDetail(actor: Actor, id: number) {
     await this.assertAccess(actor, id);
+    await examSolveService.upgradeIfNeeded(id);
     const exam = await examRepository.findDetail(id);
     if (!exam) throw AppError.notFound("Không tìm thấy đề");
     return {
@@ -51,12 +61,22 @@ export const examService = {
       threadId: exam.threadId,
       title: exam.title,
       sourceUrl: exam.sourceUrl,
+      answerStatus: exam.answerSource, // PENDING = AI đang phân tích, FAILED = AI lỗi: cả hai chỉ xem đề, chưa làm bài được
+      answerError: failedMessage(exam.answerSource),
       questions: exam.questions.map((q) => ({
         number: q.number,
         imageUrl: imageUrlOf(q.imagePath),
         correct: q.answer.split(/\s+/).filter(Boolean),
       })),
     };
+  },
+
+  // Giao diện hỏi lại định kỳ trong lúc AI phân tích: chỉ trả trạng thái và đáp án, nhẹ hơn tải cả đề
+  async getAnswers(actor: Actor, id: number) {
+    await this.assertAccess(actor, id);
+    const exam = await examRepository.findAnswers(id);
+    if (!exam) throw AppError.notFound("Không tìm thấy đề");
+    return toAnswersPayload(exam);
   },
 
   // Địa chỉ /exam/:threadId dùng mã thread (thông tin công khai trên FuOverflow) thay cho ID nội bộ tăng dần.

@@ -1,5 +1,6 @@
 import type { Quiz } from "@/features/practice/hooks/useQuiz";
 import { Sidebar } from "@/features/practice/components/sidebar/Sidebar";
+import { AnswerPendingBanner } from "./AnswerPendingBanner";
 import { ImageViewer } from "./ImageViewer";
 import { QuestionCard } from "./QuestionCard";
 import type { QuestionViewProps } from "./types";
@@ -35,6 +36,7 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange }: Props) {
     <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
       <Sidebar quiz={quiz} />
       <main className="flex flex-1 flex-col overflow-y-auto p-2 sm:p-3 lg:p-4">
+        <AnswerPendingBanner source={quiz.answerSource} examId={quiz.examId} onRetry={quiz.waitForAnswers} />
         <QuestionCard key={question.number} {...view} onZoom={() => onZoomChange(true)} />
       </main>
 

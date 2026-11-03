@@ -15,6 +15,7 @@ interface Props {
   mode: Mode;
   loaded: boolean; // đã có đề đang làm
   submitted: boolean;
+  submitLocked?: boolean; // AI chưa xong đáp án: chưa cho nộp
   elapsed: number; // số giây đã làm bài
   onPick: PickFolder;
   onSubmit: () => void;
@@ -23,7 +24,7 @@ interface Props {
 }
 
 // Header tối giản. Chưa có đề: tên app + tài khoản. Đang làm: tên đề | chế độ + đồng hồ | mở đề khác | nộp bài | tài khoản.
-export function Header({ title, mode, loaded, submitted, elapsed, onPick, onSubmit, onReset, onShowResult }: Props) {
+export function Header({ title, mode, loaded, submitted, submitLocked, elapsed, onPick, onSubmit, onReset, onShowResult }: Props) {
   const { Icon, label } = getModeConfig(mode);
 
   return (
@@ -66,7 +67,7 @@ export function Header({ title, mode, loaded, submitted, elapsed, onPick, onSubm
                 </Button>
               </>
             ) : (
-              <Button variant="primary" onClick={onSubmit} className="!px-3 sm:!px-4">
+              <Button variant="primary" onClick={onSubmit} disabled={submitLocked} className="!px-3 sm:!px-4">
                 <Send size={16} />
                 Nộp bài
               </Button>

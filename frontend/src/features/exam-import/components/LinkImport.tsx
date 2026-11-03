@@ -5,7 +5,7 @@ import { useAuth } from "@/features/auth/AuthContext";
 import { SignUpCta } from "@/features/trial/SignUpCta";
 import { useApi } from "@/shared/hooks/useApi";
 import { examImportApi } from "../exam-import.api";
-import { useFakeProgress } from "@/shared/hooks/useFakeProgress";
+import { useFakeProgress, type ProgressHint } from "@/shared/hooks/useFakeProgress";
 import { Button } from "@/shared/ui/Button";
 import { FormError } from "@/shared/ui/Feedback";
 import { inputClass } from "@/shared/ui/Input";
@@ -14,6 +14,25 @@ import { useExamImport } from "../useExamImport";
 import type { ImportedExam } from "../types";
 
 const PLACEHOLDER = "https://fuoverflow.com/threads/pro192-su26-fe.7094/";
+// Từ dòng trạng thái thật của worker ("Đang tải ảnh 12/50") suy ra mốc phần trăm: đọc thread 0-10, tải ảnh 10-70,
+// lấy bình luận 70-95, lưu 96+. Nhờ vậy thanh phản ánh tiến độ thật thay vì đoán.
+function hintFor(stage: string | null): ProgressHint {
+  const m = stage?.match(/(\d+)\/(\d+)/);
+  const [done, total] = m ? [Number(m[1]), Math.max(1, Number(m[2]))] : [0, 1];
+  if (stage?.includes("tải ảnh")) {
+    const floor = 10 + (60 * done) / total;
+    return { floor, ceiling: Math.min(70, floor + (60 / total) * 1.5) };
+  }
+  if (stage?.includes("bình luận")) {
+    const floor = 70 + (25 * done) / total;
+    return { floor, ceiling: Math.min(95, floor + (25 / total) * 1.5) };
+  }
+  if (stage?.includes("lưu")) return { floor: 96, ceiling: 98 };
+  if (stage?.includes("xếp hàng") || stage?.includes("tới lượt")) return { floor: 0, ceiling: 6 };
+  if (stage?.includes("gửi")) return { floor: 0, ceiling: 4 };
+  return { floor: 0, ceiling: 10 }; // đang đọc thread
+}
+
 const FINISH_DELAY_MS = 600; // cho người dùng thấy thanh chạm 100% trước khi chuyển
 
 interface Props {
@@ -38,7 +57,7 @@ export function LinkImport({ onImported }: Props) {
     !user && job.phase === "failed" && job.errorStatus === 429;
   const running = job.phase === "running";
   const done = job.phase === "done";
-  const percent = useFakeProgress(running || done, done);
+  const percent = useFakeProgress(running || done, done, hintFor(job.stage));
 
   // Số dư đổi khi server trừ phí (sau khi gửi) và khi hoàn phí (lỗi): cập nhật lại cho khớp
   const charged = job.phase === "running" && job.stage !== "Đang gửi yêu cầu";

@@ -6,13 +6,14 @@ import { Modal, ModalActions, ModalTitle } from "@/shared/ui/Modal";
 interface Props {
   answered: number;
   total: number;
+  answersPending: boolean; // AI chưa phân tích xong đáp án
   savable: boolean; // đề của hệ thống (lưu được lịch sử) hay đề mở từ thư mục
   onCancel: () => void;
   onConfirm: () => void;
 }
 
 // Xác nhận trước khi nộp bài
-export function ConfirmSubmitDialog({ answered, total, savable, onCancel, onConfirm }: Props) {
+export function ConfirmSubmitDialog({ answered, total, savable, answersPending, onCancel, onConfirm }: Props) {
   const { user } = useAuth();
   const left = total - answered;
 
@@ -30,6 +31,12 @@ export function ConfirmSubmitDialog({ answered, total, savable, onCancel, onConf
           " Bạn đã trả lời tất cả các câu."
         )}
       </p>
+      {answersPending && (
+        <p className="mt-3 flex items-start gap-2 rounded-xl bg-brand-50 px-3 py-2.5 text-xs leading-relaxed text-brand-900">
+          <Info size={14} className="mt-0.5 shrink-0 text-brand-600" />
+          AI vẫn đang phân tích đáp án. Bạn vẫn nộp được, điểm sẽ hiện ngay khi AI xong.
+        </p>
+      )}
       {!user && (
         <p className="mt-3 flex items-start gap-2 rounded-xl bg-slate-50 px-3 py-2.5 text-xs leading-relaxed text-slate-600">
           <Info size={14} className="mt-0.5 shrink-0 text-brand-600" />

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Mode, Question, UserAnswers } from "@/features/practice/types.ts";
+import type { AnswerSource, Mode, Question, UserAnswers } from "@/features/practice/types.ts";
 import { parseFolder } from "@/features/practice/utils/parseFolder";
 import { grade } from "@/features/practice/utils/grade";
 import { useStopwatch } from "./useStopwatch";
@@ -10,7 +10,11 @@ interface PendingExam {
   questions: Question[];
   title: string;
   examId: number | null; // có khi đề lấy từ hệ thống (để ghi lịch sử), null khi mở từ thư mục
+  answerSource: AnswerSource | null; // nguồn đáp án của đề hệ thống (null = đề mở từ thư mục)
 }
+
+// Đề chưa có đủ đáp án đúng (AI đang giải hoặc giải lỗi): chỉ xem, không làm bài
+const isLocked = (source: AnswerSource | null) => source !== null && source !== "AI" && source !== "MANUAL";
 
 export function useQuiz() {
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -20,6 +24,8 @@ export function useQuiz() {
   const [current, setCurrent] = useState(0); // vị trí câu đang xem (index)
   const [title, setTitle] = useState(""); // tên thư mục đề
   const [examId, setExamId] = useState<number | null>(null); // đề đang làm có trong hệ thống không
+  const [answerSource, setAnswerSource] = useState<AnswerSource | null>(null); // nguồn đáp án; PENDING = AI đang phân tích
+  const answersPending = isLocked(answerSource); // chưa có đáp án: chỉ xem đề
   const [mode, setMode] = useState<Mode>("practice"); // chọn lúc bắt đầu, không đổi giữa chừng
   const [pending, setPending] = useState<PendingExam | null>(null);
   const [notFound, setNotFound] = useState(false); // upload thư mục không có ảnh hợp lệ
@@ -52,22 +58,28 @@ export function useQuiz() {
       return;
     }
     setNotFound(false);
-    setPending({ questions: parsed, title: folderName, examId: null });
+    setPending({ questions: parsed, title: folderName, examId: null, answerSource: null });
   }
 
   // Đề đã có sẵn câu hỏi (nhập từ link FuOverflow): cũng chờ xác nhận như đề mở từ thư mục
-  function loadExam(examQuestions: Question[], examTitle: string, id: number) {
+  function loadExam(examQuestions: Question[], examTitle: string, id: number, source: AnswerSource = "AI") {
     setNotFound(false);
-    setPending({ questions: examQuestions, title: examTitle, examId: id });
+    setPending({
+      questions: isLocked(source) ? examQuestions.map((x) => ({ ...x, answerPending: true })) : examQuestions,
+      title: examTitle,
+      examId: id,
+      answerSource: source,
+    });
   }
 
   // Mở thẳng vào làm bài, bỏ qua bước xác nhận (khi liên kết đã nói rõ chế độ, ví dụ /exam/12?mode=exam)
-  function openExam(examQuestions: Question[], examTitle: string, id: number, chosenMode: Mode) {
+  function openExam(examQuestions: Question[], examTitle: string, id: number, chosenMode: Mode, source: AnswerSource = "AI") {
     setNotFound(false);
     setPending(null);
-    setQuestions(examQuestions);
+    setQuestions(isLocked(source) ? examQuestions.map((x) => ({ ...x, answerPending: true })) : examQuestions);
     setTitle(examTitle);
     setExamId(id);
+    setAnswerSource(source);
     setMode(chosenMode);
     clearProgress();
   }
@@ -78,9 +90,27 @@ export function useQuiz() {
     setQuestions(pending.questions);
     setTitle(pending.title);
     setExamId(pending.examId);
+    setAnswerSource(pending.answerSource);
     setMode(chosenMode);
     clearProgress();
     setPending(null);
+  }
+
+  // AI phân tích xong: gắn đáp án đúng vào các câu đang làm (không đụng tới đáp án người dùng đã chọn)
+  function applyAnswers(list: { number: number; correct: string[] }[], source: AnswerSource) {
+    const byNumber = new Map(list.map((a) => [a.number, a.correct]));
+    setQuestions((prev) => prev.map((qn) => ({ ...qn, correct: byNumber.get(qn.number) ?? qn.correct, answerPending: false })));
+    setAnswerSource(source);
+  }
+
+  // AI giải lỗi (đề vẫn chỉ xem được)
+  function markFailed() {
+    setAnswerSource("FAILED");
+  }
+
+  // Người dùng bấm "Thử lại": quay về trạng thái chờ AI
+  function waitForAnswers() {
+    setAnswerSource("PENDING");
   }
 
   function cancelPending() {
@@ -99,7 +129,7 @@ export function useQuiz() {
 
   function choose(question: Question, option: string) {
     const { number } = question;
-    if (isRevealed(question)) return; // đã có kết quả thì khóa
+    if (isRevealed(question) || answersPending) return; // đã có kết quả, hoặc AI chưa xong đáp án: chỉ xem đề
 
     setAnswers((prev) => {
       const selected = prev[number] ?? [];
@@ -135,6 +165,12 @@ export function useQuiz() {
     current,
     title,
     examId,
+    session,
+    answersPending,
+    answerSource,
+    applyAnswers,
+    markFailed,
+    waitForAnswers,
     mode,
     pending,
     notFound,
