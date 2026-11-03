@@ -21,7 +21,7 @@ export const adminExamService = {
   // Bắt đầu nhờ AI giải lại và trả về ngay (việc này có thể mất vài phút); admin theo dõi ở danh sách
   async solve(id: number) {
     const ai = await aiSettingService.get();
-    if (!aiReady(ai)) throw new AppError("Chưa bật AI hoặc chưa có khóa API ở Quản trị → Cấu hình crawl");
+    if (!aiReady(ai)) throw new AppError("Chưa bật AI hoặc chưa có khóa API ở Quản trị → AI giải đáp án");
     if (!(await examRepository.findByThreadIdOfId(id))) throw AppError.notFound("Không tìm thấy đề");
     if (!examSolveService.enqueue(id)) throw AppError.conflict("Đề này đang được AI giải");
   },
