@@ -6,10 +6,10 @@ import { examSolveService } from "./exam-solve.service";
 import { AppError } from "../rules/error";
 import { isMember, type Actor, type Owner } from "../utils/actor";
 import { failedMessage, toAnswersPayload } from "../utils/exam-answers";
+import { fileUrlOf } from "../utils/file-url";
 import { toMeta, type PaginationQuery } from "../utils/pagination";
 
-// Ảnh được phục vụ tĩnh tại /api/v1/files (xem app.ts)
-const imageUrlOf = (imagePath: string) => `/api/v1/files/${imagePath}`;
+const imageUrlOf = fileUrlOf;
 
 export const examService = {
   // Người dùng bấm "Thử lại" trên đề FAILED (có thời gian chờ giữa hai lần để không đốt token)

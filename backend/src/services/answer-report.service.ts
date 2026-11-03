@@ -8,6 +8,7 @@ import { examRepository } from "../repositories/exam.repository";
 import { AppError } from "../rules/error";
 import type { CreateReportBody, ListReportsQuery, ReviewReportBody } from "../rules/requests/answer-report.request";
 import type { Actor } from "../utils/actor";
+import { fileUrlOf } from "../utils/file-url";
 import { startOfVnDay } from "../utils/time";
 import { toMeta, type PaginationQuery } from "../utils/pagination";
 import { examService } from "./exam.service";
@@ -17,7 +18,7 @@ import { walletService } from "./wallet.service";
 // "ACD", "a c d", "C A" -> "A C D": cùng một tập đáp án thì cùng một chuỗi (để so với đáp án đang có)
 const normalize = (answer: string) => [...new Set(answer.toUpperCase().replace(/[^A-Z]/g, "").split(""))].sort().join(" ");
 
-const imageUrlOf = (imagePath: string) => `/api/v1/files/${imagePath}`;
+const imageUrlOf = fileUrlOf;
 
 export const answerReportService = {
   // ----- Thành viên
