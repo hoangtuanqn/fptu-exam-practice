@@ -7,6 +7,7 @@ export const userApi = {
   changePassword: (body: { currentPassword: string; newPassword: string }) =>
     http.patch<null>("/users/me/password", body),
   transactions: (page = 1, limit = PAGE_SIZE) => http.list<WalletTransaction>("/users/me/transactions", { page, limit }),
+  changeEmail: (body: { email: string; password: string }) => http.post<null>("/users/me/email", body),
   redeemGiftCode: (code: string) => http.post<RedeemResult>("/gift-codes/redeem", { code }),
   myGiftCodes: (page = 1) => http.list<MyGiftRedemption>("/gift-codes/mine", { page, limit: PAGE_SIZE }),
 };
