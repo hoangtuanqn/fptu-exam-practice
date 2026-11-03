@@ -4,7 +4,7 @@ export type Role = "USER" | "ADMIN";
 export type UserStatus = "ACTIVE" | "BANNED";
 export type DepositStatus = "PENDING" | "PAID" | "EXPIRED";
 export type BankTxStatus = "MATCHED" | "UNMATCHED";
-export type TransactionType = "DEPOSIT" | "ADMIN_ADJUST" | "CRAWL_CHARGE" | "CRAWL_REFUND" | "GIFT_CODE";
+export type TransactionType = "DEPOSIT" | "ADMIN_ADJUST" | "CRAWL_CHARGE" | "CRAWL_REFUND" | "GIFT_CODE" | "REPORT_REWARD";
 
 export interface User {
   id: number;
@@ -180,4 +180,37 @@ export interface RedeemResult {
   code: string;
   amount: number;
   balanceAfter: number;
+}
+
+// ----- Báo cáo đáp án
+export type ReportStatus = "PENDING" | "APPROVED" | "REJECTED";
+
+// Báo cáo trong danh sách của admin
+export interface AnswerReportAdmin {
+  id: number;
+  examId: number;
+  questionNumber: number;
+  currentAnswer: string;
+  proposedAnswer: string;
+  reason: string;
+  status: ReportStatus;
+  reward: number;
+  reviewNote: string | null;
+  createdAt: string;
+  reviewedAt: string | null;
+  imageUrl: string | null;
+  exam: { title: string; threadId: string };
+  user: { id: number; email: string; fullName: string };
+}
+
+// Báo cáo của chính thành viên
+export interface MyAnswerReport {
+  id: number;
+  questionNumber: number;
+  proposedAnswer: string;
+  status: ReportStatus;
+  reward: number;
+  reviewNote: string | null;
+  createdAt: string;
+  exam: { title: string; threadId: string };
 }
