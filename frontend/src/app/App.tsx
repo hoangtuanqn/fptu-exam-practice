@@ -5,6 +5,8 @@ import { PanelLayout, type NavItem } from "@/shared/layout/PanelLayout";
 import { Loading } from "@/shared/ui/Feedback";
 import LoginPage from "@/features/auth/pages/LoginPage";
 import RegisterPage from "@/features/auth/pages/RegisterPage";
+import ForgotPasswordPage from "@/features/auth/pages/ForgotPasswordPage";
+import ResetPasswordPage from "@/features/auth/pages/ResetPasswordPage";
 import NotFoundPage from "./NotFoundPage";
 import { GuestSync } from "@/features/guest-sync/GuestSync";
 import PracticePage from "@/features/practice/PracticePage";
@@ -52,7 +54,11 @@ export default function App() {
         <Route element={<GuestOnly />}>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         </Route>
+
+        {/* Mở từ email nên không chặn người đang đăng nhập */}
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
 
         <Route element={<RequireAuth />}>
           <Route path="/account" element={<PanelLayout title="Tài khoản" items={ACCOUNT_NAV} />}>

@@ -35,13 +35,20 @@ export default function LoginPage() {
           error={fieldErrors.email}
           placeholder="ban@example.com"
         />
-        <PasswordInput
-          label="Mật khẩu"
-          autoComplete="current-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          error={fieldErrors.password}
-        />
+        <div>
+          <PasswordInput
+            label="Mật khẩu"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            error={fieldErrors.password}
+          />
+          <div className="mt-1.5 text-right">
+            <Link to="/forgot-password" className="text-xs font-medium text-brand-700 hover:underline">
+              Quên mật khẩu?
+            </Link>
+          </div>
+        </div>
         <Button variant="primary" type="submit" disabled={loading || !email || !password} className="w-full !py-2.5">
           {loading && <Loader2 size={16} className="animate-spin" />}
           Đăng nhập
