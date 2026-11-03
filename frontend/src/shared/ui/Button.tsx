@@ -11,20 +11,20 @@ interface StyleOptions {
 }
 
 const VARIANTS: Record<Variant, string> = {
-  primary: "bg-brand-900 text-white hover:bg-brand-800",
-  secondary: "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50",
-  danger: "bg-rose-600 text-white hover:bg-rose-700",
-  ghost: "text-slate-600 hover:bg-slate-100",
+  primary: "bg-brand-600 text-white shadow-sm shadow-brand-600/25 hover:bg-brand-700 hover:shadow-md hover:shadow-brand-600/25",
+  secondary: "border border-slate-200 bg-white text-slate-700 shadow-soft hover:border-slate-300 hover:bg-slate-50",
+  danger: "bg-rose-600 text-white shadow-sm hover:bg-rose-700",
+  ghost: "text-slate-600 hover:bg-slate-900/5 hover:text-slate-900",
 };
 const SIZES: Record<Size, string> = {
-  md: "px-4 py-2",
+  md: "px-4 py-2.5",
   sm: "px-3 py-2",
 };
 
 // Tách riêng để các thẻ không phải <button> (ví dụ <label>) cũng dùng được cùng kiểu nút
 export function buttonClass({ variant = "secondary", size = "md", grow = false, className = "" }: StyleOptions = {}) {
   return [
-    "inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium transition disabled:opacity-40",
+    "inline-flex items-center justify-center gap-2 rounded-xl text-sm font-medium transition duration-150 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40",
     VARIANTS[variant],
     SIZES[size],
     grow ? "flex-1" : "",

@@ -2,9 +2,9 @@ import { forwardRef, useState, type InputHTMLAttributes, type ReactNode, type Se
 import { Eye, EyeOff } from "lucide-react";
 
 const control =
-  "w-full rounded-lg border bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 disabled:bg-slate-50 disabled:text-slate-500";
+  "w-full rounded-xl border bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-soft placeholder:text-slate-400 transition focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-500/10 disabled:bg-slate-50 disabled:text-slate-500";
 
-export const inputClass = (error?: string) => `${control} ${error ? "border-rose-400" : "border-slate-300"}`;
+export const inputClass = (error?: string) => `${control} ${error ? "border-rose-400" : "border-slate-200 hover:border-slate-300"}`;
 
 interface FieldProps {
   label?: string;
