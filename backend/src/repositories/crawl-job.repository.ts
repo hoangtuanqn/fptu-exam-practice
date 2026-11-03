@@ -4,8 +4,24 @@ import type { Owner } from "../utils/actor";
 import type { Db } from "./wallet.repository";
 
 export const crawlJobRepository = {
-  create: (data: { threadId: string; userId?: number; guestId?: string; chargedAmount: number }, db: Db = prisma) =>
+  create: (
+    data: {
+      threadId: string;
+      userId?: number;
+      guestId?: string;
+      chargedAmount: number;
+      // Dùng để ghi nhận một lượt lấy đề đã xong ngay (đề có sẵn), phục vụ đếm giới hạn theo ngày
+      status?: "DONE";
+      examId?: number;
+      finishedAt?: Date;
+    },
+    db: Db = prisma,
+  ) =>
     db.crawlJob.create({ data }),
+
+  // Số lượt lấy đề của khách từ mốc `since` (lượt lỗi không tính để khách được thử lại)
+  countGuestFetchesSince: (guestId: string, since: Date) =>
+    prisma.crawlJob.count({ where: { guestId, createdAt: { gte: since }, status: { not: "FAILED" } } }),
 
   findById: (id: number) => prisma.crawlJob.findUnique({ where: { id } }),
 
