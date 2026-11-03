@@ -15,6 +15,7 @@ const run = async () => {
     fullName: "Administrator",
     password: await hashPassword(env.ADMIN_PASSWORD),
     role: "ADMIN",
+    emailVerifiedAt: new Date(), // admin đầu tiên không cần xác minh email
   });
   console.log(`Đã tạo admin ${email}`);
 };

@@ -35,6 +35,15 @@ export const identify: RequestHandler = async (req, _res, next) => {
   next();
 };
 
+// Thành viên chưa xác minh email thì chưa dùng được các dịch vụ tính phí (khách vãng lai không có tài khoản nên không bị chặn).
+// Nạp credit, nhận credit (giftcode, giới thiệu) vẫn bình thường: chỉ chặn việc TIÊU dùng.
+export const requireVerifiedMember: RequestHandler = (req, _res, next) => {
+  if (req.user && !req.user.emailVerifiedAt) {
+    throw AppError.forbidden("Vui lòng xác minh email để sử dụng tính năng này. Kiểm tra hộp thư hoặc gửi lại thư xác minh ở trang Hồ sơ.");
+  }
+  next();
+};
+
 // Phân quyền: dùng sau authenticate
 export const requireRole =
   (...roles: Role[]): RequestHandler =>

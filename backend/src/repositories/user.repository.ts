@@ -12,6 +12,7 @@ export const publicUserSelect = {
   role: true,
   status: true,
   balance: true,
+  emailVerifiedAt: true,
   createdAt: true,
 } satisfies Prisma.UserSelect;
 
@@ -41,13 +42,17 @@ export const userRepository = {
     return { items, total };
   },
 
-  update: (id: number, data: { fullName?: string; role?: Role; status?: UserStatus }) =>
+  update: (id: number, data: { fullName?: string; role?: Role; status?: UserStatus; emailVerifiedAt?: Date | null }) =>
     prisma.user.update({ where: { id }, data, select: publicUserSelect }),
 
   countByStatus: () => prisma.user.groupBy({ by: ["status"], _count: { _all: true } }),
 
   updateProfile: (id: number, data: { fullName: string }) =>
     prisma.user.update({ where: { id }, data, select: publicUserSelect }),
+
+  // Xác minh email xong: đặt (hoặc đổi) email và đánh dấu đã xác minh
+  markEmailVerified: (db: Db, id: number, email: string) =>
+    db.user.update({ where: { id }, data: { email, emailVerifiedAt: new Date() }, select: { id: true, fullName: true } }),
 
   updatePassword: (id: number, password: string, db: Db = prisma) => db.user.update({ where: { id }, data: { password } }),
 
@@ -61,6 +66,6 @@ export const userRepository = {
     return balance;
   },
 
-  create: (data: { email: string; fullName: string; password: string; role?: Role; status?: UserStatus; referralCode?: string }, db: Db = prisma) =>
+  create: (data: { email: string; fullName: string; password: string; role?: Role; status?: UserStatus; referralCode?: string; emailVerifiedAt?: Date }, db: Db = prisma) =>
     db.user.create({ data, select: publicUserSelect }),
 };

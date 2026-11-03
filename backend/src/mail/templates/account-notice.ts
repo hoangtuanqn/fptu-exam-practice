@@ -45,6 +45,45 @@ export function renderWelcomeEmail({ name, homeUrl }: WelcomeEmailInput) {
   };
 }
 
+// ---------- Email đăng nhập đã đổi (gửi tới địa chỉ CŨ)
+
+export interface EmailChangedInput {
+  name: string;
+  newEmail: string;
+  at: Date;
+  forgotUrl: string;
+}
+
+export function renderEmailChangedEmail({ name, newEmail, at, forgotUrl }: EmailChangedInput) {
+  const bodyHtml = [
+    p(`<strong>Xin chào ${esc(name)},</strong>`),
+    p("Email đăng nhập của tài khoản bạn vừa được đổi sang địa chỉ mới."),
+    details([
+      { label: "Email mới", value: esc(newEmail), strong: true },
+      { label: "Thời gian", value: esc(formatDateTimeVN(at)) },
+    ]),
+    note("Không phải bạn thực hiện? Hãy liên hệ chúng mình ngay qua fanpage để được hỗ trợ khôi phục tài khoản."),
+    signature(),
+  ].join("");
+
+  return {
+    html: renderLayout({
+      eyebrow: "BẢO MẬT",
+      title: "Email đăng nhập đã đổi",
+      preheader: `Email tài khoản đã đổi sang ${newEmail}.`,
+      banner: MAIL_BANNERS.security,
+      bodyHtml,
+    }),
+    text: sign([
+      `Xin chào ${name},`,
+      "",
+      `Email đăng nhập của tài khoản vừa được đổi sang ${newEmail} (${formatDateTimeVN(at)}).`,
+      "Không phải bạn thực hiện? Hãy liên hệ chúng mình qua fanpage ngay.",
+      `Quên mật khẩu: ${forgotUrl}`,
+    ]),
+  };
+}
+
 // ---------- Đổi mật khẩu
 
 export interface PasswordChangedEmailInput {

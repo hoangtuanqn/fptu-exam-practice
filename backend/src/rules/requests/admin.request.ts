@@ -14,6 +14,7 @@ export const updateUserBody = z
     fullName: z.string().trim().min(2).max(100),
     role: z.enum(["USER", "ADMIN"]),
     status: z.enum(["ACTIVE", "BANNED"]),
+    emailVerified: z.boolean(), // admin xác minh tay (true) hoặc gỡ xác minh (false)
   })
   .partial()
   .refine((v) => Object.keys(v).length > 0, { message: "Cần ít nhất một trường để cập nhật" });
