@@ -24,6 +24,7 @@ export function QuizDialogs({ quiz, dialog, onDialogChange, onCloseZoom }: Props
           title={pending.title}
           total={pending.questions.length}
           graded={pending.questions.filter((q) => q.correct.length > 0).length}
+          answersPending={pending.answersPending}
           replacing={quiz.questions.length > 0 && quiz.answeredCount > 0 && !quiz.submitted}
           onCancel={quiz.cancelPending}
           onStart={(mode) => {
@@ -39,6 +40,7 @@ export function QuizDialogs({ quiz, dialog, onDialogChange, onCloseZoom }: Props
       {dialog === "confirm" && (
         <ConfirmSubmitDialog
           answered={quiz.answeredCount}
+          answersPending={quiz.answersPending}
           savable={quiz.examId !== null}
           total={quiz.questions.length}
           onCancel={() => onDialogChange(null)}
@@ -52,6 +54,7 @@ export function QuizDialogs({ quiz, dialog, onDialogChange, onCloseZoom }: Props
       {dialog === "result" && quiz.result && (
         <ResultDialog
           result={quiz.result}
+          answersPending={quiz.answersPending}
           savable={quiz.examId !== null}
           elapsed={quiz.elapsed}
           onReview={() => onDialogChange(null)}

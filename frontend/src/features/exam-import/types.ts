@@ -17,5 +17,6 @@ export interface ImportedExam {
   id: number;
   threadId: string; // mã thread FuOverflow, dùng trong địa chỉ /exam/:threadId
   title: string;
+  answerStatus: "PENDING" | "DEFAULT" | "AI" | "MANUAL"; // PENDING = AI đang phân tích đáp án
   questions: Question[];
 }
