@@ -1,13 +1,15 @@
-import { useState } from "react";
 import { userApi } from "@/features/account/api/user.api";
 import { Card, PageHeader } from "@/shared/ui/Card";
 import { ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { Pagination } from "@/shared/ui/Table";
 import { TransactionTable } from "@/features/account/components/TransactionTable";
+import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
 import { useApi } from "@/shared/hooks/useApi";
 
 export default function TransactionsPage() {
-  const [page, setPage] = useState(1);
+  const [url, setUrl] = useUrlState({ page: "1" });
+  const page = toPage(url.page);
+  const setPage = (p: number) => setUrl({ page: String(p) });
   const { data, error, loading, reload } = useApi(() => userApi.transactions(page), [page]);
 
   return (
