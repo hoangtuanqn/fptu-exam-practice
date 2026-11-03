@@ -2,7 +2,6 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { Link2, Loader2 } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
-import { useGuestTrial } from "@/features/trial/useGuestTrial";
 import { SignUpCta } from "@/features/trial/SignUpCta";
 import { useApi } from "@/shared/hooks/useApi";
 import { formatMoney } from "@/shared/utils/formatters";
@@ -26,12 +25,11 @@ export function LinkImport({ onImported }: Props) {
   const { user, refresh } = useAuth();
   const [url, setUrl] = useState("");
   const job = useExamImport();
-  const trial = useGuestTrial();
-  const [needLogin, setNeedLogin] = useState(false); // khách đã dùng hết lượt thử: mời đăng ký thay vì lấy thêm đề
   const price = useApi(() => (user ? examImportApi.price() : Promise.resolve({ price: 0 })), [user?.id]);
   const fee = price.data?.price ?? 0;
   const tooPoor = !!user && fee > 0 && user.balance < fee;
 
+  const limitReached = !user && job.phase === "failed" && job.errorStatus === 429;
   const running = job.phase === "running";
   const done = job.phase === "done";
   const percent = useFakeProgress(running || done, done);
@@ -59,10 +57,6 @@ export function LinkImport({ onImported }: Props) {
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!url.trim() || running) return;
-    if (!user && trial.used) {
-      setNeedLogin(true);
-      return;
-    }
     void job.start(url.trim());
   };
 
@@ -108,18 +102,19 @@ export function LinkImport({ onImported }: Props) {
         </p>
       )}
 
-      {!user && !needLogin && (
+      {!user && !limitReached && (
         <p className="mt-2 text-xs text-slate-500">
-          Dùng thử miễn phí, đề bạn lấy được lưu trong trình duyệt này. Đăng ký để giữ đề trong kho riêng và lưu lịch sử làm bài.
+          Khách được lấy miễn phí 1 đề mỗi ngày. Đăng ký để lấy thêm, giữ đề trong kho riêng và lưu lịch sử làm bài.
         </p>
       )}
 
-      {!user && needLogin && (
+      {limitReached && (
         <div className="mt-4 rounded-xl border border-brand-100 bg-brand-50/70 p-4">
-          <div className="text-sm font-medium text-slate-900">Bạn đã dùng hết lượt thử miễn phí</div>
+          <div className="text-sm font-semibold text-slate-900">Hết lượt lấy đề hôm nay rồi!</div>
           <p className="mb-3 mt-1 text-xs leading-relaxed text-slate-600">
-            Tạo tài khoản miễn phí, chỉ mất vài giây, để tiếp tục lấy đề từ link. Các đề bạn đã lấy sẽ được chuyển vào kho
-            riêng của tài khoản, và mỗi lần nộp bài được lưu vào lịch sử để xem lại từng câu.
+            Khách được lấy miễn phí 1 đề mỗi ngày. Đăng ký tài khoản (mất vài giây thôi) để lấy thêm đề, giữ mọi đề trong
+            kho riêng và lưu lại từng lần làm bài với điểm cùng chi tiết từng câu. Hoặc quay lại vào ngày mai để nhận thêm
+            một lượt nhé.
           </p>
           <SignUpCta />
         </div>
@@ -141,7 +136,7 @@ export function LinkImport({ onImported }: Props) {
         </div>
       )}
 
-      {job.phase === "failed" && (
+      {job.phase === "failed" && !limitReached && (
         <div className="mt-4 space-y-2">
           <FormError message={job.error} />
           <button type="button" onClick={job.reset} className="text-xs font-medium text-brand-700 hover:underline">
