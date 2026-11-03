@@ -35,6 +35,8 @@ export const TRANSACTION_LABEL: Record<TransactionType, string> = {
   DEPOSIT: "Nạp credit",
   GIFT_CODE: "Nhập giftcode",
   REPORT_REWARD: "Thưởng báo cáo đáp án",
+  EXPLAIN_CHARGE: "Giải thích câu hỏi (AI)",
+  EXPLAIN_REFUND: "Hoàn phí giải thích AI",
   ADMIN_ADJUST: "Điều chỉnh bởi quản trị",
   CRAWL_CHARGE: "Phí lấy đề FuOverflow",
   CRAWL_REFUND: "Hoàn phí lấy đề",
