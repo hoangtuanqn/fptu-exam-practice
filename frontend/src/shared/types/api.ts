@@ -4,7 +4,7 @@ export type Role = "USER" | "ADMIN";
 export type UserStatus = "ACTIVE" | "BANNED";
 export type DepositStatus = "PENDING" | "PAID" | "EXPIRED";
 export type BankTxStatus = "MATCHED" | "UNMATCHED";
-export type TransactionType = "DEPOSIT" | "ADMIN_ADJUST";
+export type TransactionType = "DEPOSIT" | "ADMIN_ADJUST" | "CRAWL_CHARGE" | "CRAWL_REFUND";
 
 export interface User {
   id: number;
@@ -82,6 +82,7 @@ export interface CrawlerAdminConfig {
   referer: string;
   requestDelayMs: number;
   webpQuality: number;
+  fetchPrice: number;
   hasCookie: boolean;
   cookiePreview: string;
 }

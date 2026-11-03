@@ -23,6 +23,8 @@ const BANK: Record<BankTxStatus, [string, Tone]> = {
 export const TRANSACTION_LABEL: Record<TransactionType, string> = {
   DEPOSIT: "Nạp tiền",
   ADMIN_ADJUST: "Điều chỉnh bởi quản trị",
+  CRAWL_CHARGE: "Phí lấy đề FuOverflow",
+  CRAWL_REFUND: "Hoàn phí lấy đề",
 };
 
 const make =
