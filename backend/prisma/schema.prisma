@@ -33,6 +33,7 @@ model User {
   userExams          UserExam[]
   attempts           ExamAttempt[]
   passwordResets     PasswordResetToken[]
+  giftRedemptions    GiftCodeRedemption[]
 
   @@map("users")
 }
@@ -101,6 +102,7 @@ enum TransactionType {
   ADMIN_ADJUST
   CRAWL_CHARGE // trừ phí lấy đề từ FuOverflow
   CRAWL_REFUND // hoàn phí khi lấy đề thất bại
+  GIFT_CODE // nhận credit từ giftcode
 }
 
 // Sổ cái ví: mỗi lần số dư đổi là một dòng (amount âm = trừ tiền)
@@ -249,4 +251,37 @@ model PasswordResetToken {
 
   @@index([userId, createdAt])
   @@map("password_reset_tokens")
+}
+
+// Giftcode: admin tạo mã, thành viên nhập mã để nhận credit. Mỗi thành viên dùng một mã tối đa một lần.
+model GiftCode {
+  id        Int       @id @default(autoincrement())
+  code      String    @unique @db.VarChar(32)
+  amount    Int // credit cộng cho mỗi lượt dùng
+  maxUses   Int       @map("max_uses")
+  usedCount Int       @default(0) @map("used_count")
+  expiresAt DateTime? @map("expires_at")
+  active    Boolean   @default(true)
+  note      String?   @db.VarChar(200)
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  redemptions GiftCodeRedemption[]
+
+  @@index([createdAt])
+  @@map("gift_codes")
+}
+
+model GiftCodeRedemption {
+  id         Int      @id @default(autoincrement())
+  giftCodeId Int      @map("gift_code_id")
+  userId     Int      @map("user_id")
+  amount     Int
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  giftCode GiftCode @relation(fields: [giftCodeId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([giftCodeId, userId])
+  @@index([userId])
+  @@map("gift_code_redemptions")
 }

@@ -118,6 +118,56 @@ export function renderDepositEmail(i: DepositEmailInput) {
   };
 }
 
+// ---------- Nhận credit từ giftcode
+
+export interface GiftCodeEmailInput {
+  name: string;
+  code: string;
+  amount: number;
+  balanceAfter: number;
+  at: Date;
+  walletUrl: string;
+}
+
+export function renderGiftCodeEmail(i: GiftCodeEmailInput) {
+  const bodyHtml = [
+    p(`<strong>Xin chào ${esc(i.name)},</strong>`),
+    p("Giftcode của bạn đã được áp dụng và credit đã được cộng vào ví."),
+    details([
+      { label: "Giftcode", value: esc(i.code) },
+      { label: "Thời gian", value: esc(formatDateTimeVN(i.at)) },
+      { label: "Credit đã cộng", value: `+${esc(formatCredit(i.amount))}`, strong: true },
+      { label: "Số dư hiện tại", value: esc(formatCredit(i.balanceAfter)) },
+    ]),
+    button("Xem lịch sử giao dịch", i.walletUrl),
+    signature(),
+  ].join("");
+
+  return {
+    html: renderLayout({
+      eyebrow: "QUÀ TẶNG",
+      title: "Nhận credit thành công",
+      preheader: `Đã cộng ${formatCredit(i.amount)} từ giftcode ${i.code}. Số dư hiện tại: ${formatCredit(i.balanceAfter)}.`,
+      banner: MAIL_BANNERS.deposit,
+      bodyHtml,
+    }),
+    text: [
+      `Xin chào ${i.name},`,
+      "",
+      "Giftcode của bạn đã được áp dụng và credit đã được cộng vào ví.",
+      `Giftcode: ${i.code}`,
+      `Credit đã cộng: +${formatCredit(i.amount)}`,
+      `Số dư hiện tại: ${formatCredit(i.balanceAfter)}`,
+      `Thời gian: ${formatDateTimeVN(i.at)}`,
+      "",
+      `Xem lịch sử giao dịch: ${i.walletUrl}`,
+      "",
+      "Trân trọng,",
+      company,
+    ].join("\n"),
+  };
+}
+
 // ---------- Phí lấy đề
 
 export interface ChargeEmailInput {

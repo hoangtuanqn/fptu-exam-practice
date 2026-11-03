@@ -90,6 +90,22 @@ export const notificationService = {
     });
   },
 
+  // Vừa nhập giftcode nhận credit (gọi SAU khi transaction cộng credit đã commit)
+  giftCodeRedeemed(n: { userId: number; code: string; amount: number; balanceAfter: number }) {
+    notify("nhập giftcode", async () => {
+      const user = await userRepository.findById(n.userId);
+      if (!user) return;
+      await mailService.sendGiftCodeRedeemed(user.email, {
+        name: user.fullName,
+        code: n.code,
+        amount: n.amount,
+        balanceAfter: n.balanceAfter,
+        at: new Date(),
+        walletUrl: walletUrl(),
+      });
+    });
+  },
+
   // Lấy đề lỗi và đã hoàn phí (gọi SAU khi transaction hoàn phí đã commit)
   fetchRefunded(n: { userId: number; amount: number; balanceAfter: number; threadId: string }) {
     notify("hoàn phí lấy đề", async () => {
