@@ -6,7 +6,7 @@ import type { PageMeta } from "@/shared/types/api";
 export function Table({ children }: { children: ReactNode }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-left text-sm">{children}</table>
+      <table className="w-full text-left text-sm text-slate-700">{children}</table>
     </div>
   );
 }
@@ -28,7 +28,7 @@ export const Tr = ({ children, onClick }: { children: ReactNode; onClick?: () =>
 );
 
 export const Td = ({ className = "", ...p }: TdHTMLAttributes<HTMLTableCellElement>) => (
-  <td className={`px-6 py-3.5 align-middle text-slate-700 ${className}`} {...p} />
+  <td className={`px-6 py-3.5 align-middle ${className}`} {...p} />
 );
 
 export function Pagination({ meta, onPage }: { meta: PageMeta; onPage: (page: number) => void }) {

@@ -1,6 +1,6 @@
 import { Receipt } from "lucide-react";
 import type { WalletTransaction } from "@/shared/types/api";
-import { formatDateTime, formatMoney, formatSigned } from "@/shared/utils/formatters";
+import { formatDateTime, formatCredit, formatCreditSigned } from "@/shared/utils/formatters";
 import { TRANSACTION_LABEL } from "@/shared/components/StatusBadge";
 import { Empty } from "@/shared/ui/Feedback";
 import { Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
@@ -22,9 +22,9 @@ export function TransactionTable({ items }: { items: WalletTransaction[] }) {
             </div>
             <div className="shrink-0 text-right">
               <div className={`whitespace-nowrap text-sm font-semibold tabular-nums ${t.amount >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
-                {formatSigned(t.amount)}
+                {formatCreditSigned(t.amount)}
               </div>
-              <div className="whitespace-nowrap text-xs tabular-nums text-slate-400">{formatMoney(t.balanceAfter)}</div>
+              <div className="whitespace-nowrap text-xs tabular-nums text-slate-400">{formatCredit(t.balanceAfter)}</div>
             </div>
           </li>
         ))}
@@ -47,9 +47,9 @@ export function TransactionTable({ items }: { items: WalletTransaction[] }) {
                   {t.note && <div className="text-xs text-slate-500">{t.note}</div>}
                 </Td>
                 <Td className={`whitespace-nowrap text-right font-medium tabular-nums ${t.amount >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
-                  {formatSigned(t.amount)}
+                  {formatCreditSigned(t.amount)}
                 </Td>
-                <Td className="whitespace-nowrap text-right tabular-nums text-slate-500">{formatMoney(t.balanceAfter)}</Td>
+                <Td className="whitespace-nowrap text-right tabular-nums text-slate-500">{formatCredit(t.balanceAfter)}</Td>
               </Tr>
             ))}
           </tbody>

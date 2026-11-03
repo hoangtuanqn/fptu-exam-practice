@@ -24,7 +24,12 @@ export const bankTransactionRepository = {
   async list(query: PaginationQuery, status?: BankTxStatus) {
     const where: Prisma.BankTransactionWhereInput = { status };
     const [items, total] = await Promise.all([
-      prisma.bankTransaction.findMany({ where, orderBy: { id: "desc" }, ...toSkipTake(query) }),
+      prisma.bankTransaction.findMany({
+        where,
+        select: { id: true, sepayId: true, gateway: true, content: true, amountIn: true, transactionAt: true, status: true, depositOrderId: true },
+        orderBy: { id: "desc" },
+        ...toSkipTake(query),
+      }),
       prisma.bankTransaction.count({ where }),
     ]);
     return { items, total };
