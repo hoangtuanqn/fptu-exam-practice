@@ -11,50 +11,76 @@ interface Props {
   trialUsed: boolean; // khách đã dùng hết lượt thử thì ẩn nhãn "dùng thử"
 }
 
-// Phần đầu trang: nhãn dùng thử, tên hệ thống, slogan, chip đối tác, chỗ nhập link hoặc thả thư mục, ba ý ngắn
+// Phần đầu trang: nhãn dùng thử, tên hệ thống, slogan, chip đối tác, khối chọn nguồn đề, ba ý ngắn
 export function HeroSection({ onPick, onImported, userName, trialUsed }: Props) {
   const isGuest = !userName;
   const [sloganLead, sloganAccent] = splitSlogan(brand.slogan);
 
   return (
-    <section className="bg-white">
-      <div className="h-1 bg-gradient-to-r from-brand-600 via-accent to-accent-soft" />
-      <div className="mx-auto w-full max-w-2xl px-5 py-8 text-center sm:py-10">
-        {isGuest && !trialUsed && (
-          <span className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-medium text-brand-800">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-            Dùng thử miễn phí 1 lần, không cần đăng ký
-          </span>
-        )}
-        <h1 className="mt-3 font-serif text-3xl font-semibold leading-tight text-slate-900 sm:text-5xl">
-          {userName ? `Chào ${userName}, vào luyện thôi` : brand.product}
-        </h1>
-        {isGuest && (
-          <p className="mt-3 font-serif text-xl font-medium text-brand-600 sm:text-2xl">
-            {sloganLead}
-            {sloganAccent && <span className="font-semibold text-brand-900">{sloganAccent}</span>}
+    <section className="relative isolate shrink-0 overflow-hidden">
+      {/* Nền: lưới chấm mờ dần ra rìa + hai quầng sáng xanh/cyan rất nhạt lấy từ gradient của logo */}
+      <div
+        aria-hidden
+        className="bg-dots absolute inset-0 -z-10 [mask-image:radial-gradient(ellipse_70%_60%_at_50%_0%,#000_30%,transparent_100%)]"
+      />
+      <div aria-hidden className="absolute -left-24 -top-24 -z-10 h-80 w-80 rounded-full bg-brand-200/40 blur-3xl" />
+      <div aria-hidden className="absolute -right-24 top-10 -z-10 h-72 w-72 rounded-full bg-accent-soft/40 blur-3xl" />
+
+      <div className="mx-auto w-full max-w-3xl px-5 pb-14 pt-12 text-center sm:pt-16">
+        <div className="animate-fade-up">
+          {isGuest && !trialUsed && (
+            <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-medium text-slate-600 shadow-soft">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
+              </span>
+              Dùng thử miễn phí 1 lần, không cần đăng ký
+            </span>
+          )}
+
+          <h1 className="mt-5 text-4xl font-semibold leading-[1.1] text-slate-900 sm:text-6xl">
+            {userName ? (
+              <>
+                Chào <span className="text-gradient">{userName}</span>, vào luyện thôi
+              </>
+            ) : (
+              brand.product
+            )}
+          </h1>
+
+          {isGuest && (
+            <p className="mt-4 text-xl font-medium text-slate-500 sm:text-2xl">
+              {sloganLead}
+              {sloganAccent && <span className="text-gradient font-semibold">{sloganAccent}</span>}
+            </p>
+          )}
+
+          <p className="mx-auto mt-4 max-w-xl text-base text-slate-600">
+            Luyện đề thi FE từ kho đề của {brand.partnerName}, làm bài và nhận điểm thang 10 ngay.
           </p>
-        )}
-        <p className="mt-3 text-base font-medium text-slate-800">Luyện đề ngay để nắm chắc 9+ trong tay.</p>
-        <p className="mt-2 text-sm text-slate-600">
-          Luyện đề thi FE từ kho đề của {brand.partnerName}, làm bài và nhận điểm thang 10 ngay.
-        </p>
-        <a
-          href={brand.partnerUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-3 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-3 text-xs text-slate-600 transition hover:border-brand-300"
-        >
-          <img src={logos.partner} alt={brand.partnerName} className="h-6 w-6 rounded-full" />
-          Kho đề từ <b className="font-semibold text-slate-800">{brand.partnerName}</b>
-        </a>
 
-        <ExamSourcePicker onPick={onPick} onImported={onImported} loggedIn={!isGuest} />
+          <a
+            href={brand.partnerUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-3.5 text-xs text-slate-600 shadow-soft transition hover:border-brand-300"
+          >
+            <img src={logos.partner} alt={brand.partnerName} className="h-6 w-6 rounded-full" />
+            Kho đề từ <b className="font-semibold text-slate-800">{brand.partnerName}</b>
+          </a>
+        </div>
 
-        <ul className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-slate-600">
+        <div className="animate-fade-up [animation-delay:120ms]">
+          <ExamSourcePicker onPick={onPick} onImported={onImported} loggedIn={!isGuest} />
+        </div>
+
+        <ul className="mt-8 flex flex-wrap items-center justify-center gap-2.5">
           {FEATURES.map(({ icon: Icon, text }) => (
-            <li key={text} className="inline-flex items-center gap-2">
-              <Icon size={16} className="text-brand-600" />
+            <li
+              key={text}
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/80 px-3.5 py-1.5 text-sm text-slate-600"
+            >
+              <Icon size={15} className="text-brand-600" />
               {text}
             </li>
           ))}
