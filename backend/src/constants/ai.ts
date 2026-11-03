@@ -14,7 +14,7 @@ export interface AiConfig {
 export const AI_DEFAULTS: AiConfig = {
   enabled: true, // có khóa là dùng AI; tắt thủ công ở trang Quản trị nếu cần
   anthropicApiKey: "",
-  claudeModel: "claude-opus-5-5",
+  claudeModel: "claude-haiku-5-5",
   effort: "high",
   useSearch: false,
 };

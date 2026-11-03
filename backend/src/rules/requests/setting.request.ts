@@ -42,7 +42,7 @@ export type UpdateSepayBody = z.infer<typeof updateSepayBody>;
 export const updateAiBody = z.object({
   enabled: z.boolean(),
   anthropicApiKey: z.string().trim().max(300).optional(), // để trống = giữ khóa cũ
-  claudeModel: z.string().trim().regex(/^[a-z0-9][a-z0-9.\-]{2,60}$/i, "Tên model không hợp lệ, ví dụ claude-opus-5-5"),
+  claudeModel: z.string().trim().regex(/^[a-z0-9][a-z0-9.\-]{2,60}$/i, "Tên model không hợp lệ, ví dụ claude-haiku-5-5"),
   effort: z.enum(["low", "medium", "high", "xhigh", "max"]),
   useSearch: z.boolean(),
 });
