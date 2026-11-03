@@ -19,31 +19,26 @@ export const aiSettingService = {
     const raw = await settingRepository.getMany(NAMES.map(keyOf));
     const config = Object.fromEntries(NAMES.map((n) => [n, parse(n, raw[keyOf(n)])])) as unknown as AiConfig;
     // Chưa nhập khóa trong trang quản trị thì dùng khóa trong .env (nếu có)
-    if (!config.apiKey && env.GEMINI_API_KEY) config.apiKey = env.GEMINI_API_KEY;
-    if (!config.aimlApiKey && env.AIMLAPI_KEY) config.aimlApiKey = env.AIMLAPI_KEY;
+    if (!config.anthropicApiKey && env.ANTHROPIC_API_KEY) config.anthropicApiKey = env.ANTHROPIC_API_KEY;
     return config;
   },
 
   // Bản trả cho admin: không lộ khóa, chỉ báo đã cấu hình hay chưa
   async getForAdmin() {
-    const { apiKey, aimlApiKey, ...rest } = await this.get();
-    const preview = (k: string) => (k ? `••••${k.slice(-4)}` : "");
+    const { anthropicApiKey, ...rest } = await this.get();
     return {
       ...rest,
-      hasApiKey: apiKey.length > 0,
-      apiKeyPreview: preview(apiKey),
-      hasAimlApiKey: aimlApiKey.length > 0,
-      aimlApiKeyPreview: preview(aimlApiKey),
+      hasApiKey: anthropicApiKey.length > 0,
+      apiKeyPreview: anthropicApiKey ? `••••${anthropicApiKey.slice(-4)}` : "",
     };
   },
 
   async update(body: UpdateAiBody) {
-    const { apiKey, aimlApiKey, ...rest } = body;
+    const { anthropicApiKey, ...rest } = body;
     const entries: Record<string, string> = {};
     for (const [name, value] of Object.entries(rest)) entries[keyOf(name as keyof AiConfig)] = String(value);
     // Để trống khóa = giữ khóa cũ
-    if (apiKey) entries[keyOf("apiKey")] = apiKey;
-    if (aimlApiKey) entries[keyOf("aimlApiKey")] = aimlApiKey;
+    if (anthropicApiKey) entries[keyOf("anthropicApiKey")] = anthropicApiKey;
 
     await settingRepository.setMany(entries);
     return this.getForAdmin();

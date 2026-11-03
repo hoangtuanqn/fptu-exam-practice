@@ -71,7 +71,7 @@ export const examImportService = {
         postedAt: thread.postedAt,
         createdById: job.userId ?? undefined,
         answerSource: useAi ? "PENDING" : "FAILED",
-        aiReport: useAi ? undefined : `${AI_REPORT_FAILED_PREFIX}AI chưa được bật hoặc chưa có khóa Gemini`,
+        aiReport: useAi ? undefined : `${AI_REPORT_FAILED_PREFIX}AI chưa được bật hoặc chưa có khóa Anthropic`,
         questions: withComments.map(({ image }, i) => ({
           number: i + 1, // thứ tự trong thread = số câu
           name: image.name,
