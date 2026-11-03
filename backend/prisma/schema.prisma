@@ -30,6 +30,8 @@ model User {
 
   walletTransactions WalletTransaction[]
   depositOrders      DepositOrder[]
+  userExams          UserExam[]
+  attempts           ExamAttempt[]
 
   @@map("users")
 }
@@ -128,6 +130,8 @@ model Exam {
 
   questions ExamQuestion[]
   crawlJobs CrawlJob[]
+  userExams UserExam[]
+  attempts  ExamAttempt[]
 
   @@map("exams")
 }
@@ -192,4 +196,48 @@ model CrawlJob {
   @@index([threadId, status])
   @@index([status, createdAt])
   @@map("crawl_jobs")
+}
+
+// Thư viện đề của từng người: nhập link xong là đề nằm trong đây (đề dùng chung, chỉ lưu liên kết)
+model UserExam {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  examId    Int      @map("exam_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, examId])
+  @@index([userId, createdAt])
+  @@map("user_exams")
+}
+
+enum AttemptMode {
+  PRACTICE
+  EXAM
+}
+
+// Một lần nộp bài. `details` là ảnh chụp từng câu (đã chọn, đáp án đúng lúc chấm) nên xem lại vẫn đúng
+// dù sau này đáp án của đề được sửa
+model ExamAttempt {
+  id          Int         @id @default(autoincrement())
+  userId      Int         @map("user_id")
+  examId      Int         @map("exam_id")
+  mode        AttemptMode
+  score       Float
+  totalGraded Int         @map("total_graded")
+  correct     Int
+  wrong       Int
+  skipped     Int
+  durationSec Int         @map("duration_sec")
+  details     Json
+  createdAt   DateTime    @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([userId, examId])
+  @@map("exam_attempts")
 }
