@@ -30,12 +30,12 @@ export function QuestionCard({
   const { number, imageUrl } = question;
 
   return (
-    <div className="flex min-h-[480px] w-full flex-1 animate-fade-in flex-col gap-2">
+    <div className="flex min-h-[360px] w-full flex-1 sm:min-h-[480px] animate-fade-in flex-col gap-2">
       {/* Đề bài: thông tin + công cụ ở trên, ảnh ngay dưới */}
       <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 px-4 py-2">
-          <div className="flex items-center gap-3">
-            <h2 className="font-serif text-lg font-semibold text-slate-900">
+        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-slate-200 px-3 py-2 sm:gap-3 sm:px-4">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+            <h2 className="whitespace-nowrap text-lg font-semibold text-slate-900">
               Câu {number} <span className="font-sans text-sm font-normal text-slate-400">/ {total}</span>
             </h2>
             <QuestionKindBadge question={question} />
@@ -45,10 +45,11 @@ export function QuestionCard({
             <button
               onClick={onZoom}
               title="Phóng to ảnh"
-              className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-500 transition hover:border-slate-400 hover:text-slate-700"
+              className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white p-2 text-xs font-medium text-slate-500 transition hover:border-slate-400 hover:text-slate-700 sm:px-2.5 sm:py-1"
+              aria-label="Phóng to ảnh"
             >
               <Maximize2 size={13} />
-              Phóng to
+              <span className="hidden sm:inline">Phóng to</span>
             </button>
           </div>
         </div>
@@ -59,14 +60,21 @@ export function QuestionCard({
         </button>
       </section>
 
-      {/* Thanh trả lời: Trước | A–H + trạng thái | Tiếp. Chiều cao ổn định nên ảnh không bị co giật. */}
-      <section className="flex shrink-0 flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm">
-        <Button size="sm" onClick={onPrev} disabled={!hasPrev}>
-          <ChevronLeft size={16} />
-          Trước
-        </Button>
+      {/* Thanh trả lời. Điện thoại: hàng đáp án (4 cột, nút to dễ chạm), trạng thái, rồi hai nút Trước/Tiếp ngang bằng nhau.
+          Máy tính: một hàng Trước | đáp án + trạng thái | Tiếp (sm:contents làm hai nút nhập vào hàng cùng cấp). */}
+      <section className="flex shrink-0 flex-col gap-2.5 rounded-xl border border-slate-200 bg-white p-2.5 shadow-sm sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 sm:px-3 sm:py-2">
+        <div className="order-2 grid grid-cols-2 gap-2 sm:contents">
+          <Button size="sm" onClick={onPrev} disabled={!hasPrev} className="!py-3 sm:order-1 sm:!py-2">
+            <ChevronLeft size={16} />
+            Trước
+          </Button>
+          <Button variant="primary" size="sm" onClick={onNext} disabled={!hasNext} className="!py-3 sm:order-3 sm:!py-2">
+            Tiếp
+            <ChevronRight size={16} />
+          </Button>
+        </div>
 
-        <div className="flex flex-1 flex-wrap items-center justify-center gap-x-4 gap-y-2">
+        <div className="order-1 flex flex-1 flex-col items-stretch gap-2.5 sm:order-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-4 sm:gap-y-2">
           <AnswerOptions compact question={question} selected={selected} revealed={revealed} onChoose={onChoose} />
           <AnswerStatus
             question={question}
@@ -76,11 +84,6 @@ export function QuestionCard({
             onCheck={onCheck}
           />
         </div>
-
-        <Button variant="primary" size="sm" onClick={onNext} disabled={!hasNext}>
-          Tiếp
-          <ChevronRight size={16} />
-        </Button>
       </section>
     </div>
   );

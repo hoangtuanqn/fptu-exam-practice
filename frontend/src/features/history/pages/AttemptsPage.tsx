@@ -35,6 +35,22 @@ export default function AttemptsPage() {
             </Empty>
           ) : (
             <>
+              <ul className="divide-y divide-slate-100 md:hidden">
+                {data.items.map((a) => (
+                  <li key={a.id}>
+                    <button onClick={() => navigate(`/account/attempts/${a.id}`)} className="flex w-full items-center gap-3 px-4 py-3 text-left transition active:bg-slate-50">
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-medium text-slate-900">{a.exam.title}</div>
+                        <div className="mt-0.5 text-xs text-slate-500">
+                          {a.mode === "EXAM" ? "Thi" : "Luyện tập"} · {formatDateTime(a.createdAt)} · {a.correct}/{a.totalGraded} · {formatDuration(a.durationSec)}
+                        </div>
+                      </div>
+                      <Badge tone={a.score >= PASS_SCORE ? "success" : "danger"}>{formatScore(a.score)}</Badge>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            <div className="hidden md:block">
               <Table>
                 <Thead>
                   <Th>Nộp lúc</Th>
@@ -63,6 +79,7 @@ export default function AttemptsPage() {
                   ))}
                 </tbody>
               </Table>
+            </div>
               <Pagination meta={data.meta} onPage={setPage} />
             </>
           ))

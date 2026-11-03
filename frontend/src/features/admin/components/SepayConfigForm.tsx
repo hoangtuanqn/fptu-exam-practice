@@ -99,7 +99,6 @@ export function SepayConfigForm({ initial, onSaved }: { initial: SepayAdminConfi
           <div className={`mt-4 space-y-2 ${form.cronEnabled ? "" : "pointer-events-none opacity-50"}`}>
             <Input
               label="Lịch chạy (cron)"
-              className="font-mono"
               value={form.cronExpression}
               onChange={text("cronExpression")}
               error={fieldErrors.cronExpression}

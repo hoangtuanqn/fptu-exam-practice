@@ -12,6 +12,18 @@ import {
   type OrderEmailInput,
 } from "../mail/templates/wallet-notice";
 
+import {
+  renderAccountStatusEmail,
+  renderAdjustEmail,
+  renderPasswordChangedEmail,
+  renderRefundEmail,
+  renderWelcomeEmail,
+  type AdjustEmailInput,
+  type PasswordChangedEmailInput,
+  type RefundEmailInput,
+  type WelcomeEmailInput,
+} from "../mail/templates/account-notice";
+
 interface Rendered {
   html: string;
   text: string;
@@ -49,6 +61,31 @@ export const mailService = {
 
   sendDepositSuccess: (to: string, input: DepositEmailInput) =>
     send(to, `${tag} Nạp tiền thành công +${money(input.amount)} · ${input.code}`, MAIL_BANNERS.deposit, renderDepositEmail(input)),
+
+  sendWelcome: (to: string, input: WelcomeEmailInput) =>
+    send(to, `${tag} Chào mừng bạn, tài khoản đã sẵn sàng`, MAIL_BANNERS.welcome, renderWelcomeEmail(input)),
+
+  sendPasswordChanged: (to: string, input: PasswordChangedEmailInput) =>
+    send(to, `${tag} Mật khẩu của bạn vừa được thay đổi`, MAIL_BANNERS.security, renderPasswordChangedEmail(input)),
+
+  sendRefund: (to: string, input: RefundEmailInput) =>
+    send(to, `${tag} Hoàn phí lấy đề +${money(input.amount)}`, MAIL_BANNERS.charge, renderRefundEmail(input)),
+
+  sendBalanceAdjusted: (to: string, input: AdjustEmailInput) =>
+    send(
+      to,
+      `${tag} Điều chỉnh số dư ví ${input.amount >= 0 ? "+" : "−"}${money(Math.abs(input.amount))}`,
+      MAIL_BANNERS.deposit,
+      renderAdjustEmail(input),
+    ),
+
+  sendAccountStatus: (to: string, input: { name: string; banned: boolean; supportUrl: string }) =>
+    send(
+      to,
+      `${tag} ${input.banned ? "Tài khoản của bạn đã bị khóa" : "Tài khoản của bạn đã được mở khóa"}`,
+      MAIL_BANNERS.security,
+      renderAccountStatusEmail(input),
+    ),
 
   sendFetchCharged: (to: string, input: ChargeEmailInput) =>
     send(to, `${tag} Biên lai: phí lấy đề −${money(input.amount)}`, MAIL_BANNERS.charge, renderChargeEmail(input)),

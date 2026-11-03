@@ -11,14 +11,15 @@ export function FlagButton({ flagged, onToggle }: Props) {
     <button
       onClick={onToggle}
       title="Đánh dấu xem lại (M)"
-      className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition ${
+      aria-label="Đánh dấu xem lại"
+      className={`inline-flex items-center gap-1.5 rounded-md border p-2 text-xs font-medium transition sm:px-2.5 sm:py-1 ${
         flagged
           ? "border-amber-300 bg-amber-50 text-amber-700"
           : "border-slate-200 bg-white text-slate-500 hover:border-slate-400 hover:text-slate-700"
       }`}
     >
       <Flag size={13} className={flagged ? "fill-amber-500" : ""} />
-      Đánh dấu
+      <span className="hidden sm:inline">Đánh dấu</span>
     </button>
   );
 }

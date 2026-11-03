@@ -1,3 +1,4 @@
+import { notificationService } from "./notification.service";
 import { userRepository } from "../repositories/user.repository";
 import { AppError } from "../rules/error";
 import type { ChangePasswordBody, UpdateProfileBody } from "../rules/requests/user.request";
@@ -13,5 +14,6 @@ export const userService = {
       throw new AppError("Mật khẩu hiện tại không đúng", 400, { currentPassword: "Mật khẩu hiện tại không đúng" });
     }
     await userRepository.updatePassword(userId, await hashPassword(newPassword));
+    notificationService.passwordChanged({ userId, via: "profile" });
   },
 };

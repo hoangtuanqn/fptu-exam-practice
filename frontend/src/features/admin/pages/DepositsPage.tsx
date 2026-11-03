@@ -43,7 +43,26 @@ export default function DepositsPage() {
           <ErrorBox message={error} onRetry={reload} />
         ) : data && data.items.length > 0 ? (
           <>
-            <Table>
+            <ul className="divide-y divide-slate-100 md:hidden">
+              {data.items.map((o) => (
+                <li key={o.id} className="px-4 py-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-xs text-slate-700">{o.code}</span>
+                    <DepositStatusBadge value={o.status} />
+                  </div>
+                  <div className="mt-1 flex items-baseline justify-between gap-3">
+                    <span className="truncate text-sm font-medium text-slate-900">{o.user?.fullName}</span>
+                    <span className="shrink-0 whitespace-nowrap text-sm font-semibold tabular-nums">{formatMoney(o.amount)}</span>
+                  </div>
+                  <div className="mt-0.5 truncate text-xs text-slate-500">{o.user?.email}</div>
+                  <div className="mt-0.5 text-xs text-slate-400">
+                    {formatDateTime(o.createdAt)}{o.paidAt ? ` · thanh toán ${formatDateTime(o.paidAt)}` : ""}
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <div className="hidden md:block">
+              <Table>
               <Thead>
                 <Th>Mã nạp</Th>
                 <Th>Thành viên</Th>
@@ -55,7 +74,7 @@ export default function DepositsPage() {
               <tbody>
                 {data.items.map((o) => (
                   <Tr key={o.id}>
-                    <Td className="font-mono text-xs">{o.code}</Td>
+                    <Td className="text-xs">{o.code}</Td>
                     <Td>
                       <div className="font-medium text-slate-800">{o.user?.fullName}</div>
                       <div className="text-xs text-slate-500">{o.user?.email}</div>
@@ -68,6 +87,7 @@ export default function DepositsPage() {
                 ))}
               </tbody>
             </Table>
+            </div>
             <Pagination meta={data.meta} onPage={setPage} />
           </>
         ) : (

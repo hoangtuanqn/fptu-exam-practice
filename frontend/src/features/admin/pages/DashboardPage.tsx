@@ -46,7 +46,7 @@ export default function DashboardPage() {
         </Link>
       )}
 
-      <StatGrid className="sm:grid-cols-2 xl:grid-cols-3">
+      <StatGrid className="grid-cols-2 xl:grid-cols-3">
         <StatCard label="Nạp hôm nay" value={formatMoney(stats.deposits.todayDeposited)} />
         <StatCard tone="emerald" label="Tổng đã nạp" value={formatMoney(stats.deposits.totalDeposited)} />
         <StatCard
@@ -60,7 +60,7 @@ export default function DashboardPage() {
         <StatCard tone="slate" label="Tổng lệnh nạp" value={stats.deposits.pending + stats.deposits.paid + stats.deposits.expired} />
       </StatGrid>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader title="Lệnh nạp gần đây" action={seeAll("/admin/deposits")} />
           {deposits.loading && !deposits.data ? (

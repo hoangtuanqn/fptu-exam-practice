@@ -52,7 +52,7 @@ export default function OverviewPage() {
         </div>
       </header>
 
-      <StatGrid className="sm:grid-cols-2 xl:grid-cols-4">
+      <StatGrid className="grid-cols-2 xl:grid-cols-4">
         <StatCard label="Số dư ví" value={formatMoney(user.balance)} note="Dùng để lấy đề từ FuOverflow" />
         <StatCard tone="emerald" label="Đề trong kho" value={library.data?.meta.total ?? "—"} note="Đã lấy về tài khoản" />
         <StatCard tone="amber" label="Lần làm bài" value={attempts.data?.meta.total ?? "—"} note="Tổng số lần đã nộp" />
@@ -64,7 +64,7 @@ export default function OverviewPage() {
         />
       </StatGrid>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader title="Bài làm gần đây" action={seeAll("/account/attempts")} />
           {attempts.loading && !attempts.data ? (

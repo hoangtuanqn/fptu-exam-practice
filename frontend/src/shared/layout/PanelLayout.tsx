@@ -54,7 +54,7 @@ function Sidebar({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex h-14 shrink-0 items-center justify-between border-b border-slate-200 px-5">
+      <div className="flex h-14 shrink-0 items-center justify-between border-b border-slate-200 pl-5 pr-14 lg:pr-5">
         <Link to="/" onClick={onNavigate} title={`Về trang ${brand.product}`}>
           <Logo className="h-6" />
         </Link>

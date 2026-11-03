@@ -23,18 +23,18 @@ export function QuestionResultGrid({ items }: { items: AttemptQuestion[] }) {
   if (items.length === 0) return <Empty title="Không có câu nào trong mục này" />;
 
   return (
-    <ul className="grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-3">
+    <ul className="grid grid-cols-2 gap-2 p-3 sm:gap-3 sm:p-5 lg:grid-cols-3">
       {items.map((q) => {
         const { box, icon: Icon, label } = STYLE[q.outcome];
         return (
-          <li key={q.number} className={`rounded-lg border px-4 py-3 ${box}`}>
+          <li key={q.number} className={`rounded-lg border px-3 py-2.5 sm:px-4 sm:py-3 ${box}`}>
             <div className="flex items-center justify-between">
-              <span className="font-serif text-base font-semibold text-slate-900">Câu {q.number}</span>
+              <span className="text-sm font-semibold text-slate-900 sm:text-base">Câu {q.number}</span>
               <span className={`inline-flex items-center gap-1 text-xs font-medium ${TEXT[q.outcome]}`}>
-                <Icon size={14} /> {label}
+                <Icon size={14} /> <span className="hidden sm:inline">{label}</span>
               </span>
             </div>
-            <dl className="mt-2 space-y-0.5 text-sm">
+            <dl className="mt-1.5 space-y-0.5 text-xs sm:mt-2 sm:text-sm">
               <div className="flex justify-between gap-3">
                 <dt className="text-slate-500">Bạn chọn</dt>
                 <dd className="font-medium text-slate-800">{show(q.chosen)}</dd>
