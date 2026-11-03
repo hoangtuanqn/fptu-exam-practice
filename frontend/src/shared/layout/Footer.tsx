@@ -8,10 +8,10 @@ export function Footer() {
 
   return (
     <footer className="mt-auto shrink-0 border-t border-slate-200/70 bg-white/60">
-      <div className="mx-auto flex max-w-5xl flex-col gap-4 px-6 py-6 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
-        <div className="flex items-center gap-4">
+      <div className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-4 sm:flex-row sm:px-6 sm:py-6 sm:items-center sm:justify-between sm:gap-8">
+        <div className="flex items-center gap-3 sm:gap-4">
           <a href={home} target="_blank" rel="noreferrer" title={brand.company} className="shrink-0">
-            <Logo className="h-8" />
+            <Logo className="h-6 sm:h-8" />
           </a>
           <div className="text-xs leading-relaxed text-slate-500">
             <div>

@@ -5,8 +5,8 @@ import { buttonClass } from "@/shared/ui/Button";
 // Khối cuối trang mời đăng ký: thẻ sáng bo tròn lớn, quầng sáng xanh/cyan rất nhạt
 export function CtaSection() {
   return (
-    <section className="bg-white px-5 py-16">
-      <div className="relative mx-auto max-w-4xl overflow-hidden rounded-[2rem] border border-slate-200/80 bg-gradient-to-b from-brand-50 to-white px-6 py-14 text-center shadow-card">
+    <section className="bg-white px-5 py-10 sm:py-16">
+      <div className="relative mx-auto max-w-4xl overflow-hidden rounded-[2rem] border border-slate-200/80 bg-gradient-to-b from-brand-50 to-white px-4 py-10 text-center sm:px-6 sm:py-14 shadow-card">
         <div aria-hidden className="bg-dots absolute inset-0 [mask-image:radial-gradient(ellipse_60%_80%_at_50%_0%,#000_20%,transparent_100%)]" />
         <div aria-hidden className="absolute -left-16 top-0 h-56 w-56 rounded-full bg-brand-200/50 blur-3xl" />
         <div aria-hidden className="absolute -right-16 bottom-0 h-56 w-56 rounded-full bg-accent-soft/50 blur-3xl" />

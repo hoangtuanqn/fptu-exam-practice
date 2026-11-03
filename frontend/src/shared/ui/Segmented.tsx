@@ -13,7 +13,7 @@ interface Props<T extends string> {
 // Nhóm nút chọn một: dùng thay cho ô chọn (select) với bộ lọc ít lựa chọn, thấy hết các lựa chọn ngay
 export function Segmented<T extends string>({ value, options, onChange, label }: Props<T>) {
   return (
-    <div role="tablist" aria-label={label} className="inline-flex rounded-lg border border-slate-300 bg-white p-0.5">
+    <div role="tablist" aria-label={label} className="inline-flex max-w-full overflow-x-auto rounded-lg border border-slate-300 bg-white p-0.5">
       {options.map((o) => (
         <button
           key={o.value}
@@ -21,7 +21,7 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
           type="button"
           aria-selected={value === o.value}
           onClick={() => onChange(o.value)}
-          className={`whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition ${
+          className={`shrink-0 whitespace-nowrap rounded-md px-2.5 py-1.5 text-sm font-medium transition sm:px-3 ${
             value === o.value ? "bg-ink text-white" : "text-slate-600 hover:bg-slate-100"
           }`}
         >

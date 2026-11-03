@@ -65,7 +65,7 @@ export function HeroSection({ onPick, onImported, userName, trialUsed }: Props) 
           <ExamSourcePicker onPick={onPick} onImported={onImported} />
         </div>
 
-        <ul className="mt-8 flex flex-wrap items-center justify-center gap-2.5">
+        <ul className="mt-8 hidden flex-wrap items-center justify-center gap-2.5 sm:flex">
           {FEATURES.map(({ icon: Icon, text }) => (
             <li
               key={text}

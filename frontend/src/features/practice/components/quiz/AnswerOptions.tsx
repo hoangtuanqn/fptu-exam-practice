@@ -29,14 +29,14 @@ export function AnswerOptions({ question, selected, revealed, onChoose, compact 
   }
 
   return (
-    <div className={`flex flex-wrap ${compact ? "justify-center gap-2" : "gap-3"}`}>
+    <div className={compact ? "grid grid-cols-4 gap-2 sm:flex sm:flex-wrap sm:justify-center" : "flex flex-wrap gap-3"}>
       {OPTIONS.map((opt) => (
         <button
           key={opt}
           onClick={() => onChoose(opt)}
           className={`border-2 font-semibold shadow-sm transition active:scale-95 ${
-            compact ? "h-10 w-10 text-base" : "h-12 w-12 text-lg"
-          } ${multiple ? "rounded-lg" : "rounded-full"} ${style(opt)}`}
+            compact ? "h-11 w-full text-base sm:h-10 sm:w-10" : "h-12 w-12 text-lg"
+          } ${multiple ? "rounded-lg" : compact ? "rounded-xl sm:rounded-full" : "rounded-full"} ${style(opt)}`}
         >
           {opt}
         </button>

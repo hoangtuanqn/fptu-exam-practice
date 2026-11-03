@@ -97,7 +97,26 @@ export default function DepositPage() {
           <ErrorBox message={orders.error} onRetry={orders.reload} />
         ) : orders.data && orders.data.items.length > 0 ? (
           <>
-            <Table>
+            <ul className="divide-y divide-slate-100 md:hidden">
+              {orders.data.items.map((o) => (
+                <li key={o.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs text-slate-700">{o.code}</span>
+                      <DepositStatusBadge value={o.status} />
+                    </div>
+                    <div className="mt-1 text-xs text-slate-500">
+                      <span className="font-medium tabular-nums text-slate-800">{formatMoney(o.amount)}</span> · {formatDateTime(o.createdAt)}
+                    </div>
+                  </div>
+                  <Button size="sm" onClick={() => navigate(`/account/deposit/${o.code}`)}>
+                    {o.status === "PENDING" && new Date(o.expiresAt) > new Date() ? "Thanh toán" : "Chi tiết"}
+                  </Button>
+                </li>
+              ))}
+            </ul>
+            <div className="hidden md:block">
+              <Table>
               <Thead>
                 <Th>Mã nạp</Th>
                 <Th>Tạo lúc</Th>
@@ -108,7 +127,7 @@ export default function DepositPage() {
               <tbody>
                 {orders.data.items.map((o) => (
                   <Tr key={o.id}>
-                    <Td className="font-mono text-xs">{o.code}</Td>
+                    <Td className="text-xs">{o.code}</Td>
                     <Td className="whitespace-nowrap text-slate-500">{formatDateTime(o.createdAt)}</Td>
                     <Td className="text-right tabular-nums">{formatMoney(o.amount)}</Td>
                     <Td>
@@ -123,6 +142,7 @@ export default function DepositPage() {
                 ))}
               </tbody>
             </Table>
+            </div>
             <Pagination meta={orders.data.meta} onPage={setPage} />
           </>
         ) : (

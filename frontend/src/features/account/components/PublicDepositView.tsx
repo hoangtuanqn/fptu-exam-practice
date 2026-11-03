@@ -57,7 +57,7 @@ export function PublicDepositView({ code, note }: { code: string; note?: ReactNo
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
         <div>
           <p className="text-xs text-slate-500">Lệnh nạp tiền</p>
-          <p className="font-mono text-base font-semibold text-slate-900">{order.code}</p>
+          <p className="text-base font-semibold text-slate-900">{order.code}</p>
         </div>
         <DepositStatusBadge value={expired ? "EXPIRED" : order.status} />
       </div>

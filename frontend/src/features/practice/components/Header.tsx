@@ -27,46 +27,46 @@ export function Header({ title, mode, loaded, submitted, elapsed, onPick, onSubm
   const { Icon, label } = getModeConfig(mode);
 
   return (
-    <header className="glass z-30 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-slate-200/70 px-4">
+    <header className="glass z-30 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-slate-200/70 px-3 sm:px-4">
       <div className="flex min-w-0 items-center gap-3">
         <Link to="/" className="shrink-0" title={brand.company}>
-          <Logo className="h-7" />
+          <Logo className="h-6 sm:h-7" />
         </Link>
-        <span className="h-5 w-px shrink-0 bg-slate-200" />
-        <div className="truncate text-base font-semibold tracking-tight text-slate-900">{loaded && title ? title : brand.product}</div>
+        <span className="hidden h-5 w-px shrink-0 bg-slate-200 sm:block" />
+        <div className="hidden truncate text-base font-semibold tracking-tight text-slate-900 sm:block">{loaded && title ? title : brand.product}</div>
       </div>
 
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
         {loaded && (
           <>
             {/* Chế độ + đồng hồ gộp một chip */}
             <span
-              className={`inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 text-sm ${
+              className={`inline-flex items-center gap-2 rounded-xl border px-2.5 py-1.5 text-sm sm:px-3 ${
                 submitted ? "border-slate-200 bg-slate-50 text-slate-500" : "border-brand-200 bg-brand-50 text-brand-800"
               }`}
             >
-              <Icon size={15} />
+              <Icon size={15} className="hidden sm:block" />
               <span className="hidden sm:inline">{label}</span>
               <span className="hidden h-4 w-px bg-current opacity-20 sm:block" />
               <Clock size={14} className="sm:hidden" />
-              <span className="font-mono tabular-nums">{formatDuration(elapsed)}</span>
+              <span className="tabular-nums">{formatDuration(elapsed)}</span>
             </span>
 
             <FolderPicker iconOnly onPick={onPick} />
 
             {submitted ? (
               <>
-                <Button onClick={onReset}>
+                <Button onClick={onReset} className="!px-2.5 sm:!px-4">
                   <RotateCcw size={16} />
                   <span className="hidden sm:inline">Làm lại</span>
                 </Button>
-                <Button variant="primary" onClick={onShowResult}>
+                <Button variant="primary" onClick={onShowResult} className="!px-3 sm:!px-4">
                   <Award size={16} />
                   Xem điểm
                 </Button>
               </>
             ) : (
-              <Button variant="primary" onClick={onSubmit}>
+              <Button variant="primary" onClick={onSubmit} className="!px-3 sm:!px-4">
                 <Send size={16} />
                 Nộp bài
               </Button>
