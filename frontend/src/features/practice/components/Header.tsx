@@ -27,13 +27,13 @@ export function Header({ title, mode, loaded, submitted, elapsed, onPick, onSubm
   const { Icon, label } = getModeConfig(mode);
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-slate-200 bg-white px-4">
+    <header className="glass z-30 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-slate-200/70 px-4">
       <div className="flex min-w-0 items-center gap-3">
         <Link to="/" className="shrink-0" title={brand.company}>
           <Logo className="h-7" />
         </Link>
         <span className="h-5 w-px shrink-0 bg-slate-200" />
-        <div className="truncate font-serif text-lg font-semibold text-slate-900">{loaded && title ? title : brand.product}</div>
+        <div className="truncate text-base font-semibold tracking-tight text-slate-900">{loaded && title ? title : brand.product}</div>
       </div>
 
       <div className="flex shrink-0 items-center gap-2">
@@ -41,7 +41,7 @@ export function Header({ title, mode, loaded, submitted, elapsed, onPick, onSubm
           <>
             {/* Chế độ + đồng hồ gộp một chip */}
             <span
-              className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm ${
+              className={`inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 text-sm ${
                 submitted ? "border-slate-200 bg-slate-50 text-slate-500" : "border-brand-200 bg-brand-50 text-brand-800"
               }`}
             >
