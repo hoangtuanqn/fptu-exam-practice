@@ -3,6 +3,7 @@ import adminRouter from "./admin.routes";
 import attemptRouter from "./attempt.routes";
 import authRouter from "./auth.routes";
 import crawlJobRouter from "./crawl-job.routes";
+import depositPublicRouter from "./deposit-public.routes";
 import depositRouter from "./deposit.routes";
 import examRouter from "./exam.routes";
 import userRouter from "./user.routes";
@@ -16,6 +17,7 @@ rootRouter.get("/health", (_req, res) => {
 rootRouter.use("/auth", authRouter);
 rootRouter.use("/users", userRouter);
 rootRouter.use("/deposits", depositRouter);
+rootRouter.use("/public/deposits", depositPublicRouter);
 rootRouter.use("/crawl-jobs", crawlJobRouter);
 rootRouter.use("/exams", examRouter);
 rootRouter.use("/attempts", attemptRouter);
