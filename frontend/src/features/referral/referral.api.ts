@@ -32,6 +32,8 @@ export const referralCodeStore = {
 export const referralApi = {
   // Trang cá nhân: mã, thống kê và danh sách người đã giới thiệu (phân trang trên server)
   me: (page = 1) => http.get<ReferralOverview>("/referrals/me", { page, limit: PAGE_SIZE }),
+  // Nhập mã giới thiệu sau khi đăng ký (trong hạn)
+  claim: (code: string) => http.post<{ bonus: number }>("/referrals/claim", { code }),
   // Không cần đăng nhập: mã trên liên kết có hợp lệ không
   publicInfo: (code: string) => http.get<{ valid: boolean; bonus: number }>(`/public/referrals/${encodeURIComponent(code)}`),
 };
