@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Route, Routes, useParams } from "react-router-dom";
-import { DatabaseZap, FileText, History, Landmark, ListChecks, LayoutDashboard, Receipt, Settings, UserRound, Users, Wallet } from "lucide-react";
+import { History, ListChecks, LayoutDashboard, UserRound, Wallet } from "lucide-react";
 import { PanelLayout, type NavItem } from "@/shared/layout/PanelLayout";
 import { Loading } from "@/shared/ui/Feedback";
 import LoginPage from "@/features/auth/pages/LoginPage";
@@ -8,6 +8,7 @@ import RegisterPage from "@/features/auth/pages/RegisterPage";
 import ForgotPasswordPage from "@/features/auth/pages/ForgotPasswordPage";
 import ResetPasswordPage from "@/features/auth/pages/ResetPasswordPage";
 import NotFoundPage from "./NotFoundPage";
+import { ADMIN_NAV, adminRoutes } from "@/features/admin/admin.routes";
 import { GuestSync } from "@/features/guest-sync/GuestSync";
 import PracticePage from "@/features/practice/PracticePage";
 
@@ -25,15 +26,8 @@ const DepositPage = lazy(() => import("@/features/account/pages/DepositPage"));
 const TransactionsPage = lazy(() => import("@/features/account/pages/TransactionsPage"));
 const ProfilePage = lazy(() => import("@/features/account/pages/ProfilePage"));
 
-const DashboardPage = lazy(() => import("@/features/admin/pages/DashboardPage"));
-const UsersPage = lazy(() => import("@/features/admin/pages/UsersPage"));
-const DepositsPage = lazy(() => import("@/features/admin/pages/DepositsPage"));
-const BankTransactionsPage = lazy(() => import("@/features/admin/pages/BankTransactionsPage"));
-const SettingsPage = lazy(() => import("@/features/admin/pages/SettingsPage"));
 const AttemptsPage = lazy(() => import("@/features/history/pages/AttemptsPage"));
 const AttemptDetailPage = lazy(() => import("@/features/history/pages/AttemptDetailPage"));
-const ExamsPage = lazy(() => import("@/features/admin/pages/ExamsPage"));
-const CrawlerPage = lazy(() => import("@/features/admin/pages/CrawlerPage"));
 
 const ACCOUNT_NAV: NavItem[] = [
   { to: "/account", label: "Tổng quan", icon: LayoutDashboard, end: true, group: "Chung" },
@@ -41,16 +35,6 @@ const ACCOUNT_NAV: NavItem[] = [
   { to: "/account/deposit", label: "Nạp tiền", icon: Wallet, group: "Ví" },
   { to: "/account/transactions", label: "Lịch sử giao dịch", icon: History, group: "Ví" },
   { to: "/account/profile", label: "Hồ sơ", icon: UserRound, group: "Cài đặt" },
-];
-
-const ADMIN_NAV: NavItem[] = [
-  { to: "/admin", label: "Tổng quan", icon: LayoutDashboard, end: true, group: "Chung" },
-  { to: "/admin/users", label: "Thành viên", icon: Users, group: "Quản lý" },
-  { to: "/admin/exams", label: "Đề thi", icon: FileText, group: "Quản lý" },
-  { to: "/admin/deposits", label: "Lệnh nạp tiền", icon: Receipt, group: "Quản lý" },
-  { to: "/admin/bank-transactions", label: "Giao dịch ngân hàng", icon: Landmark, group: "Quản lý" },
-  { to: "/admin/settings", label: "Cấu hình SePay", icon: Settings, group: "Hệ thống" },
-  { to: "/admin/crawler", label: "Cấu hình crawl", icon: DatabaseZap, group: "Hệ thống" },
 ];
 
 export default function App() {
@@ -87,13 +71,7 @@ export default function App() {
 
         <Route element={<RequireAuth role="ADMIN" />}>
           <Route path="/admin" element={<PanelLayout title="Quản trị" items={ADMIN_NAV} />}>
-            <Route index element={<DashboardPage />} />
-            <Route path="users" element={<UsersPage />} />
-            <Route path="exams" element={<ExamsPage />} />
-            <Route path="deposits" element={<DepositsPage />} />
-            <Route path="bank-transactions" element={<BankTransactionsPage />} />
-            <Route path="settings" element={<SettingsPage />} />
-            <Route path="crawler" element={<CrawlerPage />} />
+            {adminRoutes}
           </Route>
         </Route>
 
