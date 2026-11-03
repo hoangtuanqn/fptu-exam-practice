@@ -4,7 +4,7 @@ import { adminApi } from "@/features/admin/api/admin.api";
 import { DepositStatusBadge } from "@/shared/components/StatusBadge";
 import { Card, PageHeader } from "@/shared/ui/Card";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
-import { inputClass } from "@/shared/ui/Input";
+import { Segmented } from "@/shared/ui/Segmented";
 import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
 import { useApi } from "@/shared/hooks/useApi";
 import type { DepositStatus } from "@/shared/types/api";
@@ -22,12 +22,17 @@ export default function DepositsPage() {
       <PageHeader title="Lệnh nạp tiền" description="Tất cả lệnh nạp do thành viên tạo." />
       <Card>
         <div className="border-b border-slate-100 p-4">
-          <select value={status} onChange={(e) => setStatus(e.target.value as DepositStatus | "")} aria-label="Lọc theo trạng thái" className={`${inputClass()} !w-auto`}>
-            <option value="">Mọi trạng thái</option>
-            <option value="PENDING">Chờ thanh toán</option>
-            <option value="PAID">Đã thanh toán</option>
-            <option value="EXPIRED">Hết hạn</option>
-          </select>
+          <Segmented
+            label="Lọc theo trạng thái"
+            value={status}
+            onChange={setStatus}
+            options={[
+              { value: "", label: "Tất cả" },
+              { value: "PENDING", label: "Chờ thanh toán" },
+              { value: "PAID", label: "Đã thanh toán" },
+              { value: "EXPIRED", label: "Hết hạn" },
+            ]}
+          />
         </div>
 
         {loading && !data ? (
