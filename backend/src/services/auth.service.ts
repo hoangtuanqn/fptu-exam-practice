@@ -8,6 +8,7 @@ import type { ForgotPasswordBody, LoginBody, RegisterBody, ResetPasswordBody } f
 import { signToken } from "../utils/jwt";
 import { comparePassword, hashPassword } from "../utils/password";
 import { mailService } from "./mail.service";
+import { notificationService } from "./notification.service";
 
 const INVALID_LOGIN = "Email hoặc mật khẩu không đúng";
 const INVALID_RESET = "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn";
@@ -22,6 +23,7 @@ export const authService = {
       throw AppError.conflict("Email đã được sử dụng", { email: "Email đã được sử dụng" });
     }
     const user = await userRepository.create({ email, fullName, password: await hashPassword(password) });
+    notificationService.welcome(user);
     return { token: signToken(user.id), user };
   },
 
@@ -73,5 +75,6 @@ export const authService = {
       await userRepository.updatePassword(user.id, hashed, tx);
       await passwordResetRepository.invalidateAll(tx, user.id);
     });
+    notificationService.passwordChanged({ userId: user.id, via: "reset" });
   },
 };

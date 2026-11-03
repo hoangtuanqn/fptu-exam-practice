@@ -1,6 +1,7 @@
 import { env } from "../configs/env";
 import { userRepository } from "../repositories/user.repository";
 import { threadUrl } from "../utils/fuo-url";
+import { MAIL_BRAND } from "../constants/mail";
 import { mailService } from "./mail.service";
 
 const walletUrl = () => `${env.CLIENT_URL}/account/transactions`;
@@ -66,6 +67,71 @@ export const notificationService = {
         balanceAfter: n.balanceAfter,
         at: new Date(),
         walletUrl: walletUrl(),
+      });
+    });
+  },
+
+  // Đăng ký xong: thư chào mừng (có sẵn email/tên nên không cần truy vấn lại)
+  welcome(user: { email: string; fullName: string }) {
+    notify("chào mừng", () => mailService.sendWelcome(user.email, { name: user.fullName, homeUrl: env.CLIENT_URL }));
+  },
+
+  // Mật khẩu vừa đổi (đặt lại qua email hoặc đổi trong hồ sơ): cảnh báo để người dùng phát hiện nếu không phải mình
+  passwordChanged(n: { userId: number; via: "reset" | "profile" }) {
+    notify("đổi mật khẩu", async () => {
+      const user = await userRepository.findById(n.userId);
+      if (!user) return;
+      await mailService.sendPasswordChanged(user.email, {
+        name: user.fullName,
+        at: new Date(),
+        via: n.via,
+        forgotUrl: `${env.CLIENT_URL}/forgot-password`,
+      });
+    });
+  },
+
+  // Lấy đề lỗi và đã hoàn phí (gọi SAU khi transaction hoàn phí đã commit)
+  fetchRefunded(n: { userId: number; amount: number; balanceAfter: number; threadId: string }) {
+    notify("hoàn phí lấy đề", async () => {
+      const user = await userRepository.findById(n.userId);
+      if (!user) return;
+      await mailService.sendRefund(user.email, {
+        name: user.fullName,
+        examLabel: `Thread #${n.threadId}`,
+        examUrl: threadUrl(n.threadId),
+        amount: n.amount,
+        balanceAfter: n.balanceAfter,
+        at: new Date(),
+        walletUrl: walletUrl(),
+      });
+    });
+  },
+
+  // Quản trị viên cộng/trừ tiền thủ công
+  balanceAdjusted(n: { userId: number; amount: number; note: string | null; balanceAfter: number }) {
+    notify("điều chỉnh số dư", async () => {
+      const user = await userRepository.findById(n.userId);
+      if (!user) return;
+      await mailService.sendBalanceAdjusted(user.email, {
+        name: user.fullName,
+        amount: n.amount,
+        note: n.note,
+        balanceAfter: n.balanceAfter,
+        at: new Date(),
+        walletUrl: walletUrl(),
+      });
+    });
+  },
+
+  // Quản trị viên khóa / mở khóa tài khoản
+  accountStatusChanged(n: { userId: number; banned: boolean }) {
+    notify("trạng thái tài khoản", async () => {
+      const user = await userRepository.findById(n.userId);
+      if (!user) return;
+      await mailService.sendAccountStatus(user.email, {
+        name: user.fullName,
+        banned: n.banned,
+        supportUrl: MAIL_BRAND.facebookUrl,
       });
     });
   },
