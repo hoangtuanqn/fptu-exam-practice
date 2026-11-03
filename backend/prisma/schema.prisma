@@ -184,7 +184,8 @@ enum CrawlJobStatus {
 model CrawlJob {
   id            Int            @id @default(autoincrement())
   threadId      String         @map("thread_id") @db.VarChar(20)
-  userId        Int            @map("user_id")
+  userId        Int?           @map("user_id") // khách chưa đăng nhập thì null, dùng guestId
+  guestId       String?        @map("guest_id") @db.VarChar(64)
   status        CrawlJobStatus @default(QUEUED)
   stage         String?        @db.VarChar(120)
   error         String?        @db.Text
@@ -197,6 +198,7 @@ model CrawlJob {
   exam Exam? @relation(fields: [examId], references: [id])
 
   @@index([threadId, status])
+  @@index([guestId, status])
   @@index([status, createdAt])
   @@map("crawl_jobs")
 }
@@ -204,14 +206,17 @@ model CrawlJob {
 // Thư viện đề của từng người: nhập link xong là đề nằm trong đây (đề dùng chung, chỉ lưu liên kết)
 model UserExam {
   id        Int      @id @default(autoincrement())
-  userId    Int      @map("user_id")
+  userId    Int?     @map("user_id")
+  guestId   String?  @map("guest_id") @db.VarChar(64) // khách chưa đăng nhập: kho riêng theo trình duyệt, nhận về tài khoản khi đăng ký
   examId    Int      @map("exam_id")
   createdAt DateTime @default(now()) @map("created_at")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exam Exam  @relation(fields: [examId], references: [id], onDelete: Cascade)
 
   @@unique([userId, examId])
+  @@unique([guestId, examId])
+  @@index([guestId, createdAt])
   @@index([userId, createdAt])
   @@map("user_exams")
 }
