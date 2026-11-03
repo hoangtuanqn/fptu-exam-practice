@@ -45,7 +45,8 @@ export async function generateContent({ apiKey, model, system, parts, useSearch 
         signal: AbortSignal.timeout(AI_TIMEOUT_MS),
       });
     } catch (err) {
-      lastError = (err as Error).name === "TimeoutError" ? "Gemini phản hồi quá lâu" : `Không kết nối được Gemini: ${(err as Error).message}`;
+      if ((err as Error).name === "TimeoutError") throw new Error("Gemini phản hồi quá lâu"); // gọi lại chỉ tốn thêm token
+      lastError = `Không kết nối được Gemini: ${(err as Error).message}`;
       continue;
     }
 
