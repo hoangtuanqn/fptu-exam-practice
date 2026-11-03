@@ -1,0 +1,84 @@
+import fs from "node:fs/promises";
+import path from "node:path";
+import { storageDir } from "../configs/env";
+import { AI_REPORT_FALLBACK_PREFIX } from "../constants/ai";
+import { DEFAULT_ANSWER, EXAM_STORAGE_DIR } from "../constants/crawler";
+import { examRepository } from "../repositories/exam.repository";
+import { solveExam } from "./ai/exam-solver.service";
+import { aiSettingService } from "./ai-setting.service";
+
+/**
+ * Hàng đợi nhờ AI giải đáp án, chạy NỀN và tách khỏi việc lấy đề: lấy đề xong là người dùng làm bài được ngay
+ * (đáp án hiện "đang phân tích"), còn AI xử lý song song và cập nhật đáp án khi xong.
+ * Giới hạn số đề giải cùng lúc để không dồn dập gọi Gemini.
+ */
+const MAX_CONCURRENT = 2;
+
+const waiting: number[] = [];
+const running = new Set<number>();
+const lastError = new Map<number, string>();
+
+const pump = () => {
+  while (running.size < MAX_CONCURRENT && waiting.length > 0) {
+    const id = waiting.shift()!;
+    running.add(id);
+    void run(id).finally(() => {
+      running.delete(id);
+      pump();
+    });
+  }
+};
+
+async function run(examId: number) {
+  const exam = await examRepository.findForSolve(examId);
+  if (!exam) return;
+  const wasPending = exam.answerSource === "PENDING";
+
+  try {
+    const ai = await aiSettingService.get();
+    const dir = path.join(storageDir, EXAM_STORAGE_DIR, exam.threadId);
+    const commentsText = await fs.readFile(path.join(dir, "comments.txt"), "utf-8").catch(() => null);
+    const solved = await solveExam(ai, {
+      title: exam.title,
+      commentsText,
+      // imagePath trong DB đúng với cả đề cũ (ảnh nằm thẳng trong thư mục) lẫn đề mới (thư mục images/)
+      questions: exam.questions.map((q) => ({ name: q.name, file: path.join(storageDir, q.imagePath) })),
+    });
+
+    await examRepository.updateAnswers(examId, solved.answers, "AI", solved.report);
+    await fs.writeFile(path.join(dir, "ans.txt"), `${solved.answers.join("\n")}\n`, "utf-8");
+    await fs.writeFile(path.join(dir, "ai-report.md"), `${solved.report}\n`, "utf-8");
+    lastError.delete(examId);
+    console.log(`[ai] đề ${exam.threadId} đã có đáp án (${solved.answers.length} câu)`);
+  } catch (err) {
+    const message = (err as Error).message;
+    console.error(`[ai] giải đề ${exam.threadId} lỗi: ${message}`);
+    lastError.set(examId, message);
+    // Đề đang chờ đáp án mà AI lỗi: trả về đáp án tạm (A) để người dùng không phải chờ mãi; giải lại thì giữ đáp án cũ
+    if (wasPending) {
+      const fallback = exam.questions.map(() => DEFAULT_ANSWER);
+      await examRepository.updateAnswers(examId, fallback, "DEFAULT", `${AI_REPORT_FALLBACK_PREFIX}${message}`);
+    }
+  }
+}
+
+export const examSolveService = {
+  isBusy: (examId: number) => running.has(examId) || waiting.includes(examId),
+  lastError: (examId: number) => lastError.get(examId) ?? null,
+
+  // Xếp đề vào hàng đợi giải. Trả về false nếu đề đã đang chờ hoặc đang giải.
+  enqueue(examId: number) {
+    if (this.isBusy(examId)) return false;
+    lastError.delete(examId);
+    waiting.push(examId);
+    pump();
+    return true;
+  },
+
+  // Khởi động lại server giữa chừng thì các đề đang chờ AI được xếp lại hàng
+  async recoverPending() {
+    const ids = await examRepository.findPendingIds();
+    for (const id of ids) this.enqueue(id);
+    return ids.length;
+  },
+};

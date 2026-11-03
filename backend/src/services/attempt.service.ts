@@ -12,6 +12,10 @@ export const attemptService = {
   async submit(actor: Actor, examId: number, body: SubmitAttemptBody) {
     if (!isMember(actor.owner)) throw AppError.unauthorized(); // lịch sử chỉ dành cho thành viên
     await examService.assertAccess(actor, examId);
+    // AI chưa phân tích xong thì chưa chấm được: bắt giao diện chờ rồi gửi lại, không ghi điểm sai vào lịch sử
+    if ((await examRepository.findAnswerSource(examId))?.answerSource === "PENDING") {
+      throw AppError.conflict("Đáp án đang được AI phân tích, vui lòng thử lại sau ít phút");
+    }
     const questions = await examRepository.findQuestionsForGrading(examId);
     if (questions.length === 0) throw AppError.notFound("Không tìm thấy đề");
 

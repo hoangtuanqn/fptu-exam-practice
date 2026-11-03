@@ -3,7 +3,8 @@ import { prisma } from "../configs/prisma";
 import { parseSiteTime } from "../utils/html";
 import { toSkipTake, type PaginationQuery } from "../utils/pagination";
 
-export type AnswerSource = "DEFAULT" | "AI" | "MANUAL";
+// PENDING = AI đang phân tích đáp án (đề đã dùng được, chỉ chưa chấm được)
+export type AnswerSource = "PENDING" | "DEFAULT" | "AI" | "MANUAL";
 
 export interface NewExam {
   threadId: string;
@@ -43,6 +44,18 @@ export const examRepository = {
       where: { id },
       include: { questions: { orderBy: { number: "asc" }, select: { number: true, name: true, imagePath: true } } },
     }),
+
+  // Trạng thái đáp án và đáp án từng câu, để giao diện hỏi lại khi AI đang phân tích
+  findAnswers: (id: number) =>
+    prisma.exam.findUnique({
+      where: { id },
+      select: { answerSource: true, questions: { orderBy: { number: "asc" }, select: { number: true, answer: true } } },
+    }),
+
+  findAnswerSource: (id: number) => prisma.exam.findUnique({ where: { id }, select: { answerSource: true } }),
+
+  // Đề còn đang chờ AI (ví dụ server tắt giữa chừng): xếp lại hàng khi khởi động
+  findPendingIds: async () => (await prisma.exam.findMany({ where: { answerSource: "PENDING" }, select: { id: true } })).map((e) => e.id),
 
   findByThreadIdOfId: (id: number) => prisma.exam.findUnique({ where: { id }, select: { id: true } }),
 
