@@ -19,6 +19,7 @@ const crawlJobRouter = Router();
 crawlJobRouter.use(authenticate);
 
 crawlJobRouter.post("/", importLimiter, validate(importExamBody), crawlJobController.submit);
+crawlJobRouter.get("/price", crawlJobController.price);
 crawlJobRouter.get("/:id", validate(idParam, "params"), crawlJobController.get);
 
 export default crawlJobRouter;

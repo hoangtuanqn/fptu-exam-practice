@@ -4,6 +4,7 @@ export interface CrawlerConfig {
   referer: string;
   requestDelayMs: number; // nghỉ giữa các request để không bị chặn
   webpQuality: number; // chất lượng WebP khi chuyển ảnh
+  fetchPrice: number; // phí (VND) mỗi lần lấy đề từ FuOverflow, 0 = miễn phí
 }
 
 export const CRAWLER_DEFAULTS: CrawlerConfig = {
@@ -12,6 +13,7 @@ export const CRAWLER_DEFAULTS: CrawlerConfig = {
   referer: "https://fuoverflow.com/",
   requestDelayMs: 300,
   webpQuality: 80,
+  fetchPrice: 0,
 };
 
 export const CRAWLER_KEY_PREFIX = "crawler.";
