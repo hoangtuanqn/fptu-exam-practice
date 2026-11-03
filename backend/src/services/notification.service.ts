@@ -1,6 +1,7 @@
 import { env } from "../configs/env";
 import { userRepository } from "../repositories/user.repository";
 import { threadUrl } from "../utils/fuo-url";
+import { EMAIL_VERIFICATION_EXPIRES_HOURS } from "../constants/email-verification";
 import { MAIL_BRAND } from "../constants/mail";
 import { mailService } from "./mail.service";
 
@@ -74,6 +75,22 @@ export const notificationService = {
   // Đăng ký xong: thư chào mừng (có sẵn email/tên nên không cần truy vấn lại)
   welcome(user: { email: string; fullName: string }) {
     notify("chào mừng", () => mailService.sendWelcome(user.email, { name: user.fullName, homeUrl: env.CLIENT_URL }));
+  },
+
+  // Thư xác minh email (đăng ký hoặc đổi email): gửi tới đúng địa chỉ cần xác minh
+  verifyEmail(n: { userId: number; email: string; link: string }) {
+    notify("xác minh email", async () => {
+      const user = await userRepository.findById(n.userId);
+      if (!user) return;
+      await mailService.sendVerifyEmail(n.email, { name: user.fullName, link: n.link, expiresHours: EMAIL_VERIFICATION_EXPIRES_HOURS });
+    });
+  },
+
+  // Email đăng nhập đã đổi: báo tới địa chỉ CŨ để người dùng phát hiện nếu không phải mình
+  emailChanged(n: { oldEmail: string; newEmail: string; name: string }) {
+    notify("đổi email", () =>
+      mailService.sendEmailChanged(n.oldEmail, { name: n.name, newEmail: n.newEmail, at: new Date(), forgotUrl: `${env.CLIENT_URL}/forgot-password` }),
+    );
   },
 
   // Mật khẩu vừa đổi (đặt lại qua email hoặc đổi trong hồ sơ): cảnh báo để người dùng phát hiện nếu không phải mình

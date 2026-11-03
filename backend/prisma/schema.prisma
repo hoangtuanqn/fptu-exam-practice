@@ -27,6 +27,7 @@ model User {
   balance   Int        @default(0)
   referralCode String?   @unique @map("referral_code") @db.VarChar(12) // mã giới thiệu của chính người này
   referredById Int?      @map("referred_by_id") // người đã giới thiệu
+  emailVerifiedAt DateTime? @map("email_verified_at") // chưa xác minh email thì chưa dùng được các dịch vụ trừ credit
   createdAt DateTime   @default(now()) @map("created_at")
   updatedAt DateTime   @updatedAt @map("updated_at")
 
@@ -35,6 +36,7 @@ model User {
   userExams          UserExam[]
   attempts           ExamAttempt[]
   passwordResets     PasswordResetToken[]
+  emailVerifications EmailVerificationToken[]
   giftRedemptions    GiftCodeRedemption[]
   answerReports      AnswerReport[]
   explanationBuys    ExplanationPurchase[]
@@ -389,4 +391,21 @@ model ReferralReward {
   @@index([referrerId, createdAt])
   @@index([referredId])
   @@map("referral_rewards")
+}
+
+// Token xác minh email. `email` là địa chỉ cần xác minh: email hiện tại (đăng ký) hoặc email mới (đổi email).
+// Chỉ lưu băm của token. Email chỉ được đổi khi người dùng bấm liên kết gửi tới địa chỉ MỚI.
+model EmailVerificationToken {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  email     String    @db.VarChar(191)
+  tokenHash String    @unique @map("token_hash") @db.VarChar(64)
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("email_verification_tokens")
 }

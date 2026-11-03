@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Sparkles } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
+import { VerifyEmailNotice } from "@/features/verify-email/VerifyEmailNotice";
 import { Button } from "@/shared/ui/Button";
 import { Modal, ModalActions, ModalTitle } from "@/shared/ui/Modal";
 import { formatCredit } from "@/shared/utils/formatters";
@@ -16,11 +17,21 @@ interface Props {
 export function ExplainConfirmDialog({ questionNumber, price, onCancel, onConfirm }: Props) {
   const { user } = useAuth();
   const balance = user?.balance ?? 0;
+  const unverified = !!user && !user.emailVerifiedAt;
   const short = balance < price;
 
   return (
     <Modal onClose={onCancel}>
       <ModalTitle icon={Sparkles}>Giải thích câu {questionNumber}</ModalTitle>
+      {unverified ? (
+        <div className="mt-3">
+          <VerifyEmailNotice variant="inline" message="Bạn cần xác minh email trước khi dùng giải thích AI." />
+          <ModalActions>
+            <Button onClick={onCancel}>Đóng</Button>
+          </ModalActions>
+        </div>
+      ) : (
+        <>
       <p className="mt-2 text-sm leading-relaxed text-slate-600">
         AI sẽ giải thích vì sao đáp án đúng và vì sao các lựa chọn còn lại sai. Phí <b className="text-slate-900">{formatCredit(price)}</b>, mỗi câu chỉ trả một lần, xem lại miễn phí.
       </p>
@@ -48,6 +59,8 @@ export function ExplainConfirmDialog({ questionNumber, price, onCancel, onConfir
           <Sparkles size={16} /> Xác nhận ({formatCredit(price)})
         </Button>
       </ModalActions>
+        </>
+      )}
     </Modal>
   );
 }

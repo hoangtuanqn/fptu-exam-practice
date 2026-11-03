@@ -12,5 +12,7 @@ export const authApi = {
     http.post<AuthResult>("/auth/register", body),
   forgotPassword: (email: string) => http.post<null>("/auth/forgot-password", { email }),
   resetPassword: (body: { token: string; password: string }) => http.post<null>("/auth/reset-password", body),
+  verifyEmail: (token: string) => http.post<{ email: string }>("/auth/verify-email", { token }),
+  resendVerification: () => http.post<null>("/auth/resend-verification"),
   me: () => http.get<User>("/auth/me"),
 };

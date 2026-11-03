@@ -73,7 +73,7 @@ export const adminApi = {
   dashboard: () => http.get<DashboardOverview>("/admin/dashboard"),
 
   users: (f: UserFilter) => http.list<User>("/admin/users", { ...f, limit: PAGE_SIZE }),
-  updateUser: (id: number, body: Partial<Pick<User, "fullName" | "role" | "status">>) =>
+  updateUser: (id: number, body: Partial<Pick<User, "fullName" | "role" | "status">> & { emailVerified?: boolean }) =>
     http.patch<User>(`/admin/users/${id}`, body),
   adjustBalance: (id: number, body: { amount: number; note: string }) =>
     http.post<User>(`/admin/users/${id}/balance`, body),

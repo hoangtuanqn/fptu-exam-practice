@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Loader2 } from "lucide-react";
+import { EmailSection } from "@/features/account/components/EmailSection";
 import { userApi } from "@/features/account/api/user.api";
 import { Button } from "@/shared/ui/Button";
 import { Card, CardHeader, PageHeader } from "@/shared/ui/Card";
@@ -29,7 +30,6 @@ function InfoForm() {
       <CardHeader title="Thông tin cá nhân" />
       <form onSubmit={onSubmit} className="space-y-4 p-5" noValidate>
         <FormError message={error} />
-        <Input label="Email" value={user?.email ?? ""} disabled hint="Email dùng để đăng nhập, không đổi được" />
         <Input label="Họ và tên" value={fullName} onChange={(e) => setFullName(e.target.value)} error={fieldErrors.fullName} />
         <Button variant="primary" type="submit" disabled={loading || unchanged || fullName.trim().length < 2}>
           {loading && <Loader2 size={16} className="animate-spin" />}
@@ -96,10 +96,11 @@ function PasswordForm() {
 export default function ProfilePage() {
   return (
     <>
-      <PageHeader title="Hồ sơ" description="Quản lý thông tin và mật khẩu của bạn." />
+      <PageHeader title="Hồ sơ" description="Quản lý thông tin, email và mật khẩu của bạn." />
       <div className="grid gap-6 lg:grid-cols-2">
         <InfoForm />
         <PasswordForm />
+        <EmailSection />
       </div>
     </>
   );
