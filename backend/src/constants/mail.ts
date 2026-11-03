@@ -16,4 +16,12 @@ export const MAIL_BRAND = {
 // Ảnh banner nằm cạnh mã nguồn (backend/assets/mail), đúng cả khi chạy từ src/ lẫn dist/
 export const MAIL_ASSETS_DIR = path.resolve(__dirname, "../../assets/mail");
 
-export const BANNER_CID = "reset-banner@mst";
+// Mỗi loại thư một banner, nhúng thẳng vào thư bằng cid
+export const MAIL_BANNERS = {
+  reset: { file: "reset-banner.png", cid: "reset-banner@mst", alt: "Quên mật khẩu? Đặt lại chỉ trong vài bước" },
+  order: { file: "order-banner.png", cid: "order-banner@mst", alt: "Lệnh nạp tiền đã tạo" },
+  deposit: { file: "deposit-banner.png", cid: "deposit-banner@mst", alt: "Nạp tiền thành công" },
+  charge: { file: "charge-banner.png", cid: "charge-banner@mst", alt: "Đã trừ phí lấy đề" },
+} as const;
+
+export type MailBanner = (typeof MAIL_BANNERS)[keyof typeof MAIL_BANNERS];

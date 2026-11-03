@@ -10,6 +10,7 @@ import { parseThreadId } from "../utils/fuo-url";
 import { startOfVnDay } from "../utils/time";
 import { crawlerSettingService } from "./crawler-setting.service";
 import { examService } from "./exam.service";
+import { notificationService } from "./notification.service";
 import { walletService } from "./wallet.service";
 
 type Listener = () => void;
@@ -58,14 +59,16 @@ export const crawlJobService = {
     const fetchPrice = isMember(owner) ? (await crawlerSettingService.get()).fetchPrice : 0;
     const exam = await examRepository.findByThreadId(threadId);
 
+    let balanceAfter: number | null = null; // số dư sau khi trừ phí, để báo qua email
     const result = await prisma.$transaction(async (tx) => {
       if (fetchPrice > 0 && isMember(owner)) {
-        await walletService.charge(tx, {
+        const entry = await walletService.charge(tx, {
           userId: owner.userId,
           amount: fetchPrice,
           type: "CRAWL_CHARGE",
           note: `Lấy đề thread ${threadId}`,
         });
+        balanceAfter = entry.balanceAfter;
       }
       if (exam) {
         await examService.addToLibrary(owner, exam.id, tx);
@@ -81,6 +84,17 @@ export const crawlJobService = {
       const job = await crawlJobRepository.create({ threadId, ...owner, chargedAmount: fetchPrice }, tx);
       return { existed: false as const, job: toDto(job), charged: fetchPrice };
     });
+
+    // Mỗi lần bị trừ phí đều báo qua email (sau khi transaction đã commit)
+    if (isMember(owner) && fetchPrice > 0 && balanceAfter !== null) {
+      notificationService.fetchCharged({
+        userId: owner.userId,
+        amount: fetchPrice,
+        balanceAfter,
+        threadId,
+        examTitle: exam?.title,
+      });
+    }
 
     if (!result.existed) listeners.forEach((fn) => fn());
     return result;
