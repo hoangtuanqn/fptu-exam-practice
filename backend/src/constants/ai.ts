@@ -30,6 +30,8 @@ export const DEFAULT_PROMPT_FILE = path.resolve(__dirname, "../../assets/prompts
 export const AI_TIMEOUT_MS = 10 * 60 * 1000;
 export const AI_MAX_OUTPUT_TOKENS = 32_000; // gồm cả token suy luận
 export const AI_MAX_SEARCHES = 5; // số lượt tra web tối đa mỗi đề khi bật useSearch
+// Ảnh có cạnh dài hơn mức này được thu nhỏ trước khi gửi (chỉ bản gửi đi, ảnh gốc giữ nguyên): token ảnh tỉ lệ với số điểm ảnh
+export const AI_IMAGE_MAX_EDGE = 1280;
 export const AI_MAX_PAUSES = 4; // tra web lâu có thể bị tạm dừng giữa chừng, tiếp tục tối đa chừng này lần
 
 export const AI_REPORT_FAILED_PREFIX = "AI không giải được đề này. Lý do: ";
