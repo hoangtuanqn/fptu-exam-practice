@@ -1,4 +1,5 @@
 import { http } from "@/shared/api/client";
+import { PAGE_SIZE } from "@/shared/api/pagination";
 
 export interface LibraryExam {
   id: number;
@@ -12,7 +13,7 @@ export interface LibraryExam {
 }
 
 export const examLibraryApi = {
-  list: (page = 1, limit = 20) => http.list<LibraryExam>("/exams", { page, limit }),
+  list: (page = 1, limit = PAGE_SIZE) => http.list<LibraryExam>("/exams", { page, limit }),
   // Sau khi đăng ký/đăng nhập: đề khách đã lấy trên trình duyệt này chuyển về tài khoản
   claim: () => http.post<{ claimed: number }>("/exams/claim"),
 };

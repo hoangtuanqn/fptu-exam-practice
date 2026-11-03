@@ -7,7 +7,7 @@ import { depositService } from "../services/deposit.service";
 export const adminDepositController = {
   async list(_req: Request, res: Response) {
     const query = getValidated<ListDepositsQuery>(res, "query");
-    const { items, meta } = await depositService.list(query, query.userId);
+    const { items, meta } = await depositService.list(query, query.userId, true);
     res.json(new ResponseClient({ data: items, meta }));
   },
 };

@@ -4,7 +4,7 @@ export type Role = "USER" | "ADMIN";
 export type UserStatus = "ACTIVE" | "BANNED";
 export type DepositStatus = "PENDING" | "PAID" | "EXPIRED";
 export type BankTxStatus = "MATCHED" | "UNMATCHED";
-export type TransactionType = "DEPOSIT" | "ADMIN_ADJUST" | "CRAWL_CHARGE" | "CRAWL_REFUND";
+export type TransactionType = "DEPOSIT" | "ADMIN_ADJUST" | "CRAWL_CHARGE" | "CRAWL_REFUND" | "GIFT_CODE";
 
 export interface User {
   id: number;
@@ -19,7 +19,7 @@ export interface User {
 export interface WalletTransaction {
   id: number;
   type: TransactionType;
-  amount: number; // âm = trừ tiền
+  amount: number; // âm = trừ credit
   balanceAfter: number;
   note: string | null;
   createdAt: string;
@@ -142,4 +142,42 @@ export interface PageMeta {
 export interface Paged<T> {
   items: T[];
   meta: PageMeta;
+}
+
+// ----- Giftcode
+export type GiftCodeStatus = "ACTIVE" | "DISABLED" | "EXPIRED" | "USED_UP";
+
+export interface GiftCode {
+  id: number;
+  code: string;
+  amount: number; // credit mỗi lượt
+  maxUses: number;
+  usedCount: number;
+  expiresAt: string | null;
+  active: boolean;
+  note: string | null;
+  createdAt: string;
+  status: GiftCodeStatus;
+}
+
+// Một lượt dùng mã (admin xem ai đã dùng)
+export interface GiftCodeRedemption {
+  id: number;
+  amount: number;
+  createdAt: string;
+  user: { id: number; email: string; fullName: string };
+}
+
+// Mã mà chính thành viên đã nhập
+export interface MyGiftRedemption {
+  id: number;
+  code: string;
+  amount: number;
+  createdAt: string;
+}
+
+export interface RedeemResult {
+  code: string;
+  amount: number;
+  balanceAfter: number;
 }

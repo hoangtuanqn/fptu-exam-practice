@@ -1,5 +1,5 @@
 import { MAIL_BANNERS, MAIL_BRAND } from "../../constants/mail";
-import { formatDateTimeVN, formatMoney } from "../../utils/format";
+import { formatCredit, formatDateTimeVN, formatMoney } from "../../utils/format";
 import { button, details, esc, note, p, qrImage, renderLayout, signature } from "../layout";
 
 const { company } = MAIL_BRAND;
@@ -81,12 +81,12 @@ export interface DepositEmailInput {
 export function renderDepositEmail(i: DepositEmailInput) {
   const bodyHtml = [
     p(`<strong>Xin chào ${esc(i.name)},</strong>`),
-    p("Chúng mình đã nhận được tiền chuyển khoản và cộng vào ví của bạn."),
+    p("Chúng mình đã nhận được tiền chuyển khoản và cộng credit vào ví của bạn."),
     details([
       { label: "Mã nạp", value: esc(i.code) },
       { label: "Thời gian", value: esc(formatDateTimeVN(i.at)) },
-      { label: "Số tiền đã cộng", value: `+${esc(formatMoney(i.amount))}`, strong: true },
-      { label: "Số dư hiện tại", value: esc(formatMoney(i.balanceAfter)) },
+      { label: "Credit đã cộng", value: `+${esc(formatCredit(i.amount))}`, strong: true },
+      { label: "Số dư hiện tại", value: esc(formatCredit(i.balanceAfter)) },
     ]),
     button("Xem lịch sử giao dịch", i.walletUrl),
     note("Không nhận ra giao dịch này? Hãy liên hệ chúng mình qua fanpage ngay."),
@@ -96,18 +96,68 @@ export function renderDepositEmail(i: DepositEmailInput) {
   return {
     html: renderLayout({
       eyebrow: "THANH TOÁN",
-      title: "Nạp tiền thành công",
-      preheader: `Đã cộng ${formatMoney(i.amount)} vào ví. Số dư hiện tại: ${formatMoney(i.balanceAfter)}.`,
+      title: "Nạp credit thành công",
+      preheader: `Đã cộng ${formatCredit(i.amount)} vào ví. Số dư hiện tại: ${formatCredit(i.balanceAfter)}.`,
       banner: MAIL_BANNERS.deposit,
       bodyHtml,
     }),
     text: [
       `Xin chào ${i.name},`,
       "",
-      "Chúng mình đã nhận được tiền chuyển khoản và cộng vào ví của bạn.",
+      "Chúng mình đã nhận được tiền chuyển khoản và cộng credit vào ví của bạn.",
       `Mã nạp: ${i.code}`,
-      `Số tiền đã cộng: +${formatMoney(i.amount)}`,
-      `Số dư hiện tại: ${formatMoney(i.balanceAfter)}`,
+      `Credit đã cộng: +${formatCredit(i.amount)}`,
+      `Số dư hiện tại: ${formatCredit(i.balanceAfter)}`,
+      `Thời gian: ${formatDateTimeVN(i.at)}`,
+      "",
+      `Xem lịch sử giao dịch: ${i.walletUrl}`,
+      "",
+      "Trân trọng,",
+      company,
+    ].join("\n"),
+  };
+}
+
+// ---------- Nhận credit từ giftcode
+
+export interface GiftCodeEmailInput {
+  name: string;
+  code: string;
+  amount: number;
+  balanceAfter: number;
+  at: Date;
+  walletUrl: string;
+}
+
+export function renderGiftCodeEmail(i: GiftCodeEmailInput) {
+  const bodyHtml = [
+    p(`<strong>Xin chào ${esc(i.name)},</strong>`),
+    p("Giftcode của bạn đã được áp dụng và credit đã được cộng vào ví."),
+    details([
+      { label: "Giftcode", value: esc(i.code) },
+      { label: "Thời gian", value: esc(formatDateTimeVN(i.at)) },
+      { label: "Credit đã cộng", value: `+${esc(formatCredit(i.amount))}`, strong: true },
+      { label: "Số dư hiện tại", value: esc(formatCredit(i.balanceAfter)) },
+    ]),
+    button("Xem lịch sử giao dịch", i.walletUrl),
+    signature(),
+  ].join("");
+
+  return {
+    html: renderLayout({
+      eyebrow: "QUÀ TẶNG",
+      title: "Nhận credit thành công",
+      preheader: `Đã cộng ${formatCredit(i.amount)} từ giftcode ${i.code}. Số dư hiện tại: ${formatCredit(i.balanceAfter)}.`,
+      banner: MAIL_BANNERS.deposit,
+      bodyHtml,
+    }),
+    text: [
+      `Xin chào ${i.name},`,
+      "",
+      "Giftcode của bạn đã được áp dụng và credit đã được cộng vào ví.",
+      `Giftcode: ${i.code}`,
+      `Credit đã cộng: +${formatCredit(i.amount)}`,
+      `Số dư hiện tại: ${formatCredit(i.balanceAfter)}`,
       `Thời gian: ${formatDateTimeVN(i.at)}`,
       "",
       `Xem lịch sử giao dịch: ${i.walletUrl}`,
@@ -137,8 +187,8 @@ export function renderChargeEmail(i: ChargeEmailInput) {
     details([
       { label: "Đề", value: `<a href="${esc(i.examUrl)}" target="_blank" style="color:#0066ff">${esc(i.examLabel)}</a>` },
       { label: "Thời gian", value: esc(formatDateTimeVN(i.at)) },
-      { label: "Phí lấy đề", value: `−${esc(formatMoney(i.amount))}`, strong: true },
-      { label: "Số dư còn lại", value: esc(formatMoney(i.balanceAfter)) },
+      { label: "Phí lấy đề", value: `−${esc(formatCredit(i.amount))}`, strong: true },
+      { label: "Số dư còn lại", value: esc(formatCredit(i.balanceAfter)) },
     ]),
     button("Xem lịch sử giao dịch", i.walletUrl),
     note("Phí tính cho mỗi lần lấy đề. Nếu việc lấy đề thất bại, phí được hoàn lại vào ví tự động."),
@@ -149,7 +199,7 @@ export function renderChargeEmail(i: ChargeEmailInput) {
     html: renderLayout({
       eyebrow: "BIÊN LAI",
       title: "Phí lấy đề",
-      preheader: `Đã trừ ${formatMoney(i.amount)} cho lần lấy đề. Số dư còn lại: ${formatMoney(i.balanceAfter)}.`,
+      preheader: `Đã trừ ${formatCredit(i.amount)} cho lần lấy đề. Số dư còn lại: ${formatCredit(i.balanceAfter)}.`,
       banner: MAIL_BANNERS.charge,
       bodyHtml,
     }),
@@ -158,8 +208,8 @@ export function renderChargeEmail(i: ChargeEmailInput) {
       "",
       "Ví của bạn vừa bị trừ phí cho lần lấy đề từ FuOverflow.",
       `Đề: ${i.examLabel} (${i.examUrl})`,
-      `Phí lấy đề: -${formatMoney(i.amount)}`,
-      `Số dư còn lại: ${formatMoney(i.balanceAfter)}`,
+      `Phí lấy đề: -${formatCredit(i.amount)}`,
+      `Số dư còn lại: ${formatCredit(i.balanceAfter)}`,
       `Thời gian: ${formatDateTimeVN(i.at)}`,
       "",
       "Nếu việc lấy đề thất bại, phí được hoàn lại tự động.",

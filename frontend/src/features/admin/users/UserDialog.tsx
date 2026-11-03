@@ -5,7 +5,7 @@ import { useAuth } from "@/features/auth/AuthContext";
 import { useToast } from "@/shared/context/ToastContext";
 import { useSubmit } from "@/shared/hooks/useSubmit";
 import type { Role, User, UserStatus } from "@/shared/types/api";
-import { formatMoney } from "@/shared/utils/formatters";
+import { formatCredit } from "@/shared/utils/formatters";
 import { Button } from "@/shared/ui/Button";
 import { FormError } from "@/shared/ui/Feedback";
 import { Input, Select } from "@/shared/ui/Input";
@@ -52,7 +52,7 @@ export function UserDialog({ user, onClose, onChanged }: Props) {
       setCurrent(await adminApi.adjustBalance(user.id, { amount: sign * Number(digits), note }));
       setDigits("");
       setNote("");
-      toast.success(sign > 0 ? "Đã cộng tiền" : "Đã trừ tiền");
+      toast.success(sign > 0 ? "Đã cộng credit" : "Đã trừ credit");
       await changed();
     });
 
@@ -93,11 +93,11 @@ export function UserDialog({ user, onClose, onChanged }: Props) {
       <div className="space-y-3">
         <div className="flex items-baseline justify-between">
           <span className="text-sm font-medium text-slate-700">Số dư</span>
-          <span className="font-serif text-xl font-semibold tabular-nums text-slate-900">{formatMoney(current.balance)}</span>
+          <span className="font-serif text-xl font-semibold tabular-nums text-slate-900">{formatCredit(current.balance)}</span>
         </div>
         <FormError message={money.error} />
         <Input
-          label="Số tiền (₫)"
+          label="Số credit"
           inputMode="numeric"
           value={digits ? Number(digits).toLocaleString("vi-VN") : ""}
           onChange={(e) => setDigits(e.target.value.replace(/\D/g, "").slice(0, 10))}
@@ -106,10 +106,10 @@ export function UserDialog({ user, onClose, onChanged }: Props) {
         <Input label="Lý do" value={note} onChange={(e) => setNote(e.target.value)} error={money.fieldErrors.note} placeholder="Ví dụ: Hoàn tiền giao dịch lỗi" />
         <div className="flex gap-2">
           <Button grow disabled={money.loading || !amountOk} onClick={() => adjust(1)}>
-            <Plus size={16} /> Cộng tiền
+            <Plus size={16} /> Cộng credit
           </Button>
           <Button grow disabled={money.loading || !amountOk} onClick={() => adjust(-1)}>
-            <Minus size={16} /> Trừ tiền
+            <Minus size={16} /> Trừ credit
           </Button>
         </div>
       </div>

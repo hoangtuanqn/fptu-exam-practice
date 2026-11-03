@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ChevronDown, LayoutDashboard, LogOut, ShieldCheck, Wallet } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
-import { formatMoney, initials } from "@/shared/utils/formatters";
+import { formatCredit, initials } from "@/shared/utils/formatters";
 import { buttonClass } from "@/shared/ui/Button";
 
 const item = "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-100";
@@ -61,7 +61,7 @@ export function UserMenu() {
             <div className="truncate text-sm font-medium text-slate-900">{user.fullName}</div>
             <div className="truncate text-xs text-slate-500">{user.email}</div>
             <div className="mt-2 flex items-center gap-1.5 text-xs text-slate-600">
-              <Wallet size={13} /> Số dư <b className="tabular-nums text-slate-900">{formatMoney(user.balance)}</b>
+              <Wallet size={13} /> Số dư <b className="tabular-nums text-slate-900">{formatCredit(user.balance)}</b>
             </div>
           </div>
           <div className="my-1 h-px bg-slate-100" />

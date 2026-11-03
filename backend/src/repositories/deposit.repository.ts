@@ -3,7 +3,9 @@ import { prisma } from "../configs/prisma";
 import { toSkipTake, type PaginationQuery } from "../utils/pagination";
 import type { Db } from "./wallet.repository";
 
-const withUser = { user: { select: { id: true, email: true, fullName: true } } } satisfies Prisma.DepositOrderInclude;
+// Chỉ các cột giao diện hiển thị; thông tin người tạo chỉ kèm theo khi admin xem
+const listSelect = { id: true, code: true, amount: true, status: true, expiresAt: true, paidAt: true, createdAt: true } satisfies Prisma.DepositOrderSelect;
+const userSelect = { user: { select: { id: true, email: true, fullName: true } } } satisfies Prisma.DepositOrderSelect;
 
 export const depositRepository = {
   create: (data: { userId: number; code: string; amount: number; expiresAt: Date }) =>
@@ -35,10 +37,15 @@ export const depositRepository = {
 
   countPending: (userId: number) => prisma.depositOrder.count({ where: { userId, status: "PENDING" } }),
 
-  async list(query: PaginationQuery, filter: { userId?: number; status?: DepositStatus }) {
+  async list(query: PaginationQuery, filter: { userId?: number; status?: DepositStatus }, withUser = false) {
     const where: Prisma.DepositOrderWhereInput = { userId: filter.userId, status: filter.status };
     const [items, total] = await Promise.all([
-      prisma.depositOrder.findMany({ where, include: withUser, orderBy: { id: "desc" }, ...toSkipTake(query) }),
+      prisma.depositOrder.findMany({
+        where,
+        select: withUser ? { ...listSelect, ...userSelect } : listSelect,
+        orderBy: { id: "desc" },
+        ...toSkipTake(query),
+      }),
       prisma.depositOrder.count({ where }),
     ]);
     return { items, total };

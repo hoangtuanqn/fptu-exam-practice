@@ -91,7 +91,7 @@ export function CrawlerConfigForm({ initial, onSaved }: { initial: CrawlerAdminC
         </div>
 
         <Input
-          label="Phí mỗi lần lấy đề (₫)"
+          label="Phí mỗi lần lấy đề (credit)"
           inputMode="numeric"
           value={form.fetchPrice}
           onChange={text("fetchPrice")}

@@ -17,3 +17,15 @@ export const authLimiter = rateLimit({
   legacyHeaders: false,
   message: { status: false, message: "Thử quá nhiều lần, vui lòng quay lại sau" },
 });
+
+// Chống dò giftcode: chỉ đếm các lần nhập SAI, 10 lần / 15 phút / tài khoản
+export const giftCodeLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  skipSuccessfulRequests: true,
+  keyGenerator: (req) => `user:${req.user?.id ?? "anon"}`,
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: { keyGeneratorIpFallback: false },
+  message: { status: false, message: "Bạn nhập sai quá nhiều lần, vui lòng thử lại sau ít phút" },
+});

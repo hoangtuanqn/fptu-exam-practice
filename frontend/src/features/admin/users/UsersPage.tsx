@@ -12,7 +12,8 @@ import { useApi } from "@/shared/hooks/useApi";
 import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
 import { useDebounce } from "@/shared/hooks/useDebounce";
 import type { Role, User, UserStatus } from "@/shared/types/api";
-import { formatDate, formatMoney, initials } from "@/shared/utils/formatters";
+import { formatDate, formatCredit, initials } from "@/shared/utils/formatters";
+import { useClampPage } from "@/shared/hooks/useClampPage";
 
 export default function UsersPage() {
   const [url, setUrl] = useUrlState({ q: "", role: "", status: "", page: "1" });
@@ -33,6 +34,7 @@ export default function UsersPage() {
   }, [q]);
 
   const { data, error, loading, reload } = useApi(() => adminApi.users({ page, search: q, role, status }), [page, q, role, status]);
+  useClampPage(data?.meta, setPage);
 
   return (
     <>
@@ -92,7 +94,7 @@ export default function UsersPage() {
                       </div>
                     </div>
                     <div className="shrink-0 text-right">
-                      <div className="whitespace-nowrap text-sm font-semibold tabular-nums text-slate-900">{formatMoney(u.balance)}</div>
+                      <div className="whitespace-nowrap text-sm font-semibold tabular-nums text-slate-900">{formatCredit(u.balance)}</div>
                       <div className="text-xs text-slate-400">{formatDate(u.createdAt)}</div>
                     </div>
                   </button>
@@ -124,7 +126,7 @@ export default function UsersPage() {
                     </Td>
                     <Td><RoleBadge value={u.role} /></Td>
                     <Td><UserStatusBadge value={u.status} /></Td>
-                    <Td className="text-right tabular-nums">{formatMoney(u.balance)}</Td>
+                    <Td className="text-right tabular-nums">{formatCredit(u.balance)}</Td>
                     <Td className="whitespace-nowrap text-slate-500">{formatDate(u.createdAt)}</Td>
                   </Tr>
                 ))}

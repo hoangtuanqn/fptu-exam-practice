@@ -4,7 +4,7 @@ import { depositApi, type DepositDetail } from "@/features/account/api/deposit.a
 import { useAuth } from "@/features/auth/AuthContext";
 import { useToast } from "@/shared/context/ToastContext";
 import { useCountdown } from "@/shared/hooks/useCountdown";
-import { formatMoney } from "@/shared/utils/formatters";
+import { formatCredit, formatMoney } from "@/shared/utils/formatters";
 import { Button } from "@/shared/ui/Button";
 import { Card } from "@/shared/ui/Card";
 import { CopyButton } from "@/shared/ui/CopyButton";
@@ -37,7 +37,7 @@ export function PaymentPanel({ code, onClose }: { code: string; onClose: () => v
         setError(null);
         if (d.order.status === "PAID" && !notified.current) {
           notified.current = true;
-          toast.success("Đã nhận tiền, số dư được cập nhật");
+          toast.success("Đã nhận tiền, credit đã được cộng");
           void refresh();
         }
       } catch (err) {
@@ -79,9 +79,9 @@ export function PaymentPanel({ code, onClose }: { code: string; onClose: () => v
     return (
       <Card className="flex flex-col items-center gap-3 px-6 py-12 text-center">
         <CheckCircle2 size={44} className="text-emerald-600" />
-        <h2 className="font-serif text-2xl font-semibold text-slate-900">Nạp tiền thành công</h2>
+        <h2 className="font-serif text-2xl font-semibold text-slate-900">Nạp credit thành công</h2>
         <p className="text-sm text-slate-500">
-          Đã cộng <b className="text-slate-800">{formatMoney(order.amount)}</b> vào ví của bạn.
+          Đã cộng <b className="text-slate-800">{formatCredit(order.amount)}</b> vào ví của bạn.
         </p>
         <Button variant="primary" onClick={onClose} className="mt-2">
           Hoàn tất

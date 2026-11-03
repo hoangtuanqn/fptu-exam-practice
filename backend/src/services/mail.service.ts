@@ -6,9 +6,11 @@ import { renderResetPasswordEmail } from "../mail/templates/reset-password";
 import {
   renderChargeEmail,
   renderDepositEmail,
+  renderGiftCodeEmail,
   renderOrderEmail,
   type ChargeEmailInput,
   type DepositEmailInput,
+  type GiftCodeEmailInput,
   type OrderEmailInput,
 } from "../mail/templates/wallet-notice";
 
@@ -45,7 +47,8 @@ const send = async (to: string, subject: string, banner: MailBanner, { html, tex
 
 // Tiêu đề: [Tên hệ thống] + nội dung chính + số tiền/mã giao dịch, để nhìn hộp thư là biết ngay đó là thư gì
 const tag = `[${MAIL_BRAND.product}]`;
-const money = (n: number) => `${n.toLocaleString("vi-VN")} ₫`;
+const money = (n: number) => `${n.toLocaleString("vi-VN")} ₫`; // số tiền chuyển khoản thật
+const credit = (n: number) => `${n.toLocaleString("vi-VN")} credit`; // số dư ví
 
 export const mailService = {
   sendPasswordReset: (input: { to: string; name: string; link: string }) =>
@@ -60,7 +63,10 @@ export const mailService = {
     send(to, `${tag} Lệnh nạp ${money(input.amount)} đang chờ thanh toán · ${input.code}`, MAIL_BANNERS.order, renderOrderEmail(input)),
 
   sendDepositSuccess: (to: string, input: DepositEmailInput) =>
-    send(to, `${tag} Nạp tiền thành công +${money(input.amount)} · ${input.code}`, MAIL_BANNERS.deposit, renderDepositEmail(input)),
+    send(to, `${tag} Nạp credit thành công +${credit(input.amount)} · ${input.code}`, MAIL_BANNERS.deposit, renderDepositEmail(input)),
+
+  sendGiftCodeRedeemed: (to: string, input: GiftCodeEmailInput) =>
+    send(to, `${tag} Nhận giftcode +${credit(input.amount)} · ${input.code}`, MAIL_BANNERS.deposit, renderGiftCodeEmail(input)),
 
   sendWelcome: (to: string, input: WelcomeEmailInput) =>
     send(to, `${tag} Chào mừng bạn, tài khoản đã sẵn sàng`, MAIL_BANNERS.welcome, renderWelcomeEmail(input)),
@@ -69,12 +75,12 @@ export const mailService = {
     send(to, `${tag} Mật khẩu của bạn vừa được thay đổi`, MAIL_BANNERS.security, renderPasswordChangedEmail(input)),
 
   sendRefund: (to: string, input: RefundEmailInput) =>
-    send(to, `${tag} Hoàn phí lấy đề +${money(input.amount)}`, MAIL_BANNERS.charge, renderRefundEmail(input)),
+    send(to, `${tag} Hoàn phí lấy đề +${credit(input.amount)}`, MAIL_BANNERS.charge, renderRefundEmail(input)),
 
   sendBalanceAdjusted: (to: string, input: AdjustEmailInput) =>
     send(
       to,
-      `${tag} Điều chỉnh số dư ví ${input.amount >= 0 ? "+" : "−"}${money(Math.abs(input.amount))}`,
+      `${tag} Điều chỉnh số dư ví ${input.amount >= 0 ? "+" : "−"}${credit(Math.abs(input.amount))}`,
       MAIL_BANNERS.deposit,
       renderAdjustEmail(input),
     ),
@@ -88,5 +94,5 @@ export const mailService = {
     ),
 
   sendFetchCharged: (to: string, input: ChargeEmailInput) =>
-    send(to, `${tag} Biên lai: phí lấy đề −${money(input.amount)}`, MAIL_BANNERS.charge, renderChargeEmail(input)),
+    send(to, `${tag} Biên lai: phí lấy đề −${credit(input.amount)}`, MAIL_BANNERS.charge, renderChargeEmail(input)),
 };

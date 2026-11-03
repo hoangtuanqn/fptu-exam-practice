@@ -13,7 +13,12 @@ export const walletRepository = {
   async listByUser(userId: number, query: PaginationQuery) {
     const where = { userId };
     const [items, total] = await Promise.all([
-      prisma.walletTransaction.findMany({ where, orderBy: { id: "desc" }, ...toSkipTake(query) }),
+      prisma.walletTransaction.findMany({
+        where,
+        select: { id: true, type: true, amount: true, balanceAfter: true, note: true, createdAt: true },
+        orderBy: { id: "desc" },
+        ...toSkipTake(query),
+      }),
       prisma.walletTransaction.count({ where }),
     ]);
     return { items, total };

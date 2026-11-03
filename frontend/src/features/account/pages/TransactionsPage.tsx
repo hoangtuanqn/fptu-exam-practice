@@ -5,12 +5,14 @@ import { Pagination } from "@/shared/ui/Table";
 import { TransactionTable } from "@/features/account/components/TransactionTable";
 import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
 import { useApi } from "@/shared/hooks/useApi";
+import { useClampPage } from "@/shared/hooks/useClampPage";
 
 export default function TransactionsPage() {
   const [url, setUrl] = useUrlState({ page: "1" });
   const page = toPage(url.page);
   const setPage = (p: number) => setUrl({ page: String(p) });
   const { data, error, loading, reload } = useApi(() => userApi.transactions(page), [page]);
+  useClampPage(data?.meta, setPage);
 
   return (
     <>
