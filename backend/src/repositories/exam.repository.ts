@@ -52,6 +52,13 @@ export const examRepository = {
       select: { answerSource: true, questions: { orderBy: { number: "asc" }, select: { number: true, answer: true } } },
     }),
 
+  // Đề đang dùng đáp án tạm mà AI chưa từng chạy: chuyển sang chờ AI (xóa đáp án A giả)
+  markPending: (examId: number) =>
+    prisma.$transaction([
+      prisma.examQuestion.updateMany({ where: { examId }, data: { answer: "" } }),
+      prisma.exam.update({ where: { id: examId }, data: { answerSource: "PENDING" } }),
+    ]),
+
   findAnswerSource: (id: number) => prisma.exam.findUnique({ where: { id }, select: { answerSource: true } }),
 
   // Đề còn đang chờ AI (ví dụ server tắt giữa chừng): xếp lại hàng khi khởi động

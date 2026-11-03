@@ -8,7 +8,7 @@ export interface AiConfig {
 }
 
 export const AI_DEFAULTS: AiConfig = {
-  enabled: false,
+  enabled: true, // có khóa Gemini là dùng AI; tắt thủ công ở trang Quản trị nếu cần
   apiKey: "",
   model: "gemini-2.5-pro",
   useSearch: true,

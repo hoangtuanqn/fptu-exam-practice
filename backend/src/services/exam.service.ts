@@ -2,6 +2,7 @@ import { examAttemptRepository } from "../repositories/exam-attempt.repository";
 import { examRepository } from "../repositories/exam.repository";
 import { userExamRepository } from "../repositories/user-exam.repository";
 import type { Db } from "../repositories/wallet.repository";
+import { examSolveService } from "./exam-solve.service";
 import { AppError } from "../rules/error";
 import { isMember, type Actor, type Owner } from "../utils/actor";
 import { toMeta, type PaginationQuery } from "../utils/pagination";
@@ -44,6 +45,7 @@ export const examService = {
   // Dạng giống đề mở từ thư mục: mỗi câu có số, ảnh và đáp án đúng (có thể nhiều đáp án, cách nhau bằng dấu cách)
   async getDetail(actor: Actor, id: number) {
     await this.assertAccess(actor, id);
+    await examSolveService.upgradeIfNeeded(id);
     const exam = await examRepository.findDetail(id);
     if (!exam) throw AppError.notFound("Không tìm thấy đề");
     return {

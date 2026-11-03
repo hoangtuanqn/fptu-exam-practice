@@ -75,6 +75,22 @@ export const examSolveService = {
     return true;
   },
 
+  /**
+   * Đề cũ còn đáp án tạm (lấy lúc AI chưa bật): lần đầu có người mở thì nhờ AI giải, dùng ảnh và bình luận đã lưu
+   * nên không cần lấy lại từ FuOverflow. Tiết kiệm token: chỉ giải khi có người mở, mỗi đề một lần (lỗi rồi thì
+   * không tự thử lại cho tới khi khởi động lại server hoặc admin bấm giải lại). Trả về true nếu đề vừa chuyển sang chờ AI.
+   */
+  async upgradeIfNeeded(examId: number) {
+    if (this.isBusy(examId) || lastError.has(examId)) return false;
+    const exam = await examRepository.findAnswerSource(examId);
+    if (exam?.answerSource !== "DEFAULT") return false;
+    const ai = await aiSettingService.get();
+    if (!ai.enabled || !ai.apiKey) return false;
+    await examRepository.markPending(examId);
+    this.enqueue(examId);
+    return true;
+  },
+
   // Khởi động lại server giữa chừng thì các đề đang chờ AI được xếp lại hàng
   async recoverPending() {
     const ids = await examRepository.findPendingIds();
