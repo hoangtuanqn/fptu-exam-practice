@@ -49,26 +49,42 @@ export default function PracticePage({ threadId }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quiz.submitted, user]);
 
-  // AI đang phân tích đáp án: hỏi lại mỗi 5 giây, có đáp án thì gắn vào đề đang làm (câu đã chọn giữ nguyên)
+  // AI đang phân tích đáp án: hỏi lại định kỳ, có đáp án thì gắn vào đề đang làm (câu đã chọn giữ nguyên).
+  // Tiết kiệm: tab đang ẩn thì không hỏi (quay lại tab là hỏi ngay), chờ lâu thì hỏi thưa hơn.
   const waitingAnswers = quiz.answersPending && quiz.examId !== null;
   useEffect(() => {
     if (!waitingAnswers || quiz.examId === null) return;
     const examId = quiz.examId;
+    const startedAt = Date.now();
     let stopped = false;
+    let timer: ReturnType<typeof setTimeout>;
+
     const tick = async () => {
+      if (stopped || document.hidden) return;
       try {
         const r = await examImportApi.answers(examId);
         if (stopped || r.status === "PENDING") return;
-        quiz.applyAnswers(r.answers);
-        toast.success(r.status === "AI" ? "AI đã phân tích xong đáp án" : "Đã có đáp án");
+        stopped = true;
+        quiz.applyAnswers(r.answers, r.status);
+        if (r.status === "DEFAULT") toast.error("AI chưa phân tích được đáp án, đang dùng đáp án tạm (A)");
+        else toast.success("AI đã phân tích xong đáp án");
       } catch {
         /* lỗi mạng tạm thời: lần sau hỏi lại */
       }
     };
-    const id = setInterval(() => void tick(), 5000);
+    const loop = () => {
+      timer = setTimeout(async () => {
+        await tick();
+        if (!stopped) loop();
+      }, Date.now() - startedAt > 120_000 ? 10_000 : 5_000);
+    };
+    const onVisible = () => !document.hidden && void tick();
+    document.addEventListener("visibilitychange", onVisible);
+    loop();
     return () => {
       stopped = true;
-      clearInterval(id);
+      clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisible);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [waitingAnswers, quiz.examId]);
@@ -116,8 +132,8 @@ export default function PracticePage({ threadId }: Props) {
         loadedFor.current = threadId; // đã tải xong đề này
         setOpenedThread(exam.threadId);
         const mode = new URLSearchParams(location.search).get("mode");
-        if (mode === "practice" || mode === "exam") quiz.openExam(exam.questions, exam.title, exam.id, mode, exam.answerStatus === "PENDING");
-        else quiz.loadExam(exam.questions, exam.title, exam.id, exam.answerStatus === "PENDING");
+        if (mode === "practice" || mode === "exam") quiz.openExam(exam.questions, exam.title, exam.id, mode, exam.answerStatus);
+        else quiz.loadExam(exam.questions, exam.title, exam.id, exam.answerStatus);
       })
       .catch((err: unknown) => {
         if (stale) return;

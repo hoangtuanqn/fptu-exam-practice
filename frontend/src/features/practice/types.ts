@@ -1,3 +1,6 @@
+// Nguồn đáp án của đề hệ thống: PENDING = AI đang phân tích, DEFAULT = tạm (A), AI, MANUAL = chỉnh tay
+export type AnswerSource = "PENDING" | "DEFAULT" | "AI" | "MANUAL";
+
 export interface Question {
   number: number; // số câu (1, 2, 3...)
   imageUrl: string; // blob URL của ảnh
