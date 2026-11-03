@@ -16,6 +16,7 @@ export function useExamImport() {
   const [phase, setPhase] = useState<ImportPhase>("idle");
   const [stage, setStage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [errorStatus, setErrorStatus] = useState<number | null>(null); // mã HTTP của lỗi (429 = khách hết lượt hôm nay)
   const [exam, setExam] = useState<ImportedExam | null>(null);
   const alive = useRef(true);
   const runId = useRef(0);
@@ -34,11 +35,13 @@ export function useExamImport() {
     setPhase("running");
     setStage("Đang gửi yêu cầu");
     setError(null);
+    setErrorStatus(null);
     setExam(null);
 
-    const fail = (message: string) => {
+    const fail = (message: string, status: number | null = null) => {
       if (stale()) return;
       setError(message);
+      setErrorStatus(status);
       setPhase("failed");
     };
 
@@ -68,7 +71,8 @@ export function useExamImport() {
       setExam(loaded);
       setPhase("done");
     } catch (err) {
-      fail(err instanceof ApiError ? err.message : "Đã có lỗi xảy ra");
+      if (err instanceof ApiError) fail(err.message, err.status);
+      else fail("Đã có lỗi xảy ra");
     }
   }, []);
 
@@ -77,8 +81,9 @@ export function useExamImport() {
     setPhase("idle");
     setStage(null);
     setError(null);
+    setErrorStatus(null);
     setExam(null);
   }, []);
 
-  return { phase, stage, error, exam, start, reset };
+  return { phase, stage, error, errorStatus, exam, start, reset };
 }

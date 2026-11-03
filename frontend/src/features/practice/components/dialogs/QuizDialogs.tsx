@@ -39,6 +39,7 @@ export function QuizDialogs({ quiz, dialog, onDialogChange, onCloseZoom }: Props
       {dialog === "confirm" && (
         <ConfirmSubmitDialog
           answered={quiz.answeredCount}
+          savable={quiz.examId !== null}
           total={quiz.questions.length}
           onCancel={() => onDialogChange(null)}
           onConfirm={() => {
@@ -51,6 +52,7 @@ export function QuizDialogs({ quiz, dialog, onDialogChange, onCloseZoom }: Props
       {dialog === "result" && quiz.result && (
         <ResultDialog
           result={quiz.result}
+          savable={quiz.examId !== null}
           elapsed={quiz.elapsed}
           onReview={() => onDialogChange(null)}
           onRetry={() => {

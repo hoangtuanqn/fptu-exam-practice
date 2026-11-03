@@ -16,11 +16,10 @@ const TABS: { id: Source; label: string; icon: typeof Link2 }[] = [
 interface Props {
   onPick: PickFolder;
   onImported: (exam: ImportedExam) => void;
-  loggedIn: boolean; // chỉ để quyết định có hiện "Đề của tôi" hay không
 }
 
 // Hai cách vào đề: dán link FuOverflow (server crawl) hoặc mở thư mục có sẵn trên máy
-export function ExamSourcePicker({ onPick, onImported, loggedIn }: Props) {
+export function ExamSourcePicker({ onPick, onImported }: Props) {
   const [source, setSource] = useState<Source>("link");
   const [libraryKey, setLibraryKey] = useState(0); // đổi key để "Đề của tôi" tải lại sau khi nhập đề mới
 
@@ -59,7 +58,7 @@ export function ExamSourcePicker({ onPick, onImported, loggedIn }: Props) {
         </div>
       </div>
 
-      {loggedIn && <MyExams key={libraryKey} onOpen={onImported} />}
+      <MyExams key={libraryKey} onOpen={onImported} />
     </div>
   );
 }

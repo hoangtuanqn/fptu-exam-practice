@@ -2,15 +2,22 @@ import type { CrawlJob } from "@prisma/client";
 import { prisma } from "../configs/prisma";
 import { crawlJobRepository } from "../repositories/crawl-job.repository";
 import { examRepository } from "../repositories/exam.repository";
+import { HTTP_STATUS } from "../constants/httpStatus";
 import { AppError } from "../rules/error";
 import type { ImportExamBody } from "../rules/requests/crawl.request";
+import { isMember, type Actor } from "../utils/actor";
 import { parseThreadId } from "../utils/fuo-url";
+import { startOfVnDay } from "../utils/time";
 import { crawlerSettingService } from "./crawler-setting.service";
 import { examService } from "./exam.service";
 import { walletService } from "./wallet.service";
 
 type Listener = () => void;
 const listeners: Listener[] = [];
+
+const GUEST_DAILY_LIMIT = 1;
+export const GUEST_LIMIT_MESSAGE =
+  "Bạn đã hết lượt lấy đề miễn phí hôm nay. Đăng ký tài khoản để lấy thêm đề, lưu kho riêng và theo dõi lịch sử làm bài nhé!";
 
 const toDto = (job: CrawlJob) => ({
   id: job.id,
@@ -33,30 +40,45 @@ export const crawlJobService = {
    * - đề đã có trong DB (cùng thread ID, dù link khác) -> thêm vào thư viện, không crawl lại
    * - ngược lại -> tạo job và đánh thức worker nền
    */
-  async submit(userId: number, { url }: ImportExamBody) {
+  async submit(actor: Actor, { url }: ImportExamBody) {
+    const { owner } = actor;
     const threadId = parseThreadId(url);
     if (!threadId) throw new AppError("Link không hợp lệ"); // đã được validate, giữ để thu hẹp kiểu
 
-    const active = await crawlJobRepository.findActive(threadId, userId);
+    const active = await crawlJobRepository.findActive(threadId, owner);
     if (active) return { existed: false as const, job: toDto(active), charged: 0 };
 
-    const { fetchPrice } = await crawlerSettingService.get();
+    // Khách: miễn phí nhưng chỉ 1 lượt mỗi ngày (tính cả lúc đề đã có sẵn), hết lượt thì mời đăng ký
+    if (!isMember(owner)) {
+      const used = await crawlJobRepository.countGuestFetchesSince(owner.guestId, startOfVnDay());
+      if (used >= GUEST_DAILY_LIMIT) throw new AppError(GUEST_LIMIT_MESSAGE, HTTP_STATUS.TOO_MANY_REQUESTS);
+    }
+
+    // Khách chưa có ví nên không bị tính phí
+    const fetchPrice = isMember(owner) ? (await crawlerSettingService.get()).fetchPrice : 0;
     const exam = await examRepository.findByThreadId(threadId);
 
     const result = await prisma.$transaction(async (tx) => {
-      if (fetchPrice > 0) {
+      if (fetchPrice > 0 && isMember(owner)) {
         await walletService.charge(tx, {
-          userId,
+          userId: owner.userId,
           amount: fetchPrice,
           type: "CRAWL_CHARGE",
           note: `Lấy đề thread ${threadId}`,
         });
       }
       if (exam) {
-        await examService.addToLibrary(userId, exam.id, tx);
+        await examService.addToLibrary(owner, exam.id, tx);
+        if (!isMember(owner)) {
+          // Ghi lại lượt lấy của khách để đếm giới hạn ngày
+          await crawlJobRepository.create(
+            { threadId, ...owner, chargedAmount: 0, status: "DONE", examId: exam.id, finishedAt: new Date() },
+            tx,
+          );
+        }
         return { existed: true as const, examId: exam.id, title: exam.title, charged: fetchPrice };
       }
-      const job = await crawlJobRepository.create({ threadId, userId, chargedAmount: fetchPrice }, tx);
+      const job = await crawlJobRepository.create({ threadId, ...owner, chargedAmount: fetchPrice }, tx);
       return { existed: false as const, job: toDto(job), charged: fetchPrice };
     });
 
@@ -68,7 +90,7 @@ export const crawlJobService = {
   async fail(job: CrawlJob, message: string) {
     await prisma.$transaction(async (tx) => {
       const claimed = await crawlJobRepository.markFailed(tx, job.id, message);
-      if (claimed && job.chargedAmount > 0) {
+      if (claimed && job.userId !== null && job.chargedAmount > 0) {
         await walletService.applyChange(tx, {
           userId: job.userId,
           amount: job.chargedAmount,
@@ -79,10 +101,11 @@ export const crawlJobService = {
     });
   },
 
-  // Chỉ chủ job (hoặc admin) được xem tiến độ
-  async getForUser(id: number, user: { id: number; role: string }) {
+  // Chỉ chủ job (thành viên hoặc đúng khách đó, hoặc admin) được xem tiến độ
+  async getForActor(id: number, actor: Actor) {
     const job = await crawlJobRepository.findById(id);
-    if (!job || (job.userId !== user.id && user.role !== "ADMIN")) throw AppError.notFound("Không tìm thấy tiến trình");
+    const mine = isMember(actor.owner) ? job?.userId === actor.owner.userId : job?.guestId === actor.owner.guestId;
+    if (!job || (!mine && !actor.isAdmin)) throw AppError.notFound("Không tìm thấy tiến trình");
     return toDto(job);
   },
 

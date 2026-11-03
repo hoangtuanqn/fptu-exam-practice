@@ -25,11 +25,11 @@ export function LinkImport({ onImported }: Props) {
   const { user, refresh } = useAuth();
   const [url, setUrl] = useState("");
   const job = useExamImport();
-  const [needLogin, setNeedLogin] = useState(false); // khách bấm Lấy đề: mời đăng ký thay vì gọi API
   const price = useApi(() => (user ? examImportApi.price() : Promise.resolve({ price: 0 })), [user?.id]);
   const fee = price.data?.price ?? 0;
   const tooPoor = !!user && fee > 0 && user.balance < fee;
 
+  const limitReached = !user && job.phase === "failed" && job.errorStatus === 429;
   const running = job.phase === "running";
   const done = job.phase === "done";
   const percent = useFakeProgress(running || done, done);
@@ -57,10 +57,6 @@ export function LinkImport({ onImported }: Props) {
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!url.trim() || running) return;
-    if (!user) {
-      setNeedLogin(true);
-      return;
-    }
     void job.start(url.trim());
   };
 
@@ -106,18 +102,19 @@ export function LinkImport({ onImported }: Props) {
         </p>
       )}
 
-      {!user && !needLogin && (
+      {!user && !limitReached && (
         <p className="mt-2 text-xs text-slate-500">
-          Lấy đề từ link cần tài khoản để đề được lưu vào thư viện và mỗi lần nộp bài được ghi vào lịch sử.
+          Khách được lấy miễn phí 1 đề mỗi ngày. Đăng ký để lấy thêm, giữ đề trong kho riêng và lưu lịch sử làm bài.
         </p>
       )}
 
-      {!user && needLogin && (
+      {limitReached && (
         <div className="mt-4 rounded-xl border border-brand-100 bg-brand-50/70 p-4">
-          <div className="text-sm font-medium text-slate-900">Đăng nhập để lấy đề từ link</div>
+          <div className="text-sm font-semibold text-slate-900">Hết lượt lấy đề hôm nay rồi!</div>
           <p className="mb-3 mt-1 text-xs leading-relaxed text-slate-600">
-            Đề sẽ được lưu vào thư viện riêng của bạn, và mỗi lần nộp bài, điểm cùng chi tiết từng câu được lưu lại để xem
-            sau. Tạo tài khoản chỉ mất vài giây. Bạn vẫn có thể mở thư mục đề ở tab bên cạnh để dùng thử ngay.
+            Khách được lấy miễn phí 1 đề mỗi ngày. Đăng ký tài khoản (mất vài giây thôi) để lấy thêm đề, giữ mọi đề trong
+            kho riêng và lưu lại từng lần làm bài với điểm cùng chi tiết từng câu. Hoặc quay lại vào ngày mai để nhận thêm
+            một lượt nhé.
           </p>
           <SignUpCta />
         </div>
@@ -139,7 +136,7 @@ export function LinkImport({ onImported }: Props) {
         </div>
       )}
 
-      {job.phase === "failed" && (
+      {job.phase === "failed" && !limitReached && (
         <div className="mt-4 space-y-2">
           <FormError message={job.error} />
           <button type="button" onClick={job.reset} className="text-xs font-medium text-brand-700 hover:underline">
