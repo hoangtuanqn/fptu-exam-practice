@@ -1,4 +1,5 @@
 import "dotenv/config";
+import path from "node:path";
 import { z } from "zod";
 
 // Kiểm tra biến môi trường ngay khi khởi động để lỗi cấu hình lộ ra sớm
@@ -9,6 +10,7 @@ const schema = z.object({
   DATABASE_URL: z.string().min(1),
   JWT_SECRET: z.string().min(32, "JWT_SECRET cần ít nhất 32 ký tự"),
   JWT_EXPIRES_IN: z.string().default("7d"),
+  STORAGE_DIR: z.string().default("storage"), // nơi lưu ảnh đề đã crawl
   ADMIN_EMAIL: z.string().default("admin@example.com"),
   ADMIN_PASSWORD: z.string().default("Admin@123456"),
 });
@@ -22,3 +24,6 @@ if (!parsed.success) {
 
 export const env = parsed.data;
 export const isProd = env.NODE_ENV === "production";
+
+// Thư mục lưu ảnh, tính từ nơi chạy server
+export const storageDir = path.resolve(env.STORAGE_DIR);

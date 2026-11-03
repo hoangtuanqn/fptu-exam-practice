@@ -1,16 +1,18 @@
+import type { ImportedExam } from "@/features/exam-import/types";
 import type { PickFolder } from "@/features/practice/components/FolderInput";
 import { brand, logos } from "@/shared/brand/brand";
 import { FEATURES, splitSlogan } from "../content";
-import { DropZone } from "./DropZone";
+import { ExamSourcePicker } from "./ExamSourcePicker";
 
 interface Props {
   onPick: PickFolder;
+  onImported: (exam: ImportedExam) => void;
   userName?: string; // đã đăng nhập thì chào tên thay cho slogan
   trialUsed: boolean; // khách đã dùng hết lượt thử thì ẩn nhãn "dùng thử"
 }
 
-// Phần đầu trang: nhãn dùng thử, tên hệ thống, slogan, chip đối tác, vùng thả thư mục, ba ý ngắn
-export function HeroSection({ onPick, userName, trialUsed }: Props) {
+// Phần đầu trang: nhãn dùng thử, tên hệ thống, slogan, chip đối tác, chỗ nhập link hoặc thả thư mục, ba ý ngắn
+export function HeroSection({ onPick, onImported, userName, trialUsed }: Props) {
   const isGuest = !userName;
   const [sloganLead, sloganAccent] = splitSlogan(brand.slogan);
 
@@ -47,7 +49,7 @@ export function HeroSection({ onPick, userName, trialUsed }: Props) {
           Kho đề từ <b className="font-semibold text-slate-800">{brand.partnerName}</b>
         </a>
 
-        <DropZone onPick={onPick} />
+        <ExamSourcePicker onPick={onPick} onImported={onImported} loggedIn={!isGuest} />
 
         <ul className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-slate-600">
           {FEATURES.map(({ icon: Icon, text }) => (

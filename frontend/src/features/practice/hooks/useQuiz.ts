@@ -53,6 +53,12 @@ export function useQuiz() {
     setPending({ questions: parsed, title: folderName });
   }
 
+  // Đề đã có sẵn câu hỏi (nhập từ link FuOverflow): cũng chờ xác nhận như đề mở từ thư mục
+  function loadExam(examQuestions: Question[], examTitle: string) {
+    setNotFound(false);
+    setPending({ questions: examQuestions, title: examTitle });
+  }
+
   // Bước 2: người dùng xác nhận và chọn chế độ
   function startExam(chosenMode: Mode) {
     if (!pending) return;
@@ -123,6 +129,7 @@ export function useQuiz() {
     answeredCount: Object.values(answers).filter((a) => a.length > 0).length,
     result: submitted ? grade(questions, answers) : null,
     loadFolder,
+    loadExam,
     startExam,
     cancelPending,
     dismissNotFound: () => setNotFound(false),

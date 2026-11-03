@@ -77,6 +77,15 @@ export interface SepayAdminConfig {
   apiTokenPreview: string;
 }
 
+export interface CrawlerAdminConfig {
+  userAgent: string;
+  referer: string;
+  requestDelayMs: number;
+  webpQuality: number;
+  hasCookie: boolean;
+  cookiePreview: string;
+}
+
 export interface SyncResult {
   at: string;
   ok: boolean;

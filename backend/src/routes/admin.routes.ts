@@ -5,8 +5,9 @@ import { listBankTxQuery, listDepositsQuery } from "../rules/requests/deposit.re
 import { adminSepayController } from "../controllers/admin.sepay.controllers";
 import { adminDepositController } from "../controllers/admin.deposit.controllers";
 import { adminSettingController } from "../controllers/admin.setting.controllers";
+import { adminCrawlerController } from "../controllers/admin.crawler.controllers";
 import { authenticate, requireAdmin } from "../middlewares/auth.middlewares";
-import { updateSepayBody } from "../rules/requests/setting.request";
+import { updateCrawlerBody, updateSepayBody } from "../rules/requests/setting.request";
 import { validate } from "../middlewares/validate.middlewares";
 import { adjustBalanceBody, idParam, listUsersQuery, updateUserBody } from "../rules/requests/admin.request";
 
@@ -35,5 +36,8 @@ adminRouter.get("/bank-transactions", validate(listBankTxQuery, "query"), adminS
 
 adminRouter.get("/settings/sepay", adminSettingController.getSepay);
 adminRouter.put("/settings/sepay", validate(updateSepayBody), adminSettingController.updateSepay);
+
+adminRouter.get("/settings/crawler", adminCrawlerController.get);
+adminRouter.put("/settings/crawler", validate(updateCrawlerBody), adminCrawlerController.update);
 
 export default adminRouter;
