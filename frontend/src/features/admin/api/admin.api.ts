@@ -62,6 +62,7 @@ export interface AiForm {
   useSearch: boolean;
   claudeModel: string;
   effort: AiEffort;
+  explainPrice: number;
   anthropicApiKey?: string;
 }
 

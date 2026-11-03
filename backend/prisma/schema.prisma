@@ -35,6 +35,7 @@ model User {
   passwordResets     PasswordResetToken[]
   giftRedemptions    GiftCodeRedemption[]
   answerReports      AnswerReport[]
+  explanationBuys    ExplanationPurchase[]
 
   @@map("users")
 }
@@ -105,6 +106,8 @@ enum TransactionType {
   CRAWL_REFUND // hoàn phí khi lấy đề thất bại
   GIFT_CODE // nhận credit từ giftcode
   REPORT_REWARD // thưởng khi báo cáo đáp án sai được xác nhận
+  EXPLAIN_CHARGE // phí xem lời giải thích AI của một câu
+  EXPLAIN_REFUND // hoàn phí khi AI không giải thích được
 }
 
 // Sổ cái ví: mỗi lần số dư đổi là một dòng (amount âm = trừ tiền)
@@ -143,6 +146,8 @@ model Exam {
   userExams UserExam[]
   attempts  ExamAttempt[]
   reports   AnswerReport[]
+  explanations QuestionExplanation[]
+  explanationBuys ExplanationPurchase[]
 
   @@map("exams")
 }
@@ -319,4 +324,36 @@ model AnswerReport {
   @@index([status, createdAt])
   @@index([examId])
   @@map("answer_reports")
+}
+
+// Lời giải thích AI của một câu, lưu lại dùng chung: người sau mua vẫn trả phí nhưng không tốn thêm lượt gọi AI
+model QuestionExplanation {
+  id             Int      @id @default(autoincrement())
+  examId         Int      @map("exam_id")
+  questionNumber Int      @map("question_number")
+  content        String   @db.Text
+  model          String   @db.VarChar(60)
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@unique([examId, questionNumber])
+  @@map("question_explanations")
+}
+
+// Ai đã trả phí xem lời giải thích câu nào: mua rồi thì xem lại miễn phí
+model ExplanationPurchase {
+  id             Int      @id @default(autoincrement())
+  userId         Int      @map("user_id")
+  examId         Int      @map("exam_id")
+  questionNumber Int      @map("question_number")
+  price          Int
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, examId, questionNumber])
+  @@index([examId])
+  @@map("explanation_purchases")
 }

@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Maximize2, MessageSquareWarning } from "lucide-react";
+import { ChevronLeft, ChevronRight, Maximize2, MessageSquareWarning, Sparkles } from "lucide-react";
 import { Button } from "@/shared/ui/Button";
 import { AnswerOptions } from "./AnswerOptions";
 import { AnswerStatus } from "./AnswerStatus";
@@ -23,6 +23,8 @@ export function QuestionCard({
   onToggleFlag,
   onReport,
   reported,
+  onExplain,
+  explainBought,
   onChoose,
   onCheck,
   onPrev,
@@ -44,6 +46,17 @@ export function QuestionCard({
           </div>
           <div className="flex items-center gap-2">
             <FlagButton flagged={flagged} onToggle={onToggleFlag} />
+            {onExplain && (
+              <button
+                onClick={onExplain}
+                title="Giải thích bằng AI"
+                aria-label="Giải thích bằng AI"
+                className="inline-flex items-center gap-1.5 rounded-md border border-brand-200 bg-brand-50 p-2 text-xs font-medium text-brand-800 transition hover:border-brand-400 sm:px-2.5 sm:py-1"
+              >
+                <Sparkles size={13} />
+                <span className="hidden sm:inline">{explainBought ? "Xem giải thích" : "Giải thích"}</span>
+              </button>
+            )}
             {onReport && (
               <button
                 onClick={onReport}
