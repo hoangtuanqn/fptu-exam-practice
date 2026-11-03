@@ -1,4 +1,8 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { examImportApi } from "@/features/exam-import/exam-import.api";
+import { historyApi } from "@/features/history/history.api";
+import { useToast } from "@/shared/context/ToastContext";
 import { useQuiz } from "@/features/practice/hooks/useQuiz";
 import { useQuizShortcuts } from "@/features/practice/hooks/useQuizShortcuts";
 import { useGuestTrial } from "@/features/trial/useGuestTrial";
@@ -13,6 +17,8 @@ export default function PracticePage() {
   const quiz = useQuiz();
   const { user } = useAuth();
   const trial = useGuestTrial();
+  const toast = useToast();
+  const [params, setParams] = useSearchParams();
   const [zoomOpen, setZoomOpen] = useState(false);
   const [dialog, setDialog] = useState<SubmitDialog>(null);
   const [trialEnded, setTrialEnded] = useState(false);
@@ -28,6 +34,33 @@ export default function PracticePage() {
     if (!user && quiz.submitted) trial.markUsed();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quiz.submitted, user]);
+
+  // Nộp bài xong thì ghi vào lịch sử (chỉ với đề của hệ thống; đề mở từ thư mục không có trong DB)
+  useEffect(() => {
+    if (!quiz.submitted || !user || quiz.examId === null) return;
+    historyApi
+      .save(quiz.examId, {
+        mode: quiz.mode === "exam" ? "EXAM" : "PRACTICE",
+        durationSec: quiz.elapsed,
+        answers: quiz.answers,
+      })
+      .then(() => toast.success("Đã lưu vào lịch sử làm bài"))
+      .catch(() => toast.error("Không lưu được lịch sử làm bài"));
+    // Chỉ chạy đúng lúc vừa nộp bài
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quiz.submitted]);
+
+  // Mở đề từ liên kết /?exam=ID (ví dụ nút "Làm lại đề" ở lịch sử)
+  const examParam = Number(params.get("exam"));
+  useEffect(() => {
+    if (!examParam || !user) return;
+    setParams({}, { replace: true });
+    examImportApi
+      .exam(examParam)
+      .then((exam) => quiz.loadExam(exam.questions, exam.title, exam.id))
+      .catch(() => toast.error("Không mở được đề này"));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [examParam, user?.id]);
 
   const pick: typeof quiz.loadFolder = (files, name) => {
     if (!user && trial.used) {
@@ -57,7 +90,7 @@ export default function PracticePage() {
       {hasQuiz ? (
         <QuizWorkspace quiz={quiz} zoomOpen={zoomOpen} onZoomChange={setZoomOpen} />
       ) : (
-        <Landing onPick={pick} onImported={(exam) => quiz.loadExam(exam.questions, exam.title)} userName={user?.fullName} trialUsed={trial.used} />
+        <Landing onPick={pick} onImported={(exam) => quiz.loadExam(exam.questions, exam.title, exam.id)} userName={user?.fullName} trialUsed={trial.used} />
       )}
     </div>
   );
