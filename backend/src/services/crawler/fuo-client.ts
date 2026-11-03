@@ -5,7 +5,7 @@ import { sleep } from "../../utils/sleep";
 export class FuoAuthError extends Error {}
 
 export const FUO_AUTH_MESSAGE =
-  "Cookie FuOverflow đã hết hạn hoặc chưa đăng nhập. Admin hãy cập nhật ở Quản trị → Cấu hình crawl.";
+  "Cookie FuOverflow đã hết hạn hoặc chưa đăng nhập. Admin hãy cập nhật ở Quản trị → Cấu hình lấy đề.";
 
 const REQUEST_TIMEOUT_MS = 30_000;
 
