@@ -34,6 +34,7 @@ model User {
   attempts           ExamAttempt[]
   passwordResets     PasswordResetToken[]
   giftRedemptions    GiftCodeRedemption[]
+  answerReports      AnswerReport[]
 
   @@map("users")
 }
@@ -103,6 +104,7 @@ enum TransactionType {
   CRAWL_CHARGE // trừ phí lấy đề từ FuOverflow
   CRAWL_REFUND // hoàn phí khi lấy đề thất bại
   GIFT_CODE // nhận credit từ giftcode
+  REPORT_REWARD // thưởng khi báo cáo đáp án sai được xác nhận
 }
 
 // Sổ cái ví: mỗi lần số dư đổi là một dòng (amount âm = trừ tiền)
@@ -140,6 +142,7 @@ model Exam {
   crawlJobs CrawlJob[]
   userExams UserExam[]
   attempts  ExamAttempt[]
+  reports   AnswerReport[]
 
   @@map("exams")
 }
@@ -284,4 +287,36 @@ model GiftCodeRedemption {
   @@unique([giftCodeId, userId])
   @@index([userId])
   @@map("gift_code_redemptions")
+}
+
+enum ReportStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// Người dùng báo cáo đáp án sai và đề xuất đáp án đúng. Admin duyệt: đúng thì sửa đáp án và thưởng credit cho người báo cáo.
+// Mỗi người chỉ báo cáo một lần cho mỗi câu (chống lạm dụng).
+model AnswerReport {
+  id             Int          @id @default(autoincrement())
+  examId         Int          @map("exam_id")
+  questionNumber Int          @map("question_number")
+  userId         Int          @map("user_id")
+  currentAnswer  String       @map("current_answer") @db.VarChar(20) // đáp án đang có lúc báo cáo
+  proposedAnswer String       @map("proposed_answer") @db.VarChar(20)
+  reason         String       @db.VarChar(1000)
+  status         ReportStatus @default(PENDING)
+  reward         Int          @default(0) // credit đã thưởng (khi được duyệt)
+  reviewNote     String?      @map("review_note") @db.VarChar(300)
+  reviewedById   Int?         @map("reviewed_by_id")
+  reviewedAt     DateTime?    @map("reviewed_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, examId, questionNumber])
+  @@index([status, createdAt])
+  @@index([examId])
+  @@map("answer_reports")
 }

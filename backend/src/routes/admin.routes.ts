@@ -6,10 +6,12 @@ import { adminSepayController } from "../controllers/admin.sepay.controllers";
 import { adminDepositController } from "../controllers/admin.deposit.controllers";
 import { adminSettingController } from "../controllers/admin.setting.controllers";
 import { adminAiController } from "../controllers/admin.ai.controllers";
+import { adminAnswerReportController } from "../controllers/admin.answer-report.controllers";
 import { adminGiftCodeController } from "../controllers/admin.gift-code.controllers";
 import { adminCrawlerController } from "../controllers/admin.crawler.controllers";
 import { authenticate, requireAdmin } from "../middlewares/auth.middlewares";
 import { updateAiBody, updateCrawlerBody, updateSepayBody } from "../rules/requests/setting.request";
+import { listReportsQuery, reviewReportBody } from "../rules/requests/answer-report.request";
 import { createGiftCodeBody, listGiftCodesQuery, updateGiftCodeBody } from "../rules/requests/gift-code.request";
 import { validate } from "../middlewares/validate.middlewares";
 import { paginationQuery } from "../utils/pagination";
@@ -55,5 +57,9 @@ adminRouter.get("/gift-codes", validate(listGiftCodesQuery, "query"), adminGiftC
 adminRouter.post("/gift-codes", validate(createGiftCodeBody), adminGiftCodeController.create);
 adminRouter.patch("/gift-codes/:id", validate(idParam, "params"), validate(updateGiftCodeBody), adminGiftCodeController.setActive);
 adminRouter.get("/gift-codes/:id/redemptions", validate(idParam, "params"), validate(paginationQuery, "query"), adminGiftCodeController.redemptions);
+
+adminRouter.get("/answer-reports", validate(listReportsQuery, "query"), adminAnswerReportController.list);
+adminRouter.post("/answer-reports/:id/approve", validate(idParam, "params"), validate(reviewReportBody), adminAnswerReportController.approve);
+adminRouter.post("/answer-reports/:id/reject", validate(idParam, "params"), validate(reviewReportBody), adminAnswerReportController.reject);
 
 export default adminRouter;
