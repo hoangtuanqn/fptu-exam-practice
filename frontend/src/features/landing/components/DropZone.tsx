@@ -24,19 +24,19 @@ export function DropZone({ onPick }: { onPick: PickFolder }) {
         }}
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
-        className={`mt-6 flex cursor-pointer flex-col items-center rounded-2xl border-2 border-dashed px-6 py-8 transition ${
-          dragging ? "border-brand-600 bg-brand-50" : "border-brand-300 bg-brand-50/40 hover:border-brand-500"
+        className={`flex cursor-pointer flex-col items-center rounded-2xl border-2 border-dashed px-6 py-9 transition ${
+          dragging ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-slate-50/60 hover:border-brand-400 hover:bg-brand-50/50"
         }`}
       >
-        <span className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-brand-600 to-accent text-white shadow-md shadow-brand-600/25">
-          <FolderOpen size={20} />
+        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-600 to-accent text-white shadow-lg shadow-brand-600/25">
+          <FolderOpen size={22} />
         </span>
-        <div className="mt-3 font-serif text-xl font-semibold text-slate-900">Mở thư mục đề</div>
+        <div className="mt-4 text-lg font-semibold text-slate-900">Mở thư mục đề</div>
         <div className="mt-0.5 text-sm text-slate-500">Kéo thả thư mục vào đây, hoặc bấm để chọn</div>
         <FolderInput onPick={onPick} />
       </label>
 
-      <details className="mt-3 text-left text-sm">
+      <details className="mt-3 pb-1 text-left text-sm">
         <summary className="cursor-pointer select-none text-center text-xs text-slate-500 hover:text-slate-800">
           Thư mục đề cần có cấu trúc thế nào?
         </summary>

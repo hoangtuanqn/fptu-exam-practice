@@ -25,8 +25,27 @@
   /* Chữ đen của bản logo đầy đủ (SOFTWARE.VN) */
   --color-ink: #101010;
 
-  /* Nền vùng tô nhạt, cùng sắc xanh với logo */
-  --color-paper: #f0f6ff;
+  /* Nền trang: trắng ngà hơi lạnh, để thẻ trắng nổi lên nhẹ nhàng */
+  --color-paper: #f6f8fc;
+
+  /* Đổ bóng nhiều lớp, rất nhạt: tạo độ nổi mà không nặng nề */
+  --shadow-soft: 0 1px 2px rgb(16 24 40 / 0.04), 0 1px 3px rgb(16 24 40 / 0.05);
+  --shadow-card: 0 1px 2px rgb(16 24 40 / 0.04), 0 8px 24px -8px rgb(16 24 40 / 0.08);
+  --shadow-pop: 0 4px 6px -2px rgb(16 24 40 / 0.04), 0 20px 40px -12px rgb(16 24 40 / 0.18);
+
+  --radius-card: 1rem;
+
+  --animate-fade-up: fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
 
   --animate-fade-in: fade-in 0.22s ease-out;
   @keyframes fade-in {
@@ -59,7 +78,40 @@
 }
 
 body {
-  @apply bg-paper text-slate-800 antialiased;
+  @apply bg-paper text-slate-700 antialiased;
+  font-feature-settings: "cv11", "ss03"; /* Inter: a một tầng, chữ số đều nét */
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3 {
+  @apply tracking-tight;
+}
+
+/* Lưới chấm mờ cho nền hero và khối nhấn */
+.bg-dots {
+  background-image: radial-gradient(rgb(15 23 42 / 0.09) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* Chữ chuyển sắc theo dải gradient của logo */
+.text-gradient {
+  @apply bg-gradient-to-r from-brand-600 via-brand-500 to-accent bg-clip-text text-transparent;
+}
+
+/* Kính mờ cho thanh header dính trên cùng */
+.glass {
+  @apply bg-white/75 backdrop-blur-xl;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* Thanh cuộn mảnh, kín đáo */

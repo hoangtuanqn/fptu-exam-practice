@@ -17,9 +17,9 @@ Màu **đo trực tiếp từ file logo**, không phải ước chừng. Logo l�
 | Xanh nhạt pixel | `#3399ff` | `brand-400` | Các ô vuông ở góc trên logo |
 | **Cyan nhấn** | `#00c8ff` | `accent` | Giữa dải gradient logo. Dùng tiết kiệm: vạch, chấm, nhãn nhỏ trên nền tối |
 | Cyan nhạt | `#90e5ff` | `accent-soft` | Đầu cuối nhạt của dải gradient |
-| **Navy nền tối** | `#0b1730` | `brand-900` | Nền khối tối, nút chính, favicon. Hợp với nền ảnh mockup logo |
+| **Navy nền tối** | `#0b1730` | `brand-900` | Nền favicon và khối tối hiếm dùng. Nút chính dùng `brand-600`. Hợp với nền ảnh mockup logo |
 | Chữ đen logo | `#101010` | `ink` | Chữ SOFTWARE.VN trên bản logo nền sáng |
-| Nền vùng nhạt | `#f0f6ff` | `paper` | Nền các khối xanh nhạt xen kẽ trắng |
+| Nền trang | `#f6f8fc` | `paper` | Trắng ngà hơi lạnh, để thẻ trắng nổi nhẹ |
 
 Thang xanh đầy đủ: `brand-50 #eef6ff`, `100 #d9ebff`, `200 #b3d6ff`, `300 #80b8ff`, `400 #3399ff`, `500 #1a80ff`, `600 #0066ff`, `700 #0052cc`, `800 #0f3a8a`, `900 #0b1730`.
 

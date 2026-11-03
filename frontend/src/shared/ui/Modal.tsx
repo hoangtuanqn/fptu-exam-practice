@@ -4,8 +4,8 @@ import type { LucideIcon } from "lucide-react";
 // Khung hộp thoại căn giữa, nền mờ phía sau
 export function Modal({ children }: { children: ReactNode }) {
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-brand-900/60 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md animate-fade-in rounded-2xl bg-white p-6 shadow-2xl">{children}</div>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/30 p-4 backdrop-blur-md">
+      <div className="w-full max-w-md animate-fade-in rounded-3xl border border-white bg-white p-7 shadow-pop">{children}</div>
     </div>
   );
 }
@@ -14,10 +14,10 @@ export function Modal({ children }: { children: ReactNode }) {
 export function ModalTitle({ icon: Icon, children }: { icon: LucideIcon; children: ReactNode }) {
   return (
     <div className="flex items-center gap-3">
-      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-700">
+      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-50 text-brand-600">
         <Icon size={20} />
       </div>
-      <h2 className="font-serif text-xl font-semibold text-slate-900">{children}</h2>
+      <h2 className="text-xl font-semibold text-slate-900">{children}</h2>
     </div>
   );
 }
