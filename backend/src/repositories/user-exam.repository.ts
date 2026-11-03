@@ -17,7 +17,7 @@ export const userExamRepository = {
     const [items, total] = await Promise.all([
       prisma.userExam.findMany({
         where,
-        include: { exam: { select: { id: true, title: true, threadId: true, totalQuestions: true, answerSource: true } } },
+        select: { createdAt: true, exam: { select: { id: true, title: true, threadId: true, totalQuestions: true, answerSource: true } } },
         orderBy: { id: "desc" },
         ...toSkipTake(query),
       }),
