@@ -43,7 +43,9 @@ Response: `{ status, message, data, meta? }`. Gửi token bằng header `Authori
 | Auth | `POST /auth/register`, `POST /auth/login`, `GET /auth/me` |
 | User | `GET/PATCH /users/me`, `PATCH /users/me/password`, `GET /users/me/transactions` |
 | Nạp tiền | `GET /deposits/info`, `POST /deposits {amount}`, `GET /deposits`, `GET /deposits/:id` |
-| Đề thi | `POST /crawl-jobs {url}`, `GET /crawl-jobs/:id`, `GET /exams/:id` (cần đăng nhập) |
+| Đề thi | `POST /crawl-jobs {url}`, `GET /crawl-jobs/:id` |
+| Thư viện | `GET /exams` (đề của tôi), `GET /exams/:id`, `POST /exams/:id/attempts {mode, durationSec, answers}` |
+| Lịch sử | `GET /attempts?examId=`, `GET /attempts/:id` (chi tiết từng câu) |
 | Admin | `GET /admin/dashboard` |
 | | `GET /admin/users`, `GET/PATCH /admin/users/:id`, `POST /admin/users/:id/balance` |
 | | `GET /admin/deposits`, `GET /admin/bank-transactions` |
@@ -73,3 +75,10 @@ An toàn tiền bạc:
 4. Client poll `GET /crawl-jobs/:id` đến khi `DONE`, rồi `GET /exams/:id` (ảnh phục vụ tại `/api/v1/files/...`).
 
 Đáp án: crawler chưa xác định được đáp án đúng nên mọi câu tạm là `A` (`exam_questions.answer`, hằng `DEFAULT_ANSWER`). Bình luận của người dùng FuOverflow đã lưu ở `exam_comments` để làm logic suy ra đáp án sau.
+
+## Thư viện đề và lịch sử làm bài
+
+- Đề là dùng chung (một `thread_id` một bản), còn **thư viện** là liên kết riêng `user_exams`. Nhập link xong, hoặc nhập đề đã có sẵn, đề đều vào thư viện của người nhập; chỉ chủ thư viện (và admin) mở được đề, người khác nhận 404.
+- Nộp bài: client gửi đáp án đã chọn, **server tự chấm** theo đáp án trong DB (`services/grading.service.ts`, thang 10, điểm mỗi câu = 10 / số câu có đáp án) rồi lưu `exam_attempts`. Không tin điểm từ client.
+- `exam_attempts.details` là ảnh chụp từng câu (đã chọn, đáp án đúng lúc chấm, kết quả) nên xem lại vẫn đúng dù sau này đáp án của đề được sửa.
+- Đề mở từ thư mục trên máy không có trong DB nên không ghi lịch sử.
