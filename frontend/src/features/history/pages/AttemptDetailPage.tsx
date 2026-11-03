@@ -60,7 +60,7 @@ export default function AttemptDetailPage() {
             </div>
           </div>
 
-          <Link to={`/?exam=${data.examId}`} className={buttonClass({ variant: "primary" })}>
+          <Link to={`/exam/${data.exam.threadId}`} className={buttonClass({ variant: "primary" })}>
             <RotateCcw size={16} /> Làm lại đề
           </Link>
         </div>

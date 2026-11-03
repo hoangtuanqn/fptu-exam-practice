@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useParams } from "react-router-dom";
 import { DatabaseZap, History, Landmark, ListChecks, LayoutDashboard, Receipt, Settings, UserRound, Users, Wallet } from "lucide-react";
 import { PanelLayout, type NavItem } from "@/shared/layout/PanelLayout";
 import { Loading } from "@/shared/ui/Feedback";
@@ -10,9 +10,16 @@ import ResetPasswordPage from "@/features/auth/pages/ResetPasswordPage";
 import NotFoundPage from "./NotFoundPage";
 import { GuestSync } from "@/features/guest-sync/GuestSync";
 import PracticePage from "@/features/practice/PracticePage";
+
+// "/" và "/exam/:threadId" dùng chung một thể hiện của trang để đổi địa chỉ không làm mất bài đang làm
+function PracticeRoute() {
+  const threadId = useParams().threadId;
+  return <PracticePage threadId={threadId && /^\d{1,18}$/.test(threadId) ? threadId : undefined} />;
+}
 import { GuestOnly, RequireAuth } from "@/features/auth/guards";
 
 // Panel tách riêng thành chunk: người chỉ luyện đề không phải tải code của panel
+const PublicDepositPage = lazy(() => import("@/features/account/pages/PublicDepositPage"));
 const OverviewPage = lazy(() => import("@/features/account/pages/OverviewPage"));
 const DepositPage = lazy(() => import("@/features/account/pages/DepositPage"));
 const TransactionsPage = lazy(() => import("@/features/account/pages/TransactionsPage"));
@@ -49,7 +56,11 @@ export default function App() {
     <Suspense fallback={<Loading />}>
       <GuestSync />
       <Routes>
-        <Route path="/" element={<PracticePage />} />
+        <Route path="/" element={<PracticeRoute />} />
+        <Route path="/exam/:threadId" element={<PracticeRoute />} />
+
+        {/* Xem lệnh nạp bằng liên kết: không cần đăng nhập */}
+        <Route path="/deposit/:code" element={<PublicDepositPage />} />
 
         <Route element={<GuestOnly />}>
           <Route path="/login" element={<LoginPage />} />
@@ -66,6 +77,7 @@ export default function App() {
             <Route path="attempts" element={<AttemptsPage />} />
             <Route path="attempts/:id" element={<AttemptDetailPage />} />
             <Route path="deposit" element={<DepositPage />} />
+            <Route path="deposit/:code" element={<DepositPage />} />
             <Route path="transactions" element={<TransactionsPage />} />
             <Route path="profile" element={<ProfilePage />} />
           </Route>

@@ -14,6 +14,16 @@ export const listBankTxQuery = paginationQuery.extend({
   status: z.enum(["MATCHED", "UNMATCHED"]).optional(),
 });
 
+// Mã nạp có tiền tố (chữ cái) + 8 ký tự chữ-số, ví dụ NAPK3F9X2QA
+export const depositCodeParam = z.object({
+  code: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .regex(/^[A-Z0-9]{6,40}$/, "Mã lệnh nạp không hợp lệ"),
+});
+
+export type DepositCodeParam = z.infer<typeof depositCodeParam>;
 export type ListBankTxQuery = z.infer<typeof listBankTxQuery>;
 export type CreateDepositBody = z.infer<typeof createDepositBody>;
 export type ListDepositsQuery = z.infer<typeof listDepositsQuery>;

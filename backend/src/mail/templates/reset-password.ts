@@ -20,7 +20,8 @@ export function renderResetPasswordEmail({ name, link, expiresMin }: ResetEmailI
   ].join("");
 
   const html = renderLayout({
-    title: "ĐẶT LẠI MẬT KHẨU",
+    eyebrow: "TÀI KHOẢN",
+    title: "Đặt lại mật khẩu",
     preheader: `Liên kết đặt lại mật khẩu có hiệu lực ${expiresMin} phút.`,
     banner: MAIL_BANNERS.reset,
     bodyHtml,
