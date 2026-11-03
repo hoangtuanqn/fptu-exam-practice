@@ -10,6 +10,9 @@ export class AppError extends Error {
     super(message);
   }
 
+  static paymentRequired(message = "Số dư không đủ") {
+    return new AppError(message, HTTP_STATUS.PAYMENT_REQUIRED);
+  }
   static unauthorized(message = "Chưa đăng nhập hoặc phiên đã hết hạn") {
     return new AppError(message, HTTP_STATUS.UNAUTHORIZED);
   }

@@ -1,10 +1,13 @@
 import type { CrawlJob } from "@prisma/client";
+import { prisma } from "../configs/prisma";
 import { crawlJobRepository } from "../repositories/crawl-job.repository";
 import { examRepository } from "../repositories/exam.repository";
 import { AppError } from "../rules/error";
 import type { ImportExamBody } from "../rules/requests/crawl.request";
 import { parseThreadId } from "../utils/fuo-url";
+import { crawlerSettingService } from "./crawler-setting.service";
 import { examService } from "./exam.service";
+import { walletService } from "./wallet.service";
 
 type Listener = () => void;
 const listeners: Listener[] = [];
@@ -18,28 +21,62 @@ const toDto = (job: CrawlJob) => ({
 });
 
 export const crawlJobService = {
+  // Phí mỗi lần lấy đề, để giao diện báo trước cho người dùng
+  async getPrice() {
+    return { price: (await crawlerSettingService.get()).fetchPrice };
+  },
+
   /**
-   * Nhận link đề. Trả về ngay, việc crawl do worker nền làm:
-   * - đề đã có trong DB (cùng thread ID, dù link khác) -> trả luôn examId, không crawl lại
-   * - chính người này đang có lượt crawl cùng thread -> dùng lại lượt đó
-   * - ngược lại -> tạo job mới và đánh thức worker
+   * Nhận link đề. Mỗi lần lấy đều bị trừ phí (admin cấu hình), kể cả đề đã có sẵn.
+   * Trừ tiền và ghi nhận (job hoặc thư viện) nằm trong cùng một transaction: không đủ tiền thì không có gì được tạo.
+   * - chính người này đang có lượt cùng thread chưa xong -> dùng lại lượt đó, không trừ thêm
+   * - đề đã có trong DB (cùng thread ID, dù link khác) -> thêm vào thư viện, không crawl lại
+   * - ngược lại -> tạo job và đánh thức worker nền
    */
   async submit(userId: number, { url }: ImportExamBody) {
     const threadId = parseThreadId(url);
     if (!threadId) throw new AppError("Link không hợp lệ"); // đã được validate, giữ để thu hẹp kiểu
 
-    const exam = await examRepository.findByThreadId(threadId);
-    if (exam) {
-      await examService.addToLibrary(userId, exam.id); // đề có sẵn: chỉ cần thêm vào thư viện của người này
-      return { existed: true as const, examId: exam.id, title: exam.title };
-    }
-
     const active = await crawlJobRepository.findActive(threadId, userId);
-    if (active) return { existed: false as const, job: toDto(active) };
+    if (active) return { existed: false as const, job: toDto(active), charged: 0 };
 
-    const job = await crawlJobRepository.create({ threadId, userId });
-    listeners.forEach((fn) => fn());
-    return { existed: false as const, job: toDto(job) };
+    const { fetchPrice } = await crawlerSettingService.get();
+    const exam = await examRepository.findByThreadId(threadId);
+
+    const result = await prisma.$transaction(async (tx) => {
+      if (fetchPrice > 0) {
+        await walletService.charge(tx, {
+          userId,
+          amount: fetchPrice,
+          type: "CRAWL_CHARGE",
+          note: `Lấy đề thread ${threadId}`,
+        });
+      }
+      if (exam) {
+        await examService.addToLibrary(userId, exam.id, tx);
+        return { existed: true as const, examId: exam.id, title: exam.title, charged: fetchPrice };
+      }
+      const job = await crawlJobRepository.create({ threadId, userId, chargedAmount: fetchPrice }, tx);
+      return { existed: false as const, job: toDto(job), charged: fetchPrice };
+    });
+
+    if (!result.existed) listeners.forEach((fn) => fn());
+    return result;
+  },
+
+  // Job lỗi: đánh dấu FAILED và hoàn đúng số tiền đã trừ, cùng một transaction
+  async fail(job: CrawlJob, message: string) {
+    await prisma.$transaction(async (tx) => {
+      const claimed = await crawlJobRepository.markFailed(tx, job.id, message);
+      if (claimed && job.chargedAmount > 0) {
+        await walletService.applyChange(tx, {
+          userId: job.userId,
+          amount: job.chargedAmount,
+          type: "CRAWL_REFUND",
+          note: `Hoàn phí lấy đề thread ${job.threadId} (lỗi)`,
+        });
+      }
+    });
   },
 
   // Chỉ chủ job (hoặc admin) được xem tiến độ

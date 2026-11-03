@@ -12,6 +12,13 @@ export const walletService = {
     return walletRepository.createEntry(db, { ...input, balanceAfter: balance });
   },
 
+  // Trừ tiền (số dương). Không đủ số dư thì ném 402 và cả transaction chứa nó bị huỷ.
+  async charge(db: Db, input: { userId: number; amount: number; type: TransactionType; note?: string }) {
+    const balance = await userRepository.incrementBalance(db, input.userId, -input.amount);
+    if (balance < 0) throw AppError.paymentRequired("Số dư không đủ, vui lòng nạp thêm tiền");
+    return walletRepository.createEntry(db, { ...input, amount: -input.amount, balanceAfter: balance });
+  },
+
   async history(userId: number, query: PaginationQuery) {
     const { items, total } = await walletRepository.listByUser(userId, query);
     return { items, meta: toMeta(query, total) };

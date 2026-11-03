@@ -98,6 +98,8 @@ model Setting {
 enum TransactionType {
   DEPOSIT
   ADMIN_ADJUST
+  CRAWL_CHARGE // trừ phí lấy đề từ FuOverflow
+  CRAWL_REFUND // hoàn phí khi lấy đề thất bại
 }
 
 // Sổ cái ví: mỗi lần số dư đổi là một dòng (amount âm = trừ tiền)
@@ -180,16 +182,17 @@ enum CrawlJobStatus {
 
 // Một lượt nhập đề: tạo ở trạng thái QUEUED, worker nền nhận và cập nhật `stage` theo từng bước
 model CrawlJob {
-  id         Int            @id @default(autoincrement())
-  threadId   String         @map("thread_id") @db.VarChar(20)
-  userId     Int            @map("user_id")
-  status     CrawlJobStatus @default(QUEUED)
-  stage      String?        @db.VarChar(120)
-  error      String?        @db.Text
-  examId     Int?           @map("exam_id")
-  createdAt  DateTime       @default(now()) @map("created_at")
-  startedAt  DateTime?      @map("started_at")
-  finishedAt DateTime?      @map("finished_at")
+  id            Int            @id @default(autoincrement())
+  threadId      String         @map("thread_id") @db.VarChar(20)
+  userId        Int            @map("user_id")
+  status        CrawlJobStatus @default(QUEUED)
+  stage         String?        @db.VarChar(120)
+  error         String?        @db.Text
+  examId        Int?           @map("exam_id")
+  chargedAmount Int            @default(0) @map("charged_amount") // phí đã trừ, để hoàn đúng số tiền nếu job lỗi
+  createdAt     DateTime       @default(now()) @map("created_at")
+  startedAt     DateTime?      @map("started_at")
+  finishedAt    DateTime?      @map("finished_at")
 
   exam Exam? @relation(fields: [examId], references: [id])
 
