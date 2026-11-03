@@ -90,6 +90,23 @@ export const notificationService = {
     });
   },
 
+  // Thưởng giới thiệu (đăng ký qua mã, hoặc hoa hồng khi người được giới thiệu nạp tiền). Gọi SAU khi transaction đã commit.
+  referralReward(n: { recipientId: number; kind: "signup" | "referrer_signup" | "commission"; otherName: string; amount: number; balanceAfter: number }) {
+    notify("thưởng giới thiệu", async () => {
+      const user = await userRepository.findById(n.recipientId);
+      if (!user) return;
+      await mailService.sendReferralReward(user.email, {
+        name: user.fullName,
+        kind: n.kind,
+        otherName: n.otherName,
+        amount: n.amount,
+        balanceAfter: n.balanceAfter,
+        at: new Date(),
+        walletUrl: walletUrl(),
+      });
+    });
+  },
+
   // Báo cáo đáp án được admin xác nhận đúng và đã thưởng credit (gọi SAU khi transaction đã commit)
   reportApproved(n: { userId: number; examTitle: string; questionNumber: number; reward: number; balanceAfter: number }) {
     notify("thưởng báo cáo đáp án", async () => {

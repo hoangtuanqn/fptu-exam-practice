@@ -8,11 +8,13 @@ import {
   renderDepositEmail,
   renderGiftCodeEmail,
   renderReportRewardEmail,
+  renderReferralEmail,
   renderOrderEmail,
   type ChargeEmailInput,
   type DepositEmailInput,
   type GiftCodeEmailInput,
   type ReportRewardEmailInput,
+  type ReferralEmailInput,
   type OrderEmailInput,
 } from "../mail/templates/wallet-notice";
 
@@ -72,6 +74,9 @@ export const mailService = {
 
   sendReportRewarded: (to: string, input: ReportRewardEmailInput) =>
     send(to, `${tag} Báo cáo đáp án được xác nhận +${credit(input.amount)}`, MAIL_BANNERS.deposit, renderReportRewardEmail(input)),
+
+  sendReferralReward: (to: string, input: ReferralEmailInput) =>
+    send(to, `${tag} ${input.kind === "commission" ? "Hoa hồng giới thiệu" : "Thưởng giới thiệu"} +${credit(input.amount)}`, MAIL_BANNERS.deposit, renderReferralEmail(input)),
 
   sendWelcome: (to: string, input: WelcomeEmailInput) =>
     send(to, `${tag} Chào mừng bạn, tài khoản đã sẵn sàng`, MAIL_BANNERS.welcome, renderWelcomeEmail(input)),

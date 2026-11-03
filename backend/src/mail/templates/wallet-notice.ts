@@ -221,6 +221,63 @@ export function renderReportRewardEmail(i: ReportRewardEmailInput) {
   };
 }
 
+// ---------- Thưởng giới thiệu
+
+export interface ReferralEmailInput {
+  name: string;
+  kind: "signup" | "referrer_signup" | "commission";
+  otherName: string; // người giới thiệu (kind = signup) hoặc người được giới thiệu
+  amount: number;
+  balanceAfter: number;
+  at: Date;
+  walletUrl: string;
+}
+
+const REFERRAL_COPY: Record<ReferralEmailInput["kind"], { title: string; intro: (other: string) => string; label: string }> = {
+  signup: { title: "Quà chào mừng từ giới thiệu", intro: () => "Cảm ơn bạn đã đăng ký qua lời giới thiệu. Credit chào mừng đã được cộng vào ví của bạn.", label: "Credit chào mừng" },
+  referrer_signup: { title: "Bạn vừa giới thiệu thành công", intro: (o) => `${o} vừa đăng ký bằng mã giới thiệu của bạn. Credit thưởng đã được cộng vào ví.`, label: "Credit thưởng" },
+  commission: { title: "Bạn nhận được hoa hồng giới thiệu", intro: (o) => `${o} vừa nạp credit, bạn nhận hoa hồng từ lần nạp này.`, label: "Hoa hồng" },
+};
+
+export function renderReferralEmail(i: ReferralEmailInput) {
+  const copy = REFERRAL_COPY[i.kind];
+  const intro = copy.intro(i.otherName || "Một thành viên");
+  const bodyHtml = [
+    p(`<strong>Xin chào ${esc(i.name)},</strong>`),
+    p(esc(intro)),
+    details([
+      { label: "Thời gian", value: esc(formatDateTimeVN(i.at)) },
+      { label: copy.label, value: `+${esc(formatCredit(i.amount))}`, strong: true },
+      { label: "Số dư hiện tại", value: esc(formatCredit(i.balanceAfter)) },
+    ]),
+    button("Xem lịch sử giao dịch", i.walletUrl),
+    signature(),
+  ].join("");
+
+  return {
+    html: renderLayout({
+      eyebrow: "GIỚI THIỆU",
+      title: copy.title,
+      preheader: `${copy.label} +${formatCredit(i.amount)}. Số dư hiện tại: ${formatCredit(i.balanceAfter)}.`,
+      banner: MAIL_BANNERS.deposit,
+      bodyHtml,
+    }),
+    text: [
+      `Xin chào ${i.name},`,
+      "",
+      intro,
+      `${copy.label}: +${formatCredit(i.amount)}`,
+      `Số dư hiện tại: ${formatCredit(i.balanceAfter)}`,
+      `Thời gian: ${formatDateTimeVN(i.at)}`,
+      "",
+      `Xem lịch sử giao dịch: ${i.walletUrl}`,
+      "",
+      "Trân trọng,",
+      company,
+    ].join("\n"),
+  };
+}
+
 // ---------- Phí lấy đề
 
 export interface ChargeEmailInput {

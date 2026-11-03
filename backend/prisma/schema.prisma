@@ -25,6 +25,8 @@ model User {
   role      Role       @default(USER)
   status    UserStatus @default(ACTIVE)
   balance   Int        @default(0)
+  referralCode String?   @unique @map("referral_code") @db.VarChar(12) // mã giới thiệu của chính người này
+  referredById Int?      @map("referred_by_id") // người đã giới thiệu
   createdAt DateTime   @default(now()) @map("created_at")
   updatedAt DateTime   @updatedAt @map("updated_at")
 
@@ -36,7 +38,12 @@ model User {
   giftRedemptions    GiftCodeRedemption[]
   answerReports      AnswerReport[]
   explanationBuys    ExplanationPurchase[]
+  referredBy         User?                @relation("Referral", fields: [referredById], references: [id], onDelete: SetNull)
+  referrals          User[]               @relation("Referral")
+  rewardsAsReferrer  ReferralReward[]     @relation("RewardReferrer")
+  rewardsAsReferred  ReferralReward[]     @relation("RewardReferred")
 
+  @@index([referredById])
   @@map("users")
 }
 
@@ -108,6 +115,8 @@ enum TransactionType {
   REPORT_REWARD // thưởng khi báo cáo đáp án sai được xác nhận
   EXPLAIN_CHARGE // phí xem lời giải thích AI của một câu
   EXPLAIN_REFUND // hoàn phí khi AI không giải thích được
+  REFERRAL_BONUS // thưởng giới thiệu (đăng ký qua mã giới thiệu)
+  REFERRAL_COMMISSION // hoa hồng khi người được giới thiệu nạp tiền
 }
 
 // Sổ cái ví: mỗi lần số dư đổi là một dòng (amount âm = trừ tiền)
@@ -356,4 +365,28 @@ model ExplanationPurchase {
   @@unique([userId, examId, questionNumber])
   @@index([examId])
   @@map("explanation_purchases")
+}
+
+enum ReferralRewardType {
+  SIGNUP_BONUS // người mới đăng ký qua mã giới thiệu nhận
+  REFERRER_BONUS // người giới thiệu nhận khi có người đăng ký (nếu admin bật)
+  DEPOSIT_COMMISSION // người giới thiệu nhận hoa hồng mỗi lần người kia nạp tiền
+}
+
+// Sổ thưởng giới thiệu: mỗi dòng là một khoản đã cộng. depositOrderId duy nhất để một lệnh nạp chỉ sinh hoa hồng một lần.
+model ReferralReward {
+  id             Int                @id @default(autoincrement())
+  referrerId     Int                @map("referrer_id")
+  referredId     Int                @map("referred_id")
+  type           ReferralRewardType
+  amount         Int
+  depositOrderId Int?               @unique @map("deposit_order_id")
+  createdAt      DateTime           @default(now()) @map("created_at")
+
+  referrer User @relation("RewardReferrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  referred User @relation("RewardReferred", fields: [referredId], references: [id], onDelete: Cascade)
+
+  @@index([referrerId, createdAt])
+  @@index([referredId])
+  @@map("referral_rewards")
 }
