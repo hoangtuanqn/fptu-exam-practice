@@ -40,6 +40,13 @@ export const examRepository = {
   setQuestionAnswer: (db: Db, examId: number, number: number, answer: string) =>
     db.examQuestion.update({ where: { examId_number: { examId, number } }, data: { answer } }),
 
+  // Đáp án và ảnh của một câu (dùng để nhờ AI giải thích)
+  findQuestionForExplain: (examId: number, number: number) =>
+    prisma.examQuestion.findUnique({
+      where: { examId_number: { examId, number } },
+      select: { number: true, name: true, answer: true, imagePath: true, exam: { select: { title: true, threadId: true, answerSource: true } } },
+    }),
+
   findDetail: (id: number) =>
     prisma.exam.findUnique({
       where: { id },
@@ -119,6 +126,7 @@ export const examRepository = {
         await tx.examQuestion.updateMany({ where: { examId, number: i + 1 }, data: { answer } });
       }
       await tx.exam.update({ where: { id: examId }, data: { answerSource: source, aiReport: report } });
+      await tx.questionExplanation.deleteMany({ where: { examId } }); // đáp án đổi thì lời giải thích cũ không còn đúng
     }),
 };
 

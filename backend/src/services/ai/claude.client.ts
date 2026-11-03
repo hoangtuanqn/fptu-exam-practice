@@ -6,38 +6,44 @@ const SEARCH_TOOL = (model: string) => (/haiku/i.test(model) ? "web_search_20250
 
 export type ClaudeContent = Anthropic.ContentBlockParam;
 
-export interface ClaudeRequest {
+interface BaseRequest {
   apiKey: string;
   model: string;
   effort: AiEffort;
-  system: string; // prompt hệ thống cố định (được cache giữa các đề)
+  system: string; // prompt hệ thống cố định (được cache giữa các lần gọi)
   content: ClaudeContent[];
+  maxTokens?: number; // gồm cả token suy luận
+}
+
+export interface ClaudeJsonRequest extends BaseRequest {
   schema: Record<string, unknown>; // JSON Schema của kết quả: Claude trả đúng cấu trúc này
   useSearch: boolean;
 }
 
 /**
- * Gọi Claude một lượt và trả về JSON đã parse theo `schema` (structured outputs).
+ * Một lượt gọi Claude, trả về phần chữ của câu trả lời.
  * - Suy luận thích ứng (adaptive thinking), độ sâu theo `effort`.
- * - Prompt hệ thống gắn cache_control: các đề giải liên tiếp đọc lại prompt từ cache với giá rẻ.
+ * - Prompt hệ thống gắn cache_control: các lần gọi liên tiếp đọc lại prompt từ cache với giá rẻ.
  * - Stream rồi lấy message cuối: lượt dài không bị ngắt vì timeout HTTP.
  * - Có bật tra web thì lượt có thể dừng giữa chừng (pause_turn): gửi lại để Claude làm tiếp.
  * Lỗi 429/5xx do SDK tự thử lại; lỗi còn lại ném ra với lời nhắn rõ ràng.
  */
-export async function askClaude({ apiKey, model, effort, system, content, schema, useSearch }: ClaudeRequest): Promise<unknown> {
-  const client = new Anthropic({ apiKey, timeout: AI_TIMEOUT_MS, maxRetries: 2 });
-  const messages: Anthropic.MessageParam[] = [{ role: "user", content }];
+async function callClaude(req: BaseRequest, options: { schema?: Record<string, unknown>; useSearch?: boolean } = {}): Promise<string> {
+  const client = new Anthropic({ apiKey: req.apiKey, timeout: AI_TIMEOUT_MS, maxRetries: 2 });
+  const messages: Anthropic.MessageParam[] = [{ role: "user", content: req.content }];
 
   try {
     for (let turn = 0; turn <= AI_MAX_PAUSES; turn++) {
       const message = await client.messages
         .stream({
-          model,
-          max_tokens: AI_MAX_OUTPUT_TOKENS,
+          model: req.model,
+          max_tokens: req.maxTokens ?? AI_MAX_OUTPUT_TOKENS,
           thinking: { type: "adaptive" },
-          output_config: { effort, format: { type: "json_schema", schema } },
-          system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
-          ...(useSearch && { tools: [{ type: SEARCH_TOOL(model), name: "web_search", max_uses: AI_MAX_SEARCHES } as Anthropic.ToolUnion] }),
+          output_config: { effort: req.effort, ...(options.schema && { format: { type: "json_schema", schema: options.schema } }) },
+          system: [{ type: "text", text: req.system, cache_control: { type: "ephemeral" } }],
+          ...(options.useSearch && {
+            tools: [{ type: SEARCH_TOOL(req.model), name: "web_search", max_uses: AI_MAX_SEARCHES } as Anthropic.ToolUnion],
+          }),
           messages,
         })
         .finalMessage();
@@ -46,7 +52,7 @@ export async function askClaude({ apiKey, model, effort, system, content, schema
         messages.push({ role: "assistant", content: message.content });
         continue;
       }
-      if (message.stop_reason === "refusal") throw new Error("Claude từ chối giải đề này (bộ lọc an toàn)");
+      if (message.stop_reason === "refusal") throw new Error("Claude từ chối trả lời (bộ lọc an toàn)");
       if (message.stop_reason === "max_tokens") throw new Error("Câu trả lời của Claude bị cắt vì quá dài");
 
       const text = message.content
@@ -55,17 +61,26 @@ export async function askClaude({ apiKey, model, effort, system, content, schema
         .join("")
         .trim();
       if (!text) throw new Error("Claude không trả lời");
-      try {
-        return JSON.parse(text);
-      } catch {
-        throw new Error("Claude trả về dữ liệu không đúng định dạng");
-      }
+      return text;
     }
     throw new Error("Claude tra cứu quá lâu, đã dừng");
   } catch (err) {
     throw new Error(describe(err));
   }
 }
+
+/** Trả về JSON đã parse theo `schema` (structured outputs). */
+export async function askClaude({ schema, useSearch, ...req }: ClaudeJsonRequest): Promise<unknown> {
+  const text = await callClaude(req, { schema, useSearch });
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error("Claude trả về dữ liệu không đúng định dạng");
+  }
+}
+
+/** Trả về văn bản tự do (ví dụ lời giải thích một câu hỏi). */
+export const askClaudeText = (req: BaseRequest) => callClaude(req);
 
 // Đổi lỗi của SDK thành lời nhắn tiếng Việt cho admin (lưu vào báo cáo và log)
 function describe(err: unknown): string {

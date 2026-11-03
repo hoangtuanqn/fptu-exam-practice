@@ -7,6 +7,7 @@ import crawlJobRouter from "./crawl-job.routes";
 import depositPublicRouter from "./deposit-public.routes";
 import depositRouter from "./deposit.routes";
 import examRouter from "./exam.routes";
+import explanationRouter from "./explanation.routes";
 import giftCodeRouter from "./gift-code.routes";
 import userRouter from "./user.routes";
 
@@ -23,6 +24,7 @@ rootRouter.use("/public/deposits", depositPublicRouter);
 rootRouter.use("/crawl-jobs", crawlJobRouter);
 rootRouter.use("/exams", examRouter);
 rootRouter.use("/gift-codes", giftCodeRouter);
+rootRouter.use("/explanations", explanationRouter);
 rootRouter.use("/attempts", attemptRouter);
 rootRouter.use("/answer-reports", answerReportRouter);
 rootRouter.use("/admin", adminRouter);

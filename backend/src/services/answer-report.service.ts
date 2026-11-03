@@ -83,6 +83,7 @@ export const answerReportService = {
         throw AppError.conflict("Báo cáo vừa được xử lý bởi người khác");
       }
       await examRepository.setQuestionAnswer(tx, report.examId, report.questionNumber, report.proposedAnswer);
+      await tx.questionExplanation.deleteMany({ where: { examId: report.examId, questionNumber: report.questionNumber } }); // lời giải cũ theo đáp án cũ
       const entry = await walletService.applyChange(tx, {
         userId: report.userId,
         amount: ANSWER_REPORT_REWARD,
