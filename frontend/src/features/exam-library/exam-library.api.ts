@@ -8,7 +8,7 @@ export interface LibraryExam {
   addedAt: string;
   attempts: number; // số lần đã làm
   bestScore: number | null;
-  answerSource: "PENDING" | "DEFAULT" | "AI" | "MANUAL";
+  answerSource: "PENDING" | "FAILED" | "DEFAULT" | "AI" | "MANUAL";
 }
 
 export const examLibraryApi = {

@@ -13,6 +13,9 @@ interface PendingExam {
   answerSource: AnswerSource | null; // nguồn đáp án của đề hệ thống (null = đề mở từ thư mục)
 }
 
+// Đề chưa có đủ đáp án đúng (AI đang giải hoặc giải lỗi): chỉ xem, không làm bài
+const isLocked = (source: AnswerSource | null) => source !== null && source !== "AI" && source !== "MANUAL";
+
 export function useQuiz() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<UserAnswers>({});
@@ -22,7 +25,7 @@ export function useQuiz() {
   const [title, setTitle] = useState(""); // tên thư mục đề
   const [examId, setExamId] = useState<number | null>(null); // đề đang làm có trong hệ thống không
   const [answerSource, setAnswerSource] = useState<AnswerSource | null>(null); // nguồn đáp án; PENDING = AI đang phân tích
-  const answersPending = answerSource === "PENDING"; // làm bài được nhưng chưa chấm được
+  const answersPending = isLocked(answerSource); // chưa có đáp án: chỉ xem đề
   const [mode, setMode] = useState<Mode>("practice"); // chọn lúc bắt đầu, không đổi giữa chừng
   const [pending, setPending] = useState<PendingExam | null>(null);
   const [notFound, setNotFound] = useState(false); // upload thư mục không có ảnh hợp lệ
@@ -62,7 +65,7 @@ export function useQuiz() {
   function loadExam(examQuestions: Question[], examTitle: string, id: number, source: AnswerSource = "AI") {
     setNotFound(false);
     setPending({
-      questions: source === "PENDING" ? examQuestions.map((x) => ({ ...x, answerPending: true })) : examQuestions,
+      questions: isLocked(source) ? examQuestions.map((x) => ({ ...x, answerPending: true })) : examQuestions,
       title: examTitle,
       examId: id,
       answerSource: source,
@@ -73,7 +76,7 @@ export function useQuiz() {
   function openExam(examQuestions: Question[], examTitle: string, id: number, chosenMode: Mode, source: AnswerSource = "AI") {
     setNotFound(false);
     setPending(null);
-    setQuestions(source === "PENDING" ? examQuestions.map((x) => ({ ...x, answerPending: true })) : examQuestions);
+    setQuestions(isLocked(source) ? examQuestions.map((x) => ({ ...x, answerPending: true })) : examQuestions);
     setTitle(examTitle);
     setExamId(id);
     setAnswerSource(source);
@@ -98,6 +101,16 @@ export function useQuiz() {
     const byNumber = new Map(list.map((a) => [a.number, a.correct]));
     setQuestions((prev) => prev.map((qn) => ({ ...qn, correct: byNumber.get(qn.number) ?? qn.correct, answerPending: false })));
     setAnswerSource(source);
+  }
+
+  // AI giải lỗi (đề vẫn chỉ xem được)
+  function markFailed() {
+    setAnswerSource("FAILED");
+  }
+
+  // Người dùng bấm "Thử lại": quay về trạng thái chờ AI
+  function waitForAnswers() {
+    setAnswerSource("PENDING");
   }
 
   function cancelPending() {
@@ -156,6 +169,8 @@ export function useQuiz() {
     answersPending,
     answerSource,
     applyAnswers,
+    markFailed,
+    waitForAnswers,
     mode,
     pending,
     notFound,

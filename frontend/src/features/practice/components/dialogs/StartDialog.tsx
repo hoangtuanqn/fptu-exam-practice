@@ -35,7 +35,7 @@ export function StartDialog({ title, total, graded, answersPending, replacing, o
 
       {answersPending && (
         <p className="mt-3 text-sm text-brand-800">
-          Bạn xem đề trước được ngay. Phần chọn đáp án sẽ mở khi AI phân tích xong, thường sau ít phút.
+          Đề chưa có đáp án nên bạn chỉ xem được. Phần làm bài sẽ mở khi AI phân tích xong, thường sau ít phút.
         </p>
       )}
       {!answersPending && graded < total && (

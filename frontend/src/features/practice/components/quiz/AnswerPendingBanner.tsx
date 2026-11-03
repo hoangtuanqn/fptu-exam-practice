@@ -1,15 +1,32 @@
 import { useEffect, useState } from "react";
-import { Loader2, Sparkles, TriangleAlert, X } from "lucide-react";
-import type { AnswerSource, Mode } from "@/features/practice/types";
+import { useToast } from "@/shared/context/ToastContext";
+import { Loader2, RotateCw, Sparkles, TriangleAlert } from "lucide-react";
+import { examImportApi } from "@/features/exam-import/exam-import.api";
+import type { AnswerSource } from "@/features/practice/types";
 import { formatDuration } from "@/features/practice/utils/format";
 
 // Dải thông báo trên màn hình làm bài, theo nguồn đáp án:
 // - PENDING: AI đang phân tích, chỉ xem đề, chưa chọn đáp án (kèm thanh tiến trình)
-// - DEFAULT: đáp án chỉ là tạm (A), điểm chỉ để tham khảo (có thể tắt)
+// - FAILED: AI giải lỗi, đề chỉ xem được, có nút thử lại
 // - AI / MANUAL: không hiện gì
-export function AnswerPendingBanner({ source, mode }: { source: AnswerSource | null; mode: Mode }) {
+export function AnswerPendingBanner({ source, examId, onRetry }: { source: AnswerSource | null; examId: number | null; onRetry: () => void }) {
+  const toast = useToast();
   const [seconds, setSeconds] = useState(0);
-  const [dismissed, setDismissed] = useState(false);
+  const [retrying, setRetrying] = useState(false);
+
+  async function retry() {
+    if (examId === null) return;
+    setRetrying(true);
+    try {
+      await examImportApi.retrySolve(examId);
+      setSeconds(0);
+      onRetry();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Chưa thử lại được, vui lòng đợi ít phút");
+    } finally {
+      setRetrying(false);
+    }
+  }
 
   useEffect(() => {
     if (source !== "PENDING") return;
@@ -41,17 +58,22 @@ export function AnswerPendingBanner({ source, mode }: { source: AnswerSource | n
     );
   }
 
-  if (source === "DEFAULT" && !dismissed) {
+  if (source === "FAILED" || source === "DEFAULT") {
     return (
-      <div role="status" className="mb-2 flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-sm text-amber-900">
-        <TriangleAlert size={16} className="mt-0.5 shrink-0 text-amber-600" />
+      <div role="alert" className="mb-2 flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-3 text-sm text-rose-900">
+        <TriangleAlert size={16} className="mt-0.5 shrink-0 text-rose-600" />
         <div className="min-w-0 flex-1">
-          <span className="font-medium">Đề này chưa có đáp án chính xác.</span>{" "}
-          <span className="text-amber-800/80">Đang dùng đáp án tạm (A) cho mọi câu nên điểm chỉ mang tính tham khảo.</span>
+          <div className="font-medium">AI chưa phân tích được đáp án của đề này.</div>
+          <div className="mt-0.5 text-rose-800/80">Đề chỉ xem được, chưa làm bài được vì chưa có đáp án chính xác. Lỗi đã được ghi lại để quản trị viên xử lý.</div>
+          <button
+            onClick={retry}
+            disabled={retrying || examId === null}
+            className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-rose-300 bg-white px-3 py-1.5 text-xs font-medium text-rose-800 transition hover:bg-rose-100 disabled:opacity-60"
+          >
+            {retrying ? <Loader2 size={13} className="animate-spin" /> : <RotateCw size={13} />}
+            Thử lại
+          </button>
         </div>
-        <button onClick={() => setDismissed(true)} aria-label="Ẩn thông báo" className="shrink-0 rounded p-0.5 text-amber-700 hover:bg-amber-100">
-          <X size={15} />
-        </button>
       </div>
     );
   }

@@ -14,7 +14,9 @@ import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
 import { formatDateTime } from "@/shared/utils/formatters";
 
 const SOURCE: Record<AnswerSource, [string, Tone]> = {
-  DEFAULT: ["Đáp án tạm (A)", "warning"],
+  PENDING: ["AI đang giải", "info"],
+  FAILED: ["AI lỗi, chưa có đáp án", "danger"],
+  DEFAULT: ["Chưa có đáp án", "danger"],
   AI: ["AI giải", "success"],
   MANUAL: ["Chỉnh tay", "info"],
 };
