@@ -8,7 +8,7 @@ export interface NewExam {
   sourceUrl: string;
   author?: string;
   postedAt?: string;
-  createdById: number;
+  createdById?: number;
   questions: {
     number: number;
     name: string;
