@@ -1,58 +1,41 @@
 import { Link } from "react-router-dom";
 import { brand } from "@/shared/brand/brand";
+import { buttonClass } from "@/shared/ui/Button";
 
-// Khối navy cuối trang mời đăng ký
+// Khối cuối trang mời đăng ký: thẻ sáng bo tròn lớn, quầng sáng xanh/cyan rất nhạt
 export function CtaSection() {
   return (
-    <section className="relative overflow-hidden bg-brand-900 text-white">
-      {/* Lưới mờ + ánh sáng xanh/cyan lấy từ gradient của logo */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.07]"
-        style={{
-          backgroundImage:
-            "linear-gradient(to right, #fff 1px, transparent 1px), linear-gradient(to bottom, #fff 1px, transparent 1px)",
-          backgroundSize: "36px 36px",
-        }}
-      />
-      <div className="pointer-events-none absolute -left-24 top-1/2 h-72 w-72 -translate-y-1/2 rounded-full bg-brand-600/40 blur-3xl" />
-      <div className="pointer-events-none absolute -right-24 top-1/2 h-72 w-72 -translate-y-1/2 rounded-full bg-accent/20 blur-3xl" />
+    <section className="bg-white px-5 py-16">
+      <div className="relative mx-auto max-w-4xl overflow-hidden rounded-[2rem] border border-slate-200/80 bg-gradient-to-b from-brand-50 to-white px-6 py-14 text-center shadow-card">
+        <div aria-hidden className="bg-dots absolute inset-0 [mask-image:radial-gradient(ellipse_60%_80%_at_50%_0%,#000_20%,transparent_100%)]" />
+        <div aria-hidden className="absolute -left-16 top-0 h-56 w-56 rounded-full bg-brand-200/50 blur-3xl" />
+        <div aria-hidden className="absolute -right-16 bottom-0 h-56 w-56 rounded-full bg-accent-soft/50 blur-3xl" />
 
-      <div className="relative mx-auto flex max-w-3xl flex-col items-center gap-5 px-5 py-12 text-center">
-        <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-accent">{brand.slogan}</p>
-        <h2 className="font-serif text-3xl font-semibold leading-tight sm:text-4xl">
-          Sẵn sàng chạm{" "}
-          <span className="bg-gradient-to-r from-brand-400 via-accent to-accent-soft bg-clip-text text-transparent">
-            điểm 10
-          </span>
-          ?
-        </h2>
-        <p className="max-w-md text-sm text-brand-200">
-          Tạo tài khoản miễn phí chỉ với email, luyện đề không giới hạn.
-        </p>
+        <div className="relative flex flex-col items-center gap-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-600">{brand.slogan}</p>
+          <h2 className="text-3xl font-semibold leading-tight text-slate-900 sm:text-4xl">
+            Sẵn sàng chạm <span className="text-gradient">điểm 10</span>?
+          </h2>
+          <p className="max-w-md text-sm text-slate-600">Tạo tài khoản miễn phí chỉ với email, luyện đề không giới hạn.</p>
 
-        <div className="flex flex-wrap justify-center gap-3">
-          <Link
-            to="/register"
-            className="rounded-lg bg-gradient-to-r from-brand-600 to-accent px-7 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-600/30 transition hover:brightness-110"
-          >
-            Tạo tài khoản miễn phí
-          </Link>
-          <Link
-            to="/login"
-            className="rounded-lg border border-white/25 px-6 py-3 text-sm font-medium text-white transition hover:bg-white/10"
-          >
-            Đăng nhập
-          </Link>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Link to="/register" className={buttonClass({ variant: "primary", className: "!px-6 !py-3" })}>
+              Tạo tài khoản miễn phí
+            </Link>
+            <Link to="/login" className={buttonClass({ className: "!px-6 !py-3" })}>
+              Đăng nhập
+            </Link>
+          </div>
+
+          <ul className="flex flex-wrap justify-center gap-x-5 gap-y-1 text-xs text-slate-500">
+            {["Đăng ký miễn phí", "Chấm điểm thang 10", "Lưu lịch sử từng lần làm"].map((t) => (
+              <li key={t} className="inline-flex items-center gap-1.5">
+                <span className="h-1 w-1 rounded-full bg-accent" />
+                {t}
+              </li>
+            ))}
+          </ul>
         </div>
-
-        <ul className="flex flex-wrap justify-center gap-x-5 gap-y-1 text-xs text-brand-300">
-          {["Đăng ký miễn phí", "Chấm điểm thang 10", "AI giải thích đáp án"].map((t) => (
-            <li key={t} className="inline-flex items-center gap-1.5">
-              <span className="h-1 w-1 rounded-full bg-accent" />
-              {t}
-            </li>
-          ))}
-        </ul>
       </div>
     </section>
   );

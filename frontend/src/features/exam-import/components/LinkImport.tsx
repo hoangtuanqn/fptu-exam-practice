@@ -25,7 +25,8 @@ export function LinkImport({ onImported }: Props) {
   const { user, refresh } = useAuth();
   const [url, setUrl] = useState("");
   const job = useExamImport();
-  const price = useApi(() => examImportApi.price(), []);
+  const [needLogin, setNeedLogin] = useState(false); // khách bấm Lấy đề: mời đăng ký thay vì gọi API
+  const price = useApi(() => (user ? examImportApi.price() : Promise.resolve({ price: 0 })), [user?.id]);
   const fee = price.data?.price ?? 0;
   const tooPoor = !!user && fee > 0 && user.balance < fee;
 
@@ -53,31 +54,23 @@ export function LinkImport({ onImported }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [job.exam]);
 
-  if (!user) {
-    return (
-      <div className="mt-6 rounded-2xl border-2 border-dashed border-brand-300 bg-brand-50/40 px-6 py-8 text-center">
-        <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-brand-600 to-accent text-white shadow-md shadow-brand-600/25">
-          <Link2 size={20} />
-        </span>
-        <div className="mt-3 font-serif text-xl font-semibold text-slate-900">Nhập đề từ link FuOverflow</div>
-        <p className="mb-4 mt-1 text-sm text-slate-500">Đăng nhập để dán link đề, hệ thống tự lấy đề về cho bạn.</p>
-        <SignUpCta />
-      </div>
-    );
-  }
-
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (url.trim() && !running) void job.start(url.trim());
+    if (!url.trim() || running) return;
+    if (!user) {
+      setNeedLogin(true);
+      return;
+    }
+    void job.start(url.trim());
   };
 
   return (
-    <form onSubmit={onSubmit} className="mt-6 rounded-2xl border-2 border-dashed border-brand-300 bg-brand-50/40 px-6 py-8 text-left">
+    <form onSubmit={onSubmit} className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/60 px-6 py-9 text-left">
       <div className="flex flex-col items-center text-center">
-        <span className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-brand-600 to-accent text-white shadow-md shadow-brand-600/25">
-          <Link2 size={20} />
+        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-600 to-accent text-white shadow-lg shadow-brand-600/25">
+          <Link2 size={22} />
         </span>
-        <div className="mt-3 font-serif text-xl font-semibold text-slate-900">Nhập đề từ link FuOverflow</div>
+        <div className="mt-4 text-lg font-semibold text-slate-900">Nhập đề từ link FuOverflow</div>
         <div className="mt-0.5 text-sm text-slate-500">Dán link thread đề thi, hệ thống tự lấy ảnh và lưu lại</div>
       </div>
 
@@ -97,7 +90,7 @@ export function LinkImport({ onImported }: Props) {
         </Button>
       </div>
 
-      {fee > 0 && (
+      {user && fee > 0 && (
         <p className="mt-2 text-xs text-slate-500">
           Phí lấy đề: <b className="font-semibold text-slate-700">{formatMoney(fee)}</b> mỗi lần (kể cả đề đã có sẵn, lỗi thì hoàn lại)
           · Số dư: <b className="font-semibold text-slate-700">{formatMoney(user.balance)}</b>
@@ -113,13 +106,30 @@ export function LinkImport({ onImported }: Props) {
         </p>
       )}
 
+      {!user && !needLogin && (
+        <p className="mt-2 text-xs text-slate-500">
+          Lấy đề từ link cần tài khoản để đề được lưu vào thư viện và mỗi lần nộp bài được ghi vào lịch sử.
+        </p>
+      )}
+
+      {!user && needLogin && (
+        <div className="mt-4 rounded-xl border border-brand-100 bg-brand-50/70 p-4">
+          <div className="text-sm font-medium text-slate-900">Đăng nhập để lấy đề từ link</div>
+          <p className="mb-3 mt-1 text-xs leading-relaxed text-slate-600">
+            Đề sẽ được lưu vào thư viện riêng của bạn, và mỗi lần nộp bài, điểm cùng chi tiết từng câu được lưu lại để xem
+            sau. Tạo tài khoản chỉ mất vài giây. Bạn vẫn có thể mở thư mục đề ở tab bên cạnh để dùng thử ngay.
+          </p>
+          <SignUpCta />
+        </div>
+      )}
+
       {(running || done) && (
         <div className="mt-4" role="status" aria-live="polite">
           <div className="mb-1.5 flex items-center justify-between text-xs text-slate-600">
             <span>{done ? "Hoàn tất" : (job.stage ?? "Đang xử lý")}</span>
             <span className="font-mono tabular-nums">{percent}%</span>
           </div>
-          <div className="h-2 overflow-hidden rounded-full bg-brand-100">
+          <div className="h-2 overflow-hidden rounded-full bg-slate-200/70">
             <div
               className="h-full rounded-full bg-gradient-to-r from-brand-600 via-accent to-accent-soft transition-[width] duration-500 ease-out"
               style={{ width: `${percent}%` }}

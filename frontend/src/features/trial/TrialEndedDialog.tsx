@@ -9,8 +9,8 @@ export function TrialEndedDialog({ onClose }: { onClose: () => void }) {
     <Modal>
       <ModalTitle icon={Sparkles}>Bạn đã dùng hết lượt thử</ModalTitle>
       <p className="mt-3 text-sm leading-relaxed text-slate-600">
-        Lượt dùng thử miễn phí chỉ có một lần. Tạo tài khoản miễn phí, chỉ mất vài giây, để tiếp tục luyện đề không
-        giới hạn.
+        Lượt dùng thử miễn phí chỉ có một lần. Tạo tài khoản miễn phí, chỉ mất vài giây, để luyện đề không giới hạn,
+        nhập đề từ link FuOverflow và lưu lại lịch sử từng lần làm.
       </p>
       <div className="mt-5">
         <SignUpCta />

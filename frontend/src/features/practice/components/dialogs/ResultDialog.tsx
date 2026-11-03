@@ -54,8 +54,11 @@ export function ResultDialog({ result, elapsed, onReview, onRetry }: Props) {
 
       {!user && (
         <div className="mt-5 rounded-xl bg-brand-50 p-4">
-          <div className="text-sm font-medium text-brand-900">Bạn vừa dùng hết lượt thử miễn phí</div>
-          <p className="mb-3 mt-1 text-xs text-slate-600">Đăng ký miễn phí để tiếp tục luyện đề không giới hạn.</p>
+          <div className="text-sm font-medium text-brand-900">Muốn giữ lại kết quả này?</div>
+          <p className="mb-3 mt-1 text-xs leading-relaxed text-slate-600">
+            Lượt làm thử này chưa được lưu. Đăng ký tài khoản miễn phí để nhập đề từ link FuOverflow, lưu điểm và chi tiết
+            từng câu vào lịch sử, rồi theo dõi tiến bộ qua mỗi lần làm.
+          </p>
           <SignUpCta />
         </div>
       )}

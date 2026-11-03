@@ -5,7 +5,7 @@ import { useAuth } from "@/features/auth/AuthContext";
 import { formatMoney, initials } from "@/shared/utils/formatters";
 import { buttonClass } from "@/shared/ui/Button";
 
-const item = "flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm text-slate-700 hover:bg-slate-100";
+const item = "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-100";
 
 // Góc phải header: khách thấy nút Đăng nhập, thành viên thấy avatar + menu
 export function UserMenu() {
@@ -47,16 +47,16 @@ export function UserMenu() {
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="flex items-center gap-2 rounded-lg py-1 pl-1 pr-2 hover:bg-slate-100"
+        className="flex items-center gap-1.5 rounded-full py-1 pl-1 pr-2 transition hover:bg-slate-900/5"
       >
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-900 text-xs font-semibold text-white">
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-brand-600 to-accent text-xs font-semibold text-white shadow-sm">
           {initials(user.fullName)}
         </span>
         <ChevronDown size={14} className="text-slate-400" />
       </button>
 
       {open && (
-        <div role="menu" className="absolute right-0 top-full z-50 mt-2 w-64 animate-fade-in rounded-xl border border-slate-200 bg-white p-2 shadow-lg">
+        <div role="menu" className="absolute right-0 top-full z-50 mt-2 w-64 animate-fade-in rounded-2xl border border-slate-200/80 bg-white p-2 shadow-pop">
           <div className="px-3 py-2">
             <div className="truncate text-sm font-medium text-slate-900">{user.fullName}</div>
             <div className="truncate text-xs text-slate-500">{user.email}</div>

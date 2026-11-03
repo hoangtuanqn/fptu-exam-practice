@@ -34,9 +34,9 @@ export function MyExams({ onOpen }: Props) {
   }
 
   return (
-    <section className="mt-8 text-left">
+    <section className="mt-10 text-left">
       <div className="mb-2 flex items-center justify-between">
-        <h2 className="font-serif text-lg font-semibold text-slate-900">Đề của tôi</h2>
+        <h2 className="text-base font-semibold text-slate-900">Đề của tôi</h2>
         <Link to="/account/attempts" className="text-xs font-medium text-brand-700 hover:underline">
           Lịch sử làm bài
         </Link>
@@ -48,9 +48,9 @@ export function MyExams({ onOpen }: Props) {
               type="button"
               onClick={() => void open(e.id)}
               disabled={openingId !== null}
-              className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-left transition hover:border-brand-300 disabled:opacity-60"
+              className="flex w-full items-center gap-3 rounded-2xl border border-slate-200/80 bg-white px-4 py-3.5 text-left shadow-soft transition hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-card disabled:opacity-60"
             >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
                 {openingId === e.id ? <Loader2 size={16} className="animate-spin" /> : <BookOpen size={16} />}
               </span>
               <span className="min-w-0 flex-1">

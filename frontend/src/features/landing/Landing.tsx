@@ -18,7 +18,7 @@ export function Landing({ onPick, onImported, userName, trialUsed }: Props) {
   const isGuest = !userName;
 
   return (
-    <div className="flex flex-1 flex-col overflow-y-auto bg-white">
+    <div className="flex flex-1 flex-col overflow-y-auto bg-paper">
       <HeroSection onPick={onPick} onImported={onImported} userName={userName} trialUsed={trialUsed} />
 
       {isGuest && (
