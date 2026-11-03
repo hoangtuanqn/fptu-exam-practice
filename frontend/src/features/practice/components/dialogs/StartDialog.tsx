@@ -19,7 +19,7 @@ export function StartDialog({ title, total, graded, replacing, onCancel, onStart
   const [mode, setMode] = useState<Mode>("practice");
 
   return (
-    <Modal>
+    <Modal onClose={onCancel}>
       <h2 className="font-serif text-xl font-semibold text-slate-900">Bắt đầu làm đề</h2>
 
       <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm">
