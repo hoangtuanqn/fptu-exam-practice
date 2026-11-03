@@ -44,6 +44,7 @@ export const updateAiBody = z.object({
   anthropicApiKey: z.string().trim().max(300).optional(), // để trống = giữ khóa cũ
   claudeModel: z.string().trim().regex(/^[a-z0-9][a-z0-9.\-]{2,60}$/i, "Tên model không hợp lệ, ví dụ claude-haiku-5-5"),
   effort: z.enum(["low", "medium", "high", "xhigh", "max"]),
+  explainPrice: z.number("Phí không hợp lệ").int("Phí phải là số nguyên").min(0, "Tối thiểu 0").max(100_000, "Tối đa 100.000"),
   useSearch: z.boolean(),
 });
 

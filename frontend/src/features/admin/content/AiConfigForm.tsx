@@ -27,11 +27,12 @@ export function AiConfigForm({ initial, onSaved }: { initial: AiAdminConfig; onS
   const [claudeModel, setClaudeModel] = useState(initial.claudeModel);
   const [effort, setEffort] = useState<AiEffort>(initial.effort);
   const [anthropicApiKey, setAnthropicApiKey] = useState("");
+  const [explainPrice, setExplainPrice] = useState(String(initial.explainPrice));
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
     void run(async () => {
-      await adminApi.saveAiConfig({ enabled, useSearch, claudeModel, effort, anthropicApiKey: anthropicApiKey || undefined });
+      await adminApi.saveAiConfig({ enabled, useSearch, claudeModel, effort, explainPrice: Number(explainPrice), anthropicApiKey: anthropicApiKey || undefined });
       setAnthropicApiKey("");
       toast.success("Đã lưu cấu hình AI");
       onSaved();
@@ -88,6 +89,15 @@ export function AiConfigForm({ initial, onSaved }: { initial: AiAdminConfig; onS
           </div>
           <p className="mt-1.5 text-xs text-slate-500">Mức càng cao Claude càng suy nghĩ kỹ (đúng hơn) nhưng tốn nhiều token và lâu hơn.</p>
         </div>
+
+        <Input
+          label="Phí giải thích câu hỏi (credit)"
+          inputMode="numeric"
+          value={explainPrice}
+          onChange={(e) => setExplainPrice(e.target.value.replace(/\D/g, ""))}
+          error={fieldErrors.explainPrice}
+          hint="Người dùng trả phí này mỗi lần xem lời giải thích AI của một câu (mỗi câu trả một lần, xem lại miễn phí). Lời giải được lưu để dùng chung. Đặt 0 để miễn phí."
+        />
 
         <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 p-4">
           <div>

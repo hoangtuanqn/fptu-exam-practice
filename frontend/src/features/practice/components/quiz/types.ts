@@ -13,6 +13,8 @@ export interface QuestionViewProps {
   flagged: boolean; // đã đánh dấu xem lại chưa
   onToggleFlag: () => void;
   onReport?: () => void; // có khi đã có kết quả của câu và người dùng đã đăng nhập (báo cáo đáp án sai)
+  onExplain?: () => void; // xem lời giải thích AI của câu (trả phí credit)
+  explainBought?: boolean; // đã mua lời giải của câu này (xem lại miễn phí)
   reported?: boolean; // đã gửi báo cáo cho câu này trong phiên làm bài
   onChoose: (option: string) => void;
   onCheck: () => void;

@@ -11,6 +11,7 @@ const parse = (name: keyof AiConfig, raw: string | undefined) => {
   const fallback = AI_DEFAULTS[name];
   if (raw === undefined) return fallback;
   if (typeof fallback === "boolean") return raw === "true";
+  if (typeof fallback === "number") return Number.isFinite(Number(raw)) ? Number(raw) : fallback;
   return raw;
 };
 

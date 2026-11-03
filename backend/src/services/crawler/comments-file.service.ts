@@ -42,6 +42,14 @@ export async function writeCommentsFile(dir: string, meta: { title: string; url:
   return text;
 }
 
+/** Lấy phần bình luận của một câu ("Q7") từ bản đã rút gọn; null nếu câu đó không có bình luận. */
+export function commentsOfQuestion(compact: string | null, name: string): string | null {
+  if (!compact) return null;
+  const section = compact.split(/^## /m).find((part) => part.split("\n", 1)[0]?.trim() === name);
+  const body = section?.split("\n").slice(1).join("\n").trim();
+  return body || null;
+}
+
 // "[time] author [score] (#id): text" -> author, score, text (dòng đầu của một bình luận)
 const COMMENT_LINE = /^\[[^\]]*\] (.*?)(?: (\[-?\d+\]))? \(#\d+\): ?(.*)$/;
 
