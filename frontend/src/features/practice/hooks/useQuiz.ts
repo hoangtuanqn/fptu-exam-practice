@@ -116,7 +116,7 @@ export function useQuiz() {
 
   function choose(question: Question, option: string) {
     const { number } = question;
-    if (isRevealed(question)) return; // đã có kết quả thì khóa
+    if (isRevealed(question) || answersPending) return; // đã có kết quả, hoặc AI chưa xong đáp án: chỉ xem đề
 
     setAnswers((prev) => {
       const selected = prev[number] ?? [];

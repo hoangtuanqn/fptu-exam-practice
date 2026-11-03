@@ -180,6 +180,7 @@ export default function PracticePage({ threadId }: Props) {
         mode={quiz.mode}
         loaded={hasQuiz}
         submitted={quiz.submitted}
+        submitLocked={quiz.answersPending}
         elapsed={quiz.elapsed}
         onPick={pick}
         onSubmit={() => setDialog("confirm")}
