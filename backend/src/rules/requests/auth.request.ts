@@ -34,6 +34,13 @@ export type ResetPasswordBody = z.infer<typeof resetPasswordBody>;
 export type RegisterBody = z.infer<typeof registerBody>;
 export type LoginBody = z.infer<typeof loginBody>;
 
+export const googleLoginBody = z.object({
+  accessToken: z.string().min(10, "Token không hợp lệ").max(4000, "Token không hợp lệ"),
+  referralCode: z.string().trim().toUpperCase().regex(/^[A-Z0-9]{4,12}$/).optional(), // từ liên kết ?ref= khi người mới đăng ký
+});
+
+export type GoogleLoginBody = z.infer<typeof googleLoginBody>;
+
 export const verifyEmailBody = z.object({
   token: z.string().min(20, "Liên kết không hợp lệ").max(200, "Liên kết không hợp lệ"),
 });

@@ -10,6 +10,7 @@ import { Input, PasswordInput } from "@/shared/ui/Input";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useToast } from "@/shared/context/ToastContext";
 import { useSubmit } from "@/shared/hooks/useSubmit";
+import { GoogleButton } from "@/features/auth/google/GoogleButton";
 import { AuthLayout } from "./AuthLayout";
 
 export default function RegisterPage() {
@@ -53,6 +54,7 @@ export default function RegisterPage() {
 
   return (
     <AuthLayout title="Tạo tài khoản" subtitle="Chỉ mất vài giây. Dùng email để đăng nhập sau này.">
+      <GoogleButton label="Đăng ký bằng Google" />
       <form onSubmit={onSubmit} className="space-y-4" noValidate>
         <FormError message={error} />
         {invite && invite.bonus > 0 && (

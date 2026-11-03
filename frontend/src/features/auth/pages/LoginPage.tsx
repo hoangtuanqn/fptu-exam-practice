@@ -7,6 +7,7 @@ import { FormError } from "@/shared/ui/Feedback";
 import { Input, PasswordInput } from "@/shared/ui/Input";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useSubmit } from "@/shared/hooks/useSubmit";
+import { GoogleButton } from "@/features/auth/google/GoogleButton";
 import { AuthLayout } from "./AuthLayout";
 
 export default function LoginPage() {
@@ -23,6 +24,7 @@ export default function LoginPage() {
 
   return (
     <AuthLayout title="Đăng nhập" subtitle="Chào mừng quay lại. Nhập thông tin để tiếp tục.">
+      <GoogleButton />
       <form onSubmit={onSubmit} className="space-y-4" noValidate>
         <FormError message={error} />
         <Input
