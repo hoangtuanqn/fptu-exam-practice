@@ -8,9 +8,9 @@ import { DropZone } from "./DropZone";
 
 type Source = "link" | "folder";
 
-const TABS: { id: Source; label: string; icon: typeof Link2 }[] = [
-  { id: "link", label: "Nhập link FuOverflow", icon: Link2 },
-  { id: "folder", label: "Mở thư mục đề", icon: FolderOpen },
+const TABS: { id: Source; label: string; short: string; icon: typeof Link2 }[] = [
+  { id: "link", label: "Nhập link FuOverflow", short: "Nhập link", icon: Link2 },
+  { id: "folder", label: "Mở thư mục đề", short: "Mở thư mục", icon: FolderOpen },
 ];
 
 interface Props {
@@ -27,7 +27,7 @@ export function ExamSourcePicker({ onPick, onImported }: Props) {
     <div className="mt-8">
       <div className="rounded-3xl border border-slate-200/80 bg-white p-3 text-left shadow-pop sm:p-4">
         <div role="tablist" className="grid grid-cols-2 gap-1 rounded-2xl bg-slate-100/80 p-1">
-          {TABS.map(({ id, label, icon: Icon }) => (
+          {TABS.map(({ id, label, short, icon: Icon }) => (
             <button
               key={id}
               role="tab"
@@ -39,7 +39,10 @@ export function ExamSourcePicker({ onPick, onImported }: Props) {
               }`}
             >
               <Icon size={15} className={source === id ? "text-brand-600" : ""} />
-              <span className="truncate">{label}</span>
+              <span className="truncate">
+                <span className="sm:hidden">{short}</span>
+                <span className="hidden sm:inline">{label}</span>
+              </span>
             </button>
           ))}
         </div>
