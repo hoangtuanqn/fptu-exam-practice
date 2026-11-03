@@ -27,6 +27,7 @@ model User {
   balance   Int        @default(0)
   referralCode String?   @unique @map("referral_code") @db.VarChar(12) // mã giới thiệu của chính người này
   referredById Int?      @map("referred_by_id") // người đã giới thiệu
+  googleSub    String?   @unique @map("google_sub") @db.VarChar(64) // tài khoản Google đã liên kết
   emailVerifiedAt DateTime? @map("email_verified_at") // chưa xác minh email thì chưa dùng được các dịch vụ trừ credit
   createdAt DateTime   @default(now()) @map("created_at")
   updatedAt DateTime   @updatedAt @map("updated_at")
