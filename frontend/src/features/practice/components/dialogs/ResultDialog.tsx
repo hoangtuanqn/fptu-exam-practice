@@ -24,7 +24,7 @@ export function ResultDialog({ result, elapsed, savable, onReview, onRetry }: Pr
   const tone = result.total === 0 ? "neutral" : passed ? "success" : "danger";
 
   return (
-    <Modal>
+    <Modal onClose={onReview}>
       <div className="text-center">
         <div>
           <ScoreRing value={result.score / MAX_SCORE} tone={tone}>

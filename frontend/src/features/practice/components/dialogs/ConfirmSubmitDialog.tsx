@@ -17,7 +17,7 @@ export function ConfirmSubmitDialog({ answered, total, savable, onCancel, onConf
   const left = total - answered;
 
   return (
-    <Modal>
+    <Modal onClose={onCancel}>
       <ModalTitle icon={AlertTriangle}>Nộp bài?</ModalTitle>
       <p className="mt-4 text-sm text-slate-600">
         Bạn đã làm <b className="text-slate-900">{answered}</b> / {total} câu.

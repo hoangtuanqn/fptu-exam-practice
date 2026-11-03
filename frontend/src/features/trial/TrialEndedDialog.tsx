@@ -6,7 +6,7 @@ import { Modal, ModalActions, ModalTitle } from "@/shared/ui/Modal";
 // Hiện khi khách đã dùng hết lượt thử mà muốn mở đề mới
 export function TrialEndedDialog({ onClose }: { onClose: () => void }) {
   return (
-    <Modal>
+    <Modal onClose={onClose}>
       <ModalTitle icon={Sparkles}>Bạn đã dùng hết lượt thử</ModalTitle>
       <p className="mt-3 text-sm leading-relaxed text-slate-600">
         Lượt dùng thử miễn phí chỉ có một lần. Tạo tài khoản miễn phí, chỉ mất vài giây, để luyện đề không giới hạn,
