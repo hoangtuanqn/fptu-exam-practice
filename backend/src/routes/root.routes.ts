@@ -6,6 +6,7 @@ import crawlJobRouter from "./crawl-job.routes";
 import depositPublicRouter from "./deposit-public.routes";
 import depositRouter from "./deposit.routes";
 import examRouter from "./exam.routes";
+import giftCodeRouter from "./gift-code.routes";
 import userRouter from "./user.routes";
 
 const rootRouter = Router();
@@ -20,6 +21,7 @@ rootRouter.use("/deposits", depositRouter);
 rootRouter.use("/public/deposits", depositPublicRouter);
 rootRouter.use("/crawl-jobs", crawlJobRouter);
 rootRouter.use("/exams", examRouter);
+rootRouter.use("/gift-codes", giftCodeRouter);
 rootRouter.use("/attempts", attemptRouter);
 rootRouter.use("/admin", adminRouter);
 
