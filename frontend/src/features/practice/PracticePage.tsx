@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { ApiError } from "@/shared/api/client";
 import { examImportApi } from "@/features/exam-import/exam-import.api";
 import { historyApi } from "@/features/history/history.api";
 import { pendingAttempt } from "@/features/guest-sync/pendingAttempt";
@@ -12,14 +13,26 @@ import { Header } from "@/features/practice/components/Header";
 import { Landing } from "@/features/landing/Landing";
 import { QuizDialogs, type SubmitDialog } from "@/features/practice/components/dialogs/QuizDialogs";
 import { TrialEndedDialog } from "@/features/trial/TrialEndedDialog";
+import { Loading } from "@/shared/ui/Feedback";
 import { QuizWorkspace } from "@/features/practice/components/quiz/QuizWorkspace";
 
-export default function PracticePage() {
+interface Props {
+  threadId?: string; // có khi đang ở địa chỉ /exam/:threadId (mã thread FuOverflow, công khai, không phải ID nội bộ)
+}
+
+// Trang luyện đề. Địa chỉ phản ánh đề đang mở: "/" là trang chủ, "/exam/:threadId" là đề của hệ thống,
+// "/exam/:threadId?mode=exam" mở thẳng vào chế độ thi. Sao chép địa chỉ là gửi được đúng đề đó (người mở cần có đề trong kho).
+export default function PracticePage({ threadId }: Props) {
   const quiz = useQuiz();
   const { user } = useAuth();
   const trial = useGuestTrial();
   const toast = useToast();
-  const [params, setParams] = useSearchParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [opening, setOpening] = useState(false); // đang tải đề theo địa chỉ
+  const loadedFor = useRef<string | null>(null);
+  const [openedThread, setOpenedThread] = useState<string | null>(null); // mã thread của đề đang làm
+  const openedId = quiz.examId;
   const [zoomOpen, setZoomOpen] = useState(false);
   const [dialog, setDialog] = useState<SubmitDialog>(null);
   const [trialEnded, setTrialEnded] = useState(false);
@@ -57,17 +70,55 @@ export default function PracticePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quiz.submitted]);
 
-  // Mở đề từ liên kết /?exam=ID (ví dụ nút "Làm lại đề" ở lịch sử)
-  const examParam = Number(params.get("exam"));
+  // Vào /exam/:threadId thì tải đề đó: có ?mode=practice|exam thì làm bài luôn, không thì hỏi chọn chế độ
   useEffect(() => {
-    if (!examParam || !user) return;
-    setParams({}, { replace: true });
+    if (!threadId) {
+      loadedFor.current = null;
+      return;
+    }
+    if (loadedFor.current === threadId) return;
+    loadedFor.current = threadId;
+
+    let stale = false;
+    setOpening(true);
     examImportApi
-      .exam(examParam)
-      .then((exam) => quiz.loadExam(exam.questions, exam.title, exam.id))
-      .catch(() => toast.error("Không mở được đề này"));
+      .examByThread(threadId)
+      .then((exam) => {
+        if (stale) return;
+        setOpenedThread(exam.threadId);
+        const mode = new URLSearchParams(location.search).get("mode");
+        if (mode === "practice" || mode === "exam") quiz.openExam(exam.questions, exam.title, exam.id, mode);
+        else quiz.loadExam(exam.questions, exam.title, exam.id);
+      })
+      .catch((err: unknown) => {
+        if (stale) return;
+        toast.error(
+          err instanceof ApiError && err.status === 404
+            ? "Bạn chưa có đề này. Hãy lấy đề từ link FuOverflow ở trang chủ."
+            : "Không mở được đề này",
+        );
+        navigate("/", { replace: true });
+      })
+      .finally(() => !stale && setOpening(false));
+    return () => {
+      stale = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [examParam, user?.id]);
+  }, [threadId]);
+
+  // Địa chỉ luôn khớp với đề đang làm: đề hệ thống -> /exam/:threadId?mode=..., đề mở từ thư mục -> "/"
+  useEffect(() => {
+    if (!hasQuiz) return;
+    const target = openedId !== null && openedThread ? `/exam/${openedThread}?mode=${quiz.mode}` : "/";
+    if (location.pathname + location.search !== target) navigate(target, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasQuiz, openedId, openedThread, quiz.mode]);
+
+  // Đang ở /exam/:threadId mà huỷ hộp thoại chọn chế độ thì về trang chủ
+  useEffect(() => {
+    if (threadId && !hasQuiz && !quiz.pending && !opening && loadedFor.current === threadId) navigate("/", { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quiz.pending]);
 
   const pick: typeof quiz.loadFolder = (files, name) => {
     if (!user && trial.used) {
@@ -96,8 +147,12 @@ export default function PracticePage() {
 
       {hasQuiz ? (
         <QuizWorkspace quiz={quiz} zoomOpen={zoomOpen} onZoomChange={setZoomOpen} />
+      ) : opening ? (
+        <div className="flex flex-1 items-center justify-center bg-paper">
+          <Loading label="Đang mở đề…" />
+        </div>
       ) : (
-        <Landing onPick={pick} onImported={(exam) => quiz.loadExam(exam.questions, exam.title, exam.id)} userName={user?.fullName} trialUsed={trial.used} />
+        <Landing onPick={pick} onImported={(exam) => navigate(`/exam/${exam.threadId}`)} userName={user?.fullName} trialUsed={trial.used} />
       )}
     </div>
   );

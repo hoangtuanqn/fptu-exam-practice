@@ -59,6 +59,14 @@ export const examService = {
     };
   },
 
+  // Địa chỉ /exam/:threadId dùng mã thread (thông tin công khai trên FuOverflow) thay cho ID nội bộ tăng dần.
+  // Không có đề, hoặc có nhưng không nằm trong kho của người xem, đều trả cùng một lỗi 404.
+  async getDetailByThread(actor: Actor, threadId: string) {
+    const exam = await examRepository.findByThreadId(threadId);
+    if (!exam) throw AppError.notFound("Không tìm thấy đề");
+    return this.getDetail(actor, exam.id);
+  },
+
   // Vừa đăng ký/đăng nhập: đề khách đã lấy trên trình duyệt này chuyển về tài khoản
   async claimGuestLibrary(userId: number, guestId: string | undefined) {
     if (!guestId) return { claimed: 0 };
