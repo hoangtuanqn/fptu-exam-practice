@@ -12,6 +12,8 @@ export interface QuestionViewProps {
   hasNext: boolean;
   flagged: boolean; // đã đánh dấu xem lại chưa
   onToggleFlag: () => void;
+  onReport?: () => void; // có khi đã có kết quả của câu và người dùng đã đăng nhập (báo cáo đáp án sai)
+  reported?: boolean; // đã gửi báo cáo cho câu này trong phiên làm bài
   onChoose: (option: string) => void;
   onCheck: () => void;
   onPrev: () => void;
