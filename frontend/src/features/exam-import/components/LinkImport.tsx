@@ -1,15 +1,15 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { Link2, Loader2 } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { SignUpCta } from "@/features/trial/SignUpCta";
 import { useApi } from "@/shared/hooks/useApi";
-import { formatMoney } from "@/shared/utils/formatters";
 import { examImportApi } from "../exam-import.api";
 import { useFakeProgress } from "@/shared/hooks/useFakeProgress";
 import { Button } from "@/shared/ui/Button";
 import { FormError } from "@/shared/ui/Feedback";
 import { inputClass } from "@/shared/ui/Input";
+import { ConfirmFetchDialog } from "./ConfirmFetchDialog";
 import { useExamImport } from "../useExamImport";
 import type { ImportedExam } from "../types";
 
@@ -32,7 +32,7 @@ export function LinkImport({ onImported }: Props) {
     [user?.id],
   );
   const fee = price.data?.price ?? 0;
-  const tooPoor = !!user && fee > 0 && user.balance < fee;
+  const [confirming, setConfirming] = useState(false); // hộp thoại xác nhận trước khi lấy (và trừ phí)
 
   const limitReached =
     !user && job.phase === "failed" && job.errorStatus === 429;
@@ -61,16 +61,24 @@ export function LinkImport({ onImported }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [job.exam]);
 
+  // Thành viên có phí, hoặc khách (có giới hạn lượt): hỏi xác nhận. Thành viên không mất phí thì lấy luôn.
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!url.trim() || running) return;
+    if (!user || fee > 0) setConfirming(true);
+    else void job.start(url.trim());
+  };
+
+  const confirm = () => {
+    setConfirming(false);
     void job.start(url.trim());
   };
 
   return (
+    <>
     <form
       onSubmit={onSubmit}
-      className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/60 px-6 py-9 text-left"
+      className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/60 px-4 py-6 text-left sm:px-6 sm:py-9"
     >
       <div className="flex flex-col items-center text-center">
         <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-600 to-accent text-white shadow-lg shadow-brand-600/25">
@@ -97,42 +105,14 @@ export function LinkImport({ onImported }: Props) {
         <Button
           variant="primary"
           type="submit"
-          disabled={!url.trim() || running || done || tooPoor}
+          disabled={!url.trim() || running || done || (!!user && price.loading)}
         >
           {running && <Loader2 size={16} className="animate-spin" />}
           {running ? "Đang lấy đề…" : "Lấy đề"}
         </Button>
       </div>
 
-      {user && fee > 0 && (
-        <p className="mt-2 text-xs text-slate-500">
-          Phí lấy đề:{" "}
-          <b className="font-semibold text-slate-700">{formatMoney(fee)}</b> mỗi
-          lần (lỗi thì hoàn lại) · Số dư còn lại:{" "}
-          <b className="font-semibold text-slate-700">
-            {formatMoney(user.balance)}
-          </b>
-          {tooPoor && (
-            <>
-              {" "}
-              ·{" "}
-              <Link
-                to="/account/deposit"
-                className="font-medium text-brand-700 hover:underline"
-              >
-                Nạp thêm tiền
-              </Link>
-            </>
-          )}
-        </p>
-      )}
 
-      {!user && !limitReached && (
-        <p className="mt-2 text-xs text-slate-500">
-          Khách được lấy miễn phí 1 đề mỗi ngày. Đăng ký để lấy thêm, giữ đề
-          trong kho riêng và lưu lịch sử làm bài.
-        </p>
-      )}
 
       {limitReached && (
         <div className="mt-4 rounded-xl border border-brand-100 bg-brand-50/70 p-4">
@@ -180,5 +160,16 @@ export function LinkImport({ onImported }: Props) {
         </div>
       )}
     </form>
+
+    {confirming && (
+      <ConfirmFetchDialog
+        url={url.trim()}
+        fee={fee}
+        balance={user ? user.balance : null}
+        onCancel={() => setConfirming(false)}
+        onConfirm={confirm}
+      />
+    )}
+    </>
   );
 }
