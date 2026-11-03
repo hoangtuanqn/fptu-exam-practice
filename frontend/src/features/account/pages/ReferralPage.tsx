@@ -1,4 +1,11 @@
-import { Users } from "lucide-react";
+import { useState, type FormEvent } from "react";
+import { Gift, Loader2, Users } from "lucide-react";
+import { useAuth } from "@/features/auth/AuthContext";
+import { useToast } from "@/shared/context/ToastContext";
+import { useSubmit } from "@/shared/hooks/useSubmit";
+import { Button } from "@/shared/ui/Button";
+import { FormError } from "@/shared/ui/Feedback";
+import { Input } from "@/shared/ui/Input";
 import { referralApi } from "@/features/referral/referral.api";
 import { useApi } from "@/shared/hooks/useApi";
 import { useClampPage } from "@/shared/hooks/useClampPage";
@@ -8,6 +15,50 @@ import { CopyButton } from "@/shared/ui/CopyButton";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
 import { formatCredit, formatDate } from "@/shared/utils/formatters";
+
+// Nhập mã của người đã giới thiệu bạn sau khi đăng ký (trong hạn). Quá hạn thì mất quyền.
+function ClaimCard({ claim, bonus, onDone }: { claim: { status: string; deadline: string | null }; bonus: number; onDone: () => void }) {
+  const toast = useToast();
+  const { refresh } = useAuth();
+  const { run, loading, error, fieldErrors } = useSubmit();
+  const [code, setCode] = useState("");
+
+  if (claim.status !== "open") return null;
+  const daysLeft = claim.deadline ? Math.max(0, Math.ceil((new Date(claim.deadline).getTime() - Date.now()) / 86_400_000)) : 0;
+
+  const onSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    void run(async () => {
+      const r = await referralApi.claim(code);
+      toast.success(r.bonus > 0 ? `Đã nhập mã, nhận ${formatCredit(r.bonus)}` : "Đã nhập mã giới thiệu");
+      await refresh();
+      onDone();
+    });
+  };
+
+  return (
+    <Card>
+      <CardHeader title="Bạn được ai giới thiệu?" description={`Nhập mã của người giới thiệu để nhận ${formatCredit(bonus)}. Còn ${daysLeft} ngày, sau đó sẽ không nhập được nữa.`} />
+      <form onSubmit={onSubmit} className="space-y-3 p-5" noValidate>
+        <FormError message={error} />
+        <Input
+          label="Mã giới thiệu"
+          value={code}
+          onChange={(e) => setCode(e.target.value.toUpperCase())}
+          error={fieldErrors.code}
+          placeholder="Ví dụ J2PP4G9W"
+          autoComplete="off"
+          spellCheck={false}
+          maxLength={12}
+        />
+        <Button variant="primary" type="submit" disabled={loading || code.trim().length < 4}>
+          {loading ? <Loader2 size={16} className="animate-spin" /> : <Gift size={16} />}
+          Nhập mã
+        </Button>
+      </form>
+    </Card>
+  );
+}
 
 // Giới thiệu bạn bè: chia sẻ liên kết, nhận hoa hồng mỗi khi người được giới thiệu nạp credit
 export default function ReferralPage() {
@@ -48,6 +99,10 @@ export default function ReferralPage() {
           </div>
         </div>
       </Card>
+
+      <div className="mt-6">
+        <ClaimCard claim={data.claim} bonus={program.signupBonus} onDone={reload} />
+      </div>
 
       <StatGrid className="mt-6 grid-cols-2">
         <StatCard label="Đã giới thiệu" value={data.stats.referred} note="người" />
