@@ -6,10 +6,11 @@ export const crawlJobRepository = {
 
   findById: (id: number) => prisma.crawlJob.findUnique({ where: { id } }),
 
-  // Đã có lượt đang chờ/đang chạy cho thread này thì dùng lại, không tạo thêm
-  findActive: (threadId: string) =>
+  // Người này đã có lượt đang chờ/đang chạy cho thread này thì dùng lại, không tạo thêm.
+  // Mỗi người có job riêng để đề được thêm vào thư viện của đúng người đó.
+  findActive: (threadId: string, userId: number) =>
     prisma.crawlJob.findFirst({
-      where: { threadId, status: { in: ["QUEUED", "RUNNING"] } },
+      where: { threadId, userId, status: { in: ["QUEUED", "RUNNING"] } },
       orderBy: { id: "asc" },
     }),
 

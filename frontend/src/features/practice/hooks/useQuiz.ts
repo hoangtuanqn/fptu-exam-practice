@@ -9,6 +9,7 @@ import { hasAnswer, isMultiple } from "@/features/practice/utils/question";
 interface PendingExam {
   questions: Question[];
   title: string;
+  examId: number | null; // có khi đề lấy từ hệ thống (để ghi lịch sử), null khi mở từ thư mục
 }
 
 export function useQuiz() {
@@ -18,6 +19,7 @@ export function useQuiz() {
   const [submitted, setSubmitted] = useState(false);
   const [current, setCurrent] = useState(0); // vị trí câu đang xem (index)
   const [title, setTitle] = useState(""); // tên thư mục đề
+  const [examId, setExamId] = useState<number | null>(null); // đề đang làm có trong hệ thống không
   const [mode, setMode] = useState<Mode>("practice"); // chọn lúc bắt đầu, không đổi giữa chừng
   const [pending, setPending] = useState<PendingExam | null>(null);
   const [notFound, setNotFound] = useState(false); // upload thư mục không có ảnh hợp lệ
@@ -50,13 +52,13 @@ export function useQuiz() {
       return;
     }
     setNotFound(false);
-    setPending({ questions: parsed, title: folderName });
+    setPending({ questions: parsed, title: folderName, examId: null });
   }
 
   // Đề đã có sẵn câu hỏi (nhập từ link FuOverflow): cũng chờ xác nhận như đề mở từ thư mục
-  function loadExam(examQuestions: Question[], examTitle: string) {
+  function loadExam(examQuestions: Question[], examTitle: string, id: number) {
     setNotFound(false);
-    setPending({ questions: examQuestions, title: examTitle });
+    setPending({ questions: examQuestions, title: examTitle, examId: id });
   }
 
   // Bước 2: người dùng xác nhận và chọn chế độ
@@ -64,6 +66,7 @@ export function useQuiz() {
     if (!pending) return;
     setQuestions(pending.questions);
     setTitle(pending.title);
+    setExamId(pending.examId);
     setMode(chosenMode);
     clearProgress();
     setPending(null);
@@ -120,6 +123,7 @@ export function useQuiz() {
     submitted,
     current,
     title,
+    examId,
     mode,
     pending,
     notFound,
