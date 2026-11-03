@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ApiError } from "@/shared/api/client";
-import { examImportApi } from "@/features/exam-import/exam-import.api";
 import { historyApi } from "@/features/history/history.api";
 import { pendingAttempt } from "@/features/guest-sync/pendingAttempt";
+import { examImportApi } from "@/features/exam-import/exam-import.api";
+import { useExamAnswersLive } from "@/features/practice/hooks/useExamAnswersLive";
 import { useToast } from "@/shared/context/ToastContext";
 import { useQuiz } from "@/features/practice/hooks/useQuiz";
 import { useQuizShortcuts } from "@/features/practice/hooks/useQuizShortcuts";
@@ -49,10 +50,29 @@ export default function PracticePage({ threadId }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quiz.submitted, user]);
 
-  // Nộp bài xong: thành viên thì ghi vào lịch sử ngay (chỉ với đề của hệ thống; đề mở từ thư mục không có trong DB).
+  // AI đang phân tích đáp án: kết quả (thành công hoặc lỗi) về qua socket ngay khi có.
+  useExamAnswersLive(quiz.examId, quiz.answerSource === "PENDING", (r) => {
+    if (r.status === "PENDING") return; // vẫn đang xử lý: giữ nguyên trạng thái chờ
+    if (r.status === "FAILED" || r.status === "DEFAULT") {
+      quiz.markFailed();
+      toast.error("AI chưa phân tích được đáp án của đề này");
+      return;
+    }
+    quiz.applyAnswers(r.answers, r.status);
+    toast.success("AI đã phân tích xong đáp án, bạn có thể làm bài");
+  });
+
+  // Nộp bài xong: thành viên thì ghi vào lịch sử (chỉ với đề của hệ thống; đề mở từ thư mục không có trong DB).
   // Khách thì giữ bài lại, lưu khi họ đăng ký/đăng nhập (xem GuestSync).
+  // Chờ có đáp án rồi mới lưu: lưu lúc AI chưa xong sẽ ghi điểm sai.
+  const savedFor = useRef<number | null>(null);
   useEffect(() => {
-    if (!quiz.submitted || quiz.examId === null) return;
+    if (!quiz.submitted) {
+      savedFor.current = null;
+      return;
+    }
+    if (quiz.examId === null || quiz.answersPending || savedFor.current === quiz.session) return;
+    savedFor.current = quiz.session;
     const payload = {
       mode: quiz.mode === "exam" ? ("EXAM" as const) : ("PRACTICE" as const),
       durationSec: quiz.elapsed,
@@ -66,9 +86,8 @@ export default function PracticePage({ threadId }: Props) {
       .save(quiz.examId, payload)
       .then(() => toast.success("Đã lưu vào lịch sử làm bài"))
       .catch(() => toast.error("Không lưu được lịch sử làm bài"));
-    // Chỉ chạy đúng lúc vừa nộp bài
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [quiz.submitted]);
+  }, [quiz.submitted, quiz.answersPending]);
 
   // Vào /exam/:threadId thì tải đề đó: có ?mode=practice|exam thì làm bài luôn, không thì hỏi chọn chế độ
   useEffect(() => {
@@ -86,8 +105,8 @@ export default function PracticePage({ threadId }: Props) {
         loadedFor.current = threadId; // đã tải xong đề này
         setOpenedThread(exam.threadId);
         const mode = new URLSearchParams(location.search).get("mode");
-        if (mode === "practice" || mode === "exam") quiz.openExam(exam.questions, exam.title, exam.id, mode);
-        else quiz.loadExam(exam.questions, exam.title, exam.id);
+        if (mode === "practice" || mode === "exam") quiz.openExam(exam.questions, exam.title, exam.id, mode, exam.answerStatus);
+        else quiz.loadExam(exam.questions, exam.title, exam.id, exam.answerStatus);
       })
       .catch((err: unknown) => {
         if (stale) return;
@@ -134,6 +153,7 @@ export default function PracticePage({ threadId }: Props) {
         mode={quiz.mode}
         loaded={hasQuiz}
         submitted={quiz.submitted}
+        submitLocked={quiz.answersPending}
         elapsed={quiz.elapsed}
         onPick={pick}
         onSubmit={() => setDialog("confirm")}

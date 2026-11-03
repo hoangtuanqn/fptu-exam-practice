@@ -87,6 +87,30 @@ export interface CrawlerAdminConfig {
   cookiePreview: string;
 }
 
+export type AiEffort = "low" | "medium" | "high" | "xhigh" | "max";
+
+export interface AiAdminConfig {
+  enabled: boolean;
+  claudeModel: string;
+  effort: AiEffort;
+  useSearch: boolean;
+  hasApiKey: boolean;
+  apiKeyPreview: string;
+}
+
+export type AnswerSource = "PENDING" | "FAILED" | "DEFAULT" | "AI" | "MANUAL";
+
+export interface AdminExam {
+  id: number;
+  title: string;
+  threadId: string;
+  totalQuestions: number;
+  answerSource: AnswerSource;
+  createdAt: string;
+  solving: boolean; // AI đang giải lại
+  solveError: string | null; // lần giải lại gần nhất bị lỗi
+}
+
 export interface SyncResult {
   at: string;
   ok: boolean;

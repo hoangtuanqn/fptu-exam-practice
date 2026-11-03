@@ -1,7 +1,7 @@
 import type { Question } from "@/features/practice/types.ts";
 
 // Câu có từ 2 đáp án đúng trở lên -> chọn nhiều
-export const isMultiple = (q: Question) => q.correct.length > 1;
+export const isMultiple = (q: Question) => q.correct.length > 1 || !!q.answerPending;
 
 // Câu có đáp án trong ans.txt (mới chấm được)
 export const hasAnswer = (q: Question) => q.correct.length > 0;

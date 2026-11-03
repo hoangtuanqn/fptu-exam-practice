@@ -9,13 +9,14 @@ interface Props {
   title: string;
   total: number; // tổng số câu (ảnh)
   graded: number; // số câu có đáp án
+  answersPending: boolean; // AI đang phân tích đáp án
   replacing: boolean; // đang có bài làm dở sẽ bị thay thế
   onCancel: () => void;
   onStart: (mode: Mode) => void;
 }
 
 // Hộp thoại sau khi upload đề: xác nhận + chọn chế độ (không đổi được giữa chừng)
-export function StartDialog({ title, total, graded, replacing, onCancel, onStart }: Props) {
+export function StartDialog({ title, total, graded, answersPending, replacing, onCancel, onStart }: Props) {
   const [mode, setMode] = useState<Mode>("practice");
 
   return (
@@ -28,11 +29,16 @@ export function StartDialog({ title, total, graded, replacing, onCancel, onStart
           <span className="truncate">{title || "Đề chưa đặt tên"}</span>
         </div>
         <div className="mt-1 text-slate-600">
-          {total} câu hỏi · {graded} câu có đáp án
+          {total} câu hỏi{answersPending ? " · AI đang phân tích đáp án" : ` · ${graded} câu có đáp án`}
         </div>
       </div>
 
-      {graded < total && (
+      {answersPending && (
+        <p className="mt-3 text-sm text-brand-800">
+          Đề chưa có đáp án nên bạn chỉ xem được. Phần làm bài sẽ mở khi AI phân tích xong, thường sau ít phút.
+        </p>
+      )}
+      {!answersPending && graded < total && (
         <p className="mt-3 text-sm text-amber-700">
           Chỉ {graded}/{total} câu có đáp án trong ans.txt. Các câu còn lại sẽ không được chấm điểm.
         </p>

@@ -74,7 +74,7 @@ An toàn tiền bạc:
 3. Worker nền (`jobs/crawl.worker.ts`) lấy từng job: đọc thread → tải ảnh, đổi WebP vào `STORAGE_DIR/exams/<threadId>/` → lấy bình luận → ghi `exams`, `exam_questions`, `exam_comments` trong một transaction. Mỗi bước cập nhật `crawl_jobs.stage` để client hiển thị. Server tắt giữa chừng thì job `RUNNING` được xếp lại khi khởi động.
 4. Client poll `GET /crawl-jobs/:id` đến khi `DONE`, rồi `GET /exams/:id` (ảnh phục vụ tại `/api/v1/files/...`).
 
-Đáp án: crawler chưa xác định được đáp án đúng nên mọi câu tạm là `A` (`exam_questions.answer`, hằng `DEFAULT_ANSWER`). Bình luận của người dùng FuOverflow đã lưu ở `exam_comments` để làm logic suy ra đáp án sau.
+Đáp án: do AI (Claude) giải sau khi lấy đề và lưu vào `exam_questions.answer`. Không có đáp án giả: đề chưa có đáp án (`answer_source` = `PENDING` hoặc `FAILED`) chỉ xem được, chưa làm bài được. Lý do AI lỗi lưu ở `exams.ai_report` và `storage/exams/<threadId>/ai-error.log`.
 
 ## Thư viện đề và lịch sử làm bài
 
@@ -115,3 +115,14 @@ An toàn tiền bạc:
 - **Lệnh nạp:** địa chỉ theo **mã nạp** ngẫu nhiên (`NAPK3F9X2QA`), không dùng ID tăng dần để khỏi lộ số lượng lệnh. `GET /deposits/:code` chỉ trả lệnh của chính người gọi. `GET /public/deposits/:code` **không cần đăng nhập** và chỉ trả mã, số tiền, trạng thái, thời hạn, thông tin tài khoản nhận (khi còn chờ); **không có ID, tên hay email** của người tạo; giới hạn 40 lượt/phút/IP chống dò mã. Frontend: `/deposit/:code` (khách xem bản rút gọn; đã đăng nhập thì chuyển sang `/account/deposit/:code`, nếu không phải chủ lệnh vẫn chỉ thấy bản rút gọn).
 - **Đề:** `GET /exams/thread/:threadId` (mã thread FuOverflow, vốn công khai). Frontend `/exam/:threadId` mở đề, `/exam/:threadId?mode=exam|practice` vào thẳng chế độ. Không có đề và có đề nhưng không nằm trong kho của người xem đều trả cùng một lỗi 404.
 - Trang và bộ lọc của các danh sách (`?page=2&status=PAID&q=...`) nằm trên URL nên tải lại hoặc gửi liên kết vẫn giữ nguyên. `/?url=<link FuOverflow>` điền sẵn ô nhập link (không tự lấy đề vì có tính phí).
+
+## Thư mục đề và AI giải đáp án
+
+- **Thư mục mỗi đề** (`STORAGE_DIR/exams/<threadId>/`): `images/Q1.webp...`, `comments.txt` (bình luận FuOverflow, định dạng như crawl-fu), và khi AI giải xong thêm `ans.txt` (mỗi dòng một câu) và `ai-report.md`. **Bình luận không lưu vào DB** (bảng `exam_comments` đã bỏ ở migration `0011`). Đề lấy trước khi có bản này vẫn để ảnh thẳng trong `exams/<threadId>/` (đường dẫn ảnh lưu trong DB nên vẫn hiển thị đúng).
+- **AI (Claude):** bật ở Quản trị → Cấu hình crawl (hoặc đặt `ANTHROPIC_API_KEY` trong `.env`), mặc định model `claude-haiku-5-5` (rẻ nhất; đổi sang Sonnet/Opus nếu cần chính xác hơn). Mỗi đề **mới** lấy về, worker gửi cho Claude: prompt hệ thống tiếng Anh chia khối bằng thẻ XML (`<role>`, `<method>`, `<output_format>`...) `assets/prompts/exam-solver.system.md` (đổi file bằng `AI_PROMPT_FILE`, cố định nên được prompt caching) + toàn bộ ảnh có nhãn số câu + `comments.txt`. Kỹ thuật: suy luận thích ứng (adaptive thinking) với mức `effort` chỉnh được, structured outputs (JSON schema: báo cáo + đáp án từng câu kèm độ tin cậy, kiểm tra đủ N câu), tra web tùy chọn (`web_search`, tối đa 5 lượt/đề). Kết quả lưu vào `exam_questions.answer`; báo cáo (kèm các câu Claude chưa chắc) ở `exams.ai_report`.
+- Có thể bật tra Google (grounding) theo bước 4 của prompt. Khóa gửi qua header, không nằm trong URL/log.
+- Người dùng không bị trừ thêm phí vì AI.
+- `GET /admin/exams`, `POST /admin/exams/:id/solve` (chạy nền, trả 202), `GET /admin/exams/:id/report`: trang **Đề thi** của quản trị để xem nguồn đáp án và nhờ AI giải lại (dùng cho đề cũ hoặc khi AI lỗi). Đề đã có đáp án rồi (người dùng lấy lại) thì không giải lại.
+- **Không bắt người dùng chờ AI (giao hàng từng phần):** lấy đề xong (tải hết ảnh + comments) là đề được lưu và mở ngay với `answer_source = PENDING` (đáp án rỗng, chưa chấm được). AI giải **nền** qua hàng đợi riêng (`services/exam-solve.service.ts`, tối đa 2 đề cùng lúc, tách khỏi worker crawl nên các lượt lấy đề khác không phải chờ). Giao diện hiện "AI đang phân tích đáp án…" và hỏi `GET /exams/:id/answers` mỗi 5 giây; có đáp án thì gắn vào bài đang làm, câu đã chọn giữ nguyên. Trong lúc chờ mọi câu tạm cho chọn nhiều (chưa biết loại câu).
+- **Chấm điểm:** nộp bài lúc AI chưa xong thì bảng điểm hiển thị đang chờ rồi tự chuyển sang điểm thật; bài chỉ được lưu vào lịch sử khi đã có đáp án (server cũng từ chối `409` nếu gửi sớm, để không ghi điểm sai).
+- **Phục hồi:** server tắt giữa chừng thì khi khởi động các đề còn `PENDING` được xếp lại hàng. AI lỗi: đề chuyển sang đáp án tạm `A` (`DEFAULT`) để không ai chờ mãi, lý do ghi ở `ai_report`; giải lại ở trang Đề thi của quản trị.

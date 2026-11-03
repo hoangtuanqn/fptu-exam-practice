@@ -15,6 +15,7 @@ export function AnswerOptions({ question, selected, revealed, onChoose, compact 
   const { correct } = question;
   const multiple = isMultiple(question);
   const graded = hasAnswer(question);
+  const locked = !!question.answerPending; // AI chưa có đáp án: chỉ xem đề, chưa cho chọn
 
   function style(opt: string) {
     const isSelected = selected.includes(opt);
@@ -25,7 +26,7 @@ export function AnswerOptions({ question, selected, revealed, onChoose, compact 
     }
     return isSelected
       ? "border-brand-900 bg-brand-900 text-white"
-      : "border-slate-300 bg-white text-slate-700 hover:border-slate-500";
+      : "border-slate-300 bg-white text-slate-700 enabled:hover:border-slate-500";
   }
 
   return (
@@ -34,7 +35,8 @@ export function AnswerOptions({ question, selected, revealed, onChoose, compact 
         <button
           key={opt}
           onClick={() => onChoose(opt)}
-          className={`border-2 font-semibold shadow-sm transition active:scale-95 ${
+          disabled={locked}
+          className={`border-2 disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100 font-semibold shadow-sm transition active:scale-95 ${
             compact ? "h-11 w-full text-base sm:h-10 sm:w-10" : "h-12 w-12 text-lg"
           } ${multiple ? "rounded-lg" : compact ? "rounded-xl sm:rounded-full" : "rounded-full"} ${style(opt)}`}
         >
