@@ -38,6 +38,7 @@ export interface CrawlerForm {
   referer: string;
   requestDelayMs: number;
   webpQuality: number;
+  fetchPrice: number;
 }
 
 export const adminApi = {
