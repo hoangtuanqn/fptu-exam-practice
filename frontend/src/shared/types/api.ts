@@ -4,7 +4,7 @@ export type Role = "USER" | "ADMIN";
 export type UserStatus = "ACTIVE" | "BANNED";
 export type DepositStatus = "PENDING" | "PAID" | "EXPIRED";
 export type BankTxStatus = "MATCHED" | "UNMATCHED";
-export type TransactionType = "DEPOSIT" | "ADMIN_ADJUST" | "CRAWL_CHARGE" | "CRAWL_REFUND" | "GIFT_CODE" | "REPORT_REWARD";
+export type TransactionType = "DEPOSIT" | "ADMIN_ADJUST" | "CRAWL_CHARGE" | "CRAWL_REFUND" | "GIFT_CODE" | "REPORT_REWARD" | "EXPLAIN_CHARGE" | "EXPLAIN_REFUND";
 
 export interface User {
   id: number;
@@ -93,6 +93,7 @@ export interface AiAdminConfig {
   enabled: boolean;
   claudeModel: string;
   effort: AiEffort;
+  explainPrice: number; // phí (credit) mỗi lần xem lời giải thích AI
   useSearch: boolean;
   hasApiKey: boolean;
   apiKeyPreview: string;
