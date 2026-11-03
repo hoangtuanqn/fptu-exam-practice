@@ -1,6 +1,6 @@
 import { io, type Socket } from "socket.io-client";
 import { getGuestId } from "@/shared/api/guest";
-import { tokenStore } from "@/shared/api/client";
+import { API_ORIGIN, tokenStore } from "@/shared/api/client";
 import { EVENTS, SOCKET_PATH, type RoomKind } from "./events";
 
 /**
@@ -15,7 +15,7 @@ const join = (s: Socket, kind: RoomKind, id: number) => s.emit(EVENTS.subscribe,
 
 function getSocket(): Socket {
   if (socket) return socket;
-  socket = io({
+  socket = io(API_ORIGIN || undefined, {
     path: SOCKET_PATH,
     // Đọc lại mỗi lần (tái) kết nối để luôn dùng token hiện tại
     auth: (cb) => cb({ token: tokenStore.get() ?? undefined, guestId: getGuestId() }),
