@@ -64,6 +64,8 @@ export function MyExams({ onOpen }: Props) {
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-medium text-slate-900">{e.title}</span>
                 <span className="block text-xs text-slate-500">
+                  {e.answerSource === "PENDING" && <span className="font-medium text-brand-700">AI đang phân tích đáp án · </span>}
+                  {e.answerSource === "DEFAULT" && <span className="font-medium text-amber-700">Đáp án tạm · </span>}
                   {e.totalQuestions} câu · {e.attempts > 0 ? `${e.attempts} lần làm, cao nhất ${formatScore(e.bestScore ?? 0)}` : "chưa làm"}
                 </span>
               </span>

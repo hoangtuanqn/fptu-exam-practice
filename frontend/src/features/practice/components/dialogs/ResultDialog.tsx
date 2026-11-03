@@ -1,5 +1,6 @@
 import { Eye, Loader2, RotateCcw } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
+import type { AnswerSource } from "@/features/practice/types";
 import { SignUpCta } from "@/features/trial/SignUpCta";
 import { MAX_SCORE, PASS_SCORE } from "@/features/practice/config/scoring";
 import { formatDuration, formatScore } from "@/features/practice/utils/format";
@@ -13,13 +14,14 @@ interface Props {
   result: GradeResult;
   elapsed: number; // số giây làm bài
   answersPending: boolean; // AI chưa phân tích xong: điểm sẽ cập nhật khi có đáp án
+  answerSource: AnswerSource | null; // nguồn đáp án, để ghi chú độ tin cậy của điểm
   savable: boolean; // đề của hệ thống: bài vừa làm lưu được vào lịch sử khi đăng ký
   onReview: () => void;
   onRetry: () => void;
 }
 
 // Bảng điểm sau khi nộp
-export function ResultDialog({ result, elapsed, savable, answersPending, onReview, onRetry }: Props) {
+export function ResultDialog({ result, elapsed, savable, answersPending, answerSource, onReview, onRetry }: Props) {
   const { user } = useAuth();
   const passed = result.score >= PASS_SCORE;
   const tone = result.total === 0 ? "neutral" : passed ? "success" : "danger";
@@ -62,6 +64,13 @@ export function ResultDialog({ result, elapsed, savable, answersPending, onRevie
         <Stat label="Chưa làm" value={answersPending ? "—" : result.skipped} color="text-slate-600" />
         <Stat label="Thời gian" value={formatDuration(elapsed)} color="text-brand-800" />
       </div>
+
+      {answerSource === "AI" && result.total > 0 && (
+        <p className="mt-3 text-center text-xs text-slate-500">Đáp án do AI phân tích, có thể còn vài câu chưa chính xác.</p>
+      )}
+      {answerSource === "DEFAULT" && result.total > 0 && (
+        <p className="mt-3 text-center text-xs text-amber-700">Đáp án tạm (chưa có AI phân tích) nên điểm chỉ mang tính tham khảo.</p>
+      )}
 
       {!answersPending && result.total === 0 && (
         <p className="mt-4 text-center text-xs text-slate-500">Chưa có đáp án trong ans.txt nên không thể chấm điểm.</p>
