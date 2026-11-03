@@ -59,7 +59,7 @@ export function UserDialog({ user, onClose, onChanged }: Props) {
   const amountOk = Number(digits) > 0 && note.trim().length > 0;
 
   return (
-    <Modal>
+    <Modal onClose={onClose}>
       <div className="flex items-start justify-between gap-3">
         <ModalTitle icon={UserRound}>{current.fullName}</ModalTitle>
         <button onClick={onClose} aria-label="Đóng" className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700">

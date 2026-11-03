@@ -27,7 +27,7 @@ export function ConfirmFetchDialog({ url, fee, balance, onCancel, onConfirm }: P
   const short = balance !== null && balance < fee;
 
   return (
-    <Modal>
+    <Modal onClose={onCancel}>
       <ModalTitle icon={Link2}>Xác nhận lấy đề</ModalTitle>
 
       <div className="mt-4 truncate rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600" title={url}>
