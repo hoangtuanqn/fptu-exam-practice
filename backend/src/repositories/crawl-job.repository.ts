@@ -1,8 +1,10 @@
 import type { CrawlJob, CrawlJobStatus } from "@prisma/client";
 import { prisma } from "../configs/prisma";
+import type { Db } from "./wallet.repository";
 
 export const crawlJobRepository = {
-  create: (data: { threadId: string; userId: number }) => prisma.crawlJob.create({ data }),
+  create: (data: { threadId: string; userId: number; chargedAmount: number }, db: Db = prisma) =>
+    db.crawlJob.create({ data }),
 
   findById: (id: number) => prisma.crawlJob.findUnique({ where: { id } }),
 
@@ -33,6 +35,15 @@ export const crawlJobRepository = {
 
   finish: (id: number, data: { status: Extract<CrawlJobStatus, "DONE" | "FAILED">; examId?: number; error?: string }) =>
     prisma.crawlJob.update({ where: { id }, data: { ...data, stage: null, finishedAt: new Date() } }),
+
+  // Đánh dấu lỗi bằng điều kiện ở DB: chỉ một tiến trình đổi được RUNNING -> FAILED, nên hoàn phí không bị lặp
+  async markFailed(db: Db, id: number, error: string) {
+    const { count } = await db.crawlJob.updateMany({
+      where: { id, status: "RUNNING" },
+      data: { status: "FAILED", error, stage: null, finishedAt: new Date() },
+    });
+    return count === 1;
+  },
 
   // Server tắt giữa chừng: job đang chạy dở được xếp lại hàng
   requeueRunning: () =>

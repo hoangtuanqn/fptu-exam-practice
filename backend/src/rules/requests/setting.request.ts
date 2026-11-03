@@ -31,6 +31,7 @@ export const updateCrawlerBody = z.object({
   referer: z.string().trim().max(500),
   requestDelayMs: z.number().int().min(0).max(5000),
   webpQuality: z.number().int().min(30).max(100),
+  fetchPrice: z.number().int().min(0).max(1_000_000),
 });
 
 export type UpdateCrawlerBody = z.infer<typeof updateCrawlerBody>;

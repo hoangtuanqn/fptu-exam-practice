@@ -19,7 +19,7 @@ const drain = async () => {
         console.log(`[crawl-worker] job ${job.id} (thread ${job.threadId}) xong -> đề ${examId}`);
       } catch (err) {
         const message = (err as Error).message;
-        await crawlJobRepository.finish(job.id, { status: "FAILED", error: message });
+        await crawlJobService.fail(job, message); // đánh dấu lỗi + hoàn phí
         console.error(`[crawl-worker] job ${job.id} lỗi: ${message}`);
       }
     }

@@ -82,3 +82,10 @@ An toàn tiền bạc:
 - Nộp bài: client gửi đáp án đã chọn, **server tự chấm** theo đáp án trong DB (`services/grading.service.ts`, thang 10, điểm mỗi câu = 10 / số câu có đáp án) rồi lưu `exam_attempts`. Không tin điểm từ client.
 - `exam_attempts.details` là ảnh chụp từng câu (đã chọn, đáp án đúng lúc chấm, kết quả) nên xem lại vẫn đúng dù sau này đáp án của đề được sửa.
 - Đề mở từ thư mục trên máy không có trong DB nên không ghi lịch sử.
+
+## Phí lấy đề
+
+- Admin đặt `fetchPrice` (VND) ở `PUT /admin/settings/crawler`; `0` = miễn phí. `GET /crawl-jobs/price` cho giao diện báo trước.
+- Mỗi lần `POST /crawl-jobs` bị trừ phí, **kể cả đề đã có sẵn** (mở lại từ "Đề của tôi" thì không phải lấy nên không trừ). Trừ tiền và tạo job/thêm vào thư viện nằm trong một DB transaction; không đủ số dư thì `402` và không tạo gì.
+- Người đang có job cùng thread chưa xong gửi lại link thì dùng lại job đó, không trừ thêm.
+- Job lỗi (cookie hết hạn, thread không có ảnh...) được hoàn đúng số tiền đã trừ (`crawl_jobs.charged_amount`), chỉ một lần nhờ điều kiện `status = RUNNING` ở DB. Sổ cái ví có hai loại `CRAWL_CHARGE` và `CRAWL_REFUND`.

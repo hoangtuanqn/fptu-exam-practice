@@ -1,7 +1,11 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { Link } from "react-router-dom";
 import { Link2, Loader2 } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { SignUpCta } from "@/features/trial/SignUpCta";
+import { useApi } from "@/shared/hooks/useApi";
+import { formatMoney } from "@/shared/utils/formatters";
+import { examImportApi } from "../exam-import.api";
 import { useFakeProgress } from "@/shared/hooks/useFakeProgress";
 import { Button } from "@/shared/ui/Button";
 import { FormError } from "@/shared/ui/Feedback";
@@ -18,13 +22,23 @@ interface Props {
 
 // Nhập link đề FuOverflow: server crawl ở nền, ở đây hiện thanh tiến độ và mở đề khi xong
 export function LinkImport({ onImported }: Props) {
-  const { user } = useAuth();
+  const { user, refresh } = useAuth();
   const [url, setUrl] = useState("");
   const job = useExamImport();
+  const price = useApi(() => examImportApi.price(), []);
+  const fee = price.data?.price ?? 0;
+  const tooPoor = !!user && fee > 0 && user.balance < fee;
 
   const running = job.phase === "running";
   const done = job.phase === "done";
   const percent = useFakeProgress(running || done, done);
+
+  // Số dư đổi khi server trừ phí (sau khi gửi) và khi hoàn phí (lỗi): cập nhật lại cho khớp
+  const charged = job.phase === "running" && job.stage !== "Đang gửi yêu cầu";
+  useEffect(() => {
+    if (charged || job.phase === "done" || job.phase === "failed") void refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [charged, job.phase]);
 
   // Xong thì dừng ở 100% một nhịp rồi trao đề ra ngoài
   useEffect(() => {
@@ -77,11 +91,27 @@ export function LinkImport({ onImported }: Props) {
           aria-label="Link đề FuOverflow"
           className={`${inputClass(job.error ?? undefined)} sm:flex-1`}
         />
-        <Button variant="primary" type="submit" disabled={!url.trim() || running || done}>
+        <Button variant="primary" type="submit" disabled={!url.trim() || running || done || tooPoor}>
           {running && <Loader2 size={16} className="animate-spin" />}
           {running ? "Đang lấy đề…" : "Lấy đề"}
         </Button>
       </div>
+
+      {fee > 0 && (
+        <p className="mt-2 text-xs text-slate-500">
+          Phí lấy đề: <b className="font-semibold text-slate-700">{formatMoney(fee)}</b> mỗi lần (kể cả đề đã có sẵn, lỗi thì hoàn lại)
+          · Số dư: <b className="font-semibold text-slate-700">{formatMoney(user.balance)}</b>
+          {tooPoor && (
+            <>
+              {" "}
+              ·{" "}
+              <Link to="/account/deposit" className="font-medium text-brand-700 hover:underline">
+                Nạp thêm tiền
+              </Link>
+            </>
+          )}
+        </p>
+      )}
 
       {(running || done) && (
         <div className="mt-4" role="status" aria-live="polite">

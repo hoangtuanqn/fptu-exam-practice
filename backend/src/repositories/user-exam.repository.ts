@@ -1,10 +1,11 @@
 import { prisma } from "../configs/prisma";
+import type { Db } from "./wallet.repository";
 import { toSkipTake, type PaginationQuery } from "../utils/pagination";
 
 export const userExamRepository = {
   // Đã có thì bỏ qua, nhập lại cùng đề không lỗi
-  add: (userId: number, examId: number) =>
-    prisma.userExam.createMany({ data: [{ userId, examId }], skipDuplicates: true }),
+  add: (userId: number, examId: number, db: Db = prisma) =>
+    db.userExam.createMany({ data: [{ userId, examId }], skipDuplicates: true }),
 
   has: async (userId: number, examId: number) =>
     (await prisma.userExam.count({ where: { userId, examId } })) > 0,

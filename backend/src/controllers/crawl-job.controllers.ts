@@ -15,6 +15,10 @@ export const crawlJobController = {
       .json(new ResponseClient({ message: data.existed ? "Đề đã có sẵn" : "Đã nhận, đang xử lý", data }));
   },
 
+  async price(_req: Request, res: Response) {
+    res.json(new ResponseClient({ data: await crawlJobService.getPrice() }));
+  },
+
   async get(req: Request, res: Response) {
     const { id } = getValidated<IdParam>(res, "params");
     res.json(new ResponseClient({ data: await crawlJobService.getForUser(id, req.user!) }));

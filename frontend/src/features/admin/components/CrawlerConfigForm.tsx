@@ -15,6 +15,7 @@ interface FormState {
   referer: string;
   requestDelayMs: string;
   webpQuality: string;
+  fetchPrice: string;
 }
 
 // Form cấu hình crawl: cookie đăng nhập FuOverflow, User-Agent, độ trễ giữa request, chất lượng WebP
@@ -27,6 +28,7 @@ export function CrawlerConfigForm({ initial, onSaved }: { initial: CrawlerAdminC
     referer: initial.referer,
     requestDelayMs: String(initial.requestDelayMs),
     webpQuality: String(initial.webpQuality),
+    fetchPrice: String(initial.fetchPrice),
   });
   const text = (key: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
@@ -39,6 +41,7 @@ export function CrawlerConfigForm({ initial, onSaved }: { initial: CrawlerAdminC
         cookie: form.cookie || undefined, // để trống = giữ cookie cũ
         requestDelayMs: Number(form.requestDelayMs),
         webpQuality: Number(form.webpQuality),
+        fetchPrice: Number(form.fetchPrice),
       });
       setForm((f) => ({ ...f, cookie: "" }));
       toast.success("Đã lưu cấu hình crawl");
@@ -86,6 +89,15 @@ export function CrawlerConfigForm({ initial, onSaved }: { initial: CrawlerAdminC
             error={fieldErrors.webpQuality}
           />
         </div>
+
+        <Input
+          label="Phí mỗi lần lấy đề (₫)"
+          inputMode="numeric"
+          value={form.fetchPrice}
+          onChange={text("fetchPrice")}
+          error={fieldErrors.fetchPrice}
+          hint="Trừ vào ví của người dùng mỗi lần nhập link (kể cả đề đã có sẵn). Lấy đề lỗi thì hoàn lại. Nhập 0 để miễn phí."
+        />
 
         <Button variant="primary" type="submit" disabled={loading}>
           {loading && <Loader2 size={16} className="animate-spin" />}
