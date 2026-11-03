@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../configs/prisma";
 import { parseSiteTime } from "../utils/html";
+import type { Db } from "./wallet.repository";
 import { toSkipTake, type PaginationQuery } from "../utils/pagination";
 
 // PENDING = AI đang phân tích đáp án (đề đã dùng được, chỉ chưa chấm được)
@@ -31,6 +32,13 @@ export const examRepository = {
   // Đáp án đúng của từng câu, dùng để chấm bài
   findQuestionsForGrading: (examId: number) =>
     prisma.examQuestion.findMany({ where: { examId }, orderBy: { number: "asc" }, select: { number: true, answer: true } }),
+
+  // Đáp án hiện tại của một câu (để so với đáp án người dùng đề xuất)
+  findQuestionAnswer: (examId: number, number: number) =>
+    prisma.examQuestion.findUnique({ where: { examId_number: { examId, number } }, select: { answer: true } }),
+
+  setQuestionAnswer: (db: Db, examId: number, number: number, answer: string) =>
+    db.examQuestion.update({ where: { examId_number: { examId, number } }, data: { answer } }),
 
   findDetail: (id: number) =>
     prisma.exam.findUnique({

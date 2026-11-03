@@ -168,6 +168,59 @@ export function renderGiftCodeEmail(i: GiftCodeEmailInput) {
   };
 }
 
+// ---------- Thưởng báo cáo đáp án
+
+export interface ReportRewardEmailInput {
+  name: string;
+  examTitle: string;
+  questionNumber: number;
+  amount: number;
+  balanceAfter: number;
+  at: Date;
+  walletUrl: string;
+}
+
+export function renderReportRewardEmail(i: ReportRewardEmailInput) {
+  const bodyHtml = [
+    p(`<strong>Xin chào ${esc(i.name)},</strong>`),
+    p("Cảm ơn bạn đã đóng góp. Báo cáo đáp án của bạn đã được xác nhận là chính xác, đáp án đã được cập nhật và credit thưởng đã vào ví."),
+    details([
+      { label: "Đề", value: esc(i.examTitle) },
+      { label: "Câu", value: String(i.questionNumber) },
+      { label: "Thời gian", value: esc(formatDateTimeVN(i.at)) },
+      { label: "Credit thưởng", value: `+${esc(formatCredit(i.amount))}`, strong: true },
+      { label: "Số dư hiện tại", value: esc(formatCredit(i.balanceAfter)) },
+    ]),
+    button("Xem lịch sử giao dịch", i.walletUrl),
+    signature(),
+  ].join("");
+
+  return {
+    html: renderLayout({
+      eyebrow: "ĐÓNG GÓP",
+      title: "Báo cáo của bạn đã được xác nhận",
+      preheader: `Nhận ${formatCredit(i.amount)} cho báo cáo đáp án câu ${i.questionNumber}. Số dư hiện tại: ${formatCredit(i.balanceAfter)}.`,
+      banner: MAIL_BANNERS.deposit,
+      bodyHtml,
+    }),
+    text: [
+      `Xin chào ${i.name},`,
+      "",
+      "Báo cáo đáp án của bạn đã được xác nhận chính xác, đáp án đã được cập nhật và credit thưởng đã vào ví.",
+      `Đề: ${i.examTitle}`,
+      `Câu: ${i.questionNumber}`,
+      `Credit thưởng: +${formatCredit(i.amount)}`,
+      `Số dư hiện tại: ${formatCredit(i.balanceAfter)}`,
+      `Thời gian: ${formatDateTimeVN(i.at)}`,
+      "",
+      `Xem lịch sử giao dịch: ${i.walletUrl}`,
+      "",
+      "Trân trọng,",
+      company,
+    ].join("\n"),
+  };
+}
+
 // ---------- Phí lấy đề
 
 export interface ChargeEmailInput {
