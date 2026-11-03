@@ -57,7 +57,7 @@ export function AiConfigForm({ initial, onSaved }: { initial: AiAdminConfig; onS
           value={model}
           onChange={(e) => setModel(e.target.value)}
           error={fieldErrors.model}
-          hint="Ví dụ gemini-2.5-pro (chính xác hơn, chậm hơn) hoặc gemini-2.5-flash (nhanh, rẻ hơn)."
+          hint="Mặc định gemini-3-flash-preview (rẻ, dùng được với khóa miễn phí). Các model Pro cần tài khoản có trả phí."
         />
 
         <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 p-4">

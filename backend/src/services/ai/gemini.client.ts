@@ -17,8 +17,8 @@ interface GeminiResponse {
   error?: { message?: string; status?: string };
 }
 
-// Lỗi tạm thời đáng thử lại: quá tải, giới hạn tốc độ
-const RETRYABLE = new Set([429, 500, 502, 503, 504]);
+// Chỉ thử lại lỗi quá tải tạm thời của máy chủ. 429 (hết hạn mức) thử lại ngay cũng vô ích nên báo luôn.
+const RETRYABLE = new Set([500, 502, 503, 504]);
 
 /**
  * Gọi Gemini (REST generateContent) và trả về phần chữ của câu trả lời.
@@ -53,6 +53,10 @@ export async function generateContent({ apiKey, model, system, parts, useSearch 
     const json = (await res.json().catch(() => null)) as GeminiResponse | null;
     if (!res.ok) {
       lastError = `Gemini trả lỗi ${res.status}: ${json?.error?.message ?? res.statusText}`;
+      if (res.status === 429) {
+        const wait = json?.error?.message?.match(/retry in ([0-9hms.]+)/i)?.[1];
+        throw new Error(`Hết hạn mức Gemini (429)${wait ? `, thử lại sau ${wait.replace(/\.\d+s$/, "s")}` : ""}. Khóa miễn phí không dùng được model Pro: hãy dùng model Flash hoặc bật thanh toán.`);
+      }
       if (RETRYABLE.has(res.status)) continue;
       throw new Error(lastError); // sai khóa, sai tên model, ảnh quá lớn...: thử lại cũng vô ích
     }
