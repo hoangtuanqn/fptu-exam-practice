@@ -23,6 +23,9 @@ export const crawlJobRepository = {
   countGuestFetchesSince: (guestId: string, since: Date) =>
     prisma.crawlJob.count({ where: { guestId, createdAt: { gte: since }, status: { not: "FAILED" } } }),
 
+  // Số lượt đang chạy hoặc xếp hàng phía trước job này (để báo "còn N lượt phía trước")
+  countAhead: (id: number) => prisma.crawlJob.count({ where: { id: { lt: id }, status: { in: ["QUEUED", "RUNNING"] } } }),
+
   findById: (id: number) => prisma.crawlJob.findUnique({ where: { id } }),
 
   // Người này đã có lượt đang chờ/đang chạy cho thread này thì dùng lại, không tạo thêm.

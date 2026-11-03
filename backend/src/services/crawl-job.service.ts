@@ -20,12 +20,13 @@ const GUEST_DAILY_LIMIT = 1;
 export const GUEST_LIMIT_MESSAGE =
   "Bạn đã hết lượt lấy đề miễn phí hôm nay. Đăng ký tài khoản để lấy thêm đề, lưu kho riêng và theo dõi lịch sử làm bài nhé!";
 
-const toDto = (job: CrawlJob) => ({
+const toDto = (job: CrawlJob, ahead = 0) => ({
   id: job.id,
   status: job.status,
   stage: job.stage,
   error: job.error,
   examId: job.examId,
+  ahead, // số lượt phía trước trong hàng đợi (chỉ có nghĩa khi QUEUED)
 });
 
 export const crawlJobService = {
@@ -124,7 +125,7 @@ export const crawlJobService = {
     const job = await crawlJobRepository.findById(id);
     const mine = isMember(actor.owner) ? job?.userId === actor.owner.userId : job?.guestId === actor.owner.guestId;
     if (!job || (!mine && !actor.isAdmin)) throw AppError.notFound("Không tìm thấy tiến trình");
-    return toDto(job);
+    return toDto(job, job.status === "QUEUED" ? await crawlJobRepository.countAhead(job.id) : 0);
   },
 
   // Worker đăng ký để được đánh thức khi có job mới
