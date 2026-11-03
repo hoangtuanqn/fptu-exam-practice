@@ -1,7 +1,9 @@
 import { getGuestId } from "@/shared/api/guest";
 import type { Paged } from "@/shared/types/api";
 
-const BASE = "/api/v1";
+// Địa chỉ API khi web và API khác domain (vd https://api.fepass.top). Để trống khi dev: đi qua proxy của Vite
+export const API_ORIGIN = ((import.meta.env.VITE_API_URL as string | undefined) ?? "").replace(/\/+$/, "");
+const BASE = `${API_ORIGIN}/api/v1`;
 const TOKEN_KEY = "auth_token";
 
 export const tokenStore = {

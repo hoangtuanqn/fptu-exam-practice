@@ -7,6 +7,13 @@ const schema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   PORT: z.coerce.number().default(8000),
   CLIENT_URL: z.string().default("http://localhost:5173"),
+  // Địa chỉ công khai của API khi web ở domain khác (vd https://api.fepass.top). Để trống khi dev: ảnh dùng đường dẫn tương đối
+  API_URL: z
+    .string()
+    .default("")
+    .transform((v) => v.replace(/\/+$/, "")),
+  // Số lớp reverse proxy phía trước (Nginx = 1) để lấy đúng IP người dùng cho giới hạn tốc độ. Dev để 0
+  TRUST_PROXY: z.coerce.number().int().min(0).default(0),
   DATABASE_URL: z.string().min(1),
   JWT_SECRET: z.string().min(32, "JWT_SECRET cần ít nhất 32 ký tự"),
   JWT_EXPIRES_IN: z.string().default("7d"),
