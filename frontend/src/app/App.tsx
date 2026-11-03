@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Route, Routes, useParams } from "react-router-dom";
-import { History, ListChecks, LayoutDashboard, UserRound, Wallet } from "lucide-react";
+import { Gift, History, ListChecks, LayoutDashboard, UserRound, Wallet } from "lucide-react";
 import { PanelLayout, type NavItem } from "@/shared/layout/PanelLayout";
 import { Loading } from "@/shared/ui/Feedback";
 import LoginPage from "@/features/auth/pages/LoginPage";
@@ -24,6 +24,7 @@ const PublicDepositPage = lazy(() => import("@/features/account/pages/PublicDepo
 const OverviewPage = lazy(() => import("@/features/account/pages/OverviewPage"));
 const DepositPage = lazy(() => import("@/features/account/pages/DepositPage"));
 const TransactionsPage = lazy(() => import("@/features/account/pages/TransactionsPage"));
+const GiftCodePage = lazy(() => import("@/features/account/pages/GiftCodePage"));
 const ProfilePage = lazy(() => import("@/features/account/pages/ProfilePage"));
 
 const AttemptsPage = lazy(() => import("@/features/history/pages/AttemptsPage"));
@@ -33,6 +34,7 @@ const ACCOUNT_NAV: NavItem[] = [
   { to: "/account", label: "Tổng quan", icon: LayoutDashboard, end: true, group: "Chung" },
   { to: "/account/attempts", label: "Lịch sử làm bài", icon: ListChecks, group: "Học tập" },
   { to: "/account/deposit", label: "Nạp credit", icon: Wallet, group: "Ví" },
+  { to: "/account/giftcode", label: "Giftcode", icon: Gift, group: "Ví" },
   { to: "/account/transactions", label: "Lịch sử giao dịch", icon: History, group: "Ví" },
   { to: "/account/profile", label: "Hồ sơ", icon: UserRound, group: "Cài đặt" },
 ];
@@ -64,6 +66,7 @@ export default function App() {
             <Route path="attempts/:id" element={<AttemptDetailPage />} />
             <Route path="deposit" element={<DepositPage />} />
             <Route path="deposit/:code" element={<DepositPage />} />
+            <Route path="giftcode" element={<GiftCodePage />} />
             <Route path="transactions" element={<TransactionsPage />} />
             <Route path="profile" element={<ProfilePage />} />
           </Route>

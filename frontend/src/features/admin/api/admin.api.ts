@@ -3,6 +3,8 @@ import type {
   BankTxStatus,
   AdminExam,
   AiAdminConfig,
+  GiftCode,
+  GiftCodeRedemption,
   AiEffort,
   CrawlerAdminConfig,
   DashboardOverview,
@@ -15,6 +17,15 @@ import type {
   UserStatus,
 } from "@/shared/types/api";
 import { http } from "@/shared/api/client";
+import { PAGE_SIZE } from "@/shared/api/pagination";
+
+export interface GiftCodeForm {
+  code?: string; // bỏ trống = hệ thống tự sinh
+  amount: number;
+  maxUses: number;
+  expiresAt?: string; // ISO, bỏ trống = không hết hạn
+  note?: string;
+}
 
 export interface UserFilter {
   page: number;
@@ -60,6 +71,13 @@ export const adminApi = {
     http.patch<User>(`/admin/users/${id}`, body),
   adjustBalance: (id: number, body: { amount: number; note: string }) =>
     http.post<User>(`/admin/users/${id}/balance`, body),
+
+  giftCodes: (page: number, filter: { q?: string; active?: "true" | "false" | "" }) =>
+    http.list<GiftCode>("/admin/gift-codes", { page, limit: PAGE_SIZE, ...filter }),
+  createGiftCode: (body: GiftCodeForm) => http.post<GiftCode>("/admin/gift-codes", body),
+  setGiftCodeActive: (id: number, active: boolean) => http.patch<GiftCode>(`/admin/gift-codes/${id}`, { active }),
+  giftCodeRedemptions: (id: number, page: number) =>
+    http.list<GiftCodeRedemption>(`/admin/gift-codes/${id}/redemptions`, { page, limit: PAGE_SIZE }),
 
   deposits: (page: number, status?: DepositStatus | "") =>
     http.list<DepositOrder>("/admin/deposits", { page, limit: 15, status }),

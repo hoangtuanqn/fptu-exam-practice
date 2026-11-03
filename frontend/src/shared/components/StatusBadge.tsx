@@ -1,5 +1,5 @@
 import { Badge, type Tone } from "@/shared/ui/Badge";
-import type { BankTxStatus, DepositStatus, Role, TransactionType, UserStatus } from "@/shared/types/api";
+import type { BankTxStatus, DepositStatus, GiftCodeStatus, Role, TransactionType, UserStatus } from "@/shared/types/api";
 
 // Gom nhãn + màu của mọi trạng thái vào một chỗ để panel user và admin hiển thị giống nhau
 const DEPOSIT: Record<DepositStatus, [string, Tone]> = {
@@ -14,6 +14,12 @@ const USER: Record<UserStatus, [string, Tone]> = {
 const ROLE: Record<Role, [string, Tone]> = {
   ADMIN: ["Quản trị", "info"],
   USER: ["Thành viên", "neutral"],
+};
+const GIFT: Record<GiftCodeStatus, [string, Tone]> = {
+  ACTIVE: ["Đang dùng được", "success"],
+  DISABLED: ["Đã tắt", "neutral"],
+  EXPIRED: ["Hết hạn", "warning"],
+  USED_UP: ["Hết lượt", "warning"],
 };
 const BANK: Record<BankTxStatus, [string, Tone]> = {
   MATCHED: ["Đã khớp", "success"],
@@ -38,3 +44,5 @@ export const DepositStatusBadge = make(DEPOSIT);
 export const UserStatusBadge = make(USER);
 export const RoleBadge = make(ROLE);
 export const BankTxBadge = make(BANK);
+export const GiftCodeStatusBadge = make(GIFT);
+
