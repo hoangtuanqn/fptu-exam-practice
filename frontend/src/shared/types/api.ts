@@ -222,6 +222,7 @@ export interface ReferralSettings {
   enabled: boolean;
   signupBonus: number; // credit người mới nhận khi đăng ký qua mã
   referrerSignupBonus: number; // credit người giới thiệu nhận khi có người đăng ký
+  claimWindowDays: number; // số ngày sau đăng ký còn nhập được mã giới thiệu
   commissionPercent: number; // % số tiền người được giới thiệu nạp
 }
 
@@ -253,6 +254,8 @@ export interface ReferredMember {
 export interface ReferralOverview {
   code: string;
   program: { enabled: boolean; signupBonus: number; commissionPercent: number };
+  // Nhập mã giới thiệu sau khi đăng ký: open = còn nhập được, referred = đã có người giới thiệu, expired = quá hạn
+  claim: { status: "open" | "referred" | "expired" | "unavailable"; deadline: string | null };
   stats: { referred: number; earned: number };
   items: ReferredMember[];
   meta: PageMeta;

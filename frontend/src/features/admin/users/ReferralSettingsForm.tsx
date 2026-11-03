@@ -20,6 +20,7 @@ export function ReferralSettingsForm({ initial, onSaved }: { initial: ReferralSe
   const [signupBonus, setSignupBonus] = useState(String(initial.signupBonus));
   const [referrerSignupBonus, setReferrerSignupBonus] = useState(String(initial.referrerSignupBonus));
   const [commissionPercent, setCommissionPercent] = useState(String(initial.commissionPercent));
+  const [claimWindowDays, setClaimWindowDays] = useState(String(initial.claimWindowDays));
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -29,6 +30,7 @@ export function ReferralSettingsForm({ initial, onSaved }: { initial: ReferralSe
         signupBonus: Number(signupBonus),
         referrerSignupBonus: Number(referrerSignupBonus),
         commissionPercent: Number(commissionPercent),
+        claimWindowDays: Number(claimWindowDays),
       });
       toast.success("Đã lưu cấu hình giới thiệu");
       onSaved();
@@ -49,7 +51,7 @@ export function ReferralSettingsForm({ initial, onSaved }: { initial: ReferralSe
           <Switch checked={enabled} onChange={setEnabled} label="Bật chương trình giới thiệu" />
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Input
             label="Thưởng người mới (credit)"
             inputMode="numeric"
@@ -73,6 +75,14 @@ export function ReferralSettingsForm({ initial, onSaved }: { initial: ReferralSe
             onChange={(e) => setCommissionPercent(digits(e.target.value))}
             error={fieldErrors.commissionPercent}
             hint="Người giới thiệu nhận % mỗi lần người kia nạp."
+          />
+          <Input
+            label="Hạn nhập mã sau đăng ký (ngày)"
+            inputMode="numeric"
+            value={claimWindowDays}
+            onChange={(e) => setClaimWindowDays(digits(e.target.value))}
+            error={fieldErrors.claimWindowDays}
+            hint="Quá hạn thì mất quyền nhập. 0 = chỉ nhập lúc đăng ký."
           />
         </div>
 
