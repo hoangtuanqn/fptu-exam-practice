@@ -1,18 +1,19 @@
 import type { CrawlJob, CrawlJobStatus } from "@prisma/client";
 import { prisma } from "../configs/prisma";
+import type { Owner } from "../utils/actor";
 import type { Db } from "./wallet.repository";
 
 export const crawlJobRepository = {
-  create: (data: { threadId: string; userId: number; chargedAmount: number }, db: Db = prisma) =>
+  create: (data: { threadId: string; userId?: number; guestId?: string; chargedAmount: number }, db: Db = prisma) =>
     db.crawlJob.create({ data }),
 
   findById: (id: number) => prisma.crawlJob.findUnique({ where: { id } }),
 
   // Người này đã có lượt đang chờ/đang chạy cho thread này thì dùng lại, không tạo thêm.
   // Mỗi người có job riêng để đề được thêm vào thư viện của đúng người đó.
-  findActive: (threadId: string, userId: number) =>
+  findActive: (threadId: string, owner: Owner) =>
     prisma.crawlJob.findFirst({
-      where: { threadId, userId, status: { in: ["QUEUED", "RUNNING"] } },
+      where: { threadId, ...("userId" in owner ? { userId: owner.userId } : { guestId: owner.guestId }), status: { in: ["QUEUED", "RUNNING"] } },
       orderBy: { id: "asc" },
     }),
 

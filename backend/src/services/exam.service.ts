@@ -3,32 +3,31 @@ import { examRepository } from "../repositories/exam.repository";
 import { userExamRepository } from "../repositories/user-exam.repository";
 import type { Db } from "../repositories/wallet.repository";
 import { AppError } from "../rules/error";
+import { isMember, type Actor, type Owner } from "../utils/actor";
 import { toMeta, type PaginationQuery } from "../utils/pagination";
 
 // Ảnh được phục vụ tĩnh tại /api/v1/files (xem app.ts)
 const imageUrlOf = (imagePath: string) => `/api/v1/files/${imagePath}`;
 
-interface Actor {
-  id: number;
-  role: string;
-}
-
 export const examService = {
-  // Đề nhập xong (hoặc đã có sẵn) đều vào thư viện của người nhập
-  addToLibrary: (userId: number, examId: number, db?: Db) => userExamRepository.add(userId, examId, db),
+  // Đề nhập xong (hoặc đã có sẵn) đều vào kho của người nhập: thành viên hoặc khách
+  addToLibrary: (owner: Owner, examId: number, db?: Db) => userExamRepository.add(owner, examId, db),
 
-  // Chỉ chủ thư viện (hoặc admin) được xem/làm đề; người khác nhận 404 như thể đề không tồn tại
+  // Chỉ chủ kho (hoặc admin) được xem/làm đề; người khác nhận 404 như thể đề không tồn tại
   async assertAccess(actor: Actor, examId: number) {
-    if (actor.role === "ADMIN") return;
-    if (!(await userExamRepository.has(actor.id, examId))) throw AppError.notFound("Không tìm thấy đề");
+    if (actor.isAdmin) return;
+    if (!(await userExamRepository.has(actor.owner, examId))) throw AppError.notFound("Không tìm thấy đề");
   },
 
-  async listMine(userId: number, query: PaginationQuery) {
-    const { items, total } = await userExamRepository.list(userId, query);
-    const stats = await examAttemptRepository.statsByExam(
-      userId,
-      items.map((i) => i.exam.id),
-    );
+  async listMine(owner: Owner, query: PaginationQuery) {
+    const { items, total } = await userExamRepository.list(owner, query);
+    // Khách chưa có lịch sử làm bài nên không cần thống kê
+    const stats = isMember(owner)
+      ? await examAttemptRepository.statsByExam(
+          owner.userId,
+          items.map((i) => i.exam.id),
+        )
+      : [];
     const byExam = new Map(stats.map((s) => [s.examId, s]));
 
     return {
@@ -58,5 +57,11 @@ export const examService = {
         correct: q.answer.split(/\s+/).filter(Boolean),
       })),
     };
+  },
+
+  // Vừa đăng ký/đăng nhập: đề khách đã lấy trên trình duyệt này chuyển về tài khoản
+  async claimGuestLibrary(userId: number, guestId: string | undefined) {
+    if (!guestId) return { claimed: 0 };
+    return { claimed: await userExamRepository.claimGuest(userId, guestId) };
   },
 };
