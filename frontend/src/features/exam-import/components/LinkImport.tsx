@@ -124,7 +124,7 @@ export function LinkImport({ onImported }: Props) {
         <div className="mt-4" role="status" aria-live="polite">
           <div className="mb-1.5 flex items-center justify-between text-xs text-slate-600">
             <span>{done ? "Hoàn tất" : (job.stage ?? "Đang xử lý")}</span>
-            <span className="font-mono tabular-nums">{percent}%</span>
+            <span className="tabular-nums">{percent}%</span>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-slate-200/70">
             <div

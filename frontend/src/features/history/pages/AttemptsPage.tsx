@@ -51,7 +51,7 @@ export default function AttemptsPage() {
                       <Td className="whitespace-nowrap text-right tabular-nums">
                         {a.correct}/{a.totalGraded}
                       </Td>
-                      <Td className="whitespace-nowrap text-right font-mono tabular-nums text-slate-500">
+                      <Td className="whitespace-nowrap text-right tabular-nums text-slate-500">
                         {formatDuration(a.durationSec)}
                       </Td>
                       <Td className="text-right">
