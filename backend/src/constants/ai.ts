@@ -20,8 +20,8 @@ export const AI_KEY_PREFIX = "ai.";
 export const DEFAULT_PROMPT_FILE = path.resolve(__dirname, "../../assets/prompts/huong-dan-giai-de.md");
 
 // Một lượt gọi AI (có tra Google và suy luận nhiều bước) có thể kéo dài vài phút
-export const AI_TIMEOUT_MS = 10 * 60 * 1000;
-export const AI_RETRIES = 2;
+export const AI_TIMEOUT_MS = 6 * 60 * 1000;
+export const AI_RETRIES = 1;
 
 // Ghi chú khi AI không dùng được và đề rơi về đáp án tạm
 export const AI_REPORT_FALLBACK_PREFIX = "AI không giải được đề này, đang dùng đáp án tạm (A). Lý do: ";
