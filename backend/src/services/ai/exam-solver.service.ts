@@ -1,10 +1,10 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { DEFAULT_PROMPT_FILE, activeKey, type AiConfig } from "../../constants/ai";
-import { chatCompletion } from "./aiml.client";
-import { generateContent, type GeminiPart } from "./gemini.client";
+import { DEFAULT_PROMPT_FILE, type AiConfig } from "../../constants/ai";
+import { askClaude, type ClaudeContent } from "./claude.client";
 
 export interface SolveQuestion {
+  number: number; // số câu trong đề (1..N)
   name: string; // tên ảnh, ví dụ "Q1"
   file: string; // đường dẫn tuyệt đối tới ảnh
 }
@@ -17,13 +17,59 @@ export interface SolveInput {
 
 export interface SolveResult {
   answers: string[]; // đáp án từng câu theo đúng thứ tự, ví dụ ["A", "C D", ...]
-  report: string; // phần báo cáo của AI (câu nghi ngờ, câu nhiều đáp án...)
+  report: string; // báo cáo của AI kèm danh sách câu chưa chắc
 }
 
-const MIME: Record<string, string> = { ".webp": "image/webp", ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg" };
-const ANSWER_LINE = /^[A-Z](?: [A-Z])*$/;
+type Confidence = "certain" | "likely" | "unsure";
+interface ClaudeAnswer {
+  question: number;
+  choice: string;
+  confidence: Confidence;
+}
+interface ClaudeOutput {
+  report: string;
+  answers: ClaudeAnswer[];
+}
 
-// Prompt hệ thống do bạn soạn (assets/prompts/huong-dan-giai-de.md hoặc AI_PROMPT_FILE)
+const MIME: Record<string, "image/webp" | "image/png" | "image/jpeg"> = {
+  ".webp": "image/webp",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+};
+const CHOICE = /^[A-Z](?: [A-Z])*$/;
+
+// Cấu trúc kết quả bắt buộc (structured outputs): Claude luôn trả JSON đúng dạng này, không phải tự cắt chữ từ đoạn văn
+const OUTPUT_SCHEMA = {
+  type: "object",
+  properties: {
+    report: {
+      type: "string",
+      description: "Short plain-text review: multi-answer questions, disagreements with comments, doubtful or faulty questions, anything unverified.",
+    },
+    answers: {
+      type: "array",
+      description: "Exactly one entry per question number from 1 to N.",
+      items: {
+        type: "object",
+        properties: {
+          question: { type: "integer", description: "Question number from the image label." },
+          choice: {
+            type: "string",
+            description: "Uppercase letters, separated by single spaces when several answers are required, for example 'C' or 'A C D'.",
+          },
+          confidence: { type: "string", enum: ["certain", "likely", "unsure"] },
+        },
+        required: ["question", "choice", "confidence"],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ["report", "answers"],
+  additionalProperties: false,
+};
+
+// Prompt hệ thống (assets/prompts/exam-solver.system.md hoặc AI_PROMPT_FILE). Cố định cho mọi đề để được cache.
 async function loadPrompt(): Promise<string> {
   const file = process.env.AI_PROMPT_FILE ? path.resolve(process.env.AI_PROMPT_FILE) : DEFAULT_PROMPT_FILE;
   try {
@@ -33,65 +79,64 @@ async function loadPrompt(): Promise<string> {
   }
 }
 
-// Phần bổ sung cho chế độ chạy qua API: prompt gốc viết cho một trợ lý có công cụ (viết script, tạo file, ...)
-const apiAddendum = (n: number, title: string) => `
+// Kiểm tra kết quả: đủ N câu, không trùng, mỗi đáp án là các chữ cái. Sai thì ném lỗi, tuyệt đối không điền đáp án giả.
+export function validateOutput(out: ClaudeOutput, numbers: number[]): SolveResult {
+  const byNumber = new Map<number, ClaudeAnswer>();
+  for (const a of out.answers ?? []) {
+    if (byNumber.has(a.question)) throw new Error(`Claude trả lặp câu ${a.question}`);
+    byNumber.set(a.question, a);
+  }
+  const missing = numbers.filter((n) => !byNumber.has(n));
+  if (missing.length) throw new Error(`Claude thiếu đáp án ở câu ${missing.join(", ")}`);
 
----
-## PHẦN BỔ SUNG KHI CHẠY QUA API (ưu tiên cao nhất, ghi đè mọi chỗ mâu thuẫn ở trên)
-
-- Bạn đang chạy qua API: không có shell, Python hay hệ thống file. Mọi bước "viết script", "tạo file", "đường dẫn file" hãy bỏ qua; tự đối chiếu bình luận bằng suy luận. Nếu có công cụ tìm kiếm Google thì dùng cho các câu không chắc (bước 4).
-- Tên đề: ${title || "(không rõ)"}. Số câu: **${n}**.
-- Các ảnh đề được gửi lần lượt, mỗi ảnh có nhãn "Ảnh k — tên file". **Dòng k của kết quả ứng với ảnh thứ k** trong danh sách tôi gửi.
-- **ĐỊNH DẠNG TRẢ LỜI BẮT BUỘC**: phần cuối câu trả lời là MỘT khối mã mở bằng \`\`\`ans và đóng bằng \`\`\`, chứa **đúng ${n} dòng**, mỗi dòng là đáp án của câu tương ứng (một chữ cái hoa, hoặc nhiều chữ cái cách nhau một dấu cách nếu đề yêu cầu chọn nhiều). Không đánh số, không chú thích, không dòng trống trong khối này. Trước khối đó, viết báo cáo ngắn theo mục 5 (câu nhiều đáp án, câu nghi ngờ và lý do, câu lệch với bình luận).
-`;
-
-// Lấy khối \`\`\`ans cuối cùng; nếu AI quên nhãn thì lấy khối mã cuối cùng có đúng n dòng hợp lệ
-export function parseAnswers(text: string, n: number): { answers: string[]; report: string } {
-  const blocks = [...text.matchAll(/```[a-zA-Z]*\s*\n([\s\S]*?)```/g)];
-  const candidates = blocks.map((m) => ({ index: m.index ?? 0, lines: m[1]!.split(/\r?\n/).map((l) => l.trim()).filter(Boolean) }));
-  const pick = [...candidates].reverse().find((c) => c.lines.length === n) ?? candidates[candidates.length - 1];
-  if (!pick) throw new Error("AI không trả về khối đáp án");
-  if (pick.lines.length !== n) throw new Error(`AI trả về ${pick.lines.length} dòng đáp án, đề có ${n} câu`);
-
+  const answers: string[] = [];
   const bad: number[] = [];
-  const answers = pick.lines.map((line, i) => {
-    const normalized = line.toUpperCase().replace(/[.,;]+/g, " ").replace(/\s+/g, " ").trim();
-    if (ANSWER_LINE.test(normalized)) return normalized;
-    bad.push(i + 1);
-    return line;
-  });
-  // Không điền đáp án giả: có câu không phải đáp án chữ cái thì coi như AI chưa giải xong đề
-  if (bad.length) throw new Error(`AI trả về đáp án không hợp lệ ở câu ${bad.join(", ")}`);
+  const unsure: number[] = [];
+  for (const n of numbers) {
+    const a = byNumber.get(n)!;
+    const choice = a.choice.toUpperCase().replace(/[.,;]+/g, " ").replace(/\s+/g, " ").trim();
+    if (!CHOICE.test(choice)) bad.push(n);
+    if (a.confidence === "unsure") unsure.push(n);
+    answers.push(choice);
+  }
+  if (bad.length) throw new Error(`Claude trả đáp án không phải chữ cái ở câu ${bad.join(", ")} (chưa chấm được)`);
 
-  let report = text.slice(0, pick.index).trim();
-  return { answers, report };
+  const note = unsure.length ? `\n\n[System] Claude marked these questions as unsure: ${unsure.join(", ")}.` : "";
+  return { answers, report: `${out.report.trim()}${note}` };
 }
 
-/** Gửi toàn bộ ảnh + bình luận + prompt hệ thống cho Gemini và đọc lại danh sách đáp án. */
+/** Gửi toàn bộ ảnh + bình luận cho Claude và đọc lại danh sách đáp án theo cấu trúc cố định. */
 export async function solveExam(config: AiConfig, input: SolveInput): Promise<SolveResult> {
-  if (!activeKey(config)) throw new Error("Chưa cấu hình khóa API cho nhà cung cấp AI đang chọn");
+  if (!config.anthropicApiKey) throw new Error("Chưa cấu hình khóa Anthropic");
   const n = input.questions.length;
   if (n === 0) throw new Error("Đề không có câu nào");
 
-  const system = (await loadPrompt()) + apiAddendum(n, input.title);
-
-  const parts: GeminiPart[] = [
-    { text: `Đây là bộ đề "${input.title}" gồm ${n} câu. Hãy giải theo đúng hướng dẫn trong chỉ dẫn hệ thống.` },
+  const content: ClaudeContent[] = [
+    { type: "text", text: `<exam>\nTitle: ${input.title || "(unknown)"}\nNumber of questions (N): ${n}\n</exam>` },
   ];
-  for (const [i, q] of input.questions.entries()) {
+  for (const q of input.questions) {
+    const mediaType = MIME[path.extname(q.file).toLowerCase()];
+    if (!mediaType) throw new Error(`Định dạng ảnh không được hỗ trợ: ${path.basename(q.file)}`);
     const data = (await fs.readFile(q.file)).toString("base64");
-    parts.push({ text: `Ảnh ${i + 1} — ${path.basename(q.file)} (${q.name}):` });
-    parts.push({ inlineData: { mimeType: MIME[path.extname(q.file).toLowerCase()] ?? "image/webp", data } });
+    content.push({ type: "text", text: `Question ${q.number} (file ${path.basename(q.file)}):` });
+    content.push({ type: "image", source: { type: "base64", media_type: mediaType, data } });
   }
-  parts.push({
+  content.push({
+    type: "text",
     text: input.commentsText
-      ? `Nội dung comments.txt (bình luận của người dùng):\n\n${input.commentsText}`
-      : "Không có comments.txt cho đề này, hãy tự giải và tra cứu.",
+      ? `<comments>\n${input.commentsText}\n</comments>\n\nSolve all ${n} questions following your instructions.`
+      : `There are no forum comments for this exam, so solve everything yourself.\n\nSolve all ${n} questions following your instructions.`,
   });
 
-  const text =
-    config.provider === "aimlapi"
-      ? await chatCompletion({ apiKey: config.aimlApiKey, model: config.aimlModel, system, parts })
-      : await generateContent({ apiKey: config.apiKey, model: config.model, system, parts, useSearch: config.useSearch });
-  return parseAnswers(text, n);
+  const out = (await askClaude({
+    apiKey: config.anthropicApiKey,
+    model: config.claudeModel,
+    effort: config.effort,
+    system: await loadPrompt(),
+    content,
+    schema: OUTPUT_SCHEMA,
+    useSearch: config.useSearch,
+  })) as ClaudeOutput;
+
+  return validateOutput(out, input.questions.map((q) => q.number));
 }

@@ -3,6 +3,7 @@ import type {
   BankTxStatus,
   AdminExam,
   AiAdminConfig,
+  AiEffort,
   CrawlerAdminConfig,
   DashboardOverview,
   DepositOrder,
@@ -46,11 +47,9 @@ export interface CrawlerForm {
 export interface AiForm {
   enabled: boolean;
   useSearch: boolean;
-  provider: "gemini" | "aimlapi";
-  model: string;
-  aimlModel: string;
-  apiKey?: string;
-  aimlApiKey?: string;
+  claudeModel: string;
+  effort: AiEffort;
+  anthropicApiKey?: string;
 }
 
 export const adminApi = {

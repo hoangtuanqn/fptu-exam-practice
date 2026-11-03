@@ -11,7 +11,7 @@ import { aiSettingService } from "./ai-setting.service";
 /**
  * Hàng đợi nhờ AI giải đáp án, chạy NỀN và tách khỏi việc lấy đề: lấy đề xong là người dùng làm bài được ngay
  * (đáp án hiện "đang phân tích"), còn AI xử lý song song và cập nhật đáp án khi xong.
- * Giới hạn số đề giải cùng lúc để không dồn dập gọi Gemini.
+ * Giới hạn số đề giải cùng lúc để không dồn dập gọi Claude.
  */
 const MAX_CONCURRENT = 2;
 
@@ -44,7 +44,7 @@ async function run(examId: number) {
       title: exam.title,
       commentsText,
       // imagePath trong DB đúng với cả đề cũ (ảnh nằm thẳng trong thư mục) lẫn đề mới (thư mục images/)
-      questions: exam.questions.map((q) => ({ name: q.name, file: path.join(storageDir, q.imagePath) })),
+      questions: exam.questions.map((q) => ({ number: q.number, name: q.name, file: path.join(storageDir, q.imagePath) })),
     });
 
     await examRepository.updateAnswers(examId, solved.answers, "AI", solved.report);

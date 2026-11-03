@@ -74,7 +74,7 @@ An toàn tiền bạc:
 3. Worker nền (`jobs/crawl.worker.ts`) lấy từng job: đọc thread → tải ảnh, đổi WebP vào `STORAGE_DIR/exams/<threadId>/` → lấy bình luận → ghi `exams`, `exam_questions`, `exam_comments` trong một transaction. Mỗi bước cập nhật `crawl_jobs.stage` để client hiển thị. Server tắt giữa chừng thì job `RUNNING` được xếp lại khi khởi động.
 4. Client poll `GET /crawl-jobs/:id` đến khi `DONE`, rồi `GET /exams/:id` (ảnh phục vụ tại `/api/v1/files/...`).
 
-Đáp án: do AI (Gemini) giải sau khi lấy đề và lưu vào `exam_questions.answer`. Không có đáp án giả: đề chưa có đáp án (`answer_source` = `PENDING` hoặc `FAILED`) chỉ xem được, chưa làm bài được. Lý do AI lỗi lưu ở `exams.ai_report` và `storage/exams/<threadId>/ai-error.log`.
+Đáp án: do AI (Claude) giải sau khi lấy đề và lưu vào `exam_questions.answer`. Không có đáp án giả: đề chưa có đáp án (`answer_source` = `PENDING` hoặc `FAILED`) chỉ xem được, chưa làm bài được. Lý do AI lỗi lưu ở `exams.ai_report` và `storage/exams/<threadId>/ai-error.log`.
 
 ## Thư viện đề và lịch sử làm bài
 
@@ -119,7 +119,7 @@ An toàn tiền bạc:
 ## Thư mục đề và AI giải đáp án
 
 - **Thư mục mỗi đề** (`STORAGE_DIR/exams/<threadId>/`): `images/Q1.webp...`, `comments.txt` (bình luận FuOverflow, định dạng như crawl-fu), và khi AI giải xong thêm `ans.txt` (mỗi dòng một câu) và `ai-report.md`. **Bình luận không lưu vào DB** (bảng `exam_comments` đã bỏ ở migration `0011`). Đề lấy trước khi có bản này vẫn để ảnh thẳng trong `exams/<threadId>/` (đường dẫn ảnh lưu trong DB nên vẫn hiển thị đúng).
-- **AI (Gemini):** bật ở Quản trị → Cấu hình crawl (hoặc đặt `GEMINI_API_KEY` trong `.env`). Mỗi đề **mới** lấy về, worker gửi cho Gemini: prompt hệ thống `assets/prompts/huong-dan-giai-de.md` (đổi file bằng `AI_PROMPT_FILE`) + một phần bổ sung cho chế độ API + toàn bộ ảnh theo thứ tự + `comments.txt`. Gemini trả về khối ```` ```ans ```` gồm đúng N dòng, được kiểm tra rồi lưu vào `exam_questions.answer`; phần báo cáo phía trên khối lưu ở `exams.ai_report`.
+- **AI (Claude):** bật ở Quản trị → Cấu hình crawl (hoặc đặt `ANTHROPIC_API_KEY` trong `.env`), mặc định model `claude-opus-5-5`. Mỗi đề **mới** lấy về, worker gửi cho Claude: prompt hệ thống tiếng Anh `assets/prompts/exam-solver.system.md` (đổi file bằng `AI_PROMPT_FILE`, cố định nên được prompt caching) + toàn bộ ảnh có nhãn số câu + `comments.txt`. Kỹ thuật: suy luận thích ứng (adaptive thinking) với mức `effort` chỉnh được, structured outputs (JSON schema: báo cáo + đáp án từng câu kèm độ tin cậy, kiểm tra đủ N câu), tra web tùy chọn (`web_search`, tối đa 5 lượt/đề). Kết quả lưu vào `exam_questions.answer`; báo cáo (kèm các câu Claude chưa chắc) ở `exams.ai_report`.
 - Có thể bật tra Google (grounding) theo bước 4 của prompt. Khóa gửi qua header, không nằm trong URL/log.
 - Người dùng không bị trừ thêm phí vì AI.
 - `GET /admin/exams`, `POST /admin/exams/:id/solve` (chạy nền, trả 202), `GET /admin/exams/:id/report`: trang **Đề thi** của quản trị để xem nguồn đáp án và nhờ AI giải lại (dùng cho đề cũ hoặc khi AI lỗi). Đề đã có đáp án rồi (người dùng lấy lại) thì không giải lại.
