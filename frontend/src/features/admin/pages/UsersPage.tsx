@@ -9,20 +9,28 @@ import { inputClass } from "@/shared/ui/Input";
 import { Segmented } from "@/shared/ui/Segmented";
 import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
 import { useApi } from "@/shared/hooks/useApi";
+import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
 import { useDebounce } from "@/shared/hooks/useDebounce";
 import type { Role, User, UserStatus } from "@/shared/types/api";
 import { formatDate, formatMoney, initials } from "@/shared/utils/formatters";
 
 export default function UsersPage() {
-  const [search, setSearch] = useState("");
-  const [role, setRole] = useState<Role | "">("");
-  const [status, setStatus] = useState<UserStatus | "">("");
-  const [page, setPage] = useState(1);
+  const [url, setUrl] = useUrlState({ q: "", role: "", status: "", page: "1" });
+  const role = url.role as Role | "";
+  const status = url.status as UserStatus | "";
+  const page = toPage(url.page);
+  const setPage = (p: number) => setUrl({ page: String(p) });
+  const setRole = (v: Role | "") => setUrl({ role: v, page: "1" });
+  const setStatus = (v: UserStatus | "") => setUrl({ status: v, page: "1" });
   const [selected, setSelected] = useState<User | null>(null);
 
+  // Ô tìm kiếm gõ trực tiếp, sau khi ngừng gõ mới đưa lên URL (và về trang 1)
+  const [search, setSearch] = useState(url.q);
   const q = useDebounce(search.trim());
-  // Đổi bộ lọc thì về trang 1
-  useEffect(() => setPage(1), [q, role, status]);
+  useEffect(() => {
+    if (q !== url.q) setUrl({ q, page: "1" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q]);
 
   const { data, error, loading, reload } = useApi(() => adminApi.users({ page, search: q, role, status }), [page, q, role, status]);
 
