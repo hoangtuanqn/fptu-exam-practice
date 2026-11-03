@@ -7,6 +7,7 @@ import { AppError } from "../rules/error";
 import { sepayClient, type SepayTransaction } from "./sepay.client";
 import { notificationService } from "./notification.service";
 import { settingService } from "./setting.service";
+import { referralService } from "./referral.service";
 import { walletService } from "./wallet.service";
 
 const LAST_RUN_KEY = "sepay.lastRun";
@@ -64,9 +65,19 @@ const processTransaction = async (tx: SepayTransaction, config: SepayConfig) => 
       type: "DEPOSIT",
       note: `Nạp tiền ${order!.code}`,
     });
+    // Người nạp có người giới thiệu: chia hoa hồng ngay trong transaction này
+    const depositor = await db.user.findUnique({ where: { id: order!.userId }, select: { fullName: true } });
+    const commission = await referralService.rewardDeposit(db, {
+      depositorId: order!.userId,
+      depositorName: depositor?.fullName ?? "",
+      depositOrderId: order!.id,
+      code: order!.code,
+      amount: data.amountIn,
+    });
     return {
       matched: true as const,
       notice: { userId: order!.userId, code: order!.code, amount: data.amountIn, balanceAfter: entry.balanceAfter },
+      commission,
     };
   });
 };
@@ -96,6 +107,7 @@ const runSync = async (): Promise<SyncResult> => {
       if (result.matched) {
         matched++;
         notificationService.depositSuccess(result.notice); // sau khi transaction cộng tiền đã commit
+        referralService.notify([result.commission]);
       }
       created++;
     } catch (err) {

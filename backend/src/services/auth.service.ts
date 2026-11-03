@@ -7,6 +7,7 @@ import { AppError } from "../rules/error";
 import type { ForgotPasswordBody, LoginBody, RegisterBody, ResetPasswordBody } from "../rules/requests/auth.request";
 import { signToken } from "../utils/jwt";
 import { comparePassword, hashPassword } from "../utils/password";
+import { referralService } from "./referral.service";
 import { mailService } from "./mail.service";
 import { notificationService } from "./notification.service";
 
@@ -18,12 +19,25 @@ const RESET_COOLDOWN_MS = 60_000; // tối thiểu 60 giây giữa hai lần g�
 const hashToken = (token: string) => createHash("sha256").update(token).digest("hex");
 
 export const authService = {
-  async register({ email, fullName, password }: RegisterBody) {
+  async register({ email, fullName, password, referralCode }: RegisterBody) {
     if (await userRepository.existsByEmail(email)) {
       throw AppError.conflict("Email đã được sử dụng", { email: "Email đã được sử dụng" });
     }
-    const user = await userRepository.create({ email, fullName, password: await hashPassword(password) });
+    const hashed = await hashPassword(password);
+    const code = await referralService.uniqueCode(); // mã giới thiệu của chính người mới
+
+    // Tạo tài khoản và cộng thưởng giới thiệu cùng một transaction: không có chuyện có thưởng mà không có tài khoản
+    const { user, notices } = await prisma.$transaction(async (tx) => {
+      const created = await userRepository.create({ email, fullName, password: hashed, referralCode: code }, tx);
+      // Lỗi thưởng giới thiệu không được làm hỏng việc đăng ký
+      const rewards = await referralService.applyAtSignup(tx, created, referralCode).catch((err: Error) => {
+        console.error(`[referral] không áp dụng được mã giới thiệu: ${err.message}`);
+        return [];
+      });
+      return { user: (await userRepository.findById(created.id, tx))!, notices: rewards };
+    });
     notificationService.welcome(user);
+    referralService.notify(notices);
     return { token: signToken(user.id), user };
   },
 

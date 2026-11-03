@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Route, Routes, useParams } from "react-router-dom";
-import { BookOpen, Gift, History, MessageSquareWarning, ListChecks, LayoutDashboard, UserRound, Wallet } from "lucide-react";
+import { BookOpen, Gift, History, MessageSquareWarning, UserPlus, ListChecks, LayoutDashboard, UserRound, Wallet } from "lucide-react";
 import { PanelLayout, type NavItem } from "@/shared/layout/PanelLayout";
 import { Loading } from "@/shared/ui/Feedback";
 import LoginPage from "@/features/auth/pages/LoginPage";
@@ -26,6 +26,7 @@ const DepositPage = lazy(() => import("@/features/account/pages/DepositPage"));
 const TransactionsPage = lazy(() => import("@/features/account/pages/TransactionsPage"));
 const LibraryPage = lazy(() => import("@/features/account/pages/LibraryPage"));
 const MyReportsPage = lazy(() => import("@/features/account/pages/MyReportsPage"));
+const ReferralPage = lazy(() => import("@/features/account/pages/ReferralPage"));
 const GiftCodePage = lazy(() => import("@/features/account/pages/GiftCodePage"));
 const ProfilePage = lazy(() => import("@/features/account/pages/ProfilePage"));
 
@@ -38,6 +39,7 @@ const ACCOUNT_NAV: NavItem[] = [
   { to: "/account/reports", label: "Báo cáo đáp án", icon: MessageSquareWarning, group: "Học tập" },
   { to: "/account/attempts", label: "Lịch sử làm bài", icon: ListChecks, group: "Học tập" },
   { to: "/account/deposit", label: "Nạp credit", icon: Wallet, group: "Ví" },
+  { to: "/account/referral", label: "Giới thiệu bạn bè", icon: UserPlus, group: "Ví" },
   { to: "/account/giftcode", label: "Giftcode", icon: Gift, group: "Ví" },
   { to: "/account/transactions", label: "Lịch sử giao dịch", icon: History, group: "Ví" },
   { to: "/account/profile", label: "Hồ sơ", icon: UserRound, group: "Cài đặt" },
@@ -72,6 +74,7 @@ export default function App() {
             <Route path="deposit/:code" element={<DepositPage />} />
             <Route path="exams" element={<LibraryPage />} />
             <Route path="reports" element={<MyReportsPage />} />
+            <Route path="referral" element={<ReferralPage />} />
             <Route path="giftcode" element={<GiftCodePage />} />
             <Route path="transactions" element={<TransactionsPage />} />
             <Route path="profile" element={<ProfilePage />} />
