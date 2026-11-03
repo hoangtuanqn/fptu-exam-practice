@@ -103,3 +103,9 @@ An toàn tiền bạc:
 - `POST /auth/reset-password {token, password}`: token dùng một lần (chiếm bằng điều kiện ở DB nên hai yêu cầu cùng lúc chỉ một cái thành công), đổi mật khẩu và huỷ mọi token còn lại, trong một transaction. Phiên đăng nhập cũ vẫn dùng được tới khi JWT hết hạn.
 - SMTP cấu hình trong `.env` (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, tuỳ chọn `MAIL_FROM`). Gmail: cần "Mật khẩu ứng dụng". Không cấu hình thì server vẫn chạy, yêu cầu quên mật khẩu chỉ ghi log lỗi.
 - Email dựng từ `mail/templates/reset-password.ts` (khung của `FStyle_BTC.html`, đổi sang nhận diện MST Software), banner ở `backend/assets/mail/reset-banner.png` được nhúng thẳng vào thư (cid) nên hiển thị cả khi chạy local.
+
+## Email thông báo và cron theo giây
+
+- Email gửi khi: tạo lệnh nạp (kèm thông tin chuyển khoản và mã QR), tiền nạp khớp lệnh và đã cộng ví, mỗi lần bị trừ phí lấy đề, đặt lại mật khẩu. Tiêu đề dạng `[Luyện thi FE FPTU] Nạp tiền thành công +100.000 ₫ · NAPXXXX` để nhìn hộp thư là biết nội dung chính. Khung chung ở `mail/layout.ts`, nội dung từng thư ở `mail/templates/`, banner ở `assets/mail/`.
+- Thư luôn gửi **sau khi** transaction đã commit và chạy nền (`services/notification.service.ts`); gửi lỗi chỉ ghi log, không ảnh hưởng giao dịch.
+- Cron đối soát SePay nhận 5 trường (tối thiểu 1 phút) hoặc **6 trường có giây ở đầu**, ví dụ `*/10 * * * * *` = mỗi 10 giây. Với 6 trường bước giây tối thiểu 10 (cố định hoặc `*/N`, N >= 10) để không gọi API SePay dồn dập. Các lượt chạy không bao giờ chồng nhau (đang chạy thì lượt sau bỏ qua).

@@ -5,6 +5,7 @@ import { depositRepository } from "../repositories/deposit.repository";
 import { AppError } from "../rules/error";
 import type { CreateDepositBody, ListDepositsQuery } from "../rules/requests/deposit.request";
 import { toMeta } from "../utils/pagination";
+import { notificationService } from "./notification.service";
 import { settingService } from "./setting.service";
 
 const MAX_PENDING_PER_USER = 3;
@@ -71,7 +72,15 @@ export const depositService = {
           expiresAt,
           code: randomCode(config.codePrefix),
         });
-        return { order, payment: toPayment(config, order) };
+        const payment = toPayment(config, order);
+        notificationService.depositCreated({
+          userId,
+          code: order.code,
+          amount: order.amount,
+          expiresAt: order.expiresAt,
+          payment,
+        });
+        return { order, payment };
       } catch (err) {
         if (attempt >= 2 || (err as { code?: string }).code !== "P2002") throw err;
       }

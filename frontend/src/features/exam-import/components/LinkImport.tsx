@@ -25,11 +25,15 @@ export function LinkImport({ onImported }: Props) {
   const { user, refresh } = useAuth();
   const [url, setUrl] = useState("");
   const job = useExamImport();
-  const price = useApi(() => (user ? examImportApi.price() : Promise.resolve({ price: 0 })), [user?.id]);
+  const price = useApi(
+    () => (user ? examImportApi.price() : Promise.resolve({ price: 0 })),
+    [user?.id],
+  );
   const fee = price.data?.price ?? 0;
   const tooPoor = !!user && fee > 0 && user.balance < fee;
 
-  const limitReached = !user && job.phase === "failed" && job.errorStatus === 429;
+  const limitReached =
+    !user && job.phase === "failed" && job.errorStatus === 429;
   const running = job.phase === "running";
   const done = job.phase === "done";
   const percent = useFakeProgress(running || done, done);
@@ -37,7 +41,8 @@ export function LinkImport({ onImported }: Props) {
   // Số dư đổi khi server trừ phí (sau khi gửi) và khi hoàn phí (lỗi): cập nhật lại cho khớp
   const charged = job.phase === "running" && job.stage !== "Đang gửi yêu cầu";
   useEffect(() => {
-    if (charged || job.phase === "done" || job.phase === "failed") void refresh();
+    if (charged || job.phase === "done" || job.phase === "failed")
+      void refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [charged, job.phase]);
 
@@ -61,13 +66,20 @@ export function LinkImport({ onImported }: Props) {
   };
 
   return (
-    <form onSubmit={onSubmit} className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/60 px-6 py-9 text-left">
+    <form
+      onSubmit={onSubmit}
+      className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/60 px-6 py-9 text-left"
+    >
       <div className="flex flex-col items-center text-center">
         <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-600 to-accent text-white shadow-lg shadow-brand-600/25">
           <Link2 size={22} />
         </span>
-        <div className="mt-4 text-lg font-semibold text-slate-900">Nhập đề từ link FuOverflow</div>
-        <div className="mt-0.5 text-sm text-slate-500">Dán link thread đề thi, hệ thống tự lấy ảnh và lưu lại</div>
+        <div className="mt-4 text-lg font-semibold text-slate-900">
+          Nhập đề từ link FuOverflow
+        </div>
+        <div className="mt-0.5 text-sm text-slate-500">
+          Dán link thread đề thi, hệ thống tự lấy ảnh và lưu lại
+        </div>
       </div>
 
       <div className="mt-5 flex flex-col gap-2 sm:flex-row">
@@ -80,7 +92,11 @@ export function LinkImport({ onImported }: Props) {
           aria-label="Link đề FuOverflow"
           className={`${inputClass(job.error ?? undefined)} sm:flex-1`}
         />
-        <Button variant="primary" type="submit" disabled={!url.trim() || running || done || tooPoor}>
+        <Button
+          variant="primary"
+          type="submit"
+          disabled={!url.trim() || running || done || tooPoor}
+        >
           {running && <Loader2 size={16} className="animate-spin" />}
           {running ? "Đang lấy đề…" : "Lấy đề"}
         </Button>
@@ -88,13 +104,20 @@ export function LinkImport({ onImported }: Props) {
 
       {user && fee > 0 && (
         <p className="mt-2 text-xs text-slate-500">
-          Phí lấy đề: <b className="font-semibold text-slate-700">{formatMoney(fee)}</b> mỗi lần (kể cả đề đã có sẵn, lỗi thì hoàn lại)
-          · Số dư: <b className="font-semibold text-slate-700">{formatMoney(user.balance)}</b>
+          Phí lấy đề:{" "}
+          <b className="font-semibold text-slate-700">{formatMoney(fee)}</b> mỗi
+          lần (lỗi thì hoàn lại) · Số dư còn lại:{" "}
+          <b className="font-semibold text-slate-700">
+            {formatMoney(user.balance)}
+          </b>
           {tooPoor && (
             <>
               {" "}
               ·{" "}
-              <Link to="/account/deposit" className="font-medium text-brand-700 hover:underline">
+              <Link
+                to="/account/deposit"
+                className="font-medium text-brand-700 hover:underline"
+              >
                 Nạp thêm tiền
               </Link>
             </>
@@ -104,17 +127,21 @@ export function LinkImport({ onImported }: Props) {
 
       {!user && !limitReached && (
         <p className="mt-2 text-xs text-slate-500">
-          Khách được lấy miễn phí 1 đề mỗi ngày. Đăng ký để lấy thêm, giữ đề trong kho riêng và lưu lịch sử làm bài.
+          Khách được lấy miễn phí 1 đề mỗi ngày. Đăng ký để lấy thêm, giữ đề
+          trong kho riêng và lưu lịch sử làm bài.
         </p>
       )}
 
       {limitReached && (
         <div className="mt-4 rounded-xl border border-brand-100 bg-brand-50/70 p-4">
-          <div className="text-sm font-semibold text-slate-900">Hết lượt lấy đề hôm nay rồi!</div>
+          <div className="text-sm font-semibold text-slate-900">
+            Hết lượt lấy đề hôm nay rồi!
+          </div>
           <p className="mb-3 mt-1 text-xs leading-relaxed text-slate-600">
-            Khách được lấy miễn phí 1 đề mỗi ngày. Đăng ký tài khoản (mất vài giây thôi) để lấy thêm đề, giữ mọi đề trong
-            kho riêng và lưu lại từng lần làm bài với điểm cùng chi tiết từng câu. Hoặc quay lại vào ngày mai để nhận thêm
-            một lượt nhé.
+            Khách được lấy miễn phí 1 đề mỗi ngày. Đăng ký tài khoản (mất vài
+            giây thôi) để lấy thêm đề, giữ mọi đề trong kho riêng và lưu lại
+            từng lần làm bài với điểm cùng chi tiết từng câu. Hoặc quay lại vào
+            ngày mai để nhận thêm một lượt nhé.
           </p>
           <SignUpCta />
         </div>
@@ -132,14 +159,20 @@ export function LinkImport({ onImported }: Props) {
               style={{ width: `${percent}%` }}
             />
           </div>
-          <p className="mt-2 text-xs text-slate-500">Đề mới có thể mất vài phút. Đề đã có sẵn sẽ mở ngay.</p>
+          <p className="mt-2 text-xs text-slate-500">
+            Đề mới có thể mất vài phút. Đề đã có sẵn sẽ mở ngay.
+          </p>
         </div>
       )}
 
       {job.phase === "failed" && !limitReached && (
         <div className="mt-4 space-y-2">
           <FormError message={job.error} />
-          <button type="button" onClick={job.reset} className="text-xs font-medium text-brand-700 hover:underline">
+          <button
+            type="button"
+            onClick={job.reset}
+            className="text-xs font-medium text-brand-700 hover:underline"
+          >
             Thử lại
           </button>
         </div>
