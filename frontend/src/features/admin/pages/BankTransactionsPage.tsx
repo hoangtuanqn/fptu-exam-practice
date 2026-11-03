@@ -4,7 +4,7 @@ import { adminApi } from "@/features/admin/api/admin.api";
 import { BankTxBadge } from "@/shared/components/StatusBadge";
 import { Card, PageHeader } from "@/shared/ui/Card";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
-import { inputClass } from "@/shared/ui/Input";
+import { Segmented } from "@/shared/ui/Segmented";
 import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
 import { useApi } from "@/shared/hooks/useApi";
 import type { BankTxStatus } from "@/shared/types/api";
@@ -25,11 +25,16 @@ export default function BankTransactionsPage() {
       />
       <Card>
         <div className="border-b border-slate-100 p-4">
-          <select value={status} onChange={(e) => setStatus(e.target.value as BankTxStatus | "")} aria-label="Lọc theo trạng thái" className={`${inputClass()} !w-auto`}>
-            <option value="">Tất cả</option>
-            <option value="UNMATCHED">Chưa khớp</option>
-            <option value="MATCHED">Đã khớp</option>
-          </select>
+          <Segmented
+            label="Lọc theo trạng thái"
+            value={status}
+            onChange={setStatus}
+            options={[
+              { value: "", label: "Tất cả" },
+              { value: "UNMATCHED", label: "Chưa khớp" },
+              { value: "MATCHED", label: "Đã khớp" },
+            ]}
+          />
         </div>
 
         {loading && !data ? (
