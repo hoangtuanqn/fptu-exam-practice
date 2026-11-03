@@ -4,6 +4,7 @@ import { BookOpen, Loader2 } from "lucide-react";
 import { examImportApi } from "@/features/exam-import/exam-import.api";
 import type { ImportedExam } from "@/features/exam-import/types";
 import { formatScore } from "@/features/practice/utils/format";
+import { useAuth } from "@/features/auth/AuthContext";
 import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
 import { examLibraryApi } from "./exam-library.api";
@@ -17,6 +18,7 @@ interface Props {
 // "Đề của tôi": các đề đã nhập, bấm vào là mở để làm. Điểm cao nhất lấy từ lịch sử làm bài.
 export function MyExams({ onOpen }: Props) {
   const toast = useToast();
+  const { user } = useAuth();
   const { data } = useApi(() => examLibraryApi.list(1, SHOWN), []);
   const [openingId, setOpeningId] = useState<number | null>(null);
 
@@ -36,10 +38,16 @@ export function MyExams({ onOpen }: Props) {
   return (
     <section className="mt-10 text-left">
       <div className="mb-2 flex items-center justify-between">
-        <h2 className="text-base font-semibold text-slate-900">Đề của tôi</h2>
-        <Link to="/account/attempts" className="text-xs font-medium text-brand-700 hover:underline">
-          Lịch sử làm bài
-        </Link>
+        <h2 className="text-base font-semibold text-slate-900">{user ? "Đề của tôi" : "Đề bạn đã lấy"}</h2>
+        {user ? (
+          <Link to="/account/attempts" className="text-xs font-medium text-brand-700 hover:underline">
+            Lịch sử làm bài
+          </Link>
+        ) : (
+          <Link to="/register" className="text-xs font-medium text-brand-700 hover:underline">
+            Đăng ký để lưu lịch sử
+          </Link>
+        )}
       </div>
       <ul className="grid gap-2 sm:grid-cols-2">
         {data.items.map((e) => (

@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { Link2, Loader2 } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
+import { useGuestTrial } from "@/features/trial/useGuestTrial";
 import { SignUpCta } from "@/features/trial/SignUpCta";
 import { useApi } from "@/shared/hooks/useApi";
 import { formatMoney } from "@/shared/utils/formatters";
@@ -25,7 +26,8 @@ export function LinkImport({ onImported }: Props) {
   const { user, refresh } = useAuth();
   const [url, setUrl] = useState("");
   const job = useExamImport();
-  const [needLogin, setNeedLogin] = useState(false); // khách bấm Lấy đề: mời đăng ký thay vì gọi API
+  const trial = useGuestTrial();
+  const [needLogin, setNeedLogin] = useState(false); // khách đã dùng hết lượt thử: mời đăng ký thay vì lấy thêm đề
   const price = useApi(() => (user ? examImportApi.price() : Promise.resolve({ price: 0 })), [user?.id]);
   const fee = price.data?.price ?? 0;
   const tooPoor = !!user && fee > 0 && user.balance < fee;
@@ -57,7 +59,7 @@ export function LinkImport({ onImported }: Props) {
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!url.trim() || running) return;
-    if (!user) {
+    if (!user && trial.used) {
       setNeedLogin(true);
       return;
     }
@@ -108,16 +110,16 @@ export function LinkImport({ onImported }: Props) {
 
       {!user && !needLogin && (
         <p className="mt-2 text-xs text-slate-500">
-          Lấy đề từ link cần tài khoản để đề được lưu vào thư viện và mỗi lần nộp bài được ghi vào lịch sử.
+          Dùng thử miễn phí, đề bạn lấy được lưu trong trình duyệt này. Đăng ký để giữ đề trong kho riêng và lưu lịch sử làm bài.
         </p>
       )}
 
       {!user && needLogin && (
         <div className="mt-4 rounded-xl border border-brand-100 bg-brand-50/70 p-4">
-          <div className="text-sm font-medium text-slate-900">Đăng nhập để lấy đề từ link</div>
+          <div className="text-sm font-medium text-slate-900">Bạn đã dùng hết lượt thử miễn phí</div>
           <p className="mb-3 mt-1 text-xs leading-relaxed text-slate-600">
-            Đề sẽ được lưu vào thư viện riêng của bạn, và mỗi lần nộp bài, điểm cùng chi tiết từng câu được lưu lại để xem
-            sau. Tạo tài khoản chỉ mất vài giây. Bạn vẫn có thể mở thư mục đề ở tab bên cạnh để dùng thử ngay.
+            Tạo tài khoản miễn phí, chỉ mất vài giây, để tiếp tục lấy đề từ link. Các đề bạn đã lấy sẽ được chuyển vào kho
+            riêng của tài khoản, và mỗi lần nộp bài được lưu vào lịch sử để xem lại từng câu.
           </p>
           <SignUpCta />
         </div>

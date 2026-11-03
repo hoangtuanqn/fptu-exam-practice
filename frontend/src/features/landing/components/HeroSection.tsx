@@ -28,15 +28,6 @@ export function HeroSection({ onPick, onImported, userName, trialUsed }: Props) 
 
       <div className="mx-auto w-full max-w-3xl px-5 pb-14 pt-12 text-center sm:pt-16">
         <div className="animate-fade-up">
-          {isGuest && !trialUsed && (
-            <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-medium text-slate-600 shadow-soft">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
-              </span>
-              Dùng thử miễn phí 1 lần, không cần đăng ký
-            </span>
-          )}
 
           <h1 className="mt-5 text-4xl font-semibold leading-[1.1] text-slate-900 sm:text-6xl">
             {userName ? (
@@ -71,7 +62,7 @@ export function HeroSection({ onPick, onImported, userName, trialUsed }: Props) 
         </div>
 
         <div className="animate-fade-up [animation-delay:120ms]">
-          <ExamSourcePicker onPick={onPick} onImported={onImported} loggedIn={!isGuest} />
+          <ExamSourcePicker onPick={onPick} onImported={onImported} />
         </div>
 
         <ul className="mt-8 flex flex-wrap items-center justify-center gap-2.5">

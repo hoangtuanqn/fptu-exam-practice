@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { examImportApi } from "@/features/exam-import/exam-import.api";
 import { historyApi } from "@/features/history/history.api";
+import { pendingAttempt } from "@/features/guest-sync/pendingAttempt";
 import { useToast } from "@/shared/context/ToastContext";
 import { useQuiz } from "@/features/practice/hooks/useQuiz";
 import { useQuizShortcuts } from "@/features/practice/hooks/useQuizShortcuts";
@@ -35,15 +36,21 @@ export default function PracticePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quiz.submitted, user]);
 
-  // Nộp bài xong thì ghi vào lịch sử (chỉ với đề của hệ thống; đề mở từ thư mục không có trong DB)
+  // Nộp bài xong: thành viên thì ghi vào lịch sử ngay (chỉ với đề của hệ thống; đề mở từ thư mục không có trong DB).
+  // Khách thì giữ bài lại, lưu khi họ đăng ký/đăng nhập (xem GuestSync).
   useEffect(() => {
-    if (!quiz.submitted || !user || quiz.examId === null) return;
+    if (!quiz.submitted || quiz.examId === null) return;
+    const payload = {
+      mode: quiz.mode === "exam" ? ("EXAM" as const) : ("PRACTICE" as const),
+      durationSec: quiz.elapsed,
+      answers: quiz.answers,
+    };
+    if (!user) {
+      pendingAttempt.save({ examId: quiz.examId, payload });
+      return;
+    }
     historyApi
-      .save(quiz.examId, {
-        mode: quiz.mode === "exam" ? "EXAM" : "PRACTICE",
-        durationSec: quiz.elapsed,
-        answers: quiz.answers,
-      })
+      .save(quiz.examId, payload)
       .then(() => toast.success("Đã lưu vào lịch sử làm bài"))
       .catch(() => toast.error("Không lưu được lịch sử làm bài"));
     // Chỉ chạy đúng lúc vừa nộp bài

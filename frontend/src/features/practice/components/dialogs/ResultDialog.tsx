@@ -12,12 +12,13 @@ import { ScoreRing } from "@/shared/ui/ScoreRing";
 interface Props {
   result: GradeResult;
   elapsed: number; // số giây làm bài
+  savable: boolean; // đề của hệ thống: bài vừa làm lưu được vào lịch sử khi đăng ký
   onReview: () => void;
   onRetry: () => void;
 }
 
 // Bảng điểm sau khi nộp
-export function ResultDialog({ result, elapsed, onReview, onRetry }: Props) {
+export function ResultDialog({ result, elapsed, savable, onReview, onRetry }: Props) {
   const { user } = useAuth();
   const passed = result.score >= PASS_SCORE;
   const tone = result.total === 0 ? "neutral" : passed ? "success" : "danger";
@@ -56,8 +57,9 @@ export function ResultDialog({ result, elapsed, onReview, onRetry }: Props) {
         <div className="mt-5 rounded-xl bg-brand-50 p-4">
           <div className="text-sm font-medium text-brand-900">Muốn giữ lại kết quả này?</div>
           <p className="mb-3 mt-1 text-xs leading-relaxed text-slate-600">
-            Lượt làm thử này chưa được lưu. Đăng ký tài khoản miễn phí để nhập đề từ link FuOverflow, lưu điểm và chi tiết
-            từng câu vào lịch sử, rồi theo dõi tiến bộ qua mỗi lần làm.
+            {savable
+              ? "Đăng ký (hoặc đăng nhập) ngay bây giờ, bài vừa làm sẽ được lưu vào lịch sử cùng điểm và chi tiết từng câu, và các đề bạn đã lấy sẽ nằm trong kho riêng của bạn."
+              : "Đề mở từ thư mục không được lưu lịch sử. Đăng ký tài khoản miễn phí để lấy đề từ link FuOverflow, lưu điểm và chi tiết từng câu, rồi theo dõi tiến bộ qua mỗi lần làm."}
           </p>
           <SignUpCta />
         </div>
