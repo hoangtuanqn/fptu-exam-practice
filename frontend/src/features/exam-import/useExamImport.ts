@@ -57,7 +57,13 @@ export function useExamImport() {
         while (job.status === "QUEUED" || job.status === "RUNNING") {
           if (stale()) return;
           if (Date.now() > deadline) return fail("Quá thời gian chờ, vui lòng thử lại sau");
-          setStage(job.status === "QUEUED" ? "Đang chờ tới lượt" : (job.stage ?? "Đang xử lý"));
+          setStage(
+            job.status === "QUEUED"
+              ? job.ahead > 0
+                ? `Đang xếp hàng, còn ${job.ahead} lượt phía trước`
+                : "Sắp tới lượt"
+              : (job.stage ?? "Đang xử lý"),
+          );
           await wait(POLL_MS);
           job = await examImportApi.job(job.id);
         }
