@@ -1,6 +1,8 @@
 import type {
   BankTransaction,
   BankTxStatus,
+  AdminExam,
+  AiAdminConfig,
   CrawlerAdminConfig,
   DashboardOverview,
   DepositOrder,
@@ -41,6 +43,13 @@ export interface CrawlerForm {
   fetchPrice: number;
 }
 
+export interface AiForm {
+  enabled: boolean;
+  useSearch: boolean;
+  model: string;
+  apiKey?: string;
+}
+
 export const adminApi = {
   dashboard: () => http.get<DashboardOverview>("/admin/dashboard"),
 
@@ -59,6 +68,11 @@ export const adminApi = {
   saveSepayConfig: (body: SepayForm) => http.put<SepayAdminConfig>("/admin/settings/sepay", body),
   crawlerConfig: () => http.get<CrawlerAdminConfig>("/admin/settings/crawler"),
   saveCrawlerConfig: (body: CrawlerForm) => http.put<CrawlerAdminConfig>("/admin/settings/crawler", body),
+  aiConfig: () => http.get<AiAdminConfig>("/admin/settings/ai"),
+  saveAiConfig: (body: AiForm) => http.put<AiAdminConfig>("/admin/settings/ai", body),
+  exams: (page: number) => http.list<AdminExam>("/admin/exams", { page, limit: 15 }),
+  solveExam: (id: number) => http.post<null>(`/admin/exams/${id}/solve`),
+  examReport: (id: number) => http.get<{ id: number; title: string; aiReport: string | null }>(`/admin/exams/${id}/report`),
   sepayStatus: () => http.get<SyncResult | null>("/admin/sepay/status"),
   syncNow: () => http.post<SyncResult>("/admin/sepay/sync"),
 };

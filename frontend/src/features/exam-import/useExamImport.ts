@@ -6,7 +6,7 @@ import type { ImportedExam } from "./types";
 export type ImportPhase = "idle" | "running" | "done" | "failed";
 
 const POLL_MS = 1500;
-const GIVE_UP_MS = 10 * 60 * 1000;
+const GIVE_UP_MS = 20 * 60 * 1000; // AI giải đáp án có thể mất vài phút
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
