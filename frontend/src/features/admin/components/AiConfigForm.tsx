@@ -66,7 +66,7 @@ export function AiConfigForm({ initial, onSaved }: { initial: AiAdminConfig; onS
           value={claudeModel}
           onChange={(e) => setClaudeModel(e.target.value)}
           error={fieldErrors.claudeModel}
-          hint="Mặc định claude-opus-5-5 (chính xác nhất). claude-sonnet-5-5 rẻ hơn khoảng một nửa nhưng có thể kém chính xác hơn."
+          hint="Mặc định claude-haiku-5-5 (rẻ nhất). claude-sonnet-5-5 hoặc claude-opus-5-5 chính xác hơn nhưng đắt hơn."
         />
 
         <div>

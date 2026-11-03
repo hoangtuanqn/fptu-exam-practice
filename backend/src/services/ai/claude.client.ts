@@ -1,6 +1,9 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { AI_MAX_OUTPUT_TOKENS, AI_MAX_PAUSES, AI_MAX_SEARCHES, AI_TIMEOUT_MS, type AiEffort } from "../../constants/ai";
 
+// Haiku chưa có bản tra web mới (lọc động), dùng bản cơ bản
+const SEARCH_TOOL = (model: string) => (/haiku/i.test(model) ? "web_search_20250305" : "web_search_20260209");
+
 export type ClaudeContent = Anthropic.ContentBlockParam;
 
 export interface ClaudeRequest {
@@ -34,7 +37,7 @@ export async function askClaude({ apiKey, model, effort, system, content, schema
           thinking: { type: "adaptive" },
           output_config: { effort, format: { type: "json_schema", schema } },
           system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
-          ...(useSearch && { tools: [{ type: "web_search_20260209", name: "web_search", max_uses: AI_MAX_SEARCHES }] }),
+          ...(useSearch && { tools: [{ type: SEARCH_TOOL(model), name: "web_search", max_uses: AI_MAX_SEARCHES } as Anthropic.ToolUnion] }),
           messages,
         })
         .finalMessage();
