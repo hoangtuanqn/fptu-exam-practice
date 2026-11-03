@@ -13,6 +13,7 @@ export interface User {
   role: Role;
   status: UserStatus;
   balance: number;
+  emailVerifiedAt: string | null; // chưa xác minh thì chưa dùng được các dịch vụ trừ credit
   createdAt: string;
 }
 

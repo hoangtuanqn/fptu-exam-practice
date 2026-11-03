@@ -27,6 +27,7 @@ export function UserDialog({ user, onClose, onChanged }: Props) {
   const [fullName, setFullName] = useState(user.fullName);
   const [role, setRole] = useState<Role>(user.role);
   const [status, setStatus] = useState<UserStatus>(user.status);
+  const [verified, setVerified] = useState(!!user.emailVerifiedAt);
   const [current, setCurrent] = useState(user);
 
   const money = useSubmit();
@@ -41,7 +42,7 @@ export function UserDialog({ user, onClose, onChanged }: Props) {
   const saveInfo = (e: FormEvent) => {
     e.preventDefault();
     void info.run(async () => {
-      setCurrent(await adminApi.updateUser(user.id, { fullName, role, status }));
+      setCurrent(await adminApi.updateUser(user.id, { fullName, role, status, emailVerified: verified }));
       toast.success("Đã cập nhật thành viên");
       await changed();
     });
@@ -81,6 +82,10 @@ export function UserDialog({ user, onClose, onChanged }: Props) {
             <option value="BANNED">Khoá</option>
           </Select>
         </div>
+        <Select label="Email" value={verified ? "yes" : "no"} onChange={(e) => setVerified(e.target.value === "yes")}>
+          <option value="yes">Đã xác minh</option>
+          <option value="no">Chưa xác minh</option>
+        </Select>
         {isSelf && <p className="text-xs text-slate-500">Bạn không thể tự đổi vai trò hoặc khoá chính mình.</p>}
         <Button variant="primary" type="submit" disabled={info.loading || fullName.trim().length < 2}>
           {info.loading && <Loader2 size={16} className="animate-spin" />}

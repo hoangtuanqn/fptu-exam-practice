@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import { useAuth } from "@/features/auth/AuthContext";
+import { VerifyEmailNotice } from "@/features/verify-email/VerifyEmailNotice";
 import { Link2, TriangleAlert } from "lucide-react";
 import { Button, buttonClass } from "@/shared/ui/Button";
 import { Modal, ModalActions, ModalTitle } from "@/shared/ui/Modal";
@@ -23,6 +25,8 @@ const Row = ({ label, value, strong, danger }: { label: string; value: string; s
 
 // Xác nhận trước khi lấy đề: thành viên thấy rõ khoản phí sẽ bị trừ và số dư sau đó; khách thấy giới hạn lượt miễn phí.
 export function ConfirmFetchDialog({ url, fee, balance, onCancel, onConfirm }: Props) {
+  const { user } = useAuth();
+  const unverified = !!user && !user.emailVerifiedAt; // thành viên chưa xác minh email: chưa lấy đề được
   const isGuest = balance === null;
   const short = balance !== null && balance < fee;
 
@@ -30,6 +34,15 @@ export function ConfirmFetchDialog({ url, fee, balance, onCancel, onConfirm }: P
     <Modal onClose={onCancel}>
       <ModalTitle icon={Link2}>Xác nhận lấy đề</ModalTitle>
 
+      {unverified ? (
+        <div className="mt-4">
+          <VerifyEmailNotice variant="inline" message="Bạn cần xác minh email trước khi lấy đề. Kiểm tra hộp thư hoặc gửi lại thư xác minh." />
+          <ModalActions>
+            <Button onClick={onCancel}>Đóng</Button>
+          </ModalActions>
+        </div>
+      ) : (
+        <>
       <div className="mt-4 truncate rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600" title={url}>
         {url}
       </div>
@@ -74,6 +87,8 @@ export function ConfirmFetchDialog({ url, fee, balance, onCancel, onConfirm }: P
           </Button>
         )}
       </ModalActions>
+        </>
+      )}
     </Modal>
   );
 }

@@ -24,7 +24,11 @@ export const adminUserService = {
     if (id === actor.id && (body.role === "USER" || body.status === "BANNED")) {
       throw new AppError("Không thể tự hạ quyền hoặc tự khoá tài khoản của mình");
     }
-    const updated = await userRepository.update(id, body);
+    const { emailVerified, ...rest } = body;
+    const updated = await userRepository.update(id, {
+      ...rest,
+      ...(emailVerified !== undefined && { emailVerifiedAt: emailVerified ? (before.emailVerifiedAt ?? new Date()) : null }),
+    });
     // Trạng thái khóa đổi thì báo cho chính người đó
     if (body.status && body.status !== before.status) {
       notificationService.accountStatusChanged({ userId: id, banned: body.status === "BANNED" });
