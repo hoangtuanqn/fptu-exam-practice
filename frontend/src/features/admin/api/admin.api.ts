@@ -2,9 +2,12 @@ import type {
   BankTransaction,
   BankTxStatus,
   AdminExam,
+  AdminReferral,
   AiAdminConfig,
   AnswerReportAdmin,
   GiftCode,
+  ReferralSettings,
+  ReferralSummary,
   ReportStatus,
   GiftCodeRedemption,
   AiEffort,
@@ -86,6 +89,11 @@ export const adminApi = {
     http.list<AnswerReportAdmin>("/admin/answer-reports", { page, limit: PAGE_SIZE, status }),
   approveReport: (id: number, body: { note?: string }) => http.post<unknown>(`/admin/answer-reports/${id}/approve`, body),
   rejectReport: (id: number, body: { note?: string }) => http.post<unknown>(`/admin/answer-reports/${id}/reject`, body),
+
+  referralSettings: () => http.get<ReferralSettings>("/admin/settings/referral"),
+  saveReferralSettings: (body: ReferralSettings) => http.put<ReferralSettings>("/admin/settings/referral", body),
+  referralSummary: () => http.get<ReferralSummary>("/admin/referrals/summary"),
+  referrals: (page: number) => http.list<AdminReferral>("/admin/referrals", { page, limit: PAGE_SIZE }),
 
   deposits: (page: number, status?: DepositStatus | "") =>
     http.list<DepositOrder>("/admin/deposits", { page, limit: PAGE_SIZE, status }),

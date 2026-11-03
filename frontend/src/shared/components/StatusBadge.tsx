@@ -37,6 +37,8 @@ export const TRANSACTION_LABEL: Record<TransactionType, string> = {
   REPORT_REWARD: "Thưởng báo cáo đáp án",
   EXPLAIN_CHARGE: "Giải thích câu hỏi (AI)",
   EXPLAIN_REFUND: "Hoàn phí giải thích AI",
+  REFERRAL_BONUS: "Thưởng giới thiệu",
+  REFERRAL_COMMISSION: "Hoa hồng giới thiệu",
   ADMIN_ADJUST: "Điều chỉnh bởi quản trị",
   CRAWL_CHARGE: "Phí lấy đề FuOverflow",
   CRAWL_REFUND: "Hoàn phí lấy đề",

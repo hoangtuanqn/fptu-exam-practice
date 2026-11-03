@@ -1,12 +1,12 @@
 import { lazy } from "react";
 import { Navigate, Route } from "react-router-dom";
-import { Bot, DatabaseZap, FileText, Gift, MessageSquareWarning, Landmark, LayoutDashboard, Receipt, Settings, Users } from "lucide-react";
+import { Bot, DatabaseZap, FileText, Gift, MessageSquareWarning, UserPlus, Landmark, LayoutDashboard, Receipt, Settings, Users } from "lucide-react";
 import type { NavItem } from "@/shared/layout/PanelLayout";
 
 /**
  * Trang quản trị chia theo module, mỗi module một thư mục trong features/admin:
  *   overview/  Tổng quan
- *   users/     Thành viên
+ *   users/     Thành viên, giới thiệu
  *   finance/   Lệnh nạp, giao dịch ngân hàng, giftcode, cấu hình SePay
  *   content/   Đề thi, báo cáo đáp án, cấu hình lấy đề, AI giải đáp án
  * Menu và đường dẫn khai báo ở đây, thêm trang mới chỉ cần sửa file này.
@@ -15,6 +15,7 @@ const DashboardPage = lazy(() => import("./overview/DashboardPage"));
 const UsersPage = lazy(() => import("./users/UsersPage"));
 const DepositsPage = lazy(() => import("./finance/DepositsPage"));
 const BankTransactionsPage = lazy(() => import("./finance/BankTransactionsPage"));
+const ReferralsPage = lazy(() => import("./users/ReferralsPage"));
 const GiftCodesPage = lazy(() => import("./finance/GiftCodesPage"));
 const SepayPage = lazy(() => import("./finance/SepayPage"));
 const ExamsPage = lazy(() => import("./content/ExamsPage"));
@@ -25,6 +26,7 @@ const AiPage = lazy(() => import("./content/AiPage"));
 export const ADMIN_NAV: NavItem[] = [
   { to: "/admin", label: "Tổng quan", icon: LayoutDashboard, end: true, group: "Chung" },
   { to: "/admin/users", label: "Thành viên", icon: Users, group: "Người dùng" },
+  { to: "/admin/referrals", label: "Giới thiệu", icon: UserPlus, group: "Người dùng" },
   { to: "/admin/deposits", label: "Lệnh nạp tiền", icon: Receipt, group: "Tài chính" },
   { to: "/admin/bank-transactions", label: "Giao dịch ngân hàng", icon: Landmark, group: "Tài chính" },
   { to: "/admin/gift-codes", label: "Giftcode", icon: Gift, group: "Tài chính" },
@@ -40,6 +42,7 @@ export const adminRoutes = (
   <>
     <Route index element={<DashboardPage />} />
     <Route path="users" element={<UsersPage />} />
+    <Route path="referrals" element={<ReferralsPage />} />
     <Route path="deposits" element={<DepositsPage />} />
     <Route path="bank-transactions" element={<BankTransactionsPage />} />
     <Route path="gift-codes" element={<GiftCodesPage />} />
