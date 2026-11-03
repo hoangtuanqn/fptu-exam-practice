@@ -1,6 +1,7 @@
 import type {
   BankTransaction,
   BankTxStatus,
+  CrawlerAdminConfig,
   DashboardOverview,
   DepositOrder,
   DepositStatus,
@@ -31,6 +32,14 @@ export interface SepayForm {
   cronExpression: string;
 }
 
+export interface CrawlerForm {
+  cookie?: string;
+  userAgent: string;
+  referer: string;
+  requestDelayMs: number;
+  webpQuality: number;
+}
+
 export const adminApi = {
   dashboard: () => http.get<DashboardOverview>("/admin/dashboard"),
 
@@ -47,6 +56,8 @@ export const adminApi = {
 
   sepayConfig: () => http.get<SepayAdminConfig>("/admin/settings/sepay"),
   saveSepayConfig: (body: SepayForm) => http.put<SepayAdminConfig>("/admin/settings/sepay", body),
+  crawlerConfig: () => http.get<CrawlerAdminConfig>("/admin/settings/crawler"),
+  saveCrawlerConfig: (body: CrawlerForm) => http.put<CrawlerAdminConfig>("/admin/settings/crawler", body),
   sepayStatus: () => http.get<SyncResult | null>("/admin/sepay/status"),
   syncNow: () => http.post<SyncResult>("/admin/sepay/sync"),
 };

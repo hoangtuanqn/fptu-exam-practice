@@ -24,3 +24,13 @@ export const updateSepayBody = z.object({
 });
 
 export type UpdateSepayBody = z.infer<typeof updateSepayBody>;
+
+export const updateCrawlerBody = z.object({
+  cookie: z.string().trim().max(8000).optional(), // để trống = giữ cookie cũ
+  userAgent: z.string().trim().max(500),
+  referer: z.string().trim().max(500),
+  requestDelayMs: z.number().int().min(0).max(5000),
+  webpQuality: z.number().int().min(30).max(100),
+});
+
+export type UpdateCrawlerBody = z.infer<typeof updateCrawlerBody>;

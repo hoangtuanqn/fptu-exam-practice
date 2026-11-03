@@ -1,7 +1,7 @@
 import cors from "cors";
 import express from "express";
 import helmet from "helmet";
-import { env } from "./configs/env";
+import { env, storageDir } from "./configs/env";
 import { errorHandler, notFoundHandler } from "./middlewares/error.middlewares";
 import rootRouter from "./routes/root.routes";
 
@@ -12,6 +12,16 @@ export const createApp = () => {
   app.use(helmet());
   app.use(cors({ origin: env.CLIENT_URL, credentials: true }));
   app.use(express.json({ limit: "100kb" }));
+
+  // Ảnh đề đã crawl. Cho phép trang web ở origin khác nhúng (helmet mặc định chỉ cho cùng origin)
+  app.use(
+    "/api/v1/files",
+    (_req, res, next) => {
+      res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+      next();
+    },
+    express.static(storageDir, { maxAge: "7d", immutable: true, index: false, dotfiles: "ignore" }),
+  );
 
   app.use("/api/v1", rootRouter);
 
