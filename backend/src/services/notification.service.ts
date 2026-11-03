@@ -90,6 +90,23 @@ export const notificationService = {
     });
   },
 
+  // Báo cáo đáp án được admin xác nhận đúng và đã thưởng credit (gọi SAU khi transaction đã commit)
+  reportApproved(n: { userId: number; examTitle: string; questionNumber: number; reward: number; balanceAfter: number }) {
+    notify("thưởng báo cáo đáp án", async () => {
+      const user = await userRepository.findById(n.userId);
+      if (!user) return;
+      await mailService.sendReportRewarded(user.email, {
+        name: user.fullName,
+        examTitle: n.examTitle,
+        questionNumber: n.questionNumber,
+        amount: n.reward,
+        balanceAfter: n.balanceAfter,
+        at: new Date(),
+        walletUrl: walletUrl(),
+      });
+    });
+  },
+
   // Vừa nhập giftcode nhận credit (gọi SAU khi transaction cộng credit đã commit)
   giftCodeRedeemed(n: { userId: number; code: string; amount: number; balanceAfter: number }) {
     notify("nhập giftcode", async () => {

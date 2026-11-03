@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Maximize2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Maximize2, MessageSquareWarning } from "lucide-react";
 import { Button } from "@/shared/ui/Button";
 import { AnswerOptions } from "./AnswerOptions";
 import { AnswerStatus } from "./AnswerStatus";
@@ -21,6 +21,8 @@ export function QuestionCard({
   hasNext,
   flagged,
   onToggleFlag,
+  onReport,
+  reported,
   onChoose,
   onCheck,
   onPrev,
@@ -42,6 +44,18 @@ export function QuestionCard({
           </div>
           <div className="flex items-center gap-2">
             <FlagButton flagged={flagged} onToggle={onToggleFlag} />
+            {onReport && (
+              <button
+                onClick={onReport}
+                disabled={reported}
+                title="Báo cáo đáp án sai"
+                aria-label="Báo cáo đáp án sai"
+                className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white p-2 text-xs font-medium text-slate-500 transition hover:border-rose-300 hover:text-rose-600 disabled:opacity-60 disabled:hover:border-slate-200 disabled:hover:text-slate-500 sm:px-2.5 sm:py-1"
+              >
+                <MessageSquareWarning size={13} />
+                <span className="hidden sm:inline">{reported ? "Đã báo cáo" : "Báo cáo"}</span>
+              </button>
+            )}
             <button
               onClick={onZoom}
               title="Phóng to ảnh"

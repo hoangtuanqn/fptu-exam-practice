@@ -3,7 +3,9 @@ import type {
   BankTxStatus,
   AdminExam,
   AiAdminConfig,
+  AnswerReportAdmin,
   GiftCode,
+  ReportStatus,
   GiftCodeRedemption,
   AiEffort,
   CrawlerAdminConfig,
@@ -78,6 +80,11 @@ export const adminApi = {
   setGiftCodeActive: (id: number, active: boolean) => http.patch<GiftCode>(`/admin/gift-codes/${id}`, { active }),
   giftCodeRedemptions: (id: number, page: number) =>
     http.list<GiftCodeRedemption>(`/admin/gift-codes/${id}/redemptions`, { page, limit: PAGE_SIZE }),
+
+  answerReports: (page: number, status: ReportStatus | "") =>
+    http.list<AnswerReportAdmin>("/admin/answer-reports", { page, limit: PAGE_SIZE, status }),
+  approveReport: (id: number, body: { note?: string }) => http.post<unknown>(`/admin/answer-reports/${id}/approve`, body),
+  rejectReport: (id: number, body: { note?: string }) => http.post<unknown>(`/admin/answer-reports/${id}/reject`, body),
 
   deposits: (page: number, status?: DepositStatus | "") =>
     http.list<DepositOrder>("/admin/deposits", { page, limit: PAGE_SIZE, status }),

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import adminRouter from "./admin.routes";
+import answerReportRouter from "./answer-report.routes";
 import attemptRouter from "./attempt.routes";
 import authRouter from "./auth.routes";
 import crawlJobRouter from "./crawl-job.routes";
@@ -23,6 +24,7 @@ rootRouter.use("/crawl-jobs", crawlJobRouter);
 rootRouter.use("/exams", examRouter);
 rootRouter.use("/gift-codes", giftCodeRouter);
 rootRouter.use("/attempts", attemptRouter);
+rootRouter.use("/answer-reports", answerReportRouter);
 rootRouter.use("/admin", adminRouter);
 
 export default rootRouter;
