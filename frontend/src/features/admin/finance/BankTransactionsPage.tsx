@@ -9,6 +9,7 @@ import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
 import { useApi } from "@/shared/hooks/useApi";
 import type { BankTxStatus } from "@/shared/types/api";
 import { formatDateTime, formatMoney } from "@/shared/utils/formatters";
+import { useClampPage } from "@/shared/hooks/useClampPage";
 
 export default function BankTransactionsPage() {
   const [url, setUrl] = useUrlState({ status: "", page: "1" });
@@ -18,6 +19,7 @@ export default function BankTransactionsPage() {
   const setStatus = (v: BankTxStatus | "") => setUrl({ status: v, page: "1" });
 
   const { data, error, loading, reload } = useApi(() => adminApi.bankTransactions(page, status), [page, status]);
+  useClampPage(data?.meta, setPage);
 
   return (
     <>

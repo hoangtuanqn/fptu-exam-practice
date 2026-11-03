@@ -11,6 +11,7 @@ import { Card, PageHeader } from "@/shared/ui/Card";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
 import { formatDateTime } from "@/shared/utils/formatters";
+import { useClampPage } from "@/shared/hooks/useClampPage";
 
 export default function AttemptsPage() {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ export default function AttemptsPage() {
   const page = toPage(url.page);
   const setPage = (p: number) => setUrl({ page: String(p) });
   const { data, error, loading, reload } = useApi(() => historyApi.list(page), [page]);
+  useClampPage(data?.meta, setPage);
 
   return (
     <>

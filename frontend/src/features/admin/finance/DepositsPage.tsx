@@ -9,6 +9,7 @@ import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
 import { useApi } from "@/shared/hooks/useApi";
 import type { DepositStatus } from "@/shared/types/api";
 import { formatDateTime, formatMoney } from "@/shared/utils/formatters";
+import { useClampPage } from "@/shared/hooks/useClampPage";
 
 export default function DepositsPage() {
   const [url, setUrl] = useUrlState({ status: "", page: "1" });
@@ -18,6 +19,7 @@ export default function DepositsPage() {
   const setStatus = (v: DepositStatus | "") => setUrl({ status: v, page: "1" });
 
   const { data, error, loading, reload } = useApi(() => adminApi.deposits(page, status), [page, status]);
+  useClampPage(data?.meta, setPage);
 
   return (
     <>

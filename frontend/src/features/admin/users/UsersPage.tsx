@@ -13,6 +13,7 @@ import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
 import { useDebounce } from "@/shared/hooks/useDebounce";
 import type { Role, User, UserStatus } from "@/shared/types/api";
 import { formatDate, formatCredit, initials } from "@/shared/utils/formatters";
+import { useClampPage } from "@/shared/hooks/useClampPage";
 
 export default function UsersPage() {
   const [url, setUrl] = useUrlState({ q: "", role: "", status: "", page: "1" });
@@ -33,6 +34,7 @@ export default function UsersPage() {
   }, [q]);
 
   const { data, error, loading, reload } = useApi(() => adminApi.users({ page, search: q, role, status }), [page, q, role, status]);
+  useClampPage(data?.meta, setPage);
 
   return (
     <>
