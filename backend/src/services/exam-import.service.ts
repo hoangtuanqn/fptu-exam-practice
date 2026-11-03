@@ -7,6 +7,7 @@ import { AI_REPORT_FAILED_PREFIX, aiReady } from "../constants/ai";
 import { crawlJobRepository } from "../repositories/crawl-job.repository";
 import { examRepository, isDuplicateThread } from "../repositories/exam.repository";
 import { threadUrl } from "../utils/fuo-url";
+import { realtimeHub } from "../realtime/hub";
 import { aiSettingService } from "./ai-setting.service";
 import { examSolveService } from "./exam-solve.service";
 import { writeCommentsFile } from "./crawler/comments-file.service";
@@ -28,7 +29,10 @@ const imagePathOf = (threadId: string, file: string) => `${EXAM_STORAGE_DIR}/${t
  */
 export const examImportService = {
   async run(job: CrawlJob): Promise<{ examId: number }> {
-    const stage = (text: string) => crawlJobRepository.setStage(job.id, text);
+    const stage = async (text: string) => {
+      await crawlJobRepository.setStage(job.id, text);
+      void realtimeHub.publishJob(job.id); // người đang chờ thấy bước mới ngay
+    };
 
     const existing = await examRepository.findByThreadId(job.threadId);
     if (existing) return { examId: existing.id }; // có người nhập xong trước đó

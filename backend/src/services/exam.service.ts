@@ -5,14 +5,11 @@ import type { Db } from "../repositories/wallet.repository";
 import { examSolveService } from "./exam-solve.service";
 import { AppError } from "../rules/error";
 import { isMember, type Actor, type Owner } from "../utils/actor";
+import { failedMessage, toAnswersPayload } from "../utils/exam-answers";
 import { toMeta, type PaginationQuery } from "../utils/pagination";
 
 // Ảnh được phục vụ tĩnh tại /api/v1/files (xem app.ts)
 const imageUrlOf = (imagePath: string) => `/api/v1/files/${imagePath}`;
-
-// Người dùng chỉ thấy lời nhắn chung; lý do kỹ thuật nằm ở báo cáo và log để admin xem
-const failedMessage = (source: string) =>
-  source === "FAILED" || source === "DEFAULT" ? "AI chưa phân tích được đáp án của đề này. Đề chỉ xem được cho tới khi có đáp án." : null;
 
 export const examService = {
   // Người dùng bấm "Thử lại" trên đề FAILED (có thời gian chờ giữa hai lần để không đốt token)
@@ -79,11 +76,7 @@ export const examService = {
     await this.assertAccess(actor, id);
     const exam = await examRepository.findAnswers(id);
     if (!exam) throw AppError.notFound("Không tìm thấy đề");
-    return {
-      status: exam.answerSource,
-      answerError: failedMessage(exam.answerSource),
-      answers: exam.questions.map((q) => ({ number: q.number, correct: q.answer.split(/\s+/).filter(Boolean) })),
-    };
+    return toAnswersPayload(exam);
   },
 
   // Địa chỉ /exam/:threadId dùng mã thread (thông tin công khai trên FuOverflow) thay cho ID nội bộ tăng dần.

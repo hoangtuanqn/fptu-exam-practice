@@ -9,6 +9,7 @@ import { isMember, type Actor } from "../utils/actor";
 import { parseThreadId } from "../utils/fuo-url";
 import { startOfVnDay } from "../utils/time";
 import { crawlerSettingService } from "./crawler-setting.service";
+import { toJobDto } from "./crawl-job.dto";
 import { examService } from "./exam.service";
 import { notificationService } from "./notification.service";
 import { walletService } from "./wallet.service";
@@ -19,15 +20,6 @@ const listeners: Listener[] = [];
 const GUEST_DAILY_LIMIT = 1;
 export const GUEST_LIMIT_MESSAGE =
   "Bạn đã hết lượt lấy đề miễn phí hôm nay. Đăng ký tài khoản để lấy thêm đề, lưu kho riêng và theo dõi lịch sử làm bài nhé!";
-
-const toDto = (job: CrawlJob, ahead = 0) => ({
-  id: job.id,
-  status: job.status,
-  stage: job.stage,
-  error: job.error,
-  examId: job.examId,
-  ahead, // số lượt phía trước trong hàng đợi (chỉ có nghĩa khi QUEUED)
-});
 
 export const crawlJobService = {
   // Phí mỗi lần lấy đề, để giao diện báo trước cho người dùng
@@ -48,7 +40,7 @@ export const crawlJobService = {
     if (!threadId) throw new AppError("Link không hợp lệ"); // đã được validate, giữ để thu hẹp kiểu
 
     const active = await crawlJobRepository.findActive(threadId, owner);
-    if (active) return { existed: false as const, job: toDto(active), charged: 0 };
+    if (active) return { existed: false as const, job: toJobDto(active), charged: 0 };
 
     // Khách: miễn phí nhưng chỉ 1 lượt mỗi ngày (tính cả lúc đề đã có sẵn), hết lượt thì mời đăng ký
     if (!isMember(owner)) {
@@ -83,7 +75,7 @@ export const crawlJobService = {
         return { existed: true as const, examId: exam.id, title: exam.title, charged: fetchPrice };
       }
       const job = await crawlJobRepository.create({ threadId, ...owner, chargedAmount: fetchPrice }, tx);
-      return { existed: false as const, job: toDto(job), charged: fetchPrice };
+      return { existed: false as const, job: toJobDto(job), charged: fetchPrice };
     });
 
     // Mỗi lần bị trừ phí đều báo qua email (sau khi transaction đã commit)
@@ -125,7 +117,7 @@ export const crawlJobService = {
     const job = await crawlJobRepository.findById(id);
     const mine = isMember(actor.owner) ? job?.userId === actor.owner.userId : job?.guestId === actor.owner.guestId;
     if (!job || (!mine && !actor.isAdmin)) throw AppError.notFound("Không tìm thấy tiến trình");
-    return toDto(job, job.status === "QUEUED" ? await crawlJobRepository.countAhead(job.id) : 0);
+    return toJobDto(job, job.status === "QUEUED" ? await crawlJobRepository.countAhead(job.id) : 0);
   },
 
   // Worker đăng ký để được đánh thức khi có job mới
