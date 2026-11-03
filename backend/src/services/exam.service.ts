@@ -10,7 +10,18 @@ import { toMeta, type PaginationQuery } from "../utils/pagination";
 // Ảnh được phục vụ tĩnh tại /api/v1/files (xem app.ts)
 const imageUrlOf = (imagePath: string) => `/api/v1/files/${imagePath}`;
 
+// Người dùng chỉ thấy lời nhắn chung; lý do kỹ thuật nằm ở báo cáo và log để admin xem
+const failedMessage = (source: string) =>
+  source === "FAILED" || source === "DEFAULT" ? "AI chưa phân tích được đáp án của đề này. Đề chỉ xem được cho tới khi có đáp án." : null;
+
 export const examService = {
+  // Người dùng bấm "Thử lại" trên đề FAILED (có thời gian chờ giữa hai lần để không đốt token)
+  async retrySolve(actor: Actor, id: number) {
+    await this.assertAccess(actor, id);
+    const result = await examSolveService.retry(id);
+    if (result === "cooldown") throw AppError.conflict("Vừa thử lại xong, vui lòng đợi ít phút rồi thử lại");
+    return { result };
+  },
   // Đề nhập xong (hoặc đã có sẵn) đều vào kho của người nhập: thành viên hoặc khách
   addToLibrary: (owner: Owner, examId: number, db?: Db) => userExamRepository.add(owner, examId, db),
 
@@ -53,7 +64,8 @@ export const examService = {
       threadId: exam.threadId,
       title: exam.title,
       sourceUrl: exam.sourceUrl,
-      answerStatus: exam.answerSource, // PENDING = AI đang phân tích đáp án, làm bài trước được
+      answerStatus: exam.answerSource, // PENDING = AI đang phân tích, FAILED = AI lỗi: cả hai chỉ xem đề, chưa làm bài được
+      answerError: failedMessage(exam.answerSource),
       questions: exam.questions.map((q) => ({
         number: q.number,
         imageUrl: imageUrlOf(q.imagePath),
@@ -69,6 +81,7 @@ export const examService = {
     if (!exam) throw AppError.notFound("Không tìm thấy đề");
     return {
       status: exam.answerSource,
+      answerError: failedMessage(exam.answerSource),
       answers: exam.questions.map((q) => ({ number: q.number, correct: q.answer.split(/\s+/).filter(Boolean) })),
     };
   },

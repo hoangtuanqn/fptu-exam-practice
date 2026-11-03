@@ -2,7 +2,8 @@ import type { CrawlJob } from "@prisma/client";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { storageDir } from "../configs/env";
-import { DEFAULT_ANSWER, EXAM_IMAGES_DIR, EXAM_STORAGE_DIR } from "../constants/crawler";
+import { EXAM_IMAGES_DIR, EXAM_STORAGE_DIR } from "../constants/crawler";
+import { AI_REPORT_FAILED_PREFIX } from "../constants/ai";
 import { crawlJobRepository } from "../repositories/crawl-job.repository";
 import { examRepository, isDuplicateThread } from "../repositories/exam.repository";
 import { threadUrl } from "../utils/fuo-url";
@@ -52,8 +53,8 @@ export const examImportService = {
       const sourceUrl = thread.canonicalUrl ?? threadUrl(threadId);
       await writeCommentsFile(dir, { title: thread.title, url: sourceUrl }, withComments);
 
-      // Đáp án: nếu AI đã bật thì để AI giải NỀN sau khi lưu (đề dùng được ngay, đáp án hiện "đang phân tích"),
-      // không thì dùng đáp án tạm. Đáp án rỗng nghĩa là chưa chấm được.
+      // Đáp án do AI giải NỀN sau khi lưu: đề xem được ngay nhưng chưa làm bài được cho tới khi có đủ đáp án.
+      // Không có đáp án giả: AI chưa dùng được thì đề ở trạng thái FAILED (chỉ xem), có thể giải lại sau.
       const ai = await aiSettingService.get();
       const useAi = ai.enabled && Boolean(ai.apiKey);
 
@@ -65,14 +66,15 @@ export const examImportService = {
         author: thread.author,
         postedAt: thread.postedAt,
         createdById: job.userId ?? undefined,
-        answerSource: useAi ? "PENDING" : "DEFAULT",
+        answerSource: useAi ? "PENDING" : "FAILED",
+        aiReport: useAi ? undefined : `${AI_REPORT_FAILED_PREFIX}AI chưa được bật hoặc chưa có khóa Gemini`,
         questions: withComments.map(({ image }, i) => ({
           number: i + 1, // thứ tự trong thread = số câu
           name: image.name,
           imagePath: imagePathOf(threadId, downloaded[i]!.file),
           sourceImage: image.url.split("?")[0]!, // bỏ token tạm
           mediaUrl: image.mediaUrl,
-          answer: useAi ? "" : DEFAULT_ANSWER,
+          answer: "",
         })),
       });
       if (useAi) examSolveService.enqueue(exam.id); // sau khi đề đã lưu: AI giải trong nền

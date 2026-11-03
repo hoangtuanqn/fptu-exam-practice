@@ -4,7 +4,7 @@ import { parseSiteTime } from "../utils/html";
 import { toSkipTake, type PaginationQuery } from "../utils/pagination";
 
 // PENDING = AI đang phân tích đáp án (đề đã dùng được, chỉ chưa chấm được)
-export type AnswerSource = "PENDING" | "DEFAULT" | "AI" | "MANUAL";
+export type AnswerSource = "PENDING" | "FAILED" | "DEFAULT" | "AI" | "MANUAL";
 
 export interface NewExam {
   threadId: string;
@@ -49,7 +49,7 @@ export const examRepository = {
   findAnswers: (id: number) =>
     prisma.exam.findUnique({
       where: { id },
-      select: { answerSource: true, questions: { orderBy: { number: "asc" }, select: { number: true, answer: true } } },
+      select: { answerSource: true, aiReport: true, questions: { orderBy: { number: "asc" }, select: { number: true, answer: true } } },
     }),
 
   // Đề đang dùng đáp án tạm mà AI chưa từng chạy: chuyển sang chờ AI (xóa đáp án A giả)

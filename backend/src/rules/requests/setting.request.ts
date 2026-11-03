@@ -42,7 +42,7 @@ export type UpdateSepayBody = z.infer<typeof updateSepayBody>;
 export const updateAiBody = z.object({
   enabled: z.boolean(),
   apiKey: z.string().trim().max(300).optional(), // để trống = giữ khóa cũ
-  model: z.string().trim().regex(/^[a-z0-9][a-z0-9.\-]{2,60}$/i, "Tên model không hợp lệ, ví dụ gemini-2.5-pro"),
+  model: z.string().trim().regex(/^[a-z0-9][a-z0-9.\-]{2,60}$/i, "Tên model không hợp lệ, ví dụ gemini-3.1-pro-preview"),
   useSearch: z.boolean(),
 });
 
