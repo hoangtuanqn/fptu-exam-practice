@@ -6,6 +6,7 @@ import { RoleBadge, UserStatusBadge } from "@/shared/components/StatusBadge";
 import { Card, PageHeader } from "@/shared/ui/Card";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { inputClass } from "@/shared/ui/Input";
+import { Segmented } from "@/shared/ui/Segmented";
 import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
 import { useApi } from "@/shared/hooks/useApi";
 import { useDebounce } from "@/shared/hooks/useDebounce";
@@ -41,16 +42,26 @@ export default function UsersPage() {
               className={`${inputClass()} pl-9`}
             />
           </div>
-          <select value={role} onChange={(e) => setRole(e.target.value as Role | "")} aria-label="Lọc theo vai trò" className={`${inputClass()} !w-auto`}>
-            <option value="">Mọi vai trò</option>
-            <option value="USER">Thành viên</option>
-            <option value="ADMIN">Quản trị</option>
-          </select>
-          <select value={status} onChange={(e) => setStatus(e.target.value as UserStatus | "")} aria-label="Lọc theo trạng thái" className={`${inputClass()} !w-auto`}>
-            <option value="">Mọi trạng thái</option>
-            <option value="ACTIVE">Hoạt động</option>
-            <option value="BANNED">Bị khoá</option>
-          </select>
+          <Segmented
+            label="Lọc theo vai trò"
+            value={role}
+            onChange={setRole}
+            options={[
+              { value: "", label: "Tất cả" },
+              { value: "USER", label: "Thành viên" },
+              { value: "ADMIN", label: "Quản trị" },
+            ]}
+          />
+          <Segmented
+            label="Lọc theo trạng thái"
+            value={status}
+            onChange={setStatus}
+            options={[
+              { value: "", label: "Mọi trạng thái" },
+              { value: "ACTIVE", label: "Hoạt động" },
+              { value: "BANNED", label: "Bị khoá" },
+            ]}
+          />
         </div>
 
         {loading && !data ? (
