@@ -1,11 +1,25 @@
 import cron from "node-cron";
 import { z } from "zod";
 
-// Chỉ cho cron 5 trường (tối thiểu 1 phút/lần) để không dồn dập gọi API SePay
+// Cron 5 trường (phút giờ ngày tháng thứ, tối thiểu 1 phút/lần) hoặc 6 trường (thêm GIÂY ở đầu).
+// Với 6 trường chỉ nhận giây dạng "giá trị cố định" hoặc "*/N" với N >= 10, để không gọi API SePay quá dồn dập.
+const MIN_SECONDS_STEP = 10;
+
+const validCron = (value: string) => {
+  const parts = value.split(/\s+/);
+  if (![5, 6].includes(parts.length) || !cron.validate(value)) return false;
+  if (parts.length === 5) return true;
+
+  const seconds = parts[0]!;
+  if (/^\d{1,2}$/.test(seconds)) return true; // giây cố định: chạy một lần mỗi phút
+  const step = seconds.match(/^\*\/(\d{1,2})$/);
+  return !!step && Number(step[1]) >= MIN_SECONDS_STEP;
+};
+
 const cronExpression = z
   .string()
   .trim()
-  .refine((v) => v.split(/\s+/).length === 5 && cron.validate(v), "Biểu thức cron không hợp lệ (5 trường)");
+  .refine(validCron, "Biểu thức cron không hợp lệ (5 trường, hoặc 6 trường có giây với bước tối thiểu 10 giây, ví dụ */10 * * * * *)");
 
 export const updateSepayBody = z.object({
   apiToken: z.string().trim().max(255).optional(),

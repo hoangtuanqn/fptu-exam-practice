@@ -11,6 +11,8 @@ import { Input, PasswordInput } from "@/shared/ui/Input";
 import { Switch } from "@/shared/ui/Switch";
 
 const CRON_PRESETS = [
+  { label: "Mỗi 10 giây", value: "*/10 * * * * *" },
+  { label: "Mỗi 30 giây", value: "*/30 * * * * *" },
   { label: "Mỗi phút", value: "* * * * *" },
   { label: "Mỗi 2 phút", value: "*/2 * * * *" },
   { label: "Mỗi 5 phút", value: "*/5 * * * *" },
@@ -95,7 +97,14 @@ export function SepayConfigForm({ initial, onSaved }: { initial: SepayAdminConfi
             <Switch checked={form.cronEnabled} onChange={(v) => set("cronEnabled", v)} label="Bật cron đối soát" />
           </div>
           <div className={`mt-4 space-y-2 ${form.cronEnabled ? "" : "pointer-events-none opacity-50"}`}>
-            <Input label="Lịch chạy (cron 5 trường)" className="font-mono" value={form.cronExpression} onChange={text("cronExpression")} error={fieldErrors.cronExpression} />
+            <Input
+              label="Lịch chạy (cron)"
+              className="font-mono"
+              value={form.cronExpression}
+              onChange={text("cronExpression")}
+              error={fieldErrors.cronExpression}
+              hint="5 trường: phút giờ ngày tháng thứ (tối thiểu mỗi phút). Thêm trường GIÂY ở đầu (6 trường) để chạy dưới 1 phút, ví dụ */10 * * * * * = mỗi 10 giây (bước giây tối thiểu 10)."
+            />
             <div className="flex flex-wrap gap-2">
               {CRON_PRESETS.map((p) => (
                 <button
