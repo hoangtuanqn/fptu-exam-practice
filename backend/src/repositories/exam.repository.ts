@@ -1,6 +1,9 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../configs/prisma";
 import { parseSiteTime } from "../utils/html";
+import { toSkipTake, type PaginationQuery } from "../utils/pagination";
+
+export type AnswerSource = "DEFAULT" | "AI" | "MANUAL";
 
 export interface NewExam {
   threadId: string;
@@ -9,6 +12,8 @@ export interface NewExam {
   author?: string;
   postedAt?: string;
   createdById?: number;
+  answerSource: AnswerSource;
+  aiReport?: string;
   questions: {
     number: number;
     name: string;
@@ -16,7 +21,6 @@ export interface NewExam {
     sourceImage: string;
     mediaUrl?: string;
     answer: string;
-    comments: { externalId: string; author: string; authorScore?: string; time: string; text: string; url: string }[];
   }[];
 }
 
@@ -33,7 +37,31 @@ export const examRepository = {
       include: { questions: { orderBy: { number: "asc" }, select: { number: true, imagePath: true, answer: true } } },
     }),
 
-  // Đề + câu hỏi + bình luận được ghi trong một transaction: hoặc đủ, hoặc không có gì
+  // Dữ liệu để nhờ AI giải lại: tên + đường dẫn ảnh từng câu
+  findForSolve: (id: number) =>
+    prisma.exam.findUnique({
+      where: { id },
+      include: { questions: { orderBy: { number: "asc" }, select: { number: true, name: true, imagePath: true } } },
+    }),
+
+  findByThreadIdOfId: (id: number) => prisma.exam.findUnique({ where: { id }, select: { id: true } }),
+
+  findReport: (id: number) =>
+    prisma.exam.findUnique({ where: { id }, select: { id: true, title: true, threadId: true, answerSource: true, aiReport: true } }),
+
+  async listAll(query: PaginationQuery) {
+    const [items, total] = await Promise.all([
+      prisma.exam.findMany({
+        select: { id: true, title: true, threadId: true, totalQuestions: true, answerSource: true, createdAt: true },
+        orderBy: { id: "desc" },
+        ...toSkipTake(query),
+      }),
+      prisma.exam.count(),
+    ]);
+    return { items, total };
+  },
+
+  // Đề + câu hỏi được ghi trong một transaction: hoặc đủ, hoặc không có gì. (Bình luận lưu ở file comments.txt, không lưu DB)
   create: (data: NewExam) =>
     prisma.$transaction(
       async (tx) => {
@@ -46,39 +74,24 @@ export const examRepository = {
             postedAt: parseSiteTime(data.postedAt),
             totalQuestions: data.questions.length,
             createdById: data.createdById,
+            answerSource: data.answerSource,
+            aiReport: data.aiReport,
           },
         });
-
-        for (const q of data.questions) {
-          const question = await tx.examQuestion.create({
-            data: {
-              examId: exam.id,
-              number: q.number,
-              name: q.name,
-              imagePath: q.imagePath,
-              sourceImage: q.sourceImage,
-              mediaUrl: q.mediaUrl,
-              answer: q.answer,
-            },
-          });
-          if (q.comments.length) {
-            await tx.examComment.createMany({
-              data: q.comments.map((c) => ({
-                questionId: question.id,
-                externalId: c.externalId,
-                author: c.author,
-                authorScore: c.authorScore,
-                postedAt: parseSiteTime(c.time),
-                text: c.text,
-                url: c.url,
-              })),
-            });
-          }
-        }
+        await tx.examQuestion.createMany({ data: data.questions.map((q) => ({ ...q, examId: exam.id })) });
         return exam;
       },
       { timeout: 60_000 },
     ),
+
+  // Cập nhật đáp án cả đề (sau khi AI giải lại): chạy trong một transaction
+  updateAnswers: (examId: number, answers: string[], source: AnswerSource, report: string | null) =>
+    prisma.$transaction(async (tx) => {
+      for (const [i, answer] of answers.entries()) {
+        await tx.examQuestion.updateMany({ where: { examId, number: i + 1 }, data: { answer } });
+      }
+      await tx.exam.update({ where: { id: examId }, data: { answerSource: source, aiReport: report } });
+    }),
 };
 
 // Hai lượt nhập cùng một thread chạy gần nhau: lượt đến sau chạm unique `thread_id`

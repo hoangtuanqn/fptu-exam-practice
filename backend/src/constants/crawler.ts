@@ -23,5 +23,6 @@ export const FUO_HOST = "fuoverflow.com";
 // Đáp án tạm cho mọi câu cho tới khi có logic xác định đáp án đúng từ bình luận
 export const DEFAULT_ANSWER = "A";
 
-// Thư mục con trong STORAGE_DIR chứa ảnh đề: exams/<threadId>/<tên>.webp
+// Thư mục của một đề trong STORAGE_DIR: exams/<threadId>/ gồm images/<tên>.webp và comments.txt
 export const EXAM_STORAGE_DIR = "exams";
+export const EXAM_IMAGES_DIR = "images";

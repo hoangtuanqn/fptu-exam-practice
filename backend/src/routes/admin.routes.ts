@@ -5,10 +5,12 @@ import { listBankTxQuery, listDepositsQuery } from "../rules/requests/deposit.re
 import { adminSepayController } from "../controllers/admin.sepay.controllers";
 import { adminDepositController } from "../controllers/admin.deposit.controllers";
 import { adminSettingController } from "../controllers/admin.setting.controllers";
+import { adminAiController } from "../controllers/admin.ai.controllers";
 import { adminCrawlerController } from "../controllers/admin.crawler.controllers";
 import { authenticate, requireAdmin } from "../middlewares/auth.middlewares";
-import { updateCrawlerBody, updateSepayBody } from "../rules/requests/setting.request";
+import { updateAiBody, updateCrawlerBody, updateSepayBody } from "../rules/requests/setting.request";
 import { validate } from "../middlewares/validate.middlewares";
+import { paginationQuery } from "../utils/pagination";
 import { adjustBalanceBody, idParam, listUsersQuery, updateUserBody } from "../rules/requests/admin.request";
 
 const adminRouter = Router();
@@ -39,5 +41,12 @@ adminRouter.put("/settings/sepay", validate(updateSepayBody), adminSettingContro
 
 adminRouter.get("/settings/crawler", adminCrawlerController.get);
 adminRouter.put("/settings/crawler", validate(updateCrawlerBody), adminCrawlerController.update);
+
+adminRouter.get("/settings/ai", adminAiController.getSettings);
+adminRouter.put("/settings/ai", validate(updateAiBody), adminAiController.updateSettings);
+
+adminRouter.get("/exams", validate(paginationQuery, "query"), adminAiController.listExams);
+adminRouter.post("/exams/:id/solve", validate(idParam, "params"), adminAiController.solve);
+adminRouter.get("/exams/:id/report", validate(idParam, "params"), adminAiController.report);
 
 export default adminRouter;
