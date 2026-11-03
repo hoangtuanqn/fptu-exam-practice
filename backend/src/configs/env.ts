@@ -19,6 +19,7 @@ const schema = z.object({
   PASSWORD_RESET_EXPIRES_MIN: z.coerce.number().default(30),
   // Gemini: khóa mặc định khi admin chưa nhập trong trang quản trị; AI_PROMPT_FILE đổi file prompt hệ thống
   GEMINI_API_KEY: z.string().optional(),
+  AIMLAPI_KEY: z.string().optional(), // khóa AIMLAPI mặc định (nhà cung cấp "aimlapi")
   AI_PROMPT_FILE: z.string().optional(),
   STORAGE_DIR: z.string().default("storage"), // nơi lưu ảnh đề đã crawl
   ADMIN_EMAIL: z.string().default("admin@example.com"),

@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { storageDir } from "../configs/env";
 import { EXAM_IMAGES_DIR, EXAM_STORAGE_DIR } from "../constants/crawler";
-import { AI_REPORT_FAILED_PREFIX } from "../constants/ai";
+import { AI_REPORT_FAILED_PREFIX, aiReady } from "../constants/ai";
 import { crawlJobRepository } from "../repositories/crawl-job.repository";
 import { examRepository, isDuplicateThread } from "../repositories/exam.repository";
 import { threadUrl } from "../utils/fuo-url";
@@ -56,7 +56,7 @@ export const examImportService = {
       // Đáp án do AI giải NỀN sau khi lưu: đề xem được ngay nhưng chưa làm bài được cho tới khi có đủ đáp án.
       // Không có đáp án giả: AI chưa dùng được thì đề ở trạng thái FAILED (chỉ xem), có thể giải lại sau.
       const ai = await aiSettingService.get();
-      const useAi = ai.enabled && Boolean(ai.apiKey);
+      const useAi = aiReady(ai);
 
       await stage("Đang lưu vào cơ sở dữ liệu");
       const exam = await examRepository.create({

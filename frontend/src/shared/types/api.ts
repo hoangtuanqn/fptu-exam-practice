@@ -89,10 +89,14 @@ export interface CrawlerAdminConfig {
 
 export interface AiAdminConfig {
   enabled: boolean;
+  provider: "gemini" | "aimlapi";
   model: string;
+  aimlModel: string;
   useSearch: boolean;
   hasApiKey: boolean;
   apiKeyPreview: string;
+  hasAimlApiKey: boolean;
+  aimlApiKeyPreview: string;
 }
 
 export type AnswerSource = "PENDING" | "FAILED" | "DEFAULT" | "AI" | "MANUAL";

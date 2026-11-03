@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { DEFAULT_PROMPT_FILE, type AiConfig } from "../../constants/ai";
+import { DEFAULT_PROMPT_FILE, activeKey, type AiConfig } from "../../constants/ai";
+import { chatCompletion } from "./aiml.client";
 import { generateContent, type GeminiPart } from "./gemini.client";
 
 export interface SolveQuestion {
@@ -68,7 +69,7 @@ export function parseAnswers(text: string, n: number): { answers: string[]; repo
 
 /** Gửi toàn bộ ảnh + bình luận + prompt hệ thống cho Gemini và đọc lại danh sách đáp án. */
 export async function solveExam(config: AiConfig, input: SolveInput): Promise<SolveResult> {
-  if (!config.apiKey) throw new Error("Chưa cấu hình khóa Gemini");
+  if (!activeKey(config)) throw new Error("Chưa cấu hình khóa API cho nhà cung cấp AI đang chọn");
   const n = input.questions.length;
   if (n === 0) throw new Error("Đề không có câu nào");
 
@@ -88,6 +89,9 @@ export async function solveExam(config: AiConfig, input: SolveInput): Promise<So
       : "Không có comments.txt cho đề này, hãy tự giải và tra cứu.",
   });
 
-  const text = await generateContent({ apiKey: config.apiKey, model: config.model, system, parts, useSearch: config.useSearch });
+  const text =
+    config.provider === "aimlapi"
+      ? await chatCompletion({ apiKey: config.aimlApiKey, model: config.aimlModel, system, parts })
+      : await generateContent({ apiKey: config.apiKey, model: config.model, system, parts, useSearch: config.useSearch });
   return parseAnswers(text, n);
 }

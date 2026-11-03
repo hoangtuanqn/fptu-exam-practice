@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { storageDir } from "../configs/env";
-import { AI_REPORT_FAILED_PREFIX, AI_RETRY_COOLDOWN_MS } from "../constants/ai";
+import { AI_REPORT_FAILED_PREFIX, aiReady, AI_RETRY_COOLDOWN_MS } from "../constants/ai";
 import { EXAM_STORAGE_DIR } from "../constants/crawler";
 import { examRepository } from "../repositories/exam.repository";
 import { solveExam } from "./ai/exam-solver.service";
@@ -89,7 +89,7 @@ export const examSolveService = {
     const exam = await examRepository.findAnswerSource(examId);
     if (exam?.answerSource !== "DEFAULT" && exam?.answerSource !== "FAILED") return false;
     const ai = await aiSettingService.get();
-    if (!ai.enabled || !ai.apiKey) return false;
+    if (!aiReady(ai)) return false;
     await examRepository.markPending(examId);
     this.enqueue(examId);
     return true;
@@ -103,7 +103,7 @@ export const examSolveService = {
     const last = lastError.get(examId);
     if (last && Date.now() - last.at < AI_RETRY_COOLDOWN_MS) return "cooldown";
     const ai = await aiSettingService.get();
-    if (!ai.enabled || !ai.apiKey) return "not-needed";
+    if (!aiReady(ai)) return "not-needed";
     await examRepository.markPending(examId);
     this.enqueue(examId);
     return "started";
