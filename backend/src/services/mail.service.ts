@@ -3,6 +3,7 @@ import { env } from "../configs/env";
 import { isMailConfigured, mailer, mailFrom } from "../configs/mailer";
 import { MAIL_ASSETS_DIR, MAIL_BANNERS, MAIL_BRAND, type MailBanner } from "../constants/mail";
 import { renderResetPasswordEmail } from "../mail/templates/reset-password";
+import { renderVerifyEmail } from "../mail/templates/verify-email";
 import {
   renderChargeEmail,
   renderDepositEmail,
@@ -20,11 +21,13 @@ import {
 
 import {
   renderAccountStatusEmail,
+  renderEmailChangedEmail,
   renderAdjustEmail,
   renderPasswordChangedEmail,
   renderRefundEmail,
   renderWelcomeEmail,
   type AdjustEmailInput,
+  type EmailChangedInput,
   type PasswordChangedEmailInput,
   type RefundEmailInput,
   type WelcomeEmailInput,
@@ -68,6 +71,12 @@ export const mailService = {
 
   sendDepositSuccess: (to: string, input: DepositEmailInput) =>
     send(to, `${tag} Nạp credit thành công +${credit(input.amount)} · ${input.code}`, MAIL_BANNERS.deposit, renderDepositEmail(input)),
+
+  sendVerifyEmail: (to: string, input: { name: string; link: string; expiresHours: number }) =>
+    send(to, `${tag} Xác minh email của bạn`, MAIL_BANNERS.welcome, renderVerifyEmail(input)),
+
+  sendEmailChanged: (to: string, input: EmailChangedInput) =>
+    send(to, `${tag} Email đăng nhập của bạn vừa được đổi`, MAIL_BANNERS.security, renderEmailChangedEmail(input)),
 
   sendGiftCodeRedeemed: (to: string, input: GiftCodeEmailInput) =>
     send(to, `${tag} Nhận giftcode +${credit(input.amount)} · ${input.code}`, MAIL_BANNERS.deposit, renderGiftCodeEmail(input)),

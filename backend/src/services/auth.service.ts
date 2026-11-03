@@ -9,6 +9,7 @@ import { signToken } from "../utils/jwt";
 import { comparePassword, hashPassword } from "../utils/password";
 import { referralService } from "./referral.service";
 import { mailService } from "./mail.service";
+import { emailVerificationService } from "./email-verification.service";
 import { notificationService } from "./notification.service";
 
 const INVALID_LOGIN = "Email hoặc mật khẩu không đúng";
@@ -36,7 +37,7 @@ export const authService = {
       });
       return { user: (await userRepository.findById(created.id, tx))!, notices: rewards };
     });
-    notificationService.welcome(user);
+    await emailVerificationService.send(user.id, user.email).catch((err: Error) => console.error(`[verify-email] không gửi được thư xác minh: ${err.message}`));
     referralService.notify(notices);
     return { token: signToken(user.id), user };
   },

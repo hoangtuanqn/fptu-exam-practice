@@ -33,3 +33,9 @@ export type ForgotPasswordBody = z.infer<typeof forgotPasswordBody>;
 export type ResetPasswordBody = z.infer<typeof resetPasswordBody>;
 export type RegisterBody = z.infer<typeof registerBody>;
 export type LoginBody = z.infer<typeof loginBody>;
+
+export const verifyEmailBody = z.object({
+  token: z.string().min(20, "Liên kết không hợp lệ").max(200, "Liên kết không hợp lệ"),
+});
+
+export type VerifyEmailBody = z.infer<typeof verifyEmailBody>;
