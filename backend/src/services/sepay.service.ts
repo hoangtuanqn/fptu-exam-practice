@@ -5,6 +5,7 @@ import { depositRepository } from "../repositories/deposit.repository";
 import { settingRepository } from "../repositories/setting.repository";
 import { AppError } from "../rules/error";
 import { sepayClient, type SepayTransaction } from "./sepay.client";
+import { notificationService } from "./notification.service";
 import { settingService } from "./setting.service";
 import { walletService } from "./wallet.service";
 
@@ -39,6 +40,7 @@ const normalize = (tx: SepayTransaction) => ({
 });
 
 // Xử lý MỘT giao dịch trong một DB transaction: chiếm lệnh → ghi giao dịch ngân hàng → cộng ví.
+// Trả về thông tin để gửi email báo nạp tiền; việc gửi thư làm ở ngoài transaction.
 // Nếu sepayId đã tồn tại (unique) toàn bộ bị rollback nên không thể cộng tiền hai lần.
 const processTransaction = async (tx: SepayTransaction, config: SepayConfig) => {
   const data = normalize(tx);
@@ -53,16 +55,19 @@ const processTransaction = async (tx: SepayTransaction, config: SepayConfig) => 
       status: matched ? "MATCHED" : "UNMATCHED",
       depositOrderId: matched ? order!.id : null,
     });
-    if (matched) {
-      // Cộng đúng số tiền thực nhận (có thể khác số tiền khai báo trong lệnh)
-      await walletService.applyChange(db, {
-        userId: order!.userId,
-        amount: data.amountIn,
-        type: "DEPOSIT",
-        note: `Nạp tiền ${order!.code}`,
-      });
-    }
-    return matched;
+    if (!matched) return { matched: false as const };
+
+    // Cộng đúng số tiền thực nhận (có thể khác số tiền khai báo trong lệnh)
+    const entry = await walletService.applyChange(db, {
+      userId: order!.userId,
+      amount: data.amountIn,
+      type: "DEPOSIT",
+      note: `Nạp tiền ${order!.code}`,
+    });
+    return {
+      matched: true as const,
+      notice: { userId: order!.userId, code: order!.code, amount: data.amountIn, balanceAfter: entry.balanceAfter },
+    };
   });
 };
 
@@ -87,7 +92,11 @@ const runSync = async (): Promise<SyncResult> => {
   let matched = 0;
   for (const tx of fresh) {
     try {
-      if (await processTransaction(tx, config)) matched++;
+      const result = await processTransaction(tx, config);
+      if (result.matched) {
+        matched++;
+        notificationService.depositSuccess(result.notice); // sau khi transaction cộng tiền đã commit
+      }
       created++;
     } catch (err) {
       if (!isDuplicate(err)) throw err; // giao dịch vừa được tiến trình khác xử lý
