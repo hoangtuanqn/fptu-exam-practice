@@ -1,6 +1,6 @@
 import { lazy } from "react";
 import { Navigate, Route } from "react-router-dom";
-import { Bot, DatabaseZap, FileText, Gift, Landmark, LayoutDashboard, Receipt, Settings, Users } from "lucide-react";
+import { Bot, DatabaseZap, FileText, Gift, MessageSquareWarning, Landmark, LayoutDashboard, Receipt, Settings, Users } from "lucide-react";
 import type { NavItem } from "@/shared/layout/PanelLayout";
 
 /**
@@ -8,7 +8,7 @@ import type { NavItem } from "@/shared/layout/PanelLayout";
  *   overview/  Tổng quan
  *   users/     Thành viên
  *   finance/   Lệnh nạp, giao dịch ngân hàng, giftcode, cấu hình SePay
- *   content/   Đề thi, cấu hình lấy đề, AI giải đáp án
+ *   content/   Đề thi, báo cáo đáp án, cấu hình lấy đề, AI giải đáp án
  * Menu và đường dẫn khai báo ở đây, thêm trang mới chỉ cần sửa file này.
  */
 const DashboardPage = lazy(() => import("./overview/DashboardPage"));
@@ -19,6 +19,7 @@ const GiftCodesPage = lazy(() => import("./finance/GiftCodesPage"));
 const SepayPage = lazy(() => import("./finance/SepayPage"));
 const ExamsPage = lazy(() => import("./content/ExamsPage"));
 const CrawlerPage = lazy(() => import("./content/CrawlerPage"));
+const ReportsPage = lazy(() => import("./content/ReportsPage"));
 const AiPage = lazy(() => import("./content/AiPage"));
 
 export const ADMIN_NAV: NavItem[] = [
@@ -29,6 +30,7 @@ export const ADMIN_NAV: NavItem[] = [
   { to: "/admin/gift-codes", label: "Giftcode", icon: Gift, group: "Tài chính" },
   { to: "/admin/sepay", label: "Cấu hình SePay", icon: Settings, group: "Tài chính" },
   { to: "/admin/exams", label: "Đề thi", icon: FileText, group: "Nội dung & AI" },
+  { to: "/admin/reports", label: "Báo cáo đáp án", icon: MessageSquareWarning, group: "Nội dung & AI" },
   { to: "/admin/crawler", label: "Cấu hình lấy đề", icon: DatabaseZap, group: "Nội dung & AI" },
   { to: "/admin/ai", label: "AI giải đáp án", icon: Bot, group: "Nội dung & AI" },
 ];
@@ -43,6 +45,7 @@ export const adminRoutes = (
     <Route path="gift-codes" element={<GiftCodesPage />} />
     <Route path="sepay" element={<SepayPage />} />
     <Route path="exams" element={<ExamsPage />} />
+    <Route path="reports" element={<ReportsPage />} />
     <Route path="crawler" element={<CrawlerPage />} />
     <Route path="ai" element={<AiPage />} />
     {/* Địa chỉ cũ */}
