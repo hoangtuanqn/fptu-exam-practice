@@ -34,17 +34,17 @@ echo 'vm.swappiness=10' > /etc/sysctl.d/99-swappiness.conf
 sysctl -q -p /etc/sysctl.d/99-swappiness.conf
 
 step "Cập nhật hệ thống và cài gói nền"
-apt-get update -y
-apt-get upgrade -y
-apt-get install -y curl ca-certificates gnupg git nginx ufw mysql-server certbot python3-certbot-nginx
+apt-get -o DPkg::Lock::Timeout=900 update -y
+apt-get -o DPkg::Lock::Timeout=900 upgrade -y
+apt-get -o DPkg::Lock::Timeout=900 install -y curl ca-certificates gnupg git nginx ufw mysql-server certbot python3-certbot-nginx
 
 step "Cài Node.js 22 (kho NodeSource)"
 if ! command -v node >/dev/null || [ "$(node -v | cut -d. -f1 | tr -d v)" -lt 22 ]; then
   install -d -m 0755 /etc/apt/keyrings
   curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor --batch --yes -o /etc/apt/keyrings/nodesource.gpg
   echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" > /etc/apt/sources.list.d/nodesource.list
-  apt-get update -y
-  apt-get install -y nodejs
+  apt-get -o DPkg::Lock::Timeout=900 update -y
+  apt-get -o DPkg::Lock::Timeout=900 install -y nodejs
 fi
 npm install -g pm2
 
