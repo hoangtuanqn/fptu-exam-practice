@@ -102,17 +102,21 @@ export const crawlJobService = {
 
   // Job lỗi: đánh dấu FAILED và hoàn đúng số tiền đã trừ, cùng một transaction
   async fail(job: CrawlJob, message: string) {
-    await prisma.$transaction(async (tx) => {
+    const refunded = await prisma.$transaction(async (tx) => {
       const claimed = await crawlJobRepository.markFailed(tx, job.id, message);
       if (claimed && job.userId !== null && job.chargedAmount > 0) {
-        await walletService.applyChange(tx, {
+        const entry = await walletService.applyChange(tx, {
           userId: job.userId,
           amount: job.chargedAmount,
           type: "CRAWL_REFUND",
           note: `Hoàn phí lấy đề thread ${job.threadId} (lỗi)`,
         });
+        return { userId: job.userId, amount: job.chargedAmount, balanceAfter: entry.balanceAfter, threadId: job.threadId };
       }
+      return null;
     });
+    // Báo qua email sau khi transaction hoàn phí đã commit
+    if (refunded) notificationService.fetchRefunded(refunded);
   },
 
   // Chỉ chủ job (thành viên hoặc đúng khách đó, hoặc admin) được xem tiến độ
