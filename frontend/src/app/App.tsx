@@ -32,7 +32,7 @@ const AttemptDetailPage = lazy(() => import("@/features/history/pages/AttemptDet
 const ACCOUNT_NAV: NavItem[] = [
   { to: "/account", label: "Tổng quan", icon: LayoutDashboard, end: true, group: "Chung" },
   { to: "/account/attempts", label: "Lịch sử làm bài", icon: ListChecks, group: "Học tập" },
-  { to: "/account/deposit", label: "Nạp tiền", icon: Wallet, group: "Ví" },
+  { to: "/account/deposit", label: "Nạp credit", icon: Wallet, group: "Ví" },
   { to: "/account/transactions", label: "Lịch sử giao dịch", icon: History, group: "Ví" },
   { to: "/account/profile", label: "Hồ sơ", icon: UserRound, group: "Cài đặt" },
 ];

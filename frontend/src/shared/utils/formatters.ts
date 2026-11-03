@@ -6,6 +6,10 @@ export const formatMoney = (n: number) => `${money.format(n)} ₫`;
 // +50.000 ₫ / −20.000 ₫ (dùng cho lịch sử ví)
 export const formatSigned = (n: number) => `${n > 0 ? "+" : n < 0 ? "−" : ""}${money.format(Math.abs(n))} ₫`;
 
+// Ví tính bằng credit (1 ₫ chuyển khoản = 1 credit). ₫ chỉ dùng cho số tiền chuyển khoản ngân hàng.
+export const formatCredit = (n: number) => `${money.format(n)} credit`;
+export const formatCreditSigned = (n: number) => `${n > 0 ? "+" : n < 0 ? "−" : ""}${money.format(Math.abs(n))} credit`;
+
 export const formatDateTime = (iso: string) =>
   new Date(iso).toLocaleString("vi-VN", { dateStyle: "short", timeStyle: "short" });
 

@@ -1,5 +1,5 @@
 import { MAIL_BANNERS, MAIL_BRAND } from "../../constants/mail";
-import { formatDateTimeVN, formatMoney } from "../../utils/format";
+import { formatDateTimeVN, formatCredit } from "../../utils/format";
 import { button, details, esc, heading, list, note, p, renderLayout, signature, supportLine } from "../layout";
 
 const { company, product } = MAIL_BRAND;
@@ -106,8 +106,8 @@ export function renderRefundEmail(i: RefundEmailInput) {
     details([
       { label: "Đề", value: `<a href="${esc(i.examUrl)}" target="_blank" style="color:#0066ff">${esc(i.examLabel)}</a>` },
       { label: "Thời gian", value: esc(formatDateTimeVN(i.at)) },
-      { label: "Đã hoàn", value: `+${esc(formatMoney(i.amount))}`, strong: true },
-      { label: "Số dư hiện tại", value: esc(formatMoney(i.balanceAfter)) },
+      { label: "Đã hoàn", value: `+${esc(formatCredit(i.amount))}`, strong: true },
+      { label: "Số dư hiện tại", value: esc(formatCredit(i.balanceAfter)) },
     ]),
     button("Xem lịch sử giao dịch", i.walletUrl),
     note("Bạn có thể thử lấy lại đề này sau ít phút. Nếu lỗi lặp lại, hãy liên hệ chúng mình qua fanpage."),
@@ -118,7 +118,7 @@ export function renderRefundEmail(i: RefundEmailInput) {
     html: renderLayout({
       eyebrow: "BIÊN LAI",
       title: "Đã hoàn phí lấy đề",
-      preheader: `Đã hoàn ${formatMoney(i.amount)} vào ví. Số dư hiện tại: ${formatMoney(i.balanceAfter)}.`,
+      preheader: `Đã hoàn ${formatCredit(i.amount)} vào ví. Số dư hiện tại: ${formatCredit(i.balanceAfter)}.`,
       banner: MAIL_BANNERS.charge,
       bodyHtml,
     }),
@@ -127,8 +127,8 @@ export function renderRefundEmail(i: RefundEmailInput) {
       "",
       "Lần lấy đề không thành công, phí đã được hoàn vào ví.",
       `Đề: ${i.examLabel} (${i.examUrl})`,
-      `Đã hoàn: +${formatMoney(i.amount)}`,
-      `Số dư hiện tại: ${formatMoney(i.balanceAfter)}`,
+      `Đã hoàn: +${formatCredit(i.amount)}`,
+      `Số dư hiện tại: ${formatCredit(i.balanceAfter)}`,
       `Xem lịch sử: ${i.walletUrl}`,
     ]),
   };
@@ -147,15 +147,15 @@ export interface AdjustEmailInput {
 
 export function renderAdjustEmail(i: AdjustEmailInput) {
   const plus = i.amount >= 0;
-  const money = `${plus ? "+" : "−"}${formatMoney(Math.abs(i.amount))}`;
+  const money = `${plus ? "+" : "−"}${formatCredit(Math.abs(i.amount))}`;
   const bodyHtml = [
     p(`<strong>Xin chào ${esc(i.name)},</strong>`),
-    p(`Quản trị viên vừa ${plus ? "cộng tiền vào" : "trừ tiền từ"} ví của bạn.`),
+    p(`Quản trị viên vừa ${plus ? "cộng credit vào" : "trừ credit từ"} ví của bạn.`),
     details([
       { label: "Thời gian", value: esc(formatDateTimeVN(i.at)) },
       ...(i.note ? [{ label: "Lý do", value: esc(i.note) }] : []),
       { label: plus ? "Số tiền cộng" : "Số tiền trừ", value: esc(money), strong: true },
-      { label: "Số dư hiện tại", value: esc(formatMoney(i.balanceAfter)) },
+      { label: "Số dư hiện tại", value: esc(formatCredit(i.balanceAfter)) },
     ]),
     button("Xem lịch sử giao dịch", i.walletUrl),
     note("Thắc mắc về giao dịch này? Hãy liên hệ chúng mình qua fanpage."),
@@ -166,16 +166,16 @@ export function renderAdjustEmail(i: AdjustEmailInput) {
     html: renderLayout({
       eyebrow: "THANH TOÁN",
       title: "Số dư ví được điều chỉnh",
-      preheader: `${money} · Số dư hiện tại: ${formatMoney(i.balanceAfter)}.`,
+      preheader: `${money} · Số dư hiện tại: ${formatCredit(i.balanceAfter)}.`,
       banner: MAIL_BANNERS.deposit,
       bodyHtml,
     }),
     text: sign([
       `Xin chào ${i.name},`,
       "",
-      `Quản trị viên vừa ${plus ? "cộng tiền vào" : "trừ tiền từ"} ví của bạn: ${money}.`,
+      `Quản trị viên vừa ${plus ? "cộng credit vào" : "trừ credit từ"} ví của bạn: ${money}.`,
       i.note ? `Lý do: ${i.note}` : "",
-      `Số dư hiện tại: ${formatMoney(i.balanceAfter)}`,
+      `Số dư hiện tại: ${formatCredit(i.balanceAfter)}`,
       `Xem lịch sử: ${i.walletUrl}`,
     ].filter(Boolean)),
   };

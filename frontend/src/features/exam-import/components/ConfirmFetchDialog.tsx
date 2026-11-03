@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Link2, TriangleAlert } from "lucide-react";
 import { Button, buttonClass } from "@/shared/ui/Button";
 import { Modal, ModalActions, ModalTitle } from "@/shared/ui/Modal";
-import { formatMoney } from "@/shared/utils/formatters";
+import { formatCredit } from "@/shared/utils/formatters";
 
 interface Props {
   url: string;
@@ -41,16 +41,16 @@ export function ConfirmFetchDialog({ url, fee, balance, onCancel, onConfirm }: P
         </p>
       ) : (
         <div className="mt-3">
-          <Row label="Phí lấy đề" value={`−${formatMoney(fee)}`} strong />
-          <Row label="Số dư hiện tại" value={formatMoney(balance)} />
-          <Row label="Số dư sau khi lấy" value={formatMoney(Math.max(0, balance - fee))} danger={short} />
+          <Row label="Phí lấy đề" value={`−${formatCredit(fee)}`} strong />
+          <Row label="Số dư hiện tại" value={formatCredit(balance)} />
+          <Row label="Số dư sau khi lấy" value={formatCredit(Math.max(0, balance - fee))} danger={short} />
         </div>
       )}
 
       {short ? (
         <p className="mt-3 flex items-start gap-2 rounded-lg bg-rose-50 px-3 py-2.5 text-sm text-rose-700">
           <TriangleAlert size={16} className="mt-0.5 shrink-0" />
-          Số dư không đủ để lấy đề này. Vui lòng nạp thêm tiền.
+          Số dư không đủ để lấy đề này. Vui lòng nạp thêm credit.
         </p>
       ) : (
         !isGuest && (
@@ -66,7 +66,7 @@ export function ConfirmFetchDialog({ url, fee, balance, onCancel, onConfirm }: P
         </Button>
         {short ? (
           <Link to="/account/deposit" className={buttonClass({ variant: "primary", grow: true })}>
-            Nạp tiền
+            Nạp credit
           </Link>
         ) : (
           <Button grow variant="primary" onClick={onConfirm}>

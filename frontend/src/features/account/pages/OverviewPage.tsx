@@ -12,7 +12,7 @@ import { Badge } from "@/shared/ui/Badge";
 import { buttonClass } from "@/shared/ui/Button";
 import { Card, CardHeader, StatCard, StatGrid } from "@/shared/ui/Card";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
-import { formatDateTime, formatMoney } from "@/shared/utils/formatters";
+import { formatDateTime, formatCredit } from "@/shared/utils/formatters";
 
 const seeAll = (to: string, label = "Xem tất cả") => (
   <Link to={to} className="inline-flex items-center gap-1 text-sm font-medium text-slate-900 underline-offset-4 hover:text-brand-700 hover:underline">
@@ -47,13 +47,13 @@ export default function OverviewPage() {
             <PenLine size={16} /> Vào luyện đề
           </Link>
           <Link to="/account/deposit" className={buttonClass()}>
-            <Plus size={16} /> Nạp tiền
+            <Plus size={16} /> Nạp credit
           </Link>
         </div>
       </header>
 
       <StatGrid className="grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Số dư ví" value={formatMoney(user.balance)} note="Dùng để lấy đề từ FuOverflow" />
+        <StatCard label="Số dư ví" value={formatCredit(user.balance)} note="Dùng để lấy đề từ FuOverflow" />
         <StatCard tone="emerald" label="Đề trong kho" value={library.data?.meta.total ?? "—"} note="Đã lấy về tài khoản" />
         <StatCard tone="amber" label="Lần làm bài" value={attempts.data?.meta.total ?? "—"} note="Tổng số lần đã nộp" />
         <StatCard

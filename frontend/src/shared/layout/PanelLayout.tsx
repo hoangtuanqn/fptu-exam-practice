@@ -10,7 +10,7 @@ import { LogOut, Menu, PenLine, X, type LucideIcon } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { brand } from "@/shared/brand/brand";
 import { Logo } from "@/shared/brand/Logo";
-import { formatMoney, initials } from "@/shared/utils/formatters";
+import { formatCredit, initials } from "@/shared/utils/formatters";
 import { Footer } from "./Footer";
 import { UserMenu } from "./UserMenu";
 
@@ -210,12 +210,12 @@ export function PanelLayout({
             {user && (
               <Link
                 to="/account/deposit"
-                title="Nạp thêm tiền"
+                title="Nạp thêm credit"
                 className="hidden items-baseline gap-2 rounded-md border border-slate-300 px-3 py-1.5 transition hover:border-slate-900 sm:flex"
               >
                 <span className="eyebrow">Số dư</span>
                 <span className="text-sm font-medium tabular-nums text-slate-900">
-                  {formatMoney(user.balance)}
+                  {formatCredit(user.balance)}
                 </span>
               </Link>
             )}
