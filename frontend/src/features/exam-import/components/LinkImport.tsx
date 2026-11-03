@@ -142,7 +142,7 @@ export function LinkImport({ onImported }: Props) {
             />
           </div>
           <p className="mt-2 text-xs text-slate-500">
-            Đề mới có thể mất vài phút. Đề đã có sẵn sẽ mở ngay.
+            Đề mới có thể mất vài phút (AI giải đáp án). Đề đã có sẵn sẽ mở ngay.
           </p>
         </div>
       )}

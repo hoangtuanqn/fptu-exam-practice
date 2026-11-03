@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Route, Routes, useParams } from "react-router-dom";
-import { DatabaseZap, History, Landmark, ListChecks, LayoutDashboard, Receipt, Settings, UserRound, Users, Wallet } from "lucide-react";
+import { DatabaseZap, FileText, History, Landmark, ListChecks, LayoutDashboard, Receipt, Settings, UserRound, Users, Wallet } from "lucide-react";
 import { PanelLayout, type NavItem } from "@/shared/layout/PanelLayout";
 import { Loading } from "@/shared/ui/Feedback";
 import LoginPage from "@/features/auth/pages/LoginPage";
@@ -32,6 +32,7 @@ const BankTransactionsPage = lazy(() => import("@/features/admin/pages/BankTrans
 const SettingsPage = lazy(() => import("@/features/admin/pages/SettingsPage"));
 const AttemptsPage = lazy(() => import("@/features/history/pages/AttemptsPage"));
 const AttemptDetailPage = lazy(() => import("@/features/history/pages/AttemptDetailPage"));
+const ExamsPage = lazy(() => import("@/features/admin/pages/ExamsPage"));
 const CrawlerPage = lazy(() => import("@/features/admin/pages/CrawlerPage"));
 
 const ACCOUNT_NAV: NavItem[] = [
@@ -45,6 +46,7 @@ const ACCOUNT_NAV: NavItem[] = [
 const ADMIN_NAV: NavItem[] = [
   { to: "/admin", label: "Tổng quan", icon: LayoutDashboard, end: true, group: "Chung" },
   { to: "/admin/users", label: "Thành viên", icon: Users, group: "Quản lý" },
+  { to: "/admin/exams", label: "Đề thi", icon: FileText, group: "Quản lý" },
   { to: "/admin/deposits", label: "Lệnh nạp tiền", icon: Receipt, group: "Quản lý" },
   { to: "/admin/bank-transactions", label: "Giao dịch ngân hàng", icon: Landmark, group: "Quản lý" },
   { to: "/admin/settings", label: "Cấu hình SePay", icon: Settings, group: "Hệ thống" },
@@ -87,6 +89,7 @@ export default function App() {
           <Route path="/admin" element={<PanelLayout title="Quản trị" items={ADMIN_NAV} />}>
             <Route index element={<DashboardPage />} />
             <Route path="users" element={<UsersPage />} />
+            <Route path="exams" element={<ExamsPage />} />
             <Route path="deposits" element={<DepositsPage />} />
             <Route path="bank-transactions" element={<BankTransactionsPage />} />
             <Route path="settings" element={<SettingsPage />} />
