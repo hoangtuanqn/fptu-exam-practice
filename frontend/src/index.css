@@ -105,6 +105,17 @@ h3 {
   @apply bg-white/75 backdrop-blur-xl;
 }
 
+/* Nhãn nhỏ in hoa dùng cho tiêu đề mục trong panel (vẫn là Inter) */
+.eyebrow {
+  @apply text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500;
+}
+
+/* Gạch nền như bút dạ quang dưới một cụm chữ */
+.marker {
+  background-image: linear-gradient(transparent 62%, var(--color-accent-soft) 62%, var(--color-accent-soft) 92%, transparent 92%);
+  padding: 0 0.08em;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

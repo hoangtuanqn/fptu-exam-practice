@@ -26,20 +26,20 @@ const AttemptDetailPage = lazy(() => import("@/features/history/pages/AttemptDet
 const CrawlerPage = lazy(() => import("@/features/admin/pages/CrawlerPage"));
 
 const ACCOUNT_NAV: NavItem[] = [
-  { to: "/account", label: "Tổng quan", icon: LayoutDashboard, end: true },
-  { to: "/account/attempts", label: "Lịch sử làm bài", icon: ListChecks },
-  { to: "/account/deposit", label: "Nạp tiền", icon: Wallet },
-  { to: "/account/transactions", label: "Lịch sử giao dịch", icon: History },
-  { to: "/account/profile", label: "Hồ sơ", icon: UserRound },
+  { to: "/account", label: "Tổng quan", icon: LayoutDashboard, end: true, group: "Chung" },
+  { to: "/account/attempts", label: "Lịch sử làm bài", icon: ListChecks, group: "Học tập" },
+  { to: "/account/deposit", label: "Nạp tiền", icon: Wallet, group: "Ví" },
+  { to: "/account/transactions", label: "Lịch sử giao dịch", icon: History, group: "Ví" },
+  { to: "/account/profile", label: "Hồ sơ", icon: UserRound, group: "Cài đặt" },
 ];
 
 const ADMIN_NAV: NavItem[] = [
-  { to: "/admin", label: "Tổng quan", icon: LayoutDashboard, end: true },
-  { to: "/admin/users", label: "Thành viên", icon: Users },
-  { to: "/admin/deposits", label: "Lệnh nạp tiền", icon: Receipt },
-  { to: "/admin/bank-transactions", label: "Giao dịch ngân hàng", icon: Landmark },
-  { to: "/admin/settings", label: "Cấu hình SePay", icon: Settings },
-  { to: "/admin/crawler", label: "Cấu hình crawl", icon: DatabaseZap },
+  { to: "/admin", label: "Tổng quan", icon: LayoutDashboard, end: true, group: "Chung" },
+  { to: "/admin/users", label: "Thành viên", icon: Users, group: "Quản lý" },
+  { to: "/admin/deposits", label: "Lệnh nạp tiền", icon: Receipt, group: "Quản lý" },
+  { to: "/admin/bank-transactions", label: "Giao dịch ngân hàng", icon: Landmark, group: "Quản lý" },
+  { to: "/admin/settings", label: "Cấu hình SePay", icon: Settings, group: "Hệ thống" },
+  { to: "/admin/crawler", label: "Cấu hình crawl", icon: DatabaseZap, group: "Hệ thống" },
 ];
 
 export default function App() {
