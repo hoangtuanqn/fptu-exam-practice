@@ -50,7 +50,8 @@ Response: `{ status, message, data, meta? }`. Gửi token bằng header `Authori
 | | `GET /admin/users`, `GET/PATCH /admin/users/:id`, `POST /admin/users/:id/balance` |
 | | `GET /admin/deposits`, `GET /admin/bank-transactions` |
 | | `GET/PUT /admin/settings/sepay`, `GET /admin/sepay/status`, `POST /admin/sepay/sync` |
-| | `GET/PUT /admin/settings/crawler` |
+| | `GET/PUT /admin/settings/crawler`, `GET/PUT /admin/settings/account` (credit tặng khi đăng ký, `signupCredit`) |
+| | `GET /admin/wallet-transactions`, `GET /admin/crawl-jobs`, `GET /admin/attempts` (lịch sử, lọc theo `userId`, `search`) |
 
 ## Nạp tiền SePay
 

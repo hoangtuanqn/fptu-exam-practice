@@ -1,4 +1,10 @@
 import type {
+  AccountSettings,
+  AdminAttempt,
+  AdminCrawlJob,
+  AdminWalletTx,
+  CrawlJobStatus,
+  TransactionType,
   BankTransaction,
   BankTxStatus,
   AdminExam,
@@ -78,6 +84,15 @@ export const adminApi = {
   adjustBalance: (id: number, body: { amount: number; note: string }) =>
     http.post<User>(`/admin/users/${id}/balance`, body),
 
+  walletTransactions: (f: { page: number; userId?: string; search?: string; type?: TransactionType | "" }) =>
+    http.list<AdminWalletTx>("/admin/wallet-transactions", { ...f, limit: PAGE_SIZE }),
+  crawlJobs: (f: { page: number; userId?: string; search?: string; status?: CrawlJobStatus | "" }) =>
+    http.list<AdminCrawlJob>("/admin/crawl-jobs", { ...f, limit: PAGE_SIZE }),
+  attempts: (f: { page: number; userId?: string; search?: string; mode?: "PRACTICE" | "EXAM" | "" }) =>
+    http.list<AdminAttempt>("/admin/attempts", { ...f, limit: PAGE_SIZE }),
+  accountSettings: () => http.get<AccountSettings>("/admin/settings/account"),
+  saveAccountSettings: (body: AccountSettings) => http.put<AccountSettings>("/admin/settings/account", body),
+
   giftCodes: (page: number, filter: { q?: string; active?: "true" | "false" | "" }) =>
     http.list<GiftCode>("/admin/gift-codes", { page, limit: PAGE_SIZE, ...filter }),
   createGiftCode: (body: GiftCodeForm) => http.post<GiftCode>("/admin/gift-codes", body),
@@ -95,8 +110,8 @@ export const adminApi = {
   referralSummary: () => http.get<ReferralSummary>("/admin/referrals/summary"),
   referrals: (page: number) => http.list<AdminReferral>("/admin/referrals", { page, limit: PAGE_SIZE }),
 
-  deposits: (page: number, status?: DepositStatus | "") =>
-    http.list<DepositOrder>("/admin/deposits", { page, limit: PAGE_SIZE, status }),
+  deposits: (page: number, status?: DepositStatus | "", userId?: string) =>
+    http.list<DepositOrder>("/admin/deposits", { page, limit: PAGE_SIZE, status, userId }),
   bankTransactions: (page: number, status?: BankTxStatus | "") =>
     http.list<BankTransaction>("/admin/bank-transactions", { page, limit: PAGE_SIZE, status }),
 

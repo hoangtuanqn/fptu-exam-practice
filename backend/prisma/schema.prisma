@@ -120,6 +120,7 @@ enum TransactionType {
   EXPLAIN_REFUND // hoàn phí khi AI không giải thích được
   REFERRAL_BONUS // thưởng giới thiệu (đăng ký qua mã giới thiệu)
   REFERRAL_COMMISSION // hoa hồng khi người được giới thiệu nạp tiền
+  SIGNUP_BONUS // credit tặng mọi tài khoản mới khi đăng ký (admin cấu hình)
 }
 
 // Sổ cái ví: mỗi lần số dư đổi là một dòng (amount âm = trừ tiền)

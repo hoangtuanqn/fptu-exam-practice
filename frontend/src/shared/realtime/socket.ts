@@ -28,6 +28,11 @@ function getSocket(): Socket {
 
 export const isRealtimeConnected = () => socket?.connected ?? false;
 
+// Vào lại mọi phòng đang theo dõi. Dùng khi quyền xem đổi mà kết nối vẫn giữ (ví dụ job của khách vừa được chuyển về tài khoản)
+export function resubscribeRooms() {
+  if (socket?.connected) rooms.forEach((r) => join(socket!, r.kind, r.id));
+}
+
 // Đăng nhập/đăng xuất đổi danh tính: nối lại để server xác thực theo tài khoản mới
 export function refreshRealtimeAuth() {
   if (!socket) return;

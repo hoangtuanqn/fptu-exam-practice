@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { BookOpen } from "lucide-react";
+import { useOnLibraryChanged } from "@/features/exam-library/libraryEvents";
 import { examLibraryApi, type LibraryExam } from "@/features/exam-library/exam-library.api";
 import { formatScore } from "@/features/practice/utils/format";
 import { useApi } from "@/shared/hooks/useApi";
@@ -26,6 +27,7 @@ export default function LibraryPage() {
   const page = toPage(url.page);
   const setPage = (p: number) => setUrl({ page: String(p) });
   const { data, error, loading, reload } = useApi(() => examLibraryApi.list(page), [page]);
+  useOnLibraryChanged(reload);
   useClampPage(data?.meta, setPage);
 
   return (

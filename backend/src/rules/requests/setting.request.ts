@@ -56,6 +56,12 @@ export const updateReferralBody = z.object({
   commissionPercent: z.number("Tỉ lệ không hợp lệ").int("Phải là số nguyên").min(0, "Tối thiểu 0%").max(100, "Tối đa 100%"),
 });
 
+export const updateAccountBody = z.object({
+  signupCredit: z.number("Số credit không hợp lệ").int("Phải là số nguyên").min(0, "Tối thiểu 0").max(1_000_000, "Tối đa 1.000.000"),
+});
+
+export type UpdateAccountBody = z.infer<typeof updateAccountBody>;
+
 export type UpdateReferralBody = z.infer<typeof updateReferralBody>;
 
 export type UpdateAiBody = z.infer<typeof updateAiBody>;

@@ -6,6 +6,7 @@ import { AppError } from "../rules/error";
 import { signToken } from "../utils/jwt";
 import { hashPassword } from "../utils/password";
 import { notificationService } from "./notification.service";
+import { accountSettingService } from "./account-setting.service";
 import { referralService } from "./referral.service";
 
 const TOKENINFO_URL = "https://oauth2.googleapis.com/tokeninfo";
@@ -83,6 +84,7 @@ export const googleAuthService = {
         data: { email: profile.email, fullName: profile.name.slice(0, 100), password, referralCode: code, googleSub: profile.sub, emailVerifiedAt: new Date() },
         select: { id: true, fullName: true },
       });
+      await accountSettingService.grantSignupCredit(tx, created.id);
       const rewards = await referralService.applyAtSignup(tx, created, referralCode).catch((err: Error) => {
         console.error(`[referral] không áp dụng được mã giới thiệu: ${err.message}`);
         return [];
