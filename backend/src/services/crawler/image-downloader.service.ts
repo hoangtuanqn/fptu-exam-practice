@@ -1,12 +1,11 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import sharp from "sharp";
 import { FUO_AUTH_MESSAGE, FuoAuthError, type FuoClient } from "./fuo-client";
 import type { DownloadedImage, ImageRef } from "./types";
+import { stampWatermark } from "./watermark.service";
 
 /**
- * Tải một ảnh vào `dir` dưới dạng WebP. Ảnh nguồn đã là WebP thì ghi thẳng (không mã hóa lại: nhanh hơn, không mất chất lượng),
- * định dạng khác mới đổi sang WebP. Mọi lỗi đều ném ra với lời nhắn rõ ràng (lỗi đăng nhập có thông báo riêng).
+ * Tải một ảnh vào `dir` dưới dạng WebP, đóng dấu logo vào góc dưới bên phải rồi mới ghi xuống đĩa. Mọi lỗi đều ném ra với lời nhắn rõ ràng (lỗi đăng nhập có thông báo riêng).
  */
 export async function downloadImage(client: FuoClient, image: ImageRef, dir: string): Promise<DownloadedImage> {
   try {
@@ -18,8 +17,7 @@ export async function downloadImage(client: FuoClient, image: ImageRef, dir: str
     const input = Buffer.from(await res.arrayBuffer());
     const file = `${image.fileBase}.webp`;
     const target = path.join(dir, file);
-    if (type.startsWith("image/webp")) await fs.writeFile(target, input);
-    else await sharp(input, { animated: true }).webp({ quality: client.config.webpQuality }).toFile(target);
+    await fs.writeFile(target, await stampWatermark(input, client.config.webpQuality));
     return { image, file };
   } catch (err) {
     if (err instanceof FuoAuthError) throw new Error(FUO_AUTH_MESSAGE);
