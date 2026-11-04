@@ -15,6 +15,7 @@ authRouter.post("/reset-password", authLimiter, validate(resetPasswordBody), aut
 authRouter.post("/refresh", refreshLimiter, authController.refresh);
 authRouter.post("/logout", refreshLimiter, authController.logout);
 authRouter.get("/google/config", authController.googleConfig);
+authRouter.get("/signup-bonus", authController.signupBonus);
 authRouter.post("/google", authLimiter, validate(googleLoginBody), authController.google);
 authRouter.post("/verify-email", authLimiter, validate(verifyEmailBody), authController.verifyEmail);
 authRouter.post("/resend-verification", authenticate, authController.resendVerification);
