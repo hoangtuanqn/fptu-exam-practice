@@ -3,6 +3,7 @@ import { crawlJobRepository } from "../repositories/crawl-job.repository";
 import { examRepository } from "../repositories/exam.repository";
 import { toJobDto } from "../services/crawl-job.dto";
 import { toAnswersPayload } from "../utils/exam-answers";
+import { fileUrlOf } from "../utils/file-url";
 import { EVENTS, roomOf, type RoomKind } from "./events";
 
 /**
@@ -16,6 +17,17 @@ const hasListeners = (kind: RoomKind, id: number) => (io?.sockets.adapter.rooms.
 export const examPayload = async (examId: number) => {
   const exam = await examRepository.findAnswers(examId);
   return exam ? { examId, ...toAnswersPayload(exam) } : null;
+};
+
+// Các câu đã có ảnh của đề đang được lấy về (null nếu đề đã đủ câu hoặc không còn)
+export const questionsPayload = async (examId: number) => {
+  const exam = await examRepository.findLoadedQuestions(examId);
+  if (!exam) return null;
+  return {
+    examId,
+    total: exam.totalQuestions,
+    questions: exam.questions.map((q) => ({ number: q.number, imageUrl: fileUrlOf(q.imagePath), correct: [] as string[] })),
+  };
 };
 
 export const jobPayload = async (jobId: number) => {
@@ -34,6 +46,19 @@ export const realtimeHub = {
     if (!io || !hasListeners("exam", examId)) return;
     const payload = await examPayload(examId).catch(() => null);
     if (payload) io.to(roomOf("exam", examId)).emit(EVENTS.examAnswers, payload);
+  },
+
+  // Có thêm câu vừa tải xong: gửi toàn bộ các câu đã có (giao diện gộp theo số câu nên nhận lặp cũng không sao)
+  async publishExamQuestions(examId: number) {
+    if (!io || !hasListeners("exam", examId)) return;
+    const payload = await questionsPayload(examId).catch(() => null);
+    if (payload) io.to(roomOf("exam", examId)).emit(EVENTS.examQuestions, payload);
+  },
+
+  // Lấy đề thất bại sau khi người dùng đã mở đề: báo để họ thoát ra
+  publishExamFailed(examId: number, message: string) {
+    if (!io) return;
+    io.to(roomOf("exam", examId)).emit(EVENTS.examFailed, { examId, message });
   },
 
   // Tiến độ lấy đề vừa đổi (sang bước mới, xong, hoặc lỗi)

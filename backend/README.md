@@ -127,3 +127,11 @@ An toàn tiền bạc:
 - **Không bắt người dùng chờ AI (giao hàng từng phần):** lấy đề xong (tải hết ảnh + comments) là đề được lưu và mở ngay với `answer_source = PENDING` (đáp án rỗng, chưa chấm được). AI giải **nền** qua hàng đợi riêng (`services/exam-solve.service.ts`, tối đa 2 đề cùng lúc, tách khỏi worker crawl nên các lượt lấy đề khác không phải chờ). Giao diện hiện "AI đang phân tích đáp án…" và hỏi `GET /exams/:id/answers` mỗi 5 giây; có đáp án thì gắn vào bài đang làm, câu đã chọn giữ nguyên. Trong lúc chờ mọi câu tạm cho chọn nhiều (chưa biết loại câu).
 - **Chấm điểm:** nộp bài lúc AI chưa xong thì bảng điểm hiển thị đang chờ rồi tự chuyển sang điểm thật; bài chỉ được lưu vào lịch sử khi đã có đáp án (server cũng từ chối `409` nếu gửi sớm, để không ghi điểm sai).
 - **Phục hồi:** server tắt giữa chừng thì khi khởi động các đề còn `PENDING` được xếp lại hàng. AI lỗi: đề chuyển sang đáp án tạm `A` (`DEFAULT`) để không ai chờ mãi, lý do ghi ở `ai_report`; giải lại ở trang Đề thi của quản trị.
+
+## Lấy đề nhanh và hiện dần
+
+- Ảnh và bình luận được tải song song (`crawler.concurrency`, mặc định 4, chỉnh ở Quản trị → Cấu hình lấy đề); mỗi luồng nghỉ `requestDelayMs` giữa hai request. Request lỗi tạm thời (mạng, 5xx, 429) được thử lại tối đa 3 lần; ảnh nguồn đã là WebP thì ghi thẳng.
+- Đề được tạo ngay sau khi đọc thread (`totalQuestions` = số ảnh) và các câu ghi dần theo thứ tự. Có 2 ảnh đầu là job có `examId`, người dùng mở đề được ngay; các câu sau đến qua socket sự kiện `exam:questions`. Lấy đề lỗi giữa chừng thì đề bị gỡ và báo `exam:failed`.
+- AI giải đề dài theo lô (`AI_BATCH_SIZE` = 12 câu), gọi song song, mỗi lô chỉ kèm bình luận của các câu trong lô; tổng số lần gọi cùng lúc tối đa `AI_MAX_PARALLEL_CALLS`.
+- Log `[crawl]` và `[ai]` ghi thời gian từng giai đoạn để đo.
+

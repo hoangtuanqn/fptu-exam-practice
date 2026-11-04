@@ -50,7 +50,9 @@ export const crawlJobService = {
 
     // Khách chưa có ví nên không bị tính phí
     const fetchPrice = isMember(owner) ? (await crawlerSettingService.get()).fetchPrice : 0;
-    const exam = await examRepository.findByThreadId(threadId);
+    const found = await examRepository.findByThreadId(threadId);
+    // Đề đang được lấy dở dang thì chưa dùng được: xếp hàng như đề mới (lượt chạy sẽ lấy lại cho đủ)
+    const exam = found && (await examRepository.isComplete(found)) ? found : null;
 
     let balanceAfter: number | null = null; // số dư sau khi trừ phí, để báo qua email
     const result = await prisma.$transaction(async (tx) => {

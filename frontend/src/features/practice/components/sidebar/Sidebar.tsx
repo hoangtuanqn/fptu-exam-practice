@@ -13,6 +13,7 @@ export function Sidebar({ quiz }: { quiz: Quiz }) {
         checked={quiz.checked}
         mode={quiz.mode}
         result={quiz.result}
+        total={quiz.total}
       />
       <QuestionGrid
         questions={quiz.questions}
@@ -21,6 +22,7 @@ export function Sidebar({ quiz }: { quiz: Quiz }) {
         flagged={quiz.flagged}
         submitted={quiz.submitted}
         current={quiz.current}
+        total={quiz.total}
         onSelect={quiz.goTo}
       />
       <Legend mode={quiz.mode} submitted={quiz.submitted} />

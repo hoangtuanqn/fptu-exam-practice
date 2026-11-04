@@ -4,7 +4,8 @@ import { examImportApi } from "./exam-import.api";
 import type { CrawlJob } from "./types";
 
 const FALLBACK_POLL_MS = 2500; // chỉ dùng khi mất kết nối realtime
-const isFinished = (job: CrawlJob) => job.status === "DONE" || job.status === "FAILED";
+// Dừng chờ khi job xong/lỗi, hoặc khi đề đã có ảnh đầu tiên (examId có giá trị): người dùng mở đề ngay, các câu sau hiện dần
+const isFinished = (job: CrawlJob) => job.status === "DONE" || job.status === "FAILED" || job.examId !== null;
 
 /**
  * Chờ một job lấy đề chạy xong, nhận tiến độ qua socket (tức thời). Nếu socket không nối được thì tạm hỏi định kỳ

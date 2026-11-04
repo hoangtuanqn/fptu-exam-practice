@@ -77,7 +77,14 @@ export const examRepository = {
   findAnswerSource: (id: number) => prisma.exam.findUnique({ where: { id }, select: { answerSource: true } }),
 
   // Đề còn đang chờ AI (ví dụ server tắt giữa chừng): xếp lại hàng khi khởi động
-  findPendingIds: async () => (await prisma.exam.findMany({ where: { answerSource: "PENDING" }, select: { id: true } })).map((e) => e.id),
+  // (bỏ đề đang lấy dở: chưa đủ câu thì chưa thể giải)
+  findPendingIds: async () => {
+    const exams = await prisma.exam.findMany({
+      where: { answerSource: "PENDING" },
+      select: { id: true, totalQuestions: true, _count: { select: { questions: true } } },
+    });
+    return exams.filter((e) => e._count.questions >= e.totalQuestions).map((e) => e.id);
+  },
 
   findByThreadIdOfId: (id: number) => prisma.exam.findUnique({ where: { id }, select: { id: true } }),
 
@@ -95,6 +102,41 @@ export const examRepository = {
     ]);
     return { items, total };
   },
+
+  // Đề được tạo TRƯỚC khi có ảnh: câu hỏi thêm dần qua addQuestions, `totalQuestions` là tổng số ảnh sẽ có.
+  // Đề chỉ coi là đủ khi số câu đã lưu bằng totalQuestions (isComplete).
+  createShell: (data: Omit<NewExam, "questions"> & { totalQuestions: number }) =>
+    prisma.exam.create({
+      data: {
+        threadId: data.threadId,
+        title: data.title,
+        sourceUrl: data.sourceUrl,
+        author: data.author,
+        postedAt: parseSiteTime(data.postedAt),
+        totalQuestions: data.totalQuestions,
+        createdById: data.createdById,
+        answerSource: data.answerSource,
+        aiReport: data.aiReport,
+      },
+    }),
+
+  addQuestions: (examId: number, questions: NewExam["questions"]) =>
+    prisma.examQuestion.createMany({ data: questions.map((q) => ({ ...q, examId })), skipDuplicates: true }),
+
+  countQuestions: (examId: number) => prisma.examQuestion.count({ where: { examId } }),
+
+  isComplete: async (exam: { id: number; totalQuestions: number }) =>
+    (await prisma.examQuestion.count({ where: { examId: exam.id } })) >= exam.totalQuestions,
+
+  // Xóa đề (câu hỏi, kho của người dùng... xóa theo). Dùng khi lấy đề thất bại giữa chừng.
+  deleteById: (id: number) => prisma.exam.deleteMany({ where: { id } }),
+
+  // Các câu đã có ảnh + tổng số câu, để giao diện hiện dần khi đề đang được lấy về
+  findLoadedQuestions: (id: number) =>
+    prisma.exam.findUnique({
+      where: { id },
+      select: { totalQuestions: true, questions: { orderBy: { number: "asc" }, select: { number: true, imagePath: true, answer: true } } },
+    }),
 
   // Đề + câu hỏi được ghi trong một transaction: hoặc đủ, hoặc không có gì. (Bình luận lưu ở file comments.txt, không lưu DB)
   create: (data: NewExam) =>
