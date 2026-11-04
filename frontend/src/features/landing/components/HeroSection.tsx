@@ -3,6 +3,8 @@ import type { PickFolder } from "@/features/practice/components/FolderInput";
 import { brand, logos } from "@/shared/brand/brand";
 import { FEATURES, splitSlogan } from "../content";
 import { ExamSourcePicker } from "./ExamSourcePicker";
+import { PromoCard } from "./PromoCard";
+import { useScrollOverlap } from "../useScrollOverlap";
 
 interface Props {
   onPick: PickFolder;
@@ -14,6 +16,7 @@ interface Props {
 export function HeroSection({ onPick, onImported, userName }: Props) {
   const isGuest = !userName;
   const [sloganLead, sloganAccent] = splitSlogan(brand.slogan);
+  const { under, over } = useScrollOverlap(); // kéo xuống: ô nhập đề trượt lên chồng một phần lên thẻ ưu đãi (PC)
 
   return (
     <section className="relative isolate shrink-0 overflow-hidden">
@@ -25,10 +28,10 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
       <div aria-hidden className="absolute -left-24 -top-24 -z-10 h-80 w-80 rounded-full bg-brand-200/40 blur-3xl" />
       <div aria-hidden className="absolute -right-24 top-10 -z-10 h-72 w-72 rounded-full bg-accent-soft/40 blur-3xl" />
 
-      <div className="mx-auto w-full max-w-3xl px-5 pb-14 pt-12 text-center sm:pt-16">
+      <div className={`mx-auto w-full max-w-3xl px-5 pb-14 text-center ${isGuest ? "pt-8 sm:pt-12" : "pt-12 sm:pt-16"}`}>
         <div className="animate-fade-up">
 
-          <h1 className="mt-5 text-4xl font-semibold leading-[1.1] text-slate-900 sm:text-6xl">
+          <h1 className={`font-semibold leading-[1.1] text-slate-900 ${isGuest ? "text-2xl sm:text-4xl" : "mt-5 text-4xl sm:text-6xl"}`}>
             {userName ? (
               <>
                 Chào <span className="text-gradient">{userName}</span>, vào luyện thôi
@@ -39,29 +42,45 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
           </h1>
 
           {isGuest && (
-            <p className="mt-4 text-xl font-medium text-slate-500 sm:text-2xl">
+            <p className="mt-2 text-base font-medium text-slate-500 sm:text-xl">
               {sloganLead}
               {sloganAccent && <span className="text-gradient font-semibold">{sloganAccent}</span>}
             </p>
           )}
 
-          <p className="mx-auto mt-4 max-w-xl text-base text-slate-600">
-            Luyện đề thi FE từ kho đề của {brand.partnerName}, làm bài và nhận điểm thang 10 ngay.
-          </p>
+          {/* Khách: tiêu đề gọn để ưu đãi bên dưới là điểm nhấn đầu tiên */}
+          {!isGuest && (
+            <>
+              <p className="mx-auto mt-4 max-w-xl text-base text-slate-600">
+                Luyện đề thi FE từ kho đề của {brand.partnerName}, làm bài và nhận điểm thang 10 ngay.
+              </p>
 
-          <a
-            href={brand.partnerUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-3.5 text-xs text-slate-600 shadow-soft transition hover:border-brand-300"
-          >
-            <img src={logos.partner} alt={brand.partnerName} className="h-6 w-6 rounded-full" />
-            Kho đề từ <b className="font-semibold text-slate-800">{brand.partnerName}</b>
-          </a>
+              <a
+                href={brand.partnerUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-3.5 text-xs text-slate-600 shadow-soft transition hover:border-brand-300"
+              >
+                <img src={logos.partner} alt={brand.partnerName} className="h-6 w-6 rounded-full" />
+                Kho đề từ <b className="font-semibold text-slate-800">{brand.partnerName}</b>
+              </a>
+            </>
+          )}
         </div>
 
-        <div className="animate-fade-up [animation-delay:120ms]">
-          <ExamSourcePicker onPick={onPick} onImported={onImported} />
+        {/* Ưu đãi đặt ngay đầu trang để khách thấy liền, không phải cuộn */}
+        {isGuest && (
+          <div className="relative z-0 mt-6 animate-fade-up [animation-delay:60ms]">
+            <div ref={under} className="origin-bottom-left will-change-transform">
+              <PromoCard />
+            </div>
+          </div>
+        )}
+
+        <div className="relative z-10 animate-fade-up [animation-delay:120ms]">
+          <div ref={isGuest ? over : undefined} className="will-change-transform">
+            <ExamSourcePicker onPick={onPick} onImported={onImported} />
+          </div>
         </div>
 
         <ul className="mt-8 hidden flex-wrap items-center justify-center gap-2.5 sm:flex">
