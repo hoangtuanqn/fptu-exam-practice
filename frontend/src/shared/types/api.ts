@@ -82,6 +82,7 @@ export interface CrawlerAdminConfig {
   userAgent: string;
   referer: string;
   requestDelayMs: number;
+  concurrency: number;
   webpQuality: number;
   fetchPrice: number;
   hasCookie: boolean;

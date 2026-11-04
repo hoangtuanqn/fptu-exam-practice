@@ -7,7 +7,7 @@ import { examService } from "../services/exam.service";
 import type { Actor } from "../utils/actor";
 import { verifyToken } from "../utils/jwt";
 import { EVENTS, SOCKET_PATH, roomOf, type RoomKind } from "./events";
-import { examPayload, jobPayload, realtimeHub } from "./hub";
+import { examPayload, jobPayload, questionsPayload, realtimeHub } from "./hub";
 
 const GUEST_ID = /^[A-Za-z0-9-]{16,64}$/;
 const KINDS: RoomKind[] = ["exam", "job"];
@@ -33,6 +33,9 @@ async function subscribe(socket: Socket, actor: Actor, kind: RoomKind, id: numbe
     await socket.join(roomOf(kind, id));
     const payload = await examPayload(id);
     if (payload) socket.emit(EVENTS.examAnswers, payload);
+    // Gửi các câu đã có để không lỡ câu nào tải xong trước khi vào phòng (kể cả khi đề vừa đủ câu: giao diện còn đang thiếu)
+    const loaded = await questionsPayload(id);
+    if (loaded) socket.emit(EVENTS.examQuestions, loaded);
   } else {
     await crawlJobService.getForActor(id, actor); // ném lỗi nếu không phải job của người này
     await socket.join(roomOf(kind, id));

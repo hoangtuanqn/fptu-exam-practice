@@ -9,6 +9,7 @@ interface Props {
   flagged: Record<number, boolean>;
   submitted: boolean;
   current: number;
+  total?: number; // tổng số câu của đề; chưa tải xong thì các ô còn lại hiện mờ
   onSelect: (index: number) => void;
 }
 
@@ -21,7 +22,7 @@ const STATUS_STYLE: Record<QuestionStatus, string> = {
 };
 
 // Lưới số câu: màu theo trạng thái, viền đậm ở câu đang xem
-export function QuestionGrid({ questions, answers, checked, flagged, submitted, current, onSelect }: Props) {
+export function QuestionGrid({ questions, answers, checked, flagged, submitted, current, total = 0, onSelect }: Props) {
   const boxRef = useRef<HTMLDivElement>(null);
 
   // Chuyển câu bằng phím/nút thì cuộn để ô câu hiện tại luôn nằm trong tầm nhìn
@@ -53,6 +54,15 @@ export function QuestionGrid({ questions, answers, checked, flagged, submitted, 
             </button>
           );
         })}
+        {Array.from({ length: Math.max(0, total - questions.length) }, (_, k) => (
+          <span
+            key={`loading-${k}`}
+            aria-hidden
+            className="flex h-9 w-9 shrink-0 animate-pulse items-center justify-center rounded-md border border-dashed border-slate-200 bg-slate-50 text-sm text-slate-300 lg:w-auto"
+          >
+            {questions.length + k + 1}
+          </span>
+        ))}
       </div>
     </div>
   );

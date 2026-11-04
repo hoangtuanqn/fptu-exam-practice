@@ -61,6 +61,7 @@ export const examService = {
       threadId: exam.threadId,
       title: exam.title,
       sourceUrl: exam.sourceUrl,
+      totalQuestions: exam.totalQuestions, // lớn hơn số câu trả về = đề còn đang được lấy về, các câu sau đến qua socket
       answerStatus: exam.answerSource, // PENDING = AI đang phân tích, FAILED = AI lỗi: cả hai chỉ xem đề, chưa làm bài được
       answerError: failedMessage(exam.answerSource),
       questions: exam.questions.map((q) => ({
