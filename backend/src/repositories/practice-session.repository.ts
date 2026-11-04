@@ -39,4 +39,12 @@ export const practiceSessionRepository = {
   },
 
   remove: (id: number) => prisma.practiceSession.delete({ where: { id } }),
+
+  // Dọn lượt cũ: lượt dở bỏ quên lâu ngày và lượt đã nộp (kết quả đã nằm trong lịch sử làm bài)
+  async deleteStale(abandonedBefore: Date, submittedBefore: Date) {
+    const { count } = await prisma.practiceSession.deleteMany({
+      where: { OR: [{ status: "IN_PROGRESS", updatedAt: { lt: abandonedBefore } }, { status: "SUBMITTED", updatedAt: { lt: submittedBefore } }] },
+    });
+    return count;
+  },
 };
