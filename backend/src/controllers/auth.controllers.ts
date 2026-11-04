@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { getValidated } from "../middlewares/validate.middlewares";
 import { authService } from "../services/auth.service";
+import { accountSettingService } from "../services/account-setting.service";
 import { googleAuthService } from "../services/google-auth.service";
 import { refreshTokenService, type ClientContext } from "../services/refresh-token.service";
 import { userRepository } from "../repositories/user.repository";
@@ -54,6 +55,11 @@ export const authController = {
     const { created, ...data } = await googleAuthService.login(accessToken, referralCode);
     await startSession(req, res, data.user);
     res.status(created ? HTTP_STATUS.CREATED : HTTP_STATUS.OK).json(new ResponseClient({ message: created ? "Đăng ký thành công" : "Đăng nhập thành công", data }));
+  },
+
+  // Công khai: credit tặng khi đăng ký, để trang chủ báo cho khách (0 = không tặng, giao diện ẩn dòng này)
+  async signupBonus(_req: Request, res: Response) {
+    res.json(new ResponseClient({ data: { credit: (await accountSettingService.get()).signupCredit } }));
   },
 
   // Không cần đăng nhập: người dùng có thể mở liên kết từ điện thoại hoặc trình duyệt khác
