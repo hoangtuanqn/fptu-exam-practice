@@ -47,6 +47,12 @@ export const examAttemptRepository = {
     return { items, total };
   },
 
+  // Số lần làm và điểm cao nhất của một đề (hiện ở màn làm bài)
+  async summaryOfExam(userId: number, examId: number) {
+    const r = await prisma.examAttempt.aggregate({ where: { userId, examId }, _count: { _all: true }, _max: { score: true } });
+    return { attempts: r._count._all, bestScore: r._max.score };
+  },
+
   // Số lần làm và điểm cao nhất theo từng đề, để hiện ở thư viện
   statsByExam: (userId: number, examIds: number[]) =>
     prisma.examAttempt.groupBy({
