@@ -114,13 +114,10 @@ export const crawlJobService = {
 
     // Mỗi lần bị trừ phí đều báo qua email (sau khi transaction đã commit)
     if (isMember(owner) && fetchPrice > 0 && balanceAfter !== null) {
-      notificationService.fetchCharged({
-        userId: owner.userId,
-        amount: fetchPrice,
-        balanceAfter,
-        threadId,
-        examTitle: exam?.title,
-      });
+      const charged = { userId: owner.userId, amount: fetchPrice, balanceAfter, threadId, examTitle: exam?.title };
+      // Có job thì chờ một lúc: lỗi và hoàn phí ngay thì không gửi cả hai thư
+      if (!result.existed) notificationService.fetchChargedLater(result.job.id, charged);
+      else notificationService.fetchCharged(charged);
     }
 
     if (!result.existed || refresh) listeners.forEach((fn) => fn());
@@ -143,7 +140,7 @@ export const crawlJobService = {
       return null;
     });
     // Báo qua email sau khi transaction hoàn phí đã commit
-    if (refunded) notificationService.fetchRefunded(refunded);
+    if (refunded && !notificationService.cancelPendingCharge(job.id)) notificationService.fetchRefunded(refunded);
   },
 
   // Chỉ chủ job (thành viên hoặc đúng khách đó, hoặc admin) được xem tiến độ
