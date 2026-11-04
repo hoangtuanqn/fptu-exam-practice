@@ -3,6 +3,7 @@ import { ArrowRight, ClipboardCheck, Library, PenLine, Plus } from "lucide-react
 import { userApi } from "@/features/account/api/user.api";
 import { TransactionTable } from "@/features/account/components/TransactionTable";
 import { useAuth } from "@/features/auth/AuthContext";
+import { ResumeList } from "@/features/practice-session/ResumeList";
 import { useOnLibraryChanged } from "@/features/exam-library/libraryEvents";
 import { examLibraryApi } from "@/features/exam-library/exam-library.api";
 import { historyApi } from "@/features/history/history.api";
@@ -53,6 +54,9 @@ export default function OverviewPage() {
           </Link>
         </div>
       </header>
+
+      {/* Các lượt đang làm dở: hiện ngay đầu trang để vào làm tiếp (không có thì không chiếm chỗ) */}
+      <ResumeList limit={5} />
 
       <StatGrid className="grid-cols-2 xl:grid-cols-4">
         <StatCard label="Số dư ví" value={formatCredit(user.balance)} note="Dùng để lấy đề từ FuOverflow" />
