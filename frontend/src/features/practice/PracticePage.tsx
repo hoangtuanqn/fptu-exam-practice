@@ -4,6 +4,9 @@ import { ApiError } from "@/shared/api/client";
 import { historyApi } from "@/features/history/history.api";
 import { pendingAttempt } from "@/features/guest-sync/pendingAttempt";
 import { examImportApi } from "@/features/exam-import/exam-import.api";
+import { sessionApi } from "@/features/practice-session/session.api";
+import { useSessionSync } from "@/features/practice-session/useSessionSync";
+import { useLeaveWarning } from "@/shared/hooks/useLeaveWarning";
 import { useExamAnswersLive } from "@/features/practice/hooks/useExamAnswersLive";
 import { useExamQuestionsLive } from "@/features/practice/hooks/useExamQuestionsLive";
 import { useToast } from "@/shared/context/ToastContext";
@@ -41,6 +44,19 @@ export default function PracticePage({ threadId }: Props) {
 
   const hasQuiz = quiz.questions.length > 0;
   const anyDialogOpen = !!dialog || !!quiz.pending || quiz.notFound || trialEnded;
+
+  // Lưu tiến độ lên server để tải lại trang vẫn làm tiếp được (chỉ với đề của hệ thống)
+  const { flush } = useSessionSync(quiz);
+  // Đề mở từ thư mục không lưu ở đâu cả: có đáp án rồi mà đóng/tải lại trang là mất, nên hỏi lại
+  useLeaveWarning(hasQuiz && quiz.examId === null && !quiz.submitted && quiz.answeredCount > 0);
+
+  // Bấm logo: về trang chủ (đề đang làm của hệ thống đã được lưu, vào lại từ danh sách "làm dở" để làm tiếp)
+  const goHome = () => {
+    if (quiz.examId === null && !quiz.submitted && quiz.answeredCount > 0 && !window.confirm("Bài làm từ thư mục chưa được lưu và sẽ mất. Thoát về trang chủ?")) return false;
+    void flush();
+    quiz.closeExam();
+    return true;
+  };
 
   // Đang mở hộp thoại thì tắt phím tắt để tránh bấm nhầm đáp án
   useQuizShortcuts(quiz, hasQuiz && !anyDialogOpen);
@@ -111,14 +127,24 @@ export default function PracticePage({ threadId }: Props) {
 
     let stale = false;
     setOpening(true);
-    examImportApi
-      .examByThread(threadId)
-      .then((exam) => {
+    const params = new URLSearchParams(location.search);
+    const sessionId = Number(params.get("session")) || null; // có thì làm tiếp đúng lượt đó
+    Promise.all([examImportApi.examByThread(threadId), sessionId ? sessionApi.get(sessionId).catch(() => null) : Promise.resolve(null)])
+      .then(([exam, saved]) => {
         if (stale) return;
         loadedFor.current = threadId; // đã tải xong đề này
         setOpenedThread(exam.threadId);
-        const mode = new URLSearchParams(location.search).get("mode");
-        if (mode === "practice" || mode === "exam") quiz.openExam(exam.questions, exam.title, exam.id, mode, exam.answerStatus, exam.totalQuestions);
+        const mode = params.get("mode");
+        if (saved && saved.examId === exam.id && saved.status === "IN_PROGRESS") {
+          quiz.openExam(exam.questions, exam.title, exam.id, saved.mode === "EXAM" ? "exam" : "practice", exam.answerStatus, exam.totalQuestions, {
+            sessionId: saved.id,
+            answers: saved.answers,
+            checked: saved.checked,
+            flagged: saved.flagged,
+            current: saved.current,
+            elapsedSec: saved.elapsedSec,
+          });
+        } else if (mode === "practice" || mode === "exam") quiz.openExam(exam.questions, exam.title, exam.id, mode, exam.answerStatus, exam.totalQuestions);
         else quiz.loadExam(exam.questions, exam.title, exam.id, exam.answerStatus, exam.totalQuestions);
       })
       .catch((err: unknown) => {
@@ -140,10 +166,10 @@ export default function PracticePage({ threadId }: Props) {
   // Địa chỉ luôn khớp với đề đang làm: đề hệ thống -> /exam/:threadId?mode=..., đề mở từ thư mục -> "/"
   useEffect(() => {
     if (!hasQuiz) return;
-    const target = openedId !== null && openedThread ? `/exam/${openedThread}?mode=${quiz.mode}` : "/";
+    const target = openedId !== null && openedThread ? `/exam/${openedThread}?mode=${quiz.mode}${quiz.sessionId ? `&session=${quiz.sessionId}` : ""}` : "/";
     if (location.pathname + location.search !== target) navigate(target, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasQuiz, openedId, openedThread, quiz.mode]);
+  }, [hasQuiz, openedId, openedThread, quiz.mode, quiz.sessionId]);
 
   // Đang ở /exam/:threadId mà huỷ hộp thoại chọn chế độ thì về trang chủ
   useEffect(() => {
@@ -169,6 +195,7 @@ export default function PracticePage({ threadId }: Props) {
         submitLocked={quiz.answersPending}
         elapsed={quiz.elapsed}
         onPick={pick}
+        onHome={goHome}
         onSubmit={() => setDialog("confirm")}
         onReset={quiz.reset}
         onShowResult={() => setDialog("result")}
