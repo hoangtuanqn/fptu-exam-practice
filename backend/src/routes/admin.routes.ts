@@ -10,8 +10,11 @@ import { adminAnswerReportController } from "../controllers/admin.answer-report.
 import { adminReferralController } from "../controllers/admin.referral.controllers";
 import { adminGiftCodeController } from "../controllers/admin.gift-code.controllers";
 import { adminCrawlerController } from "../controllers/admin.crawler.controllers";
+import { adminHistoryController } from "../controllers/admin.history.controllers";
+import { adminAccountController } from "../controllers/admin.account.controllers";
+import { listAttemptsQuery, listCrawlJobsQuery, listWalletQuery } from "../rules/requests/admin-history.request";
 import { authenticate, requireAdmin } from "../middlewares/auth.middlewares";
-import { updateAiBody, updateCrawlerBody, updateReferralBody, updateSepayBody } from "../rules/requests/setting.request";
+import { updateAccountBody, updateAiBody, updateCrawlerBody, updateReferralBody, updateSepayBody } from "../rules/requests/setting.request";
 import { listReportsQuery, reviewReportBody } from "../rules/requests/answer-report.request";
 import { createGiftCodeBody, listGiftCodesQuery, updateGiftCodeBody } from "../rules/requests/gift-code.request";
 import { validate } from "../middlewares/validate.middlewares";
@@ -34,6 +37,14 @@ adminRouter.post(
   validate(adjustBalanceBody),
   adminUserController.adjustBalance,
 );
+
+adminRouter.get("/settings/account", adminAccountController.get);
+adminRouter.put("/settings/account", validate(updateAccountBody), adminAccountController.update);
+
+// Lịch sử: biến động số dư, lấy đề, bài làm (lọc được theo userId)
+adminRouter.get("/wallet-transactions", validate(listWalletQuery, "query"), adminHistoryController.wallet);
+adminRouter.get("/crawl-jobs", validate(listCrawlJobsQuery, "query"), adminHistoryController.crawlJobs);
+adminRouter.get("/attempts", validate(listAttemptsQuery, "query"), adminHistoryController.attempts);
 
 adminRouter.get("/deposits", validate(listDepositsQuery, "query"), adminDepositController.list);
 

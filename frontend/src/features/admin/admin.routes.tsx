@@ -1,6 +1,6 @@
 import { lazy } from "react";
 import { Navigate, Route } from "react-router-dom";
-import { Bot, DatabaseZap, FileText, Gift, MessageSquareWarning, UserPlus, Landmark, LayoutDashboard, Receipt, Settings, Users } from "lucide-react";
+import { Bot, ClipboardList, DatabaseZap, FileText, History, SlidersHorizontal, Wallet, Gift, MessageSquareWarning, UserPlus, Landmark, LayoutDashboard, Receipt, Settings, Users } from "lucide-react";
 import type { NavItem } from "@/shared/layout/PanelLayout";
 
 /**
@@ -13,6 +13,10 @@ import type { NavItem } from "@/shared/layout/PanelLayout";
  */
 const DashboardPage = lazy(() => import("./overview/DashboardPage"));
 const UsersPage = lazy(() => import("./users/UsersPage"));
+const WalletHistoryPage = lazy(() => import("./users/WalletHistoryPage"));
+const CrawlJobsPage = lazy(() => import("./users/CrawlJobsPage"));
+const AttemptsPage = lazy(() => import("./users/AttemptsPage"));
+const AccountSettingsPage = lazy(() => import("./users/AccountSettingsPage"));
 const DepositsPage = lazy(() => import("./finance/DepositsPage"));
 const BankTransactionsPage = lazy(() => import("./finance/BankTransactionsPage"));
 const ReferralsPage = lazy(() => import("./users/ReferralsPage"));
@@ -27,6 +31,10 @@ export const ADMIN_NAV: NavItem[] = [
   { to: "/admin", label: "Tổng quan", icon: LayoutDashboard, end: true, group: "Chung" },
   { to: "/admin/users", label: "Thành viên", icon: Users, group: "Người dùng" },
   { to: "/admin/referrals", label: "Giới thiệu", icon: UserPlus, group: "Người dùng" },
+  { to: "/admin/account-settings", label: "Cấu hình đăng ký", icon: SlidersHorizontal, group: "Người dùng" },
+  { to: "/admin/wallet", label: "Biến động số dư", icon: Wallet, group: "Lịch sử" },
+  { to: "/admin/crawl-jobs", label: "Lịch sử lấy đề", icon: History, group: "Lịch sử" },
+  { to: "/admin/attempts", label: "Lịch sử làm bài", icon: ClipboardList, group: "Lịch sử" },
   { to: "/admin/deposits", label: "Lệnh nạp tiền", icon: Receipt, group: "Tài chính" },
   { to: "/admin/bank-transactions", label: "Giao dịch ngân hàng", icon: Landmark, group: "Tài chính" },
   { to: "/admin/gift-codes", label: "Giftcode", icon: Gift, group: "Tài chính" },
@@ -43,6 +51,10 @@ export const adminRoutes = (
     <Route index element={<DashboardPage />} />
     <Route path="users" element={<UsersPage />} />
     <Route path="referrals" element={<ReferralsPage />} />
+    <Route path="account-settings" element={<AccountSettingsPage />} />
+    <Route path="wallet" element={<WalletHistoryPage />} />
+    <Route path="crawl-jobs" element={<CrawlJobsPage />} />
+    <Route path="attempts" element={<AttemptsPage />} />
     <Route path="deposits" element={<DepositsPage />} />
     <Route path="bank-transactions" element={<BankTransactionsPage />} />
     <Route path="gift-codes" element={<GiftCodesPage />} />
