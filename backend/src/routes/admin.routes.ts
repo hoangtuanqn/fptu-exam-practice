@@ -57,6 +57,7 @@ adminRouter.put("/settings/sepay", validate(updateSepayBody), adminSettingContro
 
 adminRouter.get("/settings/crawler", adminCrawlerController.get);
 adminRouter.put("/settings/crawler", validate(updateCrawlerBody), adminCrawlerController.update);
+adminRouter.post("/settings/crawler/login", adminCrawlerController.login);
 
 adminRouter.get("/settings/ai", adminAiController.getSettings);
 adminRouter.put("/settings/ai", validate(updateAiBody), adminAiController.updateSettings);

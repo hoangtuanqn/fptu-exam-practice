@@ -87,6 +87,10 @@ export interface CrawlerAdminConfig {
   fetchPrice: number;
   hasCookie: boolean;
   cookiePreview: string;
+  loginEmail: string;
+  hasLoginPassword: boolean;
+  loginLastAt: string; // lần tự đăng nhập gần nhất (ISO), rỗng = chưa có
+  loginLastError: string; // rỗng = lần đó thành công
 }
 
 export type AiEffort = "low" | "medium" | "high" | "xhigh" | "max";

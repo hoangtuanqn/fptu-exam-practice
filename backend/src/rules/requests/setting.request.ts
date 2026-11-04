@@ -68,6 +68,8 @@ export type UpdateAiBody = z.infer<typeof updateAiBody>;
 
 export const updateCrawlerBody = z.object({
   cookie: z.string().trim().max(8000).optional(), // để trống = giữ cookie cũ
+  loginEmail: z.string().trim().max(200).default(""),
+  loginPassword: z.string().max(200).optional(), // để trống = giữ mật khẩu cũ
   userAgent: z.string().trim().max(500),
   referer: z.string().trim().max(500),
   requestDelayMs: z.number().int().min(0).max(5000),
