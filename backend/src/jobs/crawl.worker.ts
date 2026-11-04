@@ -16,8 +16,19 @@ const drain = async () => {
       void realtimeHub.publishJob(job.id); // QUEUED -> RUNNING
       try {
         const { examId } = await examImportService.run(job);
-        await examService.addToLibrary(job.userId !== null ? { userId: job.userId } : { guestId: job.guestId! }, examId); // đề vào thư viện của người nhập
+        // Đọc lại chủ job SAU khi crawl xong: khách có thể đã đăng nhập trong lúc chờ (job được chuyển sang tài khoản),
+        // lúc đó đề phải vào kho của tài khoản chứ không phải kho khách cũ
+        const ownerOf = async () => {
+          const fresh = (await crawlJobRepository.findById(job.id)) ?? job;
+          return fresh.userId !== null ? { userId: fresh.userId } : { guestId: fresh.guestId! };
+        };
+        // Đề vào kho TRƯỚC khi báo DONE để người dùng mở được ngay khi thấy xong
+        const before = await ownerOf();
+        await examService.addToLibrary(before, examId);
         await crawlJobRepository.finish(job.id, { status: "DONE", examId });
+        // Khách đăng nhập đúng lúc này: chủ job đổi sau lần đọc trên, thêm đề cho chủ mới
+        const after = await ownerOf();
+        if (JSON.stringify(after) !== JSON.stringify(before)) await examService.addToLibrary(after, examId);
         void realtimeHub.publishJob(job.id);
         console.log(`[crawl-worker] job ${job.id} (thread ${job.threadId}) xong -> đề ${examId}`);
       } catch (err) {

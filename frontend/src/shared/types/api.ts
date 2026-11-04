@@ -4,7 +4,7 @@ export type Role = "USER" | "ADMIN";
 export type UserStatus = "ACTIVE" | "BANNED";
 export type DepositStatus = "PENDING" | "PAID" | "EXPIRED";
 export type BankTxStatus = "MATCHED" | "UNMATCHED";
-export type TransactionType = "DEPOSIT" | "ADMIN_ADJUST" | "CRAWL_CHARGE" | "CRAWL_REFUND" | "GIFT_CODE" | "REPORT_REWARD" | "EXPLAIN_CHARGE" | "EXPLAIN_REFUND" | "REFERRAL_BONUS" | "REFERRAL_COMMISSION";
+export type TransactionType = "DEPOSIT" | "ADMIN_ADJUST" | "CRAWL_CHARGE" | "CRAWL_REFUND" | "GIFT_CODE" | "REPORT_REWARD" | "EXPLAIN_CHARGE" | "EXPLAIN_REFUND" | "REFERRAL_BONUS" | "REFERRAL_COMMISSION" | "SIGNUP_BONUS";
 
 export interface User {
   id: number;
@@ -259,4 +259,45 @@ export interface ReferralOverview {
   stats: { referred: number; earned: number };
   items: ReferredMember[];
   meta: PageMeta;
+}
+
+// ----- Lịch sử cho quản trị
+type UserRef = Pick<User, "id" | "email" | "fullName">;
+
+export interface AdminWalletTx extends WalletTransaction {
+  user: UserRef;
+}
+
+export type CrawlJobStatus = "QUEUED" | "RUNNING" | "DONE" | "FAILED";
+
+export interface AdminCrawlJob {
+  id: number;
+  threadId: string;
+  status: CrawlJobStatus;
+  stage: string | null;
+  error: string | null;
+  chargedAmount: number;
+  createdAt: string;
+  finishedAt: string | null;
+  guest: boolean; // khách chưa đăng nhập
+  user: UserRef | null;
+  exam: { id: number; title: string } | null;
+}
+
+export interface AdminAttempt {
+  id: number;
+  mode: "PRACTICE" | "EXAM";
+  score: number;
+  correct: number;
+  wrong: number;
+  skipped: number;
+  totalGraded: number;
+  durationSec: number;
+  createdAt: string;
+  user: UserRef;
+  exam: { id: number; title: string };
+}
+
+export interface AccountSettings {
+  signupCredit: number; // credit tặng mọi tài khoản mới khi đăng ký
 }

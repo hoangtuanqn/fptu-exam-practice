@@ -8,6 +8,7 @@ import { useAuth } from "@/features/auth/AuthContext";
 import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
 import { examLibraryApi } from "./exam-library.api";
+import { useOnLibraryChanged } from "./libraryEvents";
 
 const SHOWN = 6;
 
@@ -19,7 +20,8 @@ interface Props {
 export function MyExams({ onOpen }: Props) {
   const toast = useToast();
   const { user } = useAuth();
-  const { data } = useApi(() => examLibraryApi.list(1, SHOWN), []);
+  const { data, reload } = useApi(() => examLibraryApi.list(1, SHOWN), [user?.id]);
+  useOnLibraryChanged(reload);
   const [openingId, setOpeningId] = useState<number | null>(null);
 
   if (!data || data.items.length === 0) return null; // chưa có đề thì không chiếm chỗ

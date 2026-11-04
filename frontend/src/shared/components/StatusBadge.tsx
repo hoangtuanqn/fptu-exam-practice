@@ -42,6 +42,7 @@ export const TRANSACTION_LABEL: Record<TransactionType, string> = {
   ADMIN_ADJUST: "Điều chỉnh bởi quản trị",
   CRAWL_CHARGE: "Phí lấy đề FuOverflow",
   CRAWL_REFUND: "Hoàn phí lấy đề",
+  SIGNUP_BONUS: "Tặng khi đăng ký",
 };
 
 const make =

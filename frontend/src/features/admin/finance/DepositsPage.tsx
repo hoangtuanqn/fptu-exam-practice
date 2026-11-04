@@ -1,6 +1,7 @@
 import { Receipt } from "lucide-react";
 import { adminApi } from "@/features/admin/api/admin.api";
 import { DepositStatusBadge } from "@/shared/components/StatusBadge";
+import { UserFilterChip } from "@/features/admin/shared";
 import { Card, PageHeader } from "@/shared/ui/Card";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
@@ -12,20 +13,20 @@ import { formatDateTime, formatMoney } from "@/shared/utils/formatters";
 import { useClampPage } from "@/shared/hooks/useClampPage";
 
 export default function DepositsPage() {
-  const [url, setUrl] = useUrlState({ status: "", page: "1" });
+  const [url, setUrl] = useUrlState({ status: "", userId: "", page: "1" });
   const status = url.status as DepositStatus | "";
   const page = toPage(url.page);
   const setPage = (p: number) => setUrl({ page: String(p) });
   const setStatus = (v: DepositStatus | "") => setUrl({ status: v, page: "1" });
 
-  const { data, error, loading, reload } = useApi(() => adminApi.deposits(page, status), [page, status]);
+  const { data, error, loading, reload } = useApi(() => adminApi.deposits(page, status, url.userId), [page, status, url.userId]);
   useClampPage(data?.meta, setPage);
 
   return (
     <>
       <PageHeader title="Lệnh nạp tiền" description="Tất cả lệnh nạp do thành viên tạo." />
       <Card>
-        <div className="border-b border-slate-100 p-4">
+        <div className="flex flex-wrap items-center gap-3 border-b border-slate-100 p-4">
           <Segmented
             label="Lọc theo trạng thái"
             value={status}
@@ -37,6 +38,7 @@ export default function DepositsPage() {
               { value: "EXPIRED", label: "Hết hạn" },
             ]}
           />
+          <UserFilterChip userId={url.userId} label={data?.items[0]?.user?.fullName} onClear={() => setUrl({ userId: "", page: "1" })} />
         </div>
 
         {loading && !data ? (
