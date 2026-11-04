@@ -56,11 +56,16 @@ export const examImportService = {
     };
 
     const existing = await examRepository.findByThreadId(job.threadId);
+    let refreshing = false; // làm mới đề cũ tại chỗ: giữ id đề (lịch sử, kho người dùng) và đề vẫn dùng được trong lúc chạy
     if (existing) {
-      if (await examRepository.isComplete(existing)) return { examId: existing.id }; // có người nhập xong trước đó
-      // Lần lấy trước bị ngắt giữa chừng (ví dụ server khởi động lại): bỏ phần dở dang rồi lấy lại từ đầu
-      await examRepository.deleteById(existing.id);
-      await removeDir(path.join(storageDir, EXAM_STORAGE_DIR, job.threadId));
+      if (await examRepository.isComplete(existing)) {
+        if (!job.refresh) return { examId: existing.id }; // có người nhập xong trước đó
+        refreshing = true;
+      } else {
+        // Lần lấy trước bị ngắt giữa chừng (ví dụ server khởi động lại): bỏ phần dở dang rồi lấy lại từ đầu
+        await examRepository.deleteById(existing.id);
+        await removeDir(path.join(storageDir, EXAM_STORAGE_DIR, job.threadId));
+      }
     }
 
     const config = await crawlerSettingService.get();
@@ -84,7 +89,8 @@ export const examImportService = {
 
     let exam;
     try {
-      exam = await examRepository.createShell({
+      if (refreshing && existing) exam = existing;
+      else exam = await examRepository.createShell({
         threadId,
         title: thread.title,
         sourceUrl,
@@ -104,7 +110,7 @@ export const examImportService = {
       throw err;
     }
     const examId = exam.id;
-    let ready = false; // đã đưa đề vào kho người nhập (người dùng có thể đang xem)
+    let ready = refreshing; // đã đưa đề vào kho người nhập (người dùng có thể đang xem); đề làm mới thì đã sẵn có
 
     try {
       await fs.mkdir(imagesDir, { recursive: true });
@@ -133,7 +139,7 @@ export const examImportService = {
               mediaUrl: image.mediaUrl,
               answer: "",
             }));
-            await examRepository.addQuestions(examId, batch);
+            await (refreshing ? examRepository.upsertQuestions(examId, batch) : examRepository.addQuestions(examId, batch));
             committed = end;
             if (!ready && committed >= Math.min(FIRST_READY, total)) {
               ready = true;
@@ -193,19 +199,22 @@ export const examImportService = {
       await stage("Đang hoàn tất", true);
       const withComments = thread.images.map((image, i) => comments[i] ?? { image, comments: [] });
       await writeCommentsFile(dir, { title: thread.title, url: sourceUrl }, withComments);
+      if (refreshing) await examRepository.finishRefresh(examId, { title: thread.title, sourceUrl, author: thread.author, postedAt: thread.postedAt, total });
 
       // Đáp án do AI giải NỀN sau khi lấy xong cả ảnh và bình luận. Cấu hình AI có thể đã đổi trong lúc lấy đề.
       const aiNow = aiReady(await aiSettingService.get());
       if (aiNow) {
-        if (exam.answerSource !== "PENDING") await examRepository.markPending(examId);
+        if (refreshing || exam.answerSource !== "PENDING") await examRepository.markPending(examId); // làm mới: bỏ đáp án cũ, giải lại từ đầu
         examSolveService.enqueue(examId);
-      } else if (useAi) {
+      } else if (useAi || refreshing) {
         await examRepository.updateAnswers(examId, Array<string>(total).fill(""), "FAILED", `${AI_REPORT_FAILED_PREFIX}AI chưa được bật hoặc chưa có khóa Anthropic`);
       }
       void realtimeHub.publishExam(examId);
       console.log(`[crawl] thread ${threadId}: ${total} câu | đọc thread ${(tThread / 1000).toFixed(1)}s | ảnh+bình luận ${(tFetch / 1000).toFixed(1)}s (${config.concurrency} luồng) | tổng ${((Date.now() - t0) / 1000).toFixed(1)}s`);
       return { examId };
     } catch (err) {
+      // Làm mới thất bại: đề cũ vẫn dùng được nên giữ nguyên, không gỡ gì cả
+      if (refreshing) throw err;
       // Người dùng đã mở đề thì báo để họ thoát ra, rồi gỡ đề dở dang và thư mục ảnh
       if (ready) realtimeHub.publishExamFailed(examId, (err as Error).message);
       await examRepository.deleteById(examId).catch(() => undefined);

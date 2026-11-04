@@ -63,14 +63,14 @@ export const googleAuthService = {
   async login(accessToken: string, referralCode?: string) {
     const profile = await fetchProfile(accessToken);
 
-    const bySub = await prisma.user.findUnique({ where: { googleSub: profile.sub }, select: { id: true, status: true } });
-    const byEmail = bySub ? null : await prisma.user.findUnique({ where: { email: profile.email }, select: { id: true, status: true, emailVerifiedAt: true } });
+    const bySub = await userRepository.findByGoogleSub(profile.sub);
+    const byEmail = bySub ? null : await userRepository.findByEmailForLink(profile.email);
     const existing = bySub ?? byEmail;
 
     if (existing) {
       if (existing.status === "BANNED") throw AppError.forbidden("Tài khoản đã bị khoá");
       if (byEmail) {
-        await prisma.user.update({ where: { id: byEmail.id }, data: { googleSub: profile.sub, emailVerifiedAt: byEmail.emailVerifiedAt ?? new Date() } });
+        await userRepository.linkGoogle(byEmail.id, profile.sub, byEmail.emailVerifiedAt ?? new Date());
       }
       const user = (await userRepository.findById(existing.id))!;
       return { token: signToken(user.id), user, created: false };

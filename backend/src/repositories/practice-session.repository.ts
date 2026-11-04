@@ -29,8 +29,8 @@ export const practiceSessionRepository = {
     }),
 
   // Các lần làm dở (chưa nộp), mới cập nhật lên đầu
-  async listInProgress(owner: Owner, query: PaginationQuery, examId?: number) {
-    const where: Prisma.PracticeSessionWhereInput = { ...whereOf(owner), status: "IN_PROGRESS", examId };
+  async listInProgress(owner: Owner, query: PaginationQuery, examId?: number, notBefore?: Date) {
+    const where: Prisma.PracticeSessionWhereInput = { ...whereOf(owner), status: "IN_PROGRESS", examId, ...(notBefore && { updatedAt: { gte: notBefore } }) };
     const [items, total] = await Promise.all([
       prisma.practiceSession.findMany({ where, include: withExam, orderBy: { updatedAt: "desc" }, ...toSkipTake(query) }),
       prisma.practiceSession.count({ where }),
@@ -39,4 +39,12 @@ export const practiceSessionRepository = {
   },
 
   remove: (id: number) => prisma.practiceSession.delete({ where: { id } }),
+
+  // Dọn lượt cũ: lượt dở bỏ quên lâu ngày và lượt đã nộp (kết quả đã nằm trong lịch sử làm bài)
+  async deleteStale(abandonedBefore: Date, submittedBefore: Date) {
+    const { count } = await prisma.practiceSession.deleteMany({
+      where: { OR: [{ status: "IN_PROGRESS", updatedAt: { lt: abandonedBefore } }, { status: "SUBMITTED", updatedAt: { lt: submittedBefore } }] },
+    });
+    return count;
+  },
 };

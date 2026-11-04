@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Award, Clock, RotateCcw, Send } from "lucide-react";
+import { Award, Clock, RotateCcw, Send, Trophy } from "lucide-react";
 import type { Mode } from "@/features/practice/types.ts";
 import { brand } from "@/shared/brand/brand";
 import { getModeConfig } from "@/features/practice/config/modes";
-import { formatDuration } from "@/features/practice/utils/format";
+import { formatDuration, formatScore } from "@/features/practice/utils/format";
 import { Logo } from "@/shared/brand/Logo";
 import { Button } from "@/shared/ui/Button";
 import type { PickFolder } from "./FolderInput";
@@ -18,6 +18,7 @@ interface Props {
   submitted: boolean;
   submitLocked?: boolean; // AI chưa xong đáp án: chưa cho nộp
   elapsed: number; // số giây đã làm bài
+  bestScore?: number | null; // điểm cao nhất của người dùng ở đề này (chưa làm lần nào thì không hiện)
   timing: boolean; // đồng hồ đang chạy (không chạy khi chờ đáp án hoặc đã nộp)
   onPick: PickFolder;
   onHome: () => boolean; // bấm logo khi đang làm đề: trả về false nếu người dùng huỷ việc thoát
@@ -27,7 +28,7 @@ interface Props {
 }
 
 // Header tối giản. Chưa có đề: tên app + tài khoản. Đang làm: tên đề | chế độ + đồng hồ | mở đề khác | nộp bài | tài khoản.
-export function Header({ title, mode, loaded, submitted, submitLocked, elapsed, timing, onPick, onHome, onSubmit, onReset, onShowResult }: Props) {
+export function Header({ title, mode, loaded, submitted, submitLocked, elapsed, bestScore, timing, onPick, onHome, onSubmit, onReset, onShowResult }: Props) {
   const { Icon, label } = getModeConfig(mode);
 
   // Vừa bắt đầu tính giờ thì chip sáng lên một lúc để học viên nhận ra
@@ -60,6 +61,17 @@ export function Header({ title, mode, loaded, submitted, submitLocked, elapsed, 
       <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
         {loaded && (
           <>
+            {bestScore != null && (
+              <span
+                title={`Điểm cao nhất của bạn ở đề này: ${formatScore(bestScore)}`}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-sm font-medium text-amber-800 sm:px-3"
+              >
+                <Trophy size={14} />
+                <span className="hidden sm:inline">Cao nhất</span>
+                <span className="tabular-nums">{formatScore(bestScore)}</span>
+              </span>
+            )}
+
             {/* Chế độ + đồng hồ gộp một chip */}
             <span
               title={waiting ? "Giờ làm bài sẽ bắt đầu tính khi đề có đáp án" : undefined}
