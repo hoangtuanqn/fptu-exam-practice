@@ -56,7 +56,7 @@ interface Envelope<T> {
   errors?: Record<string, string>;
 }
 
-async function send<T>(method: string, path: string, body?: unknown, query?: Query) {
+async function send<T>(method: string, path: string, body?: unknown, query?: Query, keepalive = false) {
   const qs = new URLSearchParams();
   for (const [k, v] of Object.entries(query ?? {})) if (v !== undefined && v !== null && v !== "") qs.set(k, String(v));
 
@@ -71,6 +71,7 @@ async function send<T>(method: string, path: string, body?: unknown, query?: Que
         ...(token && { Authorization: `Bearer ${token}` }),
       },
       body: body !== undefined ? JSON.stringify(body) : undefined,
+      keepalive, // cho phép request kịp gửi khi trang đang đóng/tải lại
     });
   } catch {
     throw new ApiError("Không kết nối được máy chủ", 0);
@@ -88,7 +89,8 @@ async function send<T>(method: string, path: string, body?: unknown, query?: Que
 export const http = {
   get: async <T>(path: string, query?: Query) => (await send<T>("GET", path, undefined, query)).data as T,
   post: async <T>(path: string, body?: unknown) => (await send<T>("POST", path, body ?? {})).data as T,
-  put: async <T>(path: string, body: unknown) => (await send<T>("PUT", path, body)).data as T,
+  put: async <T>(path: string, body: unknown, keepalive = false) => (await send<T>("PUT", path, body, undefined, keepalive)).data as T,
+  delete: async (path: string) => void (await send<unknown>("DELETE", path)),
   patch: async <T>(path: string, body: unknown) => (await send<T>("PATCH", path, body)).data as T,
   // Danh sách có phân trang: backend trả { data: [...], meta }
   async list<T>(path: string, query?: Query): Promise<Paged<T>> {
