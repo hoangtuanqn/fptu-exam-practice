@@ -2,6 +2,7 @@ import { Router } from "express";
 import adminRouter from "./admin.routes";
 import answerReportRouter from "./answer-report.routes";
 import attemptRouter from "./attempt.routes";
+import sessionRouter from "./session.routes";
 import authRouter from "./auth.routes";
 import crawlJobRouter from "./crawl-job.routes";
 import depositPublicRouter from "./deposit-public.routes";
@@ -29,6 +30,7 @@ rootRouter.use("/explanations", explanationRouter);
 rootRouter.use("/referrals", referralRouter);
 rootRouter.use("/public/referrals", referralPublicRouter);
 rootRouter.use("/attempts", attemptRouter);
+rootRouter.use("/sessions", sessionRouter);
 rootRouter.use("/answer-reports", answerReportRouter);
 rootRouter.use("/admin", adminRouter);
 
