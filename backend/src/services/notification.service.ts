@@ -13,7 +13,31 @@ const notify = (label: string, job: () => Promise<void>) => {
   void job().catch((err: Error) => console.error(`[mail] không gửi được thư "${label}": ${err.message}`));
 };
 
+// Thư "trừ phí lấy đề" được hoãn một lúc: nếu lượt lấy lỗi và hoàn phí ngay trong khoảng này thì bỏ cả hai thư (tránh spam).
+// Giữ trong bộ nhớ nên khởi động lại server trong lúc chờ thì thư trừ phí đó không được gửi (số dư vẫn đúng, xem ở lịch sử ví).
+const CHARGE_MAIL_DELAY_MS = 90_000;
+type FetchCharge = { userId: number; amount: number; balanceAfter: number; threadId: string; examTitle?: string };
+const pendingChargeMails = new Map<number, NodeJS.Timeout>();
+
 export const notificationService = {
+  fetchChargedLater(jobId: number, n: FetchCharge) {
+    const timer = setTimeout(() => {
+      pendingChargeMails.delete(jobId);
+      notificationService.fetchCharged(n);
+    }, CHARGE_MAIL_DELAY_MS);
+    timer.unref();
+    pendingChargeMails.set(jobId, timer);
+  },
+
+  /** Hoàn phí khi thư trừ phí còn chưa gửi: huỷ thư đó và trả true (không cần gửi thư hoàn phí nữa). */
+  cancelPendingCharge(jobId: number) {
+    const timer = pendingChargeMails.get(jobId);
+    if (!timer) return false;
+    clearTimeout(timer);
+    pendingChargeMails.delete(jobId);
+    return true;
+  },
+
   // Người dùng vừa tạo lệnh nạp: gửi thông tin chuyển khoản để họ có sẵn trong hộp thư
   depositCreated(n: {
     userId: number;
@@ -56,7 +80,7 @@ export const notificationService = {
   },
 
   // Vừa bị trừ phí lấy đề (gọi SAU khi transaction trừ tiền đã commit)
-  fetchCharged(n: { userId: number; amount: number; balanceAfter: number; threadId: string; examTitle?: string }) {
+  fetchCharged(n: FetchCharge) {
     notify("trừ phí lấy đề", async () => {
       const user = await userRepository.findById(n.userId);
       if (!user) return;
