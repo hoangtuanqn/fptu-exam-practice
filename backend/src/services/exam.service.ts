@@ -68,6 +68,7 @@ export const examService = {
         number: q.number,
         imageUrl: imageUrlOf(q.imagePath),
         correct: q.answer.split(/\s+/).filter(Boolean),
+        isReference: q.isReference,
       })),
     };
   },

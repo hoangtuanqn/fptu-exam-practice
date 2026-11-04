@@ -51,12 +51,14 @@ async function run(examId: number) {
       questions: exam.questions.map((q) => ({ number: q.number, name: q.name, file: path.join(storageDir, q.imagePath) })),
     });
 
-    await examRepository.updateAnswers(examId, solved.answers, "AI", solved.report);
+    await examRepository.updateAnswers(examId, solved.answers, "AI", solved.report, solved.notQuestions);
     await fs.writeFile(path.join(dir, "ans.txt"), `${solved.answers.join("\n")}\n`, "utf-8");
     await fs.writeFile(path.join(dir, "ai-report.md"), `${solved.report}\n`, "utf-8");
     lastError.delete(examId);
     void realtimeHub.publishExam(examId);
-    console.log(`[ai] đề ${exam.threadId} đã có đáp án (${solved.answers.length} câu) sau ${((Date.now() - t0) / 1000).toFixed(1)}s`);
+    const gaps = solved.unanswered.length ? `, thiếu ${solved.unanswered.length} câu (${solved.unanswered.join(",")})` : "";
+    const skipped = solved.notQuestions.length ? `, ${solved.notQuestions.length} ảnh không phải câu hỏi (${solved.notQuestions.join(",")})` : "";
+    console.log(`[ai] đề ${exam.threadId} đã có đáp án (${solved.answers.length} câu${gaps}${skipped}) sau ${((Date.now() - t0) / 1000).toFixed(1)}s`);
   } catch (err) {
     const message = (err as Error).message;
     console.error(`[ai] giải đề ${exam.threadId} lỗi: ${message}`);
