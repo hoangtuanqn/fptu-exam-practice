@@ -27,6 +27,12 @@ export interface AttemptDetail extends AttemptSummary {
   details: AttemptQuestion[];
 }
 
+// Số lần làm và điểm cao nhất của một đề
+export interface ExamAttemptStats {
+  attempts: number;
+  bestScore: number | null;
+}
+
 export interface AttemptPayload {
   mode: AttemptMode;
   durationSec: number;

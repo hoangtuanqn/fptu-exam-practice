@@ -29,8 +29,8 @@ export const practiceSessionRepository = {
     }),
 
   // Các lần làm dở (chưa nộp), mới cập nhật lên đầu
-  async listInProgress(owner: Owner, query: PaginationQuery, examId?: number) {
-    const where: Prisma.PracticeSessionWhereInput = { ...whereOf(owner), status: "IN_PROGRESS", examId };
+  async listInProgress(owner: Owner, query: PaginationQuery, examId?: number, notBefore?: Date) {
+    const where: Prisma.PracticeSessionWhereInput = { ...whereOf(owner), status: "IN_PROGRESS", examId, ...(notBefore && { updatedAt: { gte: notBefore } }) };
     const [items, total] = await Promise.all([
       prisma.practiceSession.findMany({ where, include: withExam, orderBy: { updatedAt: "desc" }, ...toSkipTake(query) }),
       prisma.practiceSession.count({ where }),

@@ -39,6 +39,8 @@ export const attemptService = {
     return { items, meta: toMeta(query, total) };
   },
 
+  summary: (userId: number, examId: number) => examAttemptRepository.summaryOfExam(userId, examId),
+
   // Chỉ chủ bài làm được xem (admin cũng không xem bài của người khác)
   async getMine(userId: number, id: number) {
     const attempt = await examAttemptRepository.findOfUser(id, userId);
