@@ -2,6 +2,8 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Link2, Loader2 } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
+import { ApiError } from "@/shared/api/client";
+import { useToast } from "@/shared/context/ToastContext";
 import { SignUpCta } from "@/features/trial/SignUpCta";
 import { useApi } from "@/shared/hooks/useApi";
 import { examImportApi } from "../exam-import.api";
@@ -52,6 +54,9 @@ export function LinkImport({ onImported }: Props) {
   );
   const fee = price.data?.price ?? 0;
   const [confirming, setConfirming] = useState(false); // hộp thoại xác nhận trước khi lấy (và trừ phí)
+  const [quoting, setQuoting] = useState(false); // đang hỏi server phí thực tế của lần lấy này
+  const [quotedFee, setQuotedFee] = useState<number | null>(null);
+  const toast = useToast();
 
   const limitReached =
     !user && job.phase === "failed" && job.errorStatus === 429;
@@ -81,11 +86,34 @@ export function LinkImport({ onImported }: Props) {
   }, [job.exam]);
 
   // Thành viên có phí, hoặc khách (có giới hạn lượt): hỏi xác nhận. Thành viên không mất phí thì lấy luôn.
-  const onSubmit = (e: FormEvent) => {
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!url.trim() || running) return;
-    if (!user || fee > 0) setConfirming(true);
-    else void job.start(url.trim());
+    const link = url.trim();
+    if (!link || running || quoting) return;
+    if (!user) return setConfirming(true);
+    if (fee <= 0) return void job.start(link);
+
+    // Hỏi trước phí thực tế: đề đã từng lấy thì miễn phí, mở luôn và báo cho người dùng biết
+    setQuoting(true);
+    try {
+      const quote = await examImportApi.quote(link);
+      if (quote.free) {
+        toast.success("Bạn đã lấy đề này trước đó nên được mở lại miễn phí, không bị trừ credit");
+        void job.start(link);
+      } else {
+        setQuotedFee(quote.fee);
+        setConfirming(true);
+      }
+    } catch (err) {
+      // Link sai: để lần gửi báo đúng lỗi. Lỗi khác (mạng...): vẫn hỏi xác nhận với mức phí mặc định, không tự trừ tiền.
+      if (err instanceof ApiError && err.status >= 400 && err.status < 500 && err.status !== 429) void job.start(link);
+      else {
+        setQuotedFee(fee);
+        setConfirming(true);
+      }
+    } finally {
+      setQuoting(false);
+    }
   };
 
   const confirm = () => {
@@ -124,9 +152,9 @@ export function LinkImport({ onImported }: Props) {
         <Button
           variant="primary"
           type="submit"
-          disabled={!url.trim() || running || done || (!!user && price.loading)}
+          disabled={!url.trim() || running || done || quoting || (!!user && price.loading)}
         >
-          {running && <Loader2 size={16} className="animate-spin" />}
+          {(running || quoting) && <Loader2 size={16} className="animate-spin" />}
           {running ? "Đang lấy đề…" : "Lấy đề"}
         </Button>
       </div>
@@ -183,7 +211,7 @@ export function LinkImport({ onImported }: Props) {
     {confirming && (
       <ConfirmFetchDialog
         url={url.trim()}
-        fee={fee}
+        fee={quotedFee ?? fee}
         balance={user ? user.balance : null}
         onCancel={() => setConfirming(false)}
         onConfirm={confirm}

@@ -2,7 +2,8 @@ import { Link } from "react-router-dom";
 import { Sparkles } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { VerifyEmailNotice } from "@/features/verify-email/VerifyEmailNotice";
-import { Button } from "@/shared/ui/Button";
+import { Button, buttonClass } from "@/shared/ui/Button";
+import { ChargeSummary } from "@/shared/ui/ChargeSummary";
 import { Modal, ModalActions, ModalTitle } from "@/shared/ui/Modal";
 import { formatCredit } from "@/shared/utils/formatters";
 
@@ -32,33 +33,24 @@ export function ExplainConfirmDialog({ questionNumber, price, onCancel, onConfir
         </div>
       ) : (
         <>
-      <p className="mt-2 text-sm leading-relaxed text-slate-600">
-        AI sẽ giải thích vì sao đáp án đúng và vì sao các lựa chọn còn lại sai. Phí <b className="text-slate-900">{formatCredit(price)}</b>, mỗi câu chỉ trả một lần, xem lại miễn phí.
-      </p>
-      <div className="mt-3 rounded-lg bg-slate-50 px-3.5 py-2.5 text-sm">
-        <div className="flex justify-between">
-          <span className="text-slate-500">Số dư hiện tại</span>
-          <span className="font-medium tabular-nums text-slate-900">{formatCredit(balance)}</span>
-        </div>
-        <div className="mt-1 flex justify-between">
-          <span className="text-slate-500">Số dư sau khi xem</span>
-          <span className={`font-medium tabular-nums ${short ? "text-rose-600" : "text-slate-900"}`}>{formatCredit(Math.max(0, balance - price))}</span>
-        </div>
-      </div>
-      {short && (
-        <p className="mt-2 text-sm text-rose-600">
-          Số dư không đủ.{" "}
-          <Link to="/account/deposit" className="font-medium underline">
-            Nạp thêm credit
-          </Link>
-        </p>
-      )}
-      <ModalActions>
-        <Button onClick={onCancel}>Hủy</Button>
-        <Button variant="primary" onClick={onConfirm} disabled={short}>
-          <Sparkles size={16} /> Xác nhận ({formatCredit(price)})
-        </Button>
-      </ModalActions>
+          <p className="mt-2 text-sm leading-relaxed text-slate-600">AI sẽ giải thích vì sao đáp án đúng và vì sao các lựa chọn còn lại sai. Mỗi câu chỉ trả một lần, xem lại miễn phí.</p>
+          <div className="mt-4">
+            <ChargeSummary amount={price} balance={balance} />
+          </div>
+          <ModalActions>
+            <Button grow onClick={onCancel}>
+              Hủy
+            </Button>
+            {short ? (
+              <Link to="/account/deposit" className={buttonClass({ variant: "primary", grow: true })}>
+                Nạp credit
+              </Link>
+            ) : (
+              <Button grow variant="primary" onClick={onConfirm}>
+                <Sparkles size={16} /> Trả {formatCredit(price)}
+              </Button>
+            )}
+          </ModalActions>
         </>
       )}
     </Modal>

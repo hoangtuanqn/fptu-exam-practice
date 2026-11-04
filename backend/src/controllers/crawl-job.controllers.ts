@@ -16,6 +16,11 @@ export const crawlJobController = {
       .json(new ResponseClient({ message: data.existed ? "Đề đã có sẵn" : "Đã nhận, đang xử lý", data }));
   },
 
+  // Báo giá trước khi xác nhận: phí thực tế (0 nếu đề người này đã lấy rồi)
+  async quote(req: Request, res: Response) {
+    res.json(new ResponseClient({ data: await crawlJobService.quote(actorOf(req), getValidated<ImportExamBody>(res, "query")) }));
+  },
+
   async price(_req: Request, res: Response) {
     res.json(new ResponseClient({ data: await crawlJobService.getPrice() }));
   },
