@@ -1,118 +1,138 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Check, Sparkles } from "lucide-react";
+import { ArrowRight, Check, Gift } from "lucide-react";
+import { authApi } from "@/features/auth/auth.api";
 import { examImportApi } from "@/features/exam-import/exam-import.api";
-import { logos } from "@/shared/brand/brand";
 import { useApi } from "@/shared/hooks/useApi";
 
 const EXAMS = 4; // số đề trong ưu đãi
-const QUESTIONS = 200; // tổng số câu của các đề đó
-const DEFAULT_TOTAL = 2000; // giá hiện khi chưa lấy được phí thật từ máy chủ
+const DEFAULT_PRICE = 500; // phí mỗi đề hiện khi chưa lấy được phí thật từ máy chủ
 
 const vnd = (n: number) => `${n.toLocaleString("vi-VN")}đ`;
-const gradientText = "bg-gradient-to-r from-amber-300 via-amber-200 to-accent-soft bg-clip-text text-transparent";
 
-// Một tờ đề thi thu nhỏ: tên đề, dòng đề bài giả, bốn đáp án (đáp án đúng tô xanh)
-function ExamSheet({ n, correct }: { n: number; correct: number }) {
+// Tờ bài thi đã chấm: đề bài, bốn phương án, đáp án đúng khoanh bút đỏ và điểm ở góc, như bài thi giấy thật
+function ExamPaper() {
   return (
-    <div className="h-full w-full rounded-2xl bg-white p-3 text-slate-800 shadow-[0_12px_30px_-8px_rgba(2,6,23,0.55)] ring-1 ring-slate-900/5">
-      <div className="flex items-center gap-2">
-        <img src={logos.partner} alt="" className="h-6 w-6 rounded-md" />
-        <div className="text-[11px] font-bold leading-none text-slate-900">Đề thi FE · 0{n}</div>
+    <div
+      aria-hidden
+      className="relative w-full max-w-[19rem] rounded-sm border border-slate-200 bg-white p-5 shadow-[0_1px_0_#e2e8f0,0_16px_30px_-20px_rgba(11,23,48,0.5)]"
+    >
+      <div className="flex items-baseline justify-between border-b border-slate-200 pb-2 font-display">
+        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Đề thi thử</span>
+        <span className="text-[10px] text-slate-400">Mã đề 01</span>
       </div>
-      <div className="mt-3 space-y-1.5">
-        <div className="h-1.5 w-full rounded-full bg-slate-200" />
-        <div className="h-1.5 w-10/12 rounded-full bg-slate-200" />
+
+      <div className="mt-4 space-y-1.5">
+        <div className="h-1.5 w-full rounded-sm bg-slate-200" />
+        <div className="h-1.5 w-10/12 rounded-sm bg-slate-200" />
       </div>
-      <div className="mt-3 space-y-1.5">
-        {["A", "B", "C", "D"].map((o, i) => (
-          <div
-            key={o}
-            className={`flex items-center gap-2 rounded-lg px-1.5 py-1 ${i === correct ? "bg-emerald-50 ring-1 ring-emerald-300" : "bg-slate-50"}`}
-          >
-            <span
-              className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[8px] font-bold ${i === correct ? "bg-emerald-500 text-white" : "bg-slate-200 text-slate-500"}`}
-            >
-              {i === correct ? <Check size={9} strokeWidth={4} /> : o}
-            </span>
-            <span className={`h-1.5 rounded-full ${i === correct ? "w-9/12 bg-emerald-300" : "w-7/12 bg-slate-200"}`} />
-          </div>
-        ))}
-      </div>
+
+      <ol className="mt-4 space-y-2.5">
+        {["A", "B", "C", "D"].map((o, i) => {
+          const right = i === 1;
+          return (
+            <li key={o} className="flex items-center gap-2.5">
+              <span
+                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border font-display text-[10px] font-semibold ${
+                  right ? "border-emerald-600 text-emerald-600 ring-2 ring-emerald-500/25" : "border-slate-200 text-slate-400"
+                }`}
+              >
+                {o}
+              </span>
+              <span className={`h-1.5 rounded-sm ${right ? "w-9/12 bg-emerald-200" : "w-7/12 bg-slate-200"}`} />
+              {right && <Check size={14} strokeWidth={3} className="text-emerald-600" />}
+            </li>
+          );
+        })}
+      </ol>
+
+      {/* Điểm chấm bằng bút đỏ */}
+      <span className="absolute -bottom-3 -right-3 -rotate-6 rounded-full border-2 border-emerald-600 bg-white px-3 py-0.5 font-display text-3xl font-bold italic leading-tight text-emerald-600">
+        10
+      </span>
     </div>
   );
 }
 
-// Hình minh hoạ: bốn tờ đề thi xoè như xấp bài, kèm huy hiệu "200 câu" và "Điểm 10"
-function PromoVisual() {
-  return (
-    <div className="relative mx-auto mb-3 h-60 w-full max-w-[22rem] sm:mb-0 sm:h-72" aria-hidden>
-      <div className="absolute left-1/2 top-1/2 h-48 w-48 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent/40 blur-3xl" />
-      {[0, 1, 2, 3].map((i) => {
-        const k = i - 1.5; // -1.5 … 1.5: xoè đều quanh tâm
-        return (
-          <div
-            key={i}
-            className="absolute left-1/2 top-1/2 h-40 w-32 sm:h-52 sm:w-40"
-            style={{
-              transform: `translate(-50%, -50%) translate(${k * 38}px, ${Math.abs(k) * 10 - 6}px) rotate(${k * 9}deg)`,
-              zIndex: i,
-            }}
-          >
-            <ExamSheet n={i + 1} correct={(i * 3 + 1) % 4} />
-          </div>
-        );
-      })}
-
-      <div className="absolute -top-1 right-1 z-10 flex h-16 w-16 rotate-12 flex-col items-center justify-center rounded-full bg-amber-400 text-brand-900 shadow-card ring-4 ring-white/30 sm:right-2 sm:h-20 sm:w-20">
-        <span className="text-xl font-extrabold leading-none sm:text-2xl">{QUESTIONS}</span>
-        <span className="text-[9px] font-bold uppercase leading-tight sm:text-[10px]">câu hỏi</span>
-      </div>
-      <div className="absolute -bottom-1 left-0 z-10 inline-flex -rotate-6 items-center gap-1.5 rounded-2xl bg-emerald-400 px-3 py-1.5 text-sm font-extrabold text-emerald-950 shadow-card ring-4 ring-white/30 sm:left-2 sm:text-base">
-        <Sparkles size={16} /> Điểm 10
-      </div>
-    </div>
-  );
-}
-
-// Thẻ ưu đãi ngay đầu trang chủ: ít chữ, giá thật to, hình minh hoạ chiếm nửa thẻ.
-// Giá = số đề × phí lấy đề admin đang cấu hình (khớp số tiền bị trừ thật); chưa tải được thì hiện giá mặc định.
+/**
+ * Thẻ ưu đãi ngay đầu trang chủ, trình bày như một tờ thông tin: viền mảnh, vạch navy trên đầu, chữ có chân, bảng thông số
+ * có đường chấm. Không chữ chuyển sắc, không phát sáng, không chuyển động; một điểm nhấn vàng đồng.
+ * Thiết kế theo vài nguyên tắc có nghiên cứu:
+ *  - Người dùng quét chứ không đọc: mỗi cụm chỉ một ý, mỗi từ khoá xuất hiện một lần.
+ *  - Một điểm nhấn duy nhất (con số lớn) và một nút bấm duy nhất.
+ *  - Endowed progress (Nunes & Drèze 2006): quà đăng ký là tiến độ đã có sẵn (2/4 đề đã mở), không chỉ là một con số credit.
+ * Giá và số đề được tặng lấy từ cấu hình admin nên luôn khớp số tiền thật; admin không tặng thì phần quà tự ẩn.
+ */
 export function PromoCard() {
-  const { data } = useApi(() => examImportApi.price(), []);
-  const total = data ? data.price * EXAMS : DEFAULT_TOTAL;
+  const price = useApi(() => examImportApi.price(), []).data?.price ?? DEFAULT_PRICE;
+  const bonus = useApi(() => authApi.signupBonus(), []).data?.credit ?? 0;
+
+  const total = price * EXAMS;
+  const gifted = price <= 0 ? EXAMS : Math.min(EXAMS, Math.floor(bonus / price)); // số đề đã mở sẵn bằng quà đăng ký
+  const hasGift = gifted > 0;
+
+  const rows: [string, string][] = [
+    ["Số đề thi", `${EXAMS} đề`],
+    ["Trọn bộ", total > 0 ? vnd(total) : "Miễn phí"],
+    ["Hoàn tiền", "nếu lấy đề lỗi"],
+  ];
 
   return (
-    <div className="relative mx-auto max-w-3xl overflow-hidden rounded-[2rem] bg-gradient-to-br from-brand-900 via-brand-800 to-brand-600 p-5 text-left text-white shadow-[0_24px_60px_-16px_rgba(0,102,255,0.55)] ring-1 ring-white/10 sm:p-8">
-      <div aria-hidden className="bg-dots absolute inset-0 opacity-15 [mask-image:radial-gradient(ellipse_80%_70%_at_20%_0%,#000_10%,transparent_100%)]" />
+    <div className="relative mx-auto max-w-3xl overflow-hidden rounded-lg border border-slate-200 border-t-4 border-t-brand-900 bg-white text-left shadow-[0_18px_40px_-28px_rgba(11,23,48,0.5)]">
+      <div className="grid sm:grid-cols-[1.1fr_1fr]">
+        <div className="p-5 sm:p-8">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-brand-700">Ưu đãi dành cho sinh viên</p>
 
-      <div className="relative grid items-center gap-4 sm:grid-cols-2 sm:gap-6">
-        <div className="text-center sm:text-left">
-          <span className="inline-block rounded-full bg-amber-400 px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.14em] text-brand-900">
-            Ưu đãi sinh viên
-          </span>
+          <div className="mt-2 font-display text-8xl font-semibold leading-[0.9] tracking-tight text-brand-900 sm:text-[7rem]">200+</div>
+          <div className="mt-1 font-display text-xl italic text-slate-600">câu hỏi có đáp án</div>
 
-          <h2 className="mt-3 text-3xl font-extrabold leading-tight sm:text-4xl">{EXAMS} đề thi FE</h2>
+          <dl className="mt-5 text-sm">
+            {rows.map(([k, v]) => (
+              <div key={k} className="flex items-baseline justify-between gap-4 border-b border-dotted border-slate-200 py-1.5">
+                <dt className="text-slate-500">{k}</dt>
+                <dd className="font-semibold text-slate-900">{v}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="mt-2 text-xs italic text-slate-500">Không cần nâng cấp VIP bên FuOverflow.</p>
 
-          {total > 0 ? (
-            <div className={`${gradientText} text-6xl font-extrabold leading-none sm:text-7xl`}>{vnd(total)}</div>
-          ) : (
-            <div className="text-5xl font-extrabold leading-none text-amber-300 sm:text-6xl">Miễn phí</div>
-          )}
-          <p className="mt-2 text-base font-medium text-brand-100">Khỏi mua gói VIP FUO</p>
-
-          <div className="relative mt-5 inline-block w-full sm:w-auto">
-            <span aria-hidden className="absolute inset-0 rounded-2xl bg-white/40 motion-safe:animate-pulse" />
-            <Link
-              to="/register"
-              className="group relative flex items-center justify-center gap-2 rounded-2xl bg-white px-7 py-3.5 text-base font-bold text-brand-800 shadow-card transition hover:bg-brand-50 active:scale-[0.98]"
-            >
-              Nhận ngay
-              <ArrowRight size={18} className="transition group-hover:translate-x-0.5" />
-            </Link>
-          </div>
+          <Link
+            to="/register"
+            className="group mt-5 inline-flex w-full items-center justify-center gap-2 rounded-md bg-brand-900 px-6 py-3 text-base font-semibold text-white transition hover:bg-brand-800 sm:w-auto"
+          >
+            {hasGift ? "Nhận quà ngay" : "Bắt đầu ngay"}
+            <ArrowRight size={18} className="transition group-hover:translate-x-0.5" />
+          </Link>
+          <p className="mt-2.5 text-xs text-slate-500">Đăng ký miễn phí, chỉ cần email.</p>
         </div>
 
-        <PromoVisual />
+        <div className="flex items-center justify-center border-t border-slate-200 bg-paper p-8 sm:border-l sm:border-t-0">
+          <ExamPaper />
+        </div>
       </div>
+
+      {/* Quà đăng ký: một hàng gọn, bốn ô đề (ô đã mở được đánh dấu) */}
+      {hasGift && (
+        <div className="flex flex-col gap-3 border-t border-slate-200 bg-paper px-5 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+          <div className="flex items-center gap-3">
+            <Gift size={22} strokeWidth={1.6} className="shrink-0 text-brand-700" />
+            <div className="leading-tight">
+              <div className="text-xs font-semibold text-slate-600">Đăng ký lần đầu nhận ngay</div>
+              <div className="font-display text-xl font-bold text-brand-900">{bonus.toLocaleString("vi-VN")} credit</div>
+            </div>
+          </div>
+
+
+          <div className="text-xs font-semibold text-slate-500 sm:text-right">
+            {gifted < EXAMS ? (
+              <>
+                Mở sẵn <b className="text-brand-900">{gifted}/{EXAMS}</b> đề
+              </>
+            ) : (
+              <b className="text-brand-900">Bộ đề thi FE FPTU</b>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -28,15 +28,15 @@ export function DropZone({ onPick }: { onPick: PickFolder }) {
           dragging ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-slate-50/60 hover:border-brand-400 hover:bg-brand-50/50"
         }`}
       >
-        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-600 to-accent text-white shadow-lg shadow-brand-600/25">
+        <span className="flex h-12 w-12 items-center justify-center rounded-md bg-brand-900 text-white">
           <FolderOpen size={22} />
         </span>
-        <div className="mt-4 text-lg font-semibold text-slate-900">Mở thư mục đề</div>
+        <div className="mt-4 font-display text-xl font-semibold text-brand-900">Mở thư mục đề</div>
         <div className="mt-0.5 text-sm text-slate-500">Kéo thả thư mục vào đây, hoặc bấm để chọn</div>
         <FolderInput onPick={onPick} />
       </label>
 
-      <details className="mt-3 pb-1 text-left text-sm">
+      <details open className="mt-3 pb-1 text-left text-sm">
         <summary className="cursor-pointer select-none text-center text-xs text-slate-500 hover:text-slate-800">
           Thư mục đề cần có cấu trúc thế nào?
         </summary>
