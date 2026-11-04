@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Link2, Loader2 } from "lucide-react";
+import { BadgeCheck, Link2, Loader2 } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { ApiError } from "@/shared/api/client";
 import { useToast } from "@/shared/context/ToastContext";
@@ -41,6 +41,8 @@ interface Props {
   onImported: (exam: ImportedExam) => void;
 }
 
+const DEFAULT_PRICE = 500; // phí niêm yết hiện khi chưa lấy được từ máy chủ
+
 // Nhập link đề FuOverflow: server crawl ở nền, ở đây hiện thanh tiến độ và mở đề khi xong
 export function LinkImport({ onImported }: Props) {
   const { user, refresh } = useAuth();
@@ -48,11 +50,11 @@ export function LinkImport({ onImported }: Props) {
   const [searchParams] = useSearchParams();
   const [url, setUrl] = useState(searchParams.get("url") ?? "");
   const job = useExamImport();
-  const price = useApi(
-    () => (user ? examImportApi.price() : Promise.resolve({ price: 0 })),
-    [user?.id],
-  );
-  const fee = price.data?.price ?? 0;
+  // Giá niêm yết luôn lấy về để hiện cho mọi người; phí thực tế chỉ tính với thành viên (khách dùng thử miễn phí)
+  const price = useApi(() => examImportApi.price(), [user?.id]);
+  const listPrice = price.data?.price ?? null;
+  const shownPrice = listPrice ?? DEFAULT_PRICE; // chưa tải được thì hiện giá mặc định
+  const fee = user ? (listPrice ?? 0) : 0;
   const [confirming, setConfirming] = useState(false); // hộp thoại xác nhận trước khi lấy (và trừ phí)
   const [quoting, setQuoting] = useState(false); // đang hỏi server phí thực tế của lần lấy này
   const [quotedFee, setQuotedFee] = useState<number | null>(null);
@@ -136,6 +138,17 @@ export function LinkImport({ onImported }: Props) {
         </div>
         <div className="mt-0.5 text-sm text-slate-500">
           Dán link thread đề thi, hệ thống tự lấy ảnh và lưu lại
+        </div>
+        <div className="mt-3 flex flex-col items-center gap-1.5">
+          <div className="flex items-baseline gap-1">
+            <span className="text-3xl font-extrabold leading-none tracking-tight text-brand-700">
+              {shownPrice > 0 ? `${shownPrice.toLocaleString("vi-VN")}đ` : "Miễn phí"}
+            </span>
+            <span className="text-sm font-medium text-slate-500">/ đề</span>
+          </div>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
+            <BadgeCheck size={14} /> Đáp án chính xác đến 99.9%
+          </span>
         </div>
       </div>
 
