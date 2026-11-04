@@ -49,6 +49,9 @@ export const crawlJobRepository = {
     }
   },
 
+  // Đề đã đủ điều kiện hiển thị (có ảnh đầu tiên): người dùng mở đề được ngay dù job còn đang tải tiếp
+  setExam: (id: number, examId: number) => prisma.crawlJob.update({ where: { id }, data: { examId } }),
+
   async setStage(id: number, stage: string): Promise<void> {
     await prisma.crawlJob.update({ where: { id }, data: { stage } });
   },

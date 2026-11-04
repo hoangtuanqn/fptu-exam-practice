@@ -19,6 +19,7 @@ export interface ImportedExam {
   threadId: string; // mã thread FuOverflow, dùng trong địa chỉ /exam/:threadId
   title: string;
   answerStatus: AnswerSource; // PENDING = AI đang phân tích đáp án
+  totalQuestions: number; // lớn hơn questions.length = đề còn đang được lấy về, các câu sau đến qua socket
   questions: Question[];
 }
 
@@ -28,4 +29,11 @@ export interface ExamAnswersPayload {
   status: AnswerSource; // PENDING = đang giải, FAILED = lỗi, còn lại = đã có đáp án
   answerError: string | null; // lời nhắn cho người dùng khi lỗi
   answers: { number: number; correct: string[] }[];
+}
+
+// Sự kiện realtime "exam:questions": các câu đã có ảnh của đề đang được lấy về (gộp theo số câu)
+export interface ExamQuestionsPayload {
+  examId: number;
+  total: number;
+  questions: { number: number; imageUrl: string; correct: string[] }[];
 }

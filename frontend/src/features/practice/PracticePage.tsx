@@ -5,6 +5,7 @@ import { historyApi } from "@/features/history/history.api";
 import { pendingAttempt } from "@/features/guest-sync/pendingAttempt";
 import { examImportApi } from "@/features/exam-import/exam-import.api";
 import { useExamAnswersLive } from "@/features/practice/hooks/useExamAnswersLive";
+import { useExamQuestionsLive } from "@/features/practice/hooks/useExamQuestionsLive";
 import { useToast } from "@/shared/context/ToastContext";
 import { useQuiz } from "@/features/practice/hooks/useQuiz";
 import { useQuizShortcuts } from "@/features/practice/hooks/useQuizShortcuts";
@@ -62,6 +63,18 @@ export default function PracticePage({ threadId }: Props) {
     toast.success("AI đã phân tích xong đáp án, bạn có thể làm bài");
   });
 
+  // Đề còn đang được lấy về: các câu mới hiện dần qua socket. Lấy thất bại thì đề bị gỡ, thoát ra trang chủ.
+  useExamQuestionsLive(
+    quiz.examId ?? quiz.pendingExamId,
+    quiz.loadingMore || quiz.pendingLoadingMore,
+    (r) => quiz.appendQuestions(r.questions, r.total),
+    (message) => {
+      quiz.closeExam();
+      toast.error(`Lấy đề thất bại: ${message}`);
+      navigate("/", { replace: true });
+    },
+  );
+
   // Nộp bài xong: thành viên thì ghi vào lịch sử (chỉ với đề của hệ thống; đề mở từ thư mục không có trong DB).
   // Khách thì giữ bài lại, lưu khi họ đăng ký/đăng nhập (xem GuestSync).
   // Chờ có đáp án rồi mới lưu: lưu lúc AI chưa xong sẽ ghi điểm sai.
@@ -105,8 +118,8 @@ export default function PracticePage({ threadId }: Props) {
         loadedFor.current = threadId; // đã tải xong đề này
         setOpenedThread(exam.threadId);
         const mode = new URLSearchParams(location.search).get("mode");
-        if (mode === "practice" || mode === "exam") quiz.openExam(exam.questions, exam.title, exam.id, mode, exam.answerStatus);
-        else quiz.loadExam(exam.questions, exam.title, exam.id, exam.answerStatus);
+        if (mode === "practice" || mode === "exam") quiz.openExam(exam.questions, exam.title, exam.id, mode, exam.answerStatus, exam.totalQuestions);
+        else quiz.loadExam(exam.questions, exam.title, exam.id, exam.answerStatus, exam.totalQuestions);
       })
       .catch((err: unknown) => {
         if (stale) return;

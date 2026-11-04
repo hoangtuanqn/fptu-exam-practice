@@ -5,6 +5,8 @@ export const EVENTS = {
   subscribe: "subscribe", // client -> server: { room: "exam" | "job", id }
   unsubscribe: "unsubscribe",
   examAnswers: "exam:answers", // server -> client: trạng thái + đáp án của đề
+  examQuestions: "exam:questions", // server -> client: các câu đã có ảnh (đề đang được lấy về, hiện dần)
+  examFailed: "exam:failed", // server -> client: lấy đề thất bại giữa chừng, đề bị gỡ
   jobUpdate: "job:update", // server -> client: tiến độ lấy đề
 } as const;
 
