@@ -17,6 +17,32 @@ function deriveName(alt: string | undefined, url: URL): string {
   return stripExt(slug.replace(/-([A-Za-z0-9]{2,5})$/, ".$1"));
 }
 
+// Chỉ nhận bài có nhãn (badge) này ở tiêu đề: <span class="label label--red">Đề Thi FE</span>
+export const REQUIRED_LABEL = "Đề Thi FE";
+const norm = (s: string) => s.normalize("NFC").replace(/\s+/g, " ").trim().toLowerCase();
+
+export function hasRequiredLabel(html: string): boolean {
+  const $ = cheerio.load(html);
+  return $("h1.p-title-value .label, h1.p-title-value .labelLink")
+    .toArray()
+    .some((el) => norm($(el).text()) === norm(REQUIRED_LABEL));
+}
+
+const QUESTION_NAME = /^Q\d+$/i;
+
+/**
+ * Tên file chuẩn là Q1, Q2... Ảnh nào đặt tên khác (vd "image", "IMG_0012") thì đổi theo thứ tự của ảnh trong thread
+ * (ảnh thứ 3 -> Q3). Tên đúng chuẩn được giữ nguyên và giữ chỗ trước, nên tên mới không bao giờ đè lên chúng.
+ */
+export function normalizeQuestionNames(images: RawImage[]): RawImage[] {
+  const used = new Set<string>();
+  const kept = images.map((img) => (QUESTION_NAME.test(img.name) ? uniqueName(img.name, used) : null));
+  return images.map((img, i) => {
+    const name = kept[i] ?? uniqueName(`Q${i + 1}`, used);
+    return { ...img, name };
+  });
+}
+
 export function extractTitle(html: string): string {
   const $ = cheerio.load(html);
   const h1 = $("h1.p-title-value").first().clone();
@@ -96,6 +122,9 @@ export async function collectThread(client: FuoClient, startUrl: string): Promis
     visited.add(next);
     const html: string = await (await client.fetchOk(next)).text();
     if (!title) {
+      if (!hasRequiredLabel(html)) {
+        throw new Error(`Chỉ lấy được các bài có nhãn "${REQUIRED_LABEL}". Bài này không có nhãn đó nên không được lấy.`);
+      }
       title = extractTitle(html);
       signature = extractThreadSignature(html);
       firstPost = extractFirstPost(html);
@@ -107,17 +136,18 @@ export async function collectThread(client: FuoClient, startUrl: string): Promis
 
   if (!images.size) {
     throw new Error(
-      `Không tìm thấy ảnh nào trong "${title}". Có thể cookie hết hạn, Cloudflare chặn, hoặc thread không có ảnh.`,
+      `Không tìm thấy ảnh nào trong "${title}". Đề phải là ảnh; hoặc cookie hết hạn, Cloudflare chặn.`,
     );
   }
 
   const used = new Set<string>();
+  const named = normalizeQuestionNames([...images.values()]);
   return {
     title: title || "untitled",
     threadId: signature.threadId,
     canonicalUrl: signature.canonicalUrl,
     author: firstPost.author,
     postedAt: firstPost.postedAt,
-    images: [...images.values()].map((img) => ({ ...img, fileBase: uniqueName(img.name, used) })),
+    images: named.map((img) => ({ ...img, fileBase: uniqueName(img.name, used) })),
   };
 }
