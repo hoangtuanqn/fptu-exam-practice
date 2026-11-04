@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Loader2, Minus, Plus, UserRound, X } from "lucide-react";
+import { Link } from "react-router-dom";
 import { adminApi } from "@/features/admin/api/admin.api";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useToast } from "@/shared/context/ToastContext";
@@ -92,6 +93,16 @@ export function UserDialog({ user, onClose, onChanged }: Props) {
           Lưu thông tin
         </Button>
       </form>
+
+      <div className="my-5 h-px bg-slate-100" />
+
+      <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+        <span className="text-slate-500">Xem lịch sử:</span>
+        <Link to={`/admin/wallet?userId=${user.id}`} className="font-medium text-brand-700 hover:underline">Biến động số dư</Link>
+        <Link to={`/admin/deposits?userId=${user.id}`} className="font-medium text-brand-700 hover:underline">Lệnh nạp</Link>
+        <Link to={`/admin/crawl-jobs?userId=${user.id}`} className="font-medium text-brand-700 hover:underline">Lấy đề</Link>
+        <Link to={`/admin/attempts?userId=${user.id}`} className="font-medium text-brand-700 hover:underline">Bài làm</Link>
+      </div>
 
       <div className="my-5 h-px bg-slate-100" />
 
