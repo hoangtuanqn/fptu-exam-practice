@@ -1,5 +1,9 @@
 export interface CrawlerConfig {
   cookie: string; // cookie đăng nhập FuOverflow (ảnh gốc yêu cầu đăng nhập)
+  loginEmail: string; // tài khoản FuOverflow để tự đăng nhập lấy cookie mới khi phiên hết hạn
+  loginPassword: string; // không bao giờ trả ra giao diện
+  loginLastAt: string; // lần đăng nhập tự động gần nhất (ISO), rỗng = chưa có
+  loginLastError: string; // lỗi của lần đó, rỗng = thành công
   userAgent: string; // phải trùng User-Agent của trình duyệt đã lấy cookie
   referer: string;
   requestDelayMs: number; // nghỉ giữa các request liên tiếp của cùng một luồng để không bị chặn
@@ -10,6 +14,10 @@ export interface CrawlerConfig {
 
 export const CRAWLER_DEFAULTS: CrawlerConfig = {
   cookie: "",
+  loginEmail: "",
+  loginPassword: "",
+  loginLastAt: "",
+  loginLastError: "",
   userAgent: "",
   referer: "https://fuoverflow.com/",
   requestDelayMs: 300,

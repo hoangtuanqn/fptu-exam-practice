@@ -20,16 +20,23 @@ export const crawlerSettingService = {
 
   // Bản trả cho admin: không lộ cookie, chỉ báo đã cấu hình hay chưa
   async getForAdmin() {
-    const { cookie, ...rest } = await this.get();
-    return { ...rest, hasCookie: cookie.length > 0, cookiePreview: cookie ? `••••${cookie.slice(-6)}` : "" };
+    const { cookie, loginPassword, ...rest } = await this.get();
+    return {
+      ...rest,
+      hasCookie: cookie.length > 0,
+      cookiePreview: cookie ? `••••${cookie.slice(-6)}` : "",
+      hasLoginPassword: loginPassword.length > 0, // mật khẩu không bao giờ trả ra ngoài
+    };
   },
 
   async update(body: UpdateCrawlerBody) {
-    const { cookie, ...rest } = body;
+    const { cookie, loginPassword, ...rest } = body;
     const entries: Record<string, string> = {};
     for (const [name, value] of Object.entries(rest)) entries[keyOf(name as keyof CrawlerConfig)] = String(value);
     // Để trống cookie = giữ cookie cũ
     if (cookie) entries[keyOf("cookie")] = cookie;
+    // Để trống mật khẩu = giữ mật khẩu cũ
+    if (loginPassword) entries[keyOf("loginPassword")] = loginPassword;
 
     await settingRepository.setMany(entries);
     return this.getForAdmin();
