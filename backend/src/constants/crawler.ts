@@ -34,4 +34,9 @@ export const FUO_HOST = "fuoverflow.com";
 
 // Thư mục của một đề trong STORAGE_DIR: exams/<threadId>/ gồm images/<tên>.webp và comments.txt
 export const EXAM_STORAGE_DIR = "exams";
+// Đề nằm trong hệ thống quá chừng này ngày (≈ 4 tháng) thì lần lấy kế tiếp sẽ làm mới: lấy lại ảnh, bình luận và giải lại đáp án
+export const EXAM_STALE_AFTER_DAYS = 120;
+// Làm mới thất bại thì chưa thử lại ngay (tránh dồn request sang FuOverflow mỗi lần có người lấy đề)
+export const EXAM_REFRESH_RETRY_HOURS = 24;
+
 export const EXAM_IMAGES_DIR = "images";

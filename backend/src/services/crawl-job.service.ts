@@ -9,6 +9,7 @@ import type { ImportExamBody } from "../rules/requests/crawl.request";
 import { isMember, type Actor } from "../utils/actor";
 import { parseThreadId } from "../utils/fuo-url";
 import { startOfVnDay } from "../utils/time";
+import { EXAM_REFRESH_RETRY_HOURS, EXAM_STALE_AFTER_DAYS } from "../constants/crawler";
 import { crawlerSettingService } from "./crawler-setting.service";
 import { toJobDto } from "./crawl-job.dto";
 import { examService } from "./exam.service";
@@ -21,6 +22,10 @@ const listeners: Listener[] = [];
 const GUEST_DAILY_LIMIT = 1;
 export const GUEST_LIMIT_MESSAGE =
   "Bạn đã hết lượt lấy đề miễn phí hôm nay. Đăng ký tài khoản để lấy thêm đề, lưu kho riêng và theo dõi lịch sử làm bài nhé!";
+
+const HOUR_MS = 60 * 60 * 1000;
+const isStale = (exam: { createdAt: Date; refreshedAt: Date | null }) =>
+  Date.now() - (exam.refreshedAt ?? exam.createdAt).getTime() > EXAM_STALE_AFTER_DAYS * 24 * HOUR_MS;
 
 export const crawlJobService = {
   // Phí mỗi lần lấy đề, để giao diện báo trước cho người dùng
@@ -73,6 +78,11 @@ export const crawlJobService = {
     const alreadyOwned = isMember(owner) && !!exam && (await userExamRepository.has(owner, exam.id));
     const fetchPrice = isMember(owner) && !alreadyOwned ? (await crawlerSettingService.get()).fetchPrice : 0;
 
+    // Đề đã cũ quá hạn: người này vẫn mở được ngay bản hiện có, đồng thời xếp một lượt làm mới chạy nền
+    // (lấy lại ảnh + bình luận, giải lại đáp án). Chưa tạo thêm nếu đang làm mới hoặc vừa thất bại gần đây.
+    const refresh =
+      !!exam && isStale(exam) && !(await crawlJobRepository.hasRecentRefresh(threadId, new Date(Date.now() - EXAM_REFRESH_RETRY_HOURS * HOUR_MS)));
+
     let balanceAfter: number | null = null; // số dư sau khi trừ phí, để báo qua email
     const result = await prisma.$transaction(async (tx) => {
       if (fetchPrice > 0 && isMember(owner)) {
@@ -86,7 +96,10 @@ export const crawlJobService = {
       }
       if (exam) {
         await examService.addToLibrary(owner, exam.id, tx);
-        if (!isMember(owner)) {
+        if (refresh) {
+          // Lượt làm mới cũng là lượt ghi nhận cho khách (đếm giới hạn ngày); không tính phí
+          await crawlJobRepository.create({ threadId, ...owner, chargedAmount: 0, refresh: true, examId: exam.id }, tx);
+        } else if (!isMember(owner)) {
           // Ghi lại lượt lấy của khách để đếm giới hạn ngày
           await crawlJobRepository.create(
             { threadId, ...owner, chargedAmount: 0, status: "DONE", examId: exam.id, finishedAt: new Date() },
@@ -110,7 +123,7 @@ export const crawlJobService = {
       });
     }
 
-    if (!result.existed) listeners.forEach((fn) => fn());
+    if (!result.existed || refresh) listeners.forEach((fn) => fn());
     return result;
   },
 

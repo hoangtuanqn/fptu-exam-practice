@@ -123,6 +123,35 @@ export const examRepository = {
   addQuestions: (examId: number, questions: NewExam["questions"]) =>
     prisma.examQuestion.createMany({ data: questions.map((q) => ({ ...q, examId })), skipDuplicates: true }),
 
+  // Làm mới đề: ghi đè từng câu theo số câu (giữ nguyên id đề và đáp án cũ cho tới khi giải xong lại)
+  async upsertQuestions(examId: number, questions: NewExam["questions"]) {
+    for (const { answer, ...q } of questions) {
+      await prisma.examQuestion.upsert({
+        where: { examId_number: { examId, number: q.number } },
+        update: q,
+        create: { ...q, answer, examId },
+      });
+    }
+  },
+
+  // Làm mới xong phần lấy dữ liệu: cập nhật thông tin đề, bỏ các câu thừa (thread bớt ảnh) và lời giải thích cũ
+  finishRefresh: (examId: number, data: { title: string; sourceUrl: string; author?: string; postedAt?: string; total: number }) =>
+    prisma.$transaction([
+      prisma.exam.update({
+        where: { id: examId },
+        data: {
+          title: data.title,
+          sourceUrl: data.sourceUrl,
+          author: data.author,
+          postedAt: parseSiteTime(data.postedAt),
+          totalQuestions: data.total,
+          refreshedAt: new Date(),
+        },
+      }),
+      prisma.examQuestion.deleteMany({ where: { examId, number: { gt: data.total } } }),
+      prisma.questionExplanation.deleteMany({ where: { examId } }),
+    ]),
+
   countQuestions: (examId: number) => prisma.examQuestion.count({ where: { examId } }),
 
   isComplete: async (exam: { id: number; totalQuestions: number }) =>
