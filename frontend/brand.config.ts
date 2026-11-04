@@ -26,7 +26,7 @@ const DEFAULTS = {
   product: "Luyện thi FE FPTU",
   tagline: "MMO Solution",
   slogan: "Hành trình đi đến điểm 10.",
-  description: "Luyện thi FE FPTU: làm đề trắc nghiệm từ thư mục ảnh, chấm điểm thang 10. Phát triển bởi MST Software.",
+  description: "Web luyện thi FE FPTU: lấy đề từ kho FuOverflow chỉ bằng một link, làm trắc nghiệm có đáp án, chấm điểm thang 10 và xem lại lịch sử. Đăng ký miễn phí.",
   siteUrl: "",
   companyUrl: "",
   facebookUrl: "https://facebook.com/mstsoftware.vn",
