@@ -1,11 +1,10 @@
-import { useEffect, useState } from "react";
 import { Search, Wallet } from "lucide-react";
 import { adminApi } from "@/features/admin/api/admin.api";
 import { UserCell, UserFilterChip } from "@/features/admin/shared";
 import { TRANSACTION_LABEL } from "@/shared/components/StatusBadge";
 import { useApi } from "@/shared/hooks/useApi";
 import { useClampPage } from "@/shared/hooks/useClampPage";
-import { useDebounce } from "@/shared/hooks/useDebounce";
+import { useUrlSearch } from "@/shared/hooks/useUrlSearch";
 import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
 import type { TransactionType } from "@/shared/types/api";
 import { Card, PageHeader } from "@/shared/ui/Card";
@@ -24,12 +23,7 @@ export default function WalletHistoryPage() {
   const setPage = (p: number) => setUrl({ page: String(p) });
 
   // Ô tìm kiếm gõ trực tiếp, sau khi ngừng gõ mới đưa lên URL (và về trang 1)
-  const [search, setSearch] = useState(url.q);
-  const q = useDebounce(search.trim());
-  useEffect(() => {
-    if (q !== url.q) setUrl({ q, page: "1" });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q]);
+  const [search, setSearch, q] = useUrlSearch(url.q, setUrl);
 
   const { data, error, loading, reload } = useApi(
     () => adminApi.walletTransactions({ page, search: q, type, userId: url.userId }),

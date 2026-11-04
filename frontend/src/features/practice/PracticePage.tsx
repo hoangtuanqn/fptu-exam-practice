@@ -225,7 +225,7 @@ export default function PracticePage({ threadId }: Props) {
           <Loading label="Đang mở đề…" />
         </div>
       ) : (
-        <Landing onPick={pick} onImported={(exam) => navigate(`/exam/${exam.threadId}`)} userName={user?.fullName} trialUsed={trial.used} />
+        <Landing onPick={pick} onImported={(exam) => navigate(`/exam/${exam.threadId}`)} userName={user?.fullName} />
       )}
     </div>
   );

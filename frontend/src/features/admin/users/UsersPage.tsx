@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Search, Users } from "lucide-react";
 import { adminApi } from "@/features/admin/api/admin.api";
 import { UserDialog } from "@/features/admin/users/UserDialog";
@@ -10,7 +10,7 @@ import { Segmented } from "@/shared/ui/Segmented";
 import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
 import { useApi } from "@/shared/hooks/useApi";
 import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
-import { useDebounce } from "@/shared/hooks/useDebounce";
+import { useUrlSearch } from "@/shared/hooks/useUrlSearch";
 import type { Role, User, UserStatus } from "@/shared/types/api";
 import { formatDate, formatCredit, initials } from "@/shared/utils/formatters";
 import { useClampPage } from "@/shared/hooks/useClampPage";
@@ -26,12 +26,7 @@ export default function UsersPage() {
   const [selected, setSelected] = useState<User | null>(null);
 
   // Ô tìm kiếm gõ trực tiếp, sau khi ngừng gõ mới đưa lên URL (và về trang 1)
-  const [search, setSearch] = useState(url.q);
-  const q = useDebounce(search.trim());
-  useEffect(() => {
-    if (q !== url.q) setUrl({ q, page: "1" });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q]);
+  const [search, setSearch, q] = useUrlSearch(url.q, setUrl);
 
   const { data, error, loading, reload } = useApi(() => adminApi.users({ page, search: q, role, status }), [page, q, role, status]);
   useClampPage(data?.meta, setPage);
