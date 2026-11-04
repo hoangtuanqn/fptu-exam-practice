@@ -1,6 +1,6 @@
 import { io, type Socket } from "socket.io-client";
 import { getGuestId } from "@/shared/api/guest";
-import { API_ORIGIN, tokenStore } from "@/shared/api/client";
+import { API_ORIGIN, refreshAccessToken, tokenStore } from "@/shared/api/client";
 import { EVENTS, SOCKET_PATH, type RoomKind } from "./events";
 
 /**
@@ -23,6 +23,11 @@ function getSocket(): Socket {
   });
   // Server không nhớ phòng sau khi mất kết nối: vào lại tất cả phòng đang theo dõi
   socket.on("connect", () => rooms.forEach((r) => join(socket!, r.kind, r.id)));
+  // Token hết hạn lúc nối lại: server từ chối và không tự thử lại. Làm mới token rồi nối lại.
+  socket.on("connect_error", (err) => {
+    if (err.message !== "unauthorized" || !tokenStore.get()) return;
+    void refreshAccessToken().then((r) => r === "ok" && socket?.connect());
+  });
   return socket;
 }
 

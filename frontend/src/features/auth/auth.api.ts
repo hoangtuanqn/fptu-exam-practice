@@ -17,4 +17,6 @@ export const authApi = {
   verifyEmail: (token: string) => http.post<{ email: string }>("/auth/verify-email", { token }),
   resendVerification: () => http.post<null>("/auth/resend-verification"),
   me: () => http.get<User>("/auth/me"),
+  // Thu hồi phiên ở máy chủ và xoá cookie đăng nhập
+  logout: () => http.post<null>("/auth/logout"),
 };
