@@ -16,6 +16,8 @@ export const authApi = {
   google: (body: { accessToken: string; referralCode?: string }) => http.post<AuthResult>("/auth/google", body),
   verifyEmail: (token: string) => http.post<{ email: string }>("/auth/verify-email", { token }),
   resendVerification: () => http.post<null>("/auth/resend-verification"),
+  // Credit tặng khi đăng ký (công khai, 0 = không tặng)
+  signupBonus: () => http.get<{ credit: number }>("/auth/signup-bonus"),
   me: () => http.get<User>("/auth/me"),
   // Thu hồi phiên ở máy chủ và xoá cookie đăng nhập
   logout: () => http.post<null>("/auth/logout"),
