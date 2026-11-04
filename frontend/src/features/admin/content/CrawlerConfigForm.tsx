@@ -80,19 +80,10 @@ export function CrawlerConfigForm({ initial, onSaved }: { initial: CrawlerAdminC
       <form onSubmit={onSubmit} className="space-y-5 p-5" noValidate>
         <FormError message={error} />
 
-        <PasswordInput
-          label="Cookie"
-          autoComplete="off"
-          value={form.cookie}
-          onChange={text("cookie")}
-          error={fieldErrors.cookie}
-          placeholder={initial.hasCookie ? `Đang dùng ${initial.cookiePreview} (để trống nếu không đổi)` : "Dán chuỗi cookie"}
-          hint="Trình duyệt → DevTools → Network → chuột phải một request tới fuoverflow.com → Copy as cURL, lấy phần cookie (xf_user, xf_session, xf_csrf, cf_clearance)."
-        />
         <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
           <div className="text-sm font-semibold text-slate-900">Tự đăng nhập khi cookie hết hạn</div>
           <p className="mt-1 text-xs leading-relaxed text-slate-500">
-            Lưu tài khoản FuOverflow để hệ thống tự lấy cookie mới khi phiên hết hạn, không phải chờ dán lại. Cần dán cookie có <b>cf_clearance</b> (cùng User-Agent) ít nhất một lần; hệ thống giữ nó và chỉ làm mới phiên
+            Lưu tài khoản FuOverflow để hệ thống tự lấy cookie mới khi phiên hết hạn, không phải chờ dán lại. Nếu Cloudflare chặn đăng nhập tự động, dán cookie có <b>cf_clearance</b> (cùng User-Agent) ở mục Nâng cao bên dưới một lần; hệ thống giữ nó và chỉ làm mới phiên
             đăng nhập. Không dùng được nếu tài khoản bật xác thực 2 bước.
           </p>
           <div className="mt-3 grid gap-4 sm:grid-cols-2">
@@ -119,13 +110,28 @@ export function CrawlerConfigForm({ initial, onSaved }: { initial: CrawlerAdminC
           </div>
         </div>
 
-        <Input
-          label="User-Agent"
-          value={form.userAgent}
-          onChange={text("userAgent")}
-          error={fieldErrors.userAgent}
-          hint="Phải trùng User-Agent của trình duyệt đã lấy cookie (cf_clearance gắn với IP và User-Agent)."
-        />
+        <details className="group rounded-xl border border-slate-200 p-4" open={!initial.hasLoginPassword}>
+          <summary className="cursor-pointer text-sm font-medium text-slate-700">Nâng cao: cookie và User-Agent (dán thủ công)</summary>
+          <div className="mt-4 space-y-5">
+            <PasswordInput
+              label="Cookie"
+              autoComplete="off"
+              value={form.cookie}
+              onChange={text("cookie")}
+              error={fieldErrors.cookie}
+              placeholder={initial.hasCookie ? `Đang dùng ${initial.cookiePreview} (để trống nếu không đổi)` : "Dán chuỗi cookie"}
+              hint="Trình duyệt → DevTools → Network → chuột phải một request tới fuoverflow.com → Copy as cURL, lấy phần cookie (xf_user, xf_session, xf_csrf, cf_clearance)."
+            />
+            <Input
+              label="User-Agent"
+              value={form.userAgent}
+              onChange={text("userAgent")}
+              error={fieldErrors.userAgent}
+              hint="Phải trùng User-Agent của trình duyệt đã lấy cookie (cf_clearance gắn với IP và User-Agent)."
+            />
+          </div>
+        </details>
+
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Input label="Referer" value={form.referer} onChange={text("referer")} error={fieldErrors.referer} />
           <Input
