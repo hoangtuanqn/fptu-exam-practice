@@ -14,6 +14,7 @@ interface FormState {
   userAgent: string;
   referer: string;
   requestDelayMs: string;
+  concurrency: string;
   webpQuality: string;
   fetchPrice: string;
 }
@@ -27,6 +28,7 @@ export function CrawlerConfigForm({ initial, onSaved }: { initial: CrawlerAdminC
     userAgent: initial.userAgent,
     referer: initial.referer,
     requestDelayMs: String(initial.requestDelayMs),
+    concurrency: String(initial.concurrency),
     webpQuality: String(initial.webpQuality),
     fetchPrice: String(initial.fetchPrice),
   });
@@ -40,6 +42,7 @@ export function CrawlerConfigForm({ initial, onSaved }: { initial: CrawlerAdminC
         ...form,
         cookie: form.cookie || undefined, // để trống = giữ cookie cũ
         requestDelayMs: Number(form.requestDelayMs),
+        concurrency: Number(form.concurrency),
         webpQuality: Number(form.webpQuality),
         fetchPrice: Number(form.fetchPrice),
       });
@@ -71,15 +74,23 @@ export function CrawlerConfigForm({ initial, onSaved }: { initial: CrawlerAdminC
           error={fieldErrors.userAgent}
           hint="Phải trùng User-Agent của trình duyệt đã lấy cookie (cf_clearance gắn với IP và User-Agent)."
         />
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Input label="Referer" value={form.referer} onChange={text("referer")} error={fieldErrors.referer} />
+          <Input
+            label="Số request cùng lúc (1–8)"
+            inputMode="numeric"
+            value={form.concurrency}
+            onChange={text("concurrency")}
+            error={fieldErrors.concurrency}
+            hint="Cao hơn thì lấy đề nhanh hơn nhưng dễ bị FuOverflow chặn. Khuyên dùng 3–4."
+          />
           <Input
             label="Nghỉ giữa request (ms)"
             inputMode="numeric"
             value={form.requestDelayMs}
             onChange={text("requestDelayMs")}
             error={fieldErrors.requestDelayMs}
-            hint="Thấp quá dễ bị chặn."
+            hint="Mỗi luồng nghỉ chừng này giữa hai request. Thấp quá dễ bị chặn."
           />
           <Input
             label="Chất lượng WebP (30–100)"

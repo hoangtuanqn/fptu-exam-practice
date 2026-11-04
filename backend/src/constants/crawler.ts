@@ -2,7 +2,8 @@ export interface CrawlerConfig {
   cookie: string; // cookie đăng nhập FuOverflow (ảnh gốc yêu cầu đăng nhập)
   userAgent: string; // phải trùng User-Agent của trình duyệt đã lấy cookie
   referer: string;
-  requestDelayMs: number; // nghỉ giữa các request để không bị chặn
+  requestDelayMs: number; // nghỉ giữa các request liên tiếp của cùng một luồng để không bị chặn
+  concurrency: number; // số request tải ảnh/bình luận chạy cùng lúc (1 = lần lượt)
   webpQuality: number; // chất lượng WebP khi chuyển ảnh
   fetchPrice: number; // phí (VND) mỗi lần lấy đề từ FuOverflow, 0 = miễn phí
 }
@@ -12,6 +13,7 @@ export const CRAWLER_DEFAULTS: CrawlerConfig = {
   userAgent: "",
   referer: "https://fuoverflow.com/",
   requestDelayMs: 300,
+  concurrency: 4,
   webpQuality: 80,
   fetchPrice: 0,
 };
