@@ -48,6 +48,35 @@ export const setUnauthorizedHandler = (fn: (() => void) | null) => {
 
 type Query = Record<string, string | number | undefined | null>;
 
+// Access token sống ngắn. Hết hạn thì đổi refresh token (cookie httpOnly, JavaScript không đọc được) lấy cái mới.
+// "ok" = đã có token mới; "invalid" = phiên hết hạn/bị thu hồi (phải đăng nhập lại); "unavailable" = chưa hỏi được máy chủ (giữ nguyên phiên).
+export type RefreshResult = "ok" | "invalid" | "unavailable";
+let refreshing: Promise<RefreshResult> | null = null;
+
+// Nhiều request cùng gặp 401 thì chỉ gửi một yêu cầu làm mới và dùng chung kết quả
+export function refreshAccessToken(): Promise<RefreshResult> {
+  refreshing ??= (async (): Promise<RefreshResult> => {
+    try {
+      const res = await fetch(`${BASE}/auth/refresh`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: "{}" });
+      const json = (await res.json().catch(() => null)) as Envelope<{ token: string }> | null;
+      if (res.ok && json?.status && json.data?.token) {
+        tokenStore.set(json.data.token);
+        return "ok";
+      }
+      if (res.status === 401 || res.status === 403) {
+        onUnauthorized?.();
+        return "invalid";
+      }
+      return "unavailable";
+    } catch {
+      return "unavailable";
+    }
+  })().finally(() => {
+    refreshing = null;
+  });
+  return refreshing;
+}
+
 interface Envelope<T> {
   status: boolean;
   message: string;
@@ -56,7 +85,7 @@ interface Envelope<T> {
   errors?: Record<string, string>;
 }
 
-async function send<T>(method: string, path: string, body?: unknown, query?: Query, keepalive = false) {
+async function send<T>(method: string, path: string, body?: unknown, query?: Query, keepalive = false, retried = false): Promise<Envelope<T>> {
   const qs = new URLSearchParams();
   for (const [k, v] of Object.entries(query ?? {})) if (v !== undefined && v !== null && v !== "") qs.set(k, String(v));
 
@@ -72,6 +101,7 @@ async function send<T>(method: string, path: string, body?: unknown, query?: Que
       },
       body: body !== undefined ? JSON.stringify(body) : undefined,
       keepalive, // cho phép request kịp gửi khi trang đang đóng/tải lại
+      credentials: "include", // gửi kèm cookie phiên đăng nhập (API khác domain với web)
     });
   } catch {
     throw new ApiError("Không kết nối được máy chủ", 0);
@@ -79,8 +109,15 @@ async function send<T>(method: string, path: string, body?: unknown, query?: Que
 
   const json = (await res.json().catch(() => null)) as Envelope<T> | null;
   if (!res.ok || !json?.status) {
-    // Chỉ coi là hết phiên khi đã gửi token; sai mật khẩu lúc đăng nhập cũng trả 401 nhưng không có token
-    if (res.status === 401 && token) onUnauthorized?.();
+    // Chỉ xử lý khi đã gửi token; sai mật khẩu lúc đăng nhập cũng trả 401 nhưng không có token
+    if (res.status === 401 && token) {
+      if (retried) onUnauthorized?.(); // đã làm mới mà vẫn bị từ chối
+      else {
+        // Request khác vừa làm mới xong thì dùng luôn token mới, không cần làm mới nữa
+        const result = tokenStore.get() !== token ? "ok" : await refreshAccessToken();
+        if (result === "ok") return send<T>(method, path, body, query, keepalive, true);
+      }
+    }
     throw new ApiError(json?.message ?? `Lỗi ${res.status}`, res.status, json?.errors);
   }
   return json;
