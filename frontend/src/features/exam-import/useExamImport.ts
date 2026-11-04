@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError } from "@/shared/api/client";
+import { useLeaveWarning } from "@/shared/hooks/useLeaveWarning";
 import { examImportApi } from "./exam-import.api";
 import { waitForJob } from "./jobLive";
 import type { CrawlJob, ImportedExam } from "./types";
@@ -16,6 +17,8 @@ export function useExamImport() {
   const [error, setError] = useState<string | null>(null);
   const [errorStatus, setErrorStatus] = useState<number | null>(null); // mã HTTP của lỗi (429 = khách hết lượt hôm nay)
   const [exam, setExam] = useState<ImportedExam | null>(null);
+  // Đang lấy đề mà đóng/tải lại trang: server vẫn lấy tiếp (đề vẫn vào kho, không mất phí), nhưng màn hình theo dõi tiến độ thì mất
+  useLeaveWarning(phase === "running");
   const alive = useRef(true);
   const runId = useRef(0);
   const abort = useRef(new AbortController()); // hủy việc chờ job khi bắt đầu lượt khác hoặc rời trang

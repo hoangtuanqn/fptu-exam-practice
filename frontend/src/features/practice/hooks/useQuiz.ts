@@ -17,6 +17,16 @@ interface PendingExam {
 // Đề chưa có đủ đáp án đúng (AI đang giải hoặc giải lỗi): chỉ xem, không làm bài
 const isLocked = (source: AnswerSource | null) => source !== null && source !== "AI" && source !== "MANUAL";
 
+// Trạng thái của một lượt làm dở dang cần khôi phục
+export interface ResumeState {
+  sessionId: number;
+  answers: UserAnswers;
+  checked: Record<number, boolean>;
+  flagged: Record<number, boolean>;
+  current: number;
+  elapsedSec: number;
+}
+
 type IncomingQuestion = { number: number; imageUrl: string; correct: string[] };
 
 // Gộp các câu mới về vào danh sách theo số câu (nhận lặp cũng không sao), giữ thứ tự tăng dần
@@ -42,9 +52,11 @@ export function useQuiz() {
   const [notFound, setNotFound] = useState(false); // upload thư mục không có ảnh hợp lệ
   const [flagged, setFlagged] = useState<Record<number, boolean>>({}); // câu đánh dấu cần xem lại
   const [session, setSession] = useState(0); // tăng mỗi lần bắt đầu/làm lại -> đặt lại đồng hồ
+  const [sessionId, setSessionId] = useState<number | null>(null); // lượt làm lưu trên server (null = chưa tạo / đề mở từ thư mục)
+  const [resumedElapsed, setResumedElapsed] = useState(0); // số giây đã làm ở lượt được làm tiếp
 
   // Đồng hồ chạy từ lúc bắt đầu, dừng khi nộp bài
-  const elapsed = useStopwatch(questions.length > 0 && !submitted, session);
+  const elapsed = useStopwatch(questions.length > 0 && !submitted, session, resumedElapsed);
 
   const last = questions.length - 1;
 
@@ -54,6 +66,8 @@ export function useQuiz() {
     setFlagged({});
     setSubmitted(false);
     setCurrent(0);
+    setSessionId(null);
+    setResumedElapsed(0);
     setSession((s) => s + 1);
   }
 
@@ -85,7 +99,15 @@ export function useQuiz() {
   }
 
   // Mở thẳng vào làm bài, bỏ qua bước xác nhận (khi liên kết đã nói rõ chế độ, ví dụ /exam/12?mode=exam)
-  function openExam(examQuestions: Question[], examTitle: string, id: number, chosenMode: Mode, source: AnswerSource = "AI", examTotal = examQuestions.length) {
+  function openExam(
+    examQuestions: Question[],
+    examTitle: string,
+    id: number,
+    chosenMode: Mode,
+    source: AnswerSource = "AI",
+    examTotal = examQuestions.length,
+    resume?: ResumeState, // có thì làm tiếp lượt dở dang thay vì bắt đầu mới
+  ) {
     setNotFound(false);
     setPending(null);
     setQuestions(isLocked(source) ? examQuestions.map((x) => ({ ...x, answerPending: true })) : examQuestions);
@@ -95,6 +117,14 @@ export function useQuiz() {
     setTotal(examTotal);
     setMode(chosenMode);
     clearProgress();
+    if (resume) {
+      setAnswers(resume.answers);
+      setChecked(resume.checked);
+      setFlagged(resume.flagged);
+      setCurrent(Math.max(0, Math.min(resume.current, examQuestions.length - 1)));
+      setResumedElapsed(resume.elapsedSec);
+      setSessionId(resume.sessionId);
+    }
   }
 
   // Bước 2: người dùng xác nhận và chọn chế độ
@@ -214,6 +244,8 @@ export function useQuiz() {
     notFound,
     flagged,
     elapsed,
+    sessionId,
+    setSessionId,
     toggleFlag,
     answeredCount: Object.values(answers).filter((a) => a.length > 0).length,
     result: submitted ? grade(questions, answers) : null,

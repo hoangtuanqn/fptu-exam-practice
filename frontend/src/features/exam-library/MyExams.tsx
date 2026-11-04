@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { BookOpen, Loader2 } from "lucide-react";
 import { examImportApi } from "@/features/exam-import/exam-import.api";
 import type { ImportedExam } from "@/features/exam-import/types";
+import { ResumeList } from "@/features/practice-session/ResumeList";
 import { formatScore } from "@/features/practice/utils/format";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useToast } from "@/shared/context/ToastContext";
@@ -38,7 +39,9 @@ export function MyExams({ onOpen }: Props) {
   }
 
   return (
-    <section className="mt-10 text-left">
+    <>
+      <ResumeList limit={3} className="mt-10 text-left" />
+      <section className="mt-8 text-left">
       <div className="mb-2 flex items-center justify-between">
         <h2 className="text-base font-semibold text-slate-900">{user ? "Đề của tôi" : "Đề bạn đã lấy"}</h2>
         {user ? (
@@ -75,6 +78,7 @@ export function MyExams({ onOpen }: Props) {
           </li>
         ))}
       </ul>
-    </section>
+      </section>
+    </>
   );
 }
