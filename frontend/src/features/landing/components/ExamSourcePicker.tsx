@@ -9,7 +9,7 @@ import { DropZone } from "./DropZone";
 type Source = "link" | "folder";
 
 const TABS: { id: Source; label: string; short: string; icon: typeof Link2 }[] = [
-  { id: "link", label: "Nhập link FuOverflow", short: "Nhập link", icon: Link2 },
+  { id: "link", label: "Dán link", short: "Dán link", icon: Link2 },
   { id: "folder", label: "Mở thư mục đề", short: "Mở thư mục", icon: FolderOpen },
 ];
 
@@ -47,17 +47,21 @@ export function ExamSourcePicker({ onPick, onImported }: Props) {
           ))}
         </div>
 
-        {/* Giữ cả hai trong DOM: đang lấy đề mà đổi tab thì tiến trình không bị mất */}
-        <div hidden={source !== "link"} className="mt-3">
-          <LinkImport
-            onImported={(exam) => {
-              setLibraryKey((k) => k + 1);
-              onImported(exam);
-            }}
-          />
-        </div>
-        <div hidden={source !== "folder"} className="mt-3">
-          <DropZone onPick={onPick} />
+        {/* Giữ cả hai trong DOM (đang lấy đề mà đổi tab thì tiến trình không bị mất) và xếp chồng vào cùng một ô lưới:
+            khung luôn cao bằng tab cao nhất nên đổi tab không làm các phần bên dưới nhảy lên xuống.
+            Tab ẩn chỉ invisible (vẫn giữ chỗ, không focus được) chứ không dùng hidden. */}
+        <div className="mt-3 grid">
+          <div className={`[grid-area:1/1] ${source === "link" ? "" : "invisible"}`} aria-hidden={source !== "link"}>
+            <LinkImport
+              onImported={(exam) => {
+                setLibraryKey((k) => k + 1);
+                onImported(exam);
+              }}
+            />
+          </div>
+          <div className={`[grid-area:1/1] ${source === "folder" ? "" : "invisible"}`} aria-hidden={source !== "folder"}>
+            <DropZone onPick={onPick} />
+          </div>
         </div>
       </div>
 

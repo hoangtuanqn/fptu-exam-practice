@@ -1,13 +1,13 @@
-import { BarChart3, Library, Sparkles } from "lucide-react";
+import { BarChart3, History, Sparkles } from "lucide-react";
 import { brand } from "@/shared/brand/brand";
 
 // Nội dung văn bản của trang chủ, tách khỏi giao diện để dễ sửa lời
 
 // Ba ý ngắn dưới vùng thả thư mục
 export const FEATURES = [
-  { icon: Library, text: `Kho đề ${brand.partnerName}` },
-  { icon: Sparkles, text: "AI giải thích đáp án" },
+  { icon: Sparkles, text: "Giải thích bằng AI" },
   { icon: BarChart3, text: "Chấm điểm thang 10" },
+  { icon: History, text: "Lưu lịch sử làm bài" },
 ];
 
 export const STEPS = [

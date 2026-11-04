@@ -15,7 +15,10 @@ export default defineConfig(({ mode }) => {
         title: brand.title,
         description: brand.description,
         themeColor: brand.themeColor,
-        ogImage: `${brand.siteUrl}/og-cover.jpg`, // có VITE_SITE_URL thì thành địa chỉ tuyệt đối
+        // Có VITE_SITE_URL thì thành địa chỉ tuyệt đối. Đổi ?v= khi thay ảnh để Facebook/Zalo nạp lại ảnh mới thay vì ảnh đã cache
+        ogImage: `${brand.siteUrl}/og-cover.jpg?v=5`,
+        siteUrl: brand.siteUrl ? `${brand.siteUrl}/` : "",
+        ogImageAlt: `${brand.product}: đề thi FE từ kho ${brand.partnerName}, có đáp án, chấm điểm thang 10`,
         siteName: brand.company,
       };
       return html.replace(/\{\{(\w+)\}\}/g, (_, key: string) => esc(values[key] ?? ""));
