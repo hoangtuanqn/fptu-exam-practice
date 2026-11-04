@@ -55,8 +55,9 @@ export function useQuiz() {
   const [sessionId, setSessionId] = useState<number | null>(null); // lượt làm lưu trên server (null = chưa tạo / đề mở từ thư mục)
   const [resumedElapsed, setResumedElapsed] = useState(0); // số giây đã làm ở lượt được làm tiếp
 
-  // Đồng hồ chạy từ lúc bắt đầu, dừng khi nộp bài
-  const elapsed = useStopwatch(questions.length > 0 && !submitted, session, resumedElapsed);
+  // Đồng hồ chỉ chạy khi có đáp án để làm: chờ AI phân tích xong mới bắt đầu tính, dừng khi nộp bài
+  const timing = questions.length > 0 && !submitted && !answersPending;
+  const elapsed = useStopwatch(timing, session, resumedElapsed);
 
   const last = questions.length - 1;
 
@@ -244,6 +245,7 @@ export function useQuiz() {
     notFound,
     flagged,
     elapsed,
+    timing,
     sessionId,
     setSessionId,
     toggleFlag,

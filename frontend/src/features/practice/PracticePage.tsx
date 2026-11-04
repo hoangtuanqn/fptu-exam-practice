@@ -58,6 +58,14 @@ export default function PracticePage({ threadId }: Props) {
     return true;
   };
 
+  // Đồng hồ bắt đầu chạy (đề có đáp án rồi): báo cho học viên biết giờ đã được tính
+  const wasTiming = useRef(false);
+  useEffect(() => {
+    if (quiz.timing && !wasTiming.current && quiz.elapsed === 0) toast.success("Bắt đầu tính giờ làm bài");
+    wasTiming.current = quiz.timing;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quiz.timing]);
+
   // Đang mở hộp thoại thì tắt phím tắt để tránh bấm nhầm đáp án
   useQuizShortcuts(quiz, hasQuiz && !anyDialogOpen);
 
@@ -194,6 +202,7 @@ export default function PracticePage({ threadId }: Props) {
         submitted={quiz.submitted}
         submitLocked={quiz.answersPending}
         elapsed={quiz.elapsed}
+        timing={quiz.timing}
         onPick={pick}
         onHome={goHome}
         onSubmit={() => setDialog("confirm")}

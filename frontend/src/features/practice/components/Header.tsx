@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Award, Clock, RotateCcw, Send } from "lucide-react";
 import type { Mode } from "@/features/practice/types.ts";
@@ -17,6 +18,7 @@ interface Props {
   submitted: boolean;
   submitLocked?: boolean; // AI chưa xong đáp án: chưa cho nộp
   elapsed: number; // số giây đã làm bài
+  timing: boolean; // đồng hồ đang chạy (không chạy khi chờ AI phân tích đáp án hoặc đã nộp)
   onPick: PickFolder;
   onHome: () => boolean; // bấm logo khi đang làm đề: trả về false nếu người dùng huỷ việc thoát
   onSubmit: () => void;
@@ -25,8 +27,18 @@ interface Props {
 }
 
 // Header tối giản. Chưa có đề: tên app + tài khoản. Đang làm: tên đề | chế độ + đồng hồ | mở đề khác | nộp bài | tài khoản.
-export function Header({ title, mode, loaded, submitted, submitLocked, elapsed, onPick, onHome, onSubmit, onReset, onShowResult }: Props) {
+export function Header({ title, mode, loaded, submitted, submitLocked, elapsed, timing, onPick, onHome, onSubmit, onReset, onShowResult }: Props) {
   const { Icon, label } = getModeConfig(mode);
+
+  // Vừa bắt đầu tính giờ thì chip sáng lên một lúc để học viên nhận ra
+  const [flash, setFlash] = useState(false);
+  useEffect(() => {
+    if (!timing) return;
+    setFlash(true);
+    const t = setTimeout(() => setFlash(false), 2500);
+    return () => clearTimeout(t);
+  }, [timing]);
+  const waiting = !submitted && !!submitLocked; // chờ AI: giờ chưa chạy
 
   return (
     <header className="glass z-30 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-slate-200/70 px-3 sm:px-4">
@@ -50,15 +62,26 @@ export function Header({ title, mode, loaded, submitted, submitLocked, elapsed, 
           <>
             {/* Chế độ + đồng hồ gộp một chip */}
             <span
-              className={`inline-flex items-center gap-2 rounded-xl border px-2.5 py-1.5 text-sm sm:px-3 ${
-                submitted ? "border-slate-200 bg-slate-50 text-slate-500" : "border-brand-200 bg-brand-50 text-brand-800"
+              title={waiting ? "Giờ làm bài sẽ bắt đầu tính khi AI phân tích xong đáp án" : undefined}
+              className={`inline-flex items-center gap-2 rounded-xl border px-2.5 py-1.5 text-sm transition sm:px-3 ${
+                submitted
+                  ? "border-slate-200 bg-slate-50 text-slate-500"
+                  : waiting
+                    ? "border-amber-200 bg-amber-50 text-amber-800"
+                    : `border-brand-200 bg-brand-50 text-brand-800 ${flash ? "scale-105 shadow-card ring-2 ring-brand-400" : ""}`
               }`}
             >
+              {timing && (
+                <span className="relative flex h-2 w-2" aria-hidden>
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-500 opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-600" />
+                </span>
+              )}
               <Icon size={15} className="hidden sm:block" />
               <span className="hidden sm:inline">{label}</span>
               <span className="hidden h-4 w-px bg-current opacity-20 sm:block" />
               <Clock size={14} className="sm:hidden" />
-              <span className="tabular-nums">{formatDuration(elapsed)}</span>
+              {waiting ? <span className="whitespace-nowrap">Chờ AI · chưa tính giờ</span> : <span className="tabular-nums">{formatDuration(elapsed)}</span>}
             </span>
 
             <FolderPicker iconOnly onPick={onPick} />
