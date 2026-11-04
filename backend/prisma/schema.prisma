@@ -179,6 +179,8 @@ model ExamQuestion {
   sourceImage String  @map("source_image") @db.VarChar(500)
   mediaUrl    String? @map("media_url") @db.VarChar(500)
   answer      String  @default("A") @db.VarChar(20)
+  // Ảnh tài liệu tham khảo (trang công thức...), không phải câu hỏi: không chấm điểm, giao diện đưa vào mục "Tài liệu tham khảo"
+  isReference Boolean @default(false) @map("is_reference")
 
   exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
 

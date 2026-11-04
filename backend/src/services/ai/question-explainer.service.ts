@@ -1,6 +1,5 @@
-import fs from "node:fs/promises";
-import path from "node:path";
-import { EXPLAIN_EFFORT, EXPLAIN_MAX_OUTPUT_TOKENS, EXPLAIN_PROMPT_FILE, type AiConfig } from "../../constants/ai";
+import { EXPLAIN_EFFORT, EXPLAIN_MAX_OUTPUT_TOKENS, type AiConfig } from "../../constants/ai";
+import { buildSystem, resolveModuleKey } from "../../prompts";
 import { askClaudeText, type ClaudeContent } from "./claude.client";
 import { loadImageForAi } from "./image";
 
@@ -10,14 +9,6 @@ export interface ExplainInput {
   imageFile: string; // đường dẫn tuyệt đối tới ảnh câu hỏi
   correctAnswer: string; // ví dụ "C" hoặc "A C"
   commentsText: string | null; // bình luận của câu này (đã rút gọn), nếu có
-}
-
-async function loadPrompt(): Promise<string> {
-  try {
-    return await fs.readFile(EXPLAIN_PROMPT_FILE, "utf-8");
-  } catch {
-    throw new Error(`Không đọc được file prompt giải thích: ${path.basename(EXPLAIN_PROMPT_FILE)}`);
-  }
 }
 
 /** Nhờ Claude giải thích một câu hỏi (ảnh + đáp án chính thức + bình luận nếu có). Trả về văn bản tiếng Việt. */
@@ -37,7 +28,8 @@ export async function explainQuestion(config: AiConfig, input: ExplainInput): Pr
     apiKey: config.anthropicApiKey,
     model: config.claudeModel,
     effort: EXPLAIN_EFFORT,
-    system: await loadPrompt(),
+    // Bộ prompt riêng của việc giải thích một câu (prompts/explain), chọn module theo mã môn ở đầu tiêu đề đề thi
+    system: buildSystem("explain", resolveModuleKey("explain", { title: input.examTitle })),
     content,
     maxTokens: EXPLAIN_MAX_OUTPUT_TOKENS,
   });
