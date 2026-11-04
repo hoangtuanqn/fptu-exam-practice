@@ -25,13 +25,11 @@ export const aiReady = (c: AiConfig) => c.enabled && c.anthropicApiKey.length > 
 
 export const AI_KEY_PREFIX = "ai.";
 
-// Prompt giải thích một câu hỏi (tiếng Anh, trả lời bằng tiếng Việt). Cố định nên được prompt caching.
-export const EXPLAIN_PROMPT_FILE = path.resolve(__dirname, "../../assets/prompts/explain.system.md");
+// Prompt giải thích một câu hỏi (tiếng Anh, trả lời bằng tiếng Việt) nằm ở backend/prompts/explain/, tách riêng với prompt giải đề
 export const EXPLAIN_MAX_OUTPUT_TOKENS = 4_000; // gồm cả token suy luận
 export const EXPLAIN_EFFORT: AiEffort = "medium"; // giải thích một câu không cần suy luận sâu như giải cả đề
 
-// Prompt hệ thống (tiếng Anh, cố định cho mọi đề nên được cache). Đổi bằng biến môi trường AI_PROMPT_FILE
-export const DEFAULT_PROMPT_FILE = path.resolve(__dirname, "../../assets/prompts/exam-solver.system.md");
+// Prompt giải đề (base + module theo môn + khối tính năng) nằm ở backend/prompts/, nạp bởi src/prompts/index.ts
 
 // Một lượt giải (nhiều ảnh, suy luận sâu, có thể tra web) có thể kéo dài vài phút
 export const AI_TIMEOUT_MS = 10 * 60 * 1000;
@@ -44,6 +42,9 @@ export const AI_IMAGE_MAX_EDGE = 1280;
 export const AI_BATCH_SIZE = 12;
 export const AI_MAX_PARALLEL_CALLS = 6; // tổng số lần gọi Claude cùng lúc trên toàn server (qua mọi đề), tránh chạm giới hạn tốc độ
 export const AI_MAX_PAUSES = 4; // tra web lâu có thể bị tạm dừng giữa chừng, tiếp tục tối đa chừng này lần
+
+// Giải được ít hơn tỉ lệ này số câu cần giải thì coi cả đề là lỗi (thường là lỗi hệ thống như hết credit); ít câu thiếu lẻ tẻ thì vẫn nhận kết quả
+export const AI_MIN_SOLVED_RATIO = 0.5;
 
 export const AI_REPORT_FAILED_PREFIX = "AI không giải được đề này. Lý do: ";
 // Chờ tối thiểu giữa hai lần người dùng bấm "Thử lại" cùng một đề (tránh đốt token)

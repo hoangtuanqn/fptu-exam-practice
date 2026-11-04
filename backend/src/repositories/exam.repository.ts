@@ -31,7 +31,7 @@ export const examRepository = {
 
   // Đáp án đúng của từng câu, dùng để chấm bài
   findQuestionsForGrading: (examId: number) =>
-    prisma.examQuestion.findMany({ where: { examId }, orderBy: { number: "asc" }, select: { number: true, answer: true } }),
+    prisma.examQuestion.findMany({ where: { examId, isReference: false }, orderBy: { number: "asc" }, select: { number: true, answer: true } }),
 
   // Đáp án hiện tại của một câu (để so với đáp án người dùng đề xuất)
   findQuestionAnswer: (examId: number, number: number) =>
@@ -50,7 +50,7 @@ export const examRepository = {
   findDetail: (id: number) =>
     prisma.exam.findUnique({
       where: { id },
-      include: { questions: { orderBy: { number: "asc" }, select: { number: true, imagePath: true, answer: true } } },
+      include: { questions: { orderBy: { number: "asc" }, select: { number: true, imagePath: true, answer: true, isReference: true } } },
     }),
 
   // Dữ liệu để nhờ AI giải lại: tên + đường dẫn ảnh từng câu
@@ -64,7 +64,7 @@ export const examRepository = {
   findAnswers: (id: number) =>
     prisma.exam.findUnique({
       where: { id },
-      select: { answerSource: true, aiReport: true, questions: { orderBy: { number: "asc" }, select: { number: true, answer: true } } },
+      select: { answerSource: true, aiReport: true, questions: { orderBy: { number: "asc" }, select: { number: true, answer: true, isReference: true } } },
     }),
 
   // Đề đang dùng đáp án tạm mà AI chưa từng chạy: chuyển sang chờ AI (xóa đáp án A giả)
@@ -191,11 +191,14 @@ export const examRepository = {
     ),
 
   // Cập nhật đáp án cả đề (sau khi AI giải lại): chạy trong một transaction
-  updateAnswers: (examId: number, answers: string[], source: AnswerSource, report: string | null) =>
+  // `references`: số câu mà AI cho là tài liệu tham khảo (trang công thức...). Mỗi lần giải đặt lại cờ cho cả đề.
+  updateAnswers: (examId: number, answers: string[], source: AnswerSource, report: string | null, references: number[] = []) =>
     prisma.$transaction(async (tx) => {
       for (const [i, answer] of answers.entries()) {
         await tx.examQuestion.updateMany({ where: { examId, number: i + 1 }, data: { answer } });
       }
+      await tx.examQuestion.updateMany({ where: { examId, number: { notIn: references } }, data: { isReference: false } });
+      if (references.length) await tx.examQuestion.updateMany({ where: { examId, number: { in: references } }, data: { isReference: true } });
       await tx.exam.update({ where: { id: examId }, data: { answerSource: source, aiReport: report } });
       await tx.questionExplanation.deleteMany({ where: { examId } }); // đáp án đổi thì lời giải thích cũ không còn đúng
     }),

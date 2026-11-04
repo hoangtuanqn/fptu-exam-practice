@@ -1,4 +1,16 @@
+import { Children, isValidElement, type ReactNode } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
+import { DotGraph } from "./DotGraph";
+
+// Khối mã ```dot / ```graphviz là một đồ thị: trả về nguồn DOT để vẽ thành hình (xem DotGraph), ngược lại null
+function dotSourceOf(children: ReactNode): string | null {
+  const child = Children.toArray(children)[0];
+  if (!isValidElement(child)) return null;
+  const props = child.props as { className?: string; children?: ReactNode };
+  const isDot = (props.className ?? "").split(" ").some((c) => c === "language-dot" || c === "language-graphviz");
+  if (!isDot) return null;
+  return String(props.children ?? "").trimEnd();
+}
 
 // Kiểu chữ cho từng thành phần markdown (in đậm, nghiêng, danh sách, mã, trích dẫn...). Cùng một font Inter với toàn trang.
 const components: Components = {
@@ -27,11 +39,15 @@ const components: Components = {
     ) : (
       <code className="rounded bg-slate-200/70 px-1.5 py-0.5 text-[0.9em] font-medium text-slate-900">{children}</code>
     ),
-  pre: ({ children }) => (
+  pre: ({ children }) => {
+    const dot = dotSourceOf(children);
+    if (dot !== null) return <DotGraph source={dot} />;
+    return (
     <pre className="mb-3 overflow-x-auto whitespace-pre rounded-lg bg-slate-900 p-3 text-[13px] leading-relaxed text-slate-100 last:mb-0 [&_code]:bg-transparent [&_code]:p-0 [&_code]:text-slate-100">
       {children}
     </pre>
-  ),
+    );
+  },
 };
 
 // Hiển thị nội dung markdown an toàn (không cho HTML thô). Dùng cho lời giải thích của AI.

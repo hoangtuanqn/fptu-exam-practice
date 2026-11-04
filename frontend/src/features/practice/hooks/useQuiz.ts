@@ -11,7 +11,8 @@ interface PendingExam {
   title: string;
   examId: number | null; // có khi đề lấy từ hệ thống (để ghi lịch sử), null khi mở từ thư mục
   answerSource: AnswerSource | null; // nguồn đáp án của đề hệ thống (null = đề mở từ thư mục)
-  total: number; // tổng số câu của đề (lớn hơn questions.length = đề còn đang được lấy về)
+  total: number; // tổng số ảnh của đề (lớn hơn số câu + tài liệu đã có = đề còn đang được lấy về)
+  references: Question[]; // tài liệu tham khảo (trang công thức...): không phải câu hỏi
 }
 
 // Đề chưa có đủ đáp án đúng (AI đang giải hoặc giải lỗi): chỉ xem, không làm bài
@@ -30,14 +31,18 @@ export interface ResumeState {
 type IncomingQuestion = { number: number; imageUrl: string; correct: string[] };
 
 // Gộp các câu mới về vào danh sách theo số câu (nhận lặp cũng không sao), giữ thứ tự tăng dần
-const mergeQuestions = (prev: Question[], incoming: IncomingQuestion[], locked: boolean): Question[] => {
-  const have = new Set(prev.map((q) => q.number));
+const mergeQuestions = (prev: Question[], incoming: IncomingQuestion[], locked: boolean, skip: Set<number> = new Set()): Question[] => {
+  const have = new Set([...prev.map((q) => q.number), ...skip]); // tài liệu tham khảo đã tách ra thì không thêm lại thành câu hỏi
   const fresh = incoming.filter((q) => !have.has(q.number)).map((q) => (locked ? { ...q, answerPending: true } : q));
   return fresh.length === 0 ? prev : [...prev, ...fresh].sort((a, b) => a.number - b.number);
 };
 
+// Tách ảnh tài liệu tham khảo khỏi các câu hỏi: tài liệu không có số câu hiển thị, không tính điểm, nằm trong mục "Tài liệu"
+const splitReferences = (list: Question[]) => ({ questions: list.filter((q) => !q.isReference), references: list.filter((q) => q.isReference) });
+
 export function useQuiz() {
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [references, setReferences] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<UserAnswers>({});
   const [checked, setChecked] = useState<Record<number, boolean>>({}); // câu đã hiện kết quả (chế độ luyện tập)
   const [submitted, setSubmitted] = useState(false);
@@ -84,14 +89,16 @@ export function useQuiz() {
       return;
     }
     setNotFound(false);
-    setPending({ questions: parsed, title: folderName, examId: null, answerSource: null, total: parsed.length });
+    setPending({ questions: parsed, title: folderName, examId: null, answerSource: null, total: parsed.length, references: [] });
   }
 
   // Đề đã có sẵn câu hỏi (nhập từ link FuOverflow): cũng chờ xác nhận như đề mở từ thư mục
   function loadExam(examQuestions: Question[], examTitle: string, id: number, source: AnswerSource = "AI", examTotal = examQuestions.length) {
     setNotFound(false);
+    const split = splitReferences(examQuestions);
     setPending({
-      questions: isLocked(source) ? examQuestions.map((x) => ({ ...x, answerPending: true })) : examQuestions,
+      questions: isLocked(source) ? split.questions.map((x) => ({ ...x, answerPending: true })) : split.questions,
+      references: split.references,
       title: examTitle,
       examId: id,
       answerSource: source,
@@ -111,7 +118,9 @@ export function useQuiz() {
   ) {
     setNotFound(false);
     setPending(null);
-    setQuestions(isLocked(source) ? examQuestions.map((x) => ({ ...x, answerPending: true })) : examQuestions);
+    const split = splitReferences(examQuestions);
+    setQuestions(isLocked(source) ? split.questions.map((x) => ({ ...x, answerPending: true })) : split.questions);
+    setReferences(split.references);
     setTitle(examTitle);
     setExamId(id);
     setAnswerSource(source);
@@ -122,7 +131,7 @@ export function useQuiz() {
       setAnswers(resume.answers);
       setChecked(resume.checked);
       setFlagged(resume.flagged);
-      setCurrent(Math.max(0, Math.min(resume.current, examQuestions.length - 1)));
+      setCurrent(Math.max(0, Math.min(resume.current, split.questions.length - 1)));
       setResumedElapsed(resume.elapsedSec);
       setSessionId(resume.sessionId);
     }
@@ -132,6 +141,7 @@ export function useQuiz() {
   function startExam(chosenMode: Mode) {
     if (!pending) return;
     setQuestions(pending.questions);
+    setReferences(pending.references);
     setTitle(pending.title);
     setExamId(pending.examId);
     setAnswerSource(pending.answerSource);
@@ -143,8 +153,11 @@ export function useQuiz() {
 
   // Đề đang được lấy về: có thêm câu mới thì thêm vào cuối (cả đề đang làm lẫn đề đang chờ chọn chế độ)
   function appendQuestions(incoming: IncomingQuestion[], examTotal: number) {
-    setQuestions((prev) => mergeQuestions(prev, incoming, isLocked(answerSource)));
-    setPending((p) => (p ? { ...p, questions: mergeQuestions(p.questions, incoming, isLocked(p.answerSource)), total: examTotal } : p));
+    const known = new Set(references.map((r) => r.number));
+    setQuestions((prev) => mergeQuestions(prev, incoming, isLocked(answerSource), known));
+    setPending((p) =>
+      p ? { ...p, questions: mergeQuestions(p.questions, incoming, isLocked(p.answerSource), new Set(p.references.map((r) => r.number))), total: examTotal } : p,
+    );
     setTotal(examTotal);
   }
 
@@ -152,6 +165,7 @@ export function useQuiz() {
   function closeExam() {
     setPending(null);
     setQuestions([]);
+    setReferences([]);
     setTitle("");
     setExamId(null);
     setAnswerSource(null);
@@ -160,9 +174,21 @@ export function useQuiz() {
   }
 
   // AI phân tích xong: gắn đáp án đúng vào các câu đang làm (không đụng tới đáp án người dùng đã chọn)
-  function applyAnswers(list: { number: number; correct: string[] }[], source: AnswerSource) {
+  // `referenceNumbers`: các câu AI cho là tài liệu tham khảo (trang công thức...): chuyển sang mục "Tài liệu", bỏ khỏi danh sách câu
+  function applyAnswers(list: { number: number; correct: string[] }[], source: AnswerSource, referenceNumbers: number[] = []) {
     const byNumber = new Map(list.map((a) => [a.number, a.correct]));
-    setQuestions((prev) => prev.map((qn) => ({ ...qn, correct: byNumber.get(qn.number) ?? qn.correct, answerPending: false })));
+    const refSet = new Set(referenceNumbers);
+    if (refSet.size > 0) {
+      const moved = questions.filter((qn) => refSet.has(qn.number)).map((qn) => ({ ...qn, isReference: true, answerPending: false }));
+      if (moved.length > 0) setReferences((prev) => [...prev.filter((r) => !refSet.has(r.number)), ...moved].sort((a, b) => a.number - b.number));
+      const rest = questions.length - moved.length;
+      setCurrent((c) => Math.max(0, Math.min(c, rest - 1))); // đang xem đúng tài liệu đó thì lùi về câu cuối
+      const omit = <T,>(rec: Record<number, T>) => Object.fromEntries(Object.entries(rec).filter(([k]) => !refSet.has(Number(k)))) as Record<number, T>;
+      setAnswers(omit); // đã lỡ chọn đáp án cho tài liệu lúc AI chưa xong thì bỏ đi, không tính vào số câu đã làm
+      setChecked(omit);
+      setFlagged(omit);
+    }
+    setQuestions((prev) => prev.filter((qn) => !refSet.has(qn.number)).map((qn) => ({ ...qn, correct: byNumber.get(qn.number) ?? qn.correct, answerPending: false })));
     setAnswerSource(source);
   }
 
@@ -232,8 +258,9 @@ export function useQuiz() {
     answersPending,
     answerSource,
     total,
-    loadingMore: examId !== null && total > questions.length,
-    pendingLoadingMore: pending !== null && pending.total > pending.questions.length,
+    references,
+    loadingMore: examId !== null && total > questions.length + references.length,
+    pendingLoadingMore: pending !== null && pending.total > pending.questions.length + pending.references.length,
     pendingExamId: pending?.examId ?? null,
     appendQuestions,
     closeExam,

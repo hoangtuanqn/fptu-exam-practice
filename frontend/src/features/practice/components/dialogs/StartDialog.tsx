@@ -38,11 +38,6 @@ export function StartDialog({ title, total, graded, answersPending, replacing, o
           Đề chưa có đáp án nên bạn chỉ xem được. Phần làm bài sẽ mở khi đáp án sẵn sàng, thường sau ít phút.
         </p>
       )}
-      {!answersPending && graded < total && (
-        <p className="mt-3 text-sm text-amber-700">
-          Chỉ {graded}/{total} câu có đáp án trong ans.txt. Các câu còn lại sẽ không được chấm điểm.
-        </p>
-      )}
       {replacing && <p className="mt-3 text-sm text-rose-700">Bài đang làm dở sẽ bị thay thế bằng đề mới này.</p>}
 
       <div className="mt-5 text-xs font-medium uppercase tracking-wider text-slate-500">Chọn chế độ</div>
