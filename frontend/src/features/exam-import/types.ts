@@ -12,7 +12,7 @@ export interface CrawlJob {
 }
 
 // POST /crawl-jobs: đề đã có thì trả examId ngay, chưa có thì trả job để theo dõi
-export type SubmitResult = { existed: true; examId: number; title: string } | { existed: false; job: CrawlJob };
+export type SubmitResult = { existed: true; examId: number; title: string; free?: boolean } | { existed: false; job: CrawlJob };
 
 export interface ImportedExam {
   id: number;
