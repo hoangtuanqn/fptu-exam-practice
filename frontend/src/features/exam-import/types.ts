@@ -29,6 +29,7 @@ export interface ExamAnswersPayload {
   status: AnswerSource; // PENDING = đang giải, FAILED = lỗi, còn lại = đã có đáp án
   answerError: string | null; // lời nhắn cho người dùng khi lỗi
   answers: { number: number; correct: string[] }[];
+  references?: number[]; // số câu là tài liệu tham khảo (không phải câu hỏi)
 }
 
 // Sự kiện realtime "exam:questions": các câu đã có ảnh của đề đang được lấy về (gộp theo số câu)

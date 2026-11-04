@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Loader2, Sparkles, X } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { ApiError } from "@/shared/api/client";
 import { useFakeProgress } from "@/shared/hooks/useFakeProgress";
+import { useResizableWidth } from "@/shared/hooks/useResizableWidth";
 import { Button } from "@/shared/ui/Button";
 import { Markdown } from "@/shared/ui/Markdown";
 import { explanationApi } from "./explanation.api";
@@ -16,6 +17,13 @@ interface Props {
 }
 
 type Phase = "loading" | "done" | "error";
+
+// Khung giải thích ở màn hình rộng kéo co dãn được; vùng đề bên cạnh tự co theo, nên luôn chừa lại chừng này cho nó
+const PANEL_MIN = 288;
+const PANEL_RESERVE = 640; // chỗ cho thanh số câu + vùng đề
+const PANEL_MAX = 900;
+const panelDefault = () => (window.innerWidth >= 1280 ? 480 : 416);
+const panelMax = () => Math.min(PANEL_MAX, window.innerWidth - PANEL_RESERVE);
 
 // Bản lời giải đã lưu sẵn vẫn "phân tích" thêm vài giây cho người trả phí lần đầu, để đồng nhất trải nghiệm
 const MIN_CACHED_WAIT_MS = 2000;
@@ -33,6 +41,7 @@ export function ExplainPanel({ examId, questionNumber, firstTime, onClose, onBou
   const alive = useRef(true);
   const started = useRef(false);
   const percent = useFakeProgress(firstTime && phase === "loading", phase === "done");
+  const resize = useResizableWidth({ storageKey: "explain_panel_width", initial: panelDefault, min: PANEL_MIN, max: panelMax });
 
   useEffect(() => {
     alive.current = true;
@@ -74,8 +83,26 @@ export function ExplainPanel({ examId, questionNumber, firstTime, onClose, onBou
   return (
     <aside
       aria-label={`Lời giải thích câu ${questionNumber}`}
-      className="fixed inset-x-0 bottom-0 z-30 flex max-h-[58dvh] flex-col rounded-t-2xl border-t border-slate-200 bg-white shadow-[0_-8px_30px_rgba(15,23,42,0.12)] lg:static lg:z-auto lg:max-h-none lg:w-[26rem] lg:shrink-0 lg:rounded-none lg:border-l lg:border-t-0 lg:shadow-none xl:w-[30rem]"
+      style={{ "--panel-w": `${resize.width}px` } as CSSProperties}
+      className="fixed inset-x-0 bottom-0 z-30 flex max-h-[58dvh] flex-col rounded-t-2xl border-t border-slate-200 bg-white shadow-[0_-8px_30px_rgba(15,23,42,0.12)] lg:relative lg:z-auto lg:max-h-none lg:w-[var(--panel-w)] lg:shrink-0 lg:rounded-none lg:border-l lg:border-t-0 lg:shadow-none"
     >
+      {/* Tay kéo ở mép trái (chỉ màn hình rộng): kéo sang trái để rộng ra, sang phải để hẹp lại; nhấp đúp về mặc định */}
+      <div
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Kéo để đổi độ rộng lời giải thích (hoặc dùng phím mũi tên trái, phải)"
+        aria-valuemin={resize.min}
+        aria-valuemax={resize.max}
+        aria-valuenow={resize.width}
+        title="Kéo để đổi độ rộng · nhấp đúp để về mặc định"
+        tabIndex={0}
+        {...resize.handleProps}
+        className="group absolute inset-y-0 -left-1.5 z-10 hidden w-3 cursor-col-resize touch-none outline-none lg:block"
+      >
+        <span className={`absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 transition-colors ${resize.dragging ? "bg-brand-500" : "bg-transparent group-hover:bg-brand-300 group-focus-visible:bg-brand-400"}`} />
+        <span className={`absolute left-1/2 top-1/2 h-12 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full transition-colors ${resize.dragging ? "bg-brand-500" : "bg-slate-300 group-hover:bg-brand-400 group-focus-visible:bg-brand-500"}`} />
+      </div>
+
       <header className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-100 px-4 py-3">
         <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
           <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
