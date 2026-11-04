@@ -7,6 +7,7 @@ import { AppError } from "../rules/error";
 import type { ForgotPasswordBody, LoginBody, RegisterBody, ResetPasswordBody } from "../rules/requests/auth.request";
 import { signToken } from "../utils/jwt";
 import { comparePassword, hashPassword } from "../utils/password";
+import { accountSettingService } from "./account-setting.service";
 import { referralService } from "./referral.service";
 import { mailService } from "./mail.service";
 import { emailVerificationService } from "./email-verification.service";
@@ -30,6 +31,8 @@ export const authService = {
     // Tạo tài khoản và cộng thưởng giới thiệu cùng một transaction: không có chuyện có thưởng mà không có tài khoản
     const { user, notices } = await prisma.$transaction(async (tx) => {
       const created = await userRepository.create({ email, fullName, password: hashed, referralCode: code }, tx);
+      // Credit tặng khi đăng ký: cùng transaction với việc tạo tài khoản, lỗi thì không có tài khoản nửa vời
+      await accountSettingService.grantSignupCredit(tx, created.id);
       // Lỗi thưởng giới thiệu không được làm hỏng việc đăng ký
       const rewards = await referralService.applyAtSignup(tx, created, referralCode).catch((err: Error) => {
         console.error(`[referral] không áp dụng được mã giới thiệu: ${err.message}`);
