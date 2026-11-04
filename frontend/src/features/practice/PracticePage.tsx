@@ -17,6 +17,7 @@ import { useAuth } from "@/features/auth/AuthContext";
 import { Header } from "@/features/practice/components/Header";
 import { Landing } from "@/features/landing/Landing";
 import { QuizDialogs, type SubmitDialog } from "@/features/practice/components/dialogs/QuizDialogs";
+import { ReferenceDialog } from "@/features/practice/components/dialogs/ReferenceDialog";
 import { TrialEndedDialog } from "@/features/trial/TrialEndedDialog";
 import { Loading } from "@/shared/ui/Feedback";
 import { QuizWorkspace } from "@/features/practice/components/quiz/QuizWorkspace";
@@ -41,10 +42,11 @@ export default function PracticePage({ threadId }: Props) {
   const [zoomOpen, setZoomOpen] = useState(false);
   const [dialog, setDialog] = useState<SubmitDialog>(null);
   const [trialEnded, setTrialEnded] = useState(false);
+  const [referencesOpen, setReferencesOpen] = useState(false); // đang xem tài liệu tham khảo của đề
   const [bestScore, setBestScore] = useState<number | null>(null); // điểm cao nhất của người dùng ở đề đang mở
 
   const hasQuiz = quiz.questions.length > 0;
-  const anyDialogOpen = !!dialog || !!quiz.pending || quiz.notFound || trialEnded;
+  const anyDialogOpen = !!dialog || !!quiz.pending || quiz.notFound || trialEnded || referencesOpen;
 
   // Lưu tiến độ lên server để tải lại trang vẫn làm tiếp được (chỉ với đề của hệ thống)
   const { flush } = useSessionSync(quiz);
@@ -101,7 +103,7 @@ export default function PracticePage({ threadId }: Props) {
       toast.error("Chưa lấy được đáp án của đề này");
       return;
     }
-    quiz.applyAnswers(r.answers, r.status);
+    quiz.applyAnswers(r.answers, r.status, r.references);
     toast.success("Đáp án đã sẵn sàng, bạn có thể làm bài");
   });
 
@@ -224,6 +226,8 @@ export default function PracticePage({ threadId }: Props) {
         submitLocked={quiz.answersPending}
         elapsed={quiz.elapsed}
         bestScore={bestScore}
+        referenceCount={quiz.references.length}
+        onShowReferences={() => setReferencesOpen(true)}
         timing={quiz.timing}
         onPick={pick}
         onHome={goHome}
@@ -234,6 +238,7 @@ export default function PracticePage({ threadId }: Props) {
 
       <QuizDialogs quiz={quiz} dialog={dialog} onDialogChange={setDialog} onCloseZoom={() => setZoomOpen(false)} />
       {trialEnded && <TrialEndedDialog onClose={() => setTrialEnded(false)} />}
+      {referencesOpen && quiz.references.length > 0 && <ReferenceDialog references={quiz.references} onClose={() => setReferencesOpen(false)} />}
 
       {hasQuiz ? (
         <QuizWorkspace quiz={quiz} zoomOpen={zoomOpen} onZoomChange={setZoomOpen} onSubmit={requestSubmit} />

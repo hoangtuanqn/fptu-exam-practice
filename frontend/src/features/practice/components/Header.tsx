@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Award, Clock, RotateCcw, Send, Trophy } from "lucide-react";
+import {
+  Award,
+  BookOpen,
+  Clock,
+  GraduationCap,
+  RotateCcw,
+  Send,
+  Trophy,
+} from "lucide-react";
 import type { Mode } from "@/features/practice/types.ts";
 import { brand } from "@/shared/brand/brand";
 import { getModeConfig } from "@/features/practice/config/modes";
@@ -21,6 +29,8 @@ interface Props {
   bestScore?: number | null; // điểm cao nhất của người dùng ở đề này (chưa làm lần nào thì không hiện)
   timing: boolean; // đồng hồ đang chạy (không chạy khi chờ đáp án hoặc đã nộp)
   onPick: PickFolder;
+  referenceCount?: number; // số tài liệu tham khảo của đề (trang công thức...); có thì hiện nút "Tài liệu"
+  onShowReferences?: () => void;
   onHome: () => boolean; // bấm logo khi đang làm đề: trả về false nếu người dùng huỷ việc thoát
   onSubmit: () => void;
   onReset: () => void;
@@ -28,7 +38,23 @@ interface Props {
 }
 
 // Header tối giản. Chưa có đề: tên app + tài khoản. Đang làm: tên đề | chế độ + đồng hồ | mở đề khác | nộp bài | tài khoản.
-export function Header({ title, mode, loaded, submitted, submitLocked, elapsed, bestScore, timing, onPick, onHome, onSubmit, onReset, onShowResult }: Props) {
+export function Header({
+  title,
+  mode,
+  loaded,
+  submitted,
+  submitLocked,
+  elapsed,
+  bestScore,
+  timing,
+  referenceCount = 0,
+  onShowReferences,
+  onPick,
+  onHome,
+  onSubmit,
+  onReset,
+  onShowResult,
+}: Props) {
   const { Icon, label } = getModeConfig(mode);
 
   // Vừa bắt đầu tính giờ thì chip sáng lên một lúc để học viên nhận ra
@@ -55,8 +81,22 @@ export function Header({ title, mode, loaded, submitted, submitLocked, elapsed, 
           <Logo className="h-6 sm:h-7" />
         </Link>
         <span className="hidden h-5 w-px shrink-0 bg-slate-200 sm:block" />
-        <div className="hidden truncate text-base font-semibold tracking-tight text-slate-900 sm:block">{loaded && title ? title : brand.product}</div>
+        <div className="hidden truncate text-base font-semibold tracking-tight text-slate-900 sm:block">
+          {loaded && title ? title : brand.product}
+        </div>
       </div>
+
+      {/* Thông điệp đối tượng phục vụ: chữ to giữa thanh, chỉ trên PC và khi chưa mở đề (đang làm bài thì nhường chỗ cho tên đề, đồng hồ) */}
+      {!loaded && (
+        <div className="hidden min-w-0 flex-1 items-center justify-center px-4 lg:flex">
+          <span className="inline-flex min-w-0 items-center gap-2.5 rounded-full border border-brand-200 bg-brand-50 px-5 py-1.5 text-sm font-semibold text-brand-900">
+            <GraduationCap size={20} className="shrink-0 text-brand-600" />
+            <span className="truncate">
+              Hệ thống phát triển chỉ phục vụ sinh viên FPTU
+            </span>
+          </span>
+        </div>
+      )}
 
       <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
         {loaded && (
@@ -74,7 +114,11 @@ export function Header({ title, mode, loaded, submitted, submitLocked, elapsed, 
 
             {/* Chế độ + đồng hồ gộp một chip */}
             <span
-              title={waiting ? "Giờ làm bài sẽ bắt đầu tính khi đề có đáp án" : undefined}
+              title={
+                waiting
+                  ? "Giờ làm bài sẽ bắt đầu tính khi đề có đáp án"
+                  : undefined
+              }
               className={`inline-flex items-center gap-2 rounded-xl border px-2.5 py-1.5 text-sm transition sm:px-3 ${
                 submitted
                   ? "border-slate-200 bg-slate-50 text-slate-500"
@@ -93,8 +137,25 @@ export function Header({ title, mode, loaded, submitted, submitLocked, elapsed, 
               <span className="hidden sm:inline">{label}</span>
               <span className="hidden h-4 w-px bg-current opacity-20 sm:block" />
               <Clock size={14} className="sm:hidden" />
-              {waiting ? <span className="whitespace-nowrap">Chờ đáp án · chưa tính giờ</span> : <span className="tabular-nums">{formatDuration(elapsed)}</span>}
+              {waiting ? (
+                <span className="whitespace-nowrap">
+                  Chờ đáp án · chưa tính giờ
+                </span>
+              ) : (
+                <span className="tabular-nums">{formatDuration(elapsed)}</span>
+              )}
             </span>
+
+            {referenceCount > 0 && onShowReferences && (
+              <Button
+                onClick={onShowReferences}
+                title="Tài liệu tham khảo (không tính điểm)"
+                className="!px-2.5 sm:!px-4"
+              >
+                <BookOpen size={16} />
+                <span className="hidden sm:inline">Tài liệu</span>
+              </Button>
+            )}
 
             <FolderPicker iconOnly onPick={onPick} />
 
@@ -104,13 +165,22 @@ export function Header({ title, mode, loaded, submitted, submitLocked, elapsed, 
                   <RotateCcw size={16} />
                   <span className="hidden sm:inline">Làm lại</span>
                 </Button>
-                <Button variant="primary" onClick={onShowResult} className="!px-3 sm:!px-4">
+                <Button
+                  variant="primary"
+                  onClick={onShowResult}
+                  className="!px-3 sm:!px-4"
+                >
                   <Award size={16} />
                   Xem điểm
                 </Button>
               </>
             ) : (
-              <Button variant="primary" onClick={onSubmit} disabled={submitLocked} className="!px-3 sm:!px-4">
+              <Button
+                variant="primary"
+                onClick={onSubmit}
+                disabled={submitLocked}
+                className="!px-3 sm:!px-4"
+              >
                 <Send size={16} />
                 Nộp bài
               </Button>

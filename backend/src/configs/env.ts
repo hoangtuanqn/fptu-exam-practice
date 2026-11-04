@@ -27,11 +27,10 @@ const schema = z.object({
   SMTP_PASS: z.string().optional(),
   MAIL_FROM: z.string().optional(), // ví dụ: "MST Software <no-reply@domain.com>", mặc định dùng SMTP_USER
   PASSWORD_RESET_EXPIRES_MIN: z.coerce.number().default(30),
-  // Anthropic (Claude): khóa mặc định khi admin chưa nhập trong trang quản trị; AI_PROMPT_FILE đổi file prompt hệ thống
+  // Anthropic (Claude): khóa mặc định khi admin chưa nhập trong trang quản trị
   ANTHROPIC_API_KEY: z.string().optional(),
   // Đăng nhập Google: OAuth client ID (Google Cloud Console > APIs & Services > Credentials). Bỏ trống thì ẩn nút đăng nhập Google.
   GOOGLE_CLIENT_ID: z.string().optional(),
-  AI_PROMPT_FILE: z.string().optional(),
   STORAGE_DIR: z.string().default("storage"), // nơi lưu ảnh đề đã crawl
   ADMIN_EMAIL: z.string().default("admin@example.com"),
   ADMIN_PASSWORD: z.string().default("Admin@123456"),

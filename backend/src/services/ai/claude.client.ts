@@ -5,12 +5,23 @@ import { AI_MAX_OUTPUT_TOKENS, AI_MAX_PAUSES, AI_MAX_SEARCHES, AI_TIMEOUT_MS, ty
 const SEARCH_TOOL = (model: string) => (/haiku/i.test(model) ? "web_search_20250305" : "web_search_20260209");
 
 export type ClaudeContent = Anthropic.ContentBlockParam;
+export type ClaudeSystem = string | Anthropic.TextBlockParam[];
+
+/** Token của một lượt gọi (cộng dồn qua các lần tạm dừng). Theo dõi cache: cacheRead > 0 nghĩa là prompt được đọc lại từ cache. */
+export interface UsageInfo {
+  input: number; // token đầu vào không nằm trong cache
+  output: number; // gồm cả token suy luận
+  cacheRead: number; // usage.cache_read_input_tokens
+  cacheCreation: number; // usage.cache_creation_input_tokens
+}
 
 interface BaseRequest {
   apiKey: string;
   model: string;
   effort: AiEffort;
-  system: string; // prompt hệ thống cố định (được cache giữa các lần gọi)
+  // Prompt hệ thống cố định. Chuỗi: một khối có cache_control. Mảng khối (xem src/prompts): giữ nguyên cache_control từng khối
+  system: ClaudeSystem;
+  onUsage?: (usage: UsageInfo) => void; // nhận token của lượt gọi để ghi log / theo dõi cache hit
   content: ClaudeContent[];
   maxTokens?: number; // gồm cả token suy luận
 }
@@ -31,6 +42,8 @@ export interface ClaudeJsonRequest extends BaseRequest {
 async function callClaude(req: BaseRequest, options: { schema?: Record<string, unknown>; useSearch?: boolean } = {}): Promise<string> {
   const client = new Anthropic({ apiKey: req.apiKey, timeout: AI_TIMEOUT_MS, maxRetries: 2 });
   const messages: Anthropic.MessageParam[] = [{ role: "user", content: req.content }];
+  const usage: UsageInfo = { input: 0, output: 0, cacheRead: 0, cacheCreation: 0 };
+  const system = typeof req.system === "string" ? [{ type: "text" as const, text: req.system, cache_control: { type: "ephemeral" as const } }] : req.system;
 
   try {
     for (let turn = 0; turn <= AI_MAX_PAUSES; turn++) {
@@ -40,13 +53,18 @@ async function callClaude(req: BaseRequest, options: { schema?: Record<string, u
           max_tokens: req.maxTokens ?? AI_MAX_OUTPUT_TOKENS,
           thinking: { type: "adaptive" },
           output_config: { effort: req.effort, ...(options.schema && { format: { type: "json_schema", schema: options.schema } }) },
-          system: [{ type: "text", text: req.system, cache_control: { type: "ephemeral" } }],
+          system,
           ...(options.useSearch && {
             tools: [{ type: SEARCH_TOOL(req.model), name: "web_search", max_uses: AI_MAX_SEARCHES } as Anthropic.ToolUnion],
           }),
           messages,
         })
         .finalMessage();
+
+      usage.input += message.usage.input_tokens ?? 0;
+      usage.output += message.usage.output_tokens ?? 0;
+      usage.cacheRead += message.usage.cache_read_input_tokens ?? 0;
+      usage.cacheCreation += message.usage.cache_creation_input_tokens ?? 0;
 
       if (message.stop_reason === "pause_turn") {
         messages.push({ role: "assistant", content: message.content });
@@ -61,6 +79,7 @@ async function callClaude(req: BaseRequest, options: { schema?: Record<string, u
         .join("")
         .trim();
       if (!text) throw new Error("Claude không trả lời");
+      req.onUsage?.(usage);
       return text;
     }
     throw new Error("Claude tra cứu quá lâu, đã dừng");
