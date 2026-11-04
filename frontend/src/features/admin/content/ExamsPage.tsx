@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FileText, Loader2, Sparkles } from "lucide-react";
+import { Copy, FileText, Loader2, Sparkles } from "lucide-react";
 import { adminApi } from "@/features/admin/api/admin.api";
 import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
@@ -22,21 +22,38 @@ const SOURCE: Record<AnswerSource, [string, Tone]> = {
   MANUAL: ["Chỉnh tay", "info"],
 };
 
-function ReportDialog({ id, onClose }: { id: number; onClose: () => void }) {
-  const { data, error, loading } = useApi(() => adminApi.examReport(id), [id]);
+// Xem trọn một đoạn văn dài (lỗi AI, báo cáo): cuộn được, giữ nguyên xuống dòng, có nút sao chép để gửi đi tra cứu
+function FullTextDialog({ title, text, loading, onClose }: { title: string; text: string; loading?: boolean; onClose: () => void }) {
+  const toast = useToast();
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Đã sao chép");
+    } catch {
+      toast.error("Không sao chép được, hãy bôi đen và copy thủ công");
+    }
+  }
   return (
     <Modal onClose={onClose}>
-      <ModalTitle icon={FileText}>Báo cáo của AI</ModalTitle>
-      <div className="mt-3 max-h-[55vh] overflow-y-auto whitespace-pre-wrap rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm leading-relaxed text-slate-700">
-        {loading ? "Đang tải…" : error ? error : (data?.aiReport ?? "Chưa có báo cáo (đề này chưa được AI giải).")}
+      <ModalTitle icon={FileText}>{title}</ModalTitle>
+      <div className="mt-3 max-h-[55vh] select-text overflow-y-auto whitespace-pre-wrap break-words rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm leading-relaxed text-slate-700">
+        {loading ? "Đang tải…" : text}
       </div>
       <ModalActions>
+        <Button onClick={() => void copy()} disabled={loading || !text}>
+          <Copy size={14} /> Sao chép
+        </Button>
         <Button grow onClick={onClose}>
           Đóng
         </Button>
       </ModalActions>
     </Modal>
   );
+}
+
+function ReportDialog({ id, onClose }: { id: number; onClose: () => void }) {
+  const { data, error, loading } = useApi(() => adminApi.examReport(id), [id]);
+  return <FullTextDialog title="Báo cáo của AI" loading={loading} text={error ? error : (data?.aiReport ?? "Chưa có báo cáo (đề này chưa được AI giải).")} onClose={onClose} />;
 }
 
 export default function ExamsPage() {
@@ -46,6 +63,7 @@ export default function ExamsPage() {
   const { data, error, loading, reload } = useApi(() => adminApi.exams(page), [page]);
   useClampPage(data?.meta, (p) => setUrl({ page: String(p) }));
   const [report, setReport] = useState<number | null>(null);
+  const [fullError, setFullError] = useState<{ title: string; text: string } | null>(null); // lỗi AI đang xem toàn văn
   const [starting, setStarting] = useState<number | null>(null);
 
   // Có đề đang được AI giải thì hỏi lại định kỳ để thấy khi xong
@@ -68,6 +86,19 @@ export default function ExamsPage() {
       setStarting(null);
     }
   }
+
+  // Lỗi AI: xuống dòng, tối đa 3 dòng; dài hơn thì có nút mở toàn văn (không còn bị cắt mất nội dung)
+  const errorLine = (e: AdminExam) =>
+    e.solveError && (
+      <div className="text-xs text-rose-600">
+        <p className="line-clamp-3 break-words">Lỗi AI: {e.solveError}</p>
+        {e.solveError.length > 90 && (
+          <button type="button" onClick={() => setFullError({ title: `Lỗi AI · ${e.title}`, text: e.solveError! })} className="mt-0.5 font-medium underline underline-offset-2 hover:text-rose-800">
+            Xem đầy đủ
+          </button>
+        )}
+      </div>
+    );
 
   const action = (e: AdminExam) => (
     <div className="flex items-center justify-end gap-2">
@@ -101,7 +132,7 @@ export default function ExamsPage() {
                       Thread {e.threadId} · {e.totalQuestions} câu
                     </span>
                   </div>
-                  {e.solveError && <div className="text-xs text-rose-600">Lần giải gần nhất lỗi: {e.solveError}</div>}
+                  {errorLine(e)}
                   {action(e)}
                 </li>
               ))}
@@ -120,8 +151,10 @@ export default function ExamsPage() {
                   {data.items.map((e) => (
                     <Tr key={e.id}>
                       <Td className="max-w-xs">
-                        <div className="truncate font-medium text-slate-800">{e.title}</div>
-                        {e.solveError && <div className="truncate text-xs text-rose-600">Lỗi AI: {e.solveError}</div>}
+                        <div className="truncate font-medium text-slate-800" title={e.title}>
+                          {e.title}
+                        </div>
+                        {errorLine(e)}
                       </Td>
                       <Td className="text-slate-500">{e.threadId}</Td>
                       <Td className="text-right tabular-nums">{e.totalQuestions}</Td>
@@ -143,6 +176,7 @@ export default function ExamsPage() {
       </Card>
 
       {report !== null && <ReportDialog id={report} onClose={() => setReport(null)} />}
+      {fullError && <FullTextDialog title={fullError.title} text={fullError.text} onClose={() => setFullError(null)} />}
     </>
   );
 }
