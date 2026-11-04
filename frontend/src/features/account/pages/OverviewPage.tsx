@@ -3,6 +3,7 @@ import { ArrowRight, ClipboardCheck, Library, PenLine, Plus } from "lucide-react
 import { userApi } from "@/features/account/api/user.api";
 import { TransactionTable } from "@/features/account/components/TransactionTable";
 import { useAuth } from "@/features/auth/AuthContext";
+import { useOnLibraryChanged } from "@/features/exam-library/libraryEvents";
 import { examLibraryApi } from "@/features/exam-library/exam-library.api";
 import { historyApi } from "@/features/history/history.api";
 import { PASS_SCORE } from "@/features/practice/config/scoring";
@@ -23,6 +24,7 @@ const seeAll = (to: string, label = "Xem tất cả") => (
 export default function OverviewPage() {
   const { user } = useAuth();
   const library = useApi(() => examLibraryApi.list(1, 5), []);
+  useOnLibraryChanged(library.reload);
   const attempts = useApi(() => historyApi.list(1, 20), []);
   const recentTx = useApi(() => userApi.transactions(1, 5), []);
   if (!user) return null;

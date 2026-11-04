@@ -26,13 +26,20 @@ export const userExamRepository = {
     return { items, total };
   },
 
-  // Chuyển toàn bộ đề của khách sang tài khoản (đã có thì bỏ qua) rồi xoá bản của khách, trong một transaction
+  // Chuyển toàn bộ đề của khách sang tài khoản (đã có thì bỏ qua) rồi xoá bản của khách, trong một transaction.
+  // Các lượt lấy đề đang chờ/đang chạy cũng được chuyển sang tài khoản: job xong sau đó sẽ đưa đề vào kho của tài khoản
+  // (không thì đề rơi vào kho của khách và người dùng không thấy). Lượt đã xong giữ nguyên để còn đếm giới hạn ngày của khách.
   claimGuest: (userId: number, guestId: string) =>
     prisma.$transaction(async (tx) => {
       const rows = await tx.userExam.findMany({ where: { guestId }, select: { examId: true } });
-      if (rows.length === 0) return 0;
-      await tx.userExam.createMany({ data: rows.map((r) => ({ userId, examId: r.examId })), skipDuplicates: true });
-      await tx.userExam.deleteMany({ where: { guestId } });
-      return rows.length;
+      if (rows.length > 0) {
+        await tx.userExam.createMany({ data: rows.map((r) => ({ userId, examId: r.examId })), skipDuplicates: true });
+        await tx.userExam.deleteMany({ where: { guestId } });
+      }
+      const jobs = await tx.crawlJob.updateMany({
+        where: { guestId, userId: null, status: { in: ["QUEUED", "RUNNING"] } },
+        data: { userId, guestId: null },
+      });
+      return { exams: rows.length, jobs: jobs.count };
     }),
 };
