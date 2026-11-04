@@ -39,6 +39,10 @@ export const AI_MAX_OUTPUT_TOKENS = 32_000; // gồm cả token suy luận
 export const AI_MAX_SEARCHES = 5; // số lượt tra web tối đa mỗi đề khi bật useSearch
 // Ảnh có cạnh dài hơn mức này được thu nhỏ trước khi gửi (chỉ bản gửi đi, ảnh gốc giữ nguyên): token ảnh tỉ lệ với số điểm ảnh
 export const AI_IMAGE_MAX_EDGE = 1280;
+// Đề dài được chia thành các lô nhỏ gọi Claude song song (mỗi lô chỉ kèm ảnh và bình luận của các câu trong lô): nhanh hơn nhiều
+// và tốn ít token hơn so với một lần gọi khổng lồ. Đề ngắn hơn ngưỡng này vẫn giải trong một lần.
+export const AI_BATCH_SIZE = 12;
+export const AI_MAX_PARALLEL_CALLS = 6; // tổng số lần gọi Claude cùng lúc trên toàn server (qua mọi đề), tránh chạm giới hạn tốc độ
 export const AI_MAX_PAUSES = 4; // tra web lâu có thể bị tạm dừng giữa chừng, tiếp tục tối đa chừng này lần
 
 export const AI_REPORT_FAILED_PREFIX = "AI không giải được đề này. Lý do: ";
