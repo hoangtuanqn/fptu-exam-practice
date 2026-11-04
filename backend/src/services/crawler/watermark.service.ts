@@ -2,8 +2,8 @@ import path from "node:path";
 import sharp from "sharp";
 
 const LOGO_FILE = path.resolve(__dirname, "../../../assets/brand/watermark.png");
-const WIDTH_RATIO = 0.16; // logo rộng bằng ngần này chiều rộng ảnh
-const MIN_WIDTH = 72;
+const WIDTH_RATIO = 0.11; // logo rộng bằng ngần này chiều rộng ảnh
+const MIN_WIDTH = 56;
 const MARGIN_RATIO = 0.02;
 const OPACITY = 0.3; // mờ nhẹ để không che nội dung đề
 
