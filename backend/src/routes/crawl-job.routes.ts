@@ -26,6 +26,7 @@ crawlJobRouter.use(identify); // thành viên hoặc khách đều được lấ
 
 crawlJobRouter.post("/", requireVerifiedMember, memberLimiter, guestLimiter, validate(importExamBody), crawlJobController.submit);
 crawlJobRouter.get("/price", crawlJobController.price);
+crawlJobRouter.get("/quote", validate(importExamBody, "query"), crawlJobController.quote);
 crawlJobRouter.get("/:id", validate(idParam, "params"), crawlJobController.get);
 
 export default crawlJobRouter;

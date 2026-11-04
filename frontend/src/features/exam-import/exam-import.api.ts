@@ -4,6 +4,8 @@ import type { CrawlJob, ExamAnswersPayload, ImportedExam, SubmitResult } from ".
 export const examImportApi = {
   submit: (url: string) => http.post<SubmitResult>("/crawl-jobs", { url }),
   price: () => http.get<{ price: number }>("/crawl-jobs/price"),
+  // Phí thực tế của lần lấy này (0 nếu người dùng đã lấy đề này trước đó)
+  quote: (url: string) => http.get<{ price: number; fee: number; free: boolean }>("/crawl-jobs/quote", { url }),
   job: (id: number) => http.get<CrawlJob>(`/crawl-jobs/${id}`),
   exam: (id: number) => http.get<ImportedExam>(`/exams/${id}`),
   // Hỏi lại trong lúc AI phân tích đáp án (nhẹ hơn tải cả đề)

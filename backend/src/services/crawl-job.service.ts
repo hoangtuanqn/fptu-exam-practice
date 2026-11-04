@@ -2,6 +2,7 @@ import type { CrawlJob } from "@prisma/client";
 import { prisma } from "../configs/prisma";
 import { crawlJobRepository } from "../repositories/crawl-job.repository";
 import { examRepository } from "../repositories/exam.repository";
+import { userExamRepository } from "../repositories/user-exam.repository";
 import { HTTP_STATUS } from "../constants/httpStatus";
 import { AppError } from "../rules/error";
 import type { ImportExamBody } from "../rules/requests/crawl.request";
@@ -27,8 +28,24 @@ export const crawlJobService = {
     return { price: (await crawlerSettingService.get()).fetchPrice };
   },
 
+  // Phí thực tế của lần lấy này. Đề người này đã lấy về kho trước đó thì miễn phí (chỉ mở lại, không crawl);
+  // đề đang có lượt lấy chưa xong của chính họ cũng không trừ thêm. Khách không bị tính phí.
+  async quote(actor: Actor, { url }: ImportExamBody) {
+    const { owner } = actor;
+    const threadId = parseThreadId(url);
+    if (!threadId) throw new AppError("Link không hợp lệ");
+    const price = isMember(owner) ? (await crawlerSettingService.get()).fetchPrice : 0;
+    const active = await crawlJobRepository.findActive(threadId, owner);
+    const found = await examRepository.findByThreadId(threadId);
+    const exam = found && (await examRepository.isComplete(found)) ? found : null;
+    const owned = !!exam && (await userExamRepository.has(owner, exam.id));
+    const free = isMember(owner) && price > 0 && (owned || !!active);
+    return { price, fee: free ? 0 : price, free, reason: free ? (owned ? ("owned" as const) : ("in-progress" as const)) : null, title: owned ? exam.title : null };
+  },
+
   /**
-   * Nhận link đề. Mỗi lần lấy đều bị trừ phí (admin cấu hình), kể cả đề đã có sẵn.
+   * Nhận link đề. Mỗi lần lấy bị trừ phí (admin cấu hình), kể cả đề đã có sẵn trong hệ thống,
+   * trừ đề chính người này đã lấy về kho trước đó (mở lại miễn phí).
    * Trừ tiền và ghi nhận (job hoặc thư viện) nằm trong cùng một transaction: không đủ tiền thì không có gì được tạo.
    * - chính người này đang có lượt cùng thread chưa xong -> dùng lại lượt đó, không trừ thêm
    * - đề đã có trong DB (cùng thread ID, dù link khác) -> thêm vào thư viện, không crawl lại
@@ -49,10 +66,12 @@ export const crawlJobService = {
     }
 
     // Khách chưa có ví nên không bị tính phí
-    const fetchPrice = isMember(owner) ? (await crawlerSettingService.get()).fetchPrice : 0;
     const found = await examRepository.findByThreadId(threadId);
     // Đề đang được lấy dở dang thì chưa dùng được: xếp hàng như đề mới (lượt chạy sẽ lấy lại cho đủ)
     const exam = found && (await examRepository.isComplete(found)) ? found : null;
+    // Đã có đề này trong kho của mình thì mở lại miễn phí
+    const alreadyOwned = isMember(owner) && !!exam && (await userExamRepository.has(owner, exam.id));
+    const fetchPrice = isMember(owner) && !alreadyOwned ? (await crawlerSettingService.get()).fetchPrice : 0;
 
     let balanceAfter: number | null = null; // số dư sau khi trừ phí, để báo qua email
     const result = await prisma.$transaction(async (tx) => {
@@ -74,7 +93,7 @@ export const crawlJobService = {
             tx,
           );
         }
-        return { existed: true as const, examId: exam.id, title: exam.title, charged: fetchPrice };
+        return { existed: true as const, examId: exam.id, title: exam.title, charged: fetchPrice, free: alreadyOwned };
       }
       const job = await crawlJobRepository.create({ threadId, ...owner, chargedAmount: fetchPrice }, tx);
       return { existed: false as const, job: toJobDto(job), charged: fetchPrice };
