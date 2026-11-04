@@ -34,7 +34,7 @@ export function ConfirmSubmitDialog({ answered, total, savable, answersPending, 
       {answersPending && (
         <p className="mt-3 flex items-start gap-2 rounded-xl bg-brand-50 px-3 py-2.5 text-xs leading-relaxed text-brand-900">
           <Info size={14} className="mt-0.5 shrink-0 text-brand-600" />
-          AI vẫn đang phân tích đáp án. Bạn vẫn nộp được, điểm sẽ hiện ngay khi AI xong.
+          Đáp án vẫn đang được chuẩn bị. Bạn vẫn nộp được, điểm sẽ hiện ngay khi đáp án sẵn sàng.
         </p>
       )}
       {!user && (
