@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { BookOpen } from "lucide-react";
 import { useOnLibraryChanged } from "@/features/exam-library/libraryEvents";
 import { examLibraryApi, type LibraryExam } from "@/features/exam-library/exam-library.api";
+import { ResumeList } from "@/features/practice-session/ResumeList";
 import { formatScore } from "@/features/practice/utils/format";
 import { useApi } from "@/shared/hooks/useApi";
 import { useClampPage } from "@/shared/hooks/useClampPage";
@@ -32,7 +33,8 @@ export default function LibraryPage() {
 
   return (
     <>
-      <PageHeader title="Kho đề của tôi" description="Các đề bạn đã lấy từ FuOverflow. Bấm vào một đề để làm bài." />
+      <PageHeader title="Kho đề của tôi" description="Các đề bạn đã lấy từ FuOverflow. Mỗi lần bấm vào một đề là một lượt làm mới, lượt đang dở được lưu lại để làm tiếp." />
+      <ResumeList limit={10} className="mb-5" />
       <Card>
         {loading && !data ? (
           <Loading />

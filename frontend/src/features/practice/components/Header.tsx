@@ -18,19 +18,27 @@ interface Props {
   submitLocked?: boolean; // AI chưa xong đáp án: chưa cho nộp
   elapsed: number; // số giây đã làm bài
   onPick: PickFolder;
+  onHome: () => boolean; // bấm logo khi đang làm đề: trả về false nếu người dùng huỷ việc thoát
   onSubmit: () => void;
   onReset: () => void;
   onShowResult: () => void;
 }
 
 // Header tối giản. Chưa có đề: tên app + tài khoản. Đang làm: tên đề | chế độ + đồng hồ | mở đề khác | nộp bài | tài khoản.
-export function Header({ title, mode, loaded, submitted, submitLocked, elapsed, onPick, onSubmit, onReset, onShowResult }: Props) {
+export function Header({ title, mode, loaded, submitted, submitLocked, elapsed, onPick, onHome, onSubmit, onReset, onShowResult }: Props) {
   const { Icon, label } = getModeConfig(mode);
 
   return (
     <header className="glass z-30 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-slate-200/70 px-3 sm:px-4">
       <div className="flex min-w-0 items-center gap-3">
-        <Link to="/" className="shrink-0" title={brand.company}>
+        <Link
+          to="/"
+          className="shrink-0"
+          title={brand.company}
+          onClick={(e) => {
+            if (loaded && !onHome()) e.preventDefault();
+          }}
+        >
           <Logo className="h-6 sm:h-7" />
         </Link>
         <span className="hidden h-5 w-px shrink-0 bg-slate-200 sm:block" />
