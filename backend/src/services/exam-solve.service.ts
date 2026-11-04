@@ -35,8 +35,10 @@ const pump = () => {
 async function run(examId: number) {
   const exam = await examRepository.findForSolve(examId);
   if (!exam) return;
+  if (exam.questions.length < exam.totalQuestions) return; // đề còn đang được lấy về, chưa đủ câu để giải
   const wasPending = exam.answerSource === "PENDING";
 
+  const t0 = Date.now();
   try {
     const ai = await aiSettingService.get();
     const dir = path.join(storageDir, EXAM_STORAGE_DIR, exam.threadId);
@@ -54,7 +56,7 @@ async function run(examId: number) {
     await fs.writeFile(path.join(dir, "ai-report.md"), `${solved.report}\n`, "utf-8");
     lastError.delete(examId);
     void realtimeHub.publishExam(examId);
-    console.log(`[ai] đề ${exam.threadId} đã có đáp án (${solved.answers.length} câu)`);
+    console.log(`[ai] đề ${exam.threadId} đã có đáp án (${solved.answers.length} câu) sau ${((Date.now() - t0) / 1000).toFixed(1)}s`);
   } catch (err) {
     const message = (err as Error).message;
     console.error(`[ai] giải đề ${exam.threadId} lỗi: ${message}`);
