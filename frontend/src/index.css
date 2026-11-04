@@ -26,6 +26,7 @@
   --color-ink: #101010;
 
   /* Nền trang: trắng ngà hơi lạnh, để thẻ trắng nổi lên nhẹ nhàng */
+  --font-display: "Source Serif 4", "Noto Serif", Georgia, "Times New Roman", serif; /* tiêu đề trang chủ: chữ có chân cho vẻ học thuật */
   --color-paper: #f6f8fc;
 
   /* Đổ bóng nhiều lớp, rất nhạt: tạo độ nổi mà không nặng nề */
@@ -114,6 +115,41 @@ h3 {
 .marker {
   background-image: linear-gradient(transparent 62%, var(--color-accent-soft) 62%, var(--color-accent-soft) 92%, transparent 92%);
   padding: 0 0.08em;
+}
+
+/* Thẻ ưu đãi ở trang chủ: chuyển động nhẹ cho thu hút (chỉ chạy khi người dùng không tắt chuyển động) */
+@keyframes promo-float {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -7px; }
+}
+@keyframes promo-shine {
+  0% { transform: translateX(-120%); }
+  55%, 100% { transform: translateX(120%); }
+}
+@keyframes promo-twinkle {
+  0%, 100% { opacity: 0.25; scale: 0.7; }
+  50% { opacity: 1; scale: 1.15; }
+}
+@keyframes promo-wiggle {
+  0%, 60%, 100% { rotate: 0deg; }
+  68% { rotate: -14deg; }
+  76% { rotate: 12deg; }
+  84% { rotate: -8deg; }
+  92% { rotate: 6deg; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .promo-float { animation: promo-float 4s ease-in-out infinite; }
+  .promo-twinkle { animation: promo-twinkle 2.4s ease-in-out infinite; }
+  .promo-wiggle { animation: promo-wiggle 3s ease-in-out infinite; transform-origin: 50% 85%; }
+  .promo-shine { position: relative; overflow: hidden; }
+  .promo-shine::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(110deg, transparent 35%, rgba(255, 255, 255, 0.4) 50%, transparent 65%);
+    animation: promo-shine 3.4s ease-in-out infinite;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -130,10 +130,10 @@ export function LinkImport({ onImported }: Props) {
       className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/60 px-4 py-6 text-left sm:px-6 sm:py-9"
     >
       <div className="flex flex-col items-center text-center">
-        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-600 to-accent text-white shadow-lg shadow-brand-600/25">
+        <span className="flex h-12 w-12 items-center justify-center rounded-md bg-brand-900 text-white">
           <Link2 size={22} />
         </span>
-        <div className="mt-4 text-lg font-semibold text-slate-900">
+        <div className="mt-4 font-display text-xl font-semibold text-brand-900">
           Nhập đề từ link FuOverflow
         </div>
         <div className="mt-0.5 text-sm text-slate-500">
@@ -141,13 +141,13 @@ export function LinkImport({ onImported }: Props) {
         </div>
         <div className="mt-3 flex flex-col items-center gap-1.5">
           <div className="flex items-baseline gap-1">
-            <span className="text-3xl font-extrabold leading-none tracking-tight text-brand-700">
+            <span className="font-display text-3xl font-semibold leading-none tracking-tight text-brand-900">
               {shownPrice > 0 ? `${shownPrice.toLocaleString("vi-VN")}đ` : "Miễn phí"}
             </span>
             <span className="text-sm font-medium text-slate-500">/ đề</span>
           </div>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
-            <BadgeCheck size={14} /> Đáp án chính xác đến 99.9%
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600">
+            <BadgeCheck size={14} className="text-brand-700" /> Đáp án chính xác đến 99.9%
           </span>
         </div>
       </div>

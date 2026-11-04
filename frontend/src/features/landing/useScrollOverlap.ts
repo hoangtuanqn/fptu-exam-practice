@@ -1,9 +1,10 @@
 import { useEffect, useRef } from "react";
 
 const PEEK_PX = 30; // phần mép thẻ phía sau còn lộ ra khi ô phía trước đã che gần hết
-const TILT_DEG = 4.5; // thẻ phía sau nghiêng chừng này độ (góc phải nhô lên)
-const SCROLL_RANGE = 260; // cuộn chừng này px thì hiệu ứng hoàn tất
-const BACK_SHARE = 0.5; // một nửa quãng cần che là do thẻ phía sau trôi xuống chậm hơn lúc cuộn (thị sai), nửa còn lại do thẻ trước kéo lên
+const TILT_DEG = 3.5; // thẻ phía sau nghiêng chừng này độ (góc phải nhô lên), ô phía trước vẫn thẳng để thao tác
+const SHIFT_PX = 16; // thẻ phía sau lệch sang trái một chút: hai thẻ bắt chéo nhau thay vì chồng thẳng lên nhau
+const SCROLL_RANGE = 220; // cuộn chừng này px thì hiệu ứng hoàn tất
+const BACK_SHARE = 0; // phần quãng che do thẻ phía sau trôi xuống (thị sai). 0 = thẻ sau cuộn theo trang, chỉ ô phía trước vọt lên; > 0 để chừa khoảng trống phía trên
 
 // Cha gần nhất có thanh cuộn dọc (trang chủ cuộn trong một khung, không phải cả cửa sổ)
 function findScroller(el: HTMLElement): HTMLElement | Window {
@@ -22,11 +23,12 @@ function findScroller(el: HTMLElement): HTMLElement | Window {
  * Mỗi đoạn cuộn là một hàm cố định của vị trí cuộn, nên cuộn lên là mọi thứ trở về đúng như cũ.
  * Cả hai khối cần có một thẻ bọc ngoài (`parentElement`) nằm cùng một khung định vị; `over` bọc ngoài là phần bị kéo lên.
  */
-export function useScrollOverlap() {
+export function useScrollOverlap(enabled: boolean) {
   const under = useRef<HTMLDivElement>(null);
   const over = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!enabled) return; // đã đăng nhập: không có thẻ ưu đãi nên không cần hiệu ứng
     const u = under.current;
     const o = over.current;
     const uOuter = u?.parentElement;
@@ -57,9 +59,13 @@ export function useScrollOverlap() {
         oOuter.style.marginTop = pull ? `-${pull}px` : "";
         applied = pull;
       }
-      u.style.transform = e ? `translateY(${sink.toFixed(1)}px) rotate(${-TILT_DEG * e}deg)` : "";
-      u.style.filter = e ? `brightness(${1 - 0.22 * e})` : "";
-      o.style.filter = e ? `drop-shadow(0 -16px 30px rgba(2, 6, 23, ${0.28 * e}))` : "";
+      // Thẻ sau cao hơn ô phía trước: cắt phần đáy thò ra để chỉ còn mép trên lộ ra, phần còn lại nằm khuất dưới ô phía trước
+      const exposed = Math.max(0, u.offsetHeight - o.offsetHeight - PEEK_PX);
+      const cut = exposed ? Math.round((exposed + 8) * e) : 0;
+      u.style.clipPath = cut ? `inset(0 0 ${cut}px 0)` : "";
+      u.style.transform = e ? `translateY(${sink.toFixed(1)}px) translateX(${(-SHIFT_PX * e).toFixed(1)}px) rotate(${-TILT_DEG * e}deg) scale(${1 - 0.03 * e})` : "";
+      u.style.filter = e ? `brightness(${1 - 0.1 * e})` : "";
+      o.style.filter = e ? `drop-shadow(0 -16px 30px rgba(11, 23, 48, ${0.24 * e}))` : "";
     };
     const onScroll = () => {
       if (!frame) frame = requestAnimationFrame(apply);
@@ -74,9 +80,15 @@ export function useScrollOverlap() {
       window.removeEventListener("resize", onScroll);
       media.removeEventListener("change", onScroll);
       if (frame) cancelAnimationFrame(frame);
+      // Tắt hiệu ứng (đăng nhập giữa chừng, đổi trang): trả mọi thứ về nguyên trạng
+      if (!(scroller instanceof Window)) scroller.style.overflowAnchor = "";
       oOuter.style.marginTop = "";
+      o.style.filter = "";
+      u.style.transform = "";
+      u.style.filter = "";
+      u.style.clipPath = "";
     };
-  }, []);
+  }, [enabled]);
 
   return { under, over };
 }
