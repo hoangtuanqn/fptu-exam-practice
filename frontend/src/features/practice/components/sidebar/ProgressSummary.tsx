@@ -9,10 +9,12 @@ interface Props {
   checked: Record<number, boolean>;
   mode: Mode;
   result: GradeResult | null; // có khi đã nộp bài
+  total?: number; // tổng số câu của đề (lớn hơn số câu đã có khi đề đang được lấy về)
 }
 
 // Đầu sidebar: điểm (sau khi nộp) hoặc thanh tiến độ (đang làm)
-export function ProgressSummary({ questions, answers, checked, mode, result }: Props) {
+export function ProgressSummary({ questions, answers, checked, mode, result, total = 0 }: Props) {
+  const count = Math.max(total, questions.length);
   if (result) {
     return (
       <div className="flex items-baseline justify-between gap-2 border-b border-slate-200 px-4 py-3">
@@ -35,7 +37,7 @@ export function ProgressSummary({ questions, answers, checked, mode, result }: P
       <div className="flex items-baseline justify-between text-sm">
         <span className="font-medium text-slate-900">
           {answered}
-          <span className="font-normal text-slate-400"> / {questions.length} câu</span>
+          <span className="font-normal text-slate-400"> / {count} câu</span>
         </span>
         {mode === "practice" && (
           <span className="text-xs">
@@ -48,7 +50,7 @@ export function ProgressSummary({ questions, answers, checked, mode, result }: P
       <div className="mt-2 h-1 overflow-hidden rounded-full bg-slate-200">
         <div
           className="h-full rounded-full bg-brand-900 transition-all"
-          style={{ width: `${(answered / questions.length) * 100}%` }}
+          style={{ width: `${(answered / Math.max(1, count)) * 100}%` }}
         />
       </div>
     </div>

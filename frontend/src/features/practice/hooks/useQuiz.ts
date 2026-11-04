@@ -11,10 +11,20 @@ interface PendingExam {
   title: string;
   examId: number | null; // có khi đề lấy từ hệ thống (để ghi lịch sử), null khi mở từ thư mục
   answerSource: AnswerSource | null; // nguồn đáp án của đề hệ thống (null = đề mở từ thư mục)
+  total: number; // tổng số câu của đề (lớn hơn questions.length = đề còn đang được lấy về)
 }
 
 // Đề chưa có đủ đáp án đúng (AI đang giải hoặc giải lỗi): chỉ xem, không làm bài
 const isLocked = (source: AnswerSource | null) => source !== null && source !== "AI" && source !== "MANUAL";
+
+type IncomingQuestion = { number: number; imageUrl: string; correct: string[] };
+
+// Gộp các câu mới về vào danh sách theo số câu (nhận lặp cũng không sao), giữ thứ tự tăng dần
+const mergeQuestions = (prev: Question[], incoming: IncomingQuestion[], locked: boolean): Question[] => {
+  const have = new Set(prev.map((q) => q.number));
+  const fresh = incoming.filter((q) => !have.has(q.number)).map((q) => (locked ? { ...q, answerPending: true } : q));
+  return fresh.length === 0 ? prev : [...prev, ...fresh].sort((a, b) => a.number - b.number);
+};
 
 export function useQuiz() {
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -25,6 +35,7 @@ export function useQuiz() {
   const [title, setTitle] = useState(""); // tên thư mục đề
   const [examId, setExamId] = useState<number | null>(null); // đề đang làm có trong hệ thống không
   const [answerSource, setAnswerSource] = useState<AnswerSource | null>(null); // nguồn đáp án; PENDING = AI đang phân tích
+  const [total, setTotal] = useState(0); // tổng số câu của đề đang làm
   const answersPending = isLocked(answerSource); // chưa có đáp án: chỉ xem đề
   const [mode, setMode] = useState<Mode>("practice"); // chọn lúc bắt đầu, không đổi giữa chừng
   const [pending, setPending] = useState<PendingExam | null>(null);
@@ -58,28 +69,30 @@ export function useQuiz() {
       return;
     }
     setNotFound(false);
-    setPending({ questions: parsed, title: folderName, examId: null, answerSource: null });
+    setPending({ questions: parsed, title: folderName, examId: null, answerSource: null, total: parsed.length });
   }
 
   // Đề đã có sẵn câu hỏi (nhập từ link FuOverflow): cũng chờ xác nhận như đề mở từ thư mục
-  function loadExam(examQuestions: Question[], examTitle: string, id: number, source: AnswerSource = "AI") {
+  function loadExam(examQuestions: Question[], examTitle: string, id: number, source: AnswerSource = "AI", examTotal = examQuestions.length) {
     setNotFound(false);
     setPending({
       questions: isLocked(source) ? examQuestions.map((x) => ({ ...x, answerPending: true })) : examQuestions,
       title: examTitle,
       examId: id,
       answerSource: source,
+      total: examTotal,
     });
   }
 
   // Mở thẳng vào làm bài, bỏ qua bước xác nhận (khi liên kết đã nói rõ chế độ, ví dụ /exam/12?mode=exam)
-  function openExam(examQuestions: Question[], examTitle: string, id: number, chosenMode: Mode, source: AnswerSource = "AI") {
+  function openExam(examQuestions: Question[], examTitle: string, id: number, chosenMode: Mode, source: AnswerSource = "AI", examTotal = examQuestions.length) {
     setNotFound(false);
     setPending(null);
     setQuestions(isLocked(source) ? examQuestions.map((x) => ({ ...x, answerPending: true })) : examQuestions);
     setTitle(examTitle);
     setExamId(id);
     setAnswerSource(source);
+    setTotal(examTotal);
     setMode(chosenMode);
     clearProgress();
   }
@@ -91,9 +104,28 @@ export function useQuiz() {
     setTitle(pending.title);
     setExamId(pending.examId);
     setAnswerSource(pending.answerSource);
+    setTotal(pending.total);
     setMode(chosenMode);
     clearProgress();
     setPending(null);
+  }
+
+  // Đề đang được lấy về: có thêm câu mới thì thêm vào cuối (cả đề đang làm lẫn đề đang chờ chọn chế độ)
+  function appendQuestions(incoming: IncomingQuestion[], examTotal: number) {
+    setQuestions((prev) => mergeQuestions(prev, incoming, isLocked(answerSource)));
+    setPending((p) => (p ? { ...p, questions: mergeQuestions(p.questions, incoming, isLocked(p.answerSource)), total: examTotal } : p));
+    setTotal(examTotal);
+  }
+
+  // Lấy đề thất bại giữa chừng: đề bị gỡ, thoát khỏi màn hình làm bài
+  function closeExam() {
+    setPending(null);
+    setQuestions([]);
+    setTitle("");
+    setExamId(null);
+    setAnswerSource(null);
+    setTotal(0);
+    clearProgress();
   }
 
   // AI phân tích xong: gắn đáp án đúng vào các câu đang làm (không đụng tới đáp án người dùng đã chọn)
@@ -168,6 +200,12 @@ export function useQuiz() {
     session,
     answersPending,
     answerSource,
+    total,
+    loadingMore: examId !== null && total > questions.length,
+    pendingLoadingMore: pending !== null && pending.total > pending.questions.length,
+    pendingExamId: pending?.examId ?? null,
+    appendQuestions,
+    closeExam,
     applyAnswers,
     markFailed,
     waitForAnswers,
