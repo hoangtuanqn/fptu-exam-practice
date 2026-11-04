@@ -48,6 +48,7 @@ model User {
 
   @@index([referredById])
   @@map("users")
+  practiceSessions PracticeSession[]
 }
 
 enum DepositStatus {
@@ -163,6 +164,7 @@ model Exam {
   explanationBuys ExplanationPurchase[]
 
   @@map("exams")
+  practiceSessions PracticeSession[]
 }
 
 // Mỗi ảnh là một câu hỏi. `answer` tạm là "A" cho đến khi có logic xác định đáp án đúng
@@ -257,6 +259,36 @@ model ExamAttempt {
   @@index([userId, createdAt])
   @@index([userId, examId])
   @@map("exam_attempts")
+}
+
+enum SessionStatus {
+  IN_PROGRESS
+  SUBMITTED
+}
+
+// Một lần bấm "làm bài" từ kho đề. Đáp án, câu đã chốt, câu đánh dấu và vị trí được lưu liên tục để tải lại trang vẫn làm tiếp được
+model PracticeSession {
+  id         Int           @id @default(autoincrement())
+  userId     Int?          @map("user_id")
+  guestId    String?       @map("guest_id") @db.VarChar(64)
+  examId     Int           @map("exam_id")
+  mode       AttemptMode
+  status     SessionStatus @default(IN_PROGRESS)
+  answers    Json
+  checked    Json
+  flagged    Json
+  current    Int           @default(0)
+  elapsedSec Int           @default(0) @map("elapsed_sec")
+  createdAt  DateTime      @default(now()) @map("created_at")
+  updatedAt  DateTime      @updatedAt @map("updated_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exam Exam  @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status, updatedAt])
+  @@index([guestId, status, updatedAt])
+  @@index([examId])
+  @@map("practice_sessions")
 }
 
 // Token đặt lại mật khẩu gửi qua email. Chỉ lưu băm SHA-256 của token (lộ DB cũng không dùng được), dùng một lần, có hạn

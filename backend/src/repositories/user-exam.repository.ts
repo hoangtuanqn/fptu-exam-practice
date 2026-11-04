@@ -40,6 +40,8 @@ export const userExamRepository = {
         where: { guestId, userId: null, status: { in: ["QUEUED", "RUNNING"] } },
         data: { userId, guestId: null },
       });
+      // Các lượt làm dở của khách cũng về tài khoản, để đăng nhập xong vẫn làm tiếp được
+      await tx.practiceSession.updateMany({ where: { guestId, userId: null }, data: { userId, guestId: null } });
       return { exams: rows.length, jobs: jobs.count };
     }),
 };

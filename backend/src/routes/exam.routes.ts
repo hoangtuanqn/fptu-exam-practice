@@ -1,9 +1,11 @@
 import { Router } from "express";
 import { examController } from "../controllers/exam.controllers";
+import { practiceSessionController } from "../controllers/practice-session.controllers";
 import { authenticate, identify } from "../middlewares/auth.middlewares";
 import { validate } from "../middlewares/validate.middlewares";
 import { idParam } from "../rules/requests/admin.request";
 import { submitAttemptBody, threadParam } from "../rules/requests/attempt.request";
+import { createSessionBody } from "../rules/requests/session.request";
 import { paginationQuery } from "../utils/pagination";
 
 const examRouter = Router();
@@ -16,5 +18,7 @@ examRouter.get("/:id/answers", identify, validate(idParam, "params"), examContro
 examRouter.post("/:id/retry-solve", identify, validate(idParam, "params"), examController.retrySolve);
 examRouter.get("/:id", identify, validate(idParam, "params"), examController.get);
 examRouter.post("/:id/attempts", authenticate, validate(idParam, "params"), validate(submitAttemptBody), examController.submitAttempt);
+// Mỗi lần bấm làm bài tạo một lượt mới (khách cũng có), lưu tiến độ để tải lại trang làm tiếp được
+examRouter.post("/:id/sessions", identify, validate(idParam, "params"), validate(createSessionBody), practiceSessionController.create);
 
 export default examRouter;
