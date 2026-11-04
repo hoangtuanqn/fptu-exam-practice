@@ -18,7 +18,7 @@ interface Props {
   submitted: boolean;
   submitLocked?: boolean; // AI chưa xong đáp án: chưa cho nộp
   elapsed: number; // số giây đã làm bài
-  timing: boolean; // đồng hồ đang chạy (không chạy khi chờ AI phân tích đáp án hoặc đã nộp)
+  timing: boolean; // đồng hồ đang chạy (không chạy khi chờ đáp án hoặc đã nộp)
   onPick: PickFolder;
   onHome: () => boolean; // bấm logo khi đang làm đề: trả về false nếu người dùng huỷ việc thoát
   onSubmit: () => void;
@@ -38,7 +38,7 @@ export function Header({ title, mode, loaded, submitted, submitLocked, elapsed, 
     const t = setTimeout(() => setFlash(false), 2500);
     return () => clearTimeout(t);
   }, [timing]);
-  const waiting = !submitted && !!submitLocked; // chờ AI: giờ chưa chạy
+  const waiting = !submitted && !!submitLocked; // chờ đáp án: giờ chưa chạy
 
   return (
     <header className="glass z-30 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-slate-200/70 px-3 sm:px-4">
@@ -62,7 +62,7 @@ export function Header({ title, mode, loaded, submitted, submitLocked, elapsed, 
           <>
             {/* Chế độ + đồng hồ gộp một chip */}
             <span
-              title={waiting ? "Giờ làm bài sẽ bắt đầu tính khi AI phân tích xong đáp án" : undefined}
+              title={waiting ? "Giờ làm bài sẽ bắt đầu tính khi đề có đáp án" : undefined}
               className={`inline-flex items-center gap-2 rounded-xl border px-2.5 py-1.5 text-sm transition sm:px-3 ${
                 submitted
                   ? "border-slate-200 bg-slate-50 text-slate-500"
@@ -81,7 +81,7 @@ export function Header({ title, mode, loaded, submitted, submitLocked, elapsed, 
               <span className="hidden sm:inline">{label}</span>
               <span className="hidden h-4 w-px bg-current opacity-20 sm:block" />
               <Clock size={14} className="sm:hidden" />
-              {waiting ? <span className="whitespace-nowrap">Chờ AI · chưa tính giờ</span> : <span className="tabular-nums">{formatDuration(elapsed)}</span>}
+              {waiting ? <span className="whitespace-nowrap">Chờ đáp án · chưa tính giờ</span> : <span className="tabular-nums">{formatDuration(elapsed)}</span>}
             </span>
 
             <FolderPicker iconOnly onPick={onPick} />
