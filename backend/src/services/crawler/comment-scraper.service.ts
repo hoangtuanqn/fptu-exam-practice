@@ -42,27 +42,16 @@ async function fetchMediaComments(client: FuoClient, mediaUrl: string): Promise<
 }
 
 /**
- * Lấy bình luận cho từng câu (ảnh), tuần tự và có nghỉ giữa các request.
- * Lỗi ở một ảnh không làm hỏng cả đề: câu đó chỉ không có bình luận.
+ * Bình luận của một câu (ảnh). Lỗi thì trả danh sách rỗng: bình luận chỉ là phụ, không làm hỏng cả đề.
  */
-export async function collectAllComments(
-  client: FuoClient,
-  images: ImageRef[],
-  onProgress?: (done: number, total: number) => Promise<void> | void,
-): Promise<QuestionComments[]> {
-  const out: QuestionComments[] = [];
-  for (const [i, image] of images.entries()) {
-    let comments: ScrapedComment[] = [];
-    if (image.mediaUrl) {
-      try {
-        comments = await fetchMediaComments(client, image.mediaUrl);
-      } catch {
-        /* bình luận chỉ là phụ, bỏ qua */
-      }
-      await client.pause();
+export async function collectComments(client: FuoClient, image: ImageRef): Promise<QuestionComments> {
+  let comments: ScrapedComment[] = [];
+  if (image.mediaUrl) {
+    try {
+      comments = await fetchMediaComments(client, image.mediaUrl);
+    } catch {
+      /* bình luận chỉ là phụ, bỏ qua */
     }
-    out.push({ image, comments });
-    await onProgress?.(i + 1, images.length);
   }
-  return out;
+  return { image, comments };
 }

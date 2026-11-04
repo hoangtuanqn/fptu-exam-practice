@@ -71,6 +71,7 @@ export const updateCrawlerBody = z.object({
   userAgent: z.string().trim().max(500),
   referer: z.string().trim().max(500),
   requestDelayMs: z.number().int().min(0).max(5000),
+  concurrency: z.number().int().min(1, "Tối thiểu 1").max(8, "Tối đa 8"),
   webpQuality: z.number().int().min(30).max(100),
   fetchPrice: z.number().int().min(0).max(1_000_000),
 });
