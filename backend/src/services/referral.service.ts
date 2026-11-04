@@ -1,6 +1,7 @@
 import { randomInt } from "node:crypto";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../configs/prisma";
+import { userRepository } from "../repositories/user.repository";
 import { REFERRAL_CODE_ALPHABET, REFERRAL_CODE_LENGTH } from "../constants/referral";
 import { referralRepository } from "../repositories/referral.repository";
 import { AppError } from "../rules/error";
@@ -93,7 +94,7 @@ export const referralService = {
    * Quá hạn thì mất quyền. Gắn người giới thiệu bằng UPDATE có điều kiện nên không thể nhập hai lần.
    */
   async claim(userId: number, code: string) {
-    const [user, config] = await Promise.all([prisma.user.findUnique({ where: { id: userId }, select: { id: true, fullName: true, createdAt: true, referredById: true } }), referralSettingService.get()]);
+    const [user, config] = await Promise.all([userRepository.findReferralProfile(userId), referralSettingService.get()]);
     if (!user) throw new AppError("Không tìm thấy tài khoản", 404);
     if (user.referredById) throw new AppError("Bạn đã được giới thiệu rồi, không thể nhập thêm mã");
     if (!config.enabled) throw new AppError("Chương trình giới thiệu đang tạm dừng");
@@ -157,7 +158,7 @@ export const referralService = {
       referralSettingService.get(),
       referralRepository.statsOf(userId),
       referralRepository.listReferred(userId, query),
-      prisma.user.findUnique({ where: { id: userId }, select: { createdAt: true, referredById: true } }),
+      userRepository.findReferralProfile(userId),
     ]);
     const commission = await referralRepository.commissionByReferred(list.items.map((u) => u.id));
     return {
@@ -178,6 +179,8 @@ export const referralService = {
   },
 
   // ----- Admin
+  adminSummary: () => referralRepository.summary(),
+
   async adminList(query: PaginationQuery) {
     const { items, total } = await referralRepository.listAll(query);
     const commission = await referralRepository.commissionByReferred(items.map((u) => u.id));
