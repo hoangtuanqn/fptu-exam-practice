@@ -5,6 +5,7 @@ import { explanationApi } from "@/features/explanation/explanation.api";
 import { useApi } from "@/shared/hooks/useApi";
 import { ReportAnswerDialog } from "@/features/answer-report/ReportAnswerDialog";
 import { useAuth } from "@/features/auth/AuthContext";
+import { usePreloadImages } from "@/features/practice/hooks/usePreloadImages";
 import type { Quiz } from "@/features/practice/hooks/useQuiz";
 import { Sidebar } from "@/features/practice/components/sidebar/Sidebar";
 import { AnswerPendingBanner } from "./AnswerPendingBanner";
@@ -30,6 +31,7 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit }: Props)
   const explainEnabled = !!user && quiz.examId !== null;
   const info = useApi(() => (explainEnabled ? explanationApi.info(quiz.examId!) : Promise.resolve(null)), [explainEnabled, quiz.examId]);
   const [reported, setReported] = useState<Set<number>>(new Set()); // các câu đã báo cáo trong phiên này
+  usePreloadImages(quiz);
   const question = quiz.questions[quiz.current];
   if (!question) return null;
 
