@@ -17,10 +17,11 @@ interface Props {
   quiz: Quiz;
   zoomOpen: boolean;
   onZoomChange: (open: boolean) => void;
+  onSubmit: () => void; // mở hộp xác nhận nộp bài
 }
 
 // Màn hình làm bài: sidebar danh sách câu + khung câu hỏi + (tuỳ chọn) cửa sổ phóng to ảnh
-export function QuizWorkspace({ quiz, zoomOpen, onZoomChange }: Props) {
+export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit }: Props) {
   const { user } = useAuth();
   const [reportOpen, setReportOpen] = useState(false);
   const [confirmExplain, setConfirmExplain] = useState(false); // hộp xác nhận phí (chỉ lần đầu mỗi câu)
@@ -57,6 +58,8 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange }: Props) {
     onCheck: () => quiz.check(question),
     onPrev: quiz.prev,
     onNext: quiz.next,
+    // Câu cuối thì nút "Tiếp" thành "Nộp bài" (không khi đã nộp, chờ AI, hoặc đề còn đang được lấy về)
+    onSubmit: !quiz.submitted && !quiz.answersPending && !quiz.loadingMore ? onSubmit : undefined,
   };
 
   return (

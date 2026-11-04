@@ -29,13 +29,13 @@ export function StartDialog({ title, total, graded, answersPending, replacing, o
           <span className="truncate">{title || "Đề chưa đặt tên"}</span>
         </div>
         <div className="mt-1 text-slate-600">
-          {total} câu hỏi{answersPending ? " · AI đang phân tích đáp án" : ` · ${graded} câu có đáp án`}
+          {total} câu hỏi{answersPending ? " · đang chuẩn bị đáp án" : ` · ${graded} câu có đáp án`}
         </div>
       </div>
 
       {answersPending && (
         <p className="mt-3 text-sm text-brand-800">
-          Đề chưa có đáp án nên bạn chỉ xem được. Phần làm bài sẽ mở khi AI phân tích xong, thường sau ít phút.
+          Đề chưa có đáp án nên bạn chỉ xem được. Phần làm bài sẽ mở khi đáp án sẵn sàng, thường sau ít phút.
         </p>
       )}
       {!answersPending && graded < total && (

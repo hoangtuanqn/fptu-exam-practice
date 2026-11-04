@@ -15,7 +15,7 @@ import { formatDate } from "@/shared/utils/formatters";
 
 const AnswerBadge = ({ source }: { source: LibraryExam["answerSource"] }) =>
   source === "PENDING" ? (
-    <Badge tone="info">AI đang giải</Badge>
+    <Badge tone="info">Đang chuẩn bị đáp án</Badge>
   ) : source === "FAILED" || source === "DEFAULT" ? (
     <Badge tone="warning">Chưa có đáp án</Badge>
   ) : null;

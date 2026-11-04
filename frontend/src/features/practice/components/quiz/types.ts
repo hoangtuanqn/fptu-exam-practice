@@ -20,4 +20,5 @@ export interface QuestionViewProps {
   onCheck: () => void;
   onPrev: () => void;
   onNext: () => void;
+  onSubmit?: () => void; // chỉ có khi được phép nộp bài; ở câu cuối nút "Tiếp" đổi thành "Nộp bài"
 }
