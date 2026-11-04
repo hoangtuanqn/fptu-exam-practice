@@ -59,6 +59,8 @@ export interface SepayForm {
 
 export interface CrawlerForm {
   cookie?: string;
+  loginEmail: string;
+  loginPassword?: string;
   userAgent: string;
   referer: string;
   requestDelayMs: number;
@@ -120,6 +122,8 @@ export const adminApi = {
   saveSepayConfig: (body: SepayForm) => http.put<SepayAdminConfig>("/admin/settings/sepay", body),
   crawlerConfig: () => http.get<CrawlerAdminConfig>("/admin/settings/crawler"),
   saveCrawlerConfig: (body: CrawlerForm) => http.put<CrawlerAdminConfig>("/admin/settings/crawler", body),
+  // Đăng nhập FuOverflow bằng tài khoản đã lưu để lấy cookie mới
+  crawlerLogin: () => http.post<CrawlerAdminConfig>("/admin/settings/crawler/login"),
   aiConfig: () => http.get<AiAdminConfig>("/admin/settings/ai"),
   saveAiConfig: (body: AiForm) => http.put<AiAdminConfig>("/admin/settings/ai", body),
   exams: (page: number) => http.list<AdminExam>("/admin/exams", { page, limit: PAGE_SIZE }),
