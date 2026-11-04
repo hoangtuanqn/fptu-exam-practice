@@ -1,10 +1,11 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { useImageZoom } from "@/features/practice/hooks/useImageZoom";
 import { useKeydown } from "@/features/practice/hooks/useKeydown";
 import { Button } from "@/shared/ui/Button";
 import { AnswerOptions } from "./AnswerOptions";
 import { AnswerStatus } from "./AnswerStatus";
 import { FlagButton } from "./FlagButton";
+import { NextButton } from "./NextButton";
 import { QuestionKindBadge } from "./QuestionKindBadge";
 import type { QuestionViewProps } from "./types";
 import { ZoomControls } from "./ZoomControls";
@@ -28,6 +29,7 @@ export function ImageViewer({
   onCheck,
   onPrev,
   onNext,
+  onSubmit,
   onClose,
 }: Props) {
   const zoom = useImageZoom(question.number); // đổi câu thì về 100%
@@ -91,10 +93,7 @@ export function ImageViewer({
               <ChevronLeft size={16} />
               Trước
             </Button>
-            <Button grow variant="primary" onClick={onNext} disabled={!hasNext}>
-              Tiếp
-              <ChevronRight size={16} />
-            </Button>
+            <NextButton grow hasNext={hasNext} onNext={onNext} onSubmit={onSubmit} />
           </div>
         </aside>
       </div>

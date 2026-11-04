@@ -58,8 +58,21 @@ export default function PracticePage({ threadId }: Props) {
     return true;
   };
 
+  // Đồng hồ bắt đầu chạy (đề có đáp án rồi): báo cho học viên biết giờ đã được tính
+  const wasTiming = useRef(false);
+  useEffect(() => {
+    if (quiz.timing && !wasTiming.current && quiz.elapsed === 0) toast.success("Bắt đầu tính giờ làm bài");
+    wasTiming.current = quiz.timing;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quiz.timing]);
+
   // Đang mở hộp thoại thì tắt phím tắt để tránh bấm nhầm đáp án
-  useQuizShortcuts(quiz, hasQuiz && !anyDialogOpen);
+  const requestSubmit = () => {
+    setZoomOpen(false);
+    setDialog("confirm");
+  };
+  const canSubmit = !quiz.submitted && !quiz.answersPending && !quiz.loadingMore;
+  useQuizShortcuts(quiz, hasQuiz && !anyDialogOpen, canSubmit ? requestSubmit : undefined);
 
   // Khách nộp bài xong là hết lượt thử; lần mở đề sau sẽ mời đăng ký
   useEffect(() => {
@@ -72,11 +85,11 @@ export default function PracticePage({ threadId }: Props) {
     if (r.status === "PENDING") return; // vẫn đang xử lý: giữ nguyên trạng thái chờ
     if (r.status === "FAILED" || r.status === "DEFAULT") {
       quiz.markFailed();
-      toast.error("AI chưa phân tích được đáp án của đề này");
+      toast.error("Chưa lấy được đáp án của đề này");
       return;
     }
     quiz.applyAnswers(r.answers, r.status);
-    toast.success("AI đã phân tích xong đáp án, bạn có thể làm bài");
+    toast.success("Đáp án đã sẵn sàng, bạn có thể làm bài");
   });
 
   // Đề còn đang được lấy về: các câu mới hiện dần qua socket. Lấy thất bại thì đề bị gỡ, thoát ra trang chủ.
@@ -194,6 +207,7 @@ export default function PracticePage({ threadId }: Props) {
         submitted={quiz.submitted}
         submitLocked={quiz.answersPending}
         elapsed={quiz.elapsed}
+        timing={quiz.timing}
         onPick={pick}
         onHome={goHome}
         onSubmit={() => setDialog("confirm")}
@@ -205,7 +219,7 @@ export default function PracticePage({ threadId }: Props) {
       {trialEnded && <TrialEndedDialog onClose={() => setTrialEnded(false)} />}
 
       {hasQuiz ? (
-        <QuizWorkspace quiz={quiz} zoomOpen={zoomOpen} onZoomChange={setZoomOpen} />
+        <QuizWorkspace quiz={quiz} zoomOpen={zoomOpen} onZoomChange={setZoomOpen} onSubmit={requestSubmit} />
       ) : opening ? (
         <div className="flex flex-1 items-center justify-center bg-paper">
           <Loading label="Đang mở đề…" />

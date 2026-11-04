@@ -42,8 +42,8 @@ export function AnswerPendingBanner({ source, examId, onRetry }: { source: Answe
         <div className="flex items-start gap-2.5">
           <Sparkles size={16} className="mt-0.5 shrink-0 text-brand-600" />
           <div className="min-w-0 flex-1">
-            <span className="font-medium">AI đang phân tích đáp án…</span>{" "}
-            <span className="text-brand-800/80">Bạn xem đề trước, phần chọn đáp án sẽ mở khi AI xong.</span>
+            <span className="font-medium">Đang chuẩn bị đáp án…</span>{" "}
+            <span className="text-brand-800/80">Bạn xem đề trước, phần chọn đáp án sẽ mở khi đáp án sẵn sàng.</span>
           </div>
           <Loader2 size={16} className="mt-0.5 shrink-0 animate-spin text-brand-600" />
         </div>
@@ -63,7 +63,7 @@ export function AnswerPendingBanner({ source, examId, onRetry }: { source: Answe
       <div role="alert" className="mb-2 flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-3 text-sm text-rose-900">
         <TriangleAlert size={16} className="mt-0.5 shrink-0 text-rose-600" />
         <div className="min-w-0 flex-1">
-          <div className="font-medium">AI chưa phân tích được đáp án của đề này.</div>
+          <div className="font-medium">Chưa lấy được đáp án của đề này.</div>
           <div className="mt-0.5 text-rose-800/80">Đề chỉ xem được, chưa làm bài được vì chưa có đáp án chính xác. Lỗi đã được ghi lại để quản trị viên xử lý.</div>
           <button
             onClick={retry}

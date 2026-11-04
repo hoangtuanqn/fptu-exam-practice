@@ -1,8 +1,9 @@
-import { ChevronLeft, ChevronRight, Maximize2, MessageSquareWarning, Sparkles } from "lucide-react";
+import { ChevronLeft, Maximize2, MessageSquareWarning, Sparkles } from "lucide-react";
 import { Button } from "@/shared/ui/Button";
 import { AnswerOptions } from "./AnswerOptions";
 import { AnswerStatus } from "./AnswerStatus";
 import { FlagButton } from "./FlagButton";
+import { NextButton } from "./NextButton";
 import { QuestionKindBadge } from "./QuestionKindBadge";
 import type { QuestionViewProps } from "./types";
 
@@ -29,6 +30,7 @@ export function QuestionCard({
   onCheck,
   onPrev,
   onNext,
+  onSubmit,
   onZoom,
 }: Props) {
   const { number, imageUrl } = question;
@@ -95,10 +97,7 @@ export function QuestionCard({
             <ChevronLeft size={16} />
             Trước
           </Button>
-          <Button variant="primary" size="sm" onClick={onNext} disabled={!hasNext} className="!py-3 sm:order-3 sm:!py-2">
-            Tiếp
-            <ChevronRight size={16} />
-          </Button>
+          <NextButton hasNext={hasNext} onNext={onNext} onSubmit={onSubmit} className="!py-3 sm:order-3 sm:!py-2" />
         </div>
 
         <div className="order-1 flex flex-1 flex-col items-stretch gap-2.5 sm:order-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-4 sm:gap-y-2">

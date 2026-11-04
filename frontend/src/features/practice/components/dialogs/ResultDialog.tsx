@@ -35,9 +35,9 @@ export function ResultDialog({ result, elapsed, savable, answersPending, answerS
             <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-50 text-brand-600">
               <Loader2 size={26} className="animate-spin" />
             </span>
-            <div className="text-lg font-semibold text-slate-900">AI đang phân tích đáp án…</div>
+            <div className="text-lg font-semibold text-slate-900">Đang chuẩn bị đáp án…</div>
             <p className="max-w-xs text-sm leading-relaxed text-slate-500">
-              Bài của bạn đã được ghi nhận. Điểm sẽ hiện ngay ở đây khi AI xong, thường sau ít phút. Bạn có thể xem lại bài trong lúc chờ.
+              Bài của bạn đã được ghi nhận. Điểm sẽ hiện ngay ở đây khi đáp án sẵn sàng, thường sau ít phút. Bạn có thể xem lại bài trong lúc chờ.
             </p>
           </div>
         ) : (
