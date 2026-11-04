@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { History } from "lucide-react";
 import { historyApi } from "@/features/history/history.api";
 import { formatDuration, formatScore } from "@/features/practice/utils/format";
@@ -15,15 +15,26 @@ import { useClampPage } from "@/shared/hooks/useClampPage";
 
 export default function AttemptsPage() {
   const navigate = useNavigate();
-  const [url, setUrl] = useUrlState({ page: "1" });
+  const [url, setUrl] = useUrlState({ page: "1", examId: "" });
   const page = toPage(url.page);
+  const examId = Number(url.examId) || undefined; // có thì chỉ hiện lịch sử của đề này
   const setPage = (p: number) => setUrl({ page: String(p) });
-  const { data, error, loading, reload } = useApi(() => historyApi.list(page), [page]);
+  const { data, error, loading, reload } = useApi(() => historyApi.list(page, undefined, examId), [page, examId]);
   useClampPage(data?.meta, setPage);
 
   return (
     <>
       <PageHeader title="Lịch sử làm bài" description="Mỗi lần nộp bài được lưu lại điểm và chi tiết từng câu." />
+      {examId && (
+        <div className="mb-3 flex items-center justify-between gap-3 rounded-xl border border-brand-200 bg-brand-50 px-4 py-2.5 text-sm text-brand-900">
+          <span className="min-w-0 truncate">
+            Đang xem lịch sử của đề: <b>{data?.items[0]?.exam.title ?? `#${examId}`}</b>
+          </span>
+          <Link to="/account/attempts" className="shrink-0 font-medium text-brand-700 hover:underline">
+            Xem tất cả
+          </Link>
+        </div>
+      )}
       <Card>
         {loading && !data ? (
           <Loading />

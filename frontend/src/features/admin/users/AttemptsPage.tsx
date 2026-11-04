@@ -1,11 +1,10 @@
-import { useEffect, useState } from "react";
 import { ClipboardList, Search } from "lucide-react";
 import { adminApi } from "@/features/admin/api/admin.api";
 import { UserCell, UserFilterChip } from "@/features/admin/shared";
 import { formatDuration, formatScore } from "@/features/practice/utils/format";
 import { useApi } from "@/shared/hooks/useApi";
 import { useClampPage } from "@/shared/hooks/useClampPage";
-import { useDebounce } from "@/shared/hooks/useDebounce";
+import { useUrlSearch } from "@/shared/hooks/useUrlSearch";
 import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
 import { Badge } from "@/shared/ui/Badge";
 import { Card, PageHeader } from "@/shared/ui/Card";
@@ -25,12 +24,8 @@ export default function AttemptsPage() {
   const page = toPage(url.page);
   const setPage = (p: number) => setUrl({ page: String(p) });
 
-  const [search, setSearch] = useState(url.q);
-  const q = useDebounce(search.trim());
-  useEffect(() => {
-    if (q !== url.q) setUrl({ q, page: "1" });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q]);
+  // Ô tìm kiếm gõ trực tiếp, sau khi ngừng gõ mới đưa lên URL (và về trang 1)
+  const [search, setSearch, q] = useUrlSearch(url.q, setUrl);
 
   const { data, error, loading, reload } = useApi(() => adminApi.attempts({ page, search: q, mode, userId: url.userId }), [page, q, mode, url.userId]);
   useClampPage(data?.meta, setPage);

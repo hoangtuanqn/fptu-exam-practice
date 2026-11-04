@@ -30,7 +30,15 @@ const toDto = (s: Row) => {
 
 const notFound = () => AppError.notFound("Không tìm thấy lượt làm bài");
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+export const ABANDONED_AFTER_DAYS = 7; // lượt dở không đụng tới quá chừng này ngày thì xoá
+export const SUBMITTED_KEEP_DAYS = 7; // lượt đã nộp giữ ngắn thôi: kết quả nằm ở lịch sử làm bài
+
 export const practiceSessionService = {
+  async cleanup(now = Date.now()) {
+    return practiceSessionRepository.deleteStale(new Date(now - ABANDONED_AFTER_DAYS * DAY_MS), new Date(now - SUBMITTED_KEEP_DAYS * DAY_MS));
+  },
+
   // Mỗi lần bấm làm bài là một lượt mới
   async create(actor: Actor, examId: number, body: CreateSessionBody) {
     await examService.assertAccess(actor, examId);
@@ -53,7 +61,8 @@ export const practiceSessionService = {
   },
 
   async listMine(actor: Actor, query: ListSessionsQuery) {
-    const { items, total } = await practiceSessionRepository.listInProgress(actor.owner, query, query.examId);
+    const notBefore = new Date(Date.now() - ABANDONED_AFTER_DAYS * DAY_MS);
+    const { items, total } = await practiceSessionRepository.listInProgress(actor.owner, query, query.examId, notBefore);
     return { items: items.map(toDto), meta: toMeta(query, total) };
   },
 

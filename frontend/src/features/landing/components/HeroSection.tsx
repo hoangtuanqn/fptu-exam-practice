@@ -8,11 +8,10 @@ interface Props {
   onPick: PickFolder;
   onImported: (exam: ImportedExam) => void;
   userName?: string; // đã đăng nhập thì chào tên thay cho slogan
-  trialUsed: boolean; // khách đã dùng hết lượt thử thì ẩn nhãn "dùng thử"
 }
 
 // Phần đầu trang: nhãn dùng thử, tên hệ thống, slogan, chip đối tác, khối chọn nguồn đề, ba ý ngắn
-export function HeroSection({ onPick, onImported, userName, trialUsed }: Props) {
+export function HeroSection({ onPick, onImported, userName }: Props) {
   const isGuest = !userName;
   const [sloganLead, sloganAccent] = splitSlogan(brand.slogan);
 

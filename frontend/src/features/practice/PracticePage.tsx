@@ -41,6 +41,7 @@ export default function PracticePage({ threadId }: Props) {
   const [zoomOpen, setZoomOpen] = useState(false);
   const [dialog, setDialog] = useState<SubmitDialog>(null);
   const [trialEnded, setTrialEnded] = useState(false);
+  const [bestScore, setBestScore] = useState<number | null>(null); // điểm cao nhất của người dùng ở đề đang mở
 
   const hasQuiz = quiz.questions.length > 0;
   const anyDialogOpen = !!dialog || !!quiz.pending || quiz.notFound || trialEnded;
@@ -57,6 +58,18 @@ export default function PracticePage({ threadId }: Props) {
     quiz.closeExam();
     return true;
   };
+
+  // Điểm cao nhất ở đề này (chỉ thành viên, đề của hệ thống); nạp lại sau mỗi lần nộp được lưu
+  const loadBest = (examId: number) =>
+    historyApi
+      .summary(examId)
+      .then((s) => setBestScore(s.bestScore))
+      .catch(() => undefined);
+  useEffect(() => {
+    setBestScore(null);
+    if (user && quiz.examId !== null) void loadBest(quiz.examId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, quiz.examId]);
 
   // Đồng hồ bắt đầu chạy (đề có đáp án rồi): báo cho học viên biết giờ đã được tính
   const wasTiming = useRef(false);
@@ -126,7 +139,10 @@ export default function PracticePage({ threadId }: Props) {
     }
     historyApi
       .save(quiz.examId, payload)
-      .then(() => toast.success("Đã lưu vào lịch sử làm bài"))
+      .then(() => {
+        toast.success("Đã lưu vào lịch sử làm bài");
+        if (quiz.examId !== null) void loadBest(quiz.examId);
+      })
       .catch(() => toast.error("Không lưu được lịch sử làm bài"));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quiz.submitted, quiz.answersPending]);
@@ -207,6 +223,7 @@ export default function PracticePage({ threadId }: Props) {
         submitted={quiz.submitted}
         submitLocked={quiz.answersPending}
         elapsed={quiz.elapsed}
+        bestScore={bestScore}
         timing={quiz.timing}
         onPick={pick}
         onHome={goHome}
@@ -225,7 +242,7 @@ export default function PracticePage({ threadId }: Props) {
           <Loading label="Đang mở đề…" />
         </div>
       ) : (
-        <Landing onPick={pick} onImported={(exam) => navigate(`/exam/${exam.threadId}`)} userName={user?.fullName} trialUsed={trial.used} />
+        <Landing onPick={pick} onImported={(exam) => navigate(`/exam/${exam.threadId}`)} userName={user?.fullName} />
       )}
     </div>
   );

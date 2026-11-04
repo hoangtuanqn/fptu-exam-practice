@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { authController } from "../controllers/auth.controllers";
 import { authenticate } from "../middlewares/auth.middlewares";
-import { authLimiter, forgotPasswordLimiter } from "../middlewares/rateLimit.middlewares";
+import { authLimiter, forgotPasswordLimiter, refreshLimiter } from "../middlewares/rateLimit.middlewares";
 import { validate } from "../middlewares/validate.middlewares";
 import { forgotPasswordBody, googleLoginBody, loginBody, registerBody, resetPasswordBody, verifyEmailBody } from "../rules/requests/auth.request";
 
@@ -11,6 +11,9 @@ authRouter.post("/register", authLimiter, validate(registerBody), authController
 authRouter.post("/login", authLimiter, validate(loginBody), authController.login);
 authRouter.post("/forgot-password", forgotPasswordLimiter, validate(forgotPasswordBody), authController.forgotPassword);
 authRouter.post("/reset-password", authLimiter, validate(resetPasswordBody), authController.resetPassword);
+// Phiên đăng nhập dài hạn (cookie httpOnly): đổi lấy access token mới, và đăng xuất để thu hồi
+authRouter.post("/refresh", refreshLimiter, authController.refresh);
+authRouter.post("/logout", refreshLimiter, authController.logout);
 authRouter.get("/google/config", authController.googleConfig);
 authRouter.post("/google", authLimiter, validate(googleLoginBody), authController.google);
 authRouter.post("/verify-email", authLimiter, validate(verifyEmailBody), authController.verifyEmail);

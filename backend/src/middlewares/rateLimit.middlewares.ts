@@ -9,6 +9,15 @@ export const forgotPasswordLimiter = rateLimit({
   message: { status: false, message: "Bạn yêu cầu quá nhiều lần, vui lòng thử lại sau ít phút" },
 });
 
+// Làm mới phiên chạy ngầm mỗi khi access token hết hạn; nhiều người dùng chung một IP (mạng trường) nên nới hơn đăng nhập
+export const refreshLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { status: false, message: "Làm mới phiên quá nhanh, vui lòng thử lại sau giây lát" },
+});
+
 // Chống dò mật khẩu: 20 lần / 15 phút / IP
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,

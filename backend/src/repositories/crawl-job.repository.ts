@@ -12,6 +12,7 @@ export const crawlJobRepository = {
       chargedAmount: number;
       // Dùng để ghi nhận một lượt lấy đề đã xong ngay (đề có sẵn), phục vụ đếm giới hạn theo ngày
       status?: "DONE";
+      refresh?: boolean; // lượt làm mới đề cũ chạy nền
       examId?: number;
       finishedAt?: Date;
     },
@@ -28,11 +29,20 @@ export const crawlJobRepository = {
 
   findById: (id: number) => prisma.crawlJob.findUnique({ where: { id } }),
 
+  // Thread này đã có lượt làm mới đang chạy, hoặc vừa có lượt làm mới (kể cả thất bại) từ mốc `since`: chưa tạo thêm
+  async hasRecentRefresh(threadId: string, since: Date) {
+    const found = await prisma.crawlJob.findFirst({
+      where: { threadId, refresh: true, OR: [{ status: { in: ["QUEUED", "RUNNING"] } }, { createdAt: { gte: since } }] },
+      select: { id: true },
+    });
+    return !!found;
+  },
+
   // Người này đã có lượt đang chờ/đang chạy cho thread này thì dùng lại, không tạo thêm.
   // Mỗi người có job riêng để đề được thêm vào thư viện của đúng người đó.
   findActive: (threadId: string, owner: Owner) =>
     prisma.crawlJob.findFirst({
-      where: { threadId, ...("userId" in owner ? { userId: owner.userId } : { guestId: owner.guestId }), status: { in: ["QUEUED", "RUNNING"] } },
+      where: { threadId, refresh: false, ...("userId" in owner ? { userId: owner.userId } : { guestId: owner.guestId }), status: { in: ["QUEUED", "RUNNING"] } },
       orderBy: { id: "asc" },
     }),
 

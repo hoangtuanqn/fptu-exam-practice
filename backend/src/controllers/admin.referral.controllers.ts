@@ -2,7 +2,6 @@ import type { Request, Response } from "express";
 import { getValidated } from "../middlewares/validate.middlewares";
 import { ResponseClient } from "../rules/response";
 import type { UpdateReferralBody } from "../rules/requests/setting.request";
-import { referralRepository } from "../repositories/referral.repository";
 import { referralService } from "../services/referral.service";
 import { referralSettingService } from "../services/referral-setting.service";
 import type { PaginationQuery } from "../utils/pagination";
@@ -17,7 +16,7 @@ export const adminReferralController = {
   },
 
   async summary(_req: Request, res: Response) {
-    res.json(new ResponseClient({ data: await referralRepository.summary() }));
+    res.json(new ResponseClient({ data: await referralService.adminSummary() }));
   },
 
   async list(_req: Request, res: Response) {

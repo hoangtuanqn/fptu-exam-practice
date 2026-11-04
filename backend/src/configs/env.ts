@@ -16,7 +16,10 @@ const schema = z.object({
   TRUST_PROXY: z.coerce.number().int().min(0).default(0),
   DATABASE_URL: z.string().min(1),
   JWT_SECRET: z.string().min(32, "JWT_SECRET cần ít nhất 32 ký tự"),
-  JWT_EXPIRES_IN: z.string().default("7d"),
+  // Access token sống ngắn (có refresh token đổi lấy cái mới); lộ token cũng chỉ dùng được trong chừng này thời gian
+  JWT_EXPIRES_IN: z.string().default("15m"),
+  // Phiên đăng nhập (refresh token) sống chừng này ngày kể từ lần dùng gần nhất; không dùng quá lâu thì phải đăng nhập lại
+  REFRESH_TOKEN_DAYS: z.coerce.number().int().min(1).default(30),
   // Gửi email (quên mật khẩu). Không cấu hình thì server vẫn chạy, chỉ không gửi được thư
   SMTP_HOST: z.string().default("smtp.gmail.com"),
   SMTP_PORT: z.coerce.number().default(465),

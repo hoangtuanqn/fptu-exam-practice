@@ -25,6 +25,14 @@ export const userRepository = {
   findByEmailWithPassword: (email: string) => prisma.user.findUnique({ where: { email } }),
   findByIdWithPassword: (id: number) => prisma.user.findUnique({ where: { id } }),
 
+  // Đăng nhập Google: tìm theo mã Google, hoặc theo email để liên kết với tài khoản có sẵn
+  findByGoogleSub: (googleSub: string) => prisma.user.findUnique({ where: { googleSub }, select: { id: true, status: true } }),
+  findByEmailForLink: (email: string) => prisma.user.findUnique({ where: { email }, select: { id: true, status: true, emailVerifiedAt: true } }),
+  linkGoogle: (id: number, googleSub: string, emailVerifiedAt: Date) => prisma.user.update({ where: { id }, data: { googleSub, emailVerifiedAt } }),
+
+  // Hồ sơ tối thiểu để xét điều kiện nhập mã giới thiệu
+  findReferralProfile: (id: number) => prisma.user.findUnique({ where: { id }, select: { id: true, fullName: true, createdAt: true, referredById: true } }),
+
   existsByEmail: async (email: string) => !!(await prisma.user.findUnique({ where: { email }, select: { id: true } })),
 
   async list(query: ListUsersQuery) {

@@ -2,6 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { env } from "../configs/env";
 import { prisma } from "../configs/prisma";
 import { passwordResetRepository } from "../repositories/password-reset.repository";
+import { refreshTokenRepository } from "../repositories/refresh-token.repository";
 import { userRepository } from "../repositories/user.repository";
 import { AppError } from "../rules/error";
 import type { ForgotPasswordBody, LoginBody, RegisterBody, ResetPasswordBody } from "../rules/requests/auth.request";
@@ -92,6 +93,7 @@ export const authService = {
       if (!(await passwordResetRepository.consume(tx, tokenHash))) throw new AppError(INVALID_RESET);
       await userRepository.updatePassword(user.id, hashed, tx);
       await passwordResetRepository.invalidateAll(tx, user.id);
+      await refreshTokenRepository.deleteAllOfUser(user.id, tx); // đổi mật khẩu thì mọi thiết bị phải đăng nhập lại
     });
     notificationService.passwordChanged({ userId: user.id, via: "reset" });
   },

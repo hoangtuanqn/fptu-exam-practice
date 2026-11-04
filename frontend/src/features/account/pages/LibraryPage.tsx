@@ -1,5 +1,5 @@
-import { Link } from "react-router-dom";
-import { BookOpen } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { BookOpen, History } from "lucide-react";
 import { useOnLibraryChanged } from "@/features/exam-library/libraryEvents";
 import { examLibraryApi, type LibraryExam } from "@/features/exam-library/exam-library.api";
 import { ResumeList } from "@/features/practice-session/ResumeList";
@@ -22,8 +22,20 @@ const AnswerBadge = ({ source }: { source: LibraryExam["answerSource"] }) =>
 
 const attemptsText = (e: LibraryExam) => (e.attempts > 0 ? `${e.attempts} lần · cao nhất ${formatScore(e.bestScore ?? 0)}` : "Chưa làm");
 
+// Đã làm rồi thì bấm vào để xem lịch sử các lần làm của đề đó
+const AttemptsCell = ({ e }: { e: LibraryExam }) =>
+  e.attempts > 0 ? (
+    <Link to={`/account/attempts?examId=${e.id}`} className="inline-flex items-center gap-1 font-medium text-brand-700 hover:underline">
+      <History size={13} />
+      {attemptsText(e)}
+    </Link>
+  ) : (
+    <>{attemptsText(e)}</>
+  );
+
 // Toàn bộ đề đã lấy về, phân trang trên server (trang chủ chỉ hiện vài đề gần nhất)
 export default function LibraryPage() {
+  const navigate = useNavigate();
   const [url, setUrl] = useUrlState({ page: "1" });
   const page = toPage(url.page);
   const setPage = (p: number) => setUrl({ page: String(p) });
@@ -52,6 +64,18 @@ export default function LibraryPage() {
                     </div>
                     <div className="mt-1 flex items-center gap-2">
                       <AnswerBadge source={e.answerSource} />
+                      {e.attempts > 0 && (
+                        <span
+                          role="link"
+                          onClick={(ev) => {
+                            ev.preventDefault();
+                            navigate(`/account/attempts?examId=${e.id}`);
+                          }}
+                          className="text-xs font-medium text-brand-700 underline"
+                        >
+                          Xem lịch sử
+                        </span>
+                      )}
                       <span className="text-xs text-slate-400">Thêm {formatDate(e.addedAt)}</span>
                     </div>
                   </Link>
@@ -63,7 +87,7 @@ export default function LibraryPage() {
                 <Thead>
                   <Th>Đề</Th>
                   <Th className="text-right">Số câu</Th>
-                  <Th>Đã làm</Th>
+                  <Th>Lịch sử làm bài</Th>
                   <Th>Đáp án</Th>
                   <Th>Thêm lúc</Th>
                 </Thead>
@@ -76,7 +100,9 @@ export default function LibraryPage() {
                         </Link>
                       </Td>
                       <Td className="text-right tabular-nums">{e.totalQuestions}</Td>
-                      <Td className="whitespace-nowrap text-slate-600">{attemptsText(e)}</Td>
+                      <Td className="whitespace-nowrap text-slate-600">
+                        <AttemptsCell e={e} />
+                      </Td>
                       <Td>
                         <AnswerBadge source={e.answerSource} />
                       </Td>

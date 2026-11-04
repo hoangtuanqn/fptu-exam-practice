@@ -1,10 +1,9 @@
-import { useEffect, useState } from "react";
 import { DatabaseZap, Search } from "lucide-react";
 import { adminApi } from "@/features/admin/api/admin.api";
 import { UserCell, UserFilterChip } from "@/features/admin/shared";
 import { useApi } from "@/shared/hooks/useApi";
 import { useClampPage } from "@/shared/hooks/useClampPage";
-import { useDebounce } from "@/shared/hooks/useDebounce";
+import { useUrlSearch } from "@/shared/hooks/useUrlSearch";
 import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
 import type { AdminCrawlJob, CrawlJobStatus } from "@/shared/types/api";
 import { Badge, type Tone } from "@/shared/ui/Badge";
@@ -31,12 +30,8 @@ export default function CrawlJobsPage() {
   const page = toPage(url.page);
   const setPage = (p: number) => setUrl({ page: String(p) });
 
-  const [search, setSearch] = useState(url.q);
-  const q = useDebounce(search.trim());
-  useEffect(() => {
-    if (q !== url.q) setUrl({ q, page: "1" });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q]);
+  // Ô tìm kiếm gõ trực tiếp, sau khi ngừng gõ mới đưa lên URL (và về trang 1)
+  const [search, setSearch, q] = useUrlSearch(url.q, setUrl);
 
   const { data, error, loading, reload } = useApi(() => adminApi.crawlJobs({ page, search: q, status, userId: url.userId }), [page, q, status, url.userId]);
   useClampPage(data?.meta, setPage);

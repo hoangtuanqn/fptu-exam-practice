@@ -23,6 +23,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     tokenStore.clear();
     setUser(null);
     refreshRealtimeAuth();
+    void authApi.logout().catch(() => undefined); // thu hồi phiên dài hạn ở máy chủ (không chờ)
   }, []);
 
   const signIn = useCallback(({ token, user }: AuthResult) => {
