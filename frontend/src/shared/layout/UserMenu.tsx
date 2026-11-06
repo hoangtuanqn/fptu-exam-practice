@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ChevronDown, LayoutDashboard, LogOut, ShieldCheck, Wallet } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
-import { formatCredit, initials } from "@/shared/utils/formatters";
+import { formatCredit } from "@/shared/utils/formatters";
 import { buttonClass } from "@/shared/ui/Button";
+import { UserAvatar } from "@/shared/ui/UserAvatar";
 
 const item = "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-100";
 
@@ -49,18 +50,21 @@ export function UserMenu() {
         aria-expanded={open}
         className="flex items-center gap-1.5 rounded-full py-1 pl-1 pr-2 transition hover:bg-slate-900/5"
       >
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-brand-600 to-accent text-xs font-semibold text-white shadow-sm">
-          {initials(user.fullName)}
-        </span>
+        <UserAvatar avatarPath={user.avatarPath} alt={user.fullName} className="h-8 w-8" />
         <ChevronDown size={14} className="text-slate-400" />
       </button>
 
       {open && (
         <div role="menu" className="absolute right-0 top-full z-50 mt-2 w-64 animate-fade-in rounded-2xl border border-slate-200/80 bg-white p-2 shadow-pop">
-          <div className="px-3 py-2">
-            <div className="truncate text-sm font-medium text-slate-900">{user.fullName}</div>
-            <div className="truncate text-xs text-slate-500">{user.email}</div>
-            <div className="mt-2 flex items-center gap-1.5 text-xs text-slate-600">
+          <div className="flex items-center gap-3 px-3 py-2">
+            <UserAvatar avatarPath={user.avatarPath} alt={user.fullName} className="h-10 w-10" />
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-medium text-slate-900">{user.fullName}</div>
+              <div className="truncate text-xs text-slate-500">{user.email}</div>
+            </div>
+          </div>
+          <div className="px-3 pb-2 pt-0.5">
+            <div className="flex items-center gap-1.5 text-xs text-slate-600">
               <Wallet size={13} /> Số dư <b className="tabular-nums text-slate-900">{formatCredit(user.balance)}</b>
             </div>
           </div>
