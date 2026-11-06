@@ -9,6 +9,7 @@ export const publicUserSelect = {
   id: true,
   email: true,
   fullName: true,
+  avatarPath: true,
   role: true,
   status: true,
   balance: true,
@@ -50,7 +51,7 @@ export const userRepository = {
     return { items, total };
   },
 
-  update: (id: number, data: { fullName?: string; role?: Role; status?: UserStatus; emailVerifiedAt?: Date | null }) =>
+  update: (id: number, data: { fullName?: string; avatarPath?: string | null; role?: Role; status?: UserStatus; emailVerifiedAt?: Date | null }) =>
     prisma.user.update({ where: { id }, data, select: publicUserSelect }),
 
   countByStatus: () => prisma.user.groupBy({ by: ["status"], _count: { _all: true } }),
