@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { BookOpen, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { examImportApi } from "@/features/exam-import/exam-import.api";
 import type { ImportedExam } from "@/features/exam-import/types";
 import { ResumeList } from "@/features/practice-session/ResumeList";
 import { formatScore } from "@/features/practice/utils/format";
 import { useAuth } from "@/features/auth/AuthContext";
+import { ProgressRing } from "@/shared/ui/ProgressRing";
 import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
 import { examLibraryApi } from "./exam-library.api";
@@ -42,42 +43,66 @@ export function MyExams({ onOpen }: Props) {
     <>
       <ResumeList limit={3} className="mt-10 text-left" />
       <section className="mt-8 text-left">
-      <div className="mb-2 flex items-center justify-between">
-        <h2 className="text-base font-semibold text-slate-900">{user ? "Đề của tôi" : "Đề bạn đã lấy"}</h2>
-        {user ? (
-          <Link to="/account/exams" className="text-xs font-medium text-brand-700 hover:underline">
-            {data.meta.total > data.items.length ? `Xem tất cả ${data.meta.total} đề` : "Kho đề của tôi"}
-          </Link>
-        ) : (
-          <Link to="/register" className="text-xs font-medium text-brand-700 hover:underline">
-            Đăng ký để lưu lịch sử
-          </Link>
-        )}
-      </div>
-      <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        {data.items.map((e) => (
-          <li key={e.id} className="min-w-0">
-            <button
-              type="button"
-              onClick={() => void open(e.id)}
-              disabled={openingId !== null}
-              className="flex w-full min-w-0 items-center gap-3 rounded-2xl border border-slate-200/80 bg-white px-4 py-3.5 text-left shadow-soft transition hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-card disabled:opacity-60"
-            >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
-                {openingId === e.id ? <Loader2 size={16} className="animate-spin" /> : <BookOpen size={16} />}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-medium text-slate-900">{e.title}</span>
-                <span className="block text-xs text-slate-500">
-                  {e.answerSource === "PENDING" && <span className="font-medium text-brand-700">Đang chuẩn bị đáp án · </span>}
-                  {(e.answerSource === "FAILED" || e.answerSource === "DEFAULT") && <span className="font-medium text-amber-700">Chưa có đáp án · </span>}
-                  {e.totalQuestions} câu · {e.attempts > 0 ? `${e.attempts} lần làm, cao nhất ${formatScore(e.bestScore ?? 0)}` : "chưa làm"}
-                </span>
-              </span>
-            </button>
-          </li>
-        ))}
-      </ul>
+        <div className="mb-2.5 flex items-baseline justify-between gap-3">
+          <h2 className="font-display text-[17px] font-semibold text-brand-900">
+            {user ? "Đề của tôi" : "Đề bạn đã lấy"}
+          </h2>
+          {user ? (
+            <Link to="/account/exams" className="text-xs font-medium text-brand-700 hover:underline">
+              {data.meta.total > data.items.length ? `Xem tất cả ${data.meta.total} đề` : "Kho đề của tôi"}
+            </Link>
+          ) : (
+            <Link to="/register" className="text-xs font-medium text-brand-700 hover:underline">
+              Đăng ký để lưu lịch sử
+            </Link>
+          )}
+        </div>
+
+        <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {data.items.map((e) => {
+            const score = e.bestScore ?? 0;
+            const tone =
+              score >= 8 ? "text-emerald-600" : score >= 5 ? "text-amber-500" : "text-rose-500";
+            const hasDone = e.attempts > 0;
+            return (
+              <li key={e.id} className="min-w-0">
+                <button
+                  type="button"
+                  onClick={() => void open(e.id)}
+                  disabled={openingId !== null}
+                  className="group flex w-full min-w-0 items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 text-left shadow-sm transition-all hover:border-brand-300 hover:shadow-md disabled:opacity-60"
+                >
+                  {openingId === e.id ? (
+                    <span className="flex h-[48px] w-[48px] shrink-0 items-center justify-center">
+                      <Loader2 size={20} className="animate-spin text-brand-600" />
+                    </span>
+                  ) : hasDone ? (
+                    <ProgressRing value={score / 10} label={formatScore(score)} size={48} color={tone} />
+                  ) : (
+                    <span className="flex h-[48px] w-[48px] shrink-0 items-center justify-center rounded-full bg-slate-100 text-[10px] font-semibold uppercase text-slate-400">
+                      mới
+                    </span>
+                  )}
+
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold text-slate-900 transition-colors group-hover:text-brand-700">
+                      {e.title}
+                    </span>
+                    <span className="mt-0.5 block truncate text-xs text-slate-500">
+                      {e.answerSource === "PENDING" && (
+                        <span className="font-medium text-brand-700">Đang chuẩn bị đáp án · </span>
+                      )}
+                      {(e.answerSource === "FAILED" || e.answerSource === "DEFAULT") && (
+                        <span className="font-medium text-amber-700">Chưa có đáp án · </span>
+                      )}
+                      {e.totalQuestions} câu · {hasDone ? `${e.attempts} lần làm, cao nhất ${formatScore(score)}` : "chưa làm"}
+                    </span>
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
       </section>
     </>
   );
