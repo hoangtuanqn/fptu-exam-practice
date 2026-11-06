@@ -39,6 +39,9 @@ export const listAttemptsQuery = paginationQuery.extend({
   mode: z.enum(["PRACTICE", "EXAM"]).optional(),
 });
 
+export const listPurchasesQuery = paginationQuery.extend({ userId, search });
+export type ListPurchasesQuery = z.infer<typeof listPurchasesQuery>;
+
 export type ListWalletQuery = z.infer<typeof listWalletQuery>;
 export type ListCrawlJobsQuery = z.infer<typeof listCrawlJobsQuery>;
 export type ListAttemptsQuery = z.infer<typeof listAttemptsQuery>;

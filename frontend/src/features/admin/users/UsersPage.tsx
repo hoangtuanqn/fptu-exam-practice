@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Search, Users } from "lucide-react";
 import { adminApi } from "@/features/admin/api/admin.api";
-import { UserDialog } from "@/features/admin/users/UserDialog";
 import { RoleBadge, UserStatusBadge } from "@/shared/components/StatusBadge";
 import { Card, PageHeader } from "@/shared/ui/Card";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
@@ -11,7 +10,7 @@ import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
 import { useApi } from "@/shared/hooks/useApi";
 import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
 import { useUrlSearch } from "@/shared/hooks/useUrlSearch";
-import type { Role, User, UserStatus } from "@/shared/types/api";
+import type { Role, UserStatus } from "@/shared/types/api";
 import { formatDate, formatCredit, initials } from "@/shared/utils/formatters";
 import { useClampPage } from "@/shared/hooks/useClampPage";
 
@@ -23,7 +22,8 @@ export default function UsersPage() {
   const setPage = (p: number) => setUrl({ page: String(p) });
   const setRole = (v: Role | "") => setUrl({ role: v, page: "1" });
   const setStatus = (v: UserStatus | "") => setUrl({ status: v, page: "1" });
-  const [selected, setSelected] = useState<User | null>(null);
+  const navigate = useNavigate();
+  const open = (id: number) => navigate(`/admin/users/${id}`);
 
   // Ô tìm kiếm gõ trực tiếp, sau khi ngừng gõ mới đưa lên URL (và về trang 1)
   const [search, setSearch, q] = useUrlSearch(url.q, setUrl);
@@ -33,7 +33,7 @@ export default function UsersPage() {
 
   return (
     <>
-      <PageHeader title="Thành viên" description="Tìm kiếm, phân quyền, khoá tài khoản và chỉnh số dư." />
+      <PageHeader title="Thành viên" description="Tìm kiếm thành viên, bấm vào một dòng để mở trang quản lý." />
 
       <Card>
         <div className="flex flex-wrap gap-3 border-b border-slate-100 p-4">
@@ -78,7 +78,7 @@ export default function UsersPage() {
             <ul className="divide-y divide-slate-100 md:hidden">
               {data.items.map((u) => (
                 <li key={u.id}>
-                  <button onClick={() => setSelected(u)} className="flex w-full items-center gap-3 px-4 py-3 text-left transition active:bg-slate-50">
+                  <button onClick={() => open(u.id)} className="flex w-full items-center gap-3 px-4 py-3 text-left transition active:bg-slate-50">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-semibold text-brand-800">{initials(u.fullName)}</span>
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-medium text-slate-900">{u.fullName}</div>
@@ -107,7 +107,7 @@ export default function UsersPage() {
               </Thead>
               <tbody>
                 {data.items.map((u) => (
-                  <Tr key={u.id} onClick={() => setSelected(u)}>
+                  <Tr key={u.id} onClick={() => open(u.id)}>
                     <Td>
                       <div className="flex items-center gap-3">
                         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-semibold text-brand-800">
@@ -135,7 +135,6 @@ export default function UsersPage() {
         )}
       </Card>
 
-      {selected && <UserDialog key={selected.id} user={selected} onClose={() => setSelected(null)} onChanged={reload} />}
     </>
   );
 }

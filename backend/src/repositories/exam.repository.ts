@@ -53,6 +53,23 @@ export const examRepository = {
       include: { questions: { orderBy: { number: "asc" }, select: { number: true, imagePath: true, answer: true, isReference: true } } },
     }),
 
+  // Admin xem/sửa đề: thông tin đề + từng câu (ảnh, đáp án, có phải tài liệu tham khảo)
+  findAdminDetail: (id: number) =>
+    prisma.exam.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        title: true,
+        threadId: true,
+        sourceUrl: true,
+        totalQuestions: true,
+        answerSource: true,
+        aiReport: true,
+        createdAt: true,
+        questions: { orderBy: { number: "asc" }, select: { number: true, name: true, imagePath: true, mediaUrl: true, answer: true, isReference: true } },
+      },
+    }),
+
   // Dữ liệu để nhờ AI giải lại: tên + đường dẫn ảnh từng câu
   findForSolve: (id: number) =>
     prisma.exam.findUnique({
