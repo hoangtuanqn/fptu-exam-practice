@@ -56,6 +56,23 @@ export const updateReferralBody = z.object({
   commissionPercent: z.number("Tỉ lệ không hợp lệ").int("Phải là số nguyên").min(0, "Tối thiểu 0%").max(100, "Tối đa 100%"),
 });
 
+export const updatePromoBody = z.object({
+  bundleDiscountPercent: z.number("Tỉ lệ không hợp lệ").int("Phải là số nguyên").min(0, "Tối thiểu 0%").max(90, "Tối đa 90%"),
+  freeTrials: z.number("Số lượt không hợp lệ").int("Phải là số nguyên").min(0, "Tối thiểu 0").max(20, "Tối đa 20"),
+  // Rỗng = không đặt hạn; có thì phải là thời điểm hợp lệ
+  promoEndsAt: z.string().trim().refine((v) => v === "" || !Number.isNaN(Date.parse(v)), "Thời điểm không hợp lệ"),
+  depositBonusTiers: z
+    .array(
+      z.object({
+        min: z.number("Mức nạp không hợp lệ").int("Phải là số nguyên").min(1000, "Tối thiểu 1.000").max(100_000_000, "Tối đa 100.000.000"),
+        percent: z.number("Tỉ lệ không hợp lệ").int("Phải là số nguyên").min(1, "Tối thiểu 1%").max(100, "Tối đa 100%"),
+      }),
+    )
+    .max(6, "Tối đa 6 bậc")
+    .refine((tiers) => new Set(tiers.map((t) => t.min)).size === tiers.length, "Các mức nạp không được trùng nhau"),
+});
+export type UpdatePromoBody = z.infer<typeof updatePromoBody>;
+
 export const updateAccountBody = z.object({
   signupCredit: z.number("Số credit không hợp lệ").int("Phải là số nguyên").min(0, "Tối thiểu 0").max(1_000_000, "Tối đa 1.000.000"),
 });

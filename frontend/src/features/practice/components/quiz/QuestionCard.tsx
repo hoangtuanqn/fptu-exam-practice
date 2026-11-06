@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { ChevronLeft, Maximize2, MessageSquareWarning, Sparkles } from "lucide-react";
 import { Button } from "@/shared/ui/Button";
 import { AnswerOptions } from "./AnswerOptions";
@@ -9,6 +10,7 @@ import type { QuestionViewProps } from "./types";
 
 interface Props extends QuestionViewProps {
   onZoom: () => void;
+  nudge?: ReactNode; // thanh mời giữa ảnh đề và thanh trả lời (ví dụ mời xem giải thích khi làm sai)
 }
 
 // Bố cục: [thanh công cụ câu hỏi] / [ảnh đề — chiếm hết chỗ còn lại] / [thanh trả lời]
@@ -26,6 +28,8 @@ export function QuestionCard({
   reported,
   onExplain,
   explainBought,
+  explainFree,
+  nudge,
   onChoose,
   onCheck,
   onPrev,
@@ -56,7 +60,7 @@ export function QuestionCard({
                 className="inline-flex items-center gap-1.5 rounded-md border border-brand-200 bg-brand-50 p-2 text-xs font-medium text-brand-800 transition hover:border-brand-400 sm:px-2.5 sm:py-1"
               >
                 <Sparkles size={13} />
-                <span className="hidden sm:inline">{explainBought ? "Xem giải thích" : "Giải thích"}</span>
+                <span className="hidden sm:inline">{explainBought ? "Xem giải thích" : explainFree ? "Giải thích miễn phí" : "Giải thích"}</span>
               </button>
             )}
             {onReport && (
@@ -88,6 +92,8 @@ export function QuestionCard({
           <img src={imageUrl} alt={`Câu ${number}`} className="absolute inset-0 h-full w-full object-contain p-2" />
         </button>
       </section>
+
+      {nudge}
 
       {/* Thanh trả lời. Điện thoại: hàng đáp án (4 cột, nút to dễ chạm), trạng thái, rồi hai nút Trước/Tiếp ngang bằng nhau.
           Máy tính: một hàng Trước | đáp án + trạng thái | Tiếp (sm:contents làm hai nút nhập vào hàng cùng cấp). */}

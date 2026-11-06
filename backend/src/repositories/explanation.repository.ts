@@ -17,7 +17,21 @@ export const explanationRepository = {
   purchasedNumbers: async (userId: number, examId: number) =>
     (await prisma.explanationPurchase.findMany({ where: { userId, examId }, select: { questionNumber: true } })).map((p) => p.questionNumber),
 
-  createPurchase: (db: Db, data: { userId: number; examId: number; questionNumber: number; price: number }) =>
+  // Số câu thật sự (không tính ảnh tài liệu tham khảo) của một đề
+  countQuestions: (examId: number) => prisma.examQuestion.count({ where: { examId, isReference: false } }),
+
+  hasUnlocked: async (userId: number, examId: number) => (await prisma.explanationUnlock.count({ where: { userId, examId } })) > 0,
+
+  createUnlock: (db: Db, data: { userId: number; examId: number; price: number; questions: number }) =>
+    db.explanationUnlock.create({ data, select: { id: true } }),
+
+  // Số lượt xem thử miễn phí tài khoản đã dùng (tổng mọi đề)
+  trialsUsed: (userId: number) => prisma.explanationPurchase.count({ where: { userId, isTrial: true } }),
+
+  // Số người đã mở khóa cả đề này (bằng chứng xã hội, chỉ hiện khi đủ lớn)
+  countUnlockBuyers: (examId: number) => prisma.explanationUnlock.count({ where: { examId, price: { gt: 0 } } }),
+
+  createPurchase: (db: Db, data: { userId: number; examId: number; questionNumber: number; price: number; isTrial?: boolean }) =>
     db.explanationPurchase.create({ data, select: { id: true } }),
 
   deletePurchase: (db: Db, userId: number, examId: number, questionNumber: number) =>

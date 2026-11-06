@@ -55,6 +55,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setLoading(false));
   }, []);
 
+  // Công bố trạng thái đăng nhập lên thẻ <html> cho tiện ích Chrome FePass (chỉ "in"/"out" và tên hiển thị, TUYỆT ĐỐI không kèm token).
+  // Đang xác thực lại phiên (loading) thì chưa công bố để tiện ích không nhận trạng thái sai.
+  useEffect(() => {
+    if (loading) return;
+    const root = document.documentElement;
+    root.dataset.fepassAuth = user ? "in" : "out";
+    if (user) root.dataset.fepassUser = user.fullName;
+    else delete root.dataset.fepassUser;
+  }, [user, loading]);
+
   const value = useMemo(() => ({ user, loading, signIn, signOut, refresh, setUser }), [user, loading, signIn, signOut, refresh]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

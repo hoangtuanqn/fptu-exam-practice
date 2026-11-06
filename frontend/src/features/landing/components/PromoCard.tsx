@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Check, Gift } from "lucide-react";
 import { authApi } from "@/features/auth/auth.api";
 import { examImportApi } from "@/features/exam-import/exam-import.api";
+import { offersApi } from "@/features/landing/offers.api";
 import { useApi } from "@/shared/hooks/useApi";
 
 const EXAMS = 4; // số đề trong ưu đãi
@@ -65,6 +66,7 @@ function ExamPaper() {
 export function PromoCard() {
   const price = useApi(() => examImportApi.price(), []).data?.price ?? DEFAULT_PRICE;
   const bonus = useApi(() => authApi.signupBonus(), []).data?.credit ?? 0;
+  const offers = useApi(() => offersApi.get(), []).data; // ưu đãi giải thích AI và thưởng nạp, đọc từ cấu hình admin
 
   const total = price * EXAMS;
   const gifted = price <= 0 ? EXAMS : Math.min(EXAMS, Math.floor(bonus / price)); // số đề đã mở sẵn bằng quà đăng ký
@@ -75,6 +77,12 @@ export function PromoCard() {
     ["Trọn bộ", total > 0 ? vnd(total) : "Miễn phí"],
     ["Hoàn tiền", "nếu lấy đề lỗi"],
   ];
+  if (offers) {
+    const explain = [offers.freeTrials > 0 && `${offers.freeTrials} câu miễn phí`, offers.bundleDiscountPercent > 0 && `cả đề -${offers.bundleDiscountPercent}%`].filter(Boolean).join(" · ");
+    if (offers.explainPrice > 0 && explain) rows.push(["Giải thích AI", explain]);
+    const topBonus = Math.max(0, ...offers.depositBonusTiers.map((t) => t.percent));
+    if (topBonus > 0) rows.push(["Nạp credit", `thưởng đến ${topBonus}%`]);
+  }
 
   return (
     <div className="relative mx-auto max-w-3xl overflow-hidden rounded-lg border border-slate-200 border-t-4 border-t-brand-900 bg-white text-left shadow-[0_18px_40px_-28px_rgba(11,23,48,0.5)]">

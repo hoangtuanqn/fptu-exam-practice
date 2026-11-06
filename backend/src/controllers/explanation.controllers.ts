@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { getValidated } from "../middlewares/validate.middlewares";
-import type { ExamIdParam, ExplainBody } from "../rules/requests/explanation.request";
+import type { ExamIdParam, ExplainBody, UnlockBody } from "../rules/requests/explanation.request";
 import { ResponseClient } from "../rules/response";
 import { explanationService } from "../services/explanation.service";
 import { actorOf } from "../utils/actor";
@@ -15,5 +15,10 @@ export const explanationController = {
   async explain(req: Request, res: Response) {
     const { examId, questionNumber } = getValidated<ExplainBody>(res);
     res.json(new ResponseClient({ data: await explanationService.explain(actorOf(req), req.user!.id, examId, questionNumber) }));
+  },
+
+  async unlock(req: Request, res: Response) {
+    const { examId, price } = getValidated<UnlockBody>(res);
+    res.json(new ResponseClient({ data: await explanationService.unlock(actorOf(req), req.user!.id, examId, price) }));
   },
 };

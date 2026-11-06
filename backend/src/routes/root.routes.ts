@@ -10,6 +10,8 @@ import depositRouter from "./deposit.routes";
 import examRouter from "./exam.routes";
 import explanationRouter from "./explanation.routes";
 import giftCodeRouter from "./gift-code.routes";
+import offersPublicRouter from "./offers-public.routes";
+import peRouter from "./pe.routes";
 import { referralPublicRouter, referralRouter } from "./referral.routes";
 import userRouter from "./user.routes";
 
@@ -29,6 +31,8 @@ rootRouter.use("/gift-codes", giftCodeRouter);
 rootRouter.use("/explanations", explanationRouter);
 rootRouter.use("/referrals", referralRouter);
 rootRouter.use("/public/referrals", referralPublicRouter);
+rootRouter.use("/public/offers", offersPublicRouter);
+rootRouter.use("/pe", peRouter);
 rootRouter.use("/attempts", attemptRouter);
 rootRouter.use("/sessions", sessionRouter);
 rootRouter.use("/answer-reports", answerReportRouter);
