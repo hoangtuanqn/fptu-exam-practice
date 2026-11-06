@@ -47,7 +47,7 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit }: Props)
   useEffect(() => {
     if (quiz.current !== firstQuestion.current) setBannerCollapsed(true);
   }, [quiz.current]);
-  const popupWanted = !!info.data && !info.data.unlocked && info.data.bundle.price > 0 && info.data.bundle.remaining > 1 && !quiz.answersPending;
+  const popupWanted = !!info.data?.bundle && !info.data.unlocked && info.data.bundle.price > 0 && info.data.bundle.remaining > 1 && !quiz.answersPending;
   // Chưa mua gói và còn câu chưa mua lẻ (đã mua gói hoặc đã xem hết các câu thì showBundle = false, không hiện nữa)
   useEffect(() => {
     if (popupWanted && !popupShown.current) {
