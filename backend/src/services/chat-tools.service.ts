@@ -1,28 +1,30 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "../configs/prisma";
+import { AppError } from "../rules/error";
+import { fuoCatalogService, FuoSubjectNotFound, normalizeSubject } from "./crawler/fuo-catalog.service";
 
 /**
  * Công cụ CHỈ ĐỌC cho chatbot, để trả lời "bài thi làm dở của tôi", "lịch sử nạp của tôi"...
  *
  * An toàn:
  * - Mọi công cụ nhận `userId` từ phiên đăng nhập ở máy chủ, KHÔNG nhận từ Claude: Claude không thể xem tài khoản khác dù bị dụ.
- * - Chỉ đọc (không có công cụ nào ghi, trừ tiền, tạo lệnh...). Mỗi công cụ trả tối đa vài dòng, đã bỏ trường nhạy cảm.
- * - Khách chưa đăng nhập không có công cụ nào.
+ * - Công cụ tra cứu (get_my_data) chỉ đọc, mỗi lần trả tối đa vài dòng, đã bỏ trường nhạy cảm.
+ * - Khách chưa đăng nhập chỉ có find_fuo_exams (dữ liệu công khai của FuOverflow).
  * - Dữ liệu trả về (tên đề, ghi chú giao dịch...) là DỮ LIỆU, không phải mệnh lệnh: prompt hệ thống dặn Claude như vậy.
  */
 
 // MỘT công cụ với tham số `what` thay vì 9 công cụ riêng: định nghĩa gọn hơn nhiều (mỗi lượt đều phải gửi kèm), kết quả như nhau
-export const CHAT_TOOLS: Anthropic.Tool[] = [
+const ACCOUNT_TOOLS: Anthropic.Tool[] = [
   {
     name: "get_my_data",
     description:
-      "Read-only lookup of the chatting user's own data. what: summary (balance, email verified, join date, referral code/count, library and attempt counts) | exams (exam library; optional search) | in_progress (unfinished sessions) | attempts (submitted results with score) | deposits (deposit orders; optional status) | wallet (credit history) | pe_downloads | unlocks (explanation bundles, single purchases, free trials used) | reports (answer reports).",
+      "The user's own data. what: summary (balance, verified, referral, counts) | exams (library; search) | in_progress | attempts (scores) | deposits (status) | wallet (credit history) | pe_downloads | unlocks (explanations bought, trials) | reports (answer reports) | gift_codes | stats (avg/best score, study time).",
     input_schema: {
       type: "object",
       properties: {
-        what: { type: "string", enum: ["summary", "exams", "in_progress", "attempts", "deposits", "wallet", "pe_downloads", "unlocks", "reports"] },
-        search: { type: "string", description: "exams only: part of the title" },
-        status: { type: "string", enum: ["PENDING", "PAID", "EXPIRED"], description: "deposits only" },
+        what: { type: "string", enum: ["summary", "exams", "in_progress", "attempts", "deposits", "wallet", "pe_downloads", "unlocks", "reports", "gift_codes", "stats"] },
+        search: { type: "string", description: "exams: title part" },
+        status: { type: "string", enum: ["PENDING", "PAID", "EXPIRED"], description: "deposits" },
         limit: { type: "integer", minimum: 1, maximum: 10, description: "default 5" },
       },
       required: ["what"],
@@ -30,8 +32,30 @@ export const CHAT_TOOLS: Anthropic.Tool[] = [
   },
 ];
 
+const FUO_TOOL: Anthropic.Tool = {
+  name: "find_fuo_exams",
+  description:
+    "Live exam threads on FuOverflow for one subject code (e.g. PRO192), newest first. kind: FE final / PE practical. term: words in title (SU26, FA25, B5, Paper 3).",
+  input_schema: {
+    type: "object",
+    properties: {
+      subject: { type: "string", description: "e.g. PRO192" },
+      kind: { type: "string", enum: ["FE", "PE", "ALL"], description: "default ALL" },
+      term: { type: "string", description: "title words" },
+      limit: { type: "integer", minimum: 1, maximum: 15, description: "default 10" },
+      offset: { type: "integer", minimum: 0, description: "skip N (show more)" },
+    },
+    required: ["subject"],
+  },
+};
+
+/** Công cụ theo người đang chat: thành viên có tra cứu dữ liệu của mình + tra đề FuOverflow, khách chỉ tra danh sách đề FuOverflow. */
+export const chatToolsFor = (userId: number | null): Anthropic.Tool[] => (userId === null ? [FUO_TOOL] : [...ACCOUNT_TOOLS, FUO_TOOL]);
+
 // Câu "đang làm gì" hiện cho người dùng trong lúc công cụ chạy
 const STATUS: Record<string, string> = {
+  gift_codes: "Đang xem các giftcode bạn đã nhập…",
+  stats: "Đang tổng hợp thống kê làm bài của bạn…",
   summary: "Đang xem thông tin tài khoản của bạn…",
   exams: "Đang xem kho đề của bạn…",
   in_progress: "Đang xem các bài bạn làm dở…",
@@ -42,7 +66,10 @@ const STATUS: Record<string, string> = {
   unlocks: "Đang xem các lời giải bạn đã mở khóa…",
   reports: "Đang xem các báo cáo đáp án của bạn…",
 };
-export const toolStatus = (input: unknown) => STATUS[(input as { what?: string } | null)?.what ?? ""] ?? "Đang tra cứu…";
+export function toolStatus(name: string, input: unknown) {
+  if (name === "find_fuo_exams") return "Đang tìm đề trên FuOverflow (có thể mất vài giây)…";
+  return STATUS[(input as { what?: string } | null)?.what ?? ""] ?? "Đang tra cứu…";
+}
 
 // what -> hàm chạy
 const WHAT: Record<string, string> = {
@@ -55,6 +82,8 @@ const WHAT: Record<string, string> = {
   pe_downloads: "list_pe_downloads",
   unlocks: "list_unlocked_explanations",
   reports: "list_answer_reports",
+  gift_codes: "list_gift_codes",
+  stats: "get_stats",
 };
 
 const take = (input: Record<string, unknown>) => {
@@ -161,6 +190,30 @@ const RUNNERS: Record<string, Runner> = {
     };
   },
 
+  async list_gift_codes(userId, input) {
+    const rows = await prisma.giftCodeRedemption.findMany({ where: { userId }, orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: take(input), select: { amount: true, createdAt: true, giftCode: { select: { code: true } } } });
+    return rows.map((r) => ({ code: r.giftCode.code, amountCredit: r.amount, at: iso(r.createdAt) }));
+  },
+
+  async get_stats(userId) {
+    const [agg, best, byMode] = await Promise.all([
+      prisma.examAttempt.aggregate({ where: { userId }, _count: { _all: true }, _avg: { score: true }, _max: { score: true }, _sum: { durationSec: true, correct: true, wrong: true } }),
+      prisma.examAttempt.findFirst({ where: { userId }, orderBy: [{ score: "desc" }, { id: "desc" }], select: { exam: { select: { title: true } } } }),
+      prisma.examAttempt.groupBy({ by: ["mode"], where: { userId }, _count: { _all: true }, _avg: { score: true } }),
+    ]);
+    const r2 = (n: unknown) => (n === null || n === undefined ? null : Number(Number(n).toFixed(2)));
+    return {
+      attempts: agg._count._all,
+      avgScore10: r2(agg._avg.score),
+      bestScore10: r2(agg._max.score),
+      bestExam: best?.exam.title ?? null,
+      totalMinutes: Math.round((agg._sum.durationSec ?? 0) / 60),
+      correctAnswers: agg._sum.correct ?? 0,
+      wrongAnswers: agg._sum.wrong ?? 0,
+      byMode: byMode.map((m) => ({ mode: m.mode === "EXAM" ? "Thi" : "Luyện tập", attempts: m._count._all, avgScore10: r2(m._avg.score) })),
+    };
+  },
+
   async list_answer_reports(userId, input) {
     const rows = await prisma.answerReport.findMany({
       where: { userId },
@@ -172,16 +225,57 @@ const RUNNERS: Record<string, Runner> = {
   },
 };
 
-/** Chạy một công cụ cho đúng người dùng. Lỗi hay tên lạ trả về thông báo ngắn để Claude nói lại với người dùng, không làm hỏng cuộc trò chuyện. */
-export async function runChatTool(userId: number, name: string, input: unknown): Promise<string> {
-  const args = input && typeof input === "object" ? (input as Record<string, unknown>) : {};
-  const run = name === "get_my_data" ? RUNNERS[WHAT[String(args.what)] ?? ""] : undefined;
-  if (!run) return JSON.stringify({ error: "Không có loại dữ liệu này" });
+// ---- find_fuo_exams
+const KIND_PREFIX: Record<string, RegExp> = { FE: /\bFE\b/i, PE: /\bPE\b/i };
+
+async function findFuoExams(input: Record<string, unknown>) {
+  const subject = normalizeSubject(String(input.subject ?? ""));
+  if (!subject) return { error: "Mã môn không hợp lệ (ví dụ PRO192)" };
+  let data;
   try {
+    data = await fuoCatalogService.examsOf(subject);
+  } catch (err) {
+    if (err instanceof FuoSubjectNotFound) return { error: `FuOverflow không có môn ${subject}. Kiểm tra lại mã môn.` };
+    console.error(`[chat-tool] find_fuo_exams ${subject}: ${(err as Error).message}`);
+    return { error: "Không đọc được FuOverflow lúc này, bạn thử lại sau nhé" };
+  }
+  const kind = String(input.kind ?? "ALL").toUpperCase();
+  const words = (typeof input.term === "string" ? input.term : "").toLowerCase().split(/\s+/).filter(Boolean).slice(0, 6);
+  const matches = data.threads.filter((t) => {
+    if (kind in KIND_PREFIX && !KIND_PREFIX[kind]!.test(`${t.prefix} ${t.title}`)) return false;
+    const hay = t.title.toLowerCase();
+    return words.every((w) => hay.includes(w));
+  });
+  const limit = Number.isInteger(Number(input.limit)) ? Math.min(15, Math.max(1, Number(input.limit))) : 10;
+  const offset = Number.isInteger(Number(input.offset)) ? Math.max(0, Number(input.offset)) : 0;
+  const counts: Record<string, number> = {};
+  for (const t of data.threads) counts[t.prefix || "Khác"] = (counts[t.prefix || "Khác"] ?? 0) + 1;
+  return {
+    subject,
+    forum: data.forumUrl,
+    total: data.threads.length,
+    byType: counts,
+    matched: matches.length,
+    from: offset + 1,
+    ...(data.truncated && { note: "list cut at 15 pages" }),
+    // dạng gọn cho ít token: [tiêu đề, loại, ngày đăng, link]
+    items: matches.slice(offset, offset + limit).map((t) => [t.title, t.prefix || "Khác", t.postedAt?.slice(0, 10) ?? null, t.url]),
+  };
+}
+
+/** Chạy một công cụ. Lỗi hay tên lạ trả về thông báo ngắn để Claude nói lại với người dùng, không làm hỏng cuộc trò chuyện. */
+export async function runChatTool(userId: number | null, name: string, input: unknown): Promise<string> {
+  const args = input && typeof input === "object" ? (input as Record<string, unknown>) : {};
+  try {
+    if (name === "find_fuo_exams") return JSON.stringify(await findFuoExams(args));
+    if (userId === null) return JSON.stringify({ error: "Cần đăng nhập để dùng chức năng này" });
+    const run = name === "get_my_data" ? RUNNERS[WHAT[String(args.what)] ?? ""] : undefined;
+    if (!run) return JSON.stringify({ error: "Không có loại dữ liệu này" });
     const data = await run(userId, args);
     return JSON.stringify(Array.isArray(data) && data.length === 0 ? { items: [], note: "Không có dữ liệu" } : data);
   } catch (err) {
-    console.error(`[chat-tool] ${String(args.what)}: ${(err as Error).message}`);
-    return JSON.stringify({ error: "Không tra cứu được lúc này" });
+    if (err instanceof AppError) return JSON.stringify({ error: err.message });
+    console.error(`[chat-tool] ${name} ${String(args.what ?? args.action ?? "")}: ${(err as Error).message}`);
+    return JSON.stringify({ error: "Không thực hiện được lúc này" });
   }
 }
