@@ -1,6 +1,6 @@
 import { lazy } from "react";
 import { Navigate, Route } from "react-router-dom";
-import { ShoppingBag, Megaphone, Bot, ClipboardList, DatabaseZap, FileText, History, SlidersHorizontal, Wallet, Gift, MessageSquareWarning, UserPlus, Landmark, LayoutDashboard, Receipt, Settings, Users } from "lucide-react";
+import { MessagesSquare, ShoppingBag, Megaphone, Bot, ClipboardList, DatabaseZap, FileText, History, SlidersHorizontal, Wallet, Gift, MessageSquareWarning, UserPlus, Landmark, LayoutDashboard, Receipt, Settings, Users } from "lucide-react";
 import type { NavItem } from "@/shared/layout/PanelLayout";
 
 /**
@@ -29,6 +29,7 @@ const ExamsPage = lazy(() => import("./content/ExamsPage"));
 const ExamEditPage = lazy(() => import("./content/ExamEditPage"));
 const CrawlerPage = lazy(() => import("./content/CrawlerPage"));
 const ReportsPage = lazy(() => import("./content/ReportsPage"));
+const ChatbotPage = lazy(() => import("./content/ChatbotPage"));
 const AiPage = lazy(() => import("./content/AiPage"));
 
 export const ADMIN_NAV: NavItem[] = [
@@ -49,6 +50,7 @@ export const ADMIN_NAV: NavItem[] = [
   { to: "/admin/reports", label: "Báo cáo đáp án", icon: MessageSquareWarning, group: "Nội dung & AI" },
   { to: "/admin/crawler", label: "Cấu hình lấy đề", icon: DatabaseZap, group: "Nội dung & AI" },
   { to: "/admin/ai", label: "AI giải đáp án", icon: Bot, group: "Nội dung & AI" },
+  { to: "/admin/chatbot", label: "Chatbot hỗ trợ", icon: MessagesSquare, group: "Nội dung & AI" },
 ];
 
 // Các route con của /admin
@@ -73,6 +75,7 @@ export const adminRoutes = (
     <Route path="reports" element={<ReportsPage />} />
     <Route path="crawler" element={<CrawlerPage />} />
     <Route path="ai" element={<AiPage />} />
+    <Route path="chatbot" element={<ChatbotPage />} />
     {/* Địa chỉ cũ */}
     <Route path="settings" element={<Navigate to="/admin/sepay" replace />} />
   </>

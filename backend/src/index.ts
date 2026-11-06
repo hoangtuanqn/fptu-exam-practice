@@ -3,6 +3,7 @@ import { createApp } from "./app";
 import { env } from "./configs/env";
 import { prisma } from "./configs/prisma";
 import { startCrawlWorker } from "./jobs/crawl.worker";
+import { knowledgeService } from "./services/knowledge.service";
 import { examSolveService } from "./services/exam-solve.service";
 import { initRealtime } from "./realtime/socket.server";
 import { startSepayCron } from "./jobs/sepay.cron";
@@ -15,6 +16,8 @@ server.listen(env.PORT, () => {
   // DB chưa sẵn sàng thì API vẫn lên, chỉ cron không khởi động được
   startSepayCron().catch((err) => console.error("Không khởi động được sepay cron:", err.message));
   startSessionCleanup();
+  // Nạp tài liệu hướng dẫn của chatbot (chỉ tạo embedding cho mục mới/đã sửa nên các lần khởi động sau gần như không tốn gì)
+  knowledgeService.reindex().then((r) => console.log(`[chat] tri thức: ${r.total} mục, ${r.embedded} có embedding${r.warning ? ` (${r.warning})` : ""}`)).catch((err) => console.error("[chat] không nạp được tri thức:", err.message));
   startCrawlWorker().catch((err) => console.error("Không khởi động được crawl worker:", err.message));
   examSolveService
     .recoverPending()
