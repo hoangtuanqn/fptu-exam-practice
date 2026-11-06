@@ -15,6 +15,7 @@ export interface Brand {
   coFounders: string[]; // đồng sáng lập (VITE_CO_FOUNDERS, cách nhau bằng dấu phẩy)
   partnerName: string; // đối tác cung cấp kho đề
   partnerUrl: string;
+  extensionUrl: string; // link tải file zip tiện ích Chrome (đặt file fepass_extension.zip vào frontend/public)
   themeColor: string; // màu thanh trình duyệt trên điện thoại
   title: string; // tiêu đề tab, ghép từ product + company
 }
@@ -26,7 +27,7 @@ const DEFAULTS = {
   product: "Luyện thi FE FPTU",
   tagline: "MMO Solution",
   slogan: "Hành trình đi đến điểm 10.",
-  description: "Web luyện thi FE FPTU: lấy đề từ kho FuOverflow chỉ bằng một link, làm trắc nghiệm có đáp án, chấm điểm thang 10 và xem lại lịch sử. Đăng ký miễn phí.",
+  description: "Luyện thi FE FPTU: lấy đề FuOverflow bằng một link (500đ/đề, có đáp án AI), giải thích từng câu, chấm điểm thang 10, tải tài nguyên đề PE. Cài tiện ích Chrome để làm đề ngay trên FuOverflow. Đăng ký tặng credit.",
   siteUrl: "",
   companyUrl: "",
   facebookUrl: "https://facebook.com/mstsoftware.vn",
@@ -34,6 +35,7 @@ const DEFAULTS = {
   coFounders: "Vũ Việt Quang, Mai Trung Hậu",
   partnerName: "FuOverflow",
   partnerUrl: "https://fuoverflow.com",
+  extensionUrl: "/fepass_extension.zip",
   themeColor: "#0b1730",
 };
 
@@ -58,6 +60,7 @@ export function loadBrand(env: Env): Brand {
       .filter(Boolean),
     partnerName: pick("VITE_PARTNER_NAME", DEFAULTS.partnerName),
     partnerUrl: pick("VITE_PARTNER_URL", DEFAULTS.partnerUrl),
+    extensionUrl: pick("VITE_EXTENSION_URL", DEFAULTS.extensionUrl),
     themeColor: pick("VITE_THEME_COLOR", DEFAULTS.themeColor),
     title: `${product} | ${company}`,
   };
