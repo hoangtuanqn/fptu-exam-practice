@@ -5,6 +5,8 @@
   // Báo cho website biết tiện ích đã được cài (website dùng để ẩn lời nhắc cài đặt); chỉ là một cờ, không kèm dữ liệu nào
   document.documentElement.dataset.fepassExt = chrome.runtime.getManifest().version;
 
+  chrome.runtime.sendMessage({ type: "checkUpdate" }, () => void chrome.runtime.lastError); // mỗi lần vào website: kiểm tra bản mới
+
   const settings = await fepassGetSettings();
   // Manifest cho chạy trên cả http://localhost để thử; chỉ tin trang đúng với địa chỉ website đã cấu hình
   if (location.origin !== settings.siteUrl) return;
