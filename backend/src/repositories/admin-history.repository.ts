@@ -1,6 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "../configs/prisma";
-import type { ListAttemptsQuery, ListCrawlJobsQuery, ListWalletQuery } from "../rules/requests/admin-history.request";
+import type { ListAttemptsQuery, ListCrawlJobsQuery, ListPurchasesQuery, ListWalletQuery } from "../rules/requests/admin-history.request";
 import { toSkipTake } from "../utils/pagination";
 
 export const historyUserSelect = { id: true, email: true, fullName: true } satisfies Prisma.UserSelect;
@@ -82,6 +82,51 @@ export const adminHistoryRepository = {
         ...toSkipTake(query),
       }),
       prisma.examAttempt.count({ where }),
+    ]);
+    return { items, total };
+  },
+
+  // Lịch sử tải đề PE
+  async peDownloads(query: ListPurchasesQuery) {
+    const where: Prisma.PeDownloadWhereInput = { user: userFilter(query.userId, query.search) };
+    const [items, total] = await Promise.all([
+      prisma.peDownload.findMany({
+        where,
+        select: { id: true, threadId: true, title: true, price: true, files: true, sizeBytes: true, status: true, error: true, createdAt: true, user: { select: historyUserSelect } },
+        orderBy: { id: "desc" },
+        ...toSkipTake(query),
+      }),
+      prisma.peDownload.count({ where }),
+    ]);
+    return { items, total };
+  },
+
+  // Gói "mở khóa toàn bộ lời giải" đã bán
+  async explanationUnlocks(query: ListPurchasesQuery) {
+    const where: Prisma.ExplanationUnlockWhereInput = { user: userFilter(query.userId, query.search) };
+    const [items, total] = await Promise.all([
+      prisma.explanationUnlock.findMany({
+        where,
+        select: { id: true, price: true, questions: true, createdAt: true, user: { select: historyUserSelect }, exam: { select: { id: true, title: true } } },
+        orderBy: { id: "desc" },
+        ...toSkipTake(query),
+      }),
+      prisma.explanationUnlock.count({ where }),
+    ]);
+    return { items, total };
+  },
+
+  // Mua lẻ lời giải từng câu (kèm lượt xem thử miễn phí)
+  async explanationPurchases(query: ListPurchasesQuery) {
+    const where: Prisma.ExplanationPurchaseWhereInput = { user: userFilter(query.userId, query.search) };
+    const [items, total] = await Promise.all([
+      prisma.explanationPurchase.findMany({
+        where,
+        select: { id: true, questionNumber: true, price: true, isTrial: true, createdAt: true, user: { select: historyUserSelect }, exam: { select: { id: true, title: true } } },
+        orderBy: { id: "desc" },
+        ...toSkipTake(query),
+      }),
+      prisma.explanationPurchase.count({ where }),
     ]);
     return { items, total };
   },

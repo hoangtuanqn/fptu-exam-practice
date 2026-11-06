@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { authApi, type AuthResult } from "./auth.api";
-import { setUnauthorizedHandler, tokenStore } from "@/shared/api/client";
+import { impersonation, setUnauthorizedHandler, tokenStore } from "@/shared/api/client";
 import { refreshRealtimeAuth } from "@/shared/realtime/socket";
 import type { User } from "@/shared/types/api";
 
@@ -20,6 +20,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(() => !!tokenStore.get());
 
   const signOut = useCallback(() => {
+    // Đang đăng nhập thay thành viên: "đăng xuất" nghĩa là quay về tài khoản admin (không thu hồi phiên của admin)
+    if (impersonation.active()) {
+      impersonation.end();
+      window.location.assign("/admin/users");
+      return;
+    }
     tokenStore.clear();
     setUser(null);
     refreshRealtimeAuth();
@@ -58,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Công bố trạng thái đăng nhập lên thẻ <html> cho tiện ích Chrome FePass (chỉ "in"/"out" và tên hiển thị, TUYỆT ĐỐI không kèm token).
   // Đang xác thực lại phiên (loading) thì chưa công bố để tiện ích không nhận trạng thái sai.
   useEffect(() => {
-    if (loading) return;
+    if (loading || impersonation.active()) return; // đăng nhập thay: không báo trạng thái cho tiện ích
     const root = document.documentElement;
     root.dataset.fepassAuth = user ? "in" : "out";
     if (user) root.dataset.fepassUser = user.fullName;

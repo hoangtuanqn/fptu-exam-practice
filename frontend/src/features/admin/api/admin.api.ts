@@ -9,6 +9,7 @@ import type {
   BankTransaction,
   BankTxStatus,
   AdminExam,
+  AnswerSource,
   AdminReferral,
   AiAdminConfig,
   AnswerReportAdmin,
@@ -79,6 +80,83 @@ export interface AiForm {
   anthropicApiKey?: string;
 }
 
+export interface UserSummary {
+  attempts: number;
+  exams: number;
+  deposits: number;
+  depositTotal: number;
+  activeSessions: number;
+  lastAttemptAt: string | null;
+  referrals: number;
+}
+
+export interface ExamQuestionAdmin {
+  number: number;
+  name: string;
+  imageUrl: string;
+  mediaUrl: string | null;
+  answer: string;
+  isReference: boolean;
+}
+
+export interface ExamAdminDetail {
+  id: number;
+  title: string;
+  threadId: string;
+  sourceUrl: string;
+  totalQuestions: number;
+  answerSource: AnswerSource;
+  aiReport: string | null;
+  createdAt: string;
+  solving: boolean;
+  usage: { userExams: number; attempts: number; unlocks: number; purchases: number };
+  questions: ExamQuestionAdmin[];
+}
+
+export interface PurchaseUser {
+  id: number;
+  email: string;
+  fullName: string;
+}
+
+export interface AdminPeDownload {
+  id: number;
+  threadId: string;
+  title: string;
+  price: number;
+  files: number;
+  sizeBytes: number;
+  status: "PENDING" | "DONE" | "FAILED";
+  error: string | null;
+  createdAt: string;
+  user: PurchaseUser;
+}
+
+export interface AdminExplanationUnlock {
+  id: number;
+  price: number;
+  questions: number;
+  createdAt: string;
+  user: PurchaseUser;
+  exam: { id: number; title: string };
+}
+
+export interface AdminExplanationPurchase {
+  id: number;
+  questionNumber: number;
+  price: number;
+  isTrial: boolean;
+  createdAt: string;
+  user: PurchaseUser;
+  exam: { id: number; title: string };
+}
+
+export interface QuestionChange {
+  number: number;
+  answer?: string;
+  isReference?: boolean;
+}
+
 export const adminApi = {
   dashboard: () => http.get<DashboardOverview>("/admin/dashboard"),
 
@@ -87,6 +165,13 @@ export const adminApi = {
     http.patch<User>(`/admin/users/${id}`, body),
   adjustBalance: (id: number, body: { amount: number; note: string }) =>
     http.post<User>(`/admin/users/${id}/balance`, body),
+
+  user: (id: number) => http.get<User>(`/admin/users/${id}`),
+  userSummary: (id: number) => http.get<UserSummary>(`/admin/users/${id}/summary`),
+  resetUserPassword: (id: number, password?: string) => http.post<{ password: string }>(`/admin/users/${id}/reset-password`, password ? { password } : {}),
+  sendResetLink: (id: number) => http.post<null>(`/admin/users/${id}/send-reset-link`),
+  revokeUserSessions: (id: number) => http.post<null>(`/admin/users/${id}/revoke-sessions`),
+  impersonateUser: (id: number) => http.post<{ token: string; user: User }>(`/admin/users/${id}/impersonate`),
 
   walletTransactions: (f: { page: number; userId?: string; search?: string; type?: TransactionType | "" }) =>
     http.list<AdminWalletTx>("/admin/wallet-transactions", { ...f, limit: PAGE_SIZE }),
@@ -130,6 +215,13 @@ export const adminApi = {
   aiConfig: () => http.get<AiAdminConfig>("/admin/settings/ai"),
   saveAiConfig: (body: AiForm) => http.put<AiAdminConfig>("/admin/settings/ai", body),
   exams: (page: number) => http.list<AdminExam>("/admin/exams", { page, limit: PAGE_SIZE }),
+  renameExam: (id: number, title: string) => http.patch<ExamAdminDetail>(`/admin/exams/${id}`, { title }),
+  deleteExam: (id: number) => http.delete(`/admin/exams/${id}`),
+  peDownloads: (f: { page: number; userId?: string; search?: string }) => http.list<AdminPeDownload>("/admin/pe-downloads", { ...f, limit: PAGE_SIZE }),
+  explanationUnlocks: (f: { page: number; userId?: string; search?: string }) => http.list<AdminExplanationUnlock>("/admin/explanation-unlocks", { ...f, limit: PAGE_SIZE }),
+  explanationPurchases: (f: { page: number; userId?: string; search?: string }) => http.list<AdminExplanationPurchase>("/admin/explanation-purchases", { ...f, limit: PAGE_SIZE }),
+  examDetail: (id: number) => http.get<ExamAdminDetail>(`/admin/exams/${id}`),
+  saveExamQuestions: (id: number, changes: QuestionChange[]) => http.patch<ExamAdminDetail>(`/admin/exams/${id}/questions`, { changes }),
   solveExam: (id: number) => http.post<null>(`/admin/exams/${id}/solve`),
   examReport: (id: number) => http.get<{ id: number; title: string; aiReport: string | null }>(`/admin/exams/${id}/report`),
   sepayStatus: () => http.get<SyncResult | null>("/admin/sepay/status"),

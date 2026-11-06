@@ -13,14 +13,14 @@ import { adminCrawlerController } from "../controllers/admin.crawler.controllers
 import { adminHistoryController } from "../controllers/admin.history.controllers";
 import { adminAccountController } from "../controllers/admin.account.controllers";
 import { adminPromoController } from "../controllers/admin.promo.controllers";
-import { listAttemptsQuery, listCrawlJobsQuery, listWalletQuery } from "../rules/requests/admin-history.request";
+import { listAttemptsQuery, listCrawlJobsQuery, listPurchasesQuery, listWalletQuery } from "../rules/requests/admin-history.request";
 import { authenticate, requireAdmin } from "../middlewares/auth.middlewares";
 import { updateAccountBody, updateAiBody, updateCrawlerBody, updatePromoBody, updateReferralBody, updateSepayBody } from "../rules/requests/setting.request";
 import { listReportsQuery, reviewReportBody } from "../rules/requests/answer-report.request";
 import { createGiftCodeBody, listGiftCodesQuery, updateGiftCodeBody } from "../rules/requests/gift-code.request";
 import { validate } from "../middlewares/validate.middlewares";
 import { paginationQuery } from "../utils/pagination";
-import { adjustBalanceBody, idParam, listUsersQuery, updateUserBody } from "../rules/requests/admin.request";
+import { adjustBalanceBody, idParam, listUsersQuery, renameExamBody, resetPasswordBody, updateExamQuestionsBody, updateUserBody } from "../rules/requests/admin.request";
 
 const adminRouter = Router();
 
@@ -39,6 +39,12 @@ adminRouter.post(
   adminUserController.adjustBalance,
 );
 
+adminRouter.get("/users/:id/summary", validate(idParam, "params"), adminUserController.summary);
+adminRouter.post("/users/:id/reset-password", validate(idParam, "params"), validate(resetPasswordBody), adminUserController.resetPassword);
+adminRouter.post("/users/:id/send-reset-link", validate(idParam, "params"), adminUserController.sendResetLink);
+adminRouter.post("/users/:id/revoke-sessions", validate(idParam, "params"), adminUserController.revokeSessions);
+adminRouter.post("/users/:id/impersonate", validate(idParam, "params"), adminUserController.impersonate);
+
 adminRouter.get("/settings/promo", adminPromoController.get);
 adminRouter.put("/settings/promo", validate(updatePromoBody), adminPromoController.update);
 adminRouter.get("/settings/account", adminAccountController.get);
@@ -48,6 +54,9 @@ adminRouter.put("/settings/account", validate(updateAccountBody), adminAccountCo
 adminRouter.get("/wallet-transactions", validate(listWalletQuery, "query"), adminHistoryController.wallet);
 adminRouter.get("/crawl-jobs", validate(listCrawlJobsQuery, "query"), adminHistoryController.crawlJobs);
 adminRouter.get("/attempts", validate(listAttemptsQuery, "query"), adminHistoryController.attempts);
+adminRouter.get("/pe-downloads", validate(listPurchasesQuery, "query"), adminHistoryController.peDownloads);
+adminRouter.get("/explanation-unlocks", validate(listPurchasesQuery, "query"), adminHistoryController.explanationUnlocks);
+adminRouter.get("/explanation-purchases", validate(listPurchasesQuery, "query"), adminHistoryController.explanationPurchases);
 
 adminRouter.get("/deposits", validate(listDepositsQuery, "query"), adminDepositController.list);
 
@@ -66,6 +75,10 @@ adminRouter.get("/settings/ai", adminAiController.getSettings);
 adminRouter.put("/settings/ai", validate(updateAiBody), adminAiController.updateSettings);
 
 adminRouter.get("/exams", validate(paginationQuery, "query"), adminAiController.listExams);
+adminRouter.get("/exams/:id", validate(idParam, "params"), adminAiController.examDetail);
+adminRouter.patch("/exams/:id", validate(idParam, "params"), validate(renameExamBody), adminAiController.renameExam);
+adminRouter.delete("/exams/:id", validate(idParam, "params"), adminAiController.removeExam);
+adminRouter.patch("/exams/:id/questions", validate(idParam, "params"), validate(updateExamQuestionsBody), adminAiController.saveQuestions);
 adminRouter.post("/exams/:id/solve", validate(idParam, "params"), adminAiController.solve);
 adminRouter.get("/exams/:id/report", validate(idParam, "params"), adminAiController.report);
 
