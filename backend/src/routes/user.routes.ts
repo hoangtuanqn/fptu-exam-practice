@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { userController } from "../controllers/user.controllers";
 import { authenticate } from "../middlewares/auth.middlewares";
+import { uploadAvatar, validateAvatarUpload } from "../middlewares/upload.middlewares";
 import { validate } from "../middlewares/validate.middlewares";
 import { changeEmailBody, changePasswordBody, updateProfileBody } from "../rules/requests/user.request";
 import { paginationQuery } from "../utils/pagination";
@@ -15,5 +16,9 @@ userRouter.patch("/me", validate(updateProfileBody), userController.updateProfil
 userRouter.patch("/me/password", validate(changePasswordBody), userController.changePassword);
 userRouter.post("/me/email", validate(changeEmailBody), userController.changeEmail);
 userRouter.get("/me/transactions", validate(paginationQuery, "query"), userController.transactions);
+
+// Avatar: multipart/form-data, field tên "avatar"
+userRouter.post("/me/avatar", uploadAvatar, validateAvatarUpload, userController.uploadAvatar);
+userRouter.delete("/me/avatar", userController.removeAvatar);
 
 export default userRouter;

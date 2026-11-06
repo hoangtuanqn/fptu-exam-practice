@@ -10,9 +10,10 @@ import { LogOut, Menu, PenLine, X, type LucideIcon } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { brand } from "@/shared/brand/brand";
 import { Logo } from "@/shared/brand/Logo";
-import { formatCredit, initials } from "@/shared/utils/formatters";
+import { formatCredit } from "@/shared/utils/formatters";
 import { Footer } from "./Footer";
 import { UserMenu } from "./UserMenu";
+import { UserAvatar } from "@/shared/ui/UserAvatar";
 import { VerifyEmailNotice } from "@/features/verify-email/VerifyEmailNotice";
 
 export interface NavItem {
@@ -103,9 +104,7 @@ function Sidebar({
         </Link>
         {user && (
           <div className="mt-3 flex items-center gap-3 px-1">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-900 text-[11px] font-semibold text-white">
-              {initials(user.fullName)}
-            </span>
+            <UserAvatar avatarPath={user.avatarPath} alt={user.fullName} className="h-8 w-8" />
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-medium text-slate-900">
                 {user.fullName}
