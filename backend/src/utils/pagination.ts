@@ -20,3 +20,12 @@ export const toMeta = ({ page, limit }: PaginationQuery, total: number): PageMet
   total,
   totalPages: Math.max(1, Math.ceil(total / limit)),
 });
+
+/**
+ * Thứ tự "mới nhất trước" cho danh sách.
+ * - Đang lọc theo người dùng: sắp theo (createdAt, id) để dùng đúng index (user_id, created_at), không phải sắp xếp lại trong bộ nhớ.
+ *   id tăng cùng chiều với createdAt nên thứ tự hiển thị không đổi.
+ * - Không lọc: sắp theo id (khoá chính) là rẻ nhất.
+ */
+export const newestFirst = (filteredByUser: boolean) =>
+  filteredByUser ? ([{ createdAt: "desc" }, { id: "desc" }] as const) : ([{ id: "desc" }] as const);

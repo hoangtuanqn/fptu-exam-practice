@@ -1,6 +1,6 @@
 import type { DepositStatus, Prisma } from "@prisma/client";
 import { prisma } from "../configs/prisma";
-import { toSkipTake, type PaginationQuery } from "../utils/pagination";
+import { newestFirst, toSkipTake, type PaginationQuery } from "../utils/pagination";
 import type { Db } from "./wallet.repository";
 
 // Chỉ các cột giao diện hiển thị; thông tin người tạo chỉ kèm theo khi admin xem
@@ -43,7 +43,7 @@ export const depositRepository = {
       prisma.depositOrder.findMany({
         where,
         select: withUser ? { ...listSelect, ...userSelect } : listSelect,
-        orderBy: { id: "desc" },
+        orderBy: [...newestFirst(filter.userId !== undefined)],
         ...toSkipTake(query),
       }),
       prisma.depositOrder.count({ where }),
