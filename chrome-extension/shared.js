@@ -6,6 +6,16 @@ const FEPASS_DEFAULTS = {
   apiUrl: "https://api.fepass.top",
 };
 
+// So sánh phiên bản dạng 1.2.3: trả true nếu a mới hơn b
+function fepassIsNewer(a, b) {
+  const pa = String(a).split(".").map((n) => parseInt(n, 10) || 0);
+  const pb = String(b).split(".").map((n) => parseInt(n, 10) || 0);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    if ((pa[i] || 0) !== (pb[i] || 0)) return (pa[i] || 0) > (pb[i] || 0);
+  }
+  return false;
+}
+
 // Trạng thái "in" cũ hơn mức này coi như chưa chắc (phiên đăng nhập của website sống tối đa 30 ngày không dùng)
 const FEPASS_AUTH_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 

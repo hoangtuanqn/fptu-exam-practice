@@ -9,6 +9,10 @@ export const peController = {
     res.json(new ResponseClient({ data: peService.price() }));
   },
 
+  async quote(req: Request, res: Response) {
+    res.json(new ResponseClient({ data: await peService.quote(req.user!.id, String(req.query.url ?? "")) }));
+  },
+
   async history(req: Request, res: Response) {
     res.json(new ResponseClient({ data: await peService.history(req.user!.id) }));
   },

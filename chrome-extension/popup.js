@@ -4,7 +4,18 @@ const msg = (text, err) => {
   $("msg").className = "msg" + (err ? " err" : "");
 };
 
+async function showUpdate() {
+  const { update } = await chrome.storage.local.get("update");
+  const el = $("update");
+  if (update && fepassIsNewer(update.version, chrome.runtime.getManifest().version)) {
+    $("updateVer").textContent = update.version;
+    el.href = update.url;
+    el.hidden = false;
+  } else el.hidden = true;
+}
+
 async function load() {
+  showUpdate();
   const s = await fepassGetSettings();
   const auth = await fepassGetAuth(s.siteUrl);
   $("status").className = "status " + (auth.loggedIn ? "in" : "out");
