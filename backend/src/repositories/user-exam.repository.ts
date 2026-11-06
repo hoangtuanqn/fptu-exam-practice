@@ -1,6 +1,6 @@
 import { prisma } from "../configs/prisma";
 import type { Owner } from "../utils/actor";
-import { toSkipTake, type PaginationQuery } from "../utils/pagination";
+import { newestFirst, toSkipTake, type PaginationQuery } from "../utils/pagination";
 import type { Db } from "./wallet.repository";
 
 const whereOf = (owner: Owner) => ("userId" in owner ? { userId: owner.userId } : { guestId: owner.guestId });
@@ -18,7 +18,7 @@ export const userExamRepository = {
       prisma.userExam.findMany({
         where,
         select: { createdAt: true, exam: { select: { id: true, title: true, threadId: true, totalQuestions: true, answerSource: true } } },
-        orderBy: { id: "desc" },
+        orderBy: [...newestFirst(true)],
         ...toSkipTake(query),
       }),
       prisma.userExam.count({ where }),
