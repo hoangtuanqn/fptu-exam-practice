@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Clock, Infinity as InfinityIcon, ShieldCheck, Sparkles, Users } from "lucide-react";
+import { Clock, Sparkles, X } from "lucide-react";
 import { useCountUp } from "@/shared/hooks/useCountUp";
 import { formatCredit } from "@/shared/utils/formatters";
 import type { ExplanationBundle } from "./explanation.api";
@@ -81,65 +81,48 @@ export function ExplainBundleBanner({ bundle, unitPrice, collapsed, onCollapse, 
     {strip}
     <section
       aria-label="Mở khóa toàn bộ lời giải thích"
-      className="bundle-card promo-shine relative mb-2 hidden shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-brand-900 via-[#10265a] to-brand-800 p-4 text-white shadow-lg sm:block"
+      className="bundle-card promo-shine relative mb-2 hidden shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-brand-900 via-[#10265a] to-brand-800 px-4 py-3 text-white shadow-lg sm:block"
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
     >
       {/* Quầng sáng vàng trôi nhẹ phía sau */}
       <span aria-hidden className="bundle-orb pointer-events-none absolute -right-10 -top-16 h-56 w-56 rounded-full bg-amber-400/25 blur-3xl" />
       <span aria-hidden className="bundle-orb pointer-events-none absolute -bottom-20 left-10 h-48 w-48 rounded-full bg-accent/20 blur-3xl [animation-delay:-3s]" />
-      {/* Vài ngôi sao lấp lánh */}
-      <Sparkles aria-hidden size={14} className="promo-twinkle absolute right-16 top-4 text-amber-300" />
-      <Sparkles aria-hidden size={10} className="promo-twinkle absolute right-1/3 top-3 text-white/70 [animation-delay:-1s]" />
-      <Sparkles aria-hidden size={12} className="promo-twinkle absolute bottom-4 left-1/2 text-amber-200/80 [animation-delay:-1.7s]" />
 
 
-      <div className="relative flex items-center justify-between gap-5">
+      <button onClick={onCollapse} aria-label="Thu gọn" title="Thu gọn" className="absolute right-2 top-2 z-10 rounded-md p-1 text-white/50 transition hover:bg-white/10 hover:text-white">
+        <X size={14} />
+      </button>
+
+      <div className="relative flex items-center justify-between gap-4 pr-5">
         <div className="min-w-0">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-400/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-300 ring-1 ring-amber-300/30">
-            <Sparkles size={12} className="promo-wiggle" /> Gói phổ biến · ưu đãi cho đề này
-          </div>
-          <h3 className="mt-2 font-serif text-lg font-semibold leading-snug">
+          <h3 className="font-serif text-base font-semibold leading-snug">
             Mở khóa <span className="text-amber-300">toàn bộ lời giải AI</span>
           </h3>
-          <ul className="mt-1.5 space-y-0.5 text-xs text-white/80">
-            <li className="flex items-center gap-2">
-              <InfinityIcon size={14} className="shrink-0 text-amber-300" /> Trả một lần, xem lại {bundle.questions} câu không mất thêm credit
-            </li>
-            <li className="text-white/60">Mua lẻ: {formatCredit(unitPrice)} mỗi câu. Gói này rẻ hơn {bundle.discountPercent}%.</li>
-            <li className="flex items-center gap-2 text-white/70">
-              <ShieldCheck size={14} className="shrink-0 text-emerald-300" /> AI không tạo được lời giải thì bạn không mất credit
-            </li>
-          </ul>
-          {bundle.buyers > 0 && (
-            <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-xs text-white/85">
-              <Users size={12} className="text-amber-300" /> {nf.format(bundle.buyers)} bạn đã mở khóa đề này
-            </div>
-          )}
-          <button onClick={onCollapse} className="mt-2 block text-xs text-white/60 underline-offset-2 hover:text-white hover:underline">
-            Thu gọn
-          </button>
+          <p className="mt-0.5 text-xs text-white/70">
+            Trả một lần, xem lại {bundle.questions} câu không mất thêm credit
+            {bundle.buyers > 0 && <> · {nf.format(bundle.buyers)} bạn đã mở</>}
+          </p>
+          {bundle.promoEndsAt && <Countdown endsAt={bundle.promoEndsAt} />}
         </div>
 
-        <div className="flex shrink-0 flex-col items-end gap-2">
-          <div className="text-right">
-            <div className="flex items-center justify-end gap-2">
-              <span className="text-sm text-white/50 line-through decoration-rose-300/80">{nf.format(bundle.original)}</span>
-              <span className="promo-wiggle inline-block rounded-md bg-rose-500 px-1.5 py-0.5 text-xs font-bold">-{bundle.discountPercent}%</span>
+        <div className="flex shrink-0 items-center gap-3">
+          <div className="text-right leading-tight">
+            <div className="flex items-center justify-end gap-1.5">
+              <span className="text-xs text-white/50 line-through decoration-rose-300/80">{nf.format(bundle.original)}</span>
+              <span className="rounded bg-rose-500 px-1 py-0.5 text-[10px] font-bold">-{bundle.discountPercent}%</span>
             </div>
-            <div className="flex items-baseline justify-end gap-1.5">
-              <span className="bg-gradient-to-b from-amber-200 to-amber-400 bg-clip-text text-3xl font-extrabold tabular-nums text-transparent">{nf.format(shown)}</span>
-              <span className="text-sm font-medium text-amber-200">credit</span>
+            <div className="flex items-baseline justify-end gap-1">
+              <span className="bg-gradient-to-b from-amber-200 to-amber-400 bg-clip-text text-xl font-extrabold tabular-nums text-transparent">{nf.format(shown)}</span>
+              <span className="text-xs font-medium text-amber-200">credit</span>
             </div>
-            <div className="text-xs text-emerald-300">Tiết kiệm {nf.format(saved)} credit</div>
-            {bundle.promoEndsAt && <Countdown endsAt={bundle.promoEndsAt} />}
+            <div className="text-[11px] text-emerald-300">Tiết kiệm {nf.format(saved)}</div>
           </div>
-
           <button
             onClick={onUnlock}
-            className={`group relative z-10 inline-flex items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-b from-amber-300 to-amber-500 px-4 py-2 text-sm font-bold text-brand-900 shadow-[0_6px_20px_-4px_rgba(251,191,36,0.6)] transition active:scale-[0.97] ${hover ? "-translate-y-0.5" : ""}`}
+            className={`group relative z-10 inline-flex items-center justify-center gap-1.5 overflow-hidden rounded-lg bg-gradient-to-b from-amber-300 to-amber-500 px-3.5 py-2 text-sm font-bold text-brand-900 shadow-[0_6px_20px_-4px_rgba(251,191,36,0.6)] transition active:scale-[0.97] ${hover ? "-translate-y-0.5" : ""}`}
           >
-            <Sparkles size={16} /> Mở khóa ngay
+            <Sparkles size={15} /> Mở khóa
           </button>
         </div>
       </div>

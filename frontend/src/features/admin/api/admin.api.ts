@@ -80,6 +80,23 @@ export interface AiForm {
   anthropicApiKey?: string;
 }
 
+export interface ChatbotAdmin {
+  settings: {
+    enabled: boolean;
+    claudeModel: string;
+    hasGeminiKey: boolean;
+    geminiKeyPreview: string;
+  };
+  knowledge: { chunks: number; embedded: number; model: string };
+  stats: { today: number; total: number; unmatched: { question: string; createdAt: string }[] };
+}
+
+export interface ChatbotForm {
+  enabled: boolean;
+  claudeModel: string;
+  geminiApiKey?: string;
+}
+
 export interface UserSummary {
   attempts: number;
   exams: number;
@@ -167,6 +184,9 @@ export const adminApi = {
     http.post<User>(`/admin/users/${id}/balance`, body),
 
   user: (id: number) => http.get<User>(`/admin/users/${id}`),
+  chatbot: () => http.get<ChatbotAdmin>("/admin/settings/chat"),
+  saveChatbot: (body: ChatbotForm) => http.put<ChatbotAdmin["settings"]>("/admin/settings/chat", body),
+  reindexChatbot: () => http.post<{ total: number; updated: number; embedded: number; warning?: string }>("/admin/settings/chat/reindex"),
   userSummary: (id: number) => http.get<UserSummary>(`/admin/users/${id}/summary`),
   resetUserPassword: (id: number, password?: string) => http.post<{ password: string }>(`/admin/users/${id}/reset-password`, password ? { password } : {}),
   sendResetLink: (id: number) => http.post<null>(`/admin/users/${id}/send-reset-link`),
