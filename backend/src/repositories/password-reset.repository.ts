@@ -23,5 +23,5 @@ export const passwordResetRepository = {
   invalidateAll: (db: Db, userId: number) =>
     db.passwordResetToken.updateMany({ where: { userId, usedAt: null }, data: { usedAt: new Date() } }),
 
-  deleteExpired: () => prisma.passwordResetToken.deleteMany({ where: { expiresAt: { lt: new Date(Date.now() - 24 * 3600 * 1000) } } }),
+  deleteExpired: async () => (await prisma.passwordResetToken.deleteMany({ where: { expiresAt: { lt: new Date(Date.now() - 24 * 3600 * 1000) } } })).count,
 };
