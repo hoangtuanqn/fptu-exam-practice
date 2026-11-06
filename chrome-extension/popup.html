@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FePass</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <img src="icons/icon48.png" width="40" height="40" alt="" />
+      <div>
+        <h1>FePass</h1>
+        <p>Làm đề FE trên fepass.top</p>
+      </div>
+    </header>
+
+    <div id="status" class="status out" role="status">
+      <span class="dot"></span>
+      <span id="statusText">Đang kiểm tra…</span>
+      <a id="login" href="https://fepass.top/login" target="_blank" rel="noopener">Đăng nhập</a>
+    </div>
+
+    <label class="row">
+      <span>
+        <b>Hiện nút trên FuOverflow</b>
+        <small>Cạnh bài “Đề Thi FE” và “Đề Thi PE”</small>
+      </span>
+      <input type="checkbox" id="enabled" role="switch" />
+    </label>
+
+    <a id="open" class="primary" href="https://fepass.top" target="_blank" rel="noopener">Mở fepass.top</a>
+
+    <p class="note">Bấm nút trên FuOverflow sẽ mở fepass.top và hỏi xác nhận. Chỉ khi bạn xác nhận mới bị trừ credit.</p>
+
+    <details>
+      <summary>Nâng cao (dùng để chạy thử)</summary>
+      <label class="field">
+        Địa chỉ website
+        <input type="url" id="siteUrl" placeholder="https://fepass.top" />
+      </label>
+      <label class="field">
+        Địa chỉ API
+        <input type="url" id="apiUrl" placeholder="https://api.fepass.top" />
+      </label>
+      <div class="actions">
+        <button type="button" id="save">Lưu</button>
+        <button type="button" id="reset" class="ghost">Về mặc định</button>
+      </div>
+      <p id="msg" class="msg" role="status"></p>
+    </details>
+
+    <script src="shared.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>

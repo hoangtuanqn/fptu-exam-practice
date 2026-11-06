@@ -7,6 +7,8 @@ import { AppError } from "../rules/error";
 import { sepayClient, type SepayTransaction } from "./sepay.client";
 import { notificationService } from "./notification.service";
 import { settingService } from "./setting.service";
+import { depositBonusOf } from "../constants/promo";
+import { promoSettingService } from "./promo-setting.service";
 import { referralService } from "./referral.service";
 import { walletService } from "./wallet.service";
 
@@ -65,6 +67,9 @@ const processTransaction = async (tx: SepayTransaction, config: SepayConfig) => 
       type: "DEPOSIT",
       note: `Nạp tiền ${order!.code}`,
     });
+    // Nạp từ một mức nhất định được thưởng thêm; hoa hồng giới thiệu bên dưới vẫn tính trên số tiền nạp thật
+    const bonus = depositBonusOf(data.amountIn, (await promoSettingService.get()).depositBonusTiers);
+    const bonusEntry = bonus > 0 ? await walletService.applyChange(db, { userId: order!.userId, amount: bonus, type: "DEPOSIT_BONUS", note: `Thưởng nạp tiền ${order!.code}` }) : null;
     // Người nạp có người giới thiệu: chia hoa hồng ngay trong transaction này
     const depositor = await db.user.findUnique({ where: { id: order!.userId }, select: { fullName: true } });
     const commission = await referralService.rewardDeposit(db, {
@@ -76,7 +81,7 @@ const processTransaction = async (tx: SepayTransaction, config: SepayConfig) => 
     });
     return {
       matched: true as const,
-      notice: { userId: order!.userId, code: order!.code, amount: data.amountIn, balanceAfter: entry.balanceAfter },
+      notice: { userId: order!.userId, code: order!.code, amount: data.amountIn, balanceAfter: bonusEntry?.balanceAfter ?? entry.balanceAfter },
       commission,
     };
   });

@@ -1,4 +1,5 @@
 import type { ImportedExam } from "@/features/exam-import/types";
+import { Mascot } from "@/shared/ui/Mascot";
 import type { PickFolder } from "@/features/practice/components/FolderInput";
 import { Footer } from "@/shared/layout/Footer";
 import { CtaSection } from "./components/CtaSection";
@@ -19,6 +20,7 @@ export function Landing({ onPick, onImported, userName }: Props) {
 
   return (
     <div className="flex flex-1 flex-col overflow-y-auto bg-paper">
+      <Mascot />
       <HeroSection onPick={onPick} onImported={onImported} userName={userName} />
 
       {isGuest && (

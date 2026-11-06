@@ -7,6 +7,7 @@ import { AppError } from "../rules/error";
 import type { CreateDepositBody, ListDepositsQuery } from "../rules/requests/deposit.request";
 import { toMeta } from "../utils/pagination";
 import { notificationService } from "./notification.service";
+import { promoSettingService } from "./promo-setting.service";
 import { settingService } from "./setting.service";
 
 const MAX_PENDING_PER_USER = 3;
@@ -49,6 +50,7 @@ export const depositService = {
       bankCode: config.bankCode,
       accountNumber: config.accountNumber,
       accountName: config.accountName,
+      bonusTiers: (await promoSettingService.get()).depositBonusTiers,
     };
   },
 

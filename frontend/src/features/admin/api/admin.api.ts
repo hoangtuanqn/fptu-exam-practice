@@ -1,5 +1,6 @@
 import type {
   AccountSettings,
+  PromoSettings,
   AdminAttempt,
   AdminCrawlJob,
   AdminWalletTx,
@@ -93,6 +94,8 @@ export const adminApi = {
     http.list<AdminCrawlJob>("/admin/crawl-jobs", { ...f, limit: PAGE_SIZE }),
   attempts: (f: { page: number; userId?: string; search?: string; mode?: "PRACTICE" | "EXAM" | "" }) =>
     http.list<AdminAttempt>("/admin/attempts", { ...f, limit: PAGE_SIZE }),
+  promoSettings: () => http.get<PromoSettings>("/admin/settings/promo"),
+  savePromoSettings: (body: PromoSettings) => http.put<PromoSettings>("/admin/settings/promo", body),
   accountSettings: () => http.get<AccountSettings>("/admin/settings/account"),
   saveAccountSettings: (body: AccountSettings) => http.put<AccountSettings>("/admin/settings/account", body),
 
