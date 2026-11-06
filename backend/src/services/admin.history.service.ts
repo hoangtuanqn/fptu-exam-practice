@@ -1,5 +1,5 @@
 import { adminHistoryRepository } from "../repositories/admin-history.repository";
-import type { ListAttemptsQuery, ListCrawlJobsQuery, ListWalletQuery } from "../rules/requests/admin-history.request";
+import type { ListAttemptsQuery, ListCrawlJobsQuery, ListPurchasesQuery, ListWalletQuery } from "../rules/requests/admin-history.request";
 import { toMeta } from "../utils/pagination";
 
 export const adminHistoryService = {
@@ -23,6 +23,21 @@ export const adminHistoryService = {
 
   async attempts(query: ListAttemptsQuery) {
     const { items, total } = await adminHistoryRepository.attempts(query);
+    return { items, meta: toMeta(query, total) };
+  },
+
+  async peDownloads(query: ListPurchasesQuery) {
+    const { items, total } = await adminHistoryRepository.peDownloads(query);
+    return { items, meta: toMeta(query, total) };
+  },
+
+  async explanationUnlocks(query: ListPurchasesQuery) {
+    const { items, total } = await adminHistoryRepository.explanationUnlocks(query);
+    return { items, meta: toMeta(query, total) };
+  },
+
+  async explanationPurchases(query: ListPurchasesQuery) {
+    const { items, total } = await adminHistoryRepository.explanationPurchases(query);
     return { items, meta: toMeta(query, total) };
   },
 };

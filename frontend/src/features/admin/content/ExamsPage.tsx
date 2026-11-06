@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Copy, FileText, Loader2, Sparkles } from "lucide-react";
+import { Copy, FileText, Loader2, PencilLine, Sparkles } from "lucide-react";
+import { Link } from "react-router-dom";
 import { adminApi } from "@/features/admin/api/admin.api";
 import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
@@ -102,6 +103,9 @@ export default function ExamsPage() {
 
   const action = (e: AdminExam) => (
     <div className="flex items-center justify-end gap-2">
+      <Link to={`/admin/exams/${e.id}`} className="inline-flex items-center gap-1.5 rounded-xl bg-brand-50 px-3 py-2 text-sm font-medium text-brand-700 transition hover:bg-brand-100">
+        <PencilLine size={14} /> Xem & sửa
+      </Link>
       <Button size="sm" onClick={() => setReport(e.id)}>
         Báo cáo
       </Button>

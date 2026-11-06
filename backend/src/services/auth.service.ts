@@ -65,6 +65,11 @@ export const authService = {
     const latest = await passwordResetRepository.latestOf(user.id);
     if (latest && Date.now() - latest.createdAt.getTime() < RESET_COOLDOWN_MS) return;
 
+    await this.sendResetLink(user);
+  },
+
+  // Tạo token đặt lại mật khẩu và gửi thư (dùng cho "quên mật khẩu" và cho admin gửi hộ thành viên)
+  async sendResetLink(user: { id: number; email: string; fullName: string }) {
     const token = randomBytes(32).toString("base64url");
     await passwordResetRepository.create({
       userId: user.id,
