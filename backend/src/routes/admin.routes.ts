@@ -12,9 +12,10 @@ import { adminGiftCodeController } from "../controllers/admin.gift-code.controll
 import { adminCrawlerController } from "../controllers/admin.crawler.controllers";
 import { adminHistoryController } from "../controllers/admin.history.controllers";
 import { adminAccountController } from "../controllers/admin.account.controllers";
+import { adminPromoController } from "../controllers/admin.promo.controllers";
 import { listAttemptsQuery, listCrawlJobsQuery, listWalletQuery } from "../rules/requests/admin-history.request";
 import { authenticate, requireAdmin } from "../middlewares/auth.middlewares";
-import { updateAccountBody, updateAiBody, updateCrawlerBody, updateReferralBody, updateSepayBody } from "../rules/requests/setting.request";
+import { updateAccountBody, updateAiBody, updateCrawlerBody, updatePromoBody, updateReferralBody, updateSepayBody } from "../rules/requests/setting.request";
 import { listReportsQuery, reviewReportBody } from "../rules/requests/answer-report.request";
 import { createGiftCodeBody, listGiftCodesQuery, updateGiftCodeBody } from "../rules/requests/gift-code.request";
 import { validate } from "../middlewares/validate.middlewares";
@@ -38,6 +39,8 @@ adminRouter.post(
   adminUserController.adjustBalance,
 );
 
+adminRouter.get("/settings/promo", adminPromoController.get);
+adminRouter.put("/settings/promo", validate(updatePromoBody), adminPromoController.update);
 adminRouter.get("/settings/account", adminAccountController.get);
 adminRouter.put("/settings/account", validate(updateAccountBody), adminAccountController.update);
 

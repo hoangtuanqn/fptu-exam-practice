@@ -4,7 +4,7 @@ export type Role = "USER" | "ADMIN";
 export type UserStatus = "ACTIVE" | "BANNED";
 export type DepositStatus = "PENDING" | "PAID" | "EXPIRED";
 export type BankTxStatus = "MATCHED" | "UNMATCHED";
-export type TransactionType = "DEPOSIT" | "ADMIN_ADJUST" | "CRAWL_CHARGE" | "CRAWL_REFUND" | "GIFT_CODE" | "REPORT_REWARD" | "EXPLAIN_CHARGE" | "EXPLAIN_REFUND" | "REFERRAL_BONUS" | "REFERRAL_COMMISSION" | "SIGNUP_BONUS";
+export type TransactionType = "DEPOSIT" | "ADMIN_ADJUST" | "CRAWL_CHARGE" | "CRAWL_REFUND" | "GIFT_CODE" | "REPORT_REWARD" | "EXPLAIN_CHARGE" | "EXPLAIN_REFUND" | "REFERRAL_BONUS" | "REFERRAL_COMMISSION" | "SIGNUP_BONUS" | "DEPOSIT_BONUS" | "PE_CHARGE" | "PE_REFUND";
 
 export interface User {
   id: number;
@@ -52,6 +52,7 @@ export interface DepositInfo {
   bankCode: string;
   accountNumber: string;
   accountName: string;
+  bonusTiers: { min: number; percent: number }[]; // nạp từ mức `min` (VND) được thưởng thêm `percent`%
 }
 
 export interface BankTransaction {
@@ -301,6 +302,28 @@ export interface AdminAttempt {
   createdAt: string;
   user: UserRef;
   exam: { id: number; title: string };
+}
+
+export interface BonusTier {
+  min: number; // nạp từ mức này (VND) trở lên
+  percent: number; // thưởng thêm % số tiền nạp
+}
+
+// Cấu hình ưu đãi & khuyến mãi (admin chỉnh, lưu trong DB)
+export interface PromoSettings {
+  bundleDiscountPercent: number;
+  freeTrials: number;
+  promoEndsAt: string; // ISO; rỗng = không đặt hạn
+  depositBonusTiers: BonusTier[];
+}
+
+// Số liệu ưu đãi hiện hành cho trang chủ (công khai)
+export interface PublicOffers {
+  explainPrice: number;
+  freeTrials: number;
+  bundleDiscountPercent: number;
+  promoEndsAt: string | null;
+  depositBonusTiers: BonusTier[];
 }
 
 export interface AccountSettings {

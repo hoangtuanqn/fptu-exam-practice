@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../configs/prisma";
 import { storageDir } from "../configs/env";
 import { aiReady } from "../constants/ai";
+import { activePromoEnd, promoExpired, type PromoConfig } from "../constants/promo";
 import { EXAM_STORAGE_DIR } from "../constants/crawler";
 import { explanationRepository } from "../repositories/explanation.repository";
 import { examRepository } from "../repositories/exam.repository";
@@ -12,6 +13,7 @@ import { AppError } from "../rules/error";
 import type { Actor } from "../utils/actor";
 import { explainQuestion } from "./ai/question-explainer.service";
 import { aiSettingService } from "./ai-setting.service";
+import { promoSettingService } from "./promo-setting.service";
 import { commentsOfQuestion, compactCommentsText } from "./crawler/comments-file.service";
 import { examService } from "./exam.service";
 import { walletService } from "./wallet.service";
@@ -23,12 +25,73 @@ const inflight = new Map<string, Promise<string>>();
 
 const isDuplicate = (err: unknown) => err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002";
 
+// Chỉ khoe số người đã mua khi đủ lớn, để không phản tác dụng
+const SOCIAL_PROOF_MIN = 5;
+
 export const explanationService = {
-  // Phí hiện tại và những câu người dùng đã mua trong một đề (để giao diện hiện "xem lại miễn phí")
+  // Báo giá gói "mở khóa cả đề": tính trên các câu CHƯA mua lẻ (ai đã mua lẻ vài câu không phải trả lại những câu đó)
+  async bundleQuote(userId: number, examId: number, explainPrice: number, purchased: number[], promo: PromoConfig) {
+    const [questions, unlocked, buyers] = await Promise.all([
+      explanationRepository.countQuestions(examId),
+      explanationRepository.hasUnlocked(userId, examId),
+      explanationRepository.countUnlockBuyers(examId),
+    ]);
+    const remaining = Math.max(0, questions - purchased.length);
+    const original = explainPrice * remaining; // giá nếu mua lẻ hết những câu còn lại
+    const discountPercent = promoExpired(promo) ? 0 : promo.bundleDiscountPercent; // hết hạn chót thật thì về giá mua lẻ
+    const price = Math.round((original * (100 - discountPercent)) / 100);
+    const ends = activePromoEnd(promo);
+    return {
+      unlocked,
+      questions,
+      remaining,
+      original,
+      price,
+      discountPercent,
+      buyers: buyers >= SOCIAL_PROOF_MIN ? buyers : 0,
+      promoEndsAt: ends ? ends.toISOString() : null,
+    };
+  },
+
+  // Phí hiện tại, những câu đã mua lẻ trong một đề (để giao diện hiện "xem lại miễn phí") và báo giá gói mở khóa cả đề
   async info(actor: Actor, userId: number, examId: number) {
     await examService.assertAccess(actor, examId);
-    const [ai, purchased] = await Promise.all([aiSettingService.get(), explanationRepository.purchasedNumbers(userId, examId)]);
-    return { price: ai.explainPrice, purchased };
+    const [ai, promo, purchased] = await Promise.all([aiSettingService.get(), promoSettingService.get(), explanationRepository.purchasedNumbers(userId, examId)]);
+    const bundle = await this.bundleQuote(userId, examId, ai.explainPrice, purchased, promo);
+    const trialsUsed = ai.explainPrice > 0 ? await explanationRepository.trialsUsed(userId) : 0;
+    return { price: ai.explainPrice, purchased, unlocked: bundle.unlocked, bundle, freeTrialsLeft: ai.explainPrice > 0 ? Math.max(0, promo.freeTrials - trialsUsed) : 0 };
+  },
+
+  /**
+   * Mở khóa MỘT LẦN toàn bộ lời giải thích của đề: trả giá gói (rẻ hơn mua lẻ), sau đó xem mọi câu miễn phí.
+   * Chỉ trừ tiền, không gọi AI hàng loạt: lời giải của từng câu vẫn được tạo khi người dùng mở câu đó (và dùng chung).
+   */
+  async unlock(actor: Actor, userId: number, examId: number, expectedPrice: number) {
+    await examService.assertAccess(actor, examId);
+    const exam = await prisma.exam.findUnique({ where: { id: examId }, select: { answerSource: true } });
+    if (!exam) throw AppError.notFound("Không tìm thấy đề");
+    if (exam.answerSource !== "AI" && exam.answerSource !== "MANUAL") throw new AppError("Đề chưa có đáp án chính thức nên chưa thể mở khóa giải thích");
+    const [ai, promo] = await Promise.all([aiSettingService.get(), promoSettingService.get()]);
+    const purchased = await explanationRepository.purchasedNumbers(userId, examId);
+    const quote = await this.bundleQuote(userId, examId, ai.explainPrice, purchased, promo);
+    if (quote.unlocked) throw new AppError("Bạn đã mở khóa toàn bộ lời giải thích của đề này rồi");
+    if (quote.price !== expectedPrice) throw new AppError(`Giá gói vừa thay đổi (hiện là ${quote.price} credit). Vui lòng kiểm tra lại rồi mở khóa.`, 409);
+    if (!aiReady(ai) && quote.price > 0) throw new AppError("Tính năng giải thích AI tạm thời chưa khả dụng", 503);
+
+    // Trừ tiền và ghi nhận mở khóa cùng một transaction; bấm hai lần cùng lúc thì lần sau lỗi trùng và bị hoàn tác (không trừ hai lần)
+    try {
+      await prisma.$transaction(async (tx) => {
+        if (quote.price > 0) {
+          await walletService.charge(tx, { userId, amount: quote.price, type: "EXPLAIN_CHARGE", note: `Mở khóa toàn bộ giải thích AI, ${quote.remaining} câu${quote.discountPercent > 0 ? ` (giảm ${quote.discountPercent}%)` : ""}` });
+        }
+        await explanationRepository.createUnlock(tx, { userId, examId, price: quote.price, questions: quote.remaining });
+      });
+    } catch (err) {
+      if (isDuplicate(err)) throw new AppError("Bạn đã mở khóa toàn bộ lời giải thích của đề này rồi");
+      throw err;
+    }
+    const user = await userRepository.findById(userId);
+    return { charged: quote.price, questions: quote.remaining, balanceAfter: user?.balance ?? 0 };
   },
 
   /**
@@ -51,16 +114,20 @@ export const explanationService = {
 
     // Trả phí (nếu chưa mua). Trừ tiền và ghi nhận lượt mua cùng một transaction.
     let charged = 0;
-    if (!(await explanationRepository.hasPurchased(userId, examId, questionNumber))) {
+    let trial = false; // lượt xem thử miễn phí (không trừ credit nhưng tính vào số lượt thử)
+    const unlockedAll = await explanationRepository.hasUnlocked(userId, examId);
+    if (!unlockedAll && !(await explanationRepository.hasPurchased(userId, examId, questionNumber))) {
       try {
+        trial = ai.explainPrice > 0 && (await explanationRepository.trialsUsed(userId)) < (await promoSettingService.get()).freeTrials;
         await prisma.$transaction(async (tx) => {
-          if (ai.explainPrice > 0) {
+          if (ai.explainPrice > 0 && !trial) {
             await walletService.charge(tx, { userId, amount: ai.explainPrice, type: "EXPLAIN_CHARGE", note: `Giải thích AI: ${question.exam.title}, câu ${questionNumber}` });
           }
-          await explanationRepository.createPurchase(tx, { userId, examId, questionNumber, price: ai.explainPrice });
+          await explanationRepository.createPurchase(tx, { userId, examId, questionNumber, price: trial ? 0 : ai.explainPrice, isTrial: trial });
         });
-        charged = ai.explainPrice;
+        charged = trial ? 0 : ai.explainPrice;
       } catch (err) {
+        trial = false;
         if (!isDuplicate(err)) throw err; // bấm hai lần cùng lúc: lượt kia đã trả phí, lượt này xem không mất thêm
       }
     }
@@ -71,6 +138,7 @@ export const explanationService = {
     } catch (err) {
       console.error(`[explain] đề ${question.exam.threadId} câu ${questionNumber} lỗi: ${(err as Error).message}`);
       if (charged > 0) await this.refund(userId, examId, questionNumber, charged);
+      else if (trial) await prisma.$transaction((tx) => explanationRepository.deletePurchase(tx, userId, examId, questionNumber)); // AI lỗi: trả lại lượt thử
       throw new AppError("AI đang bận, chưa tạo được lời giải thích. Bạn không bị trừ credit, vui lòng thử lại sau.", BAD_GATEWAY);
     }
 

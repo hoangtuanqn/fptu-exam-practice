@@ -1,6 +1,6 @@
 import { lazy } from "react";
 import { Navigate, Route } from "react-router-dom";
-import { Bot, ClipboardList, DatabaseZap, FileText, History, SlidersHorizontal, Wallet, Gift, MessageSquareWarning, UserPlus, Landmark, LayoutDashboard, Receipt, Settings, Users } from "lucide-react";
+import { Megaphone, Bot, ClipboardList, DatabaseZap, FileText, History, SlidersHorizontal, Wallet, Gift, MessageSquareWarning, UserPlus, Landmark, LayoutDashboard, Receipt, Settings, Users } from "lucide-react";
 import type { NavItem } from "@/shared/layout/PanelLayout";
 
 /**
@@ -17,6 +17,7 @@ const WalletHistoryPage = lazy(() => import("./users/WalletHistoryPage"));
 const CrawlJobsPage = lazy(() => import("./users/CrawlJobsPage"));
 const AttemptsPage = lazy(() => import("./users/AttemptsPage"));
 const AccountSettingsPage = lazy(() => import("./users/AccountSettingsPage"));
+const PromoSettingsPage = lazy(() => import("./users/PromoSettingsPage"));
 const DepositsPage = lazy(() => import("./finance/DepositsPage"));
 const BankTransactionsPage = lazy(() => import("./finance/BankTransactionsPage"));
 const ReferralsPage = lazy(() => import("./users/ReferralsPage"));
@@ -32,6 +33,7 @@ export const ADMIN_NAV: NavItem[] = [
   { to: "/admin/users", label: "Thành viên", icon: Users, group: "Người dùng" },
   { to: "/admin/referrals", label: "Giới thiệu", icon: UserPlus, group: "Người dùng" },
   { to: "/admin/account-settings", label: "Cấu hình đăng ký", icon: SlidersHorizontal, group: "Người dùng" },
+  { to: "/admin/promotions", label: "Ưu đãi & khuyến mãi", icon: Megaphone, group: "Người dùng" },
   { to: "/admin/wallet", label: "Biến động số dư", icon: Wallet, group: "Lịch sử" },
   { to: "/admin/crawl-jobs", label: "Lịch sử lấy đề", icon: History, group: "Lịch sử" },
   { to: "/admin/attempts", label: "Lịch sử làm bài", icon: ClipboardList, group: "Lịch sử" },
@@ -52,6 +54,7 @@ export const adminRoutes = (
     <Route path="users" element={<UsersPage />} />
     <Route path="referrals" element={<ReferralsPage />} />
     <Route path="account-settings" element={<AccountSettingsPage />} />
+    <Route path="promotions" element={<PromoSettingsPage />} />
     <Route path="wallet" element={<WalletHistoryPage />} />
     <Route path="crawl-jobs" element={<CrawlJobsPage />} />
     <Route path="attempts" element={<AttemptsPage />} />
