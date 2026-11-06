@@ -5,6 +5,7 @@ const msg = (text, err) => {
 };
 
 async function showUpdate() {
+  await chrome.runtime.sendMessage({ type: "checkUpdate" }).catch(() => undefined); // mỗi lần mở popup: kiểm tra bản mới trước khi hiển thị
   const { update } = await chrome.storage.local.get("update");
   const el = $("update");
   if (update && fepassIsNewer(update.version, chrome.runtime.getManifest().version)) {

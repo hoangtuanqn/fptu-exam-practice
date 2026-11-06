@@ -51,6 +51,10 @@ chrome.runtime.onStartup.addListener(checkUpdate);
 chrome.alarms.onAlarm.addListener((a) => a.name === UPDATE_ALARM && checkUpdate());
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+  if (msg && msg.type === "checkUpdate") {
+    checkUpdate().then(() => sendResponse({ ok: true }));
+    return true;
+  }
   if (!msg || msg.type !== "price") return;
   getPrice()
     .then((p) => sendResponse({ price: p.price, pePrice: p.pePrice }))
