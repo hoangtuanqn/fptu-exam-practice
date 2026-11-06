@@ -520,3 +520,34 @@ model EmailVerificationToken {
   @@index([userId, createdAt])
   @@map("email_verification_tokens")
 }
+
+// Tri thức của chatbot hỗ trợ: mỗi mục "## " trong backend/knowledge/*.md là một đoạn, kèm vector embedding để tìm đoạn giống câu hỏi
+model KbChunk {
+  id          Int      @id @default(autoincrement())
+  slug        String   @unique @db.VarChar(40)
+  title       String   @db.VarChar(200)
+  content     String   @db.Text
+  contentHash String   @map("content_hash") @db.VarChar(64)
+  embedding   Json? // mảng số; null = chưa tạo (chưa có khoá Gemini), chatbot tìm bằng từ khoá
+  model       String?  @db.VarChar(60)
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("kb_chunks")
+}
+
+// Mỗi câu hỏi gửi chatbot: để giới hạn số câu mỗi ngày và để admin biết người dùng hay hỏi gì
+model ChatLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int?     @map("user_id")
+  guestId   String?  @map("guest_id") @db.VarChar(64)
+  ip        String?  @db.VarChar(64)
+  question  String   @db.VarChar(500)
+  matched   Boolean  @default(true) // có tìm thấy đoạn hướng dẫn liên quan hay không (false = câu hỏi hệ thống chưa có tài liệu)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId, createdAt])
+  @@index([guestId, createdAt])
+  @@index([ip, createdAt])
+  @@index([createdAt])
+  @@map("chat_logs")
+}

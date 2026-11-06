@@ -21,6 +21,7 @@ function PracticeRoute() {
 import { GuestOnly, RequireAuth } from "@/features/auth/guards";
 
 // Panel tách riêng thành chunk: người chỉ luyện đề không phải tải code của panel
+const ChatWidget = lazy(() => import("@/features/chat/ChatWidget"));
 const PublicDepositPage = lazy(() => import("@/features/account/pages/PublicDepositPage"));
 const OverviewPage = lazy(() => import("@/features/account/pages/OverviewPage"));
 const DepositPage = lazy(() => import("@/features/account/pages/DepositPage"));
@@ -52,6 +53,7 @@ export default function App() {
   return (
     <Suspense fallback={<Loading />}>
       <GuestSync />
+      <ChatWidget />
       <Routes>
         <Route path="/" element={<PracticeRoute />} />
         <Route path="/exam/:threadId" element={<PracticeRoute />} />

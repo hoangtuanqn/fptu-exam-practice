@@ -229,7 +229,6 @@ export default function PracticePage({ threadId }: Props) {
         referenceCount={quiz.references.length}
         onShowReferences={() => setReferencesOpen(true)}
         timing={quiz.timing}
-        onPick={pick}
         onHome={goHome}
         onSubmit={() => setDialog("confirm")}
         onReset={quiz.reset}
