@@ -37,16 +37,11 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit }: Props)
   const info = useApi(() => (explainEnabled ? explanationApi.info(quiz.examId!) : Promise.resolve(null)), [explainEnabled, quiz.examId]);
   const [reported, setReported] = useState<Set<number>>(new Set()); // các câu đã báo cáo trong phiên này
   const [unlockOpen, setUnlockOpen] = useState(false); // hộp xác nhận mở khóa cả đề
-  const [bannerCollapsed, setBannerCollapsed] = useState(false); // thẻ ưu đãi thu thành viên thuốc
   const [popupOpen, setPopupOpen] = useState(false); // popup mời mua gói khi vừa vào làm đề
+  const [bannerCollapsed, setBannerCollapsed] = useState(false); // thẻ ưu đãi thu thành viên thuốc
   const popupShown = useRef(false); // mỗi lần vào đề chỉ tự hiện một lần
   usePreloadImages(quiz);
 
-  // Thẻ ưu đãi chỉ choán chỗ ở câu đầu: sang câu khác lần đầu thì tự thu gọn (bấm viên thuốc để mở lại)
-  const firstQuestion = useRef(quiz.current);
-  useEffect(() => {
-    if (quiz.current !== firstQuestion.current) setBannerCollapsed(true);
-  }, [quiz.current]);
   const popupWanted = !!info.data?.bundle && !info.data.unlocked && info.data.bundle.price > 0 && info.data.bundle.remaining > 1 && !quiz.answersPending;
   // Chưa mua gói và còn câu chưa mua lẻ (đã mua gói hoặc đã xem hết các câu thì showBundle = false, không hiện nữa)
   useEffect(() => {
@@ -69,7 +64,9 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit }: Props)
   const trialsLeft = info.data?.freeTrialsLeft ?? 0;
   const explainFree = !explainBought && trialsLeft > 0;
   // Còn lượt xem thử thì mở thẳng (không hỏi phí); hết lượt mới hiện hộp xác nhận trả phí
-  const openExplain = () => (explainBought ? setPanel({ number: question.number, firstTime: false }) : explainFree ? setPanel({ number: question.number, firstTime: true }) : setConfirmExplain(true));
+  // Đã mua gói nhưng câu này chưa từng xem: vẫn hiện hiệu ứng "AI đang phân tích" như lần đầu (chỉ câu đã xem rồi mới tải nhanh)
+  const seenBefore = !!info.data?.purchased.includes(question.number) || bought.has(question.number);
+  const openExplain = () => (explainBought ? setPanel({ number: question.number, firstTime: !seenBefore }) : explainFree ? setPanel({ number: question.number, firstTime: true }) : setConfirmExplain(true));
   const panelOpen = panel?.number === question.number && quiz.examId !== null; // sang câu khác thì lời giải tự ẩn
 
   // Làm SAI một câu (đã hiện kết quả) mà chưa có lời giải: đúng lúc người học muốn biết lý do nhất, mời xem giải thích
@@ -110,14 +107,7 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit }: Props)
         {quiz.loadingMore && <LoadingMoreBanner loaded={quiz.questions.length} total={quiz.total} />}
         <AnswerPendingBanner source={quiz.answerSource} examId={quiz.examId} onRetry={quiz.waitForAnswers} />
         {showBundle && bundle && (
-          <ExplainBundleBanner
-            bundle={bundle}
-            unitPrice={info.data!.price}
-            collapsed={bannerCollapsed}
-            onCollapse={() => setBannerCollapsed(true)}
-            onExpand={() => setBannerCollapsed(false)}
-            onUnlock={() => setUnlockOpen(true)}
-          />
+          <ExplainBundleBanner bundle={bundle} unitPrice={info.data!.price} collapsed={bannerCollapsed} onCollapse={() => setBannerCollapsed(true)} onUnlock={() => setUnlockOpen(true)} />
         )}
         {unlockedAll && (
           <div className="mb-2 inline-flex w-fit items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200">

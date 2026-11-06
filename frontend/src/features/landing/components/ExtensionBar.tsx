@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Check, ChevronRight, Copy, Download, Puzzle } from "lucide-react";
+import { Check, ChevronRight, Copy, Download, Puzzle, RefreshCw } from "lucide-react";
 import { brand } from "@/shared/brand/brand";
 import { Modal, ModalTitle } from "@/shared/ui/Modal";
 
@@ -48,11 +48,11 @@ const STEPS: { title: string; body: React.ReactNode }[] = [
 
 // Thanh nhỏ nằm trước mắt người dùng ở đầu trang chủ; bấm vào mở hộp hướng dẫn cài tiện ích Chrome
 // Tiện ích đã cài thì content script của nó đặt data-fepass-ext lên thẻ <html> (có thể xuất hiện sau khi trang vẽ xong nên có theo dõi)
-function useExtensionInstalled() {
-  const [installed, setInstalled] = useState(() => !!document.documentElement.dataset.fepassExt);
+function useExtensionVersion() {
+  const [installed, setInstalled] = useState(() => document.documentElement.dataset.fepassExt ?? "");
   useEffect(() => {
     const root = document.documentElement;
-    const check = () => setInstalled(!!root.dataset.fepassExt);
+    const check = () => setInstalled(root.dataset.fepassExt ?? "");
     check();
     const mo = new MutationObserver(check);
     mo.observe(root, { attributes: true, attributeFilter: ["data-fepass-ext"] });
@@ -61,10 +61,45 @@ function useExtensionInstalled() {
   return installed;
 }
 
+const newer = (a: string, b: string) => {
+  const pa = a.split(".").map((n) => parseInt(n, 10) || 0);
+  const pb = b.split(".").map((n) => parseInt(n, 10) || 0);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) if ((pa[i] ?? 0) !== (pb[i] ?? 0)) return (pa[i] ?? 0) > (pb[i] ?? 0);
+  return false;
+};
+
+// Phiên bản mới nhất (file công khai trên website), lấy mỗi lần vào trang để so với bản đã cài
+function useLatestVersion(enabled: boolean) {
+  const [latest, setLatest] = useState("");
+  useEffect(() => {
+    if (!enabled) return;
+    fetch("/extension-version.json", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j: { version?: string } | null) => setLatest(typeof j?.version === "string" ? j.version : ""))
+      .catch(() => undefined);
+  }, [enabled]);
+  return latest;
+}
+
+const UPDATE_STEPS: { title: string; body: React.ReactNode }[] = [
+  STEPS[0]!,
+  { title: "Giải nén đè lên thư mục cũ", body: <p className="text-sm text-slate-600">Giải nén vào đúng thư mục bạn đã cài tiện ích trước đây, chọn “Thay thế tất cả” (Replace).</p> },
+  {
+    title: "Tải lại tiện ích trong Chrome",
+    body: (
+      <p className="text-sm text-slate-600">
+        Dán <CopyChip text={EXT_PAGE} /> vào thanh địa chỉ, tìm FePass rồi bấm nút tải lại (⟳). Sau đó tải lại trang này.
+      </p>
+    ),
+  },
+];
+
 export function ExtensionBar() {
   const [open, setOpen] = useState(false);
-  const installed = useExtensionInstalled();
-  if (installed) return null; // đã cài rồi: bỏ dòng nhắc
+  const version = useExtensionVersion();
+  const latest = useLatestVersion(!!version);
+  const outdated = !!version && !!latest && newer(latest, version);
+  if (version && !outdated) return null; // đã cài và là bản mới nhất: bỏ dòng nhắc
 
   return (
     <>
@@ -72,24 +107,32 @@ export function ExtensionBar() {
         onClick={() => setOpen(true)}
         className="group flex w-full shrink-0 items-center justify-center gap-2 border-b border-amber-200 bg-gradient-to-r from-amber-50 via-white to-amber-50 px-4 py-2 text-sm text-amber-950 transition hover:from-amber-100 hover:to-amber-100"
       >
-        <Puzzle size={16} className="shrink-0 text-amber-600" />
+        {outdated ? <RefreshCw size={16} className="shrink-0 text-amber-600" /> : <Puzzle size={16} className="shrink-0 text-amber-600" />}
         <span className="min-w-0 truncate">
-          <b>Cài tiện ích Chrome</b> để làm đề ngay trên FuOverflow
+          {outdated ? (
+            <>
+              <b>Tiện ích Chrome của bạn đã cũ</b> (đang dùng {version}, mới nhất {latest})
+            </>
+          ) : (
+            <>
+              <b>Cài tiện ích Chrome</b> để làm đề ngay trên FuOverflow
+            </>
+          )}
         </span>
         <span className="hidden shrink-0 items-center gap-0.5 font-semibold text-brand-700 sm:inline-flex">
-          Xem hướng dẫn <ChevronRight size={15} className="transition group-hover:translate-x-0.5" />
+          {outdated ? "Cập nhật ngay" : "Xem hướng dẫn"} <ChevronRight size={15} className="transition group-hover:translate-x-0.5" />
         </span>
       </button>
 
       {open && (
         <Modal wide onClose={() => setOpen(false)}>
-          <ModalTitle icon={Puzzle}>Cài tiện ích FePass cho Chrome</ModalTitle>
+          <ModalTitle icon={outdated ? RefreshCw : Puzzle}>{outdated ? `Cập nhật tiện ích lên ${latest}` : "Cài tiện ích FePass cho Chrome"}</ModalTitle>
           <p className="mt-2 text-sm text-slate-600">
             Tích hợp thẳng vào FuOverflow: bài “Đề Thi FE” có nút <b>Làm đề</b>, bài “Đề Thi PE” có nút <b>Tải đề PE</b>. Thấy giá trước khi bấm, xác nhận mới bị trừ credit. Cài một lần, mất khoảng 1 phút.
           </p>
 
           <ol className="mt-5 space-y-4">
-            {STEPS.map((s, i) => (
+            {(outdated ? UPDATE_STEPS : STEPS).map((s, i) => (
               <li key={s.title} className="flex gap-3">
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-900 text-sm font-semibold text-white">{i + 1}</span>
                 <div className="min-w-0">
