@@ -2,6 +2,9 @@
 // Website tự công bố trạng thái lên thẻ <html> (data-fepass-auth = in|out, data-fepass-user = tên hiển thị).
 // Không đọc và không lưu token hay bất kỳ dữ liệu nhạy cảm nào.
 (async () => {
+  // Báo cho website biết tiện ích đã được cài (website dùng để ẩn lời nhắc cài đặt); chỉ là một cờ, không kèm dữ liệu nào
+  document.documentElement.dataset.fepassExt = chrome.runtime.getManifest().version;
+
   const settings = await fepassGetSettings();
   // Manifest cho chạy trên cả http://localhost để thử; chỉ tin trang đúng với địa chỉ website đã cấu hình
   if (location.origin !== settings.siteUrl) return;
