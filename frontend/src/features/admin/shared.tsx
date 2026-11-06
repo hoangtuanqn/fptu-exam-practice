@@ -7,11 +7,11 @@ export interface UserRef {
   fullName: string;
 }
 
-// Tên + email của một thành viên; bấm vào để mở danh sách thành viên đã lọc theo email đó
+// Tên + email của một thành viên; bấm vào để mở trang quản lý thành viên
 export function UserCell({ user }: { user: UserRef | null }) {
   if (!user) return <span className="text-slate-400">—</span>;
   return (
-    <Link to={`/admin/users?q=${encodeURIComponent(user.email)}`} className="block min-w-0 hover:underline">
+    <Link to={`/admin/users/${user.id}`} className="block min-w-0 hover:underline">
       <div className="truncate font-medium text-slate-800">{user.fullName}</div>
       <div className="truncate text-xs text-slate-500">{user.email}</div>
     </Link>

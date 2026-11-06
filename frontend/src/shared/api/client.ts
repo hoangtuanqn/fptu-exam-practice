@@ -6,15 +6,43 @@ export const API_ORIGIN = ((import.meta.env.VITE_API_URL as string | undefined) 
 export const BASE = `${API_ORIGIN}/api/v1`;
 const TOKEN_KEY = "auth_token";
 
+// Admin đăng nhập thay thành viên: token của thành viên chỉ nằm trong sessionStorage của TAB này,
+// token thật của admin (localStorage) giữ nguyên nên các tab khác và phiên của admin không bị ảnh hưởng.
+const IMP_KEY = "fepass_impersonate_token";
+export const impersonation = {
+  active: () => {
+    try {
+      return !!sessionStorage.getItem(IMP_KEY);
+    } catch {
+      return false;
+    }
+  },
+  start: (token: string) => {
+    try {
+      sessionStorage.setItem(IMP_KEY, token);
+    } catch {
+      /* bỏ qua */
+    }
+  },
+  end: () => {
+    try {
+      sessionStorage.removeItem(IMP_KEY);
+    } catch {
+      /* bỏ qua */
+    }
+  },
+};
+
 export const tokenStore = {
   get: () => {
     try {
-      return localStorage.getItem(TOKEN_KEY);
+      return sessionStorage.getItem(IMP_KEY) ?? localStorage.getItem(TOKEN_KEY);
     } catch {
       return null;
     }
   },
   set: (token: string) => {
+    if (impersonation.active()) return; // đang đăng nhập thay: không ghi đè token của admin
     try {
       localStorage.setItem(TOKEN_KEY, token);
     } catch {
@@ -22,6 +50,7 @@ export const tokenStore = {
     }
   },
   clear: () => {
+    if (impersonation.active()) return;
     try {
       localStorage.removeItem(TOKEN_KEY);
     } catch {
@@ -56,6 +85,11 @@ let refreshing: Promise<RefreshResult> | null = null;
 // Nhiều request cùng gặp 401 thì chỉ gửi một yêu cầu làm mới và dùng chung kết quả
 export function refreshAccessToken(): Promise<RefreshResult> {
   refreshing ??= (async (): Promise<RefreshResult> => {
+    // Phiên đăng nhập thay không có refresh token: hết hạn thì thoát về tài khoản admin
+    if (impersonation.active()) {
+      onUnauthorized?.();
+      return "invalid";
+    }
     try {
       const res = await fetch(`${BASE}/auth/refresh`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: "{}" });
       const json = (await res.json().catch(() => null)) as Envelope<{ token: string }> | null;

@@ -1,6 +1,6 @@
 import { lazy } from "react";
 import { Navigate, Route } from "react-router-dom";
-import { Megaphone, Bot, ClipboardList, DatabaseZap, FileText, History, SlidersHorizontal, Wallet, Gift, MessageSquareWarning, UserPlus, Landmark, LayoutDashboard, Receipt, Settings, Users } from "lucide-react";
+import { ShoppingBag, Megaphone, Bot, ClipboardList, DatabaseZap, FileText, History, SlidersHorizontal, Wallet, Gift, MessageSquareWarning, UserPlus, Landmark, LayoutDashboard, Receipt, Settings, Users } from "lucide-react";
 import type { NavItem } from "@/shared/layout/PanelLayout";
 
 /**
@@ -13,6 +13,8 @@ import type { NavItem } from "@/shared/layout/PanelLayout";
  */
 const DashboardPage = lazy(() => import("./overview/DashboardPage"));
 const UsersPage = lazy(() => import("./users/UsersPage"));
+const UserDetailPage = lazy(() => import("./users/UserDetailPage"));
+const PurchasesPage = lazy(() => import("./users/PurchasesPage"));
 const WalletHistoryPage = lazy(() => import("./users/WalletHistoryPage"));
 const CrawlJobsPage = lazy(() => import("./users/CrawlJobsPage"));
 const AttemptsPage = lazy(() => import("./users/AttemptsPage"));
@@ -24,6 +26,7 @@ const ReferralsPage = lazy(() => import("./users/ReferralsPage"));
 const GiftCodesPage = lazy(() => import("./finance/GiftCodesPage"));
 const SepayPage = lazy(() => import("./finance/SepayPage"));
 const ExamsPage = lazy(() => import("./content/ExamsPage"));
+const ExamEditPage = lazy(() => import("./content/ExamEditPage"));
 const CrawlerPage = lazy(() => import("./content/CrawlerPage"));
 const ReportsPage = lazy(() => import("./content/ReportsPage"));
 const AiPage = lazy(() => import("./content/AiPage"));
@@ -37,6 +40,7 @@ export const ADMIN_NAV: NavItem[] = [
   { to: "/admin/wallet", label: "Biến động số dư", icon: Wallet, group: "Lịch sử" },
   { to: "/admin/crawl-jobs", label: "Lịch sử lấy đề", icon: History, group: "Lịch sử" },
   { to: "/admin/attempts", label: "Lịch sử làm bài", icon: ClipboardList, group: "Lịch sử" },
+  { to: "/admin/purchases", label: "Lịch sử mua", icon: ShoppingBag, group: "Lịch sử" },
   { to: "/admin/deposits", label: "Lệnh nạp tiền", icon: Receipt, group: "Tài chính" },
   { to: "/admin/bank-transactions", label: "Giao dịch ngân hàng", icon: Landmark, group: "Tài chính" },
   { to: "/admin/gift-codes", label: "Giftcode", icon: Gift, group: "Tài chính" },
@@ -52,6 +56,8 @@ export const adminRoutes = (
   <>
     <Route index element={<DashboardPage />} />
     <Route path="users" element={<UsersPage />} />
+    <Route path="users/:id" element={<UserDetailPage />} />
+    <Route path="purchases" element={<PurchasesPage />} />
     <Route path="referrals" element={<ReferralsPage />} />
     <Route path="account-settings" element={<AccountSettingsPage />} />
     <Route path="promotions" element={<PromoSettingsPage />} />
@@ -63,6 +69,7 @@ export const adminRoutes = (
     <Route path="gift-codes" element={<GiftCodesPage />} />
     <Route path="sepay" element={<SepayPage />} />
     <Route path="exams" element={<ExamsPage />} />
+    <Route path="exams/:id" element={<ExamEditPage />} />
     <Route path="reports" element={<ReportsPage />} />
     <Route path="crawler" element={<CrawlerPage />} />
     <Route path="ai" element={<AiPage />} />
