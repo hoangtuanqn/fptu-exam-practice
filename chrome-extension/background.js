@@ -5,7 +5,7 @@ importScripts("shared.js");
 const PRICE_TTL_MS = 10 * 60 * 1000;
 
 async function fetchPrice(apiUrl, path) {
-  const res = await fetch(`${apiUrl}/api/v1${path}`, { headers: { Accept: "application/json" } });
+  const res = await fetch(`${apiUrl}/api/v1${path}`, { headers: { Accept: "application/json", "X-Guest-Id": "fepass-extension-price" } });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const json = await res.json();
   if (!json || !json.data || !Number.isFinite(json.data.price)) throw new Error("Phản hồi không hợp lệ");
@@ -22,6 +22,33 @@ async function getPrice() {
   if (price !== null || pePrice !== null) await chrome.storage.local.set({ prices: value });
   return value;
 }
+
+// ---- Kiểm tra bản mới: đọc file version công khai trên website mỗi ngày (chỉ để báo, không tự tải hay cài gì)
+const UPDATE_ALARM = "fepass-update-check";
+
+async function checkUpdate() {
+  try {
+    const { siteUrl } = await fepassGetSettings();
+    const res = await fetch(`${siteUrl}/extension-version.json`, { cache: "no-store" });
+    if (!res.ok) return;
+    const info = await res.json();
+    if (!info || typeof info.version !== "string") return;
+    const current = chrome.runtime.getManifest().version;
+    const newer = fepassIsNewer(info.version, current);
+    await chrome.storage.local.set({ update: newer ? { version: info.version, url: new URL(info.url || "/fepass_extension.zip", siteUrl).href } : null });
+    chrome.action.setBadgeText({ text: newer ? "!" : "" });
+    if (newer) chrome.action.setBadgeBackgroundColor({ color: "#f97316" });
+  } catch {
+    /* mất mạng: thử lại lần sau */
+  }
+}
+
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.alarms.create(UPDATE_ALARM, { periodInMinutes: 24 * 60 });
+  checkUpdate();
+});
+chrome.runtime.onStartup.addListener(checkUpdate);
+chrome.alarms.onAlarm.addListener((a) => a.name === UPDATE_ALARM && checkUpdate());
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (!msg || msg.type !== "price") return;

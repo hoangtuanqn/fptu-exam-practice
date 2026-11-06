@@ -11,6 +11,7 @@ const peRouter = Router();
 peRouter.get("/price", peController.price);
 peRouter.use(authenticate);
 peRouter.get("/history", peController.history);
+peRouter.get("/quote", peController.quote);
 peRouter.post("/download", requireVerifiedMember, limiter, validate(peDownloadBody), peController.download);
 
 export default peRouter;

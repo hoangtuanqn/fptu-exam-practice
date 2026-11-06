@@ -29,10 +29,12 @@ export default function PeDownloadPage() {
   const [url, setUrl] = useState(params.get("link") ?? "");
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [fee, setFee] = useState<number | null>(null); // phí thực tế lần này (0 = đã trả rồi, tải lại miễn phí)
   const [error, setError] = useState<string | null>(null);
   const price = useApi(() => peApi.price(), []).data?.price ?? 50;
   const history = useApi(() => peApi.history(), []);
   const balance = user?.balance ?? 0;
+  const due = fee ?? price;
   const unverified = !!user && !user.emailVerifiedAt;
 
   // Mở từ nút của tiện ích: tự mở hộp xác nhận một lần (vẫn phải bấm xác nhận mới bị trừ credit)
@@ -40,7 +42,7 @@ export default function PeDownloadPage() {
   useEffect(() => {
     if (auto.current || params.get("confirm") !== "1" || !url.trim()) return;
     auto.current = true;
-    setConfirming(true);
+    void openConfirm();
     setParams((p) => {
       const n = new URLSearchParams(p);
       n.delete("confirm");
@@ -48,6 +50,17 @@ export default function PeDownloadPage() {
       return n;
     }, { replace: true });
   }, [params, setParams, url]);
+
+  // Mở hộp xác nhận: hỏi trước phí thực tế (đã trả rồi thì miễn phí)
+  async function openConfirm(link = url) {
+    setFee(null);
+    setConfirming(true);
+    try {
+      setFee((await peApi.quote(link.trim())).fee);
+    } catch {
+      setFee(null); // không hỏi được: hiện giá niêm yết, máy chủ vẫn tính đúng khi tải
+    }
+  }
 
   async function download() {
     setConfirming(false);
@@ -74,12 +87,12 @@ export default function PeDownloadPage() {
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (url.trim() && !busy) setConfirming(true);
+    if (url.trim() && !busy) void openConfirm();
   };
 
   return (
     <>
-      <PageHeader title="Tải đề thi PE" description={`Đề thi PE là bộ tài nguyên (không phải ảnh): hệ thống gom các tệp của bài thành một file zip. Mỗi lần tải ${formatCredit(price)}.`} />
+      <PageHeader title="Tải đề thi PE" description={`Đề thi PE là bộ tài nguyên (không phải ảnh): hệ thống gom các tệp của bài thành một file zip. Trả phí ${formatCredit(price)} một lần cho mỗi đề, tải lại sau miễn phí.`} />
 
       <Card>
         <CardHeader title="Dán link bài “Đề Thi PE” trên FuOverflow" />
@@ -108,13 +121,13 @@ export default function PeDownloadPage() {
                     <div className="truncate text-sm font-medium text-slate-900">{r.title}</div>
                     <div className="text-xs text-slate-500">
                       {formatDateTime(r.createdAt)}
-                      {r.status === "DONE" && ` · ${r.files} tệp · ${size(r.sizeBytes)}`} · {r.status === "FAILED" ? "đã hoàn" : "trừ"} {formatCredit(r.price)}
+                      {r.status === "DONE" && ` · ${r.files} tệp · ${size(r.sizeBytes)}`} · {r.price === 0 ? "miễn phí" : `${r.status === "FAILED" ? "đã hoàn" : "trừ"} ${formatCredit(r.price)}`}
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS[r.status]?.cls}`}>{STATUS[r.status]?.text}</span>
-                  <Button size="sm" onClick={() => { setUrl(`https://fuoverflow.com/threads/${r.threadId}/`); setConfirming(true); }} disabled={busy}>
+                  <Button size="sm" onClick={() => { const l = `https://fuoverflow.com/threads/${r.threadId}/`; setUrl(l); void openConfirm(l); }} disabled={busy}>
                     Tải lại
                   </Button>
                 </div>
@@ -134,16 +147,16 @@ export default function PeDownloadPage() {
           ) : (
             <>
               <div className="mt-4 truncate rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600" title={url}>{url}</div>
-              <div className="mt-4"><ChargeSummary amount={price} balance={balance} /></div>
-              <p className="mt-3 text-xs leading-relaxed text-slate-500">Mỗi lần tải trừ credit một lần. Không tạo được file thì hoàn phí tự động.</p>
+              <div className="mt-4"><ChargeSummary amount={due} balance={balance} freeNote="Bạn đã trả phí đề này trước đó nên tải lại miễn phí." /></div>
+              <p className="mt-3 text-xs leading-relaxed text-slate-500">Chỉ trả phí lần đầu cho mỗi đề, các lần tải lại sau miễn phí. Không tạo được file thì hoàn phí tự động.</p>
             </>
           )}
           <ModalActions>
             <Button grow onClick={() => setConfirming(false)}>Hủy</Button>
-            {!unverified && (balance < price ? (
+            {!unverified && (balance < due ? (
               <Link to="/account/deposit" className={buttonClass({ variant: "primary", grow: true })}>Nạp credit</Link>
             ) : (
-              <Button grow variant="primary" onClick={() => void download()}><Download size={16} /> Trả {formatCredit(price)}</Button>
+              <Button grow variant="primary" onClick={() => void download()}><Download size={16} /> {due > 0 ? `Trả ${formatCredit(due)}` : "Tải miễn phí"}</Button>
             ))}
           </ModalActions>
         </Modal>
