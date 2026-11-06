@@ -15,8 +15,6 @@ import { getModeConfig } from "@/features/practice/config/modes";
 import { formatDuration, formatScore } from "@/features/practice/utils/format";
 import { Logo } from "@/shared/brand/Logo";
 import { Button } from "@/shared/ui/Button";
-import type { PickFolder } from "./FolderInput";
-import { FolderPicker } from "./FolderPicker";
 import { UserMenu } from "@/shared/layout/UserMenu";
 
 interface Props {
@@ -28,7 +26,6 @@ interface Props {
   elapsed: number; // số giây đã làm bài
   bestScore?: number | null; // điểm cao nhất của người dùng ở đề này (chưa làm lần nào thì không hiện)
   timing: boolean; // đồng hồ đang chạy (không chạy khi chờ đáp án hoặc đã nộp)
-  onPick: PickFolder;
   referenceCount?: number; // số tài liệu tham khảo của đề (trang công thức...); có thì hiện nút "Tài liệu"
   onShowReferences?: () => void;
   onHome: () => boolean; // bấm logo khi đang làm đề: trả về false nếu người dùng huỷ việc thoát
@@ -49,7 +46,6 @@ export function Header({
   timing,
   referenceCount = 0,
   onShowReferences,
-  onPick,
   onHome,
   onSubmit,
   onReset,
@@ -156,8 +152,6 @@ export function Header({
                 <span className="hidden sm:inline">Tài liệu</span>
               </Button>
             )}
-
-            <FolderPicker iconOnly onPick={onPick} />
 
             {submitted ? (
               <>

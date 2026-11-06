@@ -170,6 +170,18 @@ h3 {
 }
 @media (max-width: 640px) { .mascot { --mw: 72px; height: 90px; bottom: 0; } }
 
+/* Cóc Vàng làm nút mở chat (góc phải dưới): đứng tại chỗ, nhún nhẹ, bong bóng lời chào */
+.mascot-chat { --mw: 96px; }
+.mascot-chat svg { display: block; width: var(--mw); height: auto; filter: drop-shadow(0 3px 4px rgba(11, 23, 48, 0.28)); }
+@keyframes mascot-bob { 0%, 100% { transform: translateY(0) scale(1.03, 0.97); } 50% { transform: translateY(-7px) scale(1, 1); } }
+@keyframes mascot-tip-in { from { opacity: 0; transform: translateY(6px) scale(0.95); } to { opacity: 1; transform: none; } }
+.mascot-chat-tip { animation: mascot-tip-in 0.35s ease-out both; }
+@media (prefers-reduced-motion: no-preference) {
+  .mascot-chat .mascot-chat-body { animation: mascot-bob 1.8s ease-in-out infinite; transform-origin: 50% 100%; }
+  .mascot-chat:hover .mascot-chat-body { animation-duration: 0.7s; }
+}
+@media (max-width: 640px) { .mascot-chat { --mw: 68px; } }
+
 /* Mở khóa giải thích cả đề: thẻ vào bằng hiệu ứng, quầng sáng trôi, pháo giấy khi mua xong */
 @keyframes bundle-in {
   from { opacity: 0; transform: translateY(-14px) scale(0.97); }

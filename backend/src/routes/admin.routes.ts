@@ -12,6 +12,8 @@ import { adminGiftCodeController } from "../controllers/admin.gift-code.controll
 import { adminCrawlerController } from "../controllers/admin.crawler.controllers";
 import { adminHistoryController } from "../controllers/admin.history.controllers";
 import { adminAccountController } from "../controllers/admin.account.controllers";
+import { adminChatController } from "../controllers/admin.chat.controllers";
+import { updateChatSettingsBody } from "../rules/requests/chat.request";
 import { adminPromoController } from "../controllers/admin.promo.controllers";
 import { listAttemptsQuery, listCrawlJobsQuery, listPurchasesQuery, listWalletQuery } from "../rules/requests/admin-history.request";
 import { authenticate, requireAdmin } from "../middlewares/auth.middlewares";
@@ -44,6 +46,10 @@ adminRouter.post("/users/:id/reset-password", validate(idParam, "params"), valid
 adminRouter.post("/users/:id/send-reset-link", validate(idParam, "params"), adminUserController.sendResetLink);
 adminRouter.post("/users/:id/revoke-sessions", validate(idParam, "params"), adminUserController.revokeSessions);
 adminRouter.post("/users/:id/impersonate", validate(idParam, "params"), adminUserController.impersonate);
+
+adminRouter.get("/settings/chat", adminChatController.get);
+adminRouter.put("/settings/chat", validate(updateChatSettingsBody), adminChatController.update);
+adminRouter.post("/settings/chat/reindex", adminChatController.reindex);
 
 adminRouter.get("/settings/promo", adminPromoController.get);
 adminRouter.put("/settings/promo", validate(updatePromoBody), adminPromoController.update);
