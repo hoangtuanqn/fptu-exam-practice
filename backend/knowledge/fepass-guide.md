@@ -37,6 +37,23 @@ Bạn có thể vào trang chủ, lấy đề và làm bài mà không cần đ�
 4. Đề vào "Kho đề của tôi" (Tài khoản → Kho đề của tôi) để mở lại bất cứ lúc nào.
 Lưu ý: phí lấy đề do admin đặt (xem giá hiện hành ở phần thông tin hệ thống). Đề bạn đã có trong kho hoặc đang được lấy thì không bị tính phí lần nữa. Lấy đề lỗi thì phí được hoàn lại. Đề đã có người khác lấy trước đó thì dùng lại nhanh hơn.
 
+## Tìm đề thi trên FuOverflow (đi từ môn học đến link đề)
+FuOverflow (fuoverflow.com) là diễn đàn của sinh viên FPT. Xem đề không cần tài khoản FuOverflow; đăng nhập chỉ cần khi bạn muốn bình luận hay đăng bài.
+1. Vào fuoverflow.com. Ở trang chủ (hoặc menu "Diễn đàn") bấm vào mục "TÀI LIỆU CÁC MÔN HỌC" (địa chỉ `fuoverflow.com/categories/subjects/`).
+2. Trang này liệt kê các môn theo kỳ: "Tổng hợp - Chưa rõ kỳ", rồi "Kỳ 0" đến "Kỳ 9". Môn nào học ở kỳ nào thì nằm trong kỳ đó, và môn được ghi bằng mã môn (ví dụ PRJ301, PRO192, MAD101, SWP391), chưa thấy tên đầy đủ. Không biết môn thuộc kỳ nào thì tìm trong "Tổng hợp - Chưa rõ kỳ", hoặc dùng ô tìm kiếm của diễn đàn và gõ mã môn.
+3. Bấm vào mã môn để vào trang của môn đó (dạng `fuoverflow.com/forums/PRJ301/`). Đây là danh sách các bài đăng của môn, bài mới hoạt động gần đây nằm trên cùng, có thể nhiều trang.
+4. Mỗi bài có nhãn phía trước tên: "Đề Thi FE" (đề lý thuyết trắc nghiệm, là loại FEPass làm bài được) và "Đề Thi PE" (đề thực hành). Dùng bộ lọc "Lọc" để chỉ hiện nhãn cần xem, hoặc lật qua các trang để tìm kỳ cũ hơn.
+5. Bấm vào một bài "Đề Thi FE" để mở. Trong bài có thông tin Campus, Học kỳ, Loại tài liệu và các ảnh câu hỏi đính kèm (Q1, Q2...).
+6. Copy đường link trên thanh địa chỉ (dạng `https://fuoverflow.com/threads/prj301-su26-fe.7117/`) rồi dán vào ô lấy đề ở trang chủ FEPass để làm bài (xem mục "Lấy đề từ FuOverflow"). Nếu đã cài tiện ích Chrome của FEPass thì bài "Đề Thi FE" có sẵn nút "Làm đề", bấm là mở FEPass lấy đề luôn, không cần copy link.
+Lưu ý: mục "Suộc" và "Membership" trên FuOverflow là phần bán tài liệu riêng của FuOverflow (tính bằng điểm của họ), không liên quan đến credit của FEPass.
+
+## Đọc tên bài đề thi trên FuOverflow
+Tên bài thường theo dạng `MÃ MÔN - KỲ - LOẠI`, ví dụ "PRJ301 - SU26 - FE":
+- Mã môn: PRJ301, PRO192...
+- Kỳ thi: SP (Spring), SU (Summer), FA (Fall) kèm năm, ví dụ SU26 là Summer 2026, FA25 là Fall 2025. Muốn ôn đề mới nhất thì chọn kỳ có năm lớn nhất.
+- Loại: FE là đề thi lý thuyết, PE là thực hành; một số bài ghi thêm đợt (B1, B5...) hoặc "RE" (có vẻ là đề thi lại, bạn xem nội dung bài để chắc).
+Một môn có thể có nhiều bài cho cùng một kỳ (nhiều bộ đề), cứ mở từng bài để xem.
+
 ## Kéo thả thư mục đề có sẵn
 Nếu bạn đã có ảnh đề trên máy, kéo thả cả thư mục vào vùng thả ở trang chủ (hoặc bấm chọn thư mục). Thư mục gồm các ảnh `1.webp`, `2.webp`... mỗi ảnh là một câu, và có thể có file `ans.txt`: dòng N là đáp án câu N (nhiều đáp án cách nhau bằng dấu cách, ví dụ `A C D`). Cách này không qua máy chủ và không tốn credit.
 

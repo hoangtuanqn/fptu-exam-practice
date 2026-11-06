@@ -50,6 +50,7 @@ adminRouter.post("/users/:id/impersonate", validate(idParam, "params"), adminUse
 adminRouter.get("/settings/chat", adminChatController.get);
 adminRouter.put("/settings/chat", validate(updateChatSettingsBody), adminChatController.update);
 adminRouter.post("/settings/chat/reindex", adminChatController.reindex);
+adminRouter.delete("/settings/chat/cache", adminChatController.clearCache);
 
 adminRouter.get("/settings/promo", adminPromoController.get);
 adminRouter.put("/settings/promo", validate(updatePromoBody), adminPromoController.update);
