@@ -543,6 +543,7 @@ model ChatLog {
   ip        String?  @db.VarChar(64)
   question  String   @db.VarChar(500)
   matched   Boolean  @default(true) // có tìm thấy đoạn hướng dẫn liên quan hay không (false = câu hỏi hệ thống chưa có tài liệu)
+  cached    Boolean  @default(false) // trả lời từ cache, không gọi Claude
   createdAt DateTime @default(now()) @map("created_at")
 
   @@index([userId, createdAt])
@@ -550,4 +551,19 @@ model ChatLog {
   @@index([ip, createdAt])
   @@index([createdAt])
   @@map("chat_logs")
+}
+
+// Câu trả lời hướng dẫn chung đã có: câu hỏi giống nghĩa thì trả lại, không gọi Claude. Chỉ lưu câu hỏi đứng riêng, không dùng dữ liệu tài khoản/giá.
+model ChatAnswerCache {
+  id        Int      @id @default(autoincrement())
+  viewer    String   @db.VarChar(10) // member | guest: khách và thành viên được hướng dẫn khác nhau (đăng nhập...)
+  question  String   @db.VarChar(500)
+  embedding Json
+  answer    String   @db.Text
+  version   String   @db.VarChar(16) // băm của tài liệu hướng dẫn + prompt; đổi thì cache cũ hết hiệu lực
+  hits      Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([version])
+  @@map("chat_answer_cache")
 }

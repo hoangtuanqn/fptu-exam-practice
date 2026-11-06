@@ -21,14 +21,15 @@ function Avatar({ size = 28 }: { size?: number }) {
 }
 
 interface Msg extends ChatMessage {
-  error?: boolean;
+  failed?: string; // tin của người dùng gửi không thành công: lý do hiện nhỏ dưới tin, kèm nút gửi lại
 }
 
 const load = (): Msg[] => {
   try {
     const raw = sessionStorage.getItem(STORE_KEY);
     const parsed = raw ? (JSON.parse(raw) as Msg[]) : null;
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed.slice(-30) : [GREETING];
+    const ok = Array.isArray(parsed) ? parsed.filter((m) => m.content && !(m as { error?: boolean }).error) : [];
+    return ok.length > 0 ? ok.slice(-30) : [GREETING];
   } catch {
     return [GREETING];
   }
@@ -65,21 +66,9 @@ export default function ChatWidget() {
     };
   }, []);
 
-  // Bong bóng lời chào hiện vài giây mỗi phiên (một lần), để khách biết con cóc là nơi hỏi đáp
+  // Bong bóng lời chào hiện vài giây mỗi lần tải trang, để khách biết con cóc là nơi hỏi đáp
   useEffect(() => {
-    try {
-      if (sessionStorage.getItem("fepass_chat_tip") === "1") return;
-    } catch {
-      /* bỏ qua */
-    }
-    const show = setTimeout(() => {
-      setTip(true);
-      try {
-        sessionStorage.setItem("fepass_chat_tip", "1"); // đánh dấu lúc thực sự hiện (không phải lúc effect chạy: StrictMode chạy effect hai lần)
-      } catch {
-        /* bỏ qua */
-      }
-    }, 1500);
+    const show = setTimeout(() => setTip(true), 1500);
     const hide = setTimeout(() => setTip(false), 9000);
     return () => {
       clearTimeout(show);
@@ -103,15 +92,15 @@ export default function ChatWidget() {
     if (open) inputRef.current?.focus();
   }, [open]);
 
-  // Khu quản trị đã có giao diện riêng, không cần bong bóng hỏi đáp
-  if (!enabled || pathname.startsWith("/admin")) return null;
+  // Không hiện ở khu quản trị và ở màn hình làm bài/luyện tập (tránh gây xao nhãng)
+  if (!enabled || pathname.startsWith("/admin") || pathname.startsWith("/exam/")) return null;
 
-  async function send(text: string) {
+  async function send(text: string, history: Msg[] = messages) {
     const content = text.trim().slice(0, MAX_CHARS);
     if (!content || busy) return;
-    const base: Msg[] = [...messages, { role: "user", content }];
+    const base: Msg[] = [...history, { role: "user", content }];
     // Chỉ gửi các lượt hợp lệ (bỏ lời chào và thông báo lỗi), tin đầu phải là của người dùng
-    const payload = base.filter((m) => !m.error).map(({ role, content }) => ({ role, content }));
+    const payload = base.filter((m) => !m.failed).slice(-6).map(({ role, content }) => ({ role, content })); // chỉ gửi vài lượt gần nhất (máy chủ cũng cắt như vậy)
     while (payload[0] && payload[0].role !== "user") payload.shift();
 
     setMessages([...base, { role: "assistant", content: "" }]); // khung trả lời rỗng, chữ chảy vào dần
@@ -138,7 +127,9 @@ export default function ChatWidget() {
 
 *(câu trả lời bị gián đoạn)*` }]);
       } else {
-        setMessages([...base, { role: "assistant", content: err instanceof Error ? err.message : "Mình đang bận chút, bạn thử lại sau nhé", error: true }]);
+        // Không tạo bong bóng trả lời lỗi: đánh dấu ngay tin của người dùng, giống các app nhắn tin
+        const reason = err instanceof Error ? err.message : "Mình đang bận chút, bạn thử lại sau nhé";
+        setMessages([...history, { role: "user", content, failed: reason }]);
       }
     } finally {
       setBusy(false);
@@ -147,13 +138,18 @@ export default function ChatWidget() {
     }
   }
 
+  // Gửi lại tin bị lỗi: bỏ bản lỗi rồi gửi lại như mới
+  const retry = (index: number) => {
+    const q = messages[index];
+    if (q?.failed) void send(q.content, messages.filter((_, j) => j !== index));
+  };
+
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
     void send(input);
   };
 
-  // Trên màn hình làm bài (điện thoại) nâng bong bóng lên để không đè thanh điều hướng câu hỏi
-  const lift = pathname.startsWith("/exam/") ? "bottom-16 sm:bottom-2" : "bottom-1";
+  const lift = "bottom-1";
   const showChips = messages.length <= 1 && !busy;
 
   return (
@@ -162,7 +158,7 @@ export default function ChatWidget() {
         <div className={`fixed right-2 ${lift} z-[55] flex flex-col items-end sm:right-4`}>
           {tip && (
             <div className="mascot-chat-tip relative mb-1 mr-2 max-w-[11rem] rounded-2xl rounded-br-sm border border-amber-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-lg">
-              Cần chỉ cách dùng web? Hỏi Cóc nhé!
+              Bạn có thắc mắc gì không? Hỏi Cóc Pass nhé!
               <button onClick={() => setTip(false)} aria-label="Ẩn lời chào" className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-slate-500 hover:bg-slate-300">
                 <X size={11} />
               </button>
@@ -186,7 +182,7 @@ export default function ChatWidget() {
         <div
           role="dialog"
           aria-label="Chat với Cóc Pass"
-          className="fixed inset-x-3 bottom-3 z-[70] flex h-[min(34rem,calc(100dvh-1.5rem))] flex-col overflow-hidden rounded-3xl border border-amber-200/70 bg-[#fffdf7] shadow-[0_20px_60px_-15px_rgba(120,80,0,0.35)] sm:inset-x-auto sm:bottom-5 sm:right-5 sm:w-[23rem]"
+          className="fixed inset-0 z-[70] flex flex-col overflow-hidden bg-[#fffdf7] sm:inset-x-auto sm:bottom-5 sm:left-auto sm:right-5 sm:top-auto sm:h-[min(34rem,calc(100dvh-2.5rem))] sm:w-[23rem] sm:rounded-3xl sm:border sm:border-amber-200/70 sm:shadow-[0_20px_60px_-15px_rgba(120,80,0,0.35)]"
         >
           <div className="flex items-center gap-3 border-b border-amber-100 bg-amber-50/70 px-4 py-3">
             <Avatar size={40} />
@@ -214,16 +210,22 @@ export default function ChatWidget() {
           <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
             {messages.map((m, i) =>
               m.role === "user" ? (
-                <div key={i} className="flex justify-end">
-                  <div className="max-w-[82%] whitespace-pre-wrap break-words rounded-2xl rounded-br-md bg-brand-900 px-3.5 py-2 text-[14px] leading-relaxed text-white">{m.content}</div>
+                <div key={i} className="flex flex-col items-end gap-1">
+                  <div className={`max-w-[82%] whitespace-pre-wrap [overflow-wrap:anywhere] rounded-2xl rounded-br-md px-3.5 py-2 text-[14px] leading-relaxed text-white ${m.failed ? "bg-brand-900/60" : "bg-brand-900"}`}>{m.content}</div>
+                  {m.failed && (
+                    <div className="flex max-w-[90%] items-center gap-1.5 text-[11px] text-rose-600">
+                      <span className="min-w-0 text-right [overflow-wrap:anywhere]">{m.failed}</span>
+                      <button onClick={() => retry(i)} disabled={busy} className="flex shrink-0 items-center gap-1 rounded-full px-1.5 py-0.5 font-semibold ring-1 ring-rose-200 transition hover:bg-rose-50 disabled:opacity-50">
+                        <RotateCcw size={11} /> Gửi lại
+                      </button>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div key={i} className="flex items-end gap-2">
                   <Avatar />
-                  <div className={`max-w-[84%] break-words rounded-2xl rounded-bl-md px-3.5 py-2.5 text-[14px] leading-relaxed ${m.error ? "bg-rose-50 text-rose-700" : "bg-amber-50 text-slate-800"}`}>
-                    {m.error ? (
-                      m.content
-                    ) : m.content ? (
+                  <div className={`max-w-[84%] break-words rounded-2xl rounded-bl-md px-3.5 py-2.5 text-[14px] leading-relaxed bg-amber-50 text-slate-800`}>
+                    {m.content ? (
                       <Markdown>{m.content}</Markdown>
                     ) : (
                       <span aria-label="Đang trả lời" className="flex h-5 items-center gap-2">

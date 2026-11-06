@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { BookOpenCheck, Loader2, RefreshCw } from "lucide-react";
+import { BookOpenCheck, Loader2, RefreshCw, Trash2 } from "lucide-react";
 import { adminApi, type ChatbotAdmin } from "@/features/admin/api/admin.api";
 import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
@@ -77,6 +77,16 @@ export default function ChatbotPage() {
     }
   }
 
+  async function clearCache() {
+    try {
+      await adminApi.clearChatbotCache();
+      toast.success("Đã xoá cache câu trả lời");
+      reload();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Không xoá được");
+    }
+  }
+
   return (
     <>
       <PageHeader eyebrow="Quản trị" title="Chatbot hỗ trợ" description="Trợ lý chỉ hướng dẫn cách dùng FEPass, không giải bài và không thao tác thay người dùng." />
@@ -104,6 +114,19 @@ export default function ChatbotPage() {
               </Button>
             </Card>
           </div>
+
+          <Card className="flex flex-wrap items-center justify-between gap-4 p-4">
+            <div className="min-w-0">
+              <div className="text-xs text-slate-500">Câu trả lời lưu sẵn (cache)</div>
+              <div className="mt-1 text-2xl font-semibold tabular-nums">{data.cache.entries} câu</div>
+              <div className="text-xs text-slate-400">
+                Hôm nay trả từ cache {data.cache.today}/{data.stats.today} lượt, tổng {data.cache.total}/{data.stats.total}. Mỗi lượt như vậy không tốn token.
+              </div>
+            </div>
+            <Button variant="secondary" onClick={() => void clearCache()} disabled={data.cache.entries === 0}>
+              <Trash2 size={15} /> Xoá cache
+            </Button>
+          </Card>
 
           <Settings key={data.settings.geminiKeyPreview + String(data.settings.enabled)} data={data} onSaved={reload} />
 
