@@ -10,6 +10,7 @@ export interface User {
   id: number;
   email: string;
   fullName: string;
+  avatarPath: string | null;
   role: Role;
   status: UserStatus;
   balance: number;
