@@ -11,6 +11,7 @@ export interface Chunk {
   slug: string;
   title: string;
   content: string;
+  hash: string;
   embedding: number[] | null;
 }
 
@@ -63,7 +64,7 @@ function keywordHits(query: string, chunks: Chunk[]): Hit[] {
 }
 
 // Vector đã chuẩn hoá nên cosine = tích vô hướng
-const dot = (a: number[], b: number[]) => {
+export const dot = (a: number[], b: number[]) => {
   let s = 0;
   for (let i = 0; i < a.length; i++) s += a[i]! * b[i]!;
   return s;
@@ -77,11 +78,36 @@ const QUERY_CACHE_MAX = 300;
 async function chunks(): Promise<Chunk[]> {
   if (cache) return cache;
   const rows = await prisma.kbChunk.findMany({ orderBy: { id: "asc" } });
-  cache = rows.map((r) => ({ slug: r.slug, title: r.title, content: r.content, embedding: Array.isArray(r.embedding) ? (r.embedding as number[]) : null }));
+  cache = rows.map((r) => ({ slug: r.slug, title: r.title, content: r.content, hash: r.contentHash, embedding: Array.isArray(r.embedding) ? (r.embedding as number[]) : null }));
   return cache;
 }
 
+/** Vector (đã chuẩn hoá) của câu hỏi; dùng chung bộ nhớ đệm với tìm kiếm nên không gọi Gemini hai lần. null nếu chưa có khoá hoặc Gemini lỗi. */
+async function queryVector(query: string): Promise<number[] | null> {
+  const { geminiApiKey } = await chatSettingService.get();
+  if (!geminiApiKey) return null;
+  let q = queryCache.get(query);
+  if (!q) {
+    try {
+      q = await embedQuery(geminiApiKey, query);
+    } catch {
+      return null;
+    }
+    if (queryCache.size >= QUERY_CACHE_MAX) queryCache.delete(queryCache.keys().next().value!);
+    queryCache.set(query, q);
+  }
+  return q;
+}
+
 export const knowledgeService = {
+  queryVector,
+
+  /** Dấu vân tay của toàn bộ tài liệu hướng dẫn: đổi nội dung thì đổi, bấm cập nhật mà không có gì mới thì giữ nguyên. */
+  async version() {
+    const all = await chunks();
+    return sha(all.map((c) => `${c.slug}:${c.hash}`).join("|"));
+  },
+
   async stats() {
     const all = await chunks();
     return { chunks: all.length, embedded: all.filter((c) => c.embedding).length, model: EMBEDDING_MODEL };
@@ -136,15 +162,11 @@ export const knowledgeService = {
     const { geminiApiKey } = await chatSettingService.get();
     if (geminiApiKey && all.some((c) => c.embedding)) {
       try {
-        let q = queryCache.get(query);
-        if (!q) {
-          q = await embedQuery(geminiApiKey, query);
-          if (queryCache.size >= QUERY_CACHE_MAX) queryCache.delete(queryCache.keys().next().value!);
-          queryCache.set(query, q);
-        }
+        const q = await queryVector(query);
+        if (!q) throw new Error("không tạo được embedding");
         const hits = all
           .filter((c) => c.embedding)
-          .map((c) => ({ title: c.title, content: c.content, score: dot(q!, c.embedding!) }))
+          .map((c) => ({ title: c.title, content: c.content, score: dot(q, c.embedding!) }))
           .filter((h) => h.score >= RETRIEVE_MIN_SCORE)
           .sort((a, b) => b.score - a.score)
           .filter((h, _i, all) => h.score >= all[0]!.score - RETRIEVE_SCORE_BAND) // bỏ các đoạn kém liên quan so với đoạn tốt nhất
