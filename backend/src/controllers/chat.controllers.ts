@@ -13,7 +13,7 @@ export const chatController = {
     res.json(new ResponseClient({ data: { enabled: status.enabled } }));
   },
 
-  // Trả lời dạng stream (Server-Sent Events): mỗi dòng "data: {json}" với t = delta | done | error
+  // Trả lời dạng stream (Server-Sent Events): mỗi dòng "data: {json}" với t = delta | status | done | error
   async stream(req: Request, res: Response) {
     const ac = new AbortController();
     res.on("close", () => ac.abort()); // người dùng đóng khung chat/tab

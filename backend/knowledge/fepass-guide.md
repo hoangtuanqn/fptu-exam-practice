@@ -8,8 +8,8 @@
 FEPass (fepass.top) là website luyện thi cho sinh viên FPT (FPTU) trên các đề thi FE đăng ở diễn đàn FuOverflow. Bạn dán link đề, hệ thống tự lấy đề về, bạn làm bài và được chấm điểm thang 10. AI giúp tìm đáp án và giải thích từng câu. Hệ thống dùng đơn vị tiền gọi là credit (1 ₫ nạp vào = 1 credit).
 Hệ thống cũng hỗ trợ đề thi PE (thực hành): tải về bộ tài nguyên của đề dưới dạng file zip.
 
-## Ai phát triển FEPass
-FEPass do Phạm Hoàng Tuấn phát triển, Founder của MST Software. Hệ thống được xây dựng để phục vụ sinh viên FPTU luyện thi. Chatbot không có thông tin liên hệ riêng của người phát triển; khi cần hỗ trợ trực tiếp (tiền, tài khoản, lỗi hệ thống), hãy dùng kênh hỗ trợ mà quản trị viên công bố trên website.
+## Ai phát triển và vận hành FEPass
+FEPass do Phạm Hoàng Tuấn phát triển và vận hành. Tuấn là Founder của MST Software và là Phó chủ nhiệm học thuật của CLB F-Code, Trường Đại học FPT, nhiệm kỳ thứ 12. Hệ thống được xây dựng để phục vụ sinh viên FPTU luyện thi. Chatbot không có thông tin liên hệ riêng của người phát triển; khi cần hỗ trợ trực tiếp (tiền, tài khoản, lỗi hệ thống), hãy dùng kênh hỗ trợ mà quản trị viên công bố trên website.
 
 ## Bản đồ giao diện
 - Trang chủ (`/`): giới thiệu, ô dán link đề FuOverflow, vùng kéo thả thư mục đề, các ưu đãi, thanh cài tiện ích Chrome ở trên cùng.
@@ -130,5 +130,5 @@ Khi một thao tác cần credit mà ví không đủ, hộp thoại báo số c
 Tài khoản bị khoá không đăng nhập được. Hãy liên hệ quản trị viên để biết lý do. Nếu chỉ quên mật khẩu, dùng "Quên mật khẩu". Nếu không nhận được email, kiểm tra thư mục Spam và đúng địa chỉ email đã đăng ký.
 
 ## Cóc Pass làm được và không làm được gì
-Cóc Pass (chatbot) hướng dẫn cách dùng FEPass. Khi bạn đã đăng nhập, Cóc Pass còn tra cứu giúp dữ liệu của CHÍNH BẠN (chỉ xem, không sửa): số dư và thông tin tài khoản, kho đề, các bài đang làm dở, kết quả các lần nộp bài, lịch sử nạp tiền, biến động số dư, đề PE đã tải, lời giải đã mở khóa, báo cáo đáp án đã gửi. Ví dụ hỏi "tôi đang làm dở đề nào", "lịch sử nạp của tôi", "số dư còn bao nhiêu". Khách chưa đăng nhập không tra cứu được.
+Cóc Pass (chatbot) hướng dẫn cách dùng FEPass. Khi bạn đã đăng nhập, Cóc Pass còn tra cứu giúp dữ liệu của CHÍNH BẠN (chỉ xem, không sửa): số dư và thông tin tài khoản, kho đề, các bài đang làm dở, kết quả các lần nộp bài, lịch sử nạp tiền, biến động số dư, đề PE đã tải, lời giải đã mở khóa, báo cáo đáp án đã gửi, thống kê điểm, giftcode đã nhập. Ngoài ra Cóc Pass tra được danh sách đề của một môn trên FuOverflow (ví dụ "PRO192 có những đề FE nào"), kể cả khi chưa đăng nhập. Ví dụ hỏi "tôi đang làm dở đề nào", "lịch sử nạp của tôi", "số dư còn bao nhiêu". Khách chưa đăng nhập không tra cứu được dữ liệu cá nhân.
 Cóc Pass không thao tác thay bạn (không lấy đề, không nạp tiền, không cộng hay hoàn credit, không đổi mật khẩu), không xem được dữ liệu của người khác, không giải bài hay giải thích kiến thức môn học (hãy dùng nút "Giải thích" ở từng câu) và không xử lý khiếu nại giao dịch. Vấn đề về tiền, tài khoản bị khoá hoặc lỗi hệ thống cần báo quản trị viên.

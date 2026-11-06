@@ -14,7 +14,7 @@ import { accountSettingService } from "./account-setting.service";
 import { aiSettingService } from "./ai-setting.service";
 import { chatSettingService } from "./chat-setting.service";
 import { crawlerSettingService } from "./crawler-setting.service";
-import { CHAT_TOOLS, toolStatus, runChatTool } from "./chat-tools.service";
+import { chatToolsFor, toolStatus, runChatTool } from "./chat-tools.service";
 import { chatCacheService, type Viewer } from "./chat-cache.service";
 import { knowledgeService } from "./knowledge.service";
 import { promoSettingService } from "./promo-setting.service";
@@ -72,7 +72,7 @@ export const chatService = {
     const query = question.length < 50 && prevUser ? `${prevUser}\n${question}` : question;
 
     const [hits, facts] = await Promise.all([knowledgeService.search(query), CHAT_MONEY_HINT.test(query) ? liveFacts() : Promise.resolve("")]);
-    const knowledge = hits.length ? hits.map((h) => `### ${h.title}\n${h.content}`).join("\n\n") : "(Không có đoạn hướng dẫn nào khớp với câu hỏi này.)";
+    const knowledge = hits.length ? hits.map((h) => `<section title="${h.title.replace(/"/g, "'")}">\n${h.content}\n</section>`).join("\n") : "(Không có đoạn hướng dẫn nào khớp với câu hỏi này.)";
 
     const log = await prisma.chatLog.create({
       data: { userId: "userId" in owner ? owner.userId : null, guestId: "guestId" in owner ? owner.guestId : null, ip: ip?.slice(0, 64) ?? null, question: question.slice(0, 500), matched: hits.length > 0 },
@@ -110,7 +110,7 @@ ${facts}
 
   /**
    * Trả lời dạng stream: mỗi đoạn chữ Claude sinh ra được đẩy ngay cho người dùng (onDelta).
-   * Thành viên có công cụ tra cứu dữ liệu của chính họ: khi Claude gọi công cụ (stop_reason = tool_use) máy chủ chạy công cụ,
+   * Thành viên có công cụ tra cứu dữ liệu của chính họ và tra đề trên FuOverflow, khách chỉ tra được danh sách đề FuOverflow: khi Claude gọi công cụ (stop_reason = tool_use) máy chủ chạy công cụ,
    * trả kết quả lại và Claude viết tiếp, tối đa CHAT_MAX_TOOL_TURNS vòng. `signal` huỷ khi người dùng đóng khung chat giữa chừng.
    */
   async stream(owner: Owner, ip: string | undefined, body: ChatBody, h: { onStart: () => void; onDelta: (text: string) => void; onStatus: (text: string) => void; signal: AbortSignal }) {
@@ -154,12 +154,12 @@ ${facts}
     const messages: Anthropic.MessageParam[] = [...request.params.messages];
     const emit = h.onDelta;
     h = { ...h, onDelta: (t: string) => ((answer += t), emit(t)) };
-    const tools = userId !== null ? CHAT_TOOLS : undefined;
+    const tools = chatToolsFor(userId); // thành viên: tra dữ liệu của mình + đề FuOverflow; khách: chỉ đề FuOverflow
     let produced = false;
     let separate = false; // sau một vòng công cụ, đoạn chữ mới cách đoạn trước một dòng trống
     try {
       for (let turn = 0; turn <= CHAT_MAX_TOOL_TURNS; turn++) {
-        const stream = request.client.messages.stream({ ...request.params, messages, ...(tools && { tools }) });
+        const stream = request.client.messages.stream({ ...request.params, messages, tools });
         h.signal.addEventListener("abort", () => stream.abort(), { once: true });
         stream.on("text", (t) => {
           if (separate) {
@@ -171,13 +171,13 @@ ${facts}
         });
         const final = await stream.finalMessage();
 
-        if (final.stop_reason === "tool_use" && tools && userId !== null && turn < CHAT_MAX_TOOL_TURNS) {
+        if (final.stop_reason === "tool_use" && turn < CHAT_MAX_TOOL_TURNS) {
           usedTools = true;
           const calls = final.content.filter((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
           messages.push({ role: "assistant", content: final.content });
           const results: Anthropic.ToolResultBlockParam[] = [];
           for (const c of calls) {
-            h.onStatus(toolStatus(c.input));
+            h.onStatus(toolStatus(c.name, c.input));
             results.push({ type: "tool_result", tool_use_id: c.id, content: await runChatTool(userId, c.name, c.input) });
           }
           messages.push({ role: "user", content: results });
