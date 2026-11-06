@@ -11,8 +11,19 @@ const startOfTodayVN = () => {
   return new Date(Date.UTC(vn.getUTCFullYear(), vn.getUTCMonth(), vn.getUTCDate()) - 7 * 3_600_000);
 };
 
+// Dashboard chạy 5 truy vấn đếm/cộng tiền; lưu kết quả ít giây để admin mở/tải lại liên tục không dồn tải lên DB
+const CACHE_MS = 30_000;
+let cache: { at: number; value: Awaited<ReturnType<typeof adminDashboardService.compute>> } | null = null;
+
 export const adminDashboardService = {
   async overview() {
+    if (cache && Date.now() - cache.at < CACHE_MS) return cache.value;
+    const value = await this.compute();
+    cache = { at: Date.now(), value };
+    return value;
+  },
+
+  async compute() {
     const [users, orders, totalDeposited, todayDeposited, unmatched] = await Promise.all([
       userRepository.countByStatus(),
       depositRepository.countByStatus(),
