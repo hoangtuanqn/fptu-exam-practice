@@ -28,7 +28,7 @@ const components: Components = {
   ),
   hr: () => <hr className="my-4 border-slate-200" />,
   a: ({ href, children }) => (
-    <a href={href} target="_blank" rel="noreferrer" className="font-medium text-brand-700 underline underline-offset-2">
+    <a href={href} {...(href?.startsWith("/") ? {} : { target: "_blank", rel: "noreferrer" })} className="font-medium text-brand-700 underline underline-offset-2">
       {children}
     </a>
   ),
