@@ -50,6 +50,8 @@ model User {
   rewardsAsReferred  ReferralReward[]     @relation("RewardReferred")
 
   @@index([referredById])
+  @@index([status]) // dashboard đếm theo trạng thái
+  @@index([role, status]) // danh sách thành viên lọc vai trò/trạng thái
   @@map("users")
   practiceSessions PracticeSession[]
 }
@@ -100,7 +102,9 @@ model BankTransaction {
 
   depositOrder DepositOrder? @relation(fields: [depositOrderId], references: [id])
 
-  @@index([status, createdAt])
+  // Dashboard cộng tiền theo status + transactionAt: index "phủ" luôn amountIn nên không cần đọc từng dòng.
+  // Tiền tố (status) cũng phục vụ danh sách lọc theo trạng thái nên thay cho (status, createdAt) cũ
+  @@index([status, transactionAt, amountIn])
   @@map("bank_transactions")
 }
 
@@ -143,6 +147,7 @@ model WalletTransaction {
   user User @relation(fields: [userId], references: [id])
 
   @@index([userId, createdAt])
+  @@index([type, createdAt]) // admin lọc biến động số dư theo loại
   @@map("wallet_transactions")
 }
 
@@ -222,6 +227,7 @@ model CrawlJob {
   @@index([threadId, status])
   @@index([guestId, status])
   @@index([status, createdAt])
+  @@index([userId, createdAt]) // lịch sử lấy đề theo thành viên
   @@map("crawl_jobs")
 }
 
@@ -470,6 +476,7 @@ model PeDownload {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
+  @@index([userId, threadId, status]) // tra "đã trả tiền đề này chưa" mỗi lần báo giá/tải
   @@map("pe_downloads")
 }
 

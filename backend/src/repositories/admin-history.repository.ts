@@ -1,7 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "../configs/prisma";
 import type { ListAttemptsQuery, ListCrawlJobsQuery, ListPurchasesQuery, ListWalletQuery } from "../rules/requests/admin-history.request";
-import { toSkipTake } from "../utils/pagination";
+import { newestFirst, toSkipTake } from "../utils/pagination";
 
 export const historyUserSelect = { id: true, email: true, fullName: true } satisfies Prisma.UserSelect;
 
@@ -17,7 +17,7 @@ export const adminHistoryRepository = {
       prisma.walletTransaction.findMany({
         where,
         select: { id: true, type: true, amount: true, balanceAfter: true, note: true, createdAt: true, user: { select: historyUserSelect } },
-        orderBy: { id: "desc" },
+        orderBy: [...newestFirst(query.userId !== undefined)],
         ...toSkipTake(query),
       }),
       prisma.walletTransaction.count({ where }),
@@ -49,7 +49,7 @@ export const adminHistoryRepository = {
           finishedAt: true,
           exam: { select: { id: true, title: true } },
         },
-        orderBy: { id: "desc" },
+        orderBy: [...newestFirst(query.userId !== undefined)],
         ...toSkipTake(query),
       }),
       prisma.crawlJob.count({ where }),
@@ -78,7 +78,7 @@ export const adminHistoryRepository = {
           user: { select: historyUserSelect },
           exam: { select: { id: true, title: true } },
         },
-        orderBy: { id: "desc" },
+        orderBy: [...newestFirst(query.userId !== undefined)],
         ...toSkipTake(query),
       }),
       prisma.examAttempt.count({ where }),
@@ -93,7 +93,7 @@ export const adminHistoryRepository = {
       prisma.peDownload.findMany({
         where,
         select: { id: true, threadId: true, title: true, price: true, files: true, sizeBytes: true, status: true, error: true, createdAt: true, user: { select: historyUserSelect } },
-        orderBy: { id: "desc" },
+        orderBy: [...newestFirst(query.userId !== undefined)],
         ...toSkipTake(query),
       }),
       prisma.peDownload.count({ where }),

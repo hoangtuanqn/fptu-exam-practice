@@ -1,6 +1,6 @@
 import type { Prisma, PrismaClient, TransactionType } from "@prisma/client";
 import { prisma } from "../configs/prisma";
-import { toSkipTake, type PaginationQuery } from "../utils/pagination";
+import { newestFirst, toSkipTake, type PaginationQuery } from "../utils/pagination";
 
 export type Db = PrismaClient | Prisma.TransactionClient;
 
@@ -16,7 +16,7 @@ export const walletRepository = {
       prisma.walletTransaction.findMany({
         where,
         select: { id: true, type: true, amount: true, balanceAfter: true, note: true, createdAt: true },
-        orderBy: { id: "desc" },
+        orderBy: [...newestFirst(true)],
         ...toSkipTake(query),
       }),
       prisma.walletTransaction.count({ where }),

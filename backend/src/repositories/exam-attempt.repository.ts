@@ -1,6 +1,6 @@
 import type { AttemptMode, Prisma } from "@prisma/client";
 import { prisma } from "../configs/prisma";
-import { toSkipTake, type PaginationQuery } from "../utils/pagination";
+import { newestFirst, toSkipTake, type PaginationQuery } from "../utils/pagination";
 
 export interface NewAttempt {
   userId: number;
@@ -41,7 +41,7 @@ export const examAttemptRepository = {
   async list(userId: number, query: PaginationQuery, examId?: number) {
     const where: Prisma.ExamAttemptWhereInput = { userId, examId };
     const [items, total] = await Promise.all([
-      prisma.examAttempt.findMany({ where, select: listSelect, orderBy: { id: "desc" }, ...toSkipTake(query) }),
+      prisma.examAttempt.findMany({ where, select: listSelect, orderBy: [...newestFirst(true)], ...toSkipTake(query) }),
       prisma.examAttempt.count({ where }),
     ]);
     return { items, total };
