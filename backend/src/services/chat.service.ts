@@ -15,6 +15,7 @@ import { aiSettingService } from "./ai-setting.service";
 import { chatSettingService } from "./chat-setting.service";
 import { crawlerSettingService } from "./crawler-setting.service";
 import { CHAT_TOOLS, toolStatus, runChatTool } from "./chat-tools.service";
+import { chatCacheService, type Viewer } from "./chat-cache.service";
 import { knowledgeService } from "./knowledge.service";
 import { promoSettingService } from "./promo-setting.service";
 import { settingService } from "./setting.service";
@@ -80,6 +81,7 @@ export const chatService = {
 
     return {
       logId: log.id,
+      matched: hits.length > 0,
       userId: "userId" in owner ? owner.userId : null,
       request: {
         client: new Anthropic({ apiKey: ai.anthropicApiKey, timeout: 45_000, maxRetries: 1 }),
@@ -120,9 +122,38 @@ ${facts}
       h.onDelta(canned.reply);
       return {};
     }
-    const { logId, userId, request } = await this.prepare(owner, ip, body);
+
+    // Cache: câu hỏi hướng dẫn chung đứng riêng mà đã từng được trả lời (cùng ý) thì trả lại luôn, không gọi Claude
+    const viewer: Viewer = "userId" in owner ? "member" : "guest";
+    const question = body.messages[body.messages.length - 1]!.content;
+    const cacheable = chatCacheService.eligible(body.messages.filter((m, i) => !(i === 0 && m.role !== "user")).length, question);
+    const vec = cacheable ? await knowledgeService.queryVector(question) : null;
+    if (vec) {
+      const cached = await chatCacheService.find(vec, viewer);
+      if (cached) {
+        const status = await this.status();
+        if (!status.enabled) throw new AppError("Cóc Pass tạm nghỉ chút, bạn quay lại sau nhé", HTTP_STATUS.SERVICE_UNAVAILABLE);
+        await prisma.chatLog.create({
+          data: { userId: "userId" in owner ? owner.userId : null, guestId: "guestId" in owner ? owner.guestId : null, ip: ip?.slice(0, 64) ?? null, question: question.slice(0, 500), matched: true, cached: true },
+        });
+        h.onStart();
+        // Chảy chữ từng đoạn ngắn như khi Claude trả lời thật
+        for (const piece of cached.match(/\S+\s*/g) ?? [cached]) {
+          if (h.signal.aborted) return { aborted: true as const };
+          h.onDelta(piece);
+          await new Promise((r) => setTimeout(r, 12));
+        }
+        return {};
+      }
+    }
+
+    const { logId, userId, request, matched } = await this.prepare(owner, ip, body);
     h.onStart(); // từ đây đã gửi header, lỗi sau này báo bằng sự kiện trong luồng
+    let answer = ""; // toàn bộ câu trả lời, để lưu vào cache
+    let usedTools = false;
     const messages: Anthropic.MessageParam[] = [...request.params.messages];
+    const emit = h.onDelta;
+    h = { ...h, onDelta: (t: string) => ((answer += t), emit(t)) };
     const tools = userId !== null ? CHAT_TOOLS : undefined;
     let produced = false;
     let separate = false; // sau một vòng công cụ, đoạn chữ mới cách đoạn trước một dòng trống
@@ -141,6 +172,7 @@ ${facts}
         const final = await stream.finalMessage();
 
         if (final.stop_reason === "tool_use" && tools && userId !== null && turn < CHAT_MAX_TOOL_TURNS) {
+          usedTools = true;
           const calls = final.content.filter((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
           messages.push({ role: "assistant", content: final.content });
           const results: Anthropic.ToolResultBlockParam[] = [];
@@ -153,6 +185,8 @@ ${facts}
           continue;
         }
         if (final.stop_reason === "refusal" || !produced) throw new Error("empty");
+        // Chỉ lưu khi trả lời trọn vẹn, có dựa vào tài liệu và không đụng đến dữ liệu tài khoản
+        if (vec && matched && !usedTools && final.stop_reason === "end_turn") void chatCacheService.save(vec, viewer, question, answer);
         return {};
       }
       throw new Error("quá nhiều vòng tra cứu");

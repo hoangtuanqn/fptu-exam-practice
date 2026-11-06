@@ -59,3 +59,12 @@ export const CHAT_CANNED: { match: RegExp; reply: string }[] = [
 
 // Câu hỏi có nhắc tiền/giá thì mới kèm khối giá hiện hành (còn lại không cần, bớt token)
 export const CHAT_MONEY_HINT = /(giá|phí|bao nhiêu|mất|tốn|credit|nạp|thưởng|giảm|tặng|miễn phí|tiền|₫|vnd|đồng|khuyến mãi|ưu đãi|rẻ|gói)/i;
+
+// Câu hỏi về dữ liệu của chính người dùng (cần công cụ tra cứu): không bao giờ lấy từ cache
+export const CHAT_ACCOUNT_HINT = /(của (tôi|mình|em|tớ)|số dư|làm dở|dở dang|lịch sử|đã (nạp|mua|tải|làm|mở)|kho đề|tài khoản (tôi|mình|em)|mã giới thiệu)/i;
+
+// Cache câu trả lời theo ngữ nghĩa
+export const CACHE_MIN_SCORE = 0.93; // cosine tối thiểu giữa hai câu hỏi để coi là cùng một ý
+export const CACHE_DEDUPE_SCORE = 0.97; // đã có câu gần như y hệt thì không lưu thêm
+export const CACHE_TTL_MS = 14 * 24 * 60 * 60 * 1000;
+export const CACHE_MAX_ENTRIES = 1000;

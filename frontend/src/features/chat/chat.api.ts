@@ -12,6 +12,15 @@ interface StreamHandlers {
   signal?: AbortSignal;
 }
 
+// Người dùng không cần biết mã lỗi: đổi mọi lỗi kỹ thuật thành một câu dễ hiểu và biết phải làm gì
+function friendly(status: number, serverMessage?: string): string {
+  if (status === 0) return "Mất kết nối mạng, bạn kiểm tra internet rồi bấm Gửi lại nhé";
+  if (status === 429) return "Bạn gửi hơi nhanh, đợi vài giây rồi bấm Gửi lại nhé";
+  if (status === 401 || status === 403) return "Phiên đăng nhập đã hết hạn, bạn tải lại trang rồi thử lại nhé";
+  if (status === 503 && serverMessage) return serverMessage; // lời nhắn tiếng Việt do máy chủ chủ động gửi (chatbot đang tắt...)
+  return "Cóc Pass đang bận một chút, bạn bấm Gửi lại sau ít giây nhé";
+}
+
 // Gửi yêu cầu stream; token hết hạn (401) thì làm mới một lần rồi gửi lại, giống các API khác
 async function open(messages: ChatMessage[], signal: AbortSignal | undefined, retried = false): Promise<Response> {
   const token = tokenStore.get();
@@ -39,11 +48,11 @@ export const chatApi = {
       res = await open(messages, signal);
     } catch (err) {
       if ((err as Error).name === "AbortError") throw err;
-      throw new ApiError("Không kết nối được máy chủ", 0);
+      throw new ApiError(friendly(0), 0);
     }
     if (!res.ok || !res.body) {
       const json = (await res.json().catch(() => null)) as { message?: string } | null;
-      throw new ApiError(json?.message ?? `Lỗi ${res.status}`, res.status);
+      throw new ApiError(friendly(res.status, json?.message), res.status);
     }
 
     const reader = res.body.getReader();
@@ -65,9 +74,9 @@ export const chatApi = {
         else if (ev.t === "status") onStatus?.(ev.text);
         else if (ev.t === "done") {
           finished = true;
-        } else throw new ApiError(ev.message, 503);
+        } else throw new ApiError(friendly(503, ev.message), 503);
       }
     }
-    if (!finished) throw new ApiError("Kết nối bị gián đoạn, bạn thử lại nhé", 0);
+    if (!finished) throw new ApiError(friendly(0), 0);
   },
 };
