@@ -89,6 +89,7 @@ export interface ChatbotAdmin {
   };
   knowledge: { chunks: number; embedded: number; model: string };
   stats: { today: number; total: number; unmatched: { question: string; createdAt: string }[] };
+  cache: { entries: number; today: number; total: number }; // câu trả lời lưu sẵn; today/total = số lượt hỏi đã trả lời từ cache (không tốn token)
 }
 
 export interface ChatbotForm {
@@ -186,6 +187,7 @@ export const adminApi = {
   user: (id: number) => http.get<User>(`/admin/users/${id}`),
   chatbot: () => http.get<ChatbotAdmin>("/admin/settings/chat"),
   saveChatbot: (body: ChatbotForm) => http.put<ChatbotAdmin["settings"]>("/admin/settings/chat", body),
+  clearChatbotCache: () => http.delete("/admin/settings/chat/cache"),
   reindexChatbot: () => http.post<{ total: number; updated: number; embedded: number; warning?: string }>("/admin/settings/chat/reindex"),
   userSummary: (id: number) => http.get<UserSummary>(`/admin/users/${id}/summary`),
   resetUserPassword: (id: number, password?: string) => http.post<{ password: string }>(`/admin/users/${id}/reset-password`, password ? { password } : {}),
