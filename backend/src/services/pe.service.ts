@@ -118,6 +118,18 @@ async function buildZip(threadId: string): Promise<{ title: string; file: string
 export const peService = {
   price: () => ({ price: PE_PRICE }),
 
+  // Đã trả phí tải đề này thành công một lần thì các lần sau miễn phí
+  async hasPaid(userId: number, threadId: string) {
+    return (await prisma.peDownload.count({ where: { userId, threadId, status: "DONE", price: { gt: 0 } } })) > 0;
+  },
+
+  async quote(userId: number, url: string) {
+    const threadId = parseThreadId(url);
+    if (!threadId) throw new AppError("Link không hợp lệ");
+    const free = await this.hasPaid(userId, threadId);
+    return { price: PE_PRICE, fee: free ? 0 : PE_PRICE, free };
+  },
+
   /**
    * Tải bộ tài nguyên đề PE: trừ PE_PRICE credit mỗi lần, ghi lịch sử. Không dựng được zip thì hoàn phí đúng số đã trừ.
    * Trả đường dẫn file zip để controller gửi về.
@@ -126,9 +138,10 @@ export const peService = {
     const threadId = parseThreadId(url);
     if (!threadId) throw new AppError("Link không hợp lệ");
 
+    const fee = (await this.hasPaid(userId, threadId)) ? 0 : PE_PRICE; // đã trả tiền rồi thì tải lại miễn phí
     const row = await prisma.$transaction(async (tx) => {
-      await walletService.charge(tx, { userId, amount: PE_PRICE, type: "PE_CHARGE", note: `Tải đề PE thread ${threadId}` });
-      return tx.peDownload.create({ data: { userId, threadId, title: `Thread ${threadId}`, price: PE_PRICE } });
+      if (fee > 0) await walletService.charge(tx, { userId, amount: fee, type: "PE_CHARGE", note: `Tải đề PE thread ${threadId}` });
+      return tx.peDownload.create({ data: { userId, threadId, title: `Thread ${threadId}`, price: fee } });
     });
 
     try {
@@ -140,7 +153,7 @@ export const peService = {
       console.error(`[pe] thread ${threadId} lỗi: ${message}`);
       await prisma.$transaction(async (tx) => {
         await tx.peDownload.update({ where: { id: row.id }, data: { status: "FAILED", error: message.slice(0, 500) } });
-        await walletService.applyChange(tx, { userId, amount: PE_PRICE, type: "PE_REFUND", note: `Hoàn phí tải đề PE thread ${threadId} (lỗi)` });
+        if (fee > 0) await walletService.applyChange(tx, { userId, amount: fee, type: "PE_REFUND", note: `Hoàn phí tải đề PE thread ${threadId} (lỗi)` });
       });
       throw err instanceof AppError ? new AppError(`${err.message} Bạn không bị trừ credit.`, err.status) : new AppError("Không tải được tài nguyên đề PE. Bạn không bị trừ credit, vui lòng thử lại sau.", 502);
     }

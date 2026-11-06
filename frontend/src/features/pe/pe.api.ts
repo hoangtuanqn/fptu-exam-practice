@@ -14,6 +14,7 @@ export interface PeDownloadRow {
 
 export const peApi = {
   price: () => http.get<{ price: number }>("/pe/price"),
+  quote: (url: string) => http.get<{ price: number; fee: number; free: boolean }>("/pe/quote", { url }),
   history: () => http.get<{ items: PeDownloadRow[] }>("/pe/history"),
 
   // Tải file zip (trả về blob). Gọi history trước để token được làm mới nếu sắp hết hạn.
