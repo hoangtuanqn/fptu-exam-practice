@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Loader2 } from "lucide-react";
+import { AvatarUpload } from "@/features/account/components/AvatarUpload";
 import { EmailSection } from "@/features/account/components/EmailSection";
 import { userApi } from "@/features/account/api/user.api";
 import { Button } from "@/shared/ui/Button";
@@ -97,6 +98,9 @@ export default function ProfilePage() {
   return (
     <>
       <PageHeader title="Hồ sơ" description="Quản lý thông tin, email và mật khẩu của bạn." />
+      <Card className="mb-6 p-5">
+        <AvatarUpload />
+      </Card>
       <div className="grid gap-6 lg:grid-cols-2">
         <InfoForm />
         <PasswordForm />

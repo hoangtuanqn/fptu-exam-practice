@@ -169,3 +169,27 @@ export const http = {
     return { items: json.data ?? [], meta: json.meta! };
   },
 };
+
+
+// Gửi multipart/form-data (không set Content-Type để browser tự thêm boundary + phần đuôi)
+export async function sendForm<T>(method: string, path: string, form: FormData): Promise<T> {
+  const token = tokenStore.get();
+  let res: Response;
+  try {
+    res = await fetch(`${BASE}${path}`, {
+      method,
+      headers: {
+        "X-Guest-Id": getGuestId(),
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: form,
+      credentials: "include",
+    });
+  } catch {
+    throw new ApiError("Không kết nối được máy chủ", 0);
+  }
+  interface Env { status: boolean; message: string; data?: T; errors?: Record<string, string> }
+  const json = (await res.json().catch(() => null)) as Env | null;
+  if (!res.ok || !json?.status) throw new ApiError(json?.message ?? `Lỗi ${res.status}`, res.status, json?.errors);
+  return json.data as T;
+}

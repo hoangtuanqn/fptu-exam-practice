@@ -25,10 +25,11 @@ model User {
   role      Role       @default(USER)
   status    UserStatus @default(ACTIVE)
   balance   Int        @default(0)
-  referralCode String?   @unique @map("referral_code") @db.VarChar(12) // mã giới thiệu của chính người này
-  referredById Int?      @map("referred_by_id") // người đã giới thiệu
-  googleSub    String?   @unique @map("google_sub") @db.VarChar(64) // tài khoản Google đã liên kết
-  emailVerifiedAt DateTime? @map("email_verified_at") // chưa xác minh email thì chưa dùng được các dịch vụ trừ credit
+  referralCode String?   @unique @map("referral_code") @db.VarChar(12) // mĂ£ giá»›i thiá»‡u cá»§a chĂ­nh ngÆ°á»i nĂ y
+  referredById Int?      @map("referred_by_id") // ngÆ°á»i Ä‘Ă£ giá»›i thiá»‡u
+  googleSub    String?   @unique @map("google_sub") @db.VarChar(64) // tĂ i khoáº£n Google Ä‘Ă£ liĂªn káº¿t
+  avatarPath   String?   @map("avatar_path") @db.VarChar(120) // null = dung mascot mac dinh
+  emailVerifiedAt DateTime? @map("email_verified_at") // chÆ°a xĂ¡c minh email thĂ¬ chÆ°a dĂ¹ng Ä‘Æ°á»£c cĂ¡c dá»‹ch vá»¥ trá»« credit
   createdAt DateTime   @default(now()) @map("created_at")
   updatedAt DateTime   @updatedAt @map("updated_at")
 
@@ -50,8 +51,8 @@ model User {
   rewardsAsReferred  ReferralReward[]     @relation("RewardReferred")
 
   @@index([referredById])
-  @@index([status]) // dashboard đếm theo trạng thái
-  @@index([role, status]) // danh sách thành viên lọc vai trò/trạng thái
+  @@index([status]) // dashboard Ä‘áº¿m theo tráº¡ng thĂ¡i
+  @@index([role, status]) // danh sĂ¡ch thĂ nh viĂªn lá»c vai trĂ²/tráº¡ng thĂ¡i
   @@map("users")
   practiceSessions PracticeSession[]
 }
@@ -62,7 +63,7 @@ enum DepositStatus {
   EXPIRED
 }
 
-// Lệnh nạp tiền: người dùng chuyển khoản kèm `code` trong nội dung để hệ thống đối soát
+// Lá»‡nh náº¡p tiá»n: ngÆ°á»i dĂ¹ng chuyá»ƒn khoáº£n kĂ¨m `code` trong ná»™i dung Ä‘á»ƒ há»‡ thá»‘ng Ä‘á»‘i soĂ¡t
 model DepositOrder {
   id        Int           @id @default(autoincrement())
   userId    Int           @map("user_id")
@@ -82,11 +83,11 @@ model DepositOrder {
 }
 
 enum BankTxStatus {
-  MATCHED // khớp lệnh nạp và đã cộng tiền
-  UNMATCHED // tiền vào nhưng không khớp lệnh nào (admin xử lý tay)
+  MATCHED // khá»›p lá»‡nh náº¡p vĂ  Ä‘Ă£ cá»™ng tiá»n
+  UNMATCHED // tiá»n vĂ o nhÆ°ng khĂ´ng khá»›p lá»‡nh nĂ o (admin xá»­ lĂ½ tay)
 }
 
-// Giao dịch ngân hàng lấy từ SePay. `sepayId` unique để cùng một giao dịch không bao giờ cộng tiền hai lần
+// Giao dá»‹ch ngĂ¢n hĂ ng láº¥y tá»« SePay. `sepayId` unique Ä‘á»ƒ cĂ¹ng má»™t giao dá»‹ch khĂ´ng bao giá» cá»™ng tiá»n hai láº§n
 model BankTransaction {
   id             Int          @id @default(autoincrement())
   sepayId        String       @unique @map("sepay_id") @db.VarChar(40)
@@ -102,13 +103,13 @@ model BankTransaction {
 
   depositOrder DepositOrder? @relation(fields: [depositOrderId], references: [id])
 
-  // Dashboard cộng tiền theo status + transactionAt: index "phủ" luôn amountIn nên không cần đọc từng dòng.
-  // Tiền tố (status) cũng phục vụ danh sách lọc theo trạng thái nên thay cho (status, createdAt) cũ
+  // Dashboard cá»™ng tiá»n theo status + transactionAt: index "phá»§" luĂ´n amountIn nĂªn khĂ´ng cáº§n Ä‘á»c tá»«ng dĂ²ng.
+  // Tiá»n tá»‘ (status) cÅ©ng phá»¥c vá»¥ danh sĂ¡ch lá»c theo tráº¡ng thĂ¡i nĂªn thay cho (status, createdAt) cÅ©
   @@index([status, transactionAt, amountIn])
   @@map("bank_transactions")
 }
 
-// Cấu hình dạng key-value, admin sửa được trên panel (SePay, cron, ...)
+// Cáº¥u hĂ¬nh dáº¡ng key-value, admin sá»­a Ä‘Æ°á»£c trĂªn panel (SePay, cron, ...)
 model Setting {
   key       String   @id @db.VarChar(100)
   value     String   @db.Text
@@ -120,21 +121,21 @@ model Setting {
 enum TransactionType {
   DEPOSIT
   ADMIN_ADJUST
-  CRAWL_CHARGE // trừ phí lấy đề từ FuOverflow
-  CRAWL_REFUND // hoàn phí khi lấy đề thất bại
-  GIFT_CODE // nhận credit từ giftcode
-  REPORT_REWARD // thưởng khi báo cáo đáp án sai được xác nhận
-  EXPLAIN_CHARGE // phí xem lời giải thích AI của một câu
-  EXPLAIN_REFUND // hoàn phí khi AI không giải thích được
-  REFERRAL_BONUS // thưởng giới thiệu (đăng ký qua mã giới thiệu)
-  REFERRAL_COMMISSION // hoa hồng khi người được giới thiệu nạp tiền
-  SIGNUP_BONUS // credit tặng mọi tài khoản mới khi đăng ký (admin cấu hình)
-  DEPOSIT_BONUS // thưởng thêm khi nạp từ một mức nhất định
-  PE_CHARGE // phí tải bộ tài nguyên đề thi PE (file zip)
-  PE_REFUND // hoàn phí khi không tạo được file zip
+  CRAWL_CHARGE // trá»« phĂ­ láº¥y Ä‘á» tá»« FuOverflow
+  CRAWL_REFUND // hoĂ n phĂ­ khi láº¥y Ä‘á» tháº¥t báº¡i
+  GIFT_CODE // nháº­n credit tá»« giftcode
+  REPORT_REWARD // thÆ°á»Ÿng khi bĂ¡o cĂ¡o Ä‘Ă¡p Ă¡n sai Ä‘Æ°á»£c xĂ¡c nháº­n
+  EXPLAIN_CHARGE // phĂ­ xem lá»i giáº£i thĂ­ch AI cá»§a má»™t cĂ¢u
+  EXPLAIN_REFUND // hoĂ n phĂ­ khi AI khĂ´ng giáº£i thĂ­ch Ä‘Æ°á»£c
+  REFERRAL_BONUS // thÆ°á»Ÿng giá»›i thiá»‡u (Ä‘Äƒng kĂ½ qua mĂ£ giá»›i thiá»‡u)
+  REFERRAL_COMMISSION // hoa há»“ng khi ngÆ°á»i Ä‘Æ°á»£c giá»›i thiá»‡u náº¡p tiá»n
+  SIGNUP_BONUS // credit táº·ng má»i tĂ i khoáº£n má»›i khi Ä‘Äƒng kĂ½ (admin cáº¥u hĂ¬nh)
+  DEPOSIT_BONUS // thÆ°á»Ÿng thĂªm khi náº¡p tá»« má»™t má»©c nháº¥t Ä‘á»‹nh
+  PE_CHARGE // phĂ­ táº£i bá»™ tĂ i nguyĂªn Ä‘á» thi PE (file zip)
+  PE_REFUND // hoĂ n phĂ­ khi khĂ´ng táº¡o Ä‘Æ°á»£c file zip
 }
 
-// Sổ cái ví: mỗi lần số dư đổi là một dòng (amount âm = trừ tiền)
+// Sá»• cĂ¡i vĂ­: má»—i láº§n sá»‘ dÆ° Ä‘á»•i lĂ  má»™t dĂ²ng (amount Ă¢m = trá»« tiá»n)
 model WalletTransaction {
   id           Int             @id @default(autoincrement())
   userId       Int             @map("user_id")
@@ -147,11 +148,11 @@ model WalletTransaction {
   user User @relation(fields: [userId], references: [id])
 
   @@index([userId, createdAt])
-  @@index([type, createdAt]) // admin lọc biến động số dư theo loại
+  @@index([type, createdAt]) // admin lá»c biáº¿n Ä‘á»™ng sá»‘ dÆ° theo loáº¡i
   @@map("wallet_transactions")
 }
 
-// Đề thi lấy từ FuOverflow. `threadId` là chữ ký của đề: nhập lại cùng thread (dù link khác) không tạo bản mới
+// Äá» thi láº¥y tá»« FuOverflow. `threadId` lĂ  chá»¯ kĂ½ cá»§a Ä‘á»: nháº­p láº¡i cĂ¹ng thread (dĂ¹ link khĂ¡c) khĂ´ng táº¡o báº£n má»›i
 model Exam {
   id             Int       @id @default(autoincrement())
   threadId       String    @unique @map("thread_id") @db.VarChar(20)
@@ -160,12 +161,12 @@ model Exam {
   author         String?   @db.VarChar(100)
   postedAt       DateTime? @map("posted_at")
   totalQuestions Int       @map("total_questions")
-  // Nguồn đáp án: DEFAULT (tạm là A), AI (Gemini giải), MANUAL (chỉnh tay). aiReport là báo cáo của AI (câu nghi ngờ...)
+  // Nguá»“n Ä‘Ă¡p Ă¡n: DEFAULT (táº¡m lĂ  A), AI (Gemini giáº£i), MANUAL (chá»‰nh tay). aiReport lĂ  bĂ¡o cĂ¡o cá»§a AI (cĂ¢u nghi ngá»...)
   answerSource   String    @default("DEFAULT") @map("answer_source") @db.VarChar(10)
   aiReport       String?   @map("ai_report") @db.Text
   createdById    Int?      @map("created_by_id")
   createdAt      DateTime  @default(now()) @map("created_at")
-  refreshedAt    DateTime? @map("refreshed_at") // lần làm mới gần nhất (lấy lại ảnh, bình luận, giải lại đáp án); null = chưa từng
+  refreshedAt    DateTime? @map("refreshed_at") // láº§n lĂ m má»›i gáº§n nháº¥t (láº¥y láº¡i áº£nh, bĂ¬nh luáº­n, giáº£i láº¡i Ä‘Ă¡p Ă¡n); null = chÆ°a tá»«ng
 
   questions ExamQuestion[]
   crawlJobs CrawlJob[]
@@ -180,7 +181,7 @@ model Exam {
   practiceSessions PracticeSession[]
 }
 
-// Mỗi ảnh là một câu hỏi. `answer` tạm là "A" cho đến khi có logic xác định đáp án đúng
+// Má»—i áº£nh lĂ  má»™t cĂ¢u há»i. `answer` táº¡m lĂ  "A" cho Ä‘áº¿n khi cĂ³ logic xĂ¡c Ä‘á»‹nh Ä‘Ă¡p Ă¡n Ä‘Ăºng
 model ExamQuestion {
   id          Int     @id @default(autoincrement())
   examId      Int     @map("exam_id")
@@ -190,7 +191,7 @@ model ExamQuestion {
   sourceImage String  @map("source_image") @db.VarChar(500)
   mediaUrl    String? @map("media_url") @db.VarChar(500)
   answer      String  @default("A") @db.VarChar(20)
-  // Ảnh tài liệu tham khảo (trang công thức...), không phải câu hỏi: không chấm điểm, giao diện đưa vào mục "Tài liệu tham khảo"
+  // áº¢nh tĂ i liá»‡u tham kháº£o (trang cĂ´ng thá»©c...), khĂ´ng pháº£i cĂ¢u há»i: khĂ´ng cháº¥m Ä‘iá»ƒm, giao diá»‡n Ä‘Æ°a vĂ o má»¥c "TĂ i liá»‡u tham kháº£o"
   isReference Boolean @default(false) @map("is_reference")
 
   exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
@@ -206,18 +207,18 @@ enum CrawlJobStatus {
   FAILED
 }
 
-// Một lượt nhập đề: tạo ở trạng thái QUEUED, worker nền nhận và cập nhật `stage` theo từng bước
+// Má»™t lÆ°á»£t nháº­p Ä‘á»: táº¡o á»Ÿ tráº¡ng thĂ¡i QUEUED, worker ná»n nháº­n vĂ  cáº­p nháº­t `stage` theo tá»«ng bÆ°á»›c
 model CrawlJob {
   id            Int            @id @default(autoincrement())
   threadId      String         @map("thread_id") @db.VarChar(20)
-  userId        Int?           @map("user_id") // khách chưa đăng nhập thì null, dùng guestId
+  userId        Int?           @map("user_id") // khĂ¡ch chÆ°a Ä‘Äƒng nháº­p thĂ¬ null, dĂ¹ng guestId
   guestId       String?        @map("guest_id") @db.VarChar(64)
   status        CrawlJobStatus @default(QUEUED)
   stage         String?        @db.VarChar(120)
   error         String?        @db.Text
   examId        Int?           @map("exam_id")
-  chargedAmount Int            @default(0) @map("charged_amount") // phí đã trừ, để hoàn đúng số tiền nếu job lỗi
-  refresh       Boolean        @default(false) // lượt làm mới đề cũ có sẵn trong hệ thống (chạy nền, không tính phí)
+  chargedAmount Int            @default(0) @map("charged_amount") // phĂ­ Ä‘Ă£ trá»«, Ä‘á»ƒ hoĂ n Ä‘Ăºng sá»‘ tiá»n náº¿u job lá»—i
+  refresh       Boolean        @default(false) // lÆ°á»£t lĂ m má»›i Ä‘á» cÅ© cĂ³ sáºµn trong há»‡ thá»‘ng (cháº¡y ná»n, khĂ´ng tĂ­nh phĂ­)
   createdAt     DateTime       @default(now()) @map("created_at")
   startedAt     DateTime?      @map("started_at")
   finishedAt    DateTime?      @map("finished_at")
@@ -227,15 +228,15 @@ model CrawlJob {
   @@index([threadId, status])
   @@index([guestId, status])
   @@index([status, createdAt])
-  @@index([userId, createdAt]) // lịch sử lấy đề theo thành viên
+  @@index([userId, createdAt]) // lá»‹ch sá»­ láº¥y Ä‘á» theo thĂ nh viĂªn
   @@map("crawl_jobs")
 }
 
-// Thư viện đề của từng người: nhập link xong là đề nằm trong đây (đề dùng chung, chỉ lưu liên kết)
+// ThÆ° viá»‡n Ä‘á» cá»§a tá»«ng ngÆ°á»i: nháº­p link xong lĂ  Ä‘á» náº±m trong Ä‘Ă¢y (Ä‘á» dĂ¹ng chung, chá»‰ lÆ°u liĂªn káº¿t)
 model UserExam {
   id        Int      @id @default(autoincrement())
   userId    Int?     @map("user_id")
-  guestId   String?  @map("guest_id") @db.VarChar(64) // khách chưa đăng nhập: kho riêng theo trình duyệt, nhận về tài khoản khi đăng ký
+  guestId   String?  @map("guest_id") @db.VarChar(64) // khĂ¡ch chÆ°a Ä‘Äƒng nháº­p: kho riĂªng theo trĂ¬nh duyá»‡t, nháº­n vá» tĂ i khoáº£n khi Ä‘Äƒng kĂ½
   examId    Int      @map("exam_id")
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -254,8 +255,8 @@ enum AttemptMode {
   EXAM
 }
 
-// Một lần nộp bài. `details` là ảnh chụp từng câu (đã chọn, đáp án đúng lúc chấm) nên xem lại vẫn đúng
-// dù sau này đáp án của đề được sửa
+// Má»™t láº§n ná»™p bĂ i. `details` lĂ  áº£nh chá»¥p tá»«ng cĂ¢u (Ä‘Ă£ chá»n, Ä‘Ă¡p Ă¡n Ä‘Ăºng lĂºc cháº¥m) nĂªn xem láº¡i váº«n Ä‘Ăºng
+// dĂ¹ sau nĂ y Ä‘Ă¡p Ă¡n cá»§a Ä‘á» Ä‘Æ°á»£c sá»­a
 model ExamAttempt {
   id          Int         @id @default(autoincrement())
   userId      Int         @map("user_id")
@@ -283,7 +284,7 @@ enum SessionStatus {
   SUBMITTED
 }
 
-// Một lần bấm "làm bài" từ kho đề. Đáp án, câu đã chốt, câu đánh dấu và vị trí được lưu liên tục để tải lại trang vẫn làm tiếp được
+// Má»™t láº§n báº¥m "lĂ m bĂ i" tá»« kho Ä‘á». ÄĂ¡p Ă¡n, cĂ¢u Ä‘Ă£ chá»‘t, cĂ¢u Ä‘Ă¡nh dáº¥u vĂ  vá»‹ trĂ­ Ä‘Æ°á»£c lÆ°u liĂªn tá»¥c Ä‘á»ƒ táº£i láº¡i trang váº«n lĂ m tiáº¿p Ä‘Æ°á»£c
 model PracticeSession {
   id         Int           @id @default(autoincrement())
   userId     Int?          @map("user_id")
@@ -308,7 +309,7 @@ model PracticeSession {
   @@map("practice_sessions")
 }
 
-// Token đặt lại mật khẩu gửi qua email. Chỉ lưu băm SHA-256 của token (lộ DB cũng không dùng được), dùng một lần, có hạn
+// Token Ä‘áº·t láº¡i máº­t kháº©u gá»­i qua email. Chá»‰ lÆ°u bÄƒm SHA-256 cá»§a token (lá»™ DB cÅ©ng khĂ´ng dĂ¹ng Ä‘Æ°á»£c), dĂ¹ng má»™t láº§n, cĂ³ háº¡n
 model PasswordResetToken {
   id        Int       @id @default(autoincrement())
   userId    Int       @map("user_id")
@@ -323,9 +324,9 @@ model PasswordResetToken {
   @@map("password_reset_tokens")
 }
 
-// Phiên đăng nhập dài hạn. Chỉ lưu băm SHA-256 của token (lộ DB cũng không dùng được).
-// Mỗi lần làm mới là xoay vòng: token cũ bị thu hồi, token mới cùng `familyId`. Token đã thu hồi mà bị dùng lại
-// (dấu hiệu bị đánh cắp) thì thu hồi cả họ `familyId`, buộc đăng nhập lại.
+// PhiĂªn Ä‘Äƒng nháº­p dĂ i háº¡n. Chá»‰ lÆ°u bÄƒm SHA-256 cá»§a token (lá»™ DB cÅ©ng khĂ´ng dĂ¹ng Ä‘Æ°á»£c).
+// Má»—i láº§n lĂ m má»›i lĂ  xoay vĂ²ng: token cÅ© bá»‹ thu há»“i, token má»›i cĂ¹ng `familyId`. Token Ä‘Ă£ thu há»“i mĂ  bá»‹ dĂ¹ng láº¡i
+// (dáº¥u hiá»‡u bá»‹ Ä‘Ă¡nh cáº¯p) thĂ¬ thu há»“i cáº£ há» `familyId`, buá»™c Ä‘Äƒng nháº­p láº¡i.
 model RefreshToken {
   id         Int       @id @default(autoincrement())
   userId     Int       @map("user_id")
@@ -345,11 +346,11 @@ model RefreshToken {
   @@map("refresh_tokens")
 }
 
-// Giftcode: admin tạo mã, thành viên nhập mã để nhận credit. Mỗi thành viên dùng một mã tối đa một lần.
+// Giftcode: admin táº¡o mĂ£, thĂ nh viĂªn nháº­p mĂ£ Ä‘á»ƒ nháº­n credit. Má»—i thĂ nh viĂªn dĂ¹ng má»™t mĂ£ tá»‘i Ä‘a má»™t láº§n.
 model GiftCode {
   id        Int       @id @default(autoincrement())
   code      String    @unique @db.VarChar(32)
-  amount    Int // credit cộng cho mỗi lượt dùng
+  amount    Int // credit cá»™ng cho má»—i lÆ°á»£t dĂ¹ng
   maxUses   Int       @map("max_uses")
   usedCount Int       @default(0) @map("used_count")
   expiresAt DateTime? @map("expires_at")
@@ -384,18 +385,18 @@ enum ReportStatus {
   REJECTED
 }
 
-// Người dùng báo cáo đáp án sai và đề xuất đáp án đúng. Admin duyệt: đúng thì sửa đáp án và thưởng credit cho người báo cáo.
-// Mỗi người chỉ báo cáo một lần cho mỗi câu (chống lạm dụng).
+// NgÆ°á»i dĂ¹ng bĂ¡o cĂ¡o Ä‘Ă¡p Ă¡n sai vĂ  Ä‘á» xuáº¥t Ä‘Ă¡p Ă¡n Ä‘Ăºng. Admin duyá»‡t: Ä‘Ăºng thĂ¬ sá»­a Ä‘Ă¡p Ă¡n vĂ  thÆ°á»Ÿng credit cho ngÆ°á»i bĂ¡o cĂ¡o.
+// Má»—i ngÆ°á»i chá»‰ bĂ¡o cĂ¡o má»™t láº§n cho má»—i cĂ¢u (chá»‘ng láº¡m dá»¥ng).
 model AnswerReport {
   id             Int          @id @default(autoincrement())
   examId         Int          @map("exam_id")
   questionNumber Int          @map("question_number")
   userId         Int          @map("user_id")
-  currentAnswer  String       @map("current_answer") @db.VarChar(20) // đáp án đang có lúc báo cáo
+  currentAnswer  String       @map("current_answer") @db.VarChar(20) // Ä‘Ă¡p Ă¡n Ä‘ang cĂ³ lĂºc bĂ¡o cĂ¡o
   proposedAnswer String       @map("proposed_answer") @db.VarChar(20)
   reason         String       @db.VarChar(1000)
   status         ReportStatus @default(PENDING)
-  reward         Int          @default(0) // credit đã thưởng (khi được duyệt)
+  reward         Int          @default(0) // credit Ä‘Ă£ thÆ°á»Ÿng (khi Ä‘Æ°á»£c duyá»‡t)
   reviewNote     String?      @map("review_note") @db.VarChar(300)
   reviewedById   Int?         @map("reviewed_by_id")
   reviewedAt     DateTime?    @map("reviewed_at")
@@ -410,7 +411,7 @@ model AnswerReport {
   @@map("answer_reports")
 }
 
-// Lời giải thích AI của một câu, lưu lại dùng chung: người sau mua vẫn trả phí nhưng không tốn thêm lượt gọi AI
+// Lá»i giáº£i thĂ­ch AI cá»§a má»™t cĂ¢u, lÆ°u láº¡i dĂ¹ng chung: ngÆ°á»i sau mua váº«n tráº£ phĂ­ nhÆ°ng khĂ´ng tá»‘n thĂªm lÆ°á»£t gá»i AI
 model QuestionExplanation {
   id             Int      @id @default(autoincrement())
   examId         Int      @map("exam_id")
@@ -425,14 +426,14 @@ model QuestionExplanation {
   @@map("question_explanations")
 }
 
-// Ai đã trả phí xem lời giải thích câu nào: mua rồi thì xem lại miễn phí
+// Ai Ä‘Ă£ tráº£ phĂ­ xem lá»i giáº£i thĂ­ch cĂ¢u nĂ o: mua rá»“i thĂ¬ xem láº¡i miá»…n phĂ­
 model ExplanationPurchase {
   id             Int      @id @default(autoincrement())
   userId         Int      @map("user_id")
   examId         Int      @map("exam_id")
   questionNumber Int      @map("question_number")
   price          Int
-  isTrial        Boolean  @default(false) @map("is_trial") // lượt xem thử miễn phí (không trừ credit)
+  isTrial        Boolean  @default(false) @map("is_trial") // lÆ°á»£t xem thá»­ miá»…n phĂ­ (khĂ´ng trá»« credit)
   createdAt      DateTime @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -443,13 +444,13 @@ model ExplanationPurchase {
   @@map("explanation_purchases")
 }
 
-// Mở khóa MỘT LẦN toàn bộ lời giải thích của một đề (giá gói, rẻ hơn mua lẻ): xem mọi câu miễn phí về sau
+// Má»Ÿ khĂ³a Má»˜T Láº¦N toĂ n bá»™ lá»i giáº£i thĂ­ch cá»§a má»™t Ä‘á» (giĂ¡ gĂ³i, ráº» hÆ¡n mua láº»): xem má»i cĂ¢u miá»…n phĂ­ vá» sau
 model ExplanationUnlock {
   id        Int      @id @default(autoincrement())
   userId    Int      @map("user_id")
   examId    Int      @map("exam_id")
-  price     Int // credit đã trả cho gói
-  questions Int // số câu được mở khóa tại thời điểm mua
+  price     Int // credit Ä‘Ă£ tráº£ cho gĂ³i
+  questions Int // sá»‘ cĂ¢u Ä‘Æ°á»£c má»Ÿ khĂ³a táº¡i thá»i Ä‘iá»ƒm mua
   createdAt DateTime @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -460,14 +461,14 @@ model ExplanationUnlock {
   @@map("explanation_unlocks")
 }
 
-// Mỗi lần tải bộ tài nguyên đề thi PE (zip) là một dòng: lịch sử tải và số credit đã trả
+// Má»—i láº§n táº£i bá»™ tĂ i nguyĂªn Ä‘á» thi PE (zip) lĂ  má»™t dĂ²ng: lá»‹ch sá»­ táº£i vĂ  sá»‘ credit Ä‘Ă£ tráº£
 model PeDownload {
   id        Int      @id @default(autoincrement())
   userId    Int      @map("user_id")
   threadId  String   @map("thread_id") @db.VarChar(20)
   title     String   @db.VarChar(255)
   price     Int
-  files     Int      @default(0) // số file trong zip
+  files     Int      @default(0) // sá»‘ file trong zip
   sizeBytes Int      @default(0) @map("size_bytes")
   status    String   @default("PENDING") @db.VarChar(10) // PENDING | DONE | FAILED
   error     String?  @db.VarChar(500)
@@ -476,17 +477,17 @@ model PeDownload {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
-  @@index([userId, threadId, status]) // tra "đã trả tiền đề này chưa" mỗi lần báo giá/tải
+  @@index([userId, threadId, status]) // tra "Ä‘Ă£ tráº£ tiá»n Ä‘á» nĂ y chÆ°a" má»—i láº§n bĂ¡o giĂ¡/táº£i
   @@map("pe_downloads")
 }
 
 enum ReferralRewardType {
-  SIGNUP_BONUS // người mới đăng ký qua mã giới thiệu nhận
-  REFERRER_BONUS // người giới thiệu nhận khi có người đăng ký (nếu admin bật)
-  DEPOSIT_COMMISSION // người giới thiệu nhận hoa hồng mỗi lần người kia nạp tiền
+  SIGNUP_BONUS // ngÆ°á»i má»›i Ä‘Äƒng kĂ½ qua mĂ£ giá»›i thiá»‡u nháº­n
+  REFERRER_BONUS // ngÆ°á»i giá»›i thiá»‡u nháº­n khi cĂ³ ngÆ°á»i Ä‘Äƒng kĂ½ (náº¿u admin báº­t)
+  DEPOSIT_COMMISSION // ngÆ°á»i giá»›i thiá»‡u nháº­n hoa há»“ng má»—i láº§n ngÆ°á»i kia náº¡p tiá»n
 }
 
-// Sổ thưởng giới thiệu: mỗi dòng là một khoản đã cộng. depositOrderId duy nhất để một lệnh nạp chỉ sinh hoa hồng một lần.
+// Sá»• thÆ°á»Ÿng giá»›i thiá»‡u: má»—i dĂ²ng lĂ  má»™t khoáº£n Ä‘Ă£ cá»™ng. depositOrderId duy nháº¥t Ä‘á»ƒ má»™t lá»‡nh náº¡p chá»‰ sinh hoa há»“ng má»™t láº§n.
 model ReferralReward {
   id             Int                @id @default(autoincrement())
   referrerId     Int                @map("referrer_id")
@@ -504,8 +505,8 @@ model ReferralReward {
   @@map("referral_rewards")
 }
 
-// Token xác minh email. `email` là địa chỉ cần xác minh: email hiện tại (đăng ký) hoặc email mới (đổi email).
-// Chỉ lưu băm của token. Email chỉ được đổi khi người dùng bấm liên kết gửi tới địa chỉ MỚI.
+// Token xĂ¡c minh email. `email` lĂ  Ä‘á»‹a chá»‰ cáº§n xĂ¡c minh: email hiá»‡n táº¡i (Ä‘Äƒng kĂ½) hoáº·c email má»›i (Ä‘á»•i email).
+// Chá»‰ lÆ°u bÄƒm cá»§a token. Email chá»‰ Ä‘Æ°á»£c Ä‘á»•i khi ngÆ°á»i dĂ¹ng báº¥m liĂªn káº¿t gá»­i tá»›i Ä‘á»‹a chá»‰ Má»I.
 model EmailVerificationToken {
   id        Int       @id @default(autoincrement())
   userId    Int       @map("user_id")
@@ -521,29 +522,29 @@ model EmailVerificationToken {
   @@map("email_verification_tokens")
 }
 
-// Tri thức của chatbot hỗ trợ: mỗi mục "## " trong backend/knowledge/*.md là một đoạn, kèm vector embedding để tìm đoạn giống câu hỏi
+// Tri thá»©c cá»§a chatbot há»— trá»£: má»—i má»¥c "## " trong backend/knowledge/*.md lĂ  má»™t Ä‘oáº¡n, kĂ¨m vector embedding Ä‘á»ƒ tĂ¬m Ä‘oáº¡n giá»‘ng cĂ¢u há»i
 model KbChunk {
   id          Int      @id @default(autoincrement())
   slug        String   @unique @db.VarChar(40)
   title       String   @db.VarChar(200)
   content     String   @db.Text
   contentHash String   @map("content_hash") @db.VarChar(64)
-  embedding   Json? // mảng số; null = chưa tạo (chưa có khoá Gemini), chatbot tìm bằng từ khoá
+  embedding   Json? // máº£ng sá»‘; null = chÆ°a táº¡o (chÆ°a cĂ³ khoĂ¡ Gemini), chatbot tĂ¬m báº±ng tá»« khoĂ¡
   model       String?  @db.VarChar(60)
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@map("kb_chunks")
 }
 
-// Mỗi câu hỏi gửi chatbot: để giới hạn số câu mỗi ngày và để admin biết người dùng hay hỏi gì
+// Má»—i cĂ¢u há»i gá»­i chatbot: Ä‘á»ƒ giá»›i háº¡n sá»‘ cĂ¢u má»—i ngĂ y vĂ  Ä‘á»ƒ admin biáº¿t ngÆ°á»i dĂ¹ng hay há»i gĂ¬
 model ChatLog {
   id        Int      @id @default(autoincrement())
   userId    Int?     @map("user_id")
   guestId   String?  @map("guest_id") @db.VarChar(64)
   ip        String?  @db.VarChar(64)
   question  String   @db.VarChar(500)
-  matched   Boolean  @default(true) // có tìm thấy đoạn hướng dẫn liên quan hay không (false = câu hỏi hệ thống chưa có tài liệu)
-  cached    Boolean  @default(false) // trả lời từ cache, không gọi Claude
+  matched   Boolean  @default(true) // cĂ³ tĂ¬m tháº¥y Ä‘oáº¡n hÆ°á»›ng dáº«n liĂªn quan hay khĂ´ng (false = cĂ¢u há»i há»‡ thá»‘ng chÆ°a cĂ³ tĂ i liá»‡u)
+  cached    Boolean  @default(false) // tráº£ lá»i tá»« cache, khĂ´ng gá»i Claude
   createdAt DateTime @default(now()) @map("created_at")
 
   @@index([userId, createdAt])
@@ -553,14 +554,14 @@ model ChatLog {
   @@map("chat_logs")
 }
 
-// Câu trả lời hướng dẫn chung đã có: câu hỏi giống nghĩa thì trả lại, không gọi Claude. Chỉ lưu câu hỏi đứng riêng, không dùng dữ liệu tài khoản/giá.
+// CĂ¢u tráº£ lá»i hÆ°á»›ng dáº«n chung Ä‘Ă£ cĂ³: cĂ¢u há»i giá»‘ng nghÄ©a thĂ¬ tráº£ láº¡i, khĂ´ng gá»i Claude. Chá»‰ lÆ°u cĂ¢u há»i Ä‘á»©ng riĂªng, khĂ´ng dĂ¹ng dá»¯ liá»‡u tĂ i khoáº£n/giĂ¡.
 model ChatAnswerCache {
   id        Int      @id @default(autoincrement())
-  viewer    String   @db.VarChar(10) // member | guest: khách và thành viên được hướng dẫn khác nhau (đăng nhập...)
+  viewer    String   @db.VarChar(10) // member | guest: khĂ¡ch vĂ  thĂ nh viĂªn Ä‘Æ°á»£c hÆ°á»›ng dáº«n khĂ¡c nhau (Ä‘Äƒng nháº­p...)
   question  String   @db.VarChar(500)
   embedding Json
   answer    String   @db.Text
-  version   String   @db.VarChar(16) // băm của tài liệu hướng dẫn + prompt; đổi thì cache cũ hết hiệu lực
+  version   String   @db.VarChar(16) // bÄƒm cá»§a tĂ i liá»‡u hÆ°á»›ng dáº«n + prompt; Ä‘á»•i thĂ¬ cache cÅ© háº¿t hiá»‡u lá»±c
   hits      Int      @default(0)
   createdAt DateTime @default(now()) @map("created_at")
 
