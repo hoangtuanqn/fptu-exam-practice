@@ -21,4 +21,7 @@ export const emailVerificationRepository = {
 
   // Gửi thư mới (hoặc xác minh xong) thì các token cũ chưa dùng của người này không còn hiệu lực
   invalidateAll: (db: Db, userId: number) => db.emailVerificationToken.updateMany({ where: { userId, usedAt: null }, data: { usedAt: new Date() } }),
+
+  // Token đã hết hạn hơn 24 giờ thì không còn dùng được và không cần giữ
+  deleteExpired: async () => (await prisma.emailVerificationToken.deleteMany({ where: { expiresAt: { lt: new Date(Date.now() - 24 * 3600 * 1000) } } })).count,
 };
