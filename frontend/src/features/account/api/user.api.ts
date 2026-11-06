@@ -1,5 +1,5 @@
 import type { MyGiftRedemption, RedeemResult, User, WalletTransaction } from "@/shared/types/api";
-import { http } from "@/shared/api/client";
+import { http, sendForm } from "@/shared/api/client";
 import { PAGE_SIZE } from "@/shared/api/pagination";
 
 export const userApi = {
@@ -10,4 +10,12 @@ export const userApi = {
   changeEmail: (body: { email: string; password: string }) => http.post<null>("/users/me/email", body),
   redeemGiftCode: (code: string) => http.post<RedeemResult>("/gift-codes/redeem", { code }),
   myGiftCodes: (page = 1) => http.list<MyGiftRedemption>("/gift-codes/mine", { page, limit: PAGE_SIZE }),
+
+  // Avatar
+  uploadAvatar: (file: File) => {
+    const form = new FormData();
+    form.append("avatar", file);
+    return sendForm<User>("POST", "/users/me/avatar", form);
+  },
+  removeAvatar: () => http.delete("/users/me/avatar") as Promise<void>,
 };
