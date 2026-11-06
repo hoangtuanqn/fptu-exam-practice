@@ -20,6 +20,9 @@ export const listWalletQuery = paginationQuery.extend({
       "REFERRAL_BONUS",
       "REFERRAL_COMMISSION",
       "SIGNUP_BONUS",
+      "DEPOSIT_BONUS",
+      "PE_CHARGE",
+      "PE_REFUND",
     ])
     .optional(),
 });

@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
 import { BadgeCheck, Link2, Loader2 } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
@@ -12,6 +12,7 @@ import { Button } from "@/shared/ui/Button";
 import { FormError } from "@/shared/ui/Feedback";
 import { inputClass } from "@/shared/ui/Input";
 import { ConfirmFetchDialog } from "./ConfirmFetchDialog";
+import { ExtLoginDialog } from "./ExtLoginDialog";
 import { useExamImport } from "../useExamImport";
 import type { ImportedExam } from "../types";
 
@@ -45,10 +46,12 @@ const DEFAULT_PRICE = 500; // phí niêm yết hiện khi chưa lấy được t
 
 // Nhập link đề FuOverflow: server crawl ở nền, ở đây hiện thanh tiến độ và mở đề khi xong
 export function LinkImport({ onImported }: Props) {
-  const { user, refresh } = useAuth();
-  // /?url=<link FuOverflow> điền sẵn ô nhập; không tự lấy đề vì mỗi lần lấy có thể bị tính phí
-  const [searchParams] = useSearchParams();
-  const [url, setUrl] = useState(searchParams.get("url") ?? "");
+  const { user, refresh, loading: authLoading } = useAuth();
+  // /?url=<link FuOverflow> điền sẵn ô nhập; không tự lấy đề vì mỗi lần lấy có thể bị tính phí.
+  // Thêm &confirm=1 (nút trên FuOverflow của tiện ích Chrome) thì mở luôn hộp xác nhận: vẫn phải bấm xác nhận mới bị trừ phí.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialLink = searchParams.get("link") ?? searchParams.get("url") ?? ""; // "link" cho tiện ích (máy chủ dev Vite chặn ?url=), "url" là cách cũ
+  const [url, setUrl] = useState(initialLink);
   const job = useExamImport();
   // Giá niêm yết luôn lấy về để hiện cho mọi người; phí thực tế chỉ tính với thành viên (khách dùng thử miễn phí)
   const price = useApi(() => examImportApi.price(), [user?.id]);
@@ -88,8 +91,7 @@ export function LinkImport({ onImported }: Props) {
   }, [job.exam]);
 
   // Thành viên có phí, hoặc khách (có giới hạn lượt): hỏi xác nhận. Thành viên không mất phí thì lấy luôn.
-  const onSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const submit = async () => {
     const link = url.trim();
     if (!link || running || quoting) return;
     if (!user) return setConfirming(true);
@@ -117,6 +119,33 @@ export function LinkImport({ onImported }: Props) {
       setQuoting(false);
     }
   };
+
+  const onSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    void submit();
+  };
+
+  // Mở từ nút của tiện ích: tự đi tới bước xác nhận (một lần) khi đã biết người dùng là ai và giá là bao nhiêu
+  const autoConfirm = searchParams.get("confirm") === "1" && !!initialLink;
+  const autoDone = useRef(false);
+  const fromExt = useRef(searchParams.get("src") === "ext"); // đến từ nút của tiện ích: bắt buộc có tài khoản
+  const [needLogin, setNeedLogin] = useState(false);
+  useEffect(() => {
+    if (!autoConfirm || autoDone.current || authLoading || (!!user && price.loading)) return;
+    autoDone.current = true;
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete("confirm"); // tải lại trang không tự mở hộp xác nhận lần nữa
+        next.delete("src");
+        return next;
+      },
+      { replace: true },
+    );
+    if (!user && fromExt.current) setNeedLogin(true);
+    else void submit();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoConfirm, authLoading, user, price.loading]);
 
   const confirm = () => {
     setConfirming(false);
@@ -220,6 +249,8 @@ export function LinkImport({ onImported }: Props) {
         </div>
       )}
     </form>
+
+    {needLogin && <ExtLoginDialog url={url.trim()} onCancel={() => setNeedLogin(false)} />}
 
     {confirming && (
       <ConfirmFetchDialog

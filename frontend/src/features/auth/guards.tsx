@@ -9,7 +9,7 @@ export function RequireAuth({ role }: { role?: Role }) {
   const location = useLocation();
 
   if (loading) return <Loading />;
-  if (!user) return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  if (!user) return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />;
   if (role && user.role !== role) return <Navigate to="/account" replace />;
   return <Outlet />;
 }

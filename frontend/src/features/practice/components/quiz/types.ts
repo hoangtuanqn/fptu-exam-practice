@@ -15,6 +15,7 @@ export interface QuestionViewProps {
   onReport?: () => void; // có khi đã có kết quả của câu và người dùng đã đăng nhập (báo cáo đáp án sai)
   onExplain?: () => void; // xem lời giải thích AI của câu (trả phí credit)
   explainBought?: boolean; // đã mua lời giải của câu này (xem lại miễn phí)
+  explainFree?: boolean; // còn lượt xem thử miễn phí (nút hiện "Giải thích miễn phí")
   reported?: boolean; // đã gửi báo cáo cho câu này trong phiên làm bài
   onChoose: (option: string) => void;
   onCheck: () => void;

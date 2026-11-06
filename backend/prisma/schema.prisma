@@ -42,6 +42,8 @@ model User {
   giftRedemptions    GiftCodeRedemption[]
   answerReports      AnswerReport[]
   explanationBuys    ExplanationPurchase[]
+  explanationUnlocks ExplanationUnlock[]
+  peDownloads        PeDownload[]
   referredBy         User?                @relation("Referral", fields: [referredById], references: [id], onDelete: SetNull)
   referrals          User[]               @relation("Referral")
   rewardsAsReferrer  ReferralReward[]     @relation("RewardReferrer")
@@ -123,6 +125,9 @@ enum TransactionType {
   REFERRAL_BONUS // thưởng giới thiệu (đăng ký qua mã giới thiệu)
   REFERRAL_COMMISSION // hoa hồng khi người được giới thiệu nạp tiền
   SIGNUP_BONUS // credit tặng mọi tài khoản mới khi đăng ký (admin cấu hình)
+  DEPOSIT_BONUS // thưởng thêm khi nạp từ một mức nhất định
+  PE_CHARGE // phí tải bộ tài nguyên đề thi PE (file zip)
+  PE_REFUND // hoàn phí khi không tạo được file zip
 }
 
 // Sổ cái ví: mỗi lần số dư đổi là một dòng (amount âm = trừ tiền)
@@ -164,6 +169,7 @@ model Exam {
   reports   AnswerReport[]
   explanations QuestionExplanation[]
   explanationBuys ExplanationPurchase[]
+  explanationUnlocks ExplanationUnlock[]
 
   @@map("exams")
   practiceSessions PracticeSession[]
@@ -420,6 +426,7 @@ model ExplanationPurchase {
   examId         Int      @map("exam_id")
   questionNumber Int      @map("question_number")
   price          Int
+  isTrial        Boolean  @default(false) @map("is_trial") // lượt xem thử miễn phí (không trừ credit)
   createdAt      DateTime @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -428,6 +435,42 @@ model ExplanationPurchase {
   @@unique([userId, examId, questionNumber])
   @@index([examId])
   @@map("explanation_purchases")
+}
+
+// Mở khóa MỘT LẦN toàn bộ lời giải thích của một đề (giá gói, rẻ hơn mua lẻ): xem mọi câu miễn phí về sau
+model ExplanationUnlock {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  examId    Int      @map("exam_id")
+  price     Int // credit đã trả cho gói
+  questions Int // số câu được mở khóa tại thời điểm mua
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, examId])
+  @@index([examId])
+  @@map("explanation_unlocks")
+}
+
+// Mỗi lần tải bộ tài nguyên đề thi PE (zip) là một dòng: lịch sử tải và số credit đã trả
+model PeDownload {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  threadId  String   @map("thread_id") @db.VarChar(20)
+  title     String   @db.VarChar(255)
+  price     Int
+  files     Int      @default(0) // số file trong zip
+  sizeBytes Int      @default(0) @map("size_bytes")
+  status    String   @default("PENDING") @db.VarChar(10) // PENDING | DONE | FAILED
+  error     String?  @db.VarChar(500)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("pe_downloads")
 }
 
 enum ReferralRewardType {
