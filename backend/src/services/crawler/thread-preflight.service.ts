@@ -36,7 +36,7 @@ async function read(threadId: string): Promise<ThreadPreflight | null> {
   const $ = cheerio.load(html);
   if ($("h1.p-title-value").length === 0) return null; // không phải trang bài viết (trang đăng nhập/Cloudflare...): không kết luận
   if (!hasRequiredLabel(html)) {
-    return { ok: false, message: `Chỉ lấy được các bài có nhãn "${REQUIRED_LABEL}". Bài này không có nhãn đó nên không thể lấy, bạn không bị tính phí.` };
+    return { ok: false, message: `Chỉ lấy được các bài có nhãn "${REQUIRED_LABEL}". Bài này không có nhãn đó nên không thể lấy.` };
   }
   return { ok: true, title: $("h1.p-title-value").first().clone().find(".label, .labelLink").remove().end().text().replace(/\s+/g, " ").trim() };
 }
