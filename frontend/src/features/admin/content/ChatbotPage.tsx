@@ -11,6 +11,7 @@ import { ErrorBox, FormError, Loading } from "@/shared/ui/Feedback";
 import { Input, PasswordInput } from "@/shared/ui/Input";
 import { Switch } from "@/shared/ui/Switch";
 import { formatDateTime } from "@/shared/utils/formatters";
+import { errorMessage } from "@/shared/api/errors";
 
 function Settings({ data, onSaved }: { data: ChatbotAdmin; onSaved: () => void }) {
   const toast = useToast();
@@ -71,7 +72,7 @@ export default function ChatbotPage() {
       toast.success(r.warning ?? `Đã cập nhật: ${r.updated} mục mới/đã đổi, ${r.embedded}/${r.total} mục có embedding`);
       reload();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Không cập nhật được");
+      toast.error(errorMessage(err, "Không cập nhật được"));
     } finally {
       setSyncing(false);
     }
@@ -83,7 +84,7 @@ export default function ChatbotPage() {
       toast.success("Đã xoá cache câu trả lời");
       reload();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Không xoá được");
+      toast.error(errorMessage(err, "Không xoá được"));
     }
   }
 

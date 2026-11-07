@@ -17,6 +17,7 @@ import { Segmented } from "@/shared/ui/Segmented";
 import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
 import { formatCredit, formatDate } from "@/shared/utils/formatters";
 import { useClampPage } from "@/shared/hooks/useClampPage";
+import { errorMessage } from "@/shared/api/errors";
 
 type ActiveFilter = "" | "true" | "false";
 
@@ -39,7 +40,7 @@ export default function GiftCodesPage() {
       toast.success(g.active ? `Đã tắt mã ${g.code}` : `Đã bật mã ${g.code}`);
       reload();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Không đổi được trạng thái");
+      toast.error(errorMessage(e, "Không đổi được trạng thái"));
     }
   };
 

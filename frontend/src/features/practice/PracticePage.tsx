@@ -19,6 +19,9 @@ import { Landing } from "@/features/landing/Landing";
 import { QuizDialogs, type SubmitDialog } from "@/features/practice/components/dialogs/QuizDialogs";
 import { ReferenceDialog } from "@/features/practice/components/dialogs/ReferenceDialog";
 import { TrialEndedDialog } from "@/features/trial/TrialEndedDialog";
+import { TriangleAlert } from "lucide-react";
+import { Button } from "@/shared/ui/Button";
+import { Modal, ModalActions, ModalTitle } from "@/shared/ui/Modal";
 import { Loading } from "@/shared/ui/Feedback";
 import { QuizWorkspace } from "@/features/practice/components/quiz/QuizWorkspace";
 
@@ -54,10 +57,17 @@ export default function PracticePage({ threadId }: Props) {
   useLeaveWarning(hasQuiz && quiz.examId === null && !quiz.submitted && quiz.answeredCount > 0);
 
   // Bấm logo: về trang chủ (đề đang làm của hệ thống đã được lưu, vào lại từ danh sách "làm dở" để làm tiếp)
-  const goHome = () => {
-    if (quiz.examId === null && !quiz.submitted && quiz.answeredCount > 0 && !window.confirm("Bài làm từ thư mục chưa được lưu và sẽ mất. Thoát về trang chủ?")) return false;
+  const [leaveAsk, setLeaveAsk] = useState(false); // hộp thoại hỏi trước khi bỏ bài làm chưa lưu
+  const leaveHome = () => {
     void flush();
     quiz.closeExam();
+  };
+  const goHome = () => {
+    if (quiz.examId === null && !quiz.submitted && quiz.answeredCount > 0) {
+      setLeaveAsk(true); // chặn điều hướng, chờ người dùng chọn trong hộp thoại
+      return false;
+    }
+    leaveHome();
     return true;
   };
 
@@ -251,6 +261,29 @@ export default function PracticePage({ threadId }: Props) {
       />
 
       <QuizDialogs quiz={quiz} dialog={dialog} onDialogChange={setDialog} onCloseZoom={() => setZoomOpen(false)} />
+      {leaveAsk && (
+        <Modal onClose={() => setLeaveAsk(false)}>
+          <ModalTitle icon={TriangleAlert}>Thoát và bỏ bài đang làm?</ModalTitle>
+          <p className="md-body-medium mt-3 text-on-surface-variant">
+            Bạn đã trả lời <b className="text-on-surface">{quiz.answeredCount} câu</b> của đề mở từ thư mục. Đề này không được lưu trên hệ thống nên đáp án sẽ <b className="text-on-surface">mất hẳn, không khôi phục được</b>.
+          </p>
+          <ModalActions>
+            <Button autoFocus onClick={() => setLeaveAsk(false)}>
+              Ở lại làm tiếp
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => {
+                setLeaveAsk(false);
+                leaveHome();
+                navigate("/");
+              }}
+            >
+              Bỏ bài và thoát
+            </Button>
+          </ModalActions>
+        </Modal>
+      )}
       {trialEnded && <TrialEndedDialog onClose={() => setTrialEnded(false)} />}
       {referencesOpen && quiz.references.length > 0 && <ReferenceDialog references={quiz.references} onClose={() => setReferencesOpen(false)} />}
 

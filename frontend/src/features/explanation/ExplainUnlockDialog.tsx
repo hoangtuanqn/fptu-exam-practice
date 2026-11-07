@@ -3,7 +3,6 @@ import { Link, useLocation } from "react-router-dom";
 import { CheckCircle2, Sparkles } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { VerifyEmailNotice } from "@/features/verify-email/VerifyEmailNotice";
-import { ApiError } from "@/shared/api/client";
 import { useToast } from "@/shared/context/ToastContext";
 import { Button, buttonClass } from "@/shared/ui/Button";
 import { ChargeSummary } from "@/shared/ui/ChargeSummary";
@@ -11,6 +10,7 @@ import { Modal, ModalActions, ModalTitle } from "@/shared/ui/Modal";
 import { formatCredit } from "@/shared/utils/formatters";
 import { depositLink } from "./depositLink";
 import { explanationApi, type ExplanationBundle } from "./explanation.api";
+import { errorMessage } from "@/shared/api/errors";
 
 interface Props {
   examId: number;
@@ -49,7 +49,7 @@ export function ExplainUnlockDialog({ examId, bundle, onCancel, onUnlocked }: Pr
       setDone(true);
       onUnlocked();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Không mở khóa được, vui lòng thử lại");
+      setError(errorMessage(err, "Không mở khóa được, vui lòng thử lại"));
       onUnlocked(); // tải lại giá/trạng thái mới nhất (giá có thể đã đổi, hoặc đã mở khóa ở tab khác)
     } finally {
       setBusy(false);

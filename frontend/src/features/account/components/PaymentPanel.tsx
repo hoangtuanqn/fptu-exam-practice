@@ -12,6 +12,7 @@ import { PaymentRow } from "./PaymentRow";
 import { PublicDepositView } from "./PublicDepositView";
 import { ApiError } from "@/shared/api/client";
 import { ErrorBox, Loading } from "@/shared/ui/Feedback";
+import { errorMessage } from "@/shared/api/errors";
 
 const POLL_MS = 4000;
 
@@ -21,6 +22,7 @@ export function PaymentPanel({ code, onClose }: { code: string; onClose: () => v
   const toast = useToast();
   const [detail, setDetail] = useState<DepositDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [retrying, setRetrying] = useState(false);
   const [notOwner, setNotOwner] = useState(false); // lệnh không thuộc tài khoản này: chỉ cho xem bản rút gọn
   const notified = useRef(false);
 
@@ -43,7 +45,7 @@ export function PaymentPanel({ code, onClose }: { code: string; onClose: () => v
       } catch (err) {
         if (stopped) return;
         if (err instanceof ApiError && err.status === 404) setNotOwner(true);
-        else setError(err instanceof Error ? err.message : "Không tải được lệnh nạp");
+        else setError(errorMessage(err, "Không tải được lệnh nạp"));
       }
     };
     void load();
@@ -124,6 +126,29 @@ export function PaymentPanel({ code, onClose }: { code: string; onClose: () => v
         </span>
       </div>
 
+      {error && (
+        <div role="alert" className="md-body-medium flex flex-wrap items-center justify-between gap-2 bg-error-container px-5 py-2.5 text-on-error-container">
+          <span>{error} Trang vẫn tự thử lại. Nếu bạn đã chuyển khoản, tiền không bị mất.</span>
+          <Button
+            size="sm"
+            variant="tonal"
+            disabled={retrying}
+            onClick={() => {
+              setRetrying(true);
+              depositApi
+                .get(code)
+                .then((d) => {
+                  setDetail(d);
+                  setError(null);
+                })
+                .catch(() => undefined)
+                .finally(() => setRetrying(false));
+            }}
+          >
+            {retrying ? "Đang thử…" : "Thử lại ngay"}
+          </Button>
+        </div>
+      )}
       <div className="grid gap-6 p-5 md:grid-cols-[220px_1fr]">
         <div className="mx-auto w-full max-w-[220px]">
           <img src={payment.qrUrl} alt="Mã QR chuyển khoản" className="aspect-square w-full rounded-lg border border-slate-200 bg-surface-container-lowest object-contain" />

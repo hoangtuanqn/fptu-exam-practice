@@ -4,6 +4,7 @@ import { Loader2, RotateCw, Sparkles, TriangleAlert } from "lucide-react";
 import { examImportApi } from "@/features/exam-import/exam-import.api";
 import type { AnswerSource } from "@/features/practice/types";
 import { formatDuration } from "@/features/practice/utils/format";
+import { errorMessage } from "@/shared/api/errors";
 
 // Dải thông báo trên màn hình làm bài, theo nguồn đáp án:
 // - PENDING: AI đang phân tích, chỉ xem đề, chưa chọn đáp án (kèm thanh tiến trình)
@@ -22,7 +23,7 @@ export function AnswerPendingBanner({ source, examId, onRetry }: { source: Answe
       setSeconds(0);
       onRetry();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Chưa thử lại được, vui lòng đợi ít phút");
+      toast.error(errorMessage(e, "Chưa thử lại được, vui lòng đợi ít phút"));
     } finally {
       setRetrying(false);
     }

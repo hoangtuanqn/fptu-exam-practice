@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Loader2, Sparkles, X } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
-import { ApiError } from "@/shared/api/client";
 import { useFakeProgress } from "@/shared/hooks/useFakeProgress";
 import { useResizableWidth } from "@/shared/hooks/useResizableWidth";
 import { Button } from "@/shared/ui/Button";
 import { Markdown } from "@/shared/ui/Markdown";
 import { explanationApi } from "./explanation.api";
+import { errorMessage } from "@/shared/api/errors";
 
 interface Props {
   examId: number;
@@ -67,7 +67,7 @@ export function ExplainPanel({ examId, questionNumber, firstTime, onClose, onBou
       setPhase("done");
     } catch (err) {
       if (!alive.current) return;
-      setError(err instanceof ApiError ? err.message : "Không tải được lời giải thích");
+      setError(errorMessage(err, "Không tải được lời giải thích"));
       setPhase("error");
     }
   }
