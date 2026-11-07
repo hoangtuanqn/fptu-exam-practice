@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /account
+Disallow: /exam/
+Disallow: /deposit/
+Disallow: /auth/
+Disallow: /reset-password
+Disallow: /verify-email
+Disallow: /dev/
+
+Sitemap: https://fepass.top/sitemap.xml
