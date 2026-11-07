@@ -4,7 +4,7 @@ import { IconButton } from "./Button";
 
 // Ô nhập thô (không nhãn nổi) dùng khi cần tự bố cục: kiểu outlined của M3 (viền outline, focus đổi sang primary dày 2dp)
 const RAW =
-  "md-body-large h-12 w-full rounded-m3-xs border bg-transparent px-4 text-on-surface placeholder:text-on-surface-variant outline-none md-motion " +
+  "md-body-medium h-12 w-full rounded-m3-xs border bg-transparent px-4 text-on-surface placeholder:text-on-surface-variant outline-none md-motion " +
   "focus:border-primary focus:shadow-[inset_0_0_0_1px_var(--md-sys-color-primary)] disabled:border-on-surface/12 disabled:text-on-surface/38";
 
 export const inputClass = (error?: string) => `${RAW} ${error ? "border-error shadow-[inset_0_0_0_1px_var(--md-sys-color-error)]" : "border-outline hover:border-on-surface"}`;
@@ -52,7 +52,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input({ l
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
           placeholder={props.placeholder ?? " "}
-          className={`md-body-large peer block h-14 w-full rounded-t-m3-xs bg-transparent px-4 text-on-surface outline-none placeholder:text-transparent focus:placeholder:text-on-surface-variant ${
+          className={`md-body-medium peer block h-14 w-full rounded-t-m3-xs bg-transparent px-4 text-on-surface outline-none placeholder:text-transparent focus:placeholder:text-on-surface-variant ${
             label ? "pb-1 pt-5" : ""
           } ${trailing ? "pr-12" : ""} ${className}`}
           {...props}
@@ -60,7 +60,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input({ l
         {label && (
           <label
             htmlFor={inputId}
-            className={`md-body-large pointer-events-none absolute left-4 top-4 origin-left text-on-surface-variant md-motion peer-focus:top-1.5 peer-focus:text-xs peer-[:not(:placeholder-shown)]:top-1.5 peer-[:not(:placeholder-shown)]:text-xs ${
+            className={`md-body-medium pointer-events-none absolute left-4 top-4 origin-left text-on-surface-variant md-motion peer-focus:top-1.5 peer-focus:text-xs peer-[:not(:placeholder-shown)]:top-1.5 peer-[:not(:placeholder-shown)]:text-xs ${
               error ? "!text-error" : "peer-focus:text-primary"
             }`}
           >
