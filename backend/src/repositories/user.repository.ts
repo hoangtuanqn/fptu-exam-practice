@@ -17,6 +17,8 @@ export const publicUserSelect = {
   createdAt: true,
 } satisfies Prisma.UserSelect;
 
+export type SocialProvider = "google" | "github";
+
 export type PublicUser = Prisma.UserGetPayload<{ select: typeof publicUserSelect }>;
 
 export const userRepository = {
@@ -27,9 +29,11 @@ export const userRepository = {
   findByIdWithPassword: (id: number) => prisma.user.findUnique({ where: { id } }),
 
   // Đăng nhập Google: tìm theo mã Google, hoặc theo email để liên kết với tài khoản có sẵn
-  findByGoogleSub: (googleSub: string) => prisma.user.findUnique({ where: { googleSub }, select: { id: true, status: true } }),
+  findBySocial: (provider: SocialProvider, id: string) =>
+    prisma.user.findUnique({ where: provider === "google" ? { googleSub: id } : { githubId: id }, select: { id: true, status: true } }),
   findByEmailForLink: (email: string) => prisma.user.findUnique({ where: { email }, select: { id: true, status: true, emailVerifiedAt: true } }),
-  linkGoogle: (id: number, googleSub: string, emailVerifiedAt: Date) => prisma.user.update({ where: { id }, data: { googleSub, emailVerifiedAt } }),
+  linkSocial: (id: number, provider: SocialProvider, sub: string, emailVerifiedAt: Date) =>
+    prisma.user.update({ where: { id }, data: { ...(provider === "google" ? { googleSub: sub } : { githubId: sub }), emailVerifiedAt } }),
 
   // Hồ sơ tối thiểu để xét điều kiện nhập mã giới thiệu
   findReferralProfile: (id: number) => prisma.user.findUnique({ where: { id }, select: { id: true, fullName: true, createdAt: true, referredById: true } }),

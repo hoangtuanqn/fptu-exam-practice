@@ -8,6 +8,7 @@ import RegisterPage from "@/features/auth/pages/RegisterPage";
 import ForgotPasswordPage from "@/features/auth/pages/ForgotPasswordPage";
 import ResetPasswordPage from "@/features/auth/pages/ResetPasswordPage";
 import VerifyEmailPage from "@/features/auth/pages/VerifyEmailPage";
+import GithubCallbackPage from "@/features/auth/github/GithubCallbackPage";
 import NotFoundPage from "./NotFoundPage";
 import { ADMIN_NAV, adminRoutes } from "@/features/admin/admin.routes";
 import { GuestSync } from "@/features/guest-sync/GuestSync";
@@ -66,6 +67,9 @@ export default function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         </Route>
+
+        {/* GitHub gọi lại trong cửa sổ nhỏ khi đăng nhập */}
+        <Route path="/auth/github/callback" element={<GithubCallbackPage />} />
 
         {/* Mở từ email nên không chặn người đang đăng nhập */}
         <Route path="/reset-password" element={<ResetPasswordPage />} />
