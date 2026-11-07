@@ -22,6 +22,7 @@ export function AvatarUpload() {
   const toast = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const removeTicket = useRef(0); // lệnh xoá hoãn nào còn hiệu lực; tải ảnh mới hoặc bấm Hoàn tác sẽ huỷ nó
 
   const src = avatarSrc(user?.avatarPath);
 
@@ -34,13 +35,14 @@ export function AvatarUpload() {
       toast.error("Ảnh tối đa 5 MB");
       return;
     }
+    removeTicket.current++; // đang chờ xoá ảnh cũ mà đổi ảnh mới: huỷ lệnh xoá, kẻo nó xoá luôn ảnh mới
     setUploading(true);
     try {
       const updated = await userApi.uploadAvatar(file);
       setUser(updated);
       toast.success("Đã cập nhật ảnh đại diện");
-    } catch {
-      toast.error("Không tải lên được ảnh");
+    } catch (err) {
+      toast.error(errorMessage(err, "Không tải lên được ảnh"));
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";
@@ -51,11 +53,19 @@ export function AvatarUpload() {
   const handleRemove = () => {
     const current = user!;
     const previous = current.avatarPath;
+    const ticket = ++removeTicket.current;
     setUser({ ...current, avatarPath: null });
     toast.success("Đã xoá ảnh đại diện", {
       duration: 7000,
-      action: { label: "Hoàn tác", onClick: () => setUser({ ...current, avatarPath: previous }) },
+      action: {
+        label: "Hoàn tác",
+        onClick: () => {
+          removeTicket.current++;
+          setUser({ ...current, avatarPath: previous });
+        },
+      },
       onExpire: () => {
+        if (ticket !== removeTicket.current) return; // đã hoàn tác hoặc đã đổi ảnh khác
         userApi.removeAvatar().catch((err) => {
           setUser({ ...current, avatarPath: previous }); // xoá thật thất bại: trả ảnh lại, đừng để người dùng tưởng đã xoá
           toast.error(errorMessage(err, "Chưa xoá được ảnh đại diện"));
