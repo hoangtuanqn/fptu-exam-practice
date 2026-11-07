@@ -6,7 +6,7 @@ import { QuestionGrid } from "./QuestionGrid";
 // Máy tính: cột hẹp bên trái (240px). Điện thoại: dải ngang phía trên, không chiếm chỗ của ảnh.
 export function Sidebar({ quiz }: { quiz: Quiz }) {
   return (
-    <aside className="flex shrink-0 flex-col border-b border-slate-200 bg-white lg:w-60 lg:border-b-0 lg:border-r">
+    <aside className="flex shrink-0 flex-col border-b border-outline-variant bg-surface lg:w-72 lg:border-b-0 lg:border-r">
       <ProgressSummary
         questions={quiz.questions}
         answers={quiz.answers}

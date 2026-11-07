@@ -66,7 +66,7 @@ export function DotGraph({ source }: { source: string }) {
   return (
     <figure className="mb-3 last:mb-0" aria-label="Đồ thị minh hoạ">
       {phase !== "failed" && (
-        <div aria-busy={phase === "loading"} className="relative flex min-h-40 items-center justify-center overflow-x-auto rounded-lg border border-slate-200 bg-white p-3">
+        <div aria-busy={phase === "loading"} className="relative flex min-h-40 items-center justify-center overflow-x-auto rounded-lg border border-slate-200 bg-surface-container-lowest p-3">
           {/* Khung vẽ do DOM quản lý (SVG được chèn vào đây), không có con nào do React quản lý */}
           <div ref={host} className="flex w-full justify-center" />
           {phase === "loading" && <span className="absolute animate-pulse text-xs text-slate-400">Đang vẽ đồ thị…</span>}

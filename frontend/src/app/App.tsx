@@ -24,6 +24,8 @@ import { GuestOnly, RequireAuth } from "@/features/auth/guards";
 
 // Panel tách riêng thành chunk: người chỉ luyện đề không phải tải code của panel
 const ChatWidget = lazy(() => import("@/features/chat/ChatWidget"));
+// Thư viện thành phần M3 (chỉ khi chạy npm run dev)
+const M3Gallery = import.meta.env.DEV ? lazy(() => import("@/features/design-system/M3Gallery")) : null;
 const PublicDepositPage = lazy(() => import("@/features/account/pages/PublicDepositPage"));
 const OverviewPage = lazy(() => import("@/features/account/pages/OverviewPage"));
 const DepositPage = lazy(() => import("@/features/account/pages/DepositPage"));
@@ -60,6 +62,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<PracticeRoute />} />
         <Route path="/exam/:threadId" element={<PracticeRoute />} />
+        {M3Gallery && <Route path="/dev/m3" element={<Suspense fallback={null}><M3Gallery /></Suspense>} />}
 
         {/* Xem lệnh nạp bằng liên kết: không cần đăng nhập */}
         <Route path="/deposit/:code" element={<PublicDepositPage />} />

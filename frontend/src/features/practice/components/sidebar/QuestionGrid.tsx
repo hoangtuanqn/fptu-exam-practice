@@ -13,52 +13,53 @@ interface Props {
   onSelect: (index: number) => void;
 }
 
-const STATUS_STYLE: Record<QuestionStatus, string> = {
-  unanswered: "border-slate-300 bg-white text-slate-600 hover:border-slate-500",
-  answered: "border-brand-900 bg-brand-900 text-white",
-  correct: "border-emerald-600 bg-emerald-600 text-white",
-  wrong: "border-rose-600 bg-rose-600 text-white",
-  ungraded: "border-slate-300 bg-slate-100 text-slate-500",
+// Màu theo vai trò M3; mỗi trạng thái còn có tên đọc cho trình đọc màn hình nên không chỉ dựa vào màu
+const STATUS_STYLE: Record<QuestionStatus, { cls: string; name: string }> = {
+  unanswered: { cls: "border-outline text-on-surface", name: "chưa làm" },
+  answered: { cls: "border-transparent bg-secondary-container text-on-secondary-container", name: "đã làm" },
+  correct: { cls: "border-transparent bg-success-container text-on-success-container", name: "đúng" },
+  wrong: { cls: "border-transparent bg-error-container text-on-error-container", name: "sai" },
+  ungraded: { cls: "border-outline-variant bg-surface-container-high text-on-surface-variant", name: "chưa có đáp án" },
 };
 
-// Lưới số câu: màu theo trạng thái, viền đậm ở câu đang xem
+// Lưới số câu: ô 48dp, màu theo trạng thái, vòng primary ở câu đang xem (aria-current)
 export function QuestionGrid({ questions, answers, checked, flagged, submitted, current, total = 0, onSelect }: Props) {
   const boxRef = useRef<HTMLDivElement>(null);
 
   // Chuyển câu bằng phím/nút thì cuộn để ô câu hiện tại luôn nằm trong tầm nhìn
   useEffect(() => {
-    boxRef.current
-      ?.querySelector<HTMLElement>('[data-current="true"]')
-      ?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    boxRef.current?.querySelector<HTMLElement>('[data-current="true"]')?.scrollIntoView({ block: "nearest", inline: "nearest" });
   }, [current]);
 
   return (
     // Điện thoại: một dải cuộn ngang. Máy tính: lưới 5 cột cuộn dọc.
     <div ref={boxRef} className="overflow-x-auto px-3 py-3 lg:flex-1 lg:overflow-y-auto lg:overflow-x-hidden lg:p-4">
-      <div className="flex gap-2 lg:grid lg:grid-cols-5 lg:gap-1.5">
+      <div role="list" aria-label="Danh sách câu hỏi" className="flex gap-2 lg:grid lg:grid-cols-5 lg:gap-2">
         {questions.map((q, i) => {
           const status = getStatus(q, answers[q.number], submitted || !!checked[q.number]);
+          const { cls, name } = STATUS_STYLE[status];
           return (
-            <button
-              key={q.number}
-              data-current={i === current}
-              onClick={() => onSelect(i)}
-              className={`relative flex h-9 w-9 shrink-0 items-center justify-center rounded-md border text-sm font-medium transition lg:w-auto ${STATUS_STYLE[status]} ${
-                i === current ? "ring-2 ring-brand-900 ring-offset-2" : ""
-              }`}
-            >
-              {q.number}
-              {flagged[q.number] && (
-                <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-amber-500 ring-2 ring-white" />
-              )}
-            </button>
+            <div role="listitem" key={q.number} className="shrink-0 lg:w-auto">
+              <button
+                data-current={i === current}
+                aria-current={i === current ? "true" : undefined}
+                aria-label={`Câu ${q.number}, ${name}${flagged[q.number] ? ", đã đánh dấu" : ""}`}
+                onClick={() => onSelect(i)}
+                className={`md-state md-motion md-label-large relative flex h-12 w-12 items-center justify-center rounded-m3-sm border lg:w-full ${cls} ${
+                  i === current ? "ring-2 ring-primary ring-offset-2 ring-offset-surface" : ""
+                }`}
+              >
+                {q.number}
+                {flagged[q.number] && <span aria-hidden className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-warning ring-2 ring-surface" />}
+              </button>
+            </div>
           );
         })}
         {Array.from({ length: Math.max(0, total - questions.length) }, (_, k) => (
           <span
             key={`loading-${k}`}
             aria-hidden
-            className="flex h-9 w-9 shrink-0 animate-pulse items-center justify-center rounded-md border border-dashed border-slate-200 bg-slate-50 text-sm text-slate-300 lg:w-auto"
+            className="md-label-large flex h-12 w-12 shrink-0 animate-pulse items-center justify-center rounded-m3-sm border border-dashed border-outline-variant text-outline lg:w-full"
           >
             {questions.length + k + 1}
           </span>

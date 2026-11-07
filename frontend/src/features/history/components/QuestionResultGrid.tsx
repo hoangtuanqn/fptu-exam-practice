@@ -6,7 +6,7 @@ const STYLE: Record<Outcome, { box: string; icon: typeof Check; label: string }>
   correct: { box: "border-emerald-200 bg-emerald-50/60", icon: Check, label: "Đúng" },
   wrong: { box: "border-rose-200 bg-rose-50/60", icon: X, label: "Sai" },
   skipped: { box: "border-slate-200 bg-slate-50", icon: Minus, label: "Chưa làm" },
-  ungraded: { box: "border-slate-200 bg-white", icon: Minus, label: "Chưa có đáp án" },
+  ungraded: { box: "border-slate-200 bg-surface-container-lowest", icon: Minus, label: "Chưa có đáp án" },
 };
 
 const TEXT: Record<Outcome, string> = {

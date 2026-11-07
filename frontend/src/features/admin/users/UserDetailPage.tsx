@@ -169,9 +169,9 @@ function UserDetail({ initial }: { initial: User }) {
       </Link>
 
       {/* Đầu trang */}
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-5">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-surface-container-lowest p-5">
         <div className="flex min-w-0 items-center gap-4">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 text-xl font-bold text-white shadow-md shadow-brand-600/30">
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary-container text-xl font-bold text-on-primary-container">
             {initials(current.fullName)}
           </div>
           <div className="min-w-0">

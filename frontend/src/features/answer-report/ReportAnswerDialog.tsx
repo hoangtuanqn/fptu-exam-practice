@@ -59,7 +59,7 @@ export function ReportAnswerDialog({ examId, questionNumber, currentAnswer, onCl
                 onClick={() => toggle(letter)}
                 aria-pressed={picked.includes(letter)}
                 className={`h-10 w-10 rounded-lg border-2 text-base font-semibold transition ${
-                  picked.includes(letter) ? "border-brand-900 bg-brand-900 text-white" : "border-slate-300 bg-white text-slate-700 hover:border-slate-500"
+                  picked.includes(letter) ? "border-primary bg-primary text-on-primary" : "border-slate-300 bg-surface-container-lowest text-slate-700 hover:border-slate-500"
                 }`}
               >
                 {letter}

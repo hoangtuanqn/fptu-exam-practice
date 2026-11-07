@@ -4,7 +4,7 @@ interface Props {
   children: React.ReactNode; // nội dung ở giữa vòng
 }
 
-const STROKE = { success: "#059669", danger: "#e11d48", neutral: "#e29400" };
+const STROKE = { success: "var(--md-sys-color-success)", danger: "var(--md-sys-color-error)", neutral: "var(--md-sys-color-primary)" };
 const R = 52;
 const CIRCUMFERENCE = 2 * Math.PI * R;
 
@@ -15,7 +15,7 @@ export function ScoreRing({ value, tone, children }: Props) {
   return (
     <div className="relative mx-auto h-36 w-36">
       <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
-        <circle cx="60" cy="60" r={R} fill="none" stroke="#eef2f7" strokeWidth="8" />
+        <circle cx="60" cy="60" r={R} fill="none" stroke="var(--md-sys-color-surface-container-highest)" strokeWidth="8" />
         <circle
           cx="60"
           cy="60"

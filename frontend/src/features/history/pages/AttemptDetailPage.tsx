@@ -79,7 +79,7 @@ export default function AttemptDetailPage() {
                   aria-selected={filter === f.id}
                   onClick={() => setFilter(f.id)}
                   className={`rounded-md px-3 py-1 text-xs font-medium transition ${
-                    filter === f.id ? "bg-white text-brand-800 shadow-sm" : "text-slate-500 hover:text-slate-800"
+                    filter === f.id ? "bg-surface-container-lowest text-brand-800 shadow-sm" : "text-slate-500 hover:text-slate-800"
                   }`}
                 >
                   {f.label}

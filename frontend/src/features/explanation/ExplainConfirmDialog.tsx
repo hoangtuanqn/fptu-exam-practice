@@ -45,7 +45,7 @@ export function ExplainConfirmDialog({ questionNumber, price, bundle, onBundle, 
           {bundle && onBundle && bundle.price > 0 && bundle.remaining > 1 && (
             <button
               onClick={onBundle}
-              className="promo-shine mt-3 flex w-full items-center justify-between gap-3 rounded-xl border border-amber-300 bg-gradient-to-r from-amber-50 to-white px-3.5 py-2.5 text-left transition hover:border-amber-400"
+              className="promo-shine mt-3 flex w-full items-center justify-between gap-3 rounded-xl border border-amber-300 bg-gradient-to-r from-amber-50 to-surface-container-lowest px-3.5 py-2.5 text-left transition hover:border-amber-400"
             >
               <span className="text-sm text-amber-950">
                 <span className="font-semibold">Mở khóa cả đề {formatCredit(bundle.price)}</span>

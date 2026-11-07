@@ -14,7 +14,7 @@ function ExamPaper() {
   return (
     <div
       aria-hidden
-      className="relative w-full max-w-[19rem] rounded-sm border border-slate-200 bg-white p-5 shadow-[0_1px_0_#e2e8f0,0_16px_30px_-20px_rgba(11,23,48,0.5)]"
+      className="relative w-full max-w-[19rem] rounded-sm border border-slate-200 bg-surface-container-lowest p-5 shadow-[0_1px_0_#e2e8f0,0_16px_30px_-20px_rgba(11,23,48,0.5)]"
     >
       <div className="flex items-baseline justify-between border-b border-slate-200 pb-2 font-display">
         <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
@@ -54,7 +54,7 @@ function ExamPaper() {
       </ol>
 
       {/* Điểm chấm bằng bút đỏ */}
-      <span className="absolute -bottom-3 -right-3 -rotate-6 rounded-full border-2 border-emerald-600 bg-white px-3 py-0.5 font-display text-3xl font-bold italic leading-tight text-emerald-600">
+      <span className="absolute -bottom-3 -right-3 -rotate-6 rounded-full border-2 border-emerald-600 bg-surface-container-lowest px-3 py-0.5 font-display text-3xl font-bold italic leading-tight text-emerald-600">
         10
       </span>
     </div>
@@ -86,7 +86,7 @@ export function PromoCard() {
   ];
 
   return (
-    <div className="relative mx-auto max-w-3xl overflow-hidden rounded-lg border border-slate-200 border-t-4 border-t-brand-900 bg-white text-left shadow-[0_18px_40px_-28px_rgba(11,23,48,0.5)]">
+    <div className="relative mx-auto max-w-3xl overflow-hidden rounded-lg border border-slate-200 border-t-4 border-t-brand-900 bg-surface-container-lowest text-left shadow-[0_18px_40px_-28px_rgba(11,23,48,0.5)]">
       <div className="grid sm:grid-cols-[1.1fr_1fr]">
         <div className="p-5 sm:p-8">
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-brand-700">
@@ -117,7 +117,7 @@ export function PromoCard() {
 
           <Link
             to="/register"
-            className="group mt-5 inline-flex w-full items-center justify-center gap-2 rounded-md bg-brand-500 px-6 py-3 text-base font-semibold text-brand-900 transition hover:bg-brand-400 sm:w-auto"
+            className="group mt-5 inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary-container px-6 py-3 text-base font-semibold text-on-primary-container transition hover:bg-primary-container/80 sm:w-auto"
           >
             {hasGift ? "Nhận quà ngay" : "Bắt đầu ngay"}
             <ArrowRight
@@ -127,14 +127,14 @@ export function PromoCard() {
           </Link>
         </div>
 
-        <div className="flex items-center justify-center border-t border-slate-200 bg-paper p-8 sm:border-l sm:border-t-0">
+        <div className="flex items-center justify-center border-t border-slate-200 bg-surface p-8 sm:border-l sm:border-t-0">
           <ExamPaper />
         </div>
       </div>
 
       {/* Quà đăng ký: một hàng gọn, bốn ô đề (ô đã mở được đánh dấu) */}
       {hasGift && (
-        <div className="flex flex-col gap-3 border-t border-slate-200 bg-paper px-5 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+        <div className="flex flex-col gap-3 border-t border-slate-200 bg-surface px-5 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-8">
           <div className="flex items-center gap-3">
             <Gift
               size={22}

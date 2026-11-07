@@ -1,0 +1,155 @@
+/* Lớp nền Material Design 3 (viết tay; token nằm ở m3-tokens.css và m3-tailwind.css, đều tự sinh).
+   Gồm: lớp kích thước cửa sổ, nền trang, vòng focus, state layer, độ nổi theo tông, chuyển động, giảm chuyển động. */
+
+/* ---- Lớp kích thước cửa sổ M3: compact < 600, medium 600-839, expanded >= 840 (dùng: compact:hidden, medium:flex, expanded:grid...) ---- */
+@custom-variant compact (@media (width < 600px));
+@custom-variant medium (@media (width >= 600px) and (width < 840px));
+@custom-variant expanded (@media (width >= 840px));
+
+@layer base {
+  html {
+    background: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface);
+  }
+
+  /* Vòng focus M3: 3dp, màu secondary, cách mép 2dp. Chỉ hiện khi dùng bàn phím (focus-visible). */
+  :focus-visible {
+    outline: 3px solid var(--md-sys-color-secondary);
+    outline-offset: 2px;
+  }
+  /* Điều khiển đã có viền/nền riêng thì vòng focus ôm theo bo góc của nó */
+  :where(button, a, input, select, textarea, summary, [role="button"], [role="tab"], [role="menuitem"]):focus-visible {
+    border-radius: inherit;
+  }
+}
+
+/* ---- State layer: lớp phủ màu chữ (currentColor) ở độ mờ theo đặc tả khi di chuột / focus / nhấn / kéo; đặt class md-state lên điều khiển ---- */
+.md-state {
+  position: relative;
+  isolation: isolate;
+}
+.md-state::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--md-sys-motion-duration-short2) var(--md-sys-motion-easing-standard);
+}
+@media (hover: hover) {
+  .md-state:hover::before {
+    opacity: var(--md-sys-state-hover-opacity);
+  }
+}
+.md-state:focus-visible::before {
+  opacity: var(--md-sys-state-focus-opacity);
+}
+.md-state:active::before {
+  opacity: var(--md-sys-state-pressed-opacity);
+}
+.md-state[data-dragged="true"]::before {
+  opacity: var(--md-sys-state-dragged-opacity);
+}
+.md-state:disabled::before,
+.md-state[aria-disabled="true"]::before {
+  opacity: 0;
+}
+
+/* ---- Disabled theo M3: chữ/biểu tượng 38%, nền 12% màu on-surface ---- */
+.md-disabled-content {
+  color: color-mix(in srgb, var(--md-sys-color-on-surface) calc(var(--md-sys-state-disabled-content-opacity) * 100%), transparent) !important;
+}
+.md-disabled-container {
+  background: color-mix(in srgb, var(--md-sys-color-on-surface) calc(var(--md-sys-state-disabled-container-opacity) * 100%), transparent) !important;
+}
+
+/* ---- Độ nổi theo tông (elevation 0-5): đổi màu nền sang surface container cao hơn thay vì đổ bóng nặng ---- */
+.md-elevation-0 { background-color: var(--md-sys-elevation-level0); }
+.md-elevation-1 { background-color: var(--md-sys-elevation-level1); }
+.md-elevation-2 { background-color: var(--md-sys-elevation-level2); box-shadow: var(--md-sys-elevation-shadow-1); }
+.md-elevation-3 { background-color: var(--md-sys-elevation-level3); box-shadow: var(--md-sys-elevation-shadow-2); }
+.md-elevation-4 { background-color: var(--md-sys-elevation-level4); box-shadow: var(--md-sys-elevation-shadow-3); }
+.md-elevation-5 { background-color: var(--md-sys-elevation-level5); box-shadow: var(--md-sys-elevation-shadow-4); }
+
+/* ---- Chuyển động: mặc định dùng easing standard, thời lượng short4 (200ms) ---- */
+.md-motion {
+  transition-property: background-color, color, border-color, box-shadow, opacity, transform;
+  transition-duration: var(--md-sys-motion-duration-short4);
+  transition-timing-function: var(--md-sys-motion-easing-standard);
+}
+
+/* Vào/ra của hộp thoại, menu, snackbar: emphasized-decelerate khi vào, emphasized-accelerate khi ra */
+@keyframes md-enter {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes md-scrim-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.md-enter { animation: md-enter var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized-decelerate) both; }
+.md-scrim-in { animation: md-scrim-in var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-standard) both; }
+
+/* Chỉ báo tiến trình M3: tuyến tính (không xác định) và tròn */
+@keyframes md-linear-indeterminate {
+  0% { transform: translateX(-100%) scaleX(0.3); }
+  50% { transform: translateX(30%) scaleX(0.6); }
+  100% { transform: translateX(100%) scaleX(0.3); }
+}
+@keyframes md-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Người dùng bật "giảm chuyển động": tắt mọi chuyển động trang trí, giữ trạng thái cuối */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --md-sys-motion-duration-short1: 0.01ms;
+    --md-sys-motion-duration-short2: 0.01ms;
+    --md-sys-motion-duration-short3: 0.01ms;
+    --md-sys-motion-duration-short4: 0.01ms;
+    --md-sys-motion-duration-medium1: 0.01ms;
+    --md-sys-motion-duration-medium2: 0.01ms;
+    --md-sys-motion-duration-medium3: 0.01ms;
+    --md-sys-motion-duration-medium4: 0.01ms;
+    --md-sys-motion-duration-long1: 0.01ms;
+    --md-sys-motion-duration-long2: 0.01ms;
+  }
+  .md-enter,
+  .md-scrim-in {
+    animation: none;
+  }
+}
+
+/* ---- Bậc chữ co giãn theo lớp kích thước cửa sổ (compact dùng bậc nhỏ hơn, từ 600px trở lên dùng bậc lớn) ---- */
+.md-hero-title {
+  font-family: var(--md-sys-typescale-font);
+  font-size: var(--md-sys-typescale-display-small-size);
+  line-height: var(--md-sys-typescale-display-small-line-height);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.md-section-title {
+  font-family: var(--md-sys-typescale-font);
+  font-size: var(--md-sys-typescale-headline-medium-size);
+  line-height: var(--md-sys-typescale-headline-medium-line-height);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+@media (min-width: 600px) {
+  .md-hero-title {
+    font-size: var(--md-sys-typescale-display-medium-size);
+    line-height: var(--md-sys-typescale-display-medium-line-height);
+  }
+  .md-section-title {
+    font-size: var(--md-sys-typescale-headline-large-size);
+    line-height: var(--md-sys-typescale-headline-large-line-height);
+  }
+}
+@media (min-width: 840px) {
+  .md-hero-title {
+    font-size: var(--md-sys-typescale-display-large-size);
+    line-height: var(--md-sys-typescale-display-large-line-height);
+  }
+}

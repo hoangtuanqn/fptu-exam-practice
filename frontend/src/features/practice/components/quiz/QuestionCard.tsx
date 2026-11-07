@@ -42,7 +42,7 @@ export function QuestionCard({
   return (
     <div className="flex min-h-[360px] w-full flex-1 sm:min-h-[480px] animate-fade-in flex-col gap-2">
       {/* Đề bài: thông tin + công cụ ở trên, ảnh ngay dưới */}
-      <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-slate-200 bg-surface-container-lowest shadow-sm">
         <div className="flex shrink-0 items-center justify-between gap-2 border-b border-slate-200 px-3 py-2 sm:gap-3 sm:px-4">
           <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
             <h2 className="whitespace-nowrap text-lg font-semibold text-slate-900">
@@ -69,7 +69,7 @@ export function QuestionCard({
                 disabled={reported}
                 title="Báo cáo đáp án sai"
                 aria-label="Báo cáo đáp án sai"
-                className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white p-2 text-xs font-medium text-slate-500 transition hover:border-rose-300 hover:text-rose-600 disabled:opacity-60 disabled:hover:border-slate-200 disabled:hover:text-slate-500 sm:px-2.5 sm:py-1"
+                className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-surface-container-lowest p-2 text-xs font-medium text-slate-500 transition hover:border-rose-300 hover:text-rose-600 disabled:opacity-60 disabled:hover:border-slate-200 disabled:hover:text-slate-500 sm:px-2.5 sm:py-1"
               >
                 <MessageSquareWarning size={13} />
                 <span className="hidden sm:inline">{reported ? "Đã báo cáo" : "Báo cáo"}</span>
@@ -78,7 +78,7 @@ export function QuestionCard({
             <button
               onClick={onZoom}
               title="Phóng to ảnh"
-              className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white p-2 text-xs font-medium text-slate-500 transition hover:border-slate-400 hover:text-slate-700 sm:px-2.5 sm:py-1"
+              className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-surface-container-lowest p-2 text-xs font-medium text-slate-500 transition hover:border-slate-400 hover:text-slate-700 sm:px-2.5 sm:py-1"
               aria-label="Phóng to ảnh"
             >
               <Maximize2 size={13} />
@@ -97,7 +97,7 @@ export function QuestionCard({
 
       {/* Thanh trả lời. Điện thoại: hàng đáp án (4 cột, nút to dễ chạm), trạng thái, rồi hai nút Trước/Tiếp ngang bằng nhau.
           Máy tính: một hàng Trước | đáp án + trạng thái | Tiếp (sm:contents làm hai nút nhập vào hàng cùng cấp). */}
-      <section className="flex shrink-0 flex-col gap-2.5 rounded-xl border border-slate-200 bg-white p-2.5 shadow-sm sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 sm:px-3 sm:py-2">
+      <section className="flex shrink-0 flex-col gap-2.5 rounded-xl border border-slate-200 bg-surface-container-lowest p-2.5 shadow-sm sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 sm:px-3 sm:py-2">
         <div className="order-2 grid grid-cols-2 gap-2 sm:contents">
           <Button size="sm" onClick={onPrev} disabled={!hasPrev} className="!py-3 sm:order-1 sm:!py-2">
             <ChevronLeft size={16} />
