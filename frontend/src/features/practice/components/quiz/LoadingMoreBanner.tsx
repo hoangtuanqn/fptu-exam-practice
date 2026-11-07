@@ -5,7 +5,7 @@ export function LoadingMoreBanner({ loaded, total }: { loaded: number; total: nu
   return (
     <div role="status" aria-live="polite" className="mb-2 rounded-xl border border-brand-200 bg-brand-50 px-3.5 py-2.5 text-sm text-brand-900">
       <div className="flex items-center gap-2.5">
-        <Loader2 size={16} className="shrink-0 animate-spin text-brand-600" />
+        <Loader2 size={16} className="shrink-0 animate-spin text-brand-700" />
         <span className="font-medium">
           Đang tải câu hỏi {loaded}/{total}…
         </span>

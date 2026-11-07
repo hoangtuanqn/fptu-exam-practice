@@ -34,7 +34,7 @@ export function Modal({ children, onClose, wide = false }: { children: ReactNode
 export function ModalTitle({ icon: Icon, children }: { icon: LucideIcon; children: ReactNode }) {
   return (
     <div className="flex items-center gap-3">
-      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-50 text-brand-600">
+      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-50 text-brand-700">
         <Icon size={20} />
       </div>
       <h2 className="text-xl font-semibold text-slate-900">{children}</h2>

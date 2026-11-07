@@ -262,7 +262,7 @@ function QuestionCard({ q, answer, isReference, dirty, disabled, onToggle, onCle
                     aria-pressed={on}
                     onClick={() => onToggle(l)}
                     className={`flex h-10 w-10 items-center justify-center rounded-xl border text-sm font-bold transition active:scale-95 disabled:opacity-40 ${
-                      on ? "border-brand-600 bg-brand-600 text-white shadow-md shadow-brand-600/30" : "border-slate-200 bg-white text-slate-600 hover:border-brand-300 hover:bg-brand-50"
+                      on ? "border-brand-600 bg-brand-500 text-brand-900 shadow-md shadow-brand-500/30" : "border-slate-200 bg-white text-slate-600 hover:border-brand-300 hover:bg-brand-50"
                     }`}
                   >
                     {l}

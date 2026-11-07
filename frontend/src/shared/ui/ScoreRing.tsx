@@ -4,7 +4,7 @@ interface Props {
   children: React.ReactNode; // nội dung ở giữa vòng
 }
 
-const STROKE = { success: "#059669", danger: "#e11d48", neutral: "#0066ff" };
+const STROKE = { success: "#059669", danger: "#e11d48", neutral: "#e29400" };
 const R = 52;
 const CIRCUMFERENCE = 2 * Math.PI * R;
 

@@ -91,7 +91,7 @@ export function ResumeList({ limit = 5, className = "" }: Props) {
 
               <Link
                 to={sessionPath(s)}
-                className="hidden shrink-0 items-center gap-1.5 rounded-full bg-brand-600 px-4 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-brand-700 hover:shadow-md sm:inline-flex"
+                className="hidden shrink-0 items-center gap-1.5 rounded-full bg-brand-500 px-4 py-1.5 text-xs font-semibold text-brand-900 shadow-sm transition hover:bg-brand-700 hover:shadow-md sm:inline-flex"
               >
                 <Play size={11} fill="currentColor" />
                 Làm tiếp
