@@ -48,9 +48,15 @@ export function UserMenu() {
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="flex items-center gap-1.5 rounded-full py-1 pl-1 pr-2 transition hover:bg-slate-900/5"
+        className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2 transition hover:bg-slate-900/5"
       >
         <UserAvatar avatarPath={user.avatarPath} alt={user.fullName} className="h-8 w-8" />
+        <span className="hidden min-w-0 flex-col items-start text-left leading-tight sm:flex">
+          <span className="max-w-[9rem] truncate text-sm font-medium text-slate-900">{user.fullName}</span>
+          <span className="flex items-center gap-1 text-xs text-slate-500">
+            <Wallet size={11} /> <b className="tabular-nums text-brand-700">{formatCredit(user.balance)}</b>
+          </span>
+        </span>
         <ChevronDown size={14} className="text-slate-400" />
       </button>
 
