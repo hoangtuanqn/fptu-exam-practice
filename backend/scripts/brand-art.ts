@@ -51,6 +51,20 @@ export function measure(font: Font, str: string, size: number, spacing = 0) {
   return glyphs.reduce((w, g) => w + (g.advanceWidth ?? 0) * scale + gap, 0) - gap;
 }
 
+/** Chuyển Path commands thành chuỗi SVG d an toàn, tránh lỗi NaN của opentype.js khi làm tròn số float nhỏ */
+export function pathToD(p: opentype.Path, decimals = 2): string {
+  const round = (n: number) => Number(n.toFixed(decimals));
+  let d = "";
+  for (const cmd of p.commands) {
+    if (cmd.type === "M") d += `M${round(cmd.x)} ${round(cmd.y)}`;
+    else if (cmd.type === "L") d += `L${round(cmd.x)} ${round(cmd.y)}`;
+    else if (cmd.type === "Q") d += `Q${round(cmd.x1!)} ${round(cmd.y1!)} ${round(cmd.x)} ${round(cmd.y)}`;
+    else if (cmd.type === "C") d += `C${round(cmd.x1!)} ${round(cmd.y1!)} ${round(cmd.x2!)} ${round(cmd.y2!)} ${round(cmd.x)} ${round(cmd.y)}`;
+    else if (cmd.type === "Z") d += "Z";
+  }
+  return d;
+}
+
 /**
  * Xếp chữ từng ký tự một thành <path> (không qua bộ xử lý GSUB của opentype.js vì nó chưa hỗ trợ một số bảng của Inter);
  * chuỗi ở dạng NFC nên dấu tiếng Việt là ký tự dựng sẵn.
@@ -63,7 +77,7 @@ export function textD(font: Font, str: string, size: number, x: number, y: numbe
   let cx = opts.anchor === "middle" ? x - width / 2 : x;
   let d = "";
   for (const g of glyphs) {
-    d += g.getPath(cx, y, size).toPathData(2);
+    d += pathToD(g.getPath(cx, y, size), 2);
     cx += (g.advanceWidth ?? 0) * scale + gap;
   }
   return d;

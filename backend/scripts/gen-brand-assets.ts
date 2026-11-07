@@ -9,8 +9,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
-import { COLOR, MASCOT_H, MASCOT_W, loadFonts, mascotArt, mascotSvg, measure, wordmark, type Fonts } from "./brand-art";
-import { COVER_H, COVER_W, buildCover, coverContent, coverDefs } from "./gen-mail-cover";
+import { COLOR, MASCOT_H, MASCOT_W, loadFonts, mascotArt, mascotSvg, measure, text, wordmark, type Fonts } from "./brand-art";
+import { buildCover } from "./gen-mail-cover";
 
 const ROOT = path.resolve(__dirname, "../..");
 const PUBLIC = path.join(ROOT, "frontend/public");
@@ -64,18 +64,72 @@ function squareIcon(f: Fonts, size: number, rounded = true) {
   </svg>`;
 }
 
-// Ảnh chia sẻ link 1200x630: dùng lại bố cục ảnh bìa email, nới nền cho đủ khung
+// Ảnh chia sẻ link 1200x630 (Facebook, Zalo, OpenGraph): cùng ngôn ngữ thiết kế với ảnh bìa email (trái sáng, phải tối cạnh vát)
 function ogCover(f: Fonts) {
   const W = 1200;
   const H = 630;
-  const k = W / COVER_W;
-  const dy = (H - COVER_H * k) / 2;
+  const mx = 80;
+  const ruleW = 640;
+
+  const tl1 = "Hành trình đi đến ";
+  const tl2 = "điểm 10.";
+  const tlSize = 46;
+  const tl1W = measure(f.semibold, tl1, tlSize);
+  const tl2W = measure(f.semibold, tl2, tlSize);
+
+  const footY = 520;
+  const credit = "Dự án được phát triển bởi: ";
+  const brand = "MST Software";
+  const cs = 20;
+  const creditW = measure(f.medium, credit, cs) + measure(f.bold, brand, cs);
+  const cx0 = mx + ruleW - creditW;
+
+  const ms = 2.8;
+  const mW = MASCOT_W * ms;
+  const mH = MASCOT_H * ms;
+  const mX = 800;
+  const mY = (H - mH) / 2 - 6;
+
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
-    <defs>${coverDefs}</defs>
-    <rect width="${W}" height="${H}" fill="url(#bg)"/>
-    <rect width="${W}" height="${H}" fill="url(#grid)"/>
-    <g transform="translate(0 ${dy}) scale(${k})">${coverContent(f)}</g>
-    <rect y="${H - 12}" width="${W}" height="12" fill="url(#bar)"/>
+    <defs>
+      <linearGradient id="lbg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFDF0"/><stop offset="1" stop-color="${COLOR.gold100}"/></linearGradient>
+      <linearGradient id="dark" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a2e08"/><stop offset="1" stop-color="${COLOR.gold900}"/></linearGradient>
+      <radialGradient id="glow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="${COLOR.gold400}" stop-opacity="0.55"/><stop offset="1" stop-color="${COLOR.gold400}" stop-opacity="0"/></radialGradient>
+      <radialGradient id="gGreen" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#22C55E" stop-opacity="0.45"/><stop offset="1" stop-color="#22C55E" stop-opacity="0"/></radialGradient>
+      <radialGradient id="gOrange" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#FF7A45" stop-opacity="0.5"/><stop offset="1" stop-color="#FF7A45" stop-opacity="0"/></radialGradient>
+    </defs>
+    <rect width="${W}" height="${H}" fill="url(#lbg)"/>
+    <circle cx="30" cy="600" r="220" fill="${COLOR.gold200}" opacity="0.55"/>
+    <circle cx="690" cy="40" r="110" fill="#FFB89A" opacity="0.45"/>
+    <circle cx="745" cy="150" r="22" fill="#22C55E" opacity="0.8"/>
+
+    <path d="M820 0 H${W} V${H} H742 Z" fill="url(#dark)"/>
+    <path d="M820 0 L742 ${H}" stroke="${COLOR.gold500}" stroke-width="8"/>
+    <circle cx="${mX + mW / 2}" cy="${H / 2}" r="270" fill="url(#glow)"/>
+    <circle cx="1150" cy="590" r="260" fill="url(#gGreen)"/>
+    <circle cx="1110" cy="20" r="250" fill="url(#gOrange)"/>
+    <circle cx="876" cy="96" r="10" fill="#22C55E"/>
+    <circle cx="1150" cy="270" r="8" fill="#FF5A5F"/>
+    <circle cx="1090" cy="86" r="6" fill="#FFFFFF" opacity="0.9"/>
+    <circle cx="850" cy="470" r="8" fill="#FF8A5B"/>
+    <rect x="1112" y="470" width="26" height="8" rx="4" fill="#FFD033" transform="rotate(-35 1125 474)"/>
+    <rect x="800" y="250" width="22" height="8" rx="4" fill="#FFFFFF" opacity="0.85" transform="rotate(30 811 254)"/>
+    <path d="M1030 48 l13 0 M1036.500 41.500 l0 13" stroke="#22C55E" stroke-width="4.5" stroke-linecap="round"/>
+    <path d="M790 574 l13 0 M796.500 567.500 l0 13" stroke="#FFD033" stroke-width="4.5" stroke-linecap="round"/>
+    <path d="M1090 190 q9 -11 18 0 t18 0" fill="none" stroke="#FF5A5F" stroke-width="4.5" stroke-linecap="round"/>
+
+    <g transform="translate(${mX} ${mY}) scale(${ms})">${mascotArt(f)}</g>
+
+    ${wordmark(f.logo, "FEPass", 156, mx - 4, 238, { spacing: 0.01 })}
+    <rect x="${mx + tl1W - 2}" y="${290}" width="${tl2W + 14}" height="${tlSize * 0.88}" rx="9" fill="${COLOR.gold300}" opacity="0.85"/>
+    ${text(f.semibold, tl1, tlSize, mx, 326, COLOR.gold800)}
+    ${text(f.bold, tl2, tlSize, mx + tl1W, 326, COLOR.gold900)}
+    ${text(f.medium, "Kho đề trắc nghiệm FE · Lời giải chi tiết", 26, mx, 384, COLOR.gold700)}
+
+    <rect x="${mx}" y="450" width="${ruleW}" height="2" fill="${COLOR.gold200}"/>
+    ${text(f.bold, "FEPASS.TOP", 22, mx, footY, COLOR.gold700, { spacing: 0.14 })}
+    ${text(f.medium, credit, cs, cx0, footY, COLOR.gold700)}
+    ${text(f.bold, brand, cs, cx0 + measure(f.medium, credit, cs), footY, COLOR.gold900)}
   </svg>`;
 }
 
