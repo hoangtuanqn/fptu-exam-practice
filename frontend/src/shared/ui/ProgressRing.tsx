@@ -6,7 +6,7 @@ interface Props {
 }
 
 // Vòng tròn tiến độ: cung màu chạy theo `value`, chữ ở giữa
-export function ProgressRing({ value, label, size = 48, color = "text-brand-600" }: Props) {
+export function ProgressRing({ value, label, size = 48, color = "text-primary" }: Props) {
   const stroke = 4;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
@@ -14,10 +14,10 @@ export function ProgressRing({ value, label, size = 48, color = "text-brand-600"
   return (
     <span className="relative inline-flex shrink-0 items-center justify-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90" aria-hidden>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" strokeWidth={stroke} className="stroke-slate-200" />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" strokeWidth={stroke} className="stroke-surface-container-highest" />
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" strokeWidth={stroke} strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - v)} className={`stroke-current ${color}`} />
       </svg>
-      <span className="absolute text-[11px] font-bold tabular-nums text-slate-800">{label}</span>
+      <span className="absolute text-[11px] font-bold tabular-nums text-on-surface">{label}</span>
     </span>
   );
 }

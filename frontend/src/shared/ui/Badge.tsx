@@ -2,20 +2,15 @@ import type { ReactNode } from "react";
 
 export type Tone = "neutral" | "success" | "danger" | "warning" | "info";
 
+// Nhãn trạng thái dạng chip M3 (assist chip tĩnh): nền container của vai trò tương ứng, chữ on-container (đạt AA)
 const TONES: Record<Tone, string> = {
-  neutral: "border-slate-200 bg-slate-50 text-slate-600",
-  success: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  danger: "border-rose-200 bg-rose-50 text-rose-700",
-  warning: "border-amber-200 bg-amber-50 text-amber-700",
-  info: "border-brand-200 bg-brand-50 text-brand-800",
+  neutral: "bg-surface-container-high text-on-surface-variant",
+  success: "bg-success-container text-on-success-container",
+  danger: "bg-error-container text-on-error-container",
+  warning: "bg-warning-container text-on-warning-container",
+  info: "bg-primary-container text-on-primary-container",
 };
 
 export function Badge({ tone = "neutral", children }: { tone?: Tone; children: ReactNode }) {
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-medium ${TONES[tone]}`}
-    >
-      {children}
-    </span>
-  );
+  return <span className={`md-label-medium inline-flex h-6 items-center gap-1.5 whitespace-nowrap rounded-m3-sm px-2.5 ${TONES[tone]}`}>{children}</span>;
 }

@@ -93,7 +93,7 @@ export function PublicDepositView({ code, note }: { code: string; note?: ReactNo
             </div>
             <div className="grid gap-6 md:grid-cols-[200px_1fr]">
               <div className="mx-auto w-full max-w-[200px]">
-                <img src={payment.qrUrl} alt="Mã QR chuyển khoản" className="aspect-square w-full rounded-lg border border-slate-200 bg-white object-contain" />
+                <img src={payment.qrUrl} alt="Mã QR chuyển khoản" className="aspect-square w-full rounded-lg border border-slate-200 bg-surface-container-lowest object-contain" />
                 <p className="mt-2 text-center text-xs text-slate-500">Quét bằng ứng dụng ngân hàng</p>
               </div>
               <div>

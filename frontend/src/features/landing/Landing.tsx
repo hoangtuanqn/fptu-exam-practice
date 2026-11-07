@@ -19,7 +19,7 @@ export function Landing({ onPick, onImported, userName }: Props) {
   const isGuest = !userName;
 
   return (
-    <div className="flex flex-1 flex-col overflow-y-auto bg-paper">
+    <div className="flex flex-1 flex-col overflow-y-auto bg-surface">
       <ExtensionBar />
       <HeroSection onPick={onPick} onImported={onImported} userName={userName} />
 

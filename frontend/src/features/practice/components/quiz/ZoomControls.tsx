@@ -21,14 +21,14 @@ export function ZoomControls({ zoom, canZoomIn, canZoomOut, onZoomIn, onZoomOut,
       <button
         onClick={onReset}
         title="Đặt lại"
-        className="w-14 rounded-md py-1 text-center text-sm tabular-nums text-slate-200 hover:bg-white/10"
+        className="w-14 rounded-md py-1 text-center text-sm tabular-nums text-slate-200 hover:bg-surface-container-lowest/10"
       >
         {Math.round(zoom * 100)}%
       </button>
       <ToolButton onClick={onZoomIn} disabled={!canZoomIn} label="Phóng to">
         <ZoomIn size={18} />
       </ToolButton>
-      <div className="mx-2 h-5 w-px bg-white/20" />
+      <div className="mx-2 h-5 w-px bg-surface-container-lowest/20" />
       <ToolButton onClick={onClose} label="Đóng (Esc)">
         <X size={20} />
       </ToolButton>
@@ -42,7 +42,7 @@ function ToolButton(props: { children: ReactNode; label: string; onClick: () => 
       onClick={props.onClick}
       disabled={props.disabled}
       title={props.label}
-      className="rounded-md p-2 text-slate-200 hover:bg-white/10 disabled:opacity-30"
+      className="rounded-md p-2 text-slate-200 hover:bg-surface-container-lowest/10 disabled:opacity-30"
     >
       {props.children}
     </button>

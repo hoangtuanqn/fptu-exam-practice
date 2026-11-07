@@ -70,7 +70,7 @@ export function MyExams({ onOpen }: Props) {
                   type="button"
                   onClick={() => void open(e.id)}
                   disabled={openingId !== null}
-                  className="group flex w-full min-w-0 items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 text-left shadow-sm transition-all hover:border-brand-300 hover:shadow-md disabled:opacity-60"
+                  className="group flex w-full min-w-0 items-center gap-3 rounded-xl border border-slate-200 bg-surface-container-lowest p-3 text-left shadow-sm transition-all hover:border-brand-300 hover:shadow-md disabled:opacity-60"
                 >
                   {openingId === e.id ? (
                     <span className="flex h-[48px] w-[48px] shrink-0 items-center justify-center">

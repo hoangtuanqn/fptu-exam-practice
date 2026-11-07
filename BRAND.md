@@ -7,34 +7,15 @@ Tài liệu này dành cho người và AI sửa giao diện: đọc trước kh
 - Công ty phát triển: **MST Software** (MMO Solution). Founder: Phạm Hoàng Tuấn. Co-Founder: Vũ Việt Quang, Mai Trung Hậu. **Chân trang luôn ghi rõ "Phát triển bởi MST Software"** (không bỏ).
 - Facebook: https://facebook.com/mstsoftware.vn
 
-## Màu chủ đạo: vàng của mascot
+## Màu chủ đạo: vàng của mascot (Material Design 3)
 
-Màu lấy từ chính con Cóc Pass (thân vàng, viền nâu đậm). Đổi cả site chỉ cần sửa bảng `--color-*` ở đầu `frontend/src/index.css`.
+Màu giờ do **hệ token Material Design 3** quản lý, sinh từ MỘT màu seed là vàng của con Cóc Pass (`#ffc61f`) bằng thuật toán HCT của Google, có cả chủ đề sáng và tối. **Đọc `docs/material3.md` trước khi làm giao diện.**
 
-| Vai trò | Hex | Token Tailwind | Ghi chú |
-| --- | --- | --- | --- |
-| Vàng nền | `#ffc61f` | `brand-500` | Nền nút chính, điểm nhấn. **Chữ trên nền này luôn là nâu đậm `brand-900`, không dùng chữ trắng** (trắng trên vàng khó đọc) |
-| Vàng sáng | `#ffd033` | `brand-400`, `accent` | Hover nút, đầu sáng của dải chuyển sắc |
-| Vàng đậm | `#e29400` | `brand-600` | Viền, biểu tượng, chữ rất lớn. Không dùng làm chữ nhỏ trên nền trắng (chỉ ~2.6:1) |
-| **Nâu vàng (chữ nhấn)** | `#a86400` | `brand-700` | Liên kết, nhãn, chữ nhấn trên nền trắng (~4.7:1) |
-| Nâu | `#7a4b00` | `brand-800` | Hover khối tối, viền mascot |
-| **Nâu đậm** | `#3f2606` | `brand-900` | Chữ tiêu đề, nền tối, nút tối, chữ trên nền vàng |
-| Vàng rất nhạt | `#fffbe6` | `brand-50` | Nền vùng nhấn nhẹ |
-| Nền trang | `#f6f8fc` | `paper` | Trắng ngà hơi lạnh, để thẻ trắng nổi nhẹ |
-
-Thang đầy đủ: `brand-50 #fffbe6`, `100 #fff4bf`, `200 #ffe88a`, `300 #ffdb57`, `400 #ffd033`, `500 #ffc61f`, `600 #e29400`, `700 #a86400`, `800 #7a4b00`, `900 #3f2606`; `accent #ffd033`, `accent-soft #fff0a0`.
-
-### Gradient thương hiệu
-
-Đi theo chiều **vàng đậm → vàng → vàng nhạt**, giống thân con cóc: `from-brand-600 via-brand-500 to-accent-soft` (vạch, thanh tiến độ), `from-brand-900 via-brand-800 to-brand-600` (thẻ nền tối). Chữ chuyển sắc dùng `.text-gradient` (vàng đậm, đủ tương phản).
-
-### Quy tắc dùng màu
-
-- **Chỉ dùng token**, không viết hex trực tiếp trong component (`bg-brand-500`, `text-brand-700`...).
-- Nút chính: `bg-brand-500 text-brand-900`. Nút tối: `bg-brand-900 text-white`. Liên kết/nhãn nhỏ trên nền trắng: `text-brand-700`.
-- Trang nền **trắng**, vùng tô nhạt `brand-50`/`paper`, khối nhấn mạnh `brand-900`. Không thêm họ màu mới (tím, xanh dương làm màu thương hiệu).
-- Trạng thái nghiệp vụ giữ màu ngữ nghĩa, không phải màu thương hiệu: đúng = emerald, sai = rose. Cảnh báo dùng amber nên **gần với vàng thương hiệu**: ưu tiên nhận biết bằng biểu tượng và chữ, không chỉ bằng màu.
-- Chữ thường dùng `slate-900` (tiêu đề) và `slate-500/600` (phụ); trên nền nâu đậm dùng `white` và `brand-200`.
+- Nguồn: `frontend/scripts/gen-m3-tokens.mjs` (đổi `SEED` rồi `npx tsx scripts/gen-m3-tokens.mjs`), sinh `frontend/src/styles/m3-tokens.css`. Không sửa tay file sinh ra.
+- Dùng vai trò, không dùng hex: `bg-primary text-on-primary` (hành động chính), `bg-primary-container text-on-primary-container` (khối nhấn, vàng nhạt), `bg-secondary-container` (mục đang chọn), `bg-surface`, `text-on-surface`, `border-outline-variant`...
+- Vàng sáng nhận diện `#ffc61f` nay chỉ còn ở logo, ảnh thương hiệu và là hạt giống của bảng màu; nút chính dùng `primary` (vàng nâu đậm) để đạt tương phản AA.
+- Các tên cũ `brand-*`, `slate-*`, `emerald/rose/amber-*` vẫn chạy nhờ lớp tương thích tạm (ánh xạ về vai trò M3); **không dùng cho mã mới**.
+- Trạng thái nghiệp vụ: đúng = `success`, sai/lỗi = `error`, cảnh báo = `warning`; luôn kèm biểu tượng hoặc chữ, không chỉ màu.
 
 ## Font
 

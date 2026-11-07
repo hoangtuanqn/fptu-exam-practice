@@ -36,7 +36,7 @@ export function Pagination({ meta, onPage }: { meta: PageMeta; onPage: (page: nu
     return <div className="border-t border-slate-100 px-5 py-3 text-xs text-slate-500">{meta.total} kết quả</div>;
   }
   const btn =
-    "inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-soft hover:bg-slate-50 disabled:opacity-40";
+    "inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-surface-container-lowest text-slate-600 shadow-soft hover:bg-slate-50 disabled:opacity-40";
   return (
     <div className="flex items-center justify-between border-t border-slate-100 px-5 py-3 text-xs text-slate-500">
       <span>

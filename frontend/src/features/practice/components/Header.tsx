@@ -16,6 +16,7 @@ import { formatDuration, formatScore } from "@/features/practice/utils/format";
 import { Logo } from "@/shared/brand/Logo";
 import { Button } from "@/shared/ui/Button";
 import { UserMenu } from "@/shared/layout/UserMenu";
+import { ThemeToggle } from "@/shared/theme/ThemeToggle";
 
 interface Props {
   title: string;
@@ -68,7 +69,7 @@ export function Header({
   const low = left !== null && left <= 300; // còn dưới 5 phút: đổi sang màu đỏ
 
   return (
-    <header className="glass z-30 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-slate-200/70 px-3 sm:px-4">
+    <header className="z-30 flex h-16 shrink-0 items-center justify-between gap-2 border-b border-outline-variant bg-surface px-2 sm:px-4">
       <div className="flex min-w-0 items-center gap-3">
         <Link
           to="/"
@@ -190,6 +191,7 @@ export function Header({
             <span className="mx-1 hidden h-6 w-px bg-slate-200 sm:block" />
           </>
         )}
+        <ThemeToggle />
         <UserMenu />
       </div>
     </header>
