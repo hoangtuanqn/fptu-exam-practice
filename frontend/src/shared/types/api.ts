@@ -4,7 +4,7 @@ export type Role = "USER" | "ADMIN";
 export type UserStatus = "ACTIVE" | "BANNED";
 export type DepositStatus = "PENDING" | "PAID" | "EXPIRED";
 export type BankTxStatus = "MATCHED" | "UNMATCHED";
-export type TransactionType = "DEPOSIT" | "ADMIN_ADJUST" | "CRAWL_CHARGE" | "CRAWL_REFUND" | "GIFT_CODE" | "REPORT_REWARD" | "EXPLAIN_CHARGE" | "EXPLAIN_REFUND" | "REFERRAL_BONUS" | "REFERRAL_COMMISSION" | "SIGNUP_BONUS" | "DEPOSIT_BONUS" | "PE_CHARGE" | "PE_REFUND";
+export type TransactionType = "DEPOSIT" | "ADMIN_ADJUST" | "CRAWL_CHARGE" | "CRAWL_REFUND" | "GIFT_CODE" | "REPORT_REWARD" | "EXPLAIN_CHARGE" | "EXPLAIN_REFUND" | "REFERRAL_BONUS" | "REFERRAL_COMMISSION" | "SIGNUP_BONUS" | "DEPOSIT_BONUS" | "PE_CHARGE" | "PE_REFUND" | "CHECKIN_REWARD";
 
 export interface User {
   id: number;

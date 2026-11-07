@@ -89,6 +89,13 @@ Thấy đáp án chính thức của một câu chưa đúng? Dùng nút báo c�
 4. Credit được cộng tự động sau ít phút khi hệ thống nhận được tiền. 1 ₫ = 1 credit.
 Lưu ý: lệnh nạp có thời hạn thanh toán; quá hạn thì tạo lệnh mới. Chuyển sai nội dung hoặc sai số tiền có thể không tự khớp lệnh, khi đó hãy liên hệ quản trị viên kèm ảnh giao dịch. Có thể gửi đường link lệnh nạp (`/deposit/<mã>`) cho người khác mở xem để chuyển khoản hộ. Nạp nhiều được thưởng thêm credit theo các mức do admin cấu hình (xem ở thông tin hệ thống). Lịch sử nạp và biến động số dư xem ở Lịch sử giao dịch.
 
+## Điểm danh hằng ngày nhận credit
+- Mỗi ngày vào FEPass (đã đăng nhập), một hộp "Điểm danh hằng ngày" hiện ra ngay. Bấm **Nhận** để được tặng **25 credit**.
+- Điểm danh đủ **7 ngày liên tiếp**: ngày thứ 7 nhận 25 credit của ngày đó cộng thêm **100 credit** thưởng (tổng 125 credit ở ngày 7). Sau đó vòng mới bắt đầu lại từ ngày 1.
+- Bỏ lỡ một ngày thì chuỗi tính lại từ ngày 1. Ngày được tính theo giờ Việt Nam, qua **0h** là sang ngày mới và điểm danh được tiếp.
+- Đã nhận trong ngày thì hộp không hiện lại cho tới sau 0h. Nếu lỡ đóng hộp khi chưa nhận, mở lại bằng **avatar (góc phải) → Điểm danh nhận thưởng**.
+- Cần email đã xác minh mới nhận được. Credit điểm danh hiện ở Tài khoản → Lịch sử giao dịch với tên "Thưởng điểm danh".
+
 ## Giftcode
 Có mã quà tặng? Vào Tài khoản → Giftcode, nhập mã để nhận credit. Mỗi mã chỉ dùng được một lần cho mỗi tài khoản, mã có thể hết lượt hoặc hết hạn. Danh sách mã đã nhập hiện ngay bên dưới.
 
