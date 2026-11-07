@@ -35,6 +35,10 @@ export const depositRepository = {
   // Tra theo mã nạp và luôn kèm userId: người khác biết mã cũng không xem được lệnh của bạn
   findByCodeOfUser: (code: string, userId: number) => prisma.depositOrder.findFirst({ where: { code, userId } }),
 
+  // Lệnh chưa thanh toán, còn hạn, cùng số tiền, tạo trong khoảng gần đây: dùng lại thay vì tạo lệnh thứ hai
+  findRecentPending: (userId: number, amount: number, since: Date) =>
+    prisma.depositOrder.findFirst({ where: { userId, amount, status: "PENDING", expiresAt: { gt: new Date() }, createdAt: { gte: since } }, orderBy: { id: "desc" } }),
+
   countPending: (userId: number) => prisma.depositOrder.count({ where: { userId, status: "PENDING" } }),
 
   async list(query: PaginationQuery, filter: { userId?: number; status?: DepositStatus }, withUser = false) {

@@ -61,6 +61,9 @@ export const depositService = {
         amount: "Chưa đạt số tiền tối thiểu",
       });
     }
+    // Bấm tạo lại ngay sau khi vừa tạo (mạng chậm, gửi lại): trả về đúng lệnh đang chờ, không tạo thêm lệnh trùng
+    const recent = await depositRepository.findRecentPending(userId, amount, new Date(Date.now() - 2 * 60_000));
+    if (recent) return { order: recent, payment: toPayment(config, recent) };
     if ((await depositRepository.countPending(userId)) >= MAX_PENDING_PER_USER) {
       throw new AppError("Bạn đang có quá nhiều lệnh nạp chưa thanh toán, vui lòng hoàn tất hoặc chờ hết hạn");
     }

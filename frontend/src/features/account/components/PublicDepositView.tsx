@@ -10,6 +10,7 @@ import { ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { buttonClass } from "@/shared/ui/Button";
 import { formatDateTime, formatMoney } from "@/shared/utils/formatters";
 import { PaymentRow } from "./PaymentRow";
+import { errorMessage } from "@/shared/api/errors";
 
 const POLL_MS = 5000;
 
@@ -30,7 +31,7 @@ export function PublicDepositView({ code, note }: { code: string; note?: ReactNo
         setDetail(d);
         setError(null);
       } catch (err) {
-        if (!stopped) setError(err instanceof Error ? err.message : "Không tải được lệnh nạp");
+        if (!stopped) setError(errorMessage(err, "Không tải được lệnh nạp"));
       }
     };
     void load();

@@ -2,6 +2,7 @@ import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { crawlJobController } from "../controllers/crawl-job.controllers";
 import { identify, requireVerifiedMember } from "../middlewares/auth.middlewares";
+import { idempotent } from "../middlewares/idempotency.middlewares";
 import { validate } from "../middlewares/validate.middlewares";
 import { idParam, importExamBody } from "../rules/requests/crawl.request";
 
@@ -33,7 +34,7 @@ const crawlJobRouter = Router();
 
 crawlJobRouter.use(identify); // thành viên hoặc khách đều được lấy đề
 
-crawlJobRouter.post("/", requireVerifiedMember, memberLimiter, guestLimiter, validate(importExamBody), crawlJobController.submit);
+crawlJobRouter.post("/", requireVerifiedMember, idempotent, memberLimiter, guestLimiter, validate(importExamBody), crawlJobController.submit);
 crawlJobRouter.get("/price", crawlJobController.price);
 crawlJobRouter.get("/quote", quoteLimiter, validate(importExamBody, "query"), crawlJobController.quote);
 crawlJobRouter.get("/:id", validate(idParam, "params"), crawlJobController.get);

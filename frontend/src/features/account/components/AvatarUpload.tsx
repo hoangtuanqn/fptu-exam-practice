@@ -4,6 +4,7 @@ import { userApi } from "@/features/account/api/user.api";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useToast } from "@/shared/context/ToastContext";
 import { API_ORIGIN } from "@/shared/api/client";
+import { errorMessage } from "@/shared/api/errors";
 import { MASCOT_SVG } from "@/shared/ui/mascot-art";
 
 // Giới hạn phía client (server cũng kiểm tra lại)
@@ -21,7 +22,7 @@ export function AvatarUpload() {
   const toast = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
-  const [removing, setRemoving] = useState(false);
+  const removeTicket = useRef(0); // lệnh xoá hoãn nào còn hiệu lực; tải ảnh mới hoặc bấm Hoàn tác sẽ huỷ nó
 
   const src = avatarSrc(user?.avatarPath);
 
@@ -34,33 +35,46 @@ export function AvatarUpload() {
       toast.error("Ảnh tối đa 5 MB");
       return;
     }
+    removeTicket.current++; // đang chờ xoá ảnh cũ mà đổi ảnh mới: huỷ lệnh xoá, kẻo nó xoá luôn ảnh mới
     setUploading(true);
     try {
       const updated = await userApi.uploadAvatar(file);
       setUser(updated);
       toast.success("Đã cập nhật ảnh đại diện");
-    } catch {
-      toast.error("Không tải lên được ảnh");
+    } catch (err) {
+      toast.error(errorMessage(err, "Không tải lên được ảnh"));
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";
     }
   };
 
-  const handleRemove = async () => {
-    setRemoving(true);
-    try {
-      await userApi.removeAvatar();
-      setUser({ ...user!, avatarPath: null });
-      toast.success("Đã xoá ảnh đại diện");
-    } catch {
-      toast.error("Không xoá được ảnh");
-    } finally {
-      setRemoving(false);
-    }
+  // Xoá có hoàn tác: ảnh biến mất ngay, chỉ xoá thật ở máy chủ khi hết thời gian hoàn tác (bấm "Hoàn tác" thì không gọi máy chủ)
+  const handleRemove = () => {
+    const current = user!;
+    const previous = current.avatarPath;
+    const ticket = ++removeTicket.current;
+    setUser({ ...current, avatarPath: null });
+    toast.success("Đã xoá ảnh đại diện", {
+      duration: 7000,
+      action: {
+        label: "Hoàn tác",
+        onClick: () => {
+          removeTicket.current++;
+          setUser({ ...current, avatarPath: previous });
+        },
+      },
+      onExpire: () => {
+        if (ticket !== removeTicket.current) return; // đã hoàn tác hoặc đã đổi ảnh khác
+        userApi.removeAvatar().catch((err) => {
+          setUser({ ...current, avatarPath: previous }); // xoá thật thất bại: trả ảnh lại, đừng để người dùng tưởng đã xoá
+          toast.error(errorMessage(err, "Chưa xoá được ảnh đại diện"));
+        });
+      },
+    });
   };
 
-  const busy = uploading || removing;
+  const busy = uploading;
 
   return (
     <div className="flex items-center gap-4">
@@ -104,17 +118,13 @@ export function AvatarUpload() {
             type="button"
             onClick={handleRemove}
             title="Xoá ảnh đại diện"
+            aria-label="Xoá ảnh đại diện"
             className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-white shadow transition hover:bg-rose-600"
           >
             <X size={11} />
           </button>
         )}
 
-        {removing && (
-          <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-slate-200">
-            <Loader2 size={11} className="animate-spin text-slate-500" />
-          </span>
-        )}
       </div>
 
       {/* Text hướng dẫn */}

@@ -4,6 +4,7 @@ import { ArrowUp, RotateCcw, X } from "lucide-react";
 import { chatApi, type ChatMessage } from "@/features/chat/chat.api";
 import { MASCOT_SVG } from "@/shared/ui/mascot-art";
 import { Markdown } from "@/shared/ui/Markdown";
+import { errorMessage } from "@/shared/api/errors";
 
 const STORE_KEY = "fepass_chat_v2";
 
@@ -128,7 +129,7 @@ export default function ChatWidget() {
 *(câu trả lời bị gián đoạn)*` }]);
       } else {
         // Không tạo bong bóng trả lời lỗi: đánh dấu ngay tin của người dùng, giống các app nhắn tin
-        const reason = err instanceof Error ? err.message : "Mình đang bận chút, bạn thử lại sau nhé";
+        const reason = errorMessage(err, "Mình đang bận chút, bạn thử lại sau nhé");
         setMessages([...history, { role: "user", content, failed: reason }]);
       }
     } finally {

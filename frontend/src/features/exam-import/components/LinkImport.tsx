@@ -212,6 +212,10 @@ export function LinkImport({ onImported }: Props) {
           <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-surface-container-lowest px-3 py-1 text-xs font-semibold text-slate-600">
             <BadgeCheck size={14} className="text-brand-700" /> Đáp án chính xác đến 99.9%
           </span>
+          {/* Hạn mức nhìn thấy TRƯỚC khi bấm (không phải đợi hết lượt mới biết) */}
+          <span className="md-body-small text-on-surface-variant">
+            {user ? (fee > 0 ? `Số dư của bạn: ${user.balance.toLocaleString("vi-VN")} credit. Đề đã từng lấy được mở lại miễn phí.` : "Đề đã từng lấy được mở lại miễn phí.") : price.data?.guestRemaining !== undefined ? `Hôm nay bạn còn ${price.data.guestRemaining}/${price.data.guestLimit} lượt lấy đề miễn phí.` : "Khách được lấy miễn phí 1 đề mỗi ngày."}
+          </span>
         </div>
       </div>
 
@@ -293,6 +297,7 @@ export function LinkImport({ onImported }: Props) {
           >
             Thử lại
           </button>
+          <p className="md-body-small text-on-surface-variant">Nếu đã bị trừ credit cho lần lấy này, hệ thống tự hoàn lại khi lấy đề không thành công.</p>
         </div>
       )}
     </form>
