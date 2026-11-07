@@ -12,5 +12,15 @@ export function parseThreadId(url: string): string | null {
   }
 }
 
+/** Link thread hợp lệ của FuOverflow: http(s), đúng domain (hoặc subdomain) và có ID thread. Dùng chung cho mọi chỗ nhận link. */
+export function isFuoThreadUrl(url: string): boolean {
+  try {
+    const { protocol, hostname } = new URL(url);
+    return (protocol === "https:" || protocol === "http:") && (hostname === FUO_HOST || hostname.endsWith(`.${FUO_HOST}`)) && parseThreadId(url) !== null;
+  } catch {
+    return false;
+  }
+}
+
 /** Link sạch để crawl: chỉ phụ thuộc ID, bỏ mọi tham số người dùng gửi lên. */
 export const threadUrl = (threadId: string) => `https://${FUO_HOST}/threads/${threadId}/`;
