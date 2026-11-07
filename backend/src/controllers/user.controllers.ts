@@ -35,11 +35,11 @@ export const userController = {
   // Upload avatar: multer đã parse file, middleware đã validate
   async uploadAvatar(req: Request, res: Response) {
     if (!req.file) throw new AppError("Vui lòng chọn ảnh", 400);
-    // Xoá ảnh cũ trước khi lưu ảnh mới
+    // Lưu ảnh mới trước, cập nhật DB, rồi mới xoá ảnh cũ: lỗi giữa chừng thì người dùng vẫn còn ảnh cũ
     const current = await userRepository.findById(req.user!.id);
-    if (current?.avatarPath) await avatarService.remove(current.avatarPath);
     const avatarPath = await avatarService.upload(req.user!.id, req.file.buffer);
     const data = await userRepository.update(req.user!.id, { avatarPath });
+    if (current?.avatarPath && current.avatarPath !== avatarPath) await avatarService.remove(current.avatarPath).catch(() => undefined);
     res.json(new ResponseClient({ message: "Đã cập nhật ảnh đại diện", data }));
   },
 

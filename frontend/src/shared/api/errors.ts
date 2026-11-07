@@ -38,6 +38,12 @@ export function errorMessage(err: unknown, fallback?: string): string {
   if (kind === "unknown") return fallback ?? GENERIC.unknown;
   const apiErr = err as ApiError;
   if (kind === "server" || kind === "network") return GENERIC[kind];
+  // 429 biết chính xác phải chờ bao lâu thì nói cụ thể, người dùng khỏi đoán
+  if (kind === "rate-limit" && apiErr.retryAfter) {
+    const s = apiErr.retryAfter;
+    const wait = s >= 90 ? `khoảng ${Math.ceil(s / 60)} phút` : `${s} giây`;
+    return `Bạn thao tác hơi nhanh. Thử lại sau ${wait} nhé.`;
+  }
   const raw = apiErr.message?.trim() ?? "";
   if (!raw || RAW_CODE.test(raw)) return GENERIC[kind];
   return raw;

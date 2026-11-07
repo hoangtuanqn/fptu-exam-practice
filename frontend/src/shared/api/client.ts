@@ -64,6 +64,7 @@ export class ApiError extends Error {
     message: string,
     public status: number,
     public errors?: Record<string, string>, // lỗi theo từng trường, để hiện dưới ô nhập
+    public retryAfter?: number, // giây phải chờ trước khi thử lại (header Retry-After của lỗi 429)
   ) {
     super(message);
   }
@@ -152,7 +153,8 @@ async function send<T>(method: string, path: string, body?: unknown, query?: Que
         if (result === "ok") return send<T>(method, path, body, query, keepalive, true);
       }
     }
-    throw new ApiError(json?.message ?? `Lỗi ${res.status}`, res.status, json?.errors);
+    const wait = Number(res.headers.get("Retry-After"));
+    throw new ApiError(json?.message ?? `Lỗi ${res.status}`, res.status, json?.errors, Number.isFinite(wait) && wait > 0 ? Math.ceil(wait) : undefined);
   }
   return json;
 }
