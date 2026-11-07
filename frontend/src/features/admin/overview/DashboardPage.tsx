@@ -117,7 +117,7 @@ export default function DashboardPage() {
 
       <section>
         <h2 className="eyebrow mb-3">Lối tắt</h2>
-        <ul className="divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white">
+        <ul className="divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-surface-container-lowest">
           {QUICK.map(({ to, label, note }) => (
             <li key={to}>
               <Link to={to} className="group flex items-center gap-4 px-5 py-3.5 transition hover:bg-slate-50">

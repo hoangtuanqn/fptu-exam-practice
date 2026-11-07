@@ -11,7 +11,7 @@ import { useToast } from "@/shared/context/ToastContext";
 import type { AuthResult } from "@/features/auth/auth.api";
 
 const buttonCls =
-  "flex w-full items-center justify-center gap-2.5 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm sm:px-4 font-medium text-slate-800 shadow-soft transition hover:bg-slate-50 disabled:opacity-60";
+  "flex w-full items-center justify-center gap-2.5 rounded-lg border border-slate-300 bg-surface-container-lowest px-3 py-2.5 text-sm sm:px-4 font-medium text-slate-800 shadow-soft transition hover:bg-slate-50 disabled:opacity-60";
 
 // Các nút "Tiếp tục với Google / GitHub" + đường kẻ "hoặc". Nút nào chưa cấu hình (hoặc không tải được) thì ẩn; không có nút nào thì ẩn cả khối.
 // Email do nhà cung cấp xác minh nên tài khoản vào là dùng được ngay, không cần xác minh email.

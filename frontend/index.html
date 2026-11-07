@@ -3,6 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      /* Áp chủ đề đã lưu trước khi trình duyệt vẽ để không bị nháy sáng/tối. Không có lựa chọn thì để CSS theo prefers-color-scheme. */
+      try {
+        var t = localStorage.getItem("fepass.theme");
+        if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    </script>
     <title>{{title}}</title>
     <meta name="description" content="{{description}}" />
     <link rel="canonical" href="{{siteUrl}}" />

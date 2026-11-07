@@ -229,7 +229,7 @@ function QuestionCard({ q, answer, isReference, dirty, disabled, onToggle, onCle
   const missing = !isReference && picked.length === 0;
 
   return (
-    <div id={`q-${q.number}`} className={`overflow-hidden rounded-2xl border bg-white shadow-soft transition ${dirty ? "border-amber-300 ring-2 ring-amber-100" : missing ? "border-rose-200" : "border-slate-200"}`}>
+    <div id={`q-${q.number}`} className={`overflow-hidden rounded-2xl border bg-surface-container-lowest shadow-soft transition ${dirty ? "border-amber-300 ring-2 ring-amber-100" : missing ? "border-rose-200" : "border-slate-200"}`}>
       <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-4 py-2.5">
         <div className="flex items-center gap-2">
           <span className="font-serif text-lg font-semibold text-slate-900">Câu {q.number}</span>
@@ -262,7 +262,7 @@ function QuestionCard({ q, answer, isReference, dirty, disabled, onToggle, onCle
                     aria-pressed={on}
                     onClick={() => onToggle(l)}
                     className={`flex h-10 w-10 items-center justify-center rounded-xl border text-sm font-bold transition active:scale-95 disabled:opacity-40 ${
-                      on ? "border-brand-600 bg-brand-500 text-brand-900 shadow-md shadow-brand-500/30" : "border-slate-200 bg-white text-slate-600 hover:border-brand-300 hover:bg-brand-50"
+                      on ? "border-brand-600 bg-primary-container text-on-primary-container shadow-md shadow-brand-500/30" : "border-slate-200 bg-surface-container-lowest text-slate-600 hover:border-brand-300 hover:bg-brand-50"
                     }`}
                   >
                     {l}
@@ -434,7 +434,7 @@ export default function ExamEditPage() {
       {locked && <div className="mb-3 rounded-xl border border-sky-200 bg-sky-50 px-4 py-2.5 text-sm text-sky-800">AI đang giải đề này, chờ AI xong rồi mới sửa tay được.</div>}
 
       {/* Thanh công cụ dính khi cuộn */}
-      <div className="sticky top-0 z-20 -mx-1 mb-4 rounded-2xl border border-slate-200 bg-white/90 p-3 shadow-soft backdrop-blur">
+      <div className="sticky top-0 z-20 -mx-1 mb-4 rounded-2xl border border-slate-200 bg-surface-container-lowest/90 p-3 shadow-soft backdrop-blur">
         <div className="flex flex-wrap items-center gap-2">
           <Segmented
             label="Lọc câu hỏi"

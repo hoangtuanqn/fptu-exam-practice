@@ -27,7 +27,7 @@ const STEPS: { title: string; body: React.ReactNode }[] = [
   {
     title: "Tải tiện ích về máy",
     body: (
-      <a href={brand.extensionUrl} download className="mt-1.5 inline-flex items-center gap-2 rounded-md bg-brand-500 px-4 py-2 text-sm font-semibold text-brand-900 hover:bg-brand-400">
+      <a href={brand.extensionUrl} download className="mt-1.5 inline-flex items-center gap-2 rounded-md bg-primary-container px-4 py-2 text-sm font-semibold text-on-primary-container hover:bg-primary-container/80">
         <Download size={15} /> Tải file fepass_extension.zip
       </a>
     ),
@@ -105,9 +105,9 @@ export function ExtensionBar() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="group flex w-full shrink-0 items-center justify-center gap-2 border-b border-amber-200 bg-gradient-to-r from-amber-50 via-white to-amber-50 px-4 py-2 text-sm text-amber-950 transition hover:from-amber-100 hover:to-amber-100"
+        className="md-state md-motion md-body-medium group flex min-h-12 w-full shrink-0 items-center justify-center gap-2 border-b border-outline-variant bg-surface-container-high px-4 py-2 text-on-surface"
       >
-        {outdated ? <RefreshCw size={16} className="shrink-0 text-amber-600" /> : <Puzzle size={16} className="shrink-0 text-amber-600" />}
+        {outdated ? <RefreshCw size={16} className="shrink-0 text-primary" /> : <Puzzle size={16} className="shrink-0 text-primary" />}
         <span className="min-w-0 truncate">
           {outdated ? (
             <>
@@ -134,7 +134,7 @@ export function ExtensionBar() {
           <ol className="mt-5 space-y-4">
             {(outdated ? UPDATE_STEPS : STEPS).map((s, i) => (
               <li key={s.title} className="flex gap-3">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-900 text-sm font-semibold text-white">{i + 1}</span>
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-on-primary">{i + 1}</span>
                 <div className="min-w-0">
                   <div className="font-semibold text-slate-900">{s.title}</div>
                   {s.body}
