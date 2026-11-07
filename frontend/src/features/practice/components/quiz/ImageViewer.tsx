@@ -37,7 +37,7 @@ export function ImageViewer({
   useKeydown((e) => e.key === "Escape" && onClose());
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-brand-900/90 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex flex-col bg-scrim/90 backdrop-blur-sm">
       {/* Thanh công cụ */}
       <div className="flex h-14 shrink-0 items-center justify-between px-5 text-white">
         <div className="font-serif text-lg font-semibold">
@@ -56,7 +56,7 @@ export function ImageViewer({
 
       <div className="flex min-h-0 flex-1 flex-col gap-4 px-5 pb-5 lg:flex-row">
         {/* Ảnh */}
-        <div ref={zoom.scrollRef} className="min-h-0 flex-1 overflow-auto rounded-xl bg-white p-4">
+        <div ref={zoom.scrollRef} className="min-h-0 flex-1 overflow-auto rounded-xl bg-surface-container-lowest p-4">
           {/* m-auto thay cho justify-center: ảnh nhỏ thì nằm giữa, ảnh tràn khung thì vẫn cuộn tới được mọi phía */}
           <div className="flex min-h-full min-w-full">
             <img
@@ -72,7 +72,7 @@ export function ImageViewer({
         </div>
 
         {/* Đáp án */}
-        <aside className="flex shrink-0 flex-col rounded-xl bg-white p-5 lg:w-80">
+        <aside className="flex shrink-0 flex-col rounded-xl bg-surface-container-lowest p-5 lg:w-80">
           <div className="flex items-center justify-between">
             <QuestionKindBadge question={question} short />
             <FlagButton flagged={flagged} onToggle={onToggleFlag} />

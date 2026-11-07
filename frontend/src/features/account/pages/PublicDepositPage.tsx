@@ -16,8 +16,8 @@ export default function PublicDepositPage() {
   if (user) return <Navigate to={`/account/deposit/${encodeURIComponent(code)}`} replace />;
 
   return (
-    <div className="flex min-h-screen flex-col bg-paper">
-      <header className="flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4">
+    <div className="flex min-h-screen flex-col bg-surface">
+      <header className="flex h-14 items-center justify-between border-b border-slate-200 bg-surface-container-lowest px-4">
         <Link to="/" title={brand.company}>
           <Logo variant="full" className="h-9" />
         </Link>

@@ -18,7 +18,7 @@ export function AnswerStatus({ question, selected, revealed, canCheck, onCheck }
   return (
     <div className="flex h-10 min-w-44 items-center">
       {canCheck ? (
-        <Button variant="primary" size="sm" className="h-10" onClick={onCheck}>
+        <Button variant="filled" size="sm" className="!h-10" onClick={onCheck}>
           <Check size={16} />
           Xác nhận
           <Kbd>Enter</Kbd>
@@ -27,7 +27,7 @@ export function AnswerStatus({ question, selected, revealed, canCheck, onCheck }
         hasAnswer(question) ? (
           <Result right={isCorrect(question, selected)} correct={question.correct} />
         ) : (
-          <span className="text-sm text-slate-400">Chưa có đáp án</span>
+          <span className="md-body-medium text-on-surface-variant">Chưa có đáp án</span>
         )
       ) : null}
     </div>
@@ -36,12 +36,10 @@ export function AnswerStatus({ question, selected, revealed, canCheck, onCheck }
 
 function Result({ right, correct }: { right: boolean; correct: string[] }) {
   const Icon = right ? CheckCircle2 : XCircle;
-  const tone = right
-    ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-    : "border-rose-200 bg-rose-50 text-rose-800";
+  const tone = right ? "bg-success-container text-on-success-container" : "bg-error-container text-on-error-container";
 
   return (
-    <div className={`flex h-10 items-center gap-2 rounded-lg border px-3 text-sm ${tone}`}>
+    <div role="status" className={`md-label-large flex h-10 items-center gap-2 rounded-m3-sm px-3 ${tone}`}>
       <Icon size={18} className="shrink-0" />
       <span className="whitespace-nowrap">
         {right ? (
