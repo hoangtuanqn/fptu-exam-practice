@@ -81,7 +81,7 @@ export function LinkImport({ onImported }: Props) {
           if (cancelled) return;
           // 4xx (trừ 429) = backend không chấp nhận link; lỗi mạng/quá tải thì không chặn, để lúc bấm "Lấy đề" báo tiếp
           if (err instanceof ApiError && err.status >= 400 && err.status < 500 && err.status !== 429) setRemote({ link, status: "error", message: err.message });
-          else setRemote(null);
+          else setRemote({ link, status: "ok" }); // không kiểm tra được (mạng/quá tải): không chặn, lúc bấm Lấy đề sẽ báo tiếp
         });
     }, 450);
     return () => {
@@ -93,6 +93,7 @@ export function LinkImport({ onImported }: Props) {
   const current = remote?.link === link ? remote : null;
   const linkError = link ? (local.ok ? (current?.status === "error" ? current.message ?? "Link không hợp lệ" : null) : local.message) : null;
   const linkInvalid = !!linkError;
+  const checking = local.ok && !linkInvalid && current?.status !== "ok"; // đang kiểm tra (hoặc chưa kiểm tra xong): chưa cho bấm Lấy đề
 
   const limitReached =
     !user && job.phase === "failed" && job.errorStatus === 429;
@@ -228,7 +229,7 @@ export function LinkImport({ onImported }: Props) {
         <Button
           variant="primary"
           type="submit"
-          disabled={!url.trim() || linkInvalid || running || done || quoting || (!!user && price.loading)}
+          disabled={!url.trim() || linkInvalid || checking || running || done || quoting || (!!user && price.loading)}
         >
           {(running || quoting) && <Loader2 size={16} className="animate-spin" />}
           {running ? "Đang lấy đề…" : "Lấy đề"}
@@ -244,11 +245,7 @@ export function LinkImport({ onImported }: Props) {
           ) : current?.status === "ok" ? (
             <span className="flex items-start gap-1.5 text-emerald-700">
               <CheckCircle2 size={14} className="mt-px shrink-0" />
-              {current.quote?.reason === "owned"
-                ? `Link hợp lệ. Bạn đã lấy đề${current.quote.title ? ` "${current.quote.title}"` : ""} rồi, mở lại miễn phí.`
-                : current.quote?.reason === "in-progress"
-                  ? "Link hợp lệ. Đề đang được lấy, không tính thêm phí."
-                  : `Link hợp lệ${local.ok ? ` (mã đề ${local.threadId})` : ""}.`}
+              Link hợp lệ
             </span>
           ) : local.ok ? (
             <span className="flex items-center gap-1.5 text-slate-500">
