@@ -6,7 +6,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
-import { COLOR, mascotArt, text, type Fonts, loadFonts } from "./brand-art";
+import { COLOR, mascotArt, text, wordmark, type Fonts, loadFonts } from "./brand-art";
 
 const OUT_DIR = path.resolve(__dirname, "../assets/mail");
 export const COVER_W = 1120;
@@ -55,7 +55,7 @@ export const coverContent = (f: Fonts) => `
     ${text(f.extrabold, "10", 38, 0, 12, COLOR.gold700, { anchor: "middle" })}
     ${text(f.bold, "ĐIỂM", 13, 0, 34, COLOR.gold800, { anchor: "middle", spacing: 0.115 })}
   </g>
-  ${text(f.extrabold, "FEPass", 104, 92, 238, "url(#word)", { spacing: -0.02 })}
+  ${wordmark(f.logo, "FEPass", 118, 96, 236, { dark: true, spacing: 0.01 })}
   <rect x="96" y="266" width="120" height="6" rx="3" fill="${COLOR.gold500}"/>
   ${text(f.semibold, "Hành trình đi đến điểm 10.", 30, 96, 320, COLOR.gold200)}
   ${text(f.medium, "Luyện thi FE FPTU · fepass.top", 22, 96, 362, COLOR.gold400, { opacity: 0.9 })}`;
