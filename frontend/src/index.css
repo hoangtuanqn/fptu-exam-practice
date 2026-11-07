@@ -1,9 +1,14 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  /* Cả site dùng Inter (nhúng từ Google Fonts trong index.html). Giữ tên font-serif để các tiêu đề cũ tự đổi theo. */
-  --font-serif: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* CẢ HỆ THỐNG CHỈ DÙNG INTER (nhúng từ Google Fonts trong index.html). Mọi họ phông đều trỏ về Inter: các class font-serif, font-display,
+     font-mono cũ và thẻ <code>/<pre>/<kbd> (Tailwind mặc định dùng phông monospace) đều ra Inter. Không thêm phông khác (xem BRAND.md). */
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-serif: var(--font-sans);
+  --font-display: var(--font-sans);
+  --font-mono: var(--font-sans);
+  --default-font-family: var(--font-sans);
+  --default-mono-font-family: var(--font-sans);
 
   /* BẢNG MÀU THƯƠNG HIỆU MST: đo trực tiếp từ logo (xem BRAND.md ở thư mục gốc).
      Đổi màu cả site chỉ cần sửa các dòng dưới đây. */
@@ -26,7 +31,6 @@
   --color-ink: #101010;
 
   /* Nền trang: trắng ngà hơi lạnh, để thẻ trắng nổi lên nhẹ nhàng */
-  --font-display: "Source Serif 4", "Noto Serif", Georgia, "Times New Roman", serif; /* tiêu đề trang chủ: chữ có chân cho vẻ học thuật */
   --color-paper: #f6f8fc;
 
   /* Đổ bóng nhiều lớp, rất nhạt: tạo độ nổi mà không nặng nề */

@@ -40,7 +40,7 @@
   const MODAL_CSS = `
     :host { all: initial; }
     .ov { position: fixed; inset: 0; z-index: 2147483647; display: flex; align-items: center; justify-content: center; padding: 16px;
-      background: rgba(11,23,48,.45); backdrop-filter: blur(3px); font: 14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+      background: rgba(11,23,48,.45); backdrop-filter: blur(3px); font: 14px/1.5 "FePass Inter",sans-serif; }
     .box { width: 100%; max-width: 400px; background: #fff; color: #101010; border-radius: 20px; padding: 24px; box-shadow: 0 24px 60px rgba(11,23,48,.35);
       animation: pop .22s cubic-bezier(.2,.9,.3,1.2) both; text-align: center; }
     @keyframes pop { from { opacity: 0; transform: translateY(10px) scale(.96); } to { opacity: 1; transform: none; } }

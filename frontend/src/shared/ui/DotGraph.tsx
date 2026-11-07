@@ -16,7 +16,7 @@ const loadViz = () => (vizPromise ??= import("@viz-js/viz").then((m) => m.instan
 const withTimeout = <T,>(p: Promise<T>) =>
   Promise.race([p, new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Vẽ đồ thị quá lâu")), RENDER_TIMEOUT_MS))]);
 
-const FONT = "Inter, Helvetica, Arial, sans-serif";
+const FONT = "Inter, sans-serif";
 
 /**
  * Vẽ một đồ thị viết bằng ngôn ngữ DOT thành SVG, đặt trong lời giải thích. Thiết kế để không ảnh hưởng trải nghiệm:
