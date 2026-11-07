@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ApiError } from "@/shared/api/client";
+import { errorMessage } from "@/shared/api/errors";
 
 interface State<T> {
   data: T | null;
@@ -23,7 +23,7 @@ export function useApi<T>(fetcher: () => Promise<T>, deps: unknown[]) {
       .then((data) => mine === ticket.current && setState({ data, error: null, loading: false }))
       .catch((err: unknown) => {
         if (mine !== ticket.current) return;
-        const message = err instanceof ApiError ? err.message : "Đã có lỗi xảy ra";
+        const message = errorMessage(err, "Đã có lỗi xảy ra");
         setState((s) => ({ ...s, error: message, loading: false }));
       });
   }, []);

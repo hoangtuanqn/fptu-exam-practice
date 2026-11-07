@@ -14,6 +14,7 @@ import { Modal, ModalActions, ModalTitle } from "@/shared/ui/Modal";
 import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
 import { formatDateTime } from "@/shared/utils/formatters";
 import { useClampPage } from "@/shared/hooks/useClampPage";
+import { errorMessage } from "@/shared/api/errors";
 
 const SOURCE: Record<AnswerSource, [string, Tone]> = {
   PENDING: ["AI đang giải", "info"],
@@ -82,7 +83,7 @@ export default function ExamsPage() {
       toast.success("AI đang giải lại đáp án, có thể mất vài phút");
       reload();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Không bắt đầu được");
+      toast.error(errorMessage(err, "Không bắt đầu được"));
     } finally {
       setStarting(null);
     }

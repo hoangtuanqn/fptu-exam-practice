@@ -21,8 +21,8 @@ export const crawlJobController = {
     res.json(new ResponseClient({ data: await crawlJobService.quote(actorOf(req), getValidated<ImportExamBody>(res, "query")) }));
   },
 
-  async price(_req: Request, res: Response) {
-    res.json(new ResponseClient({ data: await crawlJobService.getPrice() }));
+  async price(req: Request, res: Response) {
+    res.json(new ResponseClient({ data: await crawlJobService.getPrice(actorOf(req)) }));
   },
 
   async get(req: Request, res: Response) {

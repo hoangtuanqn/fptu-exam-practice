@@ -22,7 +22,8 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
   const accentCount = words.length >= 3 ? 2 : 1;
   const titleLead = words.slice(0, -accentCount).join(" ");
   const titleAccent = words.slice(-accentCount).join(" ");
-  const { under, over } = useScrollOverlap(isGuest); // chỉ khách (có thẻ ưu đãi); kéo xuống: ô nhập đề trượt lên chồng một phần lên thẻ ưu đãi (PC)
+  // Hiệu ứng xấp thẻ đang TẮT: ô nhập đề trượt lên che gần hết thẻ ưu đãi, làm khuất dòng quà đăng ký. Muốn bật lại: useScrollOverlap(isGuest)
+  const { under, over } = useScrollOverlap(false);
 
   return (
     <section className="relative isolate shrink-0 border-b border-outline-variant">

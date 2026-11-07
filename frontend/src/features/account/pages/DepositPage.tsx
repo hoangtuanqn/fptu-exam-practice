@@ -61,6 +61,9 @@ export default function DepositPage() {
   const orders = useApi(() => depositApi.list(page), [page]);
   useClampPage(orders.data?.meta, setPage);
 
+  // Lệnh chưa thanh toán còn hiệu lực: nhắc quay lại thanh toán thay vì tạo lệnh mới (tránh chuyển khoản nhầm hoặc nhân đôi)
+  const openOrder = orders.data?.items.find((o) => o.status === "PENDING" && new Date(o.expiresAt) > new Date());
+
   const amount = Number(digits || 0);
   const min = info.data?.minDeposit ?? 0;
   const tooLow = digits !== "" && amount < min;
@@ -91,6 +94,16 @@ export default function DepositPage() {
       {need > 0 && !activeCode && (
         <div className="mb-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950">
           Bạn đang thiếu <b>{formatCredit(need)}</b>. {min > need ? `Mức nạp tối thiểu là ${formatMoney(min)}, phần dư vẫn nằm trong ví để dùng tiếp.` : "Mình đã điền sẵn số tiền vừa đủ."} Nạp xong là quay lại mở khóa ngay.
+        </div>
+      )}
+      {openOrder && !activeCode && (
+        <div role="status" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-m3-md bg-secondary-container px-4 py-3 text-on-secondary-container">
+          <p className="md-body-medium">
+            Bạn còn một lệnh nạp <b className="tabular-nums">{formatMoney(openOrder.amount)}</b> chưa thanh toán. Tiếp tục lệnh này thay vì tạo lệnh mới nhé.
+          </p>
+          <Button size="sm" variant="tonal" onClick={() => navigate(`/account/deposit/${openOrder.code}`)}>
+            Tiếp tục thanh toán
+          </Button>
         </div>
       )}
       {back && (
@@ -162,8 +175,9 @@ export default function DepositPage() {
             </div>
             <Button variant="primary" type="submit" disabled={loading || !digits || tooLow}>
               {loading ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
-              Tạo lệnh nạp
+              {loading ? "Đang tạo lệnh…" : amount >= min && amount > 0 ? `Tạo lệnh nạp ${formatMoney(amount)}` : "Tạo lệnh nạp"}
             </Button>
+            <p className="md-body-small text-on-surface-variant">Chưa trừ tiền ở bước này. Bạn chỉ chuyển khoản sau khi thấy mã QR và nội dung chuyển.</p>
           </form>
         </Card>
       )}

@@ -11,6 +11,7 @@ import { Card } from "@/shared/ui/Card";
 import { ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { Modal, ModalActions, ModalTitle } from "@/shared/ui/Modal";
 import { Segmented } from "@/shared/ui/Segmented";
+import { errorMessage } from "@/shared/api/errors";
 
 const SOURCE: Record<AnswerSource, [string, Tone]> = {
   PENDING: ["AI đang giải", "info"],
@@ -101,7 +102,7 @@ function TitleEditor({ examId, title, onSaved }: { examId: number; title: string
       setEditing(false);
       onSaved();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Không đổi được tên");
+      toast.error(errorMessage(err, "Không đổi được tên"));
     } finally {
       setSaving(false);
     }
@@ -172,7 +173,7 @@ function DeleteExamDialog({ exam, onClose }: { exam: ExamAdminDetail; onClose: (
       toast.success("Đã xoá đề");
       navigate("/admin/exams", { replace: true });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Không xoá được");
+      toast.error(errorMessage(err, "Không xoá được"));
       setBusy(false);
     }
   }
@@ -357,7 +358,7 @@ export default function ExamEditPage() {
       setDraft({});
       reload();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Không lưu được");
+      toast.error(errorMessage(err, "Không lưu được"));
     } finally {
       setSaving(false);
     }

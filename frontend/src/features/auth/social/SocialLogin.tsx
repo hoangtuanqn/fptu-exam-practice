@@ -4,11 +4,11 @@ import { useAuth } from "@/features/auth/AuthContext";
 import { useGithubLogin } from "@/features/auth/github/useGithubLogin";
 import { useGoogleLogin } from "@/features/auth/google/useGoogleLogin";
 import { referralCodeStore } from "@/features/referral/referral.api";
-import { ApiError } from "@/shared/api/client";
 import { GithubIcon } from "@/shared/brand/GithubIcon";
 import { GoogleIcon } from "@/shared/brand/GoogleIcon";
 import { useToast } from "@/shared/context/ToastContext";
 import type { AuthResult } from "@/features/auth/auth.api";
+import { errorMessage } from "@/shared/api/errors";
 
 const buttonCls =
   "flex w-full items-center justify-center gap-2.5 rounded-lg border border-slate-300 bg-surface-container-lowest px-3 py-2.5 text-sm sm:px-4 font-medium text-slate-800 shadow-soft transition hover:bg-slate-50 disabled:opacity-60";
@@ -25,7 +25,7 @@ export function SocialLogin({ verb = "Tiếp tục" }: { verb?: string }) {
       referralCodeStore.clear();
       signIn(result); // GuestOnly tự chuyển sang trang phù hợp
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : fallback);
+      toast.error(errorMessage(err, fallback));
     }
   };
 

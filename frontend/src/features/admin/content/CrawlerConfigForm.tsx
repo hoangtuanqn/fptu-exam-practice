@@ -9,6 +9,7 @@ import { Button } from "@/shared/ui/Button";
 import { Card, CardHeader } from "@/shared/ui/Card";
 import { FormError } from "@/shared/ui/Feedback";
 import { Input, PasswordInput } from "@/shared/ui/Input";
+import { errorMessage } from "@/shared/api/errors";
 
 interface FormState {
   cookie: string;
@@ -67,7 +68,7 @@ export function CrawlerConfigForm({ initial, onSaved }: { initial: CrawlerAdminC
       toast.success("Đã đăng nhập FuOverflow và làm mới cookie");
       onSaved();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Đăng nhập thất bại");
+      toast.error(errorMessage(err, "Đăng nhập thất bại"));
     } finally {
       setLoggingIn(false);
     }

@@ -5,6 +5,7 @@ import { useAuth } from "@/features/auth/AuthContext";
 import { ApiError } from "@/shared/api/client";
 import { useToast } from "@/shared/context/ToastContext";
 import { Button } from "@/shared/ui/Button";
+import { errorMessage } from "@/shared/api/errors";
 
 const COOLDOWN_SEC = 60; // khớp backend/constants/email-verification.ts
 
@@ -35,7 +36,7 @@ export function VerifyEmailNotice({ variant = "banner", message }: Props) {
       toast.success("Đã gửi lại thư xác minh, hãy kiểm tra hộp thư (cả mục Spam)");
       setWait(COOLDOWN_SEC);
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Không gửi được thư xác minh");
+      toast.error(errorMessage(err, "Không gửi được thư xác minh"));
       if (err instanceof ApiError && err.status === 429) setWait(COOLDOWN_SEC);
     } finally {
       setSending(false);
