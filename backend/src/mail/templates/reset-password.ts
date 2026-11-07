@@ -8,13 +8,13 @@ export interface ResetEmailInput {
 }
 
 export function renderResetPasswordEmail({ name, link, expiresMin }: ResetEmailInput) {
-  const { company, blue } = MAIL_BRAND;
+  const { company, deep } = MAIL_BRAND;
 
   const bodyHtml = [
     p(`<strong>Xin chào ${esc(name)},</strong>`),
     p("Bạn vừa yêu cầu đặt lại mật khẩu. Nhấn nút bên dưới để tạo mật khẩu mới."),
     button("Đặt lại mật khẩu", link),
-    note(`Liên kết có hiệu lực <strong>${expiresMin} phút</strong> và chỉ dùng được một lần. Nếu nút không bấm được, mở: <a href="${esc(link)}" target="_blank" style="color:${blue};word-break:break-all">${esc(link)}</a>`),
+    note(`Liên kết có hiệu lực <strong>${expiresMin} phút</strong> và chỉ dùng được một lần. Nếu nút không bấm được, mở: <a href="${esc(link)}" target="_blank" style="color:${deep};word-break:break-all">${esc(link)}</a>`),
     note("Không phải bạn yêu cầu? Hãy bỏ qua email này, mật khẩu hiện tại vẫn an toàn."),
     signature(),
   ].join("");

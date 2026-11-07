@@ -1,7 +1,7 @@
 import { brand, logos } from "./brand";
 
 interface Props {
-  variant?: "mark" | "full"; // mark: chỉ MST · full: kèm chữ SOFTWARE.VN
+  variant?: "mark" | "full"; // mark: chỉ mascot Cóc Pass · full: kèm chữ FEPass
   onDark?: boolean; // đặt trên nền tối (chỉ khác ở bản full)
   className?: string; // đặt chiều cao, ví dụ "h-7"
 }

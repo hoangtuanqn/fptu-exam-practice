@@ -36,7 +36,7 @@ const DEFAULTS = {
   partnerName: "FuOverflow",
   partnerUrl: "https://fuoverflow.com",
   extensionUrl: "/fepass_extension.zip",
-  themeColor: "#0b1730",
+  themeColor: "#3f2606",
 };
 
 export function loadBrand(env: Env): Brand {

@@ -30,7 +30,7 @@ export function ExplainBundlePopup({ bundle, unitPrice, freeTrials, onBuy, onClo
         </h2>
         <p className="mt-1 text-sm text-slate-600">Trả một lần, xem giải thích {bundle.remaining} câu của đề này không mất thêm credit.</p>
 
-        <div className="mt-4 rounded-2xl bg-gradient-to-br from-brand-900 via-[#10265a] to-brand-800 px-4 py-4 text-white">
+        <div className="mt-4 rounded-2xl bg-gradient-to-br from-brand-900 via-brand-800 to-brand-800 px-4 py-4 text-white">
           <div className="flex items-center justify-center gap-2 text-sm">
             <span className="text-white/50 line-through">{nf.format(bundle.original)}</span>
             <span className="rounded-md bg-rose-500 px-1.5 py-0.5 text-xs font-bold">-{bundle.discountPercent}%</span>

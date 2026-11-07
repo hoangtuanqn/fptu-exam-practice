@@ -11,7 +11,7 @@ interface StyleOptions {
 }
 
 const VARIANTS: Record<Variant, string> = {
-  primary: "bg-brand-600 text-white shadow-sm shadow-brand-600/25 hover:bg-brand-700 hover:shadow-md hover:shadow-brand-600/25",
+  primary: "bg-brand-500 text-brand-900 shadow-sm shadow-brand-500/30 hover:bg-brand-400 hover:shadow-md hover:shadow-brand-500/30",
   secondary: "border border-slate-200 bg-white text-slate-700 shadow-soft hover:border-slate-300 hover:bg-slate-50",
   danger: "bg-rose-600 text-white shadow-sm hover:bg-rose-700",
   ghost: "text-slate-600 hover:bg-slate-900/5 hover:text-slate-900",
