@@ -28,6 +28,7 @@ model User {
   referralCode String?   @unique @map("referral_code") @db.VarChar(12) // mĂ£ giá»›i thiá»‡u cá»§a chĂ­nh ngÆ°á»i nĂ y
   referredById Int?      @map("referred_by_id") // ngÆ°á»i Ä‘Ă£ giá»›i thiá»‡u
   googleSub    String?   @unique @map("google_sub") @db.VarChar(64) // tĂ i khoáº£n Google Ä‘Ă£ liĂªn káº¿t
+  githubId     String?   @unique @map("github_id") @db.VarChar(32) // tai khoan GitHub da lien ket (id so)
   avatarPath   String?   @map("avatar_path") @db.VarChar(120) // null = dung mascot mac dinh
   emailVerifiedAt DateTime? @map("email_verified_at") // chÆ°a xĂ¡c minh email thĂ¬ chÆ°a dĂ¹ng Ä‘Æ°á»£c cĂ¡c dá»‹ch vá»¥ trá»« credit
   createdAt DateTime   @default(now()) @map("created_at")
