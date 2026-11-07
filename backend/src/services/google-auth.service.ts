@@ -7,6 +7,7 @@ import { signToken } from "../utils/jwt";
 import { hashPassword } from "../utils/password";
 import { notificationService } from "./notification.service";
 import { accountSettingService } from "./account-setting.service";
+import { avatarService } from "./avatar.service";
 import { referralService } from "./referral.service";
 
 const TOKENINFO_URL = "https://oauth2.googleapis.com/tokeninfo";
@@ -17,7 +18,9 @@ interface GoogleProfile {
   sub: string;
   email: string;
   name: string;
+  picture?: string; // ảnh đại diện Google (chỉ dùng khi tài khoản chưa có avatar)
 }
+const MAX_PICTURE_BYTES = 2 * 1024 * 1024;
 
 const INVALID = "Không xác thực được tài khoản Google, vui lòng thử lại";
 
@@ -42,12 +45,29 @@ async function fetchProfile(accessToken: string): Promise<GoogleProfile> {
   const info = await getJson<{ aud?: string; azp?: string }>(`${TOKENINFO_URL}?access_token=${encodeURIComponent(accessToken)}`);
   if (!info || (info.aud !== clientId && info.azp !== clientId)) throw new AppError(INVALID, 401);
 
-  const profile = await getJson<{ sub?: string; email?: string; email_verified?: boolean | string; name?: string }>(USERINFO_URL, {
+  const profile = await getJson<{ sub?: string; email?: string; email_verified?: boolean | string; name?: string; picture?: string }>(USERINFO_URL, {
     headers: { authorization: `Bearer ${accessToken}` },
   });
   const verified = profile?.email_verified === true || profile?.email_verified === "true";
   if (!profile?.sub || !profile.email || !verified) throw new AppError(INVALID, 401);
-  return { sub: profile.sub, email: profile.email.toLowerCase(), name: profile.name?.trim() || profile.email.split("@")[0]! };
+  return { sub: profile.sub, email: profile.email.toLowerCase(), name: profile.name?.trim() || profile.email.split("@")[0]!, picture: profile.picture };
+}
+
+/** Lấy ảnh Google làm avatar nếu tài khoản chưa có. Lỗi gì cũng bỏ qua (không được làm hỏng đăng nhập). */
+async function adoptPicture(userId: number, picture?: string) {
+  try {
+    if (!picture) return;
+    const url = new URL(picture);
+    if (url.protocol !== "https:" || !/(^|\.)googleusercontent\.com$/.test(url.hostname)) return; // chỉ tin ảnh do Google phục vụ
+    const res = await fetch(picture.replace(/=s\d+(-c)?$/, "=s256-c"), { signal: AbortSignal.timeout(GOOGLE_TIMEOUT_MS) });
+    if (!res.ok) return;
+    const buf = Buffer.from(await res.arrayBuffer());
+    if (buf.length === 0 || buf.length > MAX_PICTURE_BYTES) return;
+    const avatarPath = await avatarService.upload(userId, buf);
+    await userRepository.update(userId, { avatarPath });
+  } catch (err) {
+    console.error(`[google] không lấy được ảnh đại diện: ${err instanceof Error ? err.message : err}`);
+  }
 }
 
 export const googleAuthService = {
@@ -72,7 +92,11 @@ export const googleAuthService = {
       if (byEmail) {
         await userRepository.linkGoogle(byEmail.id, profile.sub, byEmail.emailVerifiedAt ?? new Date());
       }
-      const user = (await userRepository.findById(existing.id))!;
+      let user = (await userRepository.findById(existing.id))!;
+      if (!user.avatarPath && profile.picture) {
+        await adoptPicture(user.id, profile.picture);
+        user = (await userRepository.findById(existing.id))!;
+      }
       return { token: signToken(user.id), user, created: false };
     }
 
@@ -93,6 +117,7 @@ export const googleAuthService = {
     });
     notificationService.welcome(user);
     referralService.notify(notices);
-    return { token: signToken(user.id), user, created: true };
+    await adoptPicture(user.id, profile.picture);
+    return { token: signToken(user.id), user: (await userRepository.findById(user.id)) ?? user, created: true };
   },
 };
