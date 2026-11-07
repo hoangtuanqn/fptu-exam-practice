@@ -1,4 +1,4 @@
-import { MAIL_BANNERS, MAIL_BRAND } from "../../constants/mail";
+import { MAIL_BRAND } from "../../constants/mail";
 import { button, esc, note, p, renderLayout, signature } from "../layout";
 
 export interface VerifyEmailInput {
@@ -21,10 +21,8 @@ export function renderVerifyEmail({ name, link, expiresHours }: VerifyEmailInput
 
   return {
     html: renderLayout({
-      eyebrow: "TÀI KHOẢN",
       title: "Xác minh email",
       preheader: `Liên kết xác minh email có hiệu lực ${expiresHours} giờ.`,
-      banner: MAIL_BANNERS.welcome,
       bodyHtml,
     }),
     text: [

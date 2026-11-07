@@ -1,4 +1,4 @@
-import { MAIL_BANNERS, MAIL_BRAND } from "../../constants/mail";
+import { MAIL_BRAND } from "../../constants/mail";
 import { formatCredit, formatDateTimeVN, formatMoney } from "../../utils/format";
 import { button, details, esc, note, p, qrImage, renderLayout, signature } from "../layout";
 
@@ -40,10 +40,8 @@ export function renderOrderEmail(i: OrderEmailInput) {
 
   return {
     html: renderLayout({
-      eyebrow: "THANH TOÁN",
       title: "Lệnh nạp tiền đang chờ thanh toán",
       preheader: `Chuyển khoản ${formatMoney(i.amount)} với nội dung ${i.code} trước ${formatDateTimeVN(i.expiresAt)}.`,
-      banner: MAIL_BANNERS.order,
       bodyHtml,
     }),
     text: [
@@ -95,10 +93,8 @@ export function renderDepositEmail(i: DepositEmailInput) {
 
   return {
     html: renderLayout({
-      eyebrow: "THANH TOÁN",
       title: "Nạp credit thành công",
       preheader: `Đã cộng ${formatCredit(i.amount)} vào ví. Số dư hiện tại: ${formatCredit(i.balanceAfter)}.`,
-      banner: MAIL_BANNERS.deposit,
       bodyHtml,
     }),
     text: [
@@ -145,10 +141,8 @@ export function renderGiftCodeEmail(i: GiftCodeEmailInput) {
 
   return {
     html: renderLayout({
-      eyebrow: "QUÀ TẶNG",
       title: "Nhận credit thành công",
       preheader: `Đã cộng ${formatCredit(i.amount)} từ giftcode ${i.code}. Số dư hiện tại: ${formatCredit(i.balanceAfter)}.`,
-      banner: MAIL_BANNERS.deposit,
       bodyHtml,
     }),
     text: [
@@ -197,10 +191,8 @@ export function renderReportRewardEmail(i: ReportRewardEmailInput) {
 
   return {
     html: renderLayout({
-      eyebrow: "ĐÓNG GÓP",
       title: "Báo cáo của bạn đã được xác nhận",
       preheader: `Nhận ${formatCredit(i.amount)} cho báo cáo đáp án câu ${i.questionNumber}. Số dư hiện tại: ${formatCredit(i.balanceAfter)}.`,
-      banner: MAIL_BANNERS.deposit,
       bodyHtml,
     }),
     text: [
@@ -256,10 +248,8 @@ export function renderReferralEmail(i: ReferralEmailInput) {
 
   return {
     html: renderLayout({
-      eyebrow: "GIỚI THIỆU",
       title: copy.title,
       preheader: `${copy.label} +${formatCredit(i.amount)}. Số dư hiện tại: ${formatCredit(i.balanceAfter)}.`,
-      banner: MAIL_BANNERS.deposit,
       bodyHtml,
     }),
     text: [
@@ -307,10 +297,8 @@ export function renderChargeEmail(i: ChargeEmailInput) {
 
   return {
     html: renderLayout({
-      eyebrow: "BIÊN LAI",
       title: "Phí lấy đề",
       preheader: `Đã trừ ${formatCredit(i.amount)} cho lần lấy đề. Số dư còn lại: ${formatCredit(i.balanceAfter)}.`,
-      banner: MAIL_BANNERS.charge,
       bodyHtml,
     }),
     text: [
