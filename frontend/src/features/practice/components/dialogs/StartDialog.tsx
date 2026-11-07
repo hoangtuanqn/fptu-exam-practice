@@ -2,6 +2,7 @@ import { useState } from "react";
 import { FileText, Play } from "lucide-react";
 import type { Mode } from "@/features/practice/types.ts";
 import { MODES } from "@/features/practice/config/modes";
+import { TIME_LIMIT_OPTIONS } from "@/features/practice/utils/timeLimit";
 import { Button } from "@/shared/ui/Button";
 import { Modal, ModalActions } from "@/shared/ui/Modal";
 
@@ -12,12 +13,13 @@ interface Props {
   answersPending: boolean; // AI đang phân tích đáp án
   replacing: boolean; // đang có bài làm dở sẽ bị thay thế
   onCancel: () => void;
-  onStart: (mode: Mode) => void;
+  onStart: (mode: Mode, limitMin: number | null) => void;
 }
 
 // Hộp thoại sau khi upload đề: xác nhận + chọn chế độ (không đổi được giữa chừng)
 export function StartDialog({ title, total, graded, answersPending, replacing, onCancel, onStart }: Props) {
   const [mode, setMode] = useState<Mode>("practice");
+  const [limit, setLimit] = useState<number>(0); // phút; 0 = không giới hạn (chỉ dùng ở chế độ Thi)
 
   return (
     <Modal onClose={onCancel}>
@@ -65,13 +67,36 @@ export function StartDialog({ title, total, graded, answersPending, replacing, o
           </button>
         ))}
       </div>
+      {mode === "exam" && (
+        <div className="mt-4">
+          <div className="text-xs font-medium uppercase tracking-wider text-slate-500">Thời gian làm bài</div>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {TIME_LIMIT_OPTIONS.map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setLimit(m)}
+                aria-pressed={limit === m}
+                className={`rounded-lg border-2 px-3 py-1.5 text-sm transition ${
+                  limit === m ? "border-brand-900 bg-slate-50 font-medium text-slate-900" : "border-slate-200 text-slate-600 hover:border-slate-400"
+                }`}
+              >
+                {m === 0 ? "Không giới hạn" : `${m} phút`}
+              </button>
+            ))}
+          </div>
+          <p className="mt-1.5 text-xs text-slate-500">
+            {limit > 0 ? "Hết giờ, bài sẽ được tự nộp và chấm điểm." : "Đồng hồ chỉ để bạn theo dõi thời gian làm bài."}
+          </p>
+        </div>
+      )}
       <p className="mt-3 text-xs text-slate-500">Không đổi được chế độ khi đang làm bài.</p>
 
       <ModalActions>
         <Button grow onClick={onCancel}>
           Hủy
         </Button>
-        <Button grow variant="primary" onClick={() => onStart(mode)}>
+        <Button grow variant="primary" onClick={() => onStart(mode, mode === "exam" && limit > 0 ? limit : null)}>
           <Play size={16} />
           <span className="sm:hidden">Bắt đầu</span>
           <span className="hidden sm:inline">Bắt đầu làm bài</span>
