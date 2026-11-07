@@ -41,6 +41,13 @@ export const googleLoginBody = z.object({
 
 export type GoogleLoginBody = z.infer<typeof googleLoginBody>;
 
+export const githubLoginBody = z.object({
+  code: z.string().regex(/^[A-Za-z0-9_-]{10,100}$/, "Mã không hợp lệ"),
+  referralCode: z.string().trim().toUpperCase().regex(/^[A-Z0-9]{4,12}$/).optional(),
+});
+
+export type GithubLoginBody = z.infer<typeof githubLoginBody>;
+
 export const verifyEmailBody = z.object({
   token: z.string().min(20, "Liên kết không hợp lệ").max(200, "Liên kết không hợp lệ"),
 });

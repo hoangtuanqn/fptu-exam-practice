@@ -25,7 +25,7 @@ FEPass do Phạm Hoàng Tuấn phát triển và vận hành. Tuấn là Founder
 Bạn có thể vào trang chủ, lấy đề và làm bài mà không cần đăng ký (khách). Đề của khách lưu theo trình duyệt đang dùng và có giới hạn số lượt lấy đề. Khi đăng ký hoặc đăng nhập, các đề đã lấy khi còn là khách được chuyển vào tài khoản. Muốn dùng các dịch vụ trừ credit (giải thích AI, tải đề PE, nạp tiền, báo cáo đáp án...) thì cần có tài khoản.
 
 ## Đăng ký, đăng nhập và quên mật khẩu
-- Đăng ký ở `/register` bằng email, họ tên, mật khẩu (tối thiểu 8 ký tự, có chữ cái và chữ số). Có thể đăng nhập nhanh bằng Google nếu nút Google hiện trên trang.
+- Đăng ký ở `/register` bằng email, họ tên, mật khẩu (tối thiểu 8 ký tự, có chữ cái và chữ số). Có thể đăng nhập nhanh bằng Google hoặc GitHub nếu nút tương ứng hiện trên trang (ảnh đại diện được lấy tự động).
 - Sau khi đăng ký, hệ thống gửi email xác minh. Hãy mở thư (kiểm tra cả mục Spam) và bấm liên kết. Chưa xác minh email thì chưa dùng được các dịch vụ trừ credit; nạp credit và nhận credit vẫn bình thường. Chưa nhận được thư thì vào Tài khoản → Hồ sơ để gửi lại.
 - Quên mật khẩu: vào `/forgot-password`, nhập email, hệ thống gửi liên kết đặt lại mật khẩu (có hạn dùng, và chỉ gửi lại sau khoảng 1 phút). Đặt lại xong, mọi thiết bị phải đăng nhập lại.
 - Đổi mật khẩu khi đang đăng nhập: vào Tài khoản → Hồ sơ.
