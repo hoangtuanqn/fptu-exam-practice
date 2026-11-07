@@ -40,20 +40,20 @@
   const MODAL_CSS = `
     :host { all: initial; }
     .ov { position: fixed; inset: 0; z-index: 2147483647; display: flex; align-items: center; justify-content: center; padding: 16px;
-      background: rgba(11,23,48,.45); backdrop-filter: blur(3px); font: 14px/1.5 "FePass Inter",sans-serif; }
-    .box { width: 100%; max-width: 400px; background: #fff; color: #101010; border-radius: 20px; padding: 24px; box-shadow: 0 24px 60px rgba(11,23,48,.35);
+      background: rgba(63,38,6,.45); backdrop-filter: blur(3px); font: 14px/1.5 "FePass Inter",sans-serif; }
+    .box { width: 100%; max-width: 400px; background: #fff; color: #101010; border-radius: 20px; padding: 24px; box-shadow: 0 24px 60px rgba(63,38,6,.35);
       animation: pop .22s cubic-bezier(.2,.9,.3,1.2) both; text-align: center; }
     @keyframes pop { from { opacity: 0; transform: translateY(10px) scale(.96); } to { opacity: 1; transform: none; } }
     @media (prefers-reduced-motion: reduce) { .box { animation: none; } }
     img { width: 64px; height: 64px; border-radius: 16px; }
-    h2 { margin: 12px 0 6px; font-size: 18px; color: #0b1730; }
+    h2 { margin: 12px 0 6px; font-size: 18px; color: #3f2606; }
     p { margin: 0; color: #475569; }
-    .steps { margin: 14px 0 4px; padding: 10px 14px; text-align: left; background: #f6f8fc; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 13px; color: #334155; }
+    .steps { margin: 14px 0 4px; padding: 10px 14px; text-align: left; background: #fffbe6; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 13px; color: #334155; }
     .steps ol { margin: 0; padding-left: 18px; }
     .btns { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
     a.btn, button.btn { display: block; width: 100%; padding: 10px 14px; border-radius: 12px; border: 1px solid transparent; font: inherit; font-weight: 600; cursor: pointer; text-decoration: none; text-align: center; }
-    .primary { background: #0b1730; color: #fff; } .primary:hover { background: #10265a; }
-    .second { background: #fff; color: #0b1730; border-color: #cbd5e1; } .second:hover { background: #f1f5f9; }
+    .primary { background: #3f2606; color: #fff; } .primary:hover { background: #5c3706; }
+    .second { background: #fff; color: #3f2606; border-color: #cbd5e1; } .second:hover { background: #f1f5f9; }
     .link { background: none; border: 0; color: #64748b; font-size: 13px; cursor: pointer; margin-top: 2px; padding: 6px; }
     .ok { color: #047857; font-weight: 600; }
   `;

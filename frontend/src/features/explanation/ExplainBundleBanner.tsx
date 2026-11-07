@@ -81,7 +81,7 @@ export function ExplainBundleBanner({ bundle, unitPrice, collapsed, onCollapse, 
     {strip}
     <section
       aria-label="Mở khóa toàn bộ lời giải thích"
-      className="bundle-card promo-shine relative mb-2 hidden shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-brand-900 via-[#10265a] to-brand-800 px-4 py-3 text-white shadow-lg sm:block"
+      className="bundle-card promo-shine relative mb-2 hidden shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-brand-900 via-brand-800 to-brand-800 px-4 py-3 text-white shadow-lg sm:block"
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
     >

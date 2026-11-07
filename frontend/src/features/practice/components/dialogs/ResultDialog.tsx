@@ -32,7 +32,7 @@ export function ResultDialog({ result, elapsed, savable, answersPending, answerS
         {answersPending ? (
           // AI chưa xong: chưa có điểm. Khi có đáp án, màn hình này tự chuyển sang điểm thật.
           <div className="flex flex-col items-center gap-3 py-6">
-            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-50 text-brand-600">
+            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-50 text-brand-700">
               <Loader2 size={26} className="animate-spin" />
             </span>
             <div className="text-lg font-semibold text-slate-900">Đang chuẩn bị đáp án…</div>

@@ -27,7 +27,7 @@ const STEPS: { title: string; body: React.ReactNode }[] = [
   {
     title: "Tải tiện ích về máy",
     body: (
-      <a href={brand.extensionUrl} download className="mt-1.5 inline-flex items-center gap-2 rounded-md bg-brand-900 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-800">
+      <a href={brand.extensionUrl} download className="mt-1.5 inline-flex items-center gap-2 rounded-md bg-brand-500 px-4 py-2 text-sm font-semibold text-brand-900 hover:bg-brand-400">
         <Download size={15} /> Tải file fepass_extension.zip
       </a>
     ),

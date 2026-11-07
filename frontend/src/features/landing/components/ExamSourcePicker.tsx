@@ -38,7 +38,7 @@ export function ExamSourcePicker({ onPick, onImported }: Props) {
                 source === id ? "bg-white text-slate-900 shadow-soft" : "text-slate-500 hover:text-slate-800"
               }`}
             >
-              <Icon size={15} className={source === id ? "text-brand-600" : ""} />
+              <Icon size={15} className={source === id ? "text-brand-700" : ""} />
               <span className="truncate">
                 <span className="sm:hidden">{short}</span>
                 <span className="hidden sm:inline">{label}</span>
