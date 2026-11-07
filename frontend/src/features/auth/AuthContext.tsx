@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { authApi, type AuthResult } from "./auth.api";
 import { impersonation, setUnauthorizedHandler, tokenStore } from "@/shared/api/client";
+import { useToast } from "@/shared/context/ToastContext";
 import { refreshRealtimeAuth } from "@/shared/realtime/socket";
 import type { User } from "@/shared/types/api";
 
@@ -16,6 +17,7 @@ interface AuthState {
 const AuthContext = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const toast = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(() => !!tokenStore.get());
 
@@ -46,10 +48,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // Máy chủ từ chối phiên (hết hạn/bị thu hồi): đăng xuất NHƯNG nói rõ lý do, không để người dùng bỗng dưng bị đẩy ra trang đăng nhập.
+  // Đăng nhập lại xong sẽ quay về đúng trang đang xem (RequireAuth nhớ trang).
   useEffect(() => {
-    setUnauthorizedHandler(signOut);
+    setUnauthorizedHandler(() => {
+      const hadSession = !!tokenStore.get() && !impersonation.active();
+      signOut();
+      if (hadSession) toast.error("Phiên đăng nhập đã hết hạn nên bạn được đăng xuất. Hãy đăng nhập lại để tiếp tục, dữ liệu của bạn vẫn còn.", { duration: 8000 });
+    });
     return () => setUnauthorizedHandler(null);
-  }, [signOut]);
+  }, [signOut, toast]);
 
   // Có token sẵn thì xác thực lại với máy chủ khi mở trang
   useEffect(() => {

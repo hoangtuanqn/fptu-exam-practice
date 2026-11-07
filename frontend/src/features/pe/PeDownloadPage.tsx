@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Download, FileArchive, Loader2 } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
-import { ApiError } from "@/shared/api/client";
 import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
 import { Button, buttonClass } from "@/shared/ui/Button";
@@ -13,6 +12,7 @@ import { ChargeSummary } from "@/shared/ui/ChargeSummary";
 import { Modal, ModalActions, ModalTitle } from "@/shared/ui/Modal";
 import { formatCredit, formatDateTime } from "@/shared/utils/formatters";
 import { peApi } from "./pe.api";
+import { errorMessage } from "@/shared/api/errors";
 
 const STATUS: Record<string, { text: string; cls: string }> = {
   DONE: { text: "Đã tải", cls: "bg-emerald-50 text-emerald-700" },
@@ -77,7 +77,7 @@ export default function PeDownloadPage() {
       setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
       toast.success(`Đã tải ${filename}`);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Không tải được, vui lòng thử lại");
+      setError(errorMessage(err, "Không tải được, vui lòng thử lại"));
     } finally {
       setBusy(false);
       void refresh();

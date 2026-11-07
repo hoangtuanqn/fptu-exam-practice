@@ -3,9 +3,9 @@ import { Link, useSearchParams } from "react-router-dom";
 import { CircleCheck, CircleX, Loader2 } from "lucide-react";
 import { authApi } from "@/features/auth/auth.api";
 import { useAuth } from "@/features/auth/AuthContext";
-import { ApiError } from "@/shared/api/client";
 import { buttonClass } from "@/shared/ui/Button";
 import { AuthLayout } from "./AuthLayout";
+import { errorMessage } from "@/shared/api/errors";
 
 type State = { phase: "loading" } | { phase: "ok"; email: string } | { phase: "error"; message: string };
 
@@ -25,7 +25,7 @@ export default function VerifyEmailPage() {
         setState({ phase: "ok", email: r.email });
         if (localStorage.getItem("auth_token")) await refresh(); // đang đăng nhập thì cập nhật trạng thái ngay
       })
-      .catch((err: unknown) => setState({ phase: "error", message: err instanceof ApiError ? err.message : "Không xác minh được email" }));
+      .catch((err: unknown) => setState({ phase: "error", message: errorMessage(err, "Không xác minh được email") }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
