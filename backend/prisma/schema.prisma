@@ -46,6 +46,7 @@ model User {
   explanationBuys    ExplanationPurchase[]
   explanationUnlocks ExplanationUnlock[]
   peDownloads        PeDownload[]
+  dailyCheckIns      DailyCheckIn[]
   referredBy         User?                @relation("Referral", fields: [referredById], references: [id], onDelete: SetNull)
   referrals          User[]               @relation("Referral")
   rewardsAsReferrer  ReferralReward[]     @relation("RewardReferrer")
@@ -134,6 +135,7 @@ enum TransactionType {
   DEPOSIT_BONUS // thÆ°á»Ÿng thĂªm khi náº¡p tá»« má»™t má»©c nháº¥t Ä‘á»‹nh
   PE_CHARGE // phĂ­ táº£i bá»™ tĂ i nguyĂªn Ä‘á» thi PE (file zip)
   PE_REFUND // hoĂ n phĂ­ khi khĂ´ng táº¡o Ä‘Æ°á»£c file zip
+  CHECKIN_REWARD // thưởng điểm danh hằng ngày (kể cả thưởng đủ 7 ngày)
 }
 
 // Sá»• cĂ¡i vĂ­: má»—i láº§n sá»‘ dÆ° Ä‘á»•i lĂ  má»™t dĂ²ng (amount Ă¢m = trá»« tiá»n)
@@ -151,6 +153,21 @@ model WalletTransaction {
   @@index([userId, createdAt])
   @@index([type, createdAt]) // admin lá»c biáº¿n Ä‘á»™ng sá»‘ dÆ° theo loáº¡i
   @@map("wallet_transactions")
+}
+
+// Điểm danh hằng ngày: mỗi người một dòng mỗi ngày (theo giờ Việt Nam). `day` là ngày dạng DATE; `streak` là số ngày liên tiếp tính đến ngày đó
+model DailyCheckIn {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  day       DateTime @db.Date
+  streak    Int
+  amount    Int // credit đã nhận (gồm thưởng đủ 7 ngày)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, day])
+  @@map("daily_check_ins")
 }
 
 // Äá» thi láº¥y tá»« FuOverflow. `threadId` lĂ  chá»¯ kĂ½ cá»§a Ä‘á»: nháº­p láº¡i cĂ¹ng thread (dĂ¹ link khĂ¡c) khĂ´ng táº¡o báº£n má»›i
