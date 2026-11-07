@@ -95,6 +95,20 @@ export default function PracticePage({ threadId }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quiz.submitted, user]);
 
+  // Chế độ Thi có giới hạn thời gian: nhắc khi còn 5 phút và 1 phút, hết giờ thì tự nộp bài và chấm điểm
+  const timeLeft = quiz.timeLimitSec ? quiz.timeLimitSec - quiz.elapsed : null;
+  useEffect(() => {
+    if (timeLeft === null || !quiz.timing || quiz.submitted) return;
+    if (timeLeft <= 0) {
+      quiz.submit();
+      setZoomOpen(false);
+      setDialog("result");
+      toast.success("Hết giờ làm bài, hệ thống đã tự nộp bài cho bạn");
+    } else if (timeLeft === 300) toast.error("Còn 5 phút");
+    else if (timeLeft === 60) toast.error("Còn 1 phút");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeLeft]);
+
   // AI đang phân tích đáp án: kết quả (thành công hoặc lỗi) về qua socket ngay khi có.
   useExamAnswersLive(quiz.examId, quiz.answerSource === "PENDING", (r) => {
     if (r.status === "PENDING") return; // vẫn đang xử lý: giữ nguyên trạng thái chờ
@@ -225,6 +239,7 @@ export default function PracticePage({ threadId }: Props) {
         submitted={quiz.submitted}
         submitLocked={quiz.answersPending}
         elapsed={quiz.elapsed}
+        timeLimitSec={quiz.timeLimitSec}
         bestScore={bestScore}
         referenceCount={quiz.references.length}
         onShowReferences={() => setReferencesOpen(true)}
