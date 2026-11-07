@@ -1,0 +1,16 @@
+# https://fepass.top/robots.txt
+# Cho phép mọi bot đọc trang công khai (kể cả bot xem trước liên kết của Facebook, Zalo, Messenger, Telegram).
+User-agent: *
+Disallow: /admin
+Disallow: /account
+Allow: /
+
+# Bot xem trước liên kết: luôn được phép lấy trang và ảnh chia sẻ
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Facebot
+Allow: /
+
+User-agent: meta-externalagent
+Allow: /
