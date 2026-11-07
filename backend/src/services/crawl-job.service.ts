@@ -11,6 +11,7 @@ import { parseThreadId } from "../utils/fuo-url";
 import { startOfVnDay } from "../utils/time";
 import { EXAM_REFRESH_RETRY_HOURS, EXAM_STALE_AFTER_DAYS } from "../constants/crawler";
 import { crawlerSettingService } from "./crawler-setting.service";
+import { threadPreflight } from "./crawler/thread-preflight.service";
 import { toJobDto } from "./crawl-job.dto";
 import { examService } from "./exam.service";
 import { notificationService } from "./notification.service";
@@ -24,6 +25,13 @@ export const GUEST_LIMIT_MESSAGE =
   "Bạn đã hết lượt lấy đề miễn phí hôm nay. Đăng ký tài khoản để lấy thêm đề, lưu kho riêng và theo dõi lịch sử làm bài nhé!";
 
 const HOUR_MS = 60 * 60 * 1000;
+
+// Bài chưa có trong hệ thống: đọc thử trang đầu trên FuOverflow, sai nhãn/không tồn tại thì báo lỗi NGAY, trước khi trừ phí
+async function assertThreadAccepted(threadId: string) {
+  const check = await threadPreflight.check(threadId);
+  if (check && !check.ok) throw new AppError(check.message, HTTP_STATUS.UNPROCESSABLE_ENTITY);
+}
+
 const isStale = (exam: { createdAt: Date; refreshedAt: Date | null }) =>
   Date.now() - (exam.refreshedAt ?? exam.createdAt).getTime() > EXAM_STALE_AFTER_DAYS * 24 * HOUR_MS;
 
@@ -44,6 +52,7 @@ export const crawlJobService = {
     const found = await examRepository.findByThreadId(threadId);
     const exam = found && (await examRepository.isComplete(found)) ? found : null;
     const owned = !!exam && (await userExamRepository.has(owner, exam.id));
+    if (!exam && !active) await assertThreadAccepted(threadId); // đề phải lấy mới: bài sai thì không cho tới bước xác nhận phí
     const free = isMember(owner) && price > 0 && (owned || !!active);
     return { price, fee: free ? 0 : price, free, reason: free ? (owned ? ("owned" as const) : ("in-progress" as const)) : null, title: owned ? exam.title : null };
   },
@@ -74,6 +83,7 @@ export const crawlJobService = {
     const found = await examRepository.findByThreadId(threadId);
     // Đề đang được lấy dở dang thì chưa dùng được: xếp hàng như đề mới (lượt chạy sẽ lấy lại cho đủ)
     const exam = found && (await examRepository.isComplete(found)) ? found : null;
+    if (!exam) await assertThreadAccepted(threadId); // chặn trước khi trừ phí (xem thread-preflight.service)
     // Đã có đề này trong kho của mình thì mở lại miễn phí
     const alreadyOwned = isMember(owner) && !!exam && (await userExamRepository.has(owner, exam.id));
     const fetchPrice = isMember(owner) && !alreadyOwned ? (await crawlerSettingService.get()).fetchPrice : 0;

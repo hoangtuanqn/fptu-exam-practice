@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
-import { BadgeCheck, Link2, Loader2 } from "lucide-react";
+import { AlertCircle, BadgeCheck, CheckCircle2, Link2, Loader2 } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { ApiError } from "@/shared/api/client";
 import { useToast } from "@/shared/context/ToastContext";
 import { SignUpCta } from "@/features/trial/SignUpCta";
 import { useApi } from "@/shared/hooks/useApi";
-import { examImportApi } from "../exam-import.api";
+import { examImportApi, type QuoteResult } from "../exam-import.api";
+import { checkFuoLink } from "@/shared/utils/fuo-link";
 import { useFakeProgress, type ProgressHint } from "@/shared/hooks/useFakeProgress";
 import { Button } from "@/shared/ui/Button";
 import { FormError } from "@/shared/ui/Feedback";
@@ -63,6 +64,37 @@ export function LinkImport({ onImported }: Props) {
   const [quotedFee, setQuotedFee] = useState<number | null>(null);
   const toast = useToast();
 
+  // Kiểm tra link ngay khi gõ/dán: bước 1 ở trình duyệt (tức thì), bước 2 hỏi backend (gộp bằng debounce) để biết link có được
+  // chấp nhận không và đề đã có trong kho của bạn chưa. Kết quả backend cũng dùng lại cho bước báo phí khi bấm "Lấy đề".
+  const local = checkFuoLink(url);
+  const link = url.trim();
+  const [remote, setRemote] = useState<{ link: string; status: "checking" | "ok" | "error"; message?: string; quote?: QuoteResult } | null>(null);
+  useEffect(() => {
+    if (!local.ok) return void setRemote(null);
+    setRemote({ link, status: "checking" });
+    let cancelled = false;
+    const id = setTimeout(() => {
+      examImportApi
+        .quote(link)
+        .then((quote) => !cancelled && setRemote({ link, status: "ok", quote }))
+        .catch((err) => {
+          if (cancelled) return;
+          // 4xx (trừ 429) = backend không chấp nhận link; lỗi mạng/quá tải thì không chặn, để lúc bấm "Lấy đề" báo tiếp
+          if (err instanceof ApiError && err.status >= 400 && err.status < 500 && err.status !== 429) setRemote({ link, status: "error", message: err.message });
+          else setRemote({ link, status: "ok" }); // không kiểm tra được (mạng/quá tải): không chặn, lúc bấm Lấy đề sẽ báo tiếp
+        });
+    }, 450);
+    return () => {
+      cancelled = true;
+      clearTimeout(id);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [link, local.ok, user?.id]);
+  const current = remote?.link === link ? remote : null;
+  const linkError = link ? (local.ok ? (current?.status === "error" ? current.message ?? "Link không hợp lệ" : null) : local.message) : null;
+  const linkInvalid = !!linkError;
+  const checking = local.ok && !linkInvalid && current?.status !== "ok"; // đang kiểm tra (hoặc chưa kiểm tra xong): chưa cho bấm Lấy đề
+
   const limitReached =
     !user && job.phase === "failed" && job.errorStatus === 429;
   const running = job.phase === "running";
@@ -93,14 +125,14 @@ export function LinkImport({ onImported }: Props) {
   // Thành viên có phí, hoặc khách (có giới hạn lượt): hỏi xác nhận. Thành viên không mất phí thì lấy luôn.
   const submit = async () => {
     const link = url.trim();
-    if (!link || running || quoting) return;
+    if (!link || running || quoting || linkInvalid) return;
     if (!user) return setConfirming(true);
     if (fee <= 0) return void job.start(link);
 
     // Hỏi trước phí thực tế: đề đã từng lấy thì miễn phí, mở luôn và báo cho người dùng biết
     setQuoting(true);
     try {
-      const quote = await examImportApi.quote(link);
+      const quote = current?.status === "ok" && current.quote ? current.quote : await examImportApi.quote(link);
       if (quote.free) {
         toast.success("Bạn đã lấy đề này trước đó nên được mở lại miễn phí, không bị trừ credit");
         void job.start(link);
@@ -109,9 +141,11 @@ export function LinkImport({ onImported }: Props) {
         setConfirming(true);
       }
     } catch (err) {
-      // Link sai: để lần gửi báo đúng lỗi. Lỗi khác (mạng...): vẫn hỏi xác nhận với mức phí mặc định, không tự trừ tiền.
-      if (err instanceof ApiError && err.status >= 400 && err.status < 500 && err.status !== 429) void job.start(link);
-      else {
+      // Backend từ chối link (sai nhãn, không tồn tại...): báo lỗi, TUYỆT ĐỐI không gửi lấy đề. Lỗi khác (mạng...): vẫn hỏi xác nhận với mức phí mặc định, không tự trừ tiền.
+      if (err instanceof ApiError && err.status >= 400 && err.status < 500 && err.status !== 429) {
+        setRemote({ link, status: "error", message: err.message });
+        toast.error(err.message);
+      } else {
         setQuotedFee(fee);
         setConfirming(true);
       }
@@ -189,19 +223,37 @@ export function LinkImport({ onImported }: Props) {
           disabled={running || done}
           placeholder={PLACEHOLDER}
           aria-label="Link đề FuOverflow"
-          className={`${inputClass(job.error ?? undefined)} sm:flex-1`}
+          aria-invalid={linkInvalid || undefined}
+          className={`${inputClass(linkError ?? job.error ?? undefined)} sm:flex-1`}
         />
         <Button
           variant="primary"
           type="submit"
-          disabled={!url.trim() || running || done || quoting || (!!user && price.loading)}
+          disabled={!url.trim() || linkInvalid || checking || running || done || quoting || (!!user && price.loading)}
         >
           {(running || quoting) && <Loader2 size={16} className="animate-spin" />}
           {running ? "Đang lấy đề…" : "Lấy đề"}
         </Button>
       </div>
 
-
+      {link && !running && !done && (
+        <div className="mt-2 min-h-5 text-left text-xs" role="status" aria-live="polite">
+          {linkError ? (
+            <span className="flex items-start gap-1.5 text-red-600">
+              <AlertCircle size={14} className="mt-px shrink-0" /> {linkError}
+            </span>
+          ) : current?.status === "ok" ? (
+            <span className="flex items-start gap-1.5 text-emerald-700">
+              <CheckCircle2 size={14} className="mt-px shrink-0" />
+              Link hợp lệ
+            </span>
+          ) : local.ok ? (
+            <span className="flex items-center gap-1.5 text-slate-500">
+              <Loader2 size={14} className="animate-spin" /> Đang kiểm tra link…
+            </span>
+          ) : null}
+        </div>
+      )}
 
       {limitReached && (
         <div className="mt-4 rounded-xl border border-brand-100 bg-brand-50/70 p-4">
