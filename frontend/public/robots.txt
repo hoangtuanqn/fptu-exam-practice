@@ -1,8 +1,5 @@
-# https://fepass.top/robots.txt
 User-agent: *
 Allow: /
-
-# Khu vực riêng tư hoặc không có giá trị tìm kiếm
 Disallow: /admin
 Disallow: /account
 Disallow: /exam/
