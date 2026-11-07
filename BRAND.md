@@ -1,45 +1,40 @@
-# Nhận diện thương hiệu: MST Software
+# Nhận diện thương hiệu: FEPass (Luyện thi FE FPTU)
 
 Tài liệu này dành cho người và AI sửa giao diện: đọc trước khi chọn màu, font hay logo.
 
-- Công ty: **MST Software** (MMO Solution). Founder: Phạm Hoàng Tuấn. Co-Founder: Vũ Việt Quang, Mai Trung Hậu.
-- Sản phẩm: **Luyện thi FE FPTU**. Slogan: **"Hành trình đi đến điểm 10."**
+- Sản phẩm: **Luyện thi FE FPTU** (tên ngắn **FEPass**). Slogan: **"Hành trình đi đến điểm 10."**
+- Linh vật và logo: **Cóc Pass** (con cóc vàng đội vòng nguyệt quế, cầm bảng "CÓC PASS"). Hình vẽ nằm ở `frontend/src/shared/ui/mascot-art.ts`.
+- Công ty phát triển: **MST Software** (MMO Solution). Founder: Phạm Hoàng Tuấn. Co-Founder: Vũ Việt Quang, Mai Trung Hậu. **Chân trang luôn ghi rõ "Phát triển bởi MST Software"** (không bỏ).
 - Facebook: https://facebook.com/mstsoftware.vn
-- Logo gốc (nguồn màu): `C:\Users\ad\Desktop\Workspace\04-mst-software\01-logo\` (LOGO.png, LogoTitle Black.png, LogoTitle White.png, mockup nền tối).
 
-## Màu chủ đạo
+## Màu chủ đạo: vàng của mascot
 
-Màu **đo trực tiếp từ file logo**, không phải ước chừng. Logo là chữ M-S-T chuyển sắc **xanh hoàng gia → cyan → cyan nhạt**, có các ô vuông pixel xanh nhạt ở góc.
+Màu lấy từ chính con Cóc Pass (thân vàng, viền nâu đậm). Đổi cả site chỉ cần sửa bảng `--color-*` ở đầu `frontend/src/index.css`.
 
 | Vai trò | Hex | Token Tailwind | Ghi chú |
 | --- | --- | --- | --- |
-| **Xanh chính** | `#0066ff` | `brand-600` | Màu đậm nhất của logo. Liên kết, nhấn mạnh, đầu dải gradient |
-| Xanh nhạt pixel | `#3399ff` | `brand-400` | Các ô vuông ở góc trên logo |
-| **Cyan nhấn** | `#00c8ff` | `accent` | Giữa dải gradient logo. Dùng tiết kiệm: vạch, chấm, nhãn nhỏ trên nền tối |
-| Cyan nhạt | `#90e5ff` | `accent-soft` | Đầu cuối nhạt của dải gradient |
-| **Navy nền tối** | `#0b1730` | `brand-900` | Nền favicon và khối tối hiếm dùng. Nút chính dùng `brand-600`. Hợp với nền ảnh mockup logo |
-| Chữ đen logo | `#101010` | `ink` | Chữ SOFTWARE.VN trên bản logo nền sáng |
+| Vàng nền | `#ffc61f` | `brand-500` | Nền nút chính, điểm nhấn. **Chữ trên nền này luôn là nâu đậm `brand-900`, không dùng chữ trắng** (trắng trên vàng khó đọc) |
+| Vàng sáng | `#ffd033` | `brand-400`, `accent` | Hover nút, đầu sáng của dải chuyển sắc |
+| Vàng đậm | `#e29400` | `brand-600` | Viền, biểu tượng, chữ rất lớn. Không dùng làm chữ nhỏ trên nền trắng (chỉ ~2.6:1) |
+| **Nâu vàng (chữ nhấn)** | `#a86400` | `brand-700` | Liên kết, nhãn, chữ nhấn trên nền trắng (~4.7:1) |
+| Nâu | `#7a4b00` | `brand-800` | Hover khối tối, viền mascot |
+| **Nâu đậm** | `#3f2606` | `brand-900` | Chữ tiêu đề, nền tối, nút tối, chữ trên nền vàng |
+| Vàng rất nhạt | `#fffbe6` | `brand-50` | Nền vùng nhấn nhẹ |
 | Nền trang | `#f6f8fc` | `paper` | Trắng ngà hơi lạnh, để thẻ trắng nổi nhẹ |
 
-Thang xanh đầy đủ: `brand-50 #eef6ff`, `100 #d9ebff`, `200 #b3d6ff`, `300 #80b8ff`, `400 #3399ff`, `500 #1a80ff`, `600 #0066ff`, `700 #0052cc`, `800 #0f3a8a`, `900 #0b1730`.
+Thang đầy đủ: `brand-50 #fffbe6`, `100 #fff4bf`, `200 #ffe88a`, `300 #ffdb57`, `400 #ffd033`, `500 #ffc61f`, `600 #e29400`, `700 #a86400`, `800 #7a4b00`, `900 #3f2606`; `accent #ffd033`, `accent-soft #fff0a0`.
 
 ### Gradient thương hiệu
 
-Luôn đi theo chiều **xanh chính → cyan → cyan nhạt**, giống logo:
-
-```
-from-brand-600 via-accent to-accent-soft      /* vạch, đường kẻ */
-from-brand-600 to-accent                      /* nút chính, biểu tượng nổi */
-from-brand-900 via-brand-800 to-brand-600     /* thẻ nền tối */
-```
+Đi theo chiều **vàng đậm → vàng → vàng nhạt**, giống thân con cóc: `from-brand-600 via-brand-500 to-accent-soft` (vạch, thanh tiến độ), `from-brand-900 via-brand-800 to-brand-600` (thẻ nền tối). Chữ chuyển sắc dùng `.text-gradient` (vàng đậm, đủ tương phản).
 
 ### Quy tắc dùng màu
 
-- **Chỉ dùng token**, không viết hex trực tiếp trong component (`bg-brand-600`, `text-accent`...). Muốn đổi màu cả site, sửa bảng `--color-*` ở đầu `frontend/src/index.css`.
-- Trang nền **trắng**, vùng tô nhạt dùng `paper`, khối nhấn mạnh dùng `brand-900`. Không thêm họ màu mới (tím, cam, xanh lá làm màu thương hiệu).
-- Trạng thái nghiệp vụ giữ màu ngữ nghĩa, không phải màu thương hiệu: đúng = emerald, sai = rose, cảnh báo = amber.
-- Cyan `accent` chỉ là điểm nhấn, không dùng làm nền lớn hay chữ dài trên nền trắng (độ tương phản thấp).
-- Chữ thường dùng `slate-900` (tiêu đề) và `slate-500/600` (phụ); trên nền navy dùng `white` và `brand-200`.
+- **Chỉ dùng token**, không viết hex trực tiếp trong component (`bg-brand-500`, `text-brand-700`...).
+- Nút chính: `bg-brand-500 text-brand-900`. Nút tối: `bg-brand-900 text-white`. Liên kết/nhãn nhỏ trên nền trắng: `text-brand-700`.
+- Trang nền **trắng**, vùng tô nhạt `brand-50`/`paper`, khối nhấn mạnh `brand-900`. Không thêm họ màu mới (tím, xanh dương làm màu thương hiệu).
+- Trạng thái nghiệp vụ giữ màu ngữ nghĩa, không phải màu thương hiệu: đúng = emerald, sai = rose. Cảnh báo dùng amber nên **gần với vàng thương hiệu**: ưu tiên nhận biết bằng biểu tượng và chữ, không chỉ bằng màu.
+- Chữ thường dùng `slate-900` (tiêu đề) và `slate-500/600` (phụ); trên nền nâu đậm dùng `white` và `brand-200`.
 
 ## Font
 
@@ -53,18 +48,22 @@ from-brand-900 via-brand-800 to-brand-600     /* thẻ nền tối */
 
 ## Logo và tài sản
 
-Nằm trong `frontend/public/`, thay file cùng tên là đổi toàn site:
+Logo là **con Cóc Pass ngồi trên chữ "FEPass"** (chữ vàng gradient viền nâu, con cóc đứng lên cụm "ss"). Tất cả ảnh thương hiệu được **sinh bằng code** từ hình mascot: sửa mascot hoặc màu rồi chạy lại `cd backend && npx tsx scripts/gen-brand-assets.ts` (chữ trong ảnh là đường nét lấy từ `backend/assets/fonts/Inter-*.ttf`, nên luôn là Inter).
 
 | File | Dùng ở đâu |
 | --- | --- |
-| `brand/logo-mark.png` | Chữ MST, header, footer, trang đăng nhập (mobile) |
-| `brand/logo-full.png` | Có chữ SOFTWARE.VN đen, cho nền sáng |
-| `brand/logo-full-light.png` | Chữ trắng, cho nền tối (cột trái trang đăng nhập) |
-| `favicon.ico`, `favicon-32.png`, `icon-192.png`, `icon-512.png`, `apple-touch-icon.png` | Favicon và icon: logo MST trên nền navy bo góc |
-| `og-cover.jpg` | Ảnh chia sẻ link 1200×630, cắt từ ảnh mockup nền tối |
-| `brand/fuoverflow.webp` | Logo đối tác kho đề FuOverflow (không phải logo MST) |
+| `frontend/public/brand/logo-full.png` | Logo chính (cóc + chữ FEPass), dùng ở header, thanh bên, trang đăng nhập (nền sáng) |
+| `frontend/public/brand/logo-full-light.png` | Cùng logo cho nền tối |
+| `frontend/public/brand/logo-mark.png` | Chỉ con Cóc Pass, dùng ở chân trang |
+| `favicon.ico`, `favicon-32.png`, `icon-192.png`, `icon-512.png`, `apple-touch-icon.png` | Favicon và icon: mascot trên nền nâu đậm bo góc |
+| `frontend/public/og-cover.jpg` | Ảnh chia sẻ link 1200×630 |
+| `backend/assets/mail/cover.png`, `logo.png` | Ảnh bìa và logo trong email |
+| `chrome-extension/icons/icon*.png` | Icon tiện ích Chrome |
+| `frontend/public/brand/mst-logo-*.png` | Logo công ty MST Software (bản cũ, giữ để dùng khi cần ghi nhận nhà phát triển) |
+| `frontend/public/brand/fuoverflow.webp` | Logo đối tác kho đề FuOverflow |
 
-Dùng component `Logo` (`src/components/brand/Logo.tsx`), không gắn `<img>` logo trực tiếp.
+Dùng component `Logo` (`src/shared/brand/Logo.tsx`), không gắn `<img>` logo trực tiếp.
+**Watermark** đóng lên ảnh đề (`backend/assets/brand/watermark.png`) là tài sản riêng, không thuộc bộ logo này và không đổi theo thương hiệu.
 
 ## Nơi đổi thông tin chữ
 

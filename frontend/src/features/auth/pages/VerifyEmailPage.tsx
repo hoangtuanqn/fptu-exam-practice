@@ -34,7 +34,7 @@ export default function VerifyEmailPage() {
       <div className="space-y-5 py-4 text-center">
         {state.phase === "loading" && (
           <>
-            <Loader2 size={32} className="mx-auto animate-spin text-brand-600" />
+            <Loader2 size={32} className="mx-auto animate-spin text-brand-700" />
             <p className="text-sm text-slate-600">Đang xác minh…</p>
           </>
         )}

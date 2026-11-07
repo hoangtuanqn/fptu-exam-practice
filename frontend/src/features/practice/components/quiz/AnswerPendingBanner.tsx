@@ -40,12 +40,12 @@ export function AnswerPendingBanner({ source, examId, onRetry }: { source: Answe
     return (
       <div role="status" aria-live="polite" className="mb-2 rounded-xl border border-brand-200 bg-brand-50 px-3.5 py-3 text-sm text-brand-900">
         <div className="flex items-start gap-2.5">
-          <Sparkles size={16} className="mt-0.5 shrink-0 text-brand-600" />
+          <Sparkles size={16} className="mt-0.5 shrink-0 text-brand-700" />
           <div className="min-w-0 flex-1">
             <span className="font-medium">Đang chuẩn bị đáp án…</span>{" "}
             <span className="text-brand-800/80">Bạn xem đề trước, phần chọn đáp án sẽ mở khi đáp án sẵn sàng.</span>
           </div>
-          <Loader2 size={16} className="mt-0.5 shrink-0 animate-spin text-brand-600" />
+          <Loader2 size={16} className="mt-0.5 shrink-0 animate-spin text-brand-700" />
         </div>
         <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-brand-100" aria-hidden>
           <div className="h-full rounded-full bg-brand-600 transition-[width] duration-1000 ease-linear" style={{ width: `${percent}%` }} />

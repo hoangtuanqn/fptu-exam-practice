@@ -78,7 +78,7 @@ export function Header({
             if (loaded && !onHome()) e.preventDefault();
           }}
         >
-          <Logo className="h-6 sm:h-7" />
+          <Logo variant="full" className="h-10 sm:h-11" />
         </Link>
         <span className="hidden h-5 w-px shrink-0 bg-slate-200 sm:block" />
         <div className="hidden truncate text-base font-semibold tracking-tight text-slate-900 sm:block">
@@ -90,7 +90,7 @@ export function Header({
       {!loaded && (
         <div className="hidden min-w-0 flex-1 items-center justify-center px-4 lg:flex">
           <span className="inline-flex min-w-0 items-center gap-2.5 rounded-full border border-brand-200 bg-brand-50 px-5 py-1.5 text-sm font-semibold text-brand-900">
-            <GraduationCap size={20} className="shrink-0 text-brand-600" />
+            <GraduationCap size={20} className="shrink-0 text-brand-700" />
             <span className="truncate">
               Hệ thống phát triển chỉ phục vụ sinh viên FPTU
             </span>

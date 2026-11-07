@@ -74,7 +74,7 @@ export function MyExams({ onOpen }: Props) {
                 >
                   {openingId === e.id ? (
                     <span className="flex h-[48px] w-[48px] shrink-0 items-center justify-center">
-                      <Loader2 size={20} className="animate-spin text-brand-600" />
+                      <Loader2 size={20} className="animate-spin text-brand-700" />
                     </span>
                   ) : hasDone ? (
                     <ProgressRing value={score / 10} label={formatScore(score)} size={48} color={tone} />

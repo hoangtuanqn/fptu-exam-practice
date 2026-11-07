@@ -55,7 +55,7 @@ function Panel({ icon, title, desc, children }: { icon: ReactNode; title: string
   return (
     <Card className="p-5">
       <div className="flex items-start gap-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600">{icon}</div>
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">{icon}</div>
         <div className="min-w-0">
           <h2 className="text-base font-semibold text-slate-900">{title}</h2>
           {desc && <p className="mt-0.5 text-sm leading-relaxed text-slate-500">{desc}</p>}
