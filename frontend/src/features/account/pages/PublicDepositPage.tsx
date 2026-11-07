@@ -19,7 +19,7 @@ export default function PublicDepositPage() {
     <div className="flex min-h-screen flex-col bg-paper">
       <header className="flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4">
         <Link to="/" title={brand.company}>
-          <Logo className="h-7" />
+          <Logo variant="full" className="h-9" />
         </Link>
         <Link to="/login" className="text-sm font-medium text-brand-700 hover:underline">
           Đăng nhập

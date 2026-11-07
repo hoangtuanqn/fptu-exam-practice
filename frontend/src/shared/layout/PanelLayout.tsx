@@ -58,7 +58,7 @@ function Sidebar({
     <div className="flex h-full flex-col">
       <div className="flex h-14 shrink-0 items-center justify-between border-b border-slate-200 pl-5 pr-14 lg:pr-5">
         <Link to="/" onClick={onNavigate} title={`Về trang ${brand.product}`}>
-          <Logo className="h-6" />
+          <Logo variant="full" className="h-9" />
         </Link>
         <span className="eyebrow !text-brand-700">{title}</span>
       </div>
@@ -84,7 +84,7 @@ function Sidebar({
                   )}
                   <Icon
                     size={17}
-                    className={`shrink-0 ${isActive ? "text-brand-600" : "text-slate-400 group-hover:text-slate-600"}`}
+                    className={`shrink-0 ${isActive ? "text-brand-700" : "text-slate-400 group-hover:text-slate-600"}`}
                   />
                   {label}
                 </>

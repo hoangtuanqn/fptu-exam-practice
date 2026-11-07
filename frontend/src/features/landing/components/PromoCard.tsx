@@ -117,7 +117,7 @@ export function PromoCard() {
 
           <Link
             to="/register"
-            className="group mt-5 inline-flex w-full items-center justify-center gap-2 rounded-md bg-brand-900 px-6 py-3 text-base font-semibold text-white transition hover:bg-brand-800 sm:w-auto"
+            className="group mt-5 inline-flex w-full items-center justify-center gap-2 rounded-md bg-brand-500 px-6 py-3 text-base font-semibold text-brand-900 transition hover:bg-brand-400 sm:w-auto"
           >
             {hasGift ? "Nhận quà ngay" : "Bắt đầu ngay"}
             <ArrowRight
