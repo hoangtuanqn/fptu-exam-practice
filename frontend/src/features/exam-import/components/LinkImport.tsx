@@ -140,9 +140,11 @@ export function LinkImport({ onImported }: Props) {
         setConfirming(true);
       }
     } catch (err) {
-      // Link sai: để lần gửi báo đúng lỗi. Lỗi khác (mạng...): vẫn hỏi xác nhận với mức phí mặc định, không tự trừ tiền.
-      if (err instanceof ApiError && err.status >= 400 && err.status < 500 && err.status !== 429) void job.start(link);
-      else {
+      // Backend từ chối link (sai nhãn, không tồn tại...): báo lỗi, TUYỆT ĐỐI không gửi lấy đề. Lỗi khác (mạng...): vẫn hỏi xác nhận với mức phí mặc định, không tự trừ tiền.
+      if (err instanceof ApiError && err.status >= 400 && err.status < 500 && err.status !== 429) {
+        setRemote({ link, status: "error", message: err.message });
+        toast.error(err.message);
+      } else {
         setQuotedFee(fee);
         setConfirming(true);
       }
