@@ -9,7 +9,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
-import { COLOR, MASCOT_H, MASCOT_W, loadFonts, mascotArt, mascotSvg, measure, text, textD, type Fonts } from "./brand-art";
+import { COLOR, MASCOT_H, MASCOT_W, loadFonts, mascotArt, mascotSvg, measure, wordmark, type Fonts } from "./brand-art";
 import { COVER_H, COVER_W, buildCover, coverContent, coverDefs } from "./gen-mail-cover";
 
 const ROOT = path.resolve(__dirname, "../..");
@@ -20,38 +20,30 @@ const MAIL = path.join(ROOT, "backend/assets/mail");
 
 const png = (svg: string) => sharp(Buffer.from(svg)).png({ compressionLevel: 9 });
 
-// Logo chính: chữ "FEPass" cùng phong cách với mascot (gradient vàng, viền nâu đậm, bóng nổi khối, ánh sáng phía trên)
-// với con Cóc Pass NGỒI TRÊN dòng chữ (đứng lên các chữ thường "ss"), kèm vài ánh lấp lánh.
-// `dark` chỉ khác ở nền dự kiến (nền tối): viền sáng hơn một chút để chữ không chìm.
+// Logo chính: chữ "FEPass" kiểu logo (phông Lilita One, gradient vàng, viền nâu, khối nổi) với con Cóc Pass NGỒI TRÊN dòng chữ
+// (đứng lên các chữ thường "ss"), kèm vài ánh lấp lánh. `dark` chỉ khác ở viền (sáng hơn một chút trên nền tối).
 function logoFull(f: Fonts, dark: boolean, scale: number) {
-  const size = 58;
-  const sp = -0.01;
-  const xHeight = size * 0.546; // chiều cao chữ thường của Inter
-  const capHeight = size * 0.727;
-  const edge = 3.4; // độ dày viền nâu
-  const depth = 3.2; // độ dày khối nổi phía dưới
+  const font = f.logo;
+  const size = 64;
+  const sp = 0.01;
+  const os2 = (font.tables as unknown as { os2?: { sxHeight?: number; sCapHeight?: number } }).os2 ?? {};
+  const xHeight = size * ((os2.sxHeight || font.unitsPerEm * 0.5) / font.unitsPerEm);
+  const capHeight = size * ((os2.sCapHeight || font.unitsPerEm * 0.7) / font.unitsPerEm);
+  const edge = size * 0.058;
+  const depth = size * 0.055;
   const pad = Math.ceil(edge + 2);
   const toadScale = 0.7;
   const toadW = MASCOT_W * toadScale;
   const toadH = MASCOT_H * toadScale;
-  const wAll = measure(f.extrabold, "FEPass", size, sp);
-  const baseline = toadH + xHeight - edge * 0.6; // đáy con cóc ngồi lên đỉnh chữ thường (đè nhẹ lên viền)
+  const wAll = measure(font, "FEPass", size, sp);
+  const baseline = toadH + xHeight - edge * 0.6; // đáy con cóc = đỉnh chữ thường (đè nhẹ lên viền)
   const toadX = Math.min(wAll - toadW + 10, wAll * 0.78 - toadW / 2);
   const width = Math.ceil(Math.max(wAll, toadX + toadW) + pad * 2 + 8);
   const height = Math.ceil(baseline + depth + pad + 2);
-  const d = textD(f.extrabold, "FEPass", size, 0, baseline, { spacing: sp });
   const star = (cx: number, cy: number, r: number) => `<path transform="translate(${cx} ${cy})" d="M0 ${-r}Q0 0 ${r} 0Q0 0 0 ${r}Q0 0 ${-r} 0Q0 0 0 ${-r}Z" fill="#fffbe0" stroke="${COLOR.gold600}" stroke-width="0.9" stroke-linejoin="round"/>`;
-  const outline = dark ? "#8a5a12" : "#5f3a0d";
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width * scale}" height="${height * scale}" viewBox="0 0 ${width} ${height}">
-    <defs>
-      <linearGradient id="gf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff6b0"/><stop offset=".42" stop-color="#ffcf2e"/><stop offset="1" stop-color="#e08e00"/></linearGradient>
-      <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".7"/><stop offset=".5" stop-color="#ffffff" stop-opacity="0"/></linearGradient>
-    </defs>
     <g transform="translate(${pad} 0)">
-      <path d="${d}" fill="${COLOR.gold900}" stroke="${COLOR.gold900}" stroke-width="${edge * 2}" stroke-linejoin="round" transform="translate(0 ${depth})"/>
-      <path d="${d}" fill="${outline}" stroke="${outline}" stroke-width="${edge * 2}" stroke-linejoin="round"/>
-      <path d="${d}" fill="url(#gf)"/>
-      <path d="${d}" fill="url(#shine)"/>
+      ${wordmark(font, "FEPass", size, 0, baseline, { dark, spacing: sp })}
       <g transform="translate(${toadX} 0) scale(${toadScale})">${mascotArt(f)}</g>
       ${star(toadX + toadW + 2, toadH * 0.3, 6.5)}
       ${star(toadX - 5, toadH * 0.62, 4)}

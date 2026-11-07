@@ -38,7 +38,9 @@ Thang đầy đủ: `brand-50 #fffbe6`, `100 #fff4bf`, `200 #ffe88a`, `300 #ffdb
 
 ## Font
 
-**Chỉ dùng Inter, ở mọi nơi. Không thêm phông khác** (không chữ có chân, không monospace, không phông trang trí).
+**Chữ trong giao diện, email, tiện ích: chỉ dùng Inter. Không thêm phông khác** (không chữ có chân, không monospace, không phông trang trí).
+
+**Ngoại lệ duy nhất: chữ "FEPass" trong logo** (ảnh, không phải chữ giao diện) dùng phông **Lilita One** (SIL OFL), file `backend/assets/fonts/LilitaOne-Regular.ttf`, cho hợp phong cách hoạt hình của con Cóc Pass. Phông này chỉ được dùng để dựng ảnh logo và ảnh chia sẻ/ảnh email có chữ FEPass, không dùng làm phông chạy trên web.
 
 - **Website:** nhúng từ Google Fonts trong `frontend/index.html` (độ đậm 400-700, kể cả nghiêng). `frontend/src/index.css` trỏ mọi họ phông về Inter: `font-sans`, `font-serif`, `font-display`, `font-mono` và cả thẻ `<code>`, `<pre>`, `<kbd>` (Tailwind mặc định dùng monospace) đều ra Inter. Các class `font-serif`, `font-display` cũ còn trong code nhưng chỉ là tên, kết quả vẫn là Inter.
 - **Tiện ích Chrome:** đóng gói sẵn Inter trong `chrome-extension/fonts/` (latin, latin-ext, tiếng Việt), khai báo `@font-face` ở `popup.css` và `content.css`; không phụ thuộc phông máy người dùng.
@@ -48,7 +50,7 @@ Thang đầy đủ: `brand-50 #fffbe6`, `100 #fff4bf`, `200 #ffe88a`, `300 #ffdb
 
 ## Logo và tài sản
 
-Logo là **con Cóc Pass ngồi trên chữ "FEPass"** (chữ vàng gradient viền nâu, con cóc đứng lên cụm "ss"). Tất cả ảnh thương hiệu được **sinh bằng code** từ hình mascot: sửa mascot hoặc màu rồi chạy lại `cd backend && npx tsx scripts/gen-brand-assets.ts` (chữ trong ảnh là đường nét lấy từ `backend/assets/fonts/Inter-*.ttf`, nên luôn là Inter).
+Logo là **con Cóc Pass ngồi trên chữ "FEPass"** (chữ phông Lilita One, vàng gradient viền nâu có khối nổi, con cóc đứng lên cụm "ss", kèm ánh lấp lánh). Tất cả ảnh thương hiệu được **sinh bằng code** từ hình mascot: sửa mascot hoặc màu rồi chạy lại `cd backend && npx tsx scripts/gen-brand-assets.ts` (chữ trong ảnh là đường nét lấy từ file phông trong `backend/assets/fonts/`: Lilita One cho chữ logo, Inter cho chữ còn lại).
 
 | File | Dùng ở đâu |
 | --- | --- |
