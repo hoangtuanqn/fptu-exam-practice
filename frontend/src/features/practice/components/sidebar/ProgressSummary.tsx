@@ -2,6 +2,7 @@ import type { Mode, Question, UserAnswers } from "@/features/practice/types.ts";
 import { MAX_SCORE } from "@/features/practice/config/scoring";
 import { formatScore } from "@/features/practice/utils/format";
 import { practiceStats, type GradeResult } from "@/features/practice/utils/grade";
+import { LinearProgress } from "@/shared/ui/Feedback";
 
 interface Props {
   questions: Question[];
@@ -12,17 +13,17 @@ interface Props {
   total?: number; // tổng số câu của đề (lớn hơn số câu đã có khi đề đang được lấy về)
 }
 
-// Đầu sidebar: điểm (sau khi nộp) hoặc thanh tiến độ (đang làm)
+// Đầu sidebar: điểm (sau khi nộp) hoặc chỉ báo tiến trình tuyến tính (đang làm)
 export function ProgressSummary({ questions, answers, checked, mode, result, total = 0 }: Props) {
   const count = Math.max(total, questions.length);
   if (result) {
     return (
-      <div className="flex items-baseline justify-between gap-2 border-b border-slate-200 px-4 py-3">
-        <div className="font-serif text-2xl font-semibold text-slate-900">
+      <div className="flex items-baseline justify-between gap-2 border-b border-outline-variant px-4 py-3">
+        <div className="md-headline-small text-on-surface">
           {formatScore(result.score)}
-          <span className="font-sans text-sm font-normal text-slate-400"> / {MAX_SCORE}</span>
+          <span className="md-body-medium text-on-surface-variant"> / {MAX_SCORE}</span>
         </div>
-        <div className="text-sm text-slate-500">
+        <div className="md-body-medium text-on-surface-variant">
           {result.correct}/{result.total} câu đúng
         </div>
       </div>
@@ -33,25 +34,22 @@ export function ProgressSummary({ questions, answers, checked, mode, result, tot
   const { right, wrong } = practiceStats(questions, answers, checked);
 
   return (
-    <div className="border-b border-slate-200 px-4 py-3">
-      <div className="flex items-baseline justify-between text-sm">
-        <span className="font-medium text-slate-900">
+    <div className="border-b border-outline-variant px-4 py-3">
+      <div className="flex items-baseline justify-between">
+        <span className="md-title-small text-on-surface">
           {answered}
-          <span className="font-normal text-slate-400"> / {count} câu</span>
+          <span className="md-body-medium font-normal text-on-surface-variant"> / {count} câu</span>
         </span>
         {mode === "practice" && (
-          <span className="text-xs">
-            <span className="text-emerald-700">Đúng {right}</span>
-            <span className="text-slate-300"> · </span>
-            <span className="text-rose-700">Sai {wrong}</span>
+          <span className="md-label-medium">
+            <span className="text-success">Đúng {right}</span>
+            <span className="text-outline"> · </span>
+            <span className="text-error">Sai {wrong}</span>
           </span>
         )}
       </div>
-      <div className="mt-2 h-1 overflow-hidden rounded-full bg-slate-200">
-        <div
-          className="h-full rounded-full bg-brand-900 transition-all"
-          style={{ width: `${(answered / Math.max(1, count)) * 100}%` }}
-        />
+      <div className="mt-2">
+        <LinearProgress value={answered / Math.max(1, count)} label="Số câu đã làm" />
       </div>
     </div>
   );

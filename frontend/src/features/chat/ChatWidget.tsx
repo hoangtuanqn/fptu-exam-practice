@@ -157,7 +157,7 @@ export default function ChatWidget() {
       {!open && (
         <div className={`fixed right-2 ${lift} z-[55] flex flex-col items-end sm:right-4`}>
           {tip && (
-            <div className="mascot-chat-tip relative mb-1 mr-2 max-w-[11rem] rounded-2xl rounded-br-sm border border-amber-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-lg">
+            <div className="mascot-chat-tip relative mb-1 mr-2 max-w-[11rem] rounded-2xl rounded-br-sm border border-amber-200 bg-surface-container-lowest px-3 py-2 text-xs font-medium text-slate-700 shadow-lg">
               Bạn có thắc mắc gì không? Hỏi Cóc Pass nhé!
               <button onClick={() => setTip(false)} aria-label="Ẩn lời chào" className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-slate-500 hover:bg-slate-300">
                 <X size={11} />
@@ -211,7 +211,7 @@ export default function ChatWidget() {
             {messages.map((m, i) =>
               m.role === "user" ? (
                 <div key={i} className="flex flex-col items-end gap-1">
-                  <div className={`max-w-[82%] whitespace-pre-wrap [overflow-wrap:anywhere] rounded-2xl rounded-br-md px-3.5 py-2 text-[14px] leading-relaxed text-white ${m.failed ? "bg-brand-900/60" : "bg-brand-900"}`}>{m.content}</div>
+                  <div className={`max-w-[82%] whitespace-pre-wrap [overflow-wrap:anywhere] rounded-2xl rounded-br-md px-3.5 py-2 text-[14px] leading-relaxed text-on-primary ${m.failed ? "bg-primary/60" : "bg-primary"}`}>{m.content}</div>
                   {m.failed && (
                     <div className="flex max-w-[90%] items-center gap-1.5 text-[11px] text-rose-600">
                       <span className="min-w-0 text-right [overflow-wrap:anywhere]">{m.failed}</span>
@@ -244,7 +244,7 @@ export default function ChatWidget() {
             {showChips && (
               <div className="flex flex-col items-start gap-1.5 pl-9 pt-1">
                 {SUGGESTIONS.map((s) => (
-                  <button key={s} onClick={() => void send(s)} className="rounded-full border border-amber-300 bg-white px-3 py-1.5 text-left text-[13px] text-slate-700 transition hover:border-amber-400 hover:bg-amber-50">
+                  <button key={s} onClick={() => void send(s)} className="rounded-full border border-amber-300 bg-surface-container-lowest px-3 py-1.5 text-left text-[13px] text-slate-700 transition hover:border-amber-400 hover:bg-amber-50">
                     {s}
                   </button>
                 ))}
@@ -253,8 +253,8 @@ export default function ChatWidget() {
             <div ref={endRef} />
           </div>
 
-          <form onSubmit={onSubmit} className="border-t border-amber-100 bg-white px-3 pb-2 pt-3">
-            <div className="flex items-end gap-2 rounded-3xl border border-slate-200 bg-slate-50 py-1.5 pl-4 pr-1.5 transition focus-within:border-amber-400 focus-within:bg-white">
+          <form onSubmit={onSubmit} className="border-t border-amber-100 bg-surface-container-lowest px-3 pb-2 pt-3">
+            <div className="flex items-end gap-2 rounded-3xl border border-slate-200 bg-slate-50 py-1.5 pl-4 pr-1.5 transition focus-within:border-amber-400 focus-within:bg-surface-container-lowest">
               <textarea
                 ref={inputRef}
                 value={input}

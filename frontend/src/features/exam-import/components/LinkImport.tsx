@@ -10,7 +10,7 @@ import { examImportApi, type QuoteResult } from "../exam-import.api";
 import { checkFuoLink } from "@/shared/utils/fuo-link";
 import { useFakeProgress, type ProgressHint } from "@/shared/hooks/useFakeProgress";
 import { Button } from "@/shared/ui/Button";
-import { FormError } from "@/shared/ui/Feedback";
+import { FormError, LinearProgress } from "@/shared/ui/Feedback";
 import { inputClass } from "@/shared/ui/Input";
 import { ConfirmFetchDialog } from "./ConfirmFetchDialog";
 import { ExtLoginDialog } from "./ExtLoginDialog";
@@ -193,7 +193,7 @@ export function LinkImport({ onImported }: Props) {
       className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/60 px-4 py-6 text-left sm:px-6 sm:py-9"
     >
       <div className="flex flex-col items-center text-center">
-        <span className="flex h-12 w-12 items-center justify-center rounded-md bg-brand-900 text-white">
+        <span className="flex h-12 w-12 items-center justify-center rounded-md bg-primary text-on-primary">
           <Link2 size={22} />
         </span>
         <div className="mt-4 font-display text-xl font-semibold text-brand-900">
@@ -209,7 +209,7 @@ export function LinkImport({ onImported }: Props) {
             </span>
             <span className="text-sm font-medium text-slate-500">/ đề</span>
           </div>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-surface-container-lowest px-3 py-1 text-xs font-semibold text-slate-600">
             <BadgeCheck size={14} className="text-brand-700" /> Đáp án chính xác đến 99.9%
           </span>
         </div>
@@ -276,12 +276,7 @@ export function LinkImport({ onImported }: Props) {
             <span>{done ? "Hoàn tất" : (job.stage ?? "Đang xử lý")}</span>
             <span className="tabular-nums">{percent}%</span>
           </div>
-          <div className="h-2 overflow-hidden rounded-full bg-slate-200/70">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-brand-600 via-accent to-accent-soft transition-[width] duration-500 ease-out"
-              style={{ width: `${percent}%` }}
-            />
-          </div>
+          <LinearProgress value={percent / 100} label="Tiến độ lấy đề" />
           <p className="mt-2 text-xs text-slate-500">
             Đề mới có thể mất vài phút. Đề đã có sẵn sẽ mở ngay.
           </p>

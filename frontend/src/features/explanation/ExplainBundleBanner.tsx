@@ -46,7 +46,7 @@ export function ExplainBundleBanner({ bundle, unitPrice, collapsed, onCollapse, 
   const strip = (
     <button
       onClick={onUnlock}
-      className="bundle-pill mb-1.5 flex w-full shrink-0 items-center justify-between gap-2 rounded-lg border border-amber-300 bg-gradient-to-r from-amber-50 to-white px-2.5 py-1 text-left text-xs font-semibold text-amber-950 shadow-sm sm:hidden"
+      className="bundle-pill mb-1.5 flex w-full shrink-0 items-center justify-between gap-2 rounded-lg border border-amber-300 bg-gradient-to-r from-amber-50 to-surface-container-lowest px-2.5 py-1 text-left text-xs font-semibold text-amber-950 shadow-sm sm:hidden"
     >
       <span className="flex min-w-0 items-center gap-1.5">
         <Sparkles size={13} className="promo-twinkle shrink-0 text-amber-500" />
@@ -65,7 +65,7 @@ export function ExplainBundleBanner({ bundle, unitPrice, collapsed, onCollapse, 
       {strip}
       <button
         onClick={onUnlock}
-        className="bundle-pill mb-2 hidden w-fit items-center sm:inline-flex gap-2 rounded-full border border-amber-300 bg-gradient-to-r from-amber-50 to-white px-3.5 py-1.5 text-xs font-semibold text-amber-900 shadow-sm transition hover:border-amber-400 hover:shadow"
+        className="bundle-pill mb-2 hidden w-fit items-center sm:inline-flex gap-2 rounded-full border border-amber-300 bg-gradient-to-r from-amber-50 to-surface-container-lowest px-3.5 py-1.5 text-xs font-semibold text-amber-900 shadow-sm transition hover:border-amber-400 hover:shadow"
       >
         <Sparkles size={14} className="promo-twinkle text-amber-500" />
         Mở khóa mọi giải thích · {formatCredit(bundle.price)}
@@ -81,7 +81,7 @@ export function ExplainBundleBanner({ bundle, unitPrice, collapsed, onCollapse, 
     {strip}
     <section
       aria-label="Mở khóa toàn bộ lời giải thích"
-      className="bundle-card promo-shine relative mb-2 hidden shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-brand-900 via-brand-800 to-brand-800 px-4 py-3 text-white shadow-lg sm:block"
+      className="bundle-card promo-shine relative mb-2 hidden shrink-0 overflow-hidden rounded-xl bg-inverse-surface px-4 py-3 text-inverse-on-surface shadow-m3-3 sm:block"
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
     >
@@ -90,7 +90,7 @@ export function ExplainBundleBanner({ bundle, unitPrice, collapsed, onCollapse, 
       <span aria-hidden className="bundle-orb pointer-events-none absolute -bottom-20 left-10 h-48 w-48 rounded-full bg-accent/20 blur-3xl [animation-delay:-3s]" />
 
 
-      <button onClick={onCollapse} aria-label="Thu gọn" title="Thu gọn" className="absolute right-2 top-2 z-10 rounded-md p-1 text-white/50 transition hover:bg-white/10 hover:text-white">
+      <button onClick={onCollapse} aria-label="Thu gọn" title="Thu gọn" className="absolute right-2 top-2 z-10 rounded-md p-1 text-white/50 transition hover:bg-surface-container-lowest/10 hover:text-white">
         <X size={14} />
       </button>
 

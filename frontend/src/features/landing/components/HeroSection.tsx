@@ -25,30 +25,30 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
   const { under, over } = useScrollOverlap(isGuest); // chỉ khách (có thẻ ưu đãi); kéo xuống: ô nhập đề trượt lên chồng một phần lên thẻ ưu đãi (PC)
 
   return (
-    <section className="relative isolate shrink-0 border-b border-slate-200">
+    <section className="relative isolate shrink-0 border-b border-outline-variant">
       <div className={`mx-auto w-full max-w-3xl px-5 pb-14 text-center ${isGuest ? "pt-8 sm:pt-12" : "pt-12 sm:pt-16"}`}>
         <div className="animate-fade-up">
-          {isGuest && <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-brand-700">Hệ thống ôn thi</p>}
+          {isGuest && <p className="md-label-large uppercase tracking-[0.3em] text-primary">Hệ thống ôn thi</p>}
 
-          <h1 className={`font-display font-semibold leading-[1.1] tracking-tight text-brand-900 ${isGuest ? "mt-3 text-4xl sm:text-6xl" : "mt-5 text-4xl sm:text-6xl"}`}>
+          <h1 className={`md-hero-title text-on-surface ${isGuest ? "mt-3" : "mt-5"}`}>
             {userName ? (
               <>
-                Chào <span className="italic text-brand-700">{userName}</span>, vào luyện thôi
+                Chào <span className="italic text-primary">{userName}</span>, vào luyện thôi
               </>
             ) : (
               <>
                 {titleLead && <span>{titleLead} </span>}
-                <span className="italic text-brand-700">{titleAccent}</span>
+                <span className="italic text-primary">{titleAccent}</span>
               </>
             )}
           </h1>
 
           {isGuest && (
             <>
-              <div aria-hidden className="mx-auto mt-4 h-px w-24 bg-brand-400" />
-              <p className="mt-3 font-display text-lg italic text-slate-600 sm:text-xl">
+              <div aria-hidden className="mx-auto mt-4 h-px w-24 bg-primary/40" />
+              <p className="md-title-large mt-3 font-normal italic text-on-surface-variant">
                 {sloganLead}
-                {sloganAccent && <span className="font-semibold not-italic text-brand-800">{sloganAccent}</span>}
+                {sloganAccent && <span className="font-semibold not-italic text-on-surface">{sloganAccent}</span>}
               </p>
             </>
           )}
@@ -56,7 +56,7 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
           {/* Khách: tiêu đề gọn để ưu đãi bên dưới là điểm nhấn đầu tiên */}
           {!isGuest && (
             <>
-              <p className="mx-auto mt-4 max-w-xl text-base text-slate-600">
+              <p className="md-body-large mx-auto mt-4 max-w-xl text-on-surface-variant">
                 Luyện đề thi FE từ kho đề của {brand.partnerName}, làm bài và nhận điểm thang 10 ngay.
               </p>
 
@@ -64,7 +64,7 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
                 href={brand.partnerUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-3.5 text-xs text-slate-600 transition hover:border-brand-300"
+                className="mt-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-surface-container-lowest py-1 pl-1 pr-3.5 text-xs text-slate-600 transition hover:border-brand-300"
               >
                 <img src={logos.partner} alt={brand.partnerName} className="h-6 w-6 rounded-full" />
                 Kho đề từ <b className="font-semibold text-slate-800">{brand.partnerName}</b>
@@ -90,7 +90,7 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
 
         <ul className="mt-8 hidden flex-wrap items-center justify-center gap-2.5 sm:flex">
           {FEATURES.map(({ icon: Icon, text }) => (
-            <li key={text} className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white/70 px-3.5 py-1.5 text-sm text-slate-600">
+            <li key={text} className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-surface-container-lowest/70 px-3.5 py-1.5 text-sm text-slate-600">
               <Icon size={15} className="text-brand-700" />
               {text}
             </li>

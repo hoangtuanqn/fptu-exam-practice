@@ -1,28 +1,59 @@
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import type { LucideIcon } from "lucide-react";
 
-// Khung hộp thoại căn giữa, nền mờ phía sau.
-// Vẽ thẳng vào <body> (portal): nếu để trong cây giao diện, một phần tử cha có transform/animation/overflow
-// sẽ trở thành "khung chứa" của lớp phủ position:fixed và làm nó chỉ phủ một mảng nhỏ thay vì cả màn hình.
+const FOCUSABLE = 'a[href], button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])';
+
+/**
+ * Hộp thoại Material Design 3: nền scrim (màu scrim 32%), khung surface-container-high bo góc extra-large (28dp), độ nổi mức 3.
+ * Vẽ thẳng vào <body> (portal): nếu để trong cây giao diện, một phần tử cha có transform/animation/overflow sẽ trở thành
+ * "khung chứa" của lớp phủ position:fixed và làm nó chỉ phủ một mảng nhỏ thay vì cả màn hình.
+ * Truy cập: role=dialog + aria-modal, nhốt phím Tab trong hộp, Esc để đóng, trả focus về nút đã mở hộp thoại khi đóng.
+ */
 export function Modal({ children, onClose, wide = false }: { children: ReactNode; onClose?: () => void; wide?: boolean }) {
-  // Bấm Esc để đóng
+  const box = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    if (!onClose) return;
-    const esc = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    document.addEventListener("keydown", esc);
-    return () => document.removeEventListener("keydown", esc);
+    const opener = document.activeElement as HTMLElement | null;
+    const node = box.current;
+    // Đưa focus vào hộp: ưu tiên phần tử có autoFocus, không thì khung hộp
+    (node?.querySelector<HTMLElement>("[autofocus]") ?? node)?.focus({ preventScroll: true });
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && onClose) return onClose();
+      if (e.key !== "Tab" || !node) return;
+      const items = Array.from(node.querySelectorAll<HTMLElement>(FOCUSABLE)).filter((el) => el.offsetParent !== null);
+      if (items.length === 0) return e.preventDefault();
+      const first = items[0]!;
+      const last = items[items.length - 1]!;
+      if (e.shiftKey && (document.activeElement === first || document.activeElement === node)) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      opener?.focus?.({ preventScroll: true });
+    };
   }, [onClose]);
 
   return createPortal(
     <div
-      role="dialog"
-      aria-modal="true"
-      // Bấm vào vùng nền bên ngoài hộp thoại thì đóng (chỉ khi bấm đúng nền, không phải khi bấm trong hộp)
+      // Bấm vào vùng nền (scrim) bên ngoài hộp thoại thì đóng (chỉ khi bấm đúng nền, không phải khi bấm trong hộp)
       onMouseDown={(e) => e.target === e.currentTarget && onClose?.()}
-      className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-slate-900/30 p-4 backdrop-blur-md"
+      className="md-scrim-in fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-scrim/32 p-4"
     >
-      <div className={`my-auto max-h-full w-full ${wide ? "max-w-4xl" : "max-w-md"} animate-fade-in overflow-y-auto rounded-3xl border border-white bg-white p-5 shadow-pop sm:p-7`}>
+      <div
+        ref={box}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1}
+        className={`md-enter my-auto max-h-full w-full ${wide ? "max-w-4xl" : "max-w-md"} overflow-y-auto rounded-m3-xl bg-surface-container-high p-6 text-on-surface shadow-m3-3 outline-none sm:p-7`}
+      >
         {children}
       </div>
     </div>,
@@ -30,19 +61,19 @@ export function Modal({ children, onClose, wide = false }: { children: ReactNode
   );
 }
 
-// Tiêu đề hộp thoại: icon tròn + tên
+// Tiêu đề hộp thoại (headline-small): biểu tượng tròn tông secondary + tên
 export function ModalTitle({ icon: Icon, children }: { icon: LucideIcon; children: ReactNode }) {
   return (
     <div className="flex items-center gap-3">
-      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-50 text-brand-700">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary-container text-on-secondary-container">
         <Icon size={20} />
       </div>
-      <h2 className="text-xl font-semibold text-slate-900">{children}</h2>
+      <h2 className="md-headline-small text-on-surface">{children}</h2>
     </div>
   );
 }
 
-// Hàng nút cuối hộp thoại
+// Hàng nút cuối hộp thoại: nút nằm sát phải theo M3 (nút phụ bên trái nút chính)
 export function ModalActions({ children }: { children: ReactNode }) {
-  return <div className="mt-6 flex gap-2">{children}</div>;
+  return <div className="mt-6 flex flex-wrap justify-end gap-2">{children}</div>;
 }

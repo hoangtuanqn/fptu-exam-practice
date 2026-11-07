@@ -68,7 +68,7 @@ export function AnswerPendingBanner({ source, examId, onRetry }: { source: Answe
           <button
             onClick={retry}
             disabled={retrying || examId === null}
-            className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-rose-300 bg-white px-3 py-1.5 text-xs font-medium text-rose-800 transition hover:bg-rose-100 disabled:opacity-60"
+            className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-rose-300 bg-surface-container-lowest px-3 py-1.5 text-xs font-medium text-rose-800 transition hover:bg-rose-100 disabled:opacity-60"
           >
             {retrying ? <Loader2 size={13} className="animate-spin" /> : <RotateCw size={13} />}
             Thử lại

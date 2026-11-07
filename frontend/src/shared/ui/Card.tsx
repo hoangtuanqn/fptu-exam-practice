@@ -1,24 +1,32 @@
 import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 
-export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <section className={`rounded-xl border border-slate-200 bg-white ${className}`}>{children}</section>;
+// Thẻ Material Design 3. Biến thể: outlined (mặc định: viền outline-variant), filled (nền surface-container-highest), elevated (nền theo tông + bóng nhẹ).
+export type CardVariant = "outlined" | "filled" | "elevated";
+const CARD: Record<CardVariant, string> = {
+  outlined: "border border-outline-variant bg-surface text-on-surface",
+  filled: "bg-surface-container-highest text-on-surface",
+  elevated: "bg-surface-container-low text-on-surface shadow-m3-1",
+};
+
+export function Card({ children, className = "", variant = "outlined" }: { children: ReactNode; className?: string; variant?: CardVariant }) {
+  return <section className={`rounded-m3-md ${CARD[variant]} ${className}`}>{children}</section>;
 }
 
 // Tiêu đề khối bên trong Card: tên + mô tả + nút hành động bên phải
 export function CardHeader({ title, description, action }: { title: string; description?: string; action?: ReactNode }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-3.5">
+    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-outline-variant px-5 py-4">
       <div>
-        <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
-        {description && <p className="mt-0.5 text-sm text-slate-500">{description}</p>}
+        <h2 className="md-title-medium text-on-surface">{title}</h2>
+        {description && <p className="md-body-medium mt-0.5 text-on-surface-variant">{description}</p>}
       </div>
       {action}
     </div>
   );
 }
 
-// Tiêu đề trang của panel: nhãn nhỏ (eyebrow) + tên trang + mô tả, kẻ một đường mảnh bên dưới
+// Tiêu đề trang của panel: nhãn nhỏ (eyebrow) + tên trang + mô tả
 export function PageHeader({
   title,
   description,
@@ -31,32 +39,30 @@ export function PageHeader({
   action?: ReactNode;
 }) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-3 border-b border-slate-200 pb-5">
+    <div className="mb-6 flex flex-wrap items-end justify-between gap-3 pb-4">
       <div>
-        {eyebrow && <p className="eyebrow mb-1.5">{eyebrow}</p>}
-        <h1 className="text-2xl font-semibold text-slate-900">{title}</h1>
-        {description && <p className="mt-1 text-sm text-slate-500">{description}</p>}
+        {eyebrow && <p className="md-label-medium mb-1 uppercase tracking-wider text-primary">{eyebrow}</p>}
+        <h1 className="md-headline-small text-on-surface">{title}</h1>
+        {description && <p className="md-body-medium mt-1 text-on-surface-variant">{description}</p>}
       </div>
       {action}
     </div>
   );
 }
 
-// Lưới số liệu: các ô nằm chung một khung, ngăn cách bằng đường kẻ mảnh (không phải nhiều thẻ rời)
+// Lưới số liệu: các ô nằm chung một khung, ngăn cách bằng đường kẻ mảnh
 export function StatGrid({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return (
-    <div className={`grid gap-px overflow-hidden rounded-xl border border-slate-200 bg-slate-200 ${className}`}>{children}</div>
-  );
+  return <div className={`grid gap-px overflow-hidden rounded-m3-md border border-outline-variant bg-outline-variant ${className}`}>{children}</div>;
 }
 
 export type StatTone = "brand" | "emerald" | "amber" | "rose" | "slate";
 
 const STAT_DOT: Record<StatTone, string> = {
-  brand: "bg-brand-600",
-  emerald: "bg-emerald-500",
-  amber: "bg-amber-500",
-  rose: "bg-rose-500",
-  slate: "bg-slate-400",
+  brand: "bg-primary",
+  emerald: "bg-success",
+  amber: "bg-warning",
+  rose: "bg-error",
+  slate: "bg-outline",
 };
 
 // Ô số liệu: nhãn nhỏ có chấm màu, số lớn, ghi chú. Đặt trong StatGrid.
@@ -73,13 +79,13 @@ export function StatCard({
   tone?: StatTone;
 }) {
   return (
-    <div className="min-w-0 bg-white p-4 sm:p-5">
-      <div className="eyebrow flex items-center gap-2">
+    <div className="min-w-0 bg-surface p-4 sm:p-5">
+      <div className="md-label-medium flex items-center gap-2 uppercase tracking-wider text-on-surface-variant">
         <span className={`h-1.5 w-1.5 rounded-full ${STAT_DOT[tone]}`} />
         {label}
       </div>
-      <div className="mt-2.5 break-words text-xl font-semibold leading-tight tabular-nums sm:mt-3 sm:text-[1.7rem] text-slate-900">{value}</div>
-      {note && <div className="mt-2 text-xs text-slate-500">{note}</div>}
+      <div className="md-headline-medium mt-2 break-words font-medium tabular-nums text-on-surface">{value}</div>
+      {note && <div className="md-body-small mt-1.5 text-on-surface-variant">{note}</div>}
     </div>
   );
 }

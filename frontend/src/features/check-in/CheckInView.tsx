@@ -120,7 +120,7 @@ export function CheckInView({ status, result, claiming, onClaim, onClose }: Prop
           </span>
 
           <div className="relative mt-4 flex h-40 w-40 items-center justify-center">
-            <span aria-hidden className="absolute inset-0 rounded-full bg-gradient-to-b from-brand-100 via-brand-50 to-white" />
+            <span aria-hidden className="absolute inset-0 rounded-full bg-gradient-to-b from-brand-100 via-brand-50 to-surface-container-lowest" />
             <span aria-hidden className="absolute inset-4 rounded-full border border-brand-200/70" />
             <span aria-hidden className="absolute inset-0 rounded-full bg-accent/10 blur-2xl" />
             <div aria-hidden className={`relative w-32 drop-shadow-md [&>svg]:h-auto [&>svg]:w-full ${result ? "ci-bounce" : "ci-float"}`} dangerouslySetInnerHTML={{ __html: MASCOT_SVG }} />

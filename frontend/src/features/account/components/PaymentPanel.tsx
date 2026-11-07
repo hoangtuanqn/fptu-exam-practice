@@ -126,7 +126,7 @@ export function PaymentPanel({ code, onClose }: { code: string; onClose: () => v
 
       <div className="grid gap-6 p-5 md:grid-cols-[220px_1fr]">
         <div className="mx-auto w-full max-w-[220px]">
-          <img src={payment.qrUrl} alt="Mã QR chuyển khoản" className="aspect-square w-full rounded-lg border border-slate-200 bg-white object-contain" />
+          <img src={payment.qrUrl} alt="Mã QR chuyển khoản" className="aspect-square w-full rounded-lg border border-slate-200 bg-surface-container-lowest object-contain" />
           <p className="mt-2 text-center text-xs text-slate-500">Quét bằng ứng dụng ngân hàng</p>
         </div>
 

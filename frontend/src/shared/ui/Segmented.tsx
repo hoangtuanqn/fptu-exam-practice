@@ -1,3 +1,5 @@
+import { Check } from "lucide-react";
+
 interface Option<T extends string> {
   value: T;
   label: string;
@@ -10,24 +12,28 @@ interface Props<T extends string> {
   label: string; // đọc cho trình đọc màn hình
 }
 
-// Nhóm nút chọn một: dùng thay cho ô chọn (select) với bộ lọc ít lựa chọn, thấy hết các lựa chọn ngay
+// Nút phân đoạn (segmented button) M3: chọn một trong vài lựa chọn; phần được chọn nền secondary-container kèm dấu tích
 export function Segmented<T extends string>({ value, options, onChange, label }: Props<T>) {
   return (
-    <div role="tablist" aria-label={label} className="inline-flex max-w-full overflow-x-auto rounded-lg border border-slate-300 bg-white p-0.5">
-      {options.map((o) => (
-        <button
-          key={o.value}
-          role="tab"
-          type="button"
-          aria-selected={value === o.value}
-          onClick={() => onChange(o.value)}
-          className={`shrink-0 whitespace-nowrap rounded-md px-2.5 py-1.5 text-sm font-medium transition sm:px-3 ${
-            value === o.value ? "bg-ink text-white" : "text-slate-600 hover:bg-slate-100"
-          }`}
-        >
-          {o.label}
-        </button>
-      ))}
+    <div role="radiogroup" aria-label={label} className="inline-flex max-w-full overflow-x-auto rounded-full border border-outline">
+      {options.map((o, i) => {
+        const on = value === o.value;
+        return (
+          <button
+            key={o.value}
+            role="radio"
+            type="button"
+            aria-checked={on}
+            onClick={() => onChange(o.value)}
+            className={`md-state md-motion md-label-large inline-flex h-10 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap px-3 sm:px-4 ${i > 0 ? "border-l border-outline" : ""} ${
+              on ? "bg-secondary-container text-on-secondary-container" : "text-on-surface"
+            }`}
+          >
+            {on && <Check size={16} />}
+            {o.label}
+          </button>
+        );
+      })}
     </div>
   );
 }

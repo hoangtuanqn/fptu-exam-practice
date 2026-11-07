@@ -1,42 +1,67 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { CalendarCheck, ChevronDown, LayoutDashboard, LogOut, ShieldCheck, Wallet } from "lucide-react";
+import { CalendarCheck, Check, ChevronDown, LayoutDashboard, LogOut, Monitor, Moon, ShieldCheck, Sun, Wallet } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { formatCredit } from "@/shared/utils/formatters";
 import { buttonClass } from "@/shared/ui/Button";
 import { UserAvatar } from "@/shared/ui/UserAvatar";
 import { OPEN_CHECKIN_EVENT } from "@/features/check-in/DailyCheckInPopup";
+import { useTheme, type ThemeMode } from "@/shared/theme/ThemeContext";
 
-const item = "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-100";
+// Mục menu M3: cao 48dp, chữ label-large, state layer khi di chuột/focus/nhấn
+const item = "md-state md-motion md-label-large flex h-12 w-full items-center gap-3 px-4 text-left text-on-surface";
 
-// Góc phải header: khách thấy nút Đăng nhập, thành viên thấy avatar + menu
+const THEMES: { mode: ThemeMode; label: string; icon: typeof Sun }[] = [
+  { mode: "system", label: "Giao diện theo hệ thống", icon: Monitor },
+  { mode: "light", label: "Giao diện sáng", icon: Sun },
+  { mode: "dark", label: "Giao diện tối", icon: Moon },
+];
+
+// Góc phải thanh ứng dụng: khách thấy nút Đăng nhập/Đăng ký, thành viên thấy avatar + menu (menu M3: điều hướng bằng phím ↑ ↓ Home End, Esc đóng)
 export function UserMenu() {
   const { user, loading, signOut } = useAuth();
+  const { mode, setMode } = useTheme();
   const [open, setOpen] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const navigate = useNavigate();
+
+  const close = (refocus = true) => {
+    setOpen(false);
+    if (refocus) triggerRef.current?.focus();
+  };
 
   useEffect(() => {
     if (!open) return;
-    const close = (e: MouseEvent) => !boxRef.current?.contains(e.target as Node) && setOpen(false);
-    const esc = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
-    document.addEventListener("mousedown", close);
-    document.addEventListener("keydown", esc);
-    return () => {
-      document.removeEventListener("mousedown", close);
-      document.removeEventListener("keydown", esc);
-    };
+    // Mở menu: đưa focus vào mục đầu tiên
+    menuRef.current?.querySelector<HTMLElement>('[role^="menuitem"]')?.focus();
+    const outside = (e: MouseEvent) => !boxRef.current?.contains(e.target as Node) && setOpen(false);
+    document.addEventListener("mousedown", outside);
+    return () => document.removeEventListener("mousedown", outside);
   }, [open]);
 
-  if (loading) return <div className="h-9 w-9 animate-pulse rounded-full bg-slate-200" />;
+  const onMenuKey = (e: ReactKeyboardEvent) => {
+    const items = Array.from(menuRef.current?.querySelectorAll<HTMLElement>('[role^="menuitem"]') ?? []);
+    const i = items.indexOf(document.activeElement as HTMLElement);
+    if (e.key === "Escape") return close();
+    if (e.key === "Tab") return close(false);
+    const to = e.key === "ArrowDown" ? (i + 1) % items.length : e.key === "ArrowUp" ? (i - 1 + items.length) % items.length : e.key === "Home" ? 0 : e.key === "End" ? items.length - 1 : -1;
+    if (to >= 0) {
+      e.preventDefault();
+      items[to]?.focus();
+    }
+  };
+
+  if (loading) return <div className="h-10 w-10 animate-pulse rounded-full bg-surface-container-high" />;
 
   if (!user) {
     return (
-      <div className="flex items-center gap-2">
-        <Link to="/login" className={buttonClass({ variant: "ghost" })}>
+      <div className="flex items-center gap-1">
+        <Link to="/login" className={buttonClass({ variant: "text" })}>
           Đăng nhập
         </Link>
-        <Link to="/register" className={buttonClass({ variant: "primary", className: "hidden sm:inline-flex" })}>
+        <Link to="/register" className={buttonClass({ variant: "filled", className: "hidden sm:inline-flex" })}>
           Đăng ký
         </Link>
       </div>
@@ -46,62 +71,78 @@ export function UserMenu() {
   return (
     <div ref={boxRef} className="relative">
       <button
+        ref={triggerRef}
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2 transition hover:bg-slate-900/5"
+        className="md-state md-motion relative flex h-12 items-center gap-2 rounded-full pl-1 pr-2 after:absolute after:inset-0 after:content-['']"
       >
-        <UserAvatar avatarPath={user.avatarPath} alt={user.fullName} className="h-8 w-8" />
-        <span className="hidden min-w-0 flex-col items-start text-left leading-tight sm:flex">
-          <span className="max-w-[9rem] truncate text-sm font-medium text-slate-900">{user.fullName}</span>
-          <span className="flex items-center gap-1 text-xs text-slate-500">
-            <Wallet size={11} /> <b className="tabular-nums text-brand-700">{formatCredit(user.balance)}</b>
+        <UserAvatar avatarPath={user.avatarPath} alt={user.fullName} className="h-9 w-9" />
+        <span className="hidden min-w-0 flex-col items-start text-left sm:flex">
+          <span className="md-label-large max-w-[9rem] truncate text-on-surface">{user.fullName}</span>
+          <span className="md-label-small flex items-center gap-1 text-on-surface-variant">
+            <Wallet size={11} /> <b className="tabular-nums text-primary">{formatCredit(user.balance)}</b>
           </span>
         </span>
-        <ChevronDown size={14} className="text-slate-400" />
+        <ChevronDown size={16} className="text-on-surface-variant" />
       </button>
 
       {open && (
-        <div role="menu" className="absolute right-0 top-full z-50 mt-2 w-64 animate-fade-in rounded-2xl border border-slate-200/80 bg-white p-2 shadow-pop">
-          <div className="flex items-center gap-3 px-3 py-2">
+        <div
+          ref={menuRef}
+          role="menu"
+          aria-label="Menu tài khoản"
+          onKeyDown={onMenuKey}
+          className="md-enter absolute right-0 top-full z-50 mt-1 w-72 overflow-hidden rounded-m3-sm bg-surface-container py-2 text-on-surface shadow-m3-2"
+        >
+          <div className="flex items-center gap-3 px-4 pb-2 pt-1">
             <UserAvatar avatarPath={user.avatarPath} alt={user.fullName} className="h-10 w-10" />
             <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-medium text-slate-900">{user.fullName}</div>
-              <div className="truncate text-xs text-slate-500">{user.email}</div>
+              <div className="md-title-small truncate">{user.fullName}</div>
+              <div className="md-body-small truncate text-on-surface-variant">{user.email}</div>
             </div>
           </div>
-          <div className="px-3 pb-2 pt-0.5">
-            <div className="flex items-center gap-1.5 text-xs text-slate-600">
-              <Wallet size={13} /> Số dư <b className="tabular-nums text-slate-900">{formatCredit(user.balance)}</b>
-            </div>
+          <div className="md-body-small flex items-center gap-1.5 px-4 pb-2 text-on-surface-variant">
+            <Wallet size={14} /> Số dư <b className="tabular-nums text-on-surface">{formatCredit(user.balance)}</b>
           </div>
-          <div className="my-1 h-px bg-slate-100" />
+          <div role="separator" className="my-1 h-px bg-outline-variant" />
           <button
+            role="menuitem"
             className={item}
             onClick={() => {
-              setOpen(false);
+              close(false);
               window.dispatchEvent(new Event(OPEN_CHECKIN_EVENT));
             }}
           >
-            <CalendarCheck size={16} /> Điểm danh nhận thưởng
+            <CalendarCheck size={20} className="text-on-surface-variant" /> Điểm danh nhận thưởng
           </button>
-          <Link to="/account" className={item} onClick={() => setOpen(false)}>
-            <LayoutDashboard size={16} /> Tài khoản của tôi
+          <Link role="menuitem" to="/account" className={item} onClick={() => close(false)}>
+            <LayoutDashboard size={20} className="text-on-surface-variant" /> Tài khoản của tôi
           </Link>
           {user.role === "ADMIN" && (
-            <Link to="/admin" className={item} onClick={() => setOpen(false)}>
-              <ShieldCheck size={16} /> Trang quản trị
+            <Link role="menuitem" to="/admin" className={item} onClick={() => close(false)}>
+              <ShieldCheck size={20} className="text-on-surface-variant" /> Trang quản trị
             </Link>
           )}
+          <div role="separator" className="my-1 h-px bg-outline-variant" />
+          {THEMES.map(({ mode: m, label, icon: Icon }) => (
+            <button key={m} role="menuitemradio" aria-checked={mode === m} className={item} onClick={() => setMode(m)}>
+              <Icon size={20} className="text-on-surface-variant" />
+              <span className="flex-1">{label}</span>
+              {mode === m && <Check size={18} className="text-primary" />}
+            </button>
+          ))}
+          <div role="separator" className="my-1 h-px bg-outline-variant" />
           <button
+            role="menuitem"
             className={item}
             onClick={() => {
-              setOpen(false);
+              close(false);
               signOut();
               navigate("/");
             }}
           >
-            <LogOut size={16} /> Đăng xuất
+            <LogOut size={20} className="text-on-surface-variant" /> Đăng xuất
           </button>
         </div>
       )}
