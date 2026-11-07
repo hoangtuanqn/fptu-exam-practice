@@ -12,6 +12,7 @@ import GithubCallbackPage from "@/features/auth/github/GithubCallbackPage";
 import NotFoundPage from "./NotFoundPage";
 import { ADMIN_NAV, adminRoutes } from "@/features/admin/admin.routes";
 import { GuestSync } from "@/features/guest-sync/GuestSync";
+import { DailyCheckInPopup } from "@/features/check-in/DailyCheckInPopup";
 import PracticePage from "@/features/practice/PracticePage";
 
 // "/" và "/exam/:threadId" dùng chung một thể hiện của trang để đổi địa chỉ không làm mất bài đang làm
@@ -54,6 +55,7 @@ export default function App() {
   return (
     <Suspense fallback={<Loading />}>
       <GuestSync />
+      <DailyCheckInPopup />
       <ChatWidget />
       <Routes>
         <Route path="/" element={<PracticeRoute />} />
