@@ -81,6 +81,23 @@ Việc cần làm ở dịch vụ ngoài khi lên domain:
 - **Google OAuth:** thêm `https://fepass.top` vào *Authorized JavaScript origins*.
 - **Email (SPF/DKIM):** cấu hình bản ghi cho `fepass.top` nếu gửi thư từ domain này, để thư xác minh không vào Spam.
 
+## 7. Cloudflare (chống DDoS)
+
+Đã bật proxy (đám mây cam) cho `fepass.top` và `api.fepass.top`, SSL **Full (strict)**. Phía VPS:
+
+```bash
+scp deploy/update-cloudflare-ips.sh fepass@<IP VPS>:/tmp/
+ssh fepass@<IP VPS> 'sudo install -m 755 /tmp/update-cloudflare-ips.sh /usr/local/bin/ && sudo /usr/local/bin/update-cloudflare-ips.sh'
+echo '0 4 * * 1 root /usr/local/bin/update-cloudflare-ips.sh >> /var/log/cloudflare-ips.log 2>&1' | sudo tee /etc/cron.d/cloudflare-ips
+```
+
+Script này (cron chạy mỗi thứ Hai) làm hai việc: Nginx tin header `CF-Connecting-IP` từ các IP Cloudflare để `req.ip` là IP thật của người dùng (giữ `TRUST_PROXY=1`), và `ufw` chỉ cho Cloudflare vào cổng 80/443. Sau khi chạy lần đầu, xoá luật mở 80/443 cho mọi người: `sudo ufw delete allow 80/tcp; sudo ufw delete allow 443/tcp`. Giữ nguyên cổng 22.
+
+Lưu ý:
+- Tên `api.fepass.top` giờ trỏ về Cloudflare nên **SSH phải dùng IP gốc của VPS**, không dùng tên miền (Cloudflare không proxy cổng 22).
+- Đừng bật *I'm Under Attack Mode* cho cả site: các lời gọi API của frontend không vượt được trang kiểm tra nên web hỏng. Chỉ bật tạm khi đang bị tấn công thật.
+- Sau mỗi lần upload frontend mới lên cPanel, vào Cloudflare → Caching → Purge Everything.
+
 ## Vận hành
 
 | Việc | Lệnh |
