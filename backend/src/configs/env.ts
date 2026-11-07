@@ -33,6 +33,10 @@ const schema = z.object({
   GEMINI_API_KEY: z.string().optional(),
   // Đăng nhập Google: OAuth client ID (Google Cloud Console > APIs & Services > Credentials). Bỏ trống thì ẩn nút đăng nhập Google.
   GOOGLE_CLIENT_ID: z.string().optional(),
+  // Đăng nhập GitHub: OAuth App (GitHub > Settings > Developer settings > OAuth Apps). Callback URL = <CLIENT_URL>/auth/github/callback.
+  // Thiếu một trong hai thì ẩn nút đăng nhập GitHub.
+  GITHUB_CLIENT_ID: z.string().optional(),
+  GITHUB_CLIENT_SECRET: z.string().optional(),
   STORAGE_DIR: z.string().default("storage"), // nơi lưu ảnh đề đã crawl
   ADMIN_EMAIL: z.string().default("admin@example.com"),
   ADMIN_PASSWORD: z.string().default("Admin@123456"),
