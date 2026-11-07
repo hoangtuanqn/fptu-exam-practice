@@ -11,7 +11,7 @@ import { useToast } from "@/shared/context/ToastContext";
 import type { AuthResult } from "@/features/auth/auth.api";
 
 const buttonCls =
-  "flex w-full items-center justify-center gap-2.5 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 shadow-soft transition hover:bg-slate-50 disabled:opacity-60";
+  "flex w-full items-center justify-center gap-2.5 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm sm:px-4 font-medium text-slate-800 shadow-soft transition hover:bg-slate-50 disabled:opacity-60";
 
 // Các nút "Tiếp tục với Google / GitHub" + đường kẻ "hoặc". Nút nào chưa cấu hình (hoặc không tải được) thì ẩn; không có nút nào thì ẩn cả khối.
 // Email do nhà cung cấp xác minh nên tài khoản vào là dùng được ngay, không cần xác minh email.
@@ -42,17 +42,19 @@ export function SocialLogin({ verb = "Tiếp tục" }: { verb?: string }) {
 
   return (
     <>
-      <div className="space-y-2.5">
+      <div className={`grid gap-2.5 ${google.available && github.available ? "grid-cols-2 sm:grid-cols-1" : "grid-cols-1"}`}>
         {google.available && (
-          <button type="button" onClick={google.start} disabled={google.busy} className={buttonCls}>
+          <button type="button" onClick={google.start} disabled={google.busy} aria-label={`${verb} với Google`} className={buttonCls}>
             {google.busy ? <Loader2 size={18} className="animate-spin" /> : <GoogleIcon />}
-            {verb} với Google
+            <span className="sm:hidden">Google</span>
+            <span className="hidden sm:inline">{verb} với Google</span>
           </button>
         )}
         {github.available && (
-          <button type="button" onClick={github.start} disabled={github.busy} className={buttonCls}>
+          <button type="button" onClick={github.start} disabled={github.busy} aria-label={`${verb} với GitHub`} className={buttonCls}>
             {github.busy ? <Loader2 size={18} className="animate-spin" /> : <GithubIcon />}
-            {verb} với GitHub
+            <span className="sm:hidden">GitHub</span>
+            <span className="hidden sm:inline">{verb} với GitHub</span>
           </button>
         )}
       </div>
