@@ -27,8 +27,8 @@ export function QuizDialogs({ quiz, dialog, onDialogChange, onCloseZoom }: Props
           answersPending={pending.answerSource === "PENDING"}
           replacing={quiz.questions.length > 0 && quiz.answeredCount > 0 && !quiz.submitted}
           onCancel={quiz.cancelPending}
-          onStart={(mode) => {
-            quiz.startExam(mode);
+          onStart={(mode, limitMin) => {
+            quiz.startExam(mode, limitMin);
             onCloseZoom();
             onDialogChange(null);
           }}
