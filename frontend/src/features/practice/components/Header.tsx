@@ -24,6 +24,7 @@ interface Props {
   submitted: boolean;
   submitLocked?: boolean; // AI chưa xong đáp án: chưa cho nộp
   elapsed: number; // số giây đã làm bài
+  timeLimitSec?: number | null; // chế độ Thi có giới hạn: hiện thời gian còn lại thay cho thời gian đã làm
   bestScore?: number | null; // điểm cao nhất của người dùng ở đề này (chưa làm lần nào thì không hiện)
   timing: boolean; // đồng hồ đang chạy (không chạy khi chờ đáp án hoặc đã nộp)
   referenceCount?: number; // số tài liệu tham khảo của đề (trang công thức...); có thì hiện nút "Tài liệu"
@@ -42,6 +43,7 @@ export function Header({
   submitted,
   submitLocked,
   elapsed,
+  timeLimitSec,
   bestScore,
   timing,
   referenceCount = 0,
@@ -62,6 +64,8 @@ export function Header({
     return () => clearTimeout(t);
   }, [timing]);
   const waiting = !submitted && !!submitLocked; // chờ đáp án: giờ chưa chạy
+  const left = timeLimitSec ? Math.max(0, timeLimitSec - elapsed) : null; // thời gian còn lại (chỉ khi thi có giới hạn)
+  const low = left !== null && left <= 300; // còn dưới 5 phút: đổi sang màu đỏ
 
   return (
     <header className="glass z-30 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-slate-200/70 px-3 sm:px-4">
@@ -136,6 +140,10 @@ export function Header({
               {waiting ? (
                 <span className="whitespace-nowrap">
                   Chờ đáp án · chưa tính giờ
+                </span>
+              ) : left !== null && !submitted ? (
+                <span title="Thời gian còn lại" className={`whitespace-nowrap tabular-nums ${low ? "font-semibold text-rose-600" : ""}`}>
+                  Còn {formatDuration(left)}
                 </span>
               ) : (
                 <span className="tabular-nums">{formatDuration(elapsed)}</span>
