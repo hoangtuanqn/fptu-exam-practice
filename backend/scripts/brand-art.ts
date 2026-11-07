@@ -16,6 +16,7 @@ export interface Fonts {
   semibold: Font;
   bold: Font;
   extrabold: Font;
+  logo: Font; // Lilita One: CHỈ dùng cho chữ trong logo (ảnh); chữ giao diện vẫn là Inter
 }
 
 async function loadFont(file: string): Promise<Font> {
@@ -24,8 +25,8 @@ async function loadFont(file: string): Promise<Font> {
 }
 
 export async function loadFonts(): Promise<Fonts> {
-  const [medium, semibold, bold, extrabold] = await Promise.all(["Inter-500Medium.ttf", "Inter-600SemiBold.ttf", "Inter-700Bold.ttf", "Inter-800ExtraBold.ttf"].map(loadFont));
-  return { medium: medium!, semibold: semibold!, bold: bold!, extrabold: extrabold! };
+  const [medium, semibold, bold, extrabold, logo] = await Promise.all(["Inter-500Medium.ttf", "Inter-600SemiBold.ttf", "Inter-700Bold.ttf", "Inter-800ExtraBold.ttf", "LilitaOne-Regular.ttf"].map(loadFont));
+  return { medium: medium!, semibold: semibold!, bold: bold!, extrabold: extrabold!, logo: logo! };
 }
 
 // Bảng màu thương hiệu (khớp frontend/src/index.css)
@@ -81,3 +82,23 @@ export const mascotArt = (f: Fonts) => mascotInner.replace(/<text[^>]*>CÓC PASS
 /** SVG độc lập chỉ có mascot (nền trong suốt) */
 export const mascotSvg = (f: Fonts, height = 400) =>
   `<svg xmlns="http://www.w3.org/2000/svg" width="${Math.round((height * MASCOT_W) / MASCOT_H)}" height="${height}" viewBox="0 0 ${MASCOT_W} ${MASCOT_H}">${mascotArt(f)}</svg>`;
+
+/**
+ * Chữ kiểu logo (cùng phong cách con Cóc Pass): gradient vàng, viền nâu đậm, khối nổi phía dưới và ánh sáng ở nửa trên.
+ * `dark`: viền sáng hơn một chút để không chìm trên nền tối.
+ */
+export function wordmark(font: Font, str: string, size: number, x: number, baseline: number, opts: { dark?: boolean; spacing?: number } = {}) {
+  const edge = size * 0.058;
+  const depth = size * 0.055;
+  const d = textD(font, str, size, x, baseline, { spacing: opts.spacing ?? 0 });
+  const outline = opts.dark ? "#8a5a12" : "#5f3a0d";
+  const id = `wm${Math.round(x)}_${Math.round(baseline)}_${Math.round(size)}`;
+  return `<defs>
+    <linearGradient id="${id}f" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff6b0"/><stop offset=".42" stop-color="#ffcf2e"/><stop offset="1" stop-color="#e08e00"/></linearGradient>
+    <linearGradient id="${id}s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".7"/><stop offset=".5" stop-color="#ffffff" stop-opacity="0"/></linearGradient>
+  </defs>
+  <path d="${d}" fill="${COLOR.gold900}" stroke="${COLOR.gold900}" stroke-width="${edge * 2}" stroke-linejoin="round" transform="translate(0 ${depth})"/>
+  <path d="${d}" fill="${outline}" stroke="${outline}" stroke-width="${edge * 2}" stroke-linejoin="round"/>
+  <path d="${d}" fill="url(#${id}f)"/>
+  <path d="${d}" fill="url(#${id}s)"/>`;
+}
