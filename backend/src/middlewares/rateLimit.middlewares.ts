@@ -18,10 +18,10 @@ export const refreshLimiter = rateLimit({
   message: { status: false, message: "Làm mới phiên quá nhanh, vui lòng thử lại sau giây lát" },
 });
 
-// Chống dò mật khẩu: 20 lần / 15 phút / IP
+// Chống dò mật khẩu: 30 lần / 15 phút / IP (nới hơn một chút vì nhiều sinh viên dùng chung IP wifi trường/ký túc xá)
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 20,
+  limit: 30,
   standardHeaders: true,
   legacyHeaders: false,
   message: { status: false, message: "Thử quá nhiều lần, vui lòng quay lại sau" },
