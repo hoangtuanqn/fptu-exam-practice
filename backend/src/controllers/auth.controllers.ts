@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { getValidated } from "../middlewares/validate.middlewares";
 import { authService } from "../services/auth.service";
 import { accountSettingService } from "../services/account-setting.service";
+import { githubAuthService } from "../services/github-auth.service";
 import { googleAuthService } from "../services/google-auth.service";
 import { refreshTokenService, type ClientContext } from "../services/refresh-token.service";
 import { userRepository } from "../repositories/user.repository";
@@ -10,7 +11,7 @@ import { signToken } from "../utils/jwt";
 import { clearRefreshCookie, isTrustedOrigin, readRefreshCookie, setRefreshCookie } from "../utils/auth-cookie";
 import { emailVerificationService } from "../services/email-verification.service";
 import { HTTP_STATUS } from "../constants/httpStatus";
-import type { ForgotPasswordBody, GoogleLoginBody, LoginBody, RegisterBody, ResetPasswordBody, VerifyEmailBody } from "../rules/requests/auth.request";
+import type { ForgotPasswordBody, GithubLoginBody, GoogleLoginBody, LoginBody, RegisterBody, ResetPasswordBody, VerifyEmailBody } from "../rules/requests/auth.request";
 import { ResponseClient } from "../rules/response";
 
 const clientContext = (req: Request): ClientContext => ({ ip: req.ip, userAgent: req.get("user-agent") });
@@ -53,6 +54,18 @@ export const authController = {
   async google(req: Request, res: Response) {
     const { accessToken, referralCode } = getValidated<GoogleLoginBody>(res);
     const { created, ...data } = await googleAuthService.login(accessToken, referralCode);
+    await startSession(req, res, data.user);
+    res.status(created ? HTTP_STATUS.CREATED : HTTP_STATUS.OK).json(new ResponseClient({ message: created ? "Đăng ký thành công" : "Đăng nhập thành công", data }));
+  },
+
+  // Công khai: client ID + địa chỉ gọi lại để giao diện mở cửa sổ GitHub (clientId null = chưa cấu hình, ẩn nút)
+  githubConfig(_req: Request, res: Response) {
+    res.json(new ResponseClient({ data: githubAuthService.config() }));
+  },
+
+  async github(req: Request, res: Response) {
+    const { code, referralCode } = getValidated<GithubLoginBody>(res);
+    const { created, ...data } = await githubAuthService.login(code, referralCode);
     await startSession(req, res, data.user);
     res.status(created ? HTTP_STATUS.CREATED : HTTP_STATUS.OK).json(new ResponseClient({ message: created ? "Đăng ký thành công" : "Đăng nhập thành công", data }));
   },
