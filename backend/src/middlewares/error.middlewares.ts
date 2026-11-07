@@ -29,6 +29,13 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     return;
   }
 
+  // Lỗi tải file (multer): file quá lớn là lỗi của người dùng, không phải 500
+  if (err?.name === "MulterError") {
+    const message = err.code === "LIMIT_FILE_SIZE" ? "Ảnh quá lớn, tối đa 5 MB" : "Tệp tải lên không hợp lệ";
+    res.status(HTTP_STATUS.BAD_REQUEST).json({ status: false, message });
+    return;
+  }
+
   // JSON sai cú pháp do body-parser ném ra
   if (err?.type === "entity.parse.failed") {
     res.status(HTTP_STATUS.BAD_REQUEST).json({ status: false, message: "Body không phải JSON hợp lệ" });

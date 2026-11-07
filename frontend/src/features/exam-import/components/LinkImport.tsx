@@ -214,7 +214,7 @@ export function LinkImport({ onImported }: Props) {
           </span>
           {/* Hạn mức nhìn thấy TRƯỚC khi bấm (không phải đợi hết lượt mới biết) */}
           <span className="md-body-small text-on-surface-variant">
-            {user ? (fee > 0 ? `Số dư của bạn: ${user.balance.toLocaleString("vi-VN")} credit. Đề đã từng lấy được mở lại miễn phí.` : "Đề đã từng lấy được mở lại miễn phí.") : "Khách được lấy miễn phí 1 đề mỗi ngày."}
+            {user ? (fee > 0 ? `Số dư của bạn: ${user.balance.toLocaleString("vi-VN")} credit. Đề đã từng lấy được mở lại miễn phí.` : "Đề đã từng lấy được mở lại miễn phí.") : price.data?.guestRemaining !== undefined ? `Hôm nay bạn còn ${price.data.guestRemaining}/${price.data.guestLimit} lượt lấy đề miễn phí.` : "Khách được lấy miễn phí 1 đề mỗi ngày."}
           </span>
         </div>
       </div>

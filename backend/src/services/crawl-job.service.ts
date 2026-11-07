@@ -37,8 +37,12 @@ const isStale = (exam: { createdAt: Date; refreshedAt: Date | null }) =>
 
 export const crawlJobService = {
   // Phí mỗi lần lấy đề, để giao diện báo trước cho người dùng
-  async getPrice() {
-    return { price: (await crawlerSettingService.get()).fetchPrice };
+  // Khách còn kèm số lượt miễn phí còn lại hôm nay để giao diện báo trước (thay vì đợi hết lượt mới biết)
+  async getPrice(actor?: Actor) {
+    const price = (await crawlerSettingService.get()).fetchPrice;
+    if (!actor || isMember(actor.owner)) return { price };
+    const used = await crawlJobRepository.countGuestFetchesSince(actor.owner.guestId, startOfVnDay());
+    return { price, guestLimit: GUEST_DAILY_LIMIT, guestRemaining: Math.max(0, GUEST_DAILY_LIMIT - used) };
   },
 
   // Phí thực tế của lần lấy này. Đề người này đã lấy về kho trước đó thì miễn phí (chỉ mở lại, không crawl);

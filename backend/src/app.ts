@@ -13,7 +13,7 @@ export const createApp = () => {
 
   app.use(helmet());
   // Content-Disposition phải được expose, nếu không trình duyệt (khác origin) không đọc được tên file tải về
-  app.use(cors({ origin: env.CLIENT_URL, credentials: true, exposedHeaders: ["Content-Disposition"] }));
+  app.use(cors({ origin: env.CLIENT_URL, credentials: true, exposedHeaders: ["Content-Disposition", "Retry-After", "RateLimit-Reset", "Idempotent-Replay"] }));
   app.use(express.json({ limit: "100kb" }));
 
   // Ảnh đề đã crawl. Cho phép trang web ở origin khác nhúng (helmet mặc định chỉ cho cùng origin)
