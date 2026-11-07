@@ -121,7 +121,7 @@ export function renderLayout({ title, preheader, bodyHtml }: LayoutInput) {
             <table width="600" cellpadding="0" cellspacing="0" bgcolor="#ffffff" align="center" role="none" style="${TABLE}background-color:#ffffff;width:100%;max-width:600px;border-radius:12px;overflow:hidden">
               <tr>
                 <td class="px" align="center" style="padding:20px 20px 0 20px;font-size:0;line-height:0">
-                  <img width="560" src="cid:${MAIL_IMAGES.cover.cid}" alt="${esc(MAIL_IMAGES.cover.alt)}" style="display:block;width:100%;max-width:560px;height:auto;border:0;outline:none;text-decoration:none;border-radius:10px" />
+                  <img width="560" height="140" src="cid:${MAIL_IMAGES.cover.cid}" alt="${esc(MAIL_IMAGES.cover.alt)}" style="display:block;width:100%;max-width:560px;height:auto;border:0;outline:none;text-decoration:none;border-radius:10px" />
                 </td>
               </tr>
               <tr>
