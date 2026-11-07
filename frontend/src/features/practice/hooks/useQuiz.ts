@@ -4,6 +4,7 @@ import { parseFolder } from "@/features/practice/utils/parseFolder";
 import { grade } from "@/features/practice/utils/grade";
 import { useStopwatch } from "./useStopwatch";
 import { hasAnswer, isMultiple } from "@/features/practice/utils/question";
+import { readTimeLimit, saveTimeLimit } from "@/features/practice/utils/timeLimit";
 
 // Đề vừa upload, đang chờ người dùng xác nhận + chọn chế độ
 interface PendingExam {
@@ -53,6 +54,7 @@ export function useQuiz() {
   const [total, setTotal] = useState(0); // tổng số câu của đề đang làm
   const answersPending = isLocked(answerSource); // chưa có đáp án: chỉ xem đề
   const [mode, setMode] = useState<Mode>("practice"); // chọn lúc bắt đầu, không đổi giữa chừng
+  const [timeLimitMin, setTimeLimitMin] = useState<number | null>(null); // giới hạn thời gian của chế độ Thi (phút); null = không giới hạn
   const [pending, setPending] = useState<PendingExam | null>(null);
   const [notFound, setNotFound] = useState(false); // upload thư mục không có ảnh hợp lệ
   const [flagged, setFlagged] = useState<Record<number, boolean>>({}); // câu đánh dấu cần xem lại
@@ -126,6 +128,10 @@ export function useQuiz() {
     setAnswerSource(source);
     setTotal(examTotal);
     setMode(chosenMode);
+    // Làm tiếp lượt thi dở: giữ đúng giới hạn thời gian đã chọn lúc bắt đầu; mở mới thì không có giới hạn
+    const limit = chosenMode === "exam" && resume ? readTimeLimit(id) : null;
+    if (!resume) saveTimeLimit(id, null);
+    setTimeLimitMin(limit);
     clearProgress();
     if (resume) {
       setAnswers(resume.answers);
@@ -138,7 +144,7 @@ export function useQuiz() {
   }
 
   // Bước 2: người dùng xác nhận và chọn chế độ
-  function startExam(chosenMode: Mode) {
+  function startExam(chosenMode: Mode, limitMin: number | null = null) {
     if (!pending) return;
     setQuestions(pending.questions);
     setReferences(pending.references);
@@ -147,6 +153,9 @@ export function useQuiz() {
     setAnswerSource(pending.answerSource);
     setTotal(pending.total);
     setMode(chosenMode);
+    const limit = chosenMode === "exam" ? limitMin : null;
+    setTimeLimitMin(limit);
+    saveTimeLimit(pending.examId, limit);
     clearProgress();
     setPending(null);
   }
@@ -170,6 +179,7 @@ export function useQuiz() {
     setExamId(null);
     setAnswerSource(null);
     setTotal(0);
+    setTimeLimitMin(null);
     clearProgress();
   }
 
@@ -272,6 +282,7 @@ export function useQuiz() {
     notFound,
     flagged,
     elapsed,
+    timeLimitSec: timeLimitMin ? timeLimitMin * 60 : null,
     timing,
     sessionId,
     setSessionId,
