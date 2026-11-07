@@ -14,7 +14,7 @@ export function CtaSection() {
         <p className="mx-auto mt-4 max-w-md text-sm text-slate-600">Tạo tài khoản miễn phí chỉ với email, luyện đề không giới hạn.</p>
 
         <div className="mt-6 flex flex-wrap justify-center gap-3">
-          <Link to="/register" className="rounded-md bg-brand-900 px-6 py-3 text-base font-semibold text-white transition hover:bg-brand-800">
+          <Link to="/register" className="rounded-md bg-brand-500 px-6 py-3 text-base font-semibold text-brand-900 transition hover:bg-brand-400">
             Tạo tài khoản miễn phí
           </Link>
           <Link to="/login" className="rounded-md border border-slate-200 bg-white px-6 py-3 text-base font-semibold text-slate-700 transition hover:border-brand-900 hover:text-brand-900">

@@ -25,7 +25,7 @@ function useCountUp(target: number, run: boolean, ms = 750) {
   return value;
 }
 
-const CONFETTI_COLORS = ["#0066ff", "#00c8ff", "#90e5ff", "#fbbf24", "#10b981", "#3399ff"];
+const CONFETTI_COLORS = ["#ffc61f", "#ffd033", "#fff0a0", "#e29400", "#10b981", "#a86400"];
 
 // Pháo giấy bung ra từ mascot khi nhận thưởng (CSS thuần, tự tắt khi người dùng chọn giảm chuyển động)
 function Confetti() {
@@ -69,7 +69,7 @@ function Stepper({ status, completed, done }: { status: CheckInStatus; completed
             : state === "today"
               ? last
                 ? "bg-gradient-to-br from-amber-300 to-amber-500 text-white ring-4 ring-amber-400/30"
-                : "bg-gradient-to-br from-brand-600 to-accent text-white ring-4 ring-brand-500/25"
+                : "bg-gradient-to-br from-brand-500 to-accent text-brand-900 ring-4 ring-brand-500/30"
               : last
                 ? "bg-amber-100 text-amber-500"
                 : "bg-slate-100 text-slate-400";

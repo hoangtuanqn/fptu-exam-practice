@@ -25,14 +25,14 @@ export function AuthLayout({ title, subtitle, children }: { title: string; subti
         </Link>
 
         <div className="relative">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-brand-600">{brand.tagline}</p>
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-brand-700">{brand.tagline}</p>
           <h2 className="max-w-sm text-3xl font-semibold leading-snug text-slate-900">
             {brand.product}: ôn đều đặn, <span className="text-gradient">theo dõi tiến bộ</span> từng ngày.
           </h2>
           <ul className="mt-8 space-y-3 text-sm text-slate-600">
             {POINTS.map((p) => (
               <li key={p} className="flex items-center gap-3">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-600 text-white">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-500 text-brand-900">
                   <Check size={12} strokeWidth={3} />
                 </span>
                 {p}

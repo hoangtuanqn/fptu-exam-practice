@@ -105,7 +105,7 @@ export function ExplainPanel({ examId, questionNumber, firstTime, onClose, onBou
 
       <header className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-100 px-4 py-3">
         <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
             <Sparkles size={15} />
           </span>
           Giải thích câu {questionNumber}
@@ -119,7 +119,7 @@ export function ExplainPanel({ examId, questionNumber, firstTime, onClose, onBou
         {phase === "loading" &&
           (firstTime ? (
             <div className="space-y-3 py-6 text-center" role="status" aria-live="polite">
-              <Loader2 size={28} className="mx-auto animate-spin text-brand-600" />
+              <Loader2 size={28} className="mx-auto animate-spin text-brand-700" />
               <div className="text-sm font-medium text-slate-900">AI đang phân tích câu hỏi…</div>
               <div className="mx-auto h-1.5 max-w-xs overflow-hidden rounded-full bg-slate-100" aria-hidden>
                 <div className="h-full rounded-full bg-brand-600 transition-[width] duration-300 ease-linear" style={{ width: `${percent}%` }} />

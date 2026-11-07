@@ -33,13 +33,13 @@ export function ConfirmSubmitDialog({ answered, total, savable, answersPending, 
       </p>
       {answersPending && (
         <p className="mt-3 flex items-start gap-2 rounded-xl bg-brand-50 px-3 py-2.5 text-xs leading-relaxed text-brand-900">
-          <Info size={14} className="mt-0.5 shrink-0 text-brand-600" />
+          <Info size={14} className="mt-0.5 shrink-0 text-brand-700" />
           Đáp án vẫn đang được chuẩn bị. Bạn vẫn nộp được, điểm sẽ hiện ngay khi đáp án sẵn sàng.
         </p>
       )}
       {!user && (
         <p className="mt-3 flex items-start gap-2 rounded-xl bg-slate-50 px-3 py-2.5 text-xs leading-relaxed text-slate-600">
-          <Info size={14} className="mt-0.5 shrink-0 text-brand-600" />
+          <Info size={14} className="mt-0.5 shrink-0 text-brand-700" />
           {savable
             ? "Bạn chưa đăng nhập. Sau khi nộp, hãy đăng ký hoặc đăng nhập để bài này được lưu vào lịch sử."
             : "Đề mở từ thư mục trên máy không được lưu lịch sử. Hãy lấy đề từ link FuOverflow để lưu lại kết quả."}

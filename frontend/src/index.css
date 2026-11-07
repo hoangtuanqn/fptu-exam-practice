@@ -10,24 +10,24 @@
   --default-font-family: var(--font-sans);
   --default-mono-font-family: var(--font-sans);
 
-  /* BẢNG MÀU THƯƠNG HIỆU MST: đo trực tiếp từ logo (xem BRAND.md ở thư mục gốc).
+  /* BẢNG MÀU THƯƠNG HIỆU FEPASS: vàng lấy từ mascot Cóc Pass (xem BRAND.md ở thư mục gốc).
      Đổi màu cả site chỉ cần sửa các dòng dưới đây. */
-  --color-brand-50: #eef6ff;
-  --color-brand-100: #d9ebff;
-  --color-brand-200: #b3d6ff;
-  --color-brand-300: #80b8ff;
-  --color-brand-400: #3399ff; /* xanh nhạt của các ô pixel trong logo */
-  --color-brand-500: #1a80ff;
-  --color-brand-600: #0066ff; /* XANH CHÍNH của logo */
-  --color-brand-700: #0052cc;
-  --color-brand-800: #0f3a8a;
-  --color-brand-900: #0b1730; /* navy nền tối (header tối, khối CTA, nút), hợp với nền ảnh mockup logo */
+  --color-brand-50: #fffbe6;
+  --color-brand-100: #fff4bf;
+  --color-brand-200: #ffe88a;
+  --color-brand-300: #ffdb57;
+  --color-brand-400: #ffd033; /* vàng sáng */
+  --color-brand-500: #ffc61f;
+  --color-brand-600: #e29400; /* vàng đậm (viền, nhấn) */
+  --color-brand-700: #a86400;
+  --color-brand-800: #7a4b00;
+  --color-brand-900: #3f2606; /* nâu đậm của viền mascot: chữ tiêu đề, nền tối, nút tối */
 
-  /* Cyan ở giữa dải chuyển sắc của logo, và đầu cuối nhạt của dải đó */
-  --color-accent: #00c8ff;
-  --color-accent-soft: #90e5ff;
+  /* Vàng sáng dùng làm điểm nhấn trong dải chuyển sắc, và đầu cuối nhạt của dải đó */
+  --color-accent: #ffd033;
+  --color-accent-soft: #fff0a0;
 
-  /* Chữ đen của bản logo đầy đủ (SOFTWARE.VN) */
+  /* Chữ đen */
   --color-ink: #101010;
 
   /* Nền trang: trắng ngà hơi lạnh, để thẻ trắng nổi lên nhẹ nhàng */
@@ -100,9 +100,9 @@ h3 {
   background-size: 22px 22px;
 }
 
-/* Chữ chuyển sắc theo dải gradient của logo */
+/* Chữ chuyển sắc vàng đậm (đủ tương phản trên nền trắng) */
 .text-gradient {
-  @apply bg-gradient-to-r from-brand-600 via-brand-500 to-accent bg-clip-text text-transparent;
+  @apply bg-gradient-to-r from-brand-700 via-brand-600 to-brand-500 bg-clip-text text-transparent;
 }
 
 /* Kính mờ cho thanh header dính trên cùng */

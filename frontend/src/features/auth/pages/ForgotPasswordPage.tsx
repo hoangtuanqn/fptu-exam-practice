@@ -39,7 +39,7 @@ export default function ForgotPasswordPage() {
     return (
       <AuthLayout title="Kiểm tra email của bạn" subtitle="Chúng mình đã gửi hướng dẫn đặt lại mật khẩu.">
         <div className="rounded-xl border border-brand-100 bg-brand-50/60 p-4 text-sm leading-relaxed text-slate-700">
-          <MailCheck size={20} className="mb-2 text-brand-600" />
+          <MailCheck size={20} className="mb-2 text-brand-700" />
           Nếu <b className="text-slate-900">{sentTo}</b> đã đăng ký tài khoản, bạn sẽ nhận được email trong ít phút. Hãy
           mở thư và nhấn nút "Đặt lại mật khẩu". Liên kết có hiệu lực 30 phút và chỉ dùng được một lần.
           <p className="mt-2 text-xs text-slate-500">Không thấy thư? Kiểm tra cả mục Spam hoặc Quảng cáo.</p>
