@@ -1,20 +1,44 @@
 /**
  * Dựng ảnh bìa dùng chung cho MỌI email (assets/mail/cover.png) và logo nhỏ (assets/mail/logo.png).
- * Chạy lại khi muốn đổi hình:  npx tsx scripts/gen-mail-cover.ts
+ * Chạy lại khi muốn đổi hình:  npx tsx scripts/gen-mail-cover.ts (phông: assets/fonts/Inter-*.ttf)
  * Ảnh vẽ bằng SVG (màu lấy từ BRAND.md, mascot Cóc Pass của giao diện) rồi sharp xuất PNG. Kích thước 1120x440 = gấp đôi ô 560px trong thư (nét trên màn hình retina).
  */
 import fs from "node:fs/promises";
 import path from "node:path";
+import opentype from "opentype.js";
 import sharp from "sharp";
 import { MASCOT_SVG } from "../../frontend/src/shared/ui/mascot-art";
 
 const OUT_DIR = path.resolve(__dirname, "../assets/mail");
 const W = 1120;
 const H = 440;
-const FONT = "Inter, 'Segoe UI', Arial, Helvetica, sans-serif";
+const FONT_DIR = path.resolve(__dirname, "../assets/fonts");
+
+// Chữ trong ảnh được đổi thành đường nét (path) từ chính file phông Inter, nên ảnh luôn là Inter dù máy chạy script có cài Inter hay không
+type Font = opentype.Font;
+async function loadFont(file: string): Promise<Font> {
+  const buf = await fs.readFile(path.join(FONT_DIR, file));
+  return opentype.parse(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer);
+}
+// Xếp chữ từng ký tự một (không qua bộ xử lý GSUB của opentype.js vì nó chưa hỗ trợ một số bảng của Inter); chuỗi đã ở dạng NFC nên dấu tiếng Việt là ký tự dựng sẵn
+function text(font: Font, str: string, size: number, x: number, y: number, fill: string, opts: { anchor?: "start" | "middle"; spacing?: number; opacity?: number } = {}) {
+  const scale = size / font.unitsPerEm;
+  const gap = (opts.spacing ?? 0) * size; // spacing tính bằng em
+  const glyphs = Array.from(str.normalize("NFC")).map((ch) => font.charToGlyph(ch));
+  const width = glyphs.reduce((w, g) => w + (g.advanceWidth ?? 0) * scale + gap, 0) - gap;
+  let cx = opts.anchor === "middle" ? x - width / 2 : x;
+  let d = "";
+  for (const g of glyphs) {
+    d += g.getPath(cx, y, size).toPathData(2);
+    cx += (g.advanceWidth ?? 0) * scale + gap;
+  }
+  return `<path d="${d}" fill="${fill}"${opts.opacity !== undefined ? ` opacity="${opts.opacity}"` : ""}/>`;
+}
 
 // Mascot: bỏ thẻ <svg> ngoài, đặt vào hệ toạ độ riêng (132x100)
 const mascotInner = MASCOT_SVG.replace(/^<svg[^>]*>/, "").replace(/<\/svg>$/, "");
+// Bảng "CÓC PASS" của mascot: đổi chữ thành path Inter để không dính phông dự phòng của máy
+const mascotArt = (bold: Font) => mascotInner.replace(/<text[^>]*>CÓC PASS<\/text>/, text(bold, "CÓC PASS", 7.6, 94.5, 91.8, "#6b3d00", { anchor: "middle" }));
 
 // Một tờ đề: nền trắng, vài dòng chữ giả, ô tròn đánh dấu đúng/sai
 const sheet = (x: number, y: number, rot: number, scale: number, ok: boolean, opacity = 1) => `
@@ -38,7 +62,7 @@ const pixels = [
   .map(([x, y, s, o]) => `<rect x="${x}" y="${y}" width="${s}" height="${s}" rx="4" fill="#3399ff" opacity="${o}"/>`)
   .join("");
 
-const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+const buildSvg = (f: { medium: Font; semibold: Font; bold: Font; extrabold: Font }) => `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#0b1730"/><stop offset=".5" stop-color="#0f3a8a"/><stop offset="1" stop-color="#0066ff"/>
@@ -78,27 +102,29 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" 
 
   <!-- mascot Cóc Pass -->
   <ellipse cx="850" cy="372" rx="130" ry="14" fill="#000" opacity=".28"/>
-  <g transform="translate(700 70) scale(2.3)">${mascotInner}</g>
+  <g transform="translate(700 70) scale(2.3)">${mascotArt(f.extrabold)}</g>
 
   <!-- huy hiệu 10/10 -->
   <g transform="translate(1000 205)">
     <circle r="52" fill="#ffffff"/>
     <circle r="52" fill="none" stroke="#00c8ff" stroke-width="5"/>
-    <text x="0" y="12" text-anchor="middle" font-family="${FONT}" font-size="38" font-weight="800" fill="#0066ff">10</text>
-    <text x="0" y="34" text-anchor="middle" font-family="${FONT}" font-size="13" font-weight="700" fill="#667085" letter-spacing="1.5">ĐIỂM</text>
+    ${text(f.extrabold, "10", 38, 0, 12, "#0066ff", { anchor: "middle" })}
+    ${text(f.bold, "ĐIỂM", 13, 0, 34, "#667085", { anchor: "middle", spacing: 0.115 })}
   </g>
 
   <!-- chữ thương hiệu -->
-  <text x="92" y="238" font-family="${FONT}" font-size="104" font-weight="800" fill="url(#word)" letter-spacing="-2">FEPass</text>
+  ${text(f.extrabold, "FEPass", 104, 92, 238, "url(#word)", { spacing: -0.02 })}
   <rect x="96" y="266" width="120" height="6" rx="3" fill="#00c8ff"/>
-  <text x="96" y="320" font-family="${FONT}" font-size="30" font-weight="600" fill="#b3d6ff">Hành trình đi đến điểm 10.</text>
-  <text x="96" y="362" font-family="${FONT}" font-size="22" font-weight="500" fill="#80b8ff" opacity=".9">Luyện thi FE FPTU · fepass.top</text>
+  ${text(f.semibold, "Hành trình đi đến điểm 10.", 30, 96, 320, "#b3d6ff")}
+  ${text(f.medium, "Luyện thi FE FPTU · fepass.top", 22, 96, 362, "#80b8ff", { opacity: 0.9 })}
 
   <rect y="${H - 12}" width="${W}" height="12" fill="url(#bar)"/>
 </svg>`;
 
 async function main() {
   await fs.mkdir(OUT_DIR, { recursive: true });
+  const [medium, semibold, bold, extrabold] = await Promise.all(["Inter-500Medium.ttf", "Inter-600SemiBold.ttf", "Inter-700Bold.ttf", "Inter-800ExtraBold.ttf"].map(loadFont));
+  const svg = buildSvg({ medium: medium!, semibold: semibold!, bold: bold!, extrabold: extrabold! });
   await sharp(Buffer.from(svg)).png({ compressionLevel: 9, palette: false }).toFile(path.join(OUT_DIR, "cover.png"));
   // Logo nhỏ ở khối chữ ký (rộng 240px = 120px trong thư)
   await sharp(path.resolve(__dirname, "../../frontend/public/brand/logo-full.png")).resize({ width: 240 }).png({ compressionLevel: 9 }).toFile(path.join(OUT_DIR, "logo.png"));

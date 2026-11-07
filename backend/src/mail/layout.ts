@@ -8,7 +8,7 @@ export const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
 const { company, product, founder, facebookUrl, siteUrl, blue, cyan } = MAIL_BRAND;
-const FONT = "Inter, Roboto, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif";
+const FONT = "Inter, sans-serif"; // Inter (Apple Mail, iOS, Outlook.com tải được); ứng dụng không hỗ trợ phông web thì dùng phông sans-serif mặc định
 const TABLE = "mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-spacing:0px;";
 const INK = "#101828"; // chữ đậm
 const BODY = "#333333"; // chữ nội dung
