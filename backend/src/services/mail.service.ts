@@ -1,7 +1,7 @@
 import path from "node:path";
 import { env } from "../configs/env";
 import { isMailConfigured, mailer, mailFrom } from "../configs/mailer";
-import { MAIL_ASSETS_DIR, MAIL_BANNERS, MAIL_BRAND, type MailBanner } from "../constants/mail";
+import { MAIL_ASSETS_DIR, MAIL_BRAND, MAIL_IMAGES } from "../constants/mail";
 import { renderResetPasswordEmail } from "../mail/templates/reset-password";
 import { renderVerifyEmail } from "../mail/templates/verify-email";
 import {
@@ -39,7 +39,7 @@ interface Rendered {
 }
 
 // Gửi một thư đã dựng sẵn. Ném lỗi nếu chưa cấu hình SMTP hoặc gửi thất bại (nơi gọi quyết định xử lý)
-const send = async (to: string, subject: string, banner: MailBanner, { html, text }: Rendered) => {
+const send = async (to: string, subject: string, { html, text }: Rendered) => {
   if (!isMailConfigured) throw new Error("Chưa cấu hình SMTP (SMTP_USER, SMTP_PASS)");
   await mailer.sendMail({
     from: mailFrom,
@@ -47,8 +47,8 @@ const send = async (to: string, subject: string, banner: MailBanner, { html, tex
     subject,
     html,
     text,
-    // Banner nhúng thẳng vào thư (cid) nên hiển thị cả khi chạy local, không cần ảnh trên internet
-    attachments: [{ filename: banner.file, path: path.join(MAIL_ASSETS_DIR, banner.file), cid: banner.cid }],
+    // Ảnh bìa + logo nhúng thẳng vào thư (cid) nên hiển thị cả khi chạy local, không cần ảnh trên internet
+    attachments: Object.values(MAIL_IMAGES).map(({ file, cid }) => ({ filename: file, path: path.join(MAIL_ASSETS_DIR, file), cid })),
   });
 };
 
@@ -62,45 +62,43 @@ export const mailService = {
     send(
       input.to,
       `${tag} Yêu cầu đặt lại mật khẩu`,
-      MAIL_BANNERS.reset,
       renderResetPasswordEmail({ name: input.name, link: input.link, expiresMin: env.PASSWORD_RESET_EXPIRES_MIN }),
     ),
 
   sendDepositCreated: (to: string, input: OrderEmailInput) =>
-    send(to, `${tag} Lệnh nạp ${money(input.amount)} đang chờ thanh toán · ${input.code}`, MAIL_BANNERS.order, renderOrderEmail(input)),
+    send(to, `${tag} Lệnh nạp ${money(input.amount)} đang chờ thanh toán · ${input.code}`, renderOrderEmail(input)),
 
   sendDepositSuccess: (to: string, input: DepositEmailInput) =>
-    send(to, `${tag} Nạp credit thành công +${credit(input.amount)} · ${input.code}`, MAIL_BANNERS.deposit, renderDepositEmail(input)),
+    send(to, `${tag} Nạp credit thành công +${credit(input.amount)} · ${input.code}`, renderDepositEmail(input)),
 
   sendVerifyEmail: (to: string, input: { name: string; link: string; expiresHours: number }) =>
-    send(to, `${tag} Xác minh email của bạn`, MAIL_BANNERS.welcome, renderVerifyEmail(input)),
+    send(to, `${tag} Xác minh email của bạn`, renderVerifyEmail(input)),
 
   sendEmailChanged: (to: string, input: EmailChangedInput) =>
-    send(to, `${tag} Email đăng nhập của bạn vừa được đổi`, MAIL_BANNERS.security, renderEmailChangedEmail(input)),
+    send(to, `${tag} Email đăng nhập của bạn vừa được đổi`, renderEmailChangedEmail(input)),
 
   sendGiftCodeRedeemed: (to: string, input: GiftCodeEmailInput) =>
-    send(to, `${tag} Nhận giftcode +${credit(input.amount)} · ${input.code}`, MAIL_BANNERS.deposit, renderGiftCodeEmail(input)),
+    send(to, `${tag} Nhận giftcode +${credit(input.amount)} · ${input.code}`, renderGiftCodeEmail(input)),
 
   sendReportRewarded: (to: string, input: ReportRewardEmailInput) =>
-    send(to, `${tag} Báo cáo đáp án được xác nhận +${credit(input.amount)}`, MAIL_BANNERS.deposit, renderReportRewardEmail(input)),
+    send(to, `${tag} Báo cáo đáp án được xác nhận +${credit(input.amount)}`, renderReportRewardEmail(input)),
 
   sendReferralReward: (to: string, input: ReferralEmailInput) =>
-    send(to, `${tag} ${input.kind === "commission" ? "Hoa hồng giới thiệu" : "Thưởng giới thiệu"} +${credit(input.amount)}`, MAIL_BANNERS.deposit, renderReferralEmail(input)),
+    send(to, `${tag} ${input.kind === "commission" ? "Hoa hồng giới thiệu" : "Thưởng giới thiệu"} +${credit(input.amount)}`, renderReferralEmail(input)),
 
   sendWelcome: (to: string, input: WelcomeEmailInput) =>
-    send(to, `${tag} Chào mừng bạn, tài khoản đã sẵn sàng`, MAIL_BANNERS.welcome, renderWelcomeEmail(input)),
+    send(to, `${tag} Chào mừng bạn, tài khoản đã sẵn sàng`, renderWelcomeEmail(input)),
 
   sendPasswordChanged: (to: string, input: PasswordChangedEmailInput) =>
-    send(to, `${tag} Mật khẩu của bạn vừa được thay đổi`, MAIL_BANNERS.security, renderPasswordChangedEmail(input)),
+    send(to, `${tag} Mật khẩu của bạn vừa được thay đổi`, renderPasswordChangedEmail(input)),
 
   sendRefund: (to: string, input: RefundEmailInput) =>
-    send(to, `${tag} Hoàn phí lấy đề +${credit(input.amount)}`, MAIL_BANNERS.charge, renderRefundEmail(input)),
+    send(to, `${tag} Hoàn phí lấy đề +${credit(input.amount)}`, renderRefundEmail(input)),
 
   sendBalanceAdjusted: (to: string, input: AdjustEmailInput) =>
     send(
       to,
       `${tag} Điều chỉnh số dư ví ${input.amount >= 0 ? "+" : "−"}${credit(Math.abs(input.amount))}`,
-      MAIL_BANNERS.deposit,
       renderAdjustEmail(input),
     ),
 
@@ -108,10 +106,9 @@ export const mailService = {
     send(
       to,
       `${tag} ${input.banned ? "Tài khoản của bạn đã bị khóa" : "Tài khoản của bạn đã được mở khóa"}`,
-      MAIL_BANNERS.security,
       renderAccountStatusEmail(input),
     ),
 
   sendFetchCharged: (to: string, input: ChargeEmailInput) =>
-    send(to, `${tag} Biên lai: phí lấy đề −${credit(input.amount)}`, MAIL_BANNERS.charge, renderChargeEmail(input)),
+    send(to, `${tag} Biên lai: phí lấy đề −${credit(input.amount)}`, renderChargeEmail(input)),
 };

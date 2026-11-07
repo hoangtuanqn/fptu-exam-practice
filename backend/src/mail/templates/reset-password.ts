@@ -1,4 +1,4 @@
-import { MAIL_BANNERS, MAIL_BRAND } from "../../constants/mail";
+import { MAIL_BRAND } from "../../constants/mail";
 import { button, esc, note, p, renderLayout, signature } from "../layout";
 
 export interface ResetEmailInput {
@@ -20,10 +20,8 @@ export function renderResetPasswordEmail({ name, link, expiresMin }: ResetEmailI
   ].join("");
 
   const html = renderLayout({
-    eyebrow: "TÀI KHOẢN",
     title: "Đặt lại mật khẩu",
     preheader: `Liên kết đặt lại mật khẩu có hiệu lực ${expiresMin} phút.`,
-    banner: MAIL_BANNERS.reset,
     bodyHtml,
   });
 
