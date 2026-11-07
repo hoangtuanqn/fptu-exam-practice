@@ -19,7 +19,7 @@ export function ReferenceDialog({ references, onClose }: Props) {
       <div className="mt-4 max-h-[62vh] space-y-4 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50 p-3">
         {references.map((r) => (
           <figure key={r.number}>
-            <img src={r.imageUrl} alt={`Tài liệu tham khảo ${r.number}`} loading="lazy" className="mx-auto h-auto w-full max-w-3xl rounded-lg bg-white" />
+            <img src={r.imageUrl} alt={`Tài liệu tham khảo ${r.number}`} loading="lazy" className="mx-auto h-auto w-full max-w-3xl rounded-lg bg-surface-container-lowest" />
             <figcaption className="mt-1.5 text-center text-xs">
               <a href={r.imageUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-medium text-brand-700 hover:underline">
                 Mở ảnh ở tab mới <ExternalLink size={12} />

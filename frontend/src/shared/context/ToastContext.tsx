@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from "react";
 import { CheckCircle2, CircleAlert, X } from "lucide-react";
+import { IconButton } from "@/shared/ui/Button";
 
 type Kind = "success" | "error";
 interface Toast {
@@ -15,7 +16,8 @@ interface ToastApi {
 
 const ToastContext = createContext<ToastApi | null>(null);
 
-// Thông báo nhỏ góc phải dưới, tự tắt sau vài giây
+// Snackbar Material Design 3: nền inverse-surface, chữ inverse-on-surface, nằm dưới giữa (compact) hoặc góc dưới trái (medium trở lên),
+// tự tắt sau 4 giây, có nút đóng. Lỗi dùng vùng aria-live "alert", còn lại "status".
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const nextId = useRef(1);
@@ -31,32 +33,23 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     [dismiss],
   );
 
-  const api = useMemo<ToastApi>(
-    () => ({ success: (t) => push("success", t), error: (t) => push("error", t) }),
-    [push],
-  );
+  const api = useMemo<ToastApi>(() => ({ success: (t) => push("success", t), error: (t) => push("error", t) }), [push]);
 
   return (
     <ToastContext.Provider value={api}>
       {children}
-      <div className="pointer-events-none fixed bottom-4 right-4 z-[80] flex w-[min(24rem,calc(100vw-2rem))] flex-col gap-2">
+      <div className="pointer-events-none fixed inset-x-0 bottom-4 z-[80] flex flex-col items-center gap-2 px-4 medium:items-start expanded:items-start expanded:pl-6">
         {toasts.map((t) => (
           <div
             key={t.id}
-            role="status"
-            className={`pointer-events-auto flex animate-fade-in items-start gap-2.5 rounded-xl border bg-white px-4 py-3 text-sm shadow-lg ${
-              t.kind === "success" ? "border-emerald-200 text-slate-700" : "border-rose-200 text-slate-700"
-            }`}
+            role={t.kind === "error" ? "alert" : "status"}
+            className="md-enter md-body-medium pointer-events-auto flex w-full max-w-[34rem] items-center gap-3 rounded-m3-xs bg-inverse-surface py-1.5 pl-4 pr-1 text-inverse-on-surface shadow-m3-3"
           >
-            {t.kind === "success" ? (
-              <CheckCircle2 size={18} className="mt-px shrink-0 text-emerald-600" />
-            ) : (
-              <CircleAlert size={18} className="mt-px shrink-0 text-rose-600" />
-            )}
-            <span className="flex-1">{t.text}</span>
-            <button onClick={() => dismiss(t.id)} aria-label="Đóng" className="text-slate-400 hover:text-slate-600">
-              <X size={16} />
-            </button>
+            {t.kind === "success" ? <CheckCircle2 size={20} className="shrink-0 text-inverse-primary" /> : <CircleAlert size={20} className="shrink-0 text-inverse-primary" />}
+            <span className="flex-1 py-2.5">{t.text}</span>
+            <IconButton label="Đóng thông báo" onClick={() => dismiss(t.id)} className="!text-inverse-on-surface">
+              <X size={18} />
+            </IconButton>
           </div>
         ))}
       </div>

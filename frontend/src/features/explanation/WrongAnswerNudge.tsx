@@ -17,7 +17,7 @@ interface Props {
 export function WrongAnswerNudge({ trialsLeft, unitPrice, bundle, onExplain, onUnlock }: Props) {
   const free = trialsLeft > 0;
   return (
-    <div role="status" className="bundle-pill flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-xl border border-amber-300 bg-gradient-to-r from-amber-50 via-white to-amber-50 px-3 py-2 text-sm shadow-sm">
+    <div role="status" className="bundle-pill flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-xl border border-amber-300 bg-gradient-to-r from-amber-50 via-surface-container-lowest to-amber-50 px-3 py-2 text-sm shadow-sm">
       <span className="flex min-w-0 items-center gap-2 text-amber-950">
         <Sparkles size={15} className="promo-twinkle shrink-0 text-amber-500" />
         {free ? (
@@ -37,7 +37,7 @@ export function WrongAnswerNudge({ trialsLeft, unitPrice, bundle, onExplain, onU
             Mở khóa cả đề
           </button>
         )}
-        <button onClick={onExplain} className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition active:scale-[0.97] ${free ? "bg-brand-900 text-white hover:bg-brand-800" : "border border-brand-200 bg-white text-brand-800 hover:border-brand-400"}`}>
+        <button onClick={onExplain} className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition active:scale-[0.97] ${free ? "bg-primary text-on-primary hover:bg-primary/90" : "border border-brand-200 bg-surface-container-lowest text-brand-800 hover:border-brand-400"}`}>
           {free ? "Xem miễn phí" : "Chỉ câu này"}
         </button>
       </span>

@@ -1,9 +1,5 @@
 import type { ReactNode } from "react";
 
 export function Kbd({ children }: { children: ReactNode }) {
-  return (
-    <kbd className="rounded border border-slate-300 bg-slate-50 px-1.5 py-0.5 font-sans text-[11px] text-slate-600">
-      {children}
-    </kbd>
-  );
+  return <kbd className="md-label-small rounded-m3-xs border border-outline-variant bg-surface-container px-1.5 py-0.5 text-on-surface-variant">{children}</kbd>;
 }

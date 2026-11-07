@@ -57,7 +57,7 @@ export function ResumeList({ limit = 5, className = "" }: Props) {
           return (
             <li
               key={s.id}
-              className="group flex min-w-0 items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition-all hover:border-brand-300 hover:shadow-md"
+              className="group flex min-w-0 items-center gap-3 rounded-xl border border-slate-200 bg-surface-container-lowest p-3 shadow-sm transition-all hover:border-brand-300 hover:shadow-md"
             >
               <ProgressRing value={ratio} label={`${pct}%`} size={52} />
 
@@ -91,7 +91,7 @@ export function ResumeList({ limit = 5, className = "" }: Props) {
 
               <Link
                 to={sessionPath(s)}
-                className="hidden shrink-0 items-center gap-1.5 rounded-full bg-brand-500 px-4 py-1.5 text-xs font-semibold text-brand-900 shadow-sm transition hover:bg-brand-700 hover:shadow-md sm:inline-flex"
+                className="hidden shrink-0 items-center gap-1.5 rounded-full bg-primary-container px-4 py-1.5 text-xs font-semibold text-on-primary-container shadow-sm transition hover:bg-brand-700 hover:shadow-md sm:inline-flex"
               >
                 <Play size={11} fill="currentColor" />
                 Làm tiếp

@@ -1,4 +1,7 @@
 @import "tailwindcss";
+@import "./styles/m3-tokens.css";
+@import "./styles/m3-tailwind.css";
+@import "./styles/m3-base.css";
 
 @theme {
   /* CẢ HỆ THỐNG CHỈ DÙNG INTER (nhúng từ Google Fonts trong index.html). Mọi họ phông đều trỏ về Inter: các class font-serif, font-display,
@@ -10,37 +13,79 @@
   --default-font-family: var(--font-sans);
   --default-mono-font-family: var(--font-sans);
 
-  /* BẢNG MÀU THƯƠNG HIỆU FEPASS: vàng lấy từ mascot Cóc Pass (xem BRAND.md ở thư mục gốc).
-     Đổi màu cả site chỉ cần sửa các dòng dưới đây. */
-  --color-brand-50: #fffbe6;
-  --color-brand-100: #fff4bf;
-  --color-brand-200: #ffe88a;
-  --color-brand-300: #ffdb57;
-  --color-brand-400: #ffd033; /* vàng sáng */
-  --color-brand-500: #ffc61f;
-  --color-brand-600: #e29400; /* vàng đậm (viền, nhấn) */
-  --color-brand-700: #a86400;
-  --color-brand-800: #7a4b00;
-  --color-brand-900: #3f2606; /* nâu đậm của viền mascot: chữ tiêu đề, nền tối, nút tối */
+  /* TƯƠNG THÍCH TẠM: các tên màu cũ (brand-*, slate-*, paper, ink, accent) trỏ về vai trò Material Design 3, nên mọi class cũ
+     (text-slate-600, bg-brand-50...) tự đổi theo chủ đề sáng/tối. Màn hình đã chuyển sang M3 dùng thẳng vai trò (bg-primary,
+     text-on-surface...). Khi chuyển hết thì xoá khối này (xem docs/material3.md). */
+  --color-brand-50: color-mix(in srgb, var(--md-sys-color-primary-container) 35%, var(--md-sys-color-surface));
+  --color-brand-100: color-mix(in srgb, var(--md-sys-color-primary-container) 65%, var(--md-sys-color-surface));
+  --color-brand-200: var(--md-sys-color-primary-container);
+  --color-brand-300: color-mix(in srgb, var(--md-sys-color-primary-container) 55%, var(--md-sys-color-primary));
+  --color-brand-400: color-mix(in srgb, var(--md-sys-color-primary-container) 25%, var(--md-sys-color-primary));
+  --color-brand-500: var(--md-sys-color-primary);
+  --color-brand-600: var(--md-sys-color-primary);
+  --color-brand-700: var(--md-sys-color-primary);
+  --color-brand-800: var(--md-sys-color-on-primary-container);
+  --color-brand-900: var(--md-sys-color-on-surface);
+  --color-accent: var(--md-sys-color-primary-container);
+  --color-accent-soft: color-mix(in srgb, var(--md-sys-color-primary-container) 55%, var(--md-sys-color-surface));
+  --color-ink: var(--md-sys-color-on-surface);
+  --color-paper: var(--md-sys-color-surface);
+  --color-slate-50: var(--md-sys-color-surface-container-low);
+  --color-slate-100: var(--md-sys-color-surface-container);
+  --color-slate-200: var(--md-sys-color-outline-variant);
+  --color-slate-300: color-mix(in srgb, var(--md-sys-color-outline) 55%, var(--md-sys-color-outline-variant));
+  --color-slate-400: var(--md-sys-color-outline);
+  --color-slate-500: var(--md-sys-color-on-surface-variant);
+  --color-slate-600: var(--md-sys-color-on-surface-variant);
+  --color-slate-700: var(--md-sys-color-on-surface);
+  --color-slate-800: var(--md-sys-color-on-surface);
+  --color-slate-900: var(--md-sys-color-on-surface);
+  --color-emerald-50: color-mix(in srgb, var(--md-sys-color-success-container) 45%, var(--md-sys-color-surface));
+  --color-emerald-100: var(--md-sys-color-success-container);
+  --color-emerald-200: color-mix(in srgb, var(--md-sys-color-success-container) 70%, var(--md-sys-color-success));
+  --color-emerald-300: color-mix(in srgb, var(--md-sys-color-success-container) 40%, var(--md-sys-color-success));
+  --color-emerald-400: color-mix(in srgb, var(--md-sys-color-success-container) 15%, var(--md-sys-color-success));
+  --color-emerald-500: var(--md-sys-color-success);
+  --color-emerald-600: var(--md-sys-color-success);
+  --color-emerald-700: var(--md-sys-color-success);
+  --color-emerald-800: var(--md-sys-color-on-success-container);
+  --color-emerald-900: var(--md-sys-color-on-success-container);
+  --color-emerald-950: var(--md-sys-color-on-success-container);
+  --color-rose-50: color-mix(in srgb, var(--md-sys-color-error-container) 45%, var(--md-sys-color-surface));
+  --color-rose-100: var(--md-sys-color-error-container);
+  --color-rose-200: color-mix(in srgb, var(--md-sys-color-error-container) 70%, var(--md-sys-color-error));
+  --color-rose-300: color-mix(in srgb, var(--md-sys-color-error-container) 40%, var(--md-sys-color-error));
+  --color-rose-400: color-mix(in srgb, var(--md-sys-color-error-container) 15%, var(--md-sys-color-error));
+  --color-rose-500: var(--md-sys-color-error);
+  --color-rose-600: var(--md-sys-color-error);
+  --color-rose-700: var(--md-sys-color-error);
+  --color-rose-800: var(--md-sys-color-on-error-container);
+  --color-rose-900: var(--md-sys-color-on-error-container);
+  --color-rose-950: var(--md-sys-color-on-error-container);
+  --color-amber-50: color-mix(in srgb, var(--md-sys-color-warning-container) 45%, var(--md-sys-color-surface));
+  --color-amber-100: var(--md-sys-color-warning-container);
+  --color-amber-200: color-mix(in srgb, var(--md-sys-color-warning-container) 70%, var(--md-sys-color-warning));
+  --color-amber-300: color-mix(in srgb, var(--md-sys-color-warning-container) 40%, var(--md-sys-color-warning));
+  --color-amber-400: color-mix(in srgb, var(--md-sys-color-warning-container) 15%, var(--md-sys-color-warning));
+  --color-amber-500: var(--md-sys-color-warning);
+  --color-amber-600: var(--md-sys-color-warning);
+  --color-amber-700: var(--md-sys-color-warning);
+  --color-amber-800: var(--md-sys-color-on-warning-container);
+  --color-amber-900: var(--md-sys-color-on-warning-container);
+  --color-amber-950: var(--md-sys-color-on-warning-container);
+  --color-red-600: var(--md-sys-color-error);
+  --color-sky-50: color-mix(in srgb, var(--md-sys-color-secondary-container) 45%, var(--md-sys-color-surface));
+  --color-sky-200: var(--md-sys-color-secondary-container);
+  --color-sky-800: var(--md-sys-color-on-secondary-container);
 
-  /* Vàng sáng dùng làm điểm nhấn trong dải chuyển sắc, và đầu cuối nhạt của dải đó */
-  --color-accent: #ffd033;
-  --color-accent-soft: #fff0a0;
-
-  /* Chữ đen */
-  --color-ink: #101010;
-
-  /* Nền trang: trắng ngà hơi lạnh, để thẻ trắng nổi lên nhẹ nhàng */
-  --color-paper: #f6f8fc;
-
-  /* Đổ bóng nhiều lớp, rất nhạt: tạo độ nổi mà không nặng nề */
-  --shadow-soft: 0 1px 2px rgb(16 24 40 / 0.04), 0 1px 3px rgb(16 24 40 / 0.05);
-  --shadow-card: 0 1px 2px rgb(16 24 40 / 0.04), 0 8px 24px -8px rgb(16 24 40 / 0.08);
-  --shadow-pop: 0 4px 6px -2px rgb(16 24 40 / 0.04), 0 20px 40px -12px rgb(16 24 40 / 0.18);
+  /* Đổ bóng cũ ánh xạ sang mức bóng nhẹ của M3 (độ nổi chính là màu nền theo tông) */
+  --shadow-soft: var(--md-sys-elevation-shadow-1);
+  --shadow-card: var(--md-sys-elevation-shadow-2);
+  --shadow-pop: var(--md-sys-elevation-shadow-3);
 
   --radius-card: 1rem;
 
-  --animate-fade-up: fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-fade-up: fade-up var(--md-sys-motion-duration-long2) var(--md-sys-motion-easing-emphasized-decelerate) both;
   @keyframes fade-up {
     from {
       opacity: 0;
@@ -52,7 +97,7 @@
     }
   }
 
-  --animate-fade-in: fade-in 0.22s ease-out;
+  --animate-fade-in: fade-in var(--md-sys-motion-duration-medium1) var(--md-sys-motion-easing-emphasized-decelerate);
   @keyframes fade-in {
     from {
       opacity: 0;
@@ -75,15 +120,12 @@
     cursor: not-allowed;
   }
 
-  /* Viền focus rõ ràng cho người dùng bàn phím */
-  :focus-visible {
-    outline: 2px solid var(--color-brand-500);
-    outline-offset: 2px;
-  }
 }
 
 body {
-  @apply bg-paper text-slate-700 antialiased;
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  @apply antialiased;
   font-feature-settings: "cv11", "ss03"; /* Inter: a một tầng, chữ số đều nét */
   text-rendering: optimizeLegibility;
 }
@@ -96,7 +138,7 @@ h3 {
 
 /* Lưới chấm mờ cho nền hero và khối nhấn */
 .bg-dots {
-  background-image: radial-gradient(rgb(15 23 42 / 0.09) 1px, transparent 1px);
+  background-image: radial-gradient(color-mix(in srgb, var(--md-sys-color-on-surface) 10%, transparent) 1px, transparent 1px);
   background-size: 22px 22px;
 }
 
@@ -107,7 +149,8 @@ h3 {
 
 /* Kính mờ cho thanh header dính trên cùng */
 .glass {
-  @apply bg-white/75 backdrop-blur-xl;
+  background: color-mix(in srgb, var(--md-sys-color-surface) 80%, transparent);
+  @apply backdrop-blur-xl;
 }
 
 /* Nhãn nhỏ in hoa dùng cho tiêu đề mục trong panel (vẫn là Inter) */
@@ -225,7 +268,7 @@ h3 {
 /* Thanh cuộn mảnh, kín đáo */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 transparent;
+  scrollbar-color: var(--md-sys-color-outline-variant) transparent;
 }
 
 /* Hộp điểm danh: mascot nổi nhẹ, nảy lên khi nhận thưởng, pháo giấy bung ra, chặng vừa nhận bật lên.

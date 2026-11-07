@@ -28,11 +28,11 @@ export function DropZone({ onPick }: { onPick: PickFolder }) {
           dragging ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-slate-50/60 hover:border-brand-400 hover:bg-brand-50/50"
         }`}
       >
-        <span className="flex h-12 w-12 items-center justify-center rounded-md bg-brand-900 text-white">
+        <span className="flex h-12 w-12 items-center justify-center rounded-md bg-primary text-on-primary">
           <FolderOpen size={22} />
         </span>
-        <div className="mt-4 font-display text-xl font-semibold text-brand-900">Mở thư mục đề</div>
-        <div className="mt-0.5 text-sm text-slate-500">Kéo thả thư mục vào đây, hoặc bấm để chọn</div>
+        <div className="md-title-large mt-4 text-on-surface">Mở thư mục đề</div>
+        <div className="md-body-medium mt-0.5 text-on-surface-variant">Kéo thả thư mục vào đây, hoặc bấm để chọn</div>
         <FolderInput onPick={onPick} />
       </label>
 

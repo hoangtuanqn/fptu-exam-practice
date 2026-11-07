@@ -257,7 +257,7 @@ export default function PracticePage({ threadId }: Props) {
       {hasQuiz ? (
         <QuizWorkspace quiz={quiz} zoomOpen={zoomOpen} onZoomChange={setZoomOpen} onSubmit={requestSubmit} />
       ) : opening ? (
-        <div className="flex flex-1 items-center justify-center bg-paper">
+        <div className="flex flex-1 items-center justify-center bg-surface">
           <Loading label="Đang mở đề…" />
         </div>
       ) : (
