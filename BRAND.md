@@ -43,8 +43,13 @@ from-brand-900 via-brand-800 to-brand-600     /* thẻ nền tối */
 
 ## Font
 
-- **Inter** cho toàn bộ giao diện (nhúng từ Google Fonts trong `frontend/index.html`, các độ đậm 400, 500, 600, 700, có tiếng Việt).
-- Token `font-serif` được trỏ về Inter để tiêu đề cũ không cần sửa. Không dùng font khác.
+**Chỉ dùng Inter, ở mọi nơi. Không thêm phông khác** (không chữ có chân, không monospace, không phông trang trí).
+
+- **Website:** nhúng từ Google Fonts trong `frontend/index.html` (độ đậm 400-700, kể cả nghiêng). `frontend/src/index.css` trỏ mọi họ phông về Inter: `font-sans`, `font-serif`, `font-display`, `font-mono` và cả thẻ `<code>`, `<pre>`, `<kbd>` (Tailwind mặc định dùng monospace) đều ra Inter. Các class `font-serif`, `font-display` cũ còn trong code nhưng chỉ là tên, kết quả vẫn là Inter.
+- **Tiện ích Chrome:** đóng gói sẵn Inter trong `chrome-extension/fonts/` (latin, latin-ext, tiếng Việt), khai báo `@font-face` ở `popup.css` và `content.css`; không phụ thuộc phông máy người dùng.
+- **Email:** `Inter, sans-serif` (Apple Mail, iOS, Outlook.com tải được phông web; Gmail và vài ứng dụng khác bỏ qua phông web nên dùng phông sans-serif mặc định của ứng dụng, không tránh được).
+- **Ảnh dựng bằng code** (ảnh bìa email): chữ đổi thành đường nét từ file `backend/assets/fonts/Inter-*.ttf` bằng `backend/scripts/gen-mail-cover.ts`, nên luôn là Inter dù máy dựng ảnh có cài Inter hay không.
+- Giấy phép Inter: SIL Open Font License.
 
 ## Logo và tài sản
 

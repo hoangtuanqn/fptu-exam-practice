@@ -92,7 +92,7 @@ export const MASCOT_SVG =
   `<rect x="64" y="68" width="60" height="31" rx="3.5" fill="url(#wood)" stroke="#3f2606" stroke-width="1.2"/>` +
   `<rect x="67" y="71" width="54" height="25" rx="2" fill="url(#plate)" stroke="#b97d00" stroke-width="1"/>` +
   `<path d="M94 73.2l1.5 3.1 3.4.5-2.5 2.4.6 3.4-3-1.6-3 1.6.6-3.4-2.5-2.4 3.4-.5z" fill="#e08e00" stroke="#a86400" stroke-width=".5"/>` +
-  `<text x="94.5" y="91.8" text-anchor="middle" font-size="7.6" font-weight="800" fill="#6b3d00" font-family="system-ui,-apple-system,Segoe UI,sans-serif">CÓC PASS</text>` +
+  `<text x="94.5" y="91.8" text-anchor="middle" font-size="7.6" font-weight="800" fill="#6b3d00" font-family="Inter,sans-serif">CÓC PASS</text>` +
   `</g>` +
   // hai tay đỡ bảng
   hand(65, 90) +
