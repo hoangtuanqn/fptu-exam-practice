@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ChevronDown, LayoutDashboard, LogOut, ShieldCheck, Wallet } from "lucide-react";
+import { CalendarCheck, ChevronDown, LayoutDashboard, LogOut, ShieldCheck, Wallet } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { formatCredit } from "@/shared/utils/formatters";
 import { buttonClass } from "@/shared/ui/Button";
 import { UserAvatar } from "@/shared/ui/UserAvatar";
+import { OPEN_CHECKIN_EVENT } from "@/features/check-in/DailyCheckInPopup";
 
 const item = "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-100";
 
@@ -75,6 +76,15 @@ export function UserMenu() {
             </div>
           </div>
           <div className="my-1 h-px bg-slate-100" />
+          <button
+            className={item}
+            onClick={() => {
+              setOpen(false);
+              window.dispatchEvent(new Event(OPEN_CHECKIN_EVENT));
+            }}
+          >
+            <CalendarCheck size={16} /> Điểm danh nhận thưởng
+          </button>
           <Link to="/account" className={item} onClick={() => setOpen(false)}>
             <LayoutDashboard size={16} /> Tài khoản của tôi
           </Link>
