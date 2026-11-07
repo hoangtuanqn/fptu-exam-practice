@@ -227,3 +227,18 @@ h3 {
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 transparent;
 }
+
+/* Hộp điểm danh: mascot nổi nhẹ, nảy lên khi nhận thưởng, pháo giấy bung ra, chặng vừa nhận bật lên.
+   Tự tắt khi người dùng chọn giảm chuyển động. */
+@keyframes ci-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes ci-bounce { 0% { transform: scale(1); } 30% { transform: translateY(-16px) scale(1.07); } 55% { transform: translateY(0) scale(0.97); } 75% { transform: translateY(-5px); } 100% { transform: none; } }
+@keyframes ci-pop { 0% { transform: scale(0.5); opacity: 0; } 60% { transform: scale(1.18); } 100% { transform: scale(1); opacity: 1; } }
+@keyframes ci-burst { 0% { opacity: 1; transform: translate(0, 0) rotate(0) scale(0.6); } 70% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(1); } }
+.ci-float { animation: ci-float 3.4s ease-in-out infinite; }
+.ci-bounce { animation: ci-bounce 0.85s ease-out both; }
+.ci-pop { animation: ci-pop 0.5s ease-out both; }
+.ci-confetti { position: absolute; left: 50%; top: 50%; width: 8px; height: 12px; margin: -6px 0 0 -4px; border-radius: 2px; animation: ci-burst 1.15s cubic-bezier(0.15, 0.7, 0.3, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .ci-float, .ci-bounce, .ci-pop { animation: none; }
+  .ci-confetti { display: none; }
+}
