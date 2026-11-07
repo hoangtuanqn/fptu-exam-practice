@@ -1,4 +1,4 @@
-import { MAIL_BANNERS, MAIL_BRAND } from "../../constants/mail";
+import { MAIL_BRAND } from "../../constants/mail";
 import { formatDateTimeVN, formatCredit } from "../../utils/format";
 import { button, details, esc, heading, list, note, p, renderLayout, signature, supportLine } from "../layout";
 
@@ -29,10 +29,8 @@ export function renderWelcomeEmail({ name, homeUrl }: WelcomeEmailInput) {
 
   return {
     html: renderLayout({
-      eyebrow: "CHÀO MỪNG",
       title: "Tài khoản đã sẵn sàng",
       preheader: `Chào mừng ${name} đến với ${product}. Bắt đầu luyện đề ngay.`,
-      banner: MAIL_BANNERS.welcome,
       bodyHtml,
     }),
     text: sign([
@@ -68,10 +66,8 @@ export function renderEmailChangedEmail({ name, newEmail, at, forgotUrl }: Email
 
   return {
     html: renderLayout({
-      eyebrow: "BẢO MẬT",
       title: "Email đăng nhập đã đổi",
       preheader: `Email tài khoản đã đổi sang ${newEmail}.`,
-      banner: MAIL_BANNERS.security,
       bodyHtml,
     }),
     text: sign([
@@ -111,10 +107,8 @@ export function renderPasswordChangedEmail({ name, at, via, forgotUrl }: Passwor
 
   return {
     html: renderLayout({
-      eyebrow: "BẢO MẬT",
       title: "Mật khẩu đã được thay đổi",
       preheader: `Mật khẩu tài khoản ${product} vừa được thay đổi lúc ${formatDateTimeVN(at)}.`,
-      banner: MAIL_BANNERS.security,
       bodyHtml,
     }),
     text: sign([
@@ -155,10 +149,8 @@ export function renderRefundEmail(i: RefundEmailInput) {
 
   return {
     html: renderLayout({
-      eyebrow: "BIÊN LAI",
       title: "Đã hoàn phí lấy đề",
       preheader: `Đã hoàn ${formatCredit(i.amount)} vào ví. Số dư hiện tại: ${formatCredit(i.balanceAfter)}.`,
-      banner: MAIL_BANNERS.charge,
       bodyHtml,
     }),
     text: sign([
@@ -203,10 +195,8 @@ export function renderAdjustEmail(i: AdjustEmailInput) {
 
   return {
     html: renderLayout({
-      eyebrow: "THANH TOÁN",
       title: "Số dư ví được điều chỉnh",
       preheader: `${money} · Số dư hiện tại: ${formatCredit(i.balanceAfter)}.`,
-      banner: MAIL_BANNERS.deposit,
       bodyHtml,
     }),
     text: sign([
@@ -239,10 +229,8 @@ export function renderAccountStatusEmail(i: { name: string; banned: boolean; sup
 
   return {
     html: renderLayout({
-      eyebrow: "BẢO MẬT",
       title: i.banned ? "Tài khoản đã bị khóa" : "Tài khoản đã được mở khóa",
       preheader: i.banned ? "Tài khoản của bạn đã bị khóa bởi quản trị viên." : "Tài khoản của bạn đã được mở khóa.",
-      banner: MAIL_BANNERS.security,
       bodyHtml: bodyHtml.join(""),
     }),
     text: sign([
