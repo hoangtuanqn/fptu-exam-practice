@@ -1,11 +1,20 @@
 import { http } from "@/shared/api/client";
 import type { CrawlJob, ExamAnswersPayload, ImportedExam, SubmitResult } from "./types";
 
+// reason/title: vì sao miễn phí ("owned" = đã có trong kho của bạn, kèm tên đề; "in-progress" = đang lấy dở)
+export interface QuoteResult {
+  price: number;
+  fee: number;
+  free: boolean;
+  reason?: "owned" | "in-progress" | null;
+  title?: string | null;
+}
+
 export const examImportApi = {
   submit: (url: string) => http.post<SubmitResult>("/crawl-jobs", { url }),
   price: () => http.get<{ price: number }>("/crawl-jobs/price"),
   // Phí thực tế của lần lấy này (0 nếu người dùng đã lấy đề này trước đó)
-  quote: (url: string) => http.get<{ price: number; fee: number; free: boolean }>("/crawl-jobs/quote", { url }),
+  quote: (url: string) => http.get<QuoteResult>("/crawl-jobs/quote", { url }),
   job: (id: number) => http.get<CrawlJob>(`/crawl-jobs/${id}`),
   exam: (id: number) => http.get<ImportedExam>(`/exams/${id}`),
   // Hỏi lại trong lúc AI phân tích đáp án (nhẹ hơn tải cả đề)

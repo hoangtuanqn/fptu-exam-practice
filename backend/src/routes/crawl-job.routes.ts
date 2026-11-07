@@ -20,13 +20,22 @@ const limiter = (windowMs: number, limit: number, skip: (user: unknown) => boole
 const memberLimiter = limiter(60 * 60 * 1000, 10, (user) => !user, "Bạn");
 const guestLimiter = limiter(24 * 60 * 60 * 1000, 5, (user) => !!user, "Khách");
 
+// Giao diện gọi /quote để kiểm tra link ngay khi người dùng gõ/dán (đã gộp bằng debounce), nên cho nhiều hơn lượt nhập đề
+const quoteLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { status: false, message: "Bạn kiểm tra link quá nhanh, vui lòng thử lại sau ít giây" },
+});
+
 const crawlJobRouter = Router();
 
 crawlJobRouter.use(identify); // thành viên hoặc khách đều được lấy đề
 
 crawlJobRouter.post("/", requireVerifiedMember, memberLimiter, guestLimiter, validate(importExamBody), crawlJobController.submit);
 crawlJobRouter.get("/price", crawlJobController.price);
-crawlJobRouter.get("/quote", validate(importExamBody, "query"), crawlJobController.quote);
+crawlJobRouter.get("/quote", quoteLimiter, validate(importExamBody, "query"), crawlJobController.quote);
 crawlJobRouter.get("/:id", validate(idParam, "params"), crawlJobController.get);
 
 export default crawlJobRouter;
