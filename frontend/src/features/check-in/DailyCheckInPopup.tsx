@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/features/auth/AuthContext";
-import { ApiError } from "@/shared/api/client";
 import { useToast } from "@/shared/context/ToastContext";
 import { checkInApi, type CheckInResult, type CheckInStatus } from "./check-in.api";
 import { CheckInView } from "./CheckInView";
+import { errorMessage, isRetryable } from "@/shared/api/errors";
 
 // Menu tài khoản bắn sự kiện này để mở lại hộp điểm danh (khi người dùng lỡ đóng)
 export const OPEN_CHECKIN_EVENT = "fepass:open-checkin";
@@ -67,7 +67,7 @@ export function DailyCheckInPopup() {
           setResult(null);
           setOpen(true);
         })
-        .catch(() => toast.error("Chưa mở được điểm danh, bạn thử lại nhé"));
+        .catch((err) => toast.error(errorMessage(err, "Chưa mở được điểm danh"), { action: isRetryable(err) ? { label: "Thử lại", onClick: onOpen } : undefined }));
     };
     window.addEventListener(OPEN_CHECKIN_EVENT, onOpen);
     return () => window.removeEventListener(OPEN_CHECKIN_EVENT, onOpen);
@@ -80,7 +80,7 @@ export function DailyCheckInPopup() {
       setResult(await checkInApi.claim());
       void refresh(); // cập nhật số dư trên header
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "Chưa nhận được, bạn thử lại nhé");
+      toast.error(errorMessage(err, "Chưa nhận được thưởng, bạn thử lại nhé"), { action: isRetryable(err) ? { label: "Thử lại", onClick: () => void claim() } : undefined });
       void checkInApi.status().then(setStatus).catch(() => undefined); // có thể đã nhận ở thiết bị khác
     } finally {
       setClaiming(false);

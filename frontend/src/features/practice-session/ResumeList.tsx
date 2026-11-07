@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Loader2, Play, Trash2 } from "lucide-react";
+import { Play, Trash2 } from "lucide-react";
 import { formatDuration } from "@/features/practice/utils/format";
 import { useAuth } from "@/features/auth/AuthContext";
+import { errorMessage } from "@/shared/api/errors";
 import { useToast } from "@/shared/context/ToastContext";
-import { Button } from "@/shared/ui/Button";
 import { ProgressRing } from "@/shared/ui/ProgressRing";
-import { Modal, ModalActions, ModalTitle } from "@/shared/ui/Modal";
 import { useApi } from "@/shared/hooks/useApi";
 import { formatDateTime } from "@/shared/utils/formatters";
 import { sessionApi, sessionPath, type PracticeSession } from "./session.api";
@@ -24,24 +23,35 @@ export function ResumeList({ limit = 5, className = "" }: Props) {
   const { user } = useAuth();
   const { data, reload } = useApi(() => sessionApi.listInProgress(1, limit), [user?.id, limit]);
 
-  const [target, setTarget] = useState<PracticeSession | null>(null); // lượt đang chờ xác nhận xoá
-  const [deleting, setDeleting] = useState(false);
+  // Xóa có hoàn tác (thay cho hộp thoại xác nhận): lượt làm biến mất ngay, nhưng chỉ xóa thật ở máy chủ khi hết thời gian hoàn tác.
+  // Bấm "Hoàn tác" thì lượt làm hiện lại nguyên vẹn, không gọi máy chủ.
+  const [hidden, setHidden] = useState<Set<number>>(new Set());
+  const setHiding = (id: number, on: boolean) =>
+    setHidden((prev) => {
+      const next = new Set(prev);
+      if (on) next.add(id);
+      else next.delete(id);
+      return next;
+    });
 
-  if (!data || data.items.length === 0) return null;
+  const items = (data?.items ?? []).filter((s) => !hidden.has(s.id));
+  if (!data || items.length === 0) return null;
 
-  const confirmRemove = async () => {
-    if (!target) return;
-    setDeleting(true);
-    try {
-      await sessionApi.remove(target.id);
-      toast.success("Đã xoá lượt làm bài");
-      setTarget(null);
-      reload();
-    } catch {
-      toast.error("Không xoá được lượt làm bài");
-    } finally {
-      setDeleting(false);
-    }
+  const remove = (s: PracticeSession) => {
+    setHiding(s.id, true);
+    toast.success(`Đã xoá lượt ${MODE_LABEL[s.mode]} của đề "${s.exam.title}"`, {
+      action: { label: "Hoàn tác", onClick: () => setHiding(s.id, false) },
+      duration: 7000,
+      onExpire: () => {
+        sessionApi
+          .remove(s.id)
+          .then(reload)
+          .catch((err) => {
+            setHiding(s.id, false); // xóa thật thất bại: trả lượt làm về danh sách, đừng để người dùng tưởng đã xóa
+            toast.error(errorMessage(err, "Chưa xoá được lượt làm bài, đã đưa lại vào danh sách"));
+          });
+      },
+    });
   };
 
   return (
@@ -51,7 +61,7 @@ export function ResumeList({ limit = 5, className = "" }: Props) {
       </div>
 
       <ul className="grid grid-cols-1 gap-2">
-        {data.items.map((s) => {
+        {items.map((s) => {
           const ratio = s.exam.totalQuestions > 0 ? s.answered / s.exam.totalQuestions : 0;
           const pct = Math.round(ratio * 100);
           return (
@@ -98,7 +108,7 @@ export function ResumeList({ limit = 5, className = "" }: Props) {
               </Link>
               <button
                 type="button"
-                onClick={() => setTarget(s)}
+                onClick={() => remove(s)}
                 title="Xoá lượt làm này"
                 aria-label="Xoá lượt làm này"
                 className="shrink-0 rounded-lg p-2 text-slate-300 transition hover:bg-rose-50 hover:text-rose-500"
@@ -110,28 +120,6 @@ export function ResumeList({ limit = 5, className = "" }: Props) {
         })}
       </ul>
 
-      {target && (
-        <Modal onClose={deleting ? undefined : () => setTarget(null)}>
-          <ModalTitle icon={Trash2}>Xoá lượt làm bài?</ModalTitle>
-          <p className="mt-3 text-sm leading-relaxed text-slate-600">
-            Bạn đang xoá lượt <b className="text-slate-900">{MODE_LABEL[target.mode]}</b> của đề{" "}
-            <b className="text-slate-900">{target.exam.title}</b>, đã làm {target.answered}/
-            {target.exam.totalQuestions} câu ({formatDuration(target.elapsedSec)}).
-          </p>
-          <p className="mt-2 text-sm font-medium text-rose-600">
-            Đáp án đã chọn và thời gian đã làm sẽ mất, không khôi phục được. Đề vẫn còn trong kho.
-          </p>
-          <ModalActions>
-            <Button onClick={() => setTarget(null)} disabled={deleting}>
-              Giữ lại
-            </Button>
-            <Button variant="danger" onClick={() => void confirmRemove()} disabled={deleting}>
-              {deleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
-              Xoá lượt này
-            </Button>
-          </ModalActions>
-        </Modal>
-      )}
     </section>
   );
 }

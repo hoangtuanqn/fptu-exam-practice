@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { errorMessage } from "@/shared/api/errors";
 import { ApiError } from "@/shared/api/client";
 import { useLeaveWarning } from "@/shared/hooks/useLeaveWarning";
 import { examImportApi } from "./exam-import.api";
@@ -77,8 +78,8 @@ export function useExamImport() {
       setExam(loaded);
       setPhase("done");
     } catch (err) {
-      if (err instanceof ApiError) fail(err.message, err.status);
-      else fail("Đã có lỗi xảy ra");
+      if (err instanceof ApiError) fail(errorMessage(err), err.status);
+      else fail(errorMessage(err));
     }
   }, []);
 
