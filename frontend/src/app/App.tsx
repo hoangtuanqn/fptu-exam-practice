@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Route, Routes, useParams } from "react-router-dom";
-import { Download, BookOpen, Gift, History, MessageSquareWarning, UserPlus, ListChecks, LayoutDashboard, UserRound, Wallet } from "lucide-react";
+import { NotebookPen, Download, BookOpen, Gift, History, MessageSquareWarning, UserPlus, ListChecks, LayoutDashboard, UserRound, Wallet } from "lucide-react";
 import { PanelLayout, type NavItem } from "@/shared/layout/PanelLayout";
 import { Loading } from "@/shared/ui/Feedback";
 import LoginPage from "@/features/auth/pages/LoginPage";
@@ -33,6 +33,8 @@ const OverviewPage = lazy(() => import("@/features/account/pages/OverviewPage"))
 const DepositPage = lazy(() => import("@/features/account/pages/DepositPage"));
 const TransactionsPage = lazy(() => import("@/features/account/pages/TransactionsPage"));
 const LibraryPage = lazy(() => import("@/features/account/pages/LibraryPage"));
+const ReviewPage = lazy(() => import("@/features/review/ReviewPage"));
+const ReviewPracticePage = lazy(() => import("@/features/review/ReviewPracticePage"));
 const MyReportsPage = lazy(() => import("@/features/account/pages/MyReportsPage"));
 const ReferralPage = lazy(() => import("@/features/account/pages/ReferralPage"));
 const GiftCodePage = lazy(() => import("@/features/account/pages/GiftCodePage"));
@@ -48,6 +50,7 @@ const AttemptDetailPage = lazy(() => import("@/features/history/pages/AttemptDet
 const ACCOUNT_NAV: NavItem[] = [
   { to: "/account", label: "Tổng quan", icon: LayoutDashboard, end: true, group: "Chung" },
   { to: "/account/exams", label: "Kho đề của tôi", icon: BookOpen, group: "Học tập" },
+  { to: "/account/review", label: "Sổ câu sai", icon: NotebookPen, group: "Học tập" },
   { to: "/account/pe", label: "Tải đề thi PE", icon: Download, group: "Học tập" },
   { to: "/account/reports", label: "Báo cáo đáp án", icon: MessageSquareWarning, group: "Học tập" },
   { to: "/account/attempts", label: "Lịch sử làm bài", icon: ListChecks, group: "Học tập" },
@@ -103,6 +106,8 @@ export default function App() {
             <Route path="deposit" element={<DepositPage />} />
             <Route path="deposit/:code" element={<DepositPage />} />
             <Route path="exams" element={<LibraryPage />} />
+            <Route path="review" element={<ReviewPage />} />
+            <Route path="review/practice" element={<ReviewPracticePage />} />
             <Route path="pe" element={<PeDownloadPage />} />
             <Route path="reports" element={<MyReportsPage />} />
             <Route path="referral" element={<ReferralPage />} />

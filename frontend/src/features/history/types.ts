@@ -37,4 +37,10 @@ export interface AttemptPayload {
   mode: AttemptMode;
   durationSec: number;
   answers: Record<number, string[]>;
+  flagged?: number[]; // các câu đã đánh dấu phân vân (vào Sổ câu sai dù làm đúng)
+}
+
+// Kết quả lưu bài: kèm số câu mới vào Sổ câu sai và số câu không vào được vì sổ đã đầy (gói thường)
+export interface SavedAttempt extends AttemptSummary {
+  review?: { added: number; capped: number };
 }

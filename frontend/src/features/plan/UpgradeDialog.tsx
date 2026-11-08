@@ -94,6 +94,7 @@ export function UpgradeDialog({ plan, onClose }: { plan: PlanInfo; onClose: () =
         {plan.benefits.freeFetch && <li className="inline-flex items-center gap-1"><Check size={14} className="text-primary" /> Lấy đề miễn phí</li>}
         {plan.benefits.freeExplain && <li className="inline-flex items-center gap-1"><Check size={14} className="text-primary" /> Giải thích AI mọi câu</li>}
         {plan.benefits.freePe && <li className="inline-flex items-center gap-1"><Check size={14} className="text-primary" /> Tải đề PE miễn phí</li>}
+        {plan.benefits.unlimitedReview && <li className="inline-flex items-center gap-1"><Check size={14} className="text-primary" /> Sổ câu sai không giới hạn</li>}
       </ul>
       <div className="mt-4">
         <ChargeSummary amount={plan.price} balance={balance} />
