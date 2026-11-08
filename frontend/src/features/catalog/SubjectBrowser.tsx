@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, BookOpen, Check, Download, Loader2, Play, Search } from "lucide-react";
+import { BookOpen, Check, Download, Loader2, Play, Search } from "lucide-react";
 import { ConfirmFetchDialog } from "@/features/exam-import/components/ConfirmFetchDialog";
 import { examImportApi } from "@/features/exam-import/exam-import.api";
 import { useExamImport } from "@/features/exam-import/useExamImport";
@@ -11,12 +11,13 @@ import { useApi } from "@/shared/hooks/useApi";
 import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
 import { Badge } from "@/shared/ui/Badge";
 import { Button } from "@/shared/ui/Button";
-import { Card, CardHeader } from "@/shared/ui/Card";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { Pagination } from "@/shared/ui/Table";
 import { formatDate } from "@/shared/utils/formatters";
 import { isPro } from "@/shared/utils/pro";
-import { catalogApi, type CatalogItem, type CatalogSubject } from "./catalog.api";
+import { SubjectCard } from "@/features/subject/SubjectCard";
+import { SubjectPicker } from "@/features/subject/SubjectPicker";
+import { catalogApi, type CatalogItem } from "./catalog.api";
 
 const fuoUrl = (threadId: string) => `https://fuoverflow.com/threads/${threadId}/`;
 
@@ -24,72 +25,24 @@ const fuoUrl = (threadId: string) => `https://fuoverflow.com/threads/${threadId}
 export function SubjectBrowser() {
   const [url, setUrl] = useUrlState({ subject: "" });
   const code = url.subject.toUpperCase();
-  return code ? <ExamList code={code} onBack={() => setUrl({ subject: "" })} /> : <SubjectPicker onPick={(c) => setUrl({ subject: c })} />;
+  return code ? <ExamList code={code} onBack={() => setUrl({ subject: "" })} /> : <SubjectChooser onPick={(c) => setUrl({ subject: c })} />;
 }
 
-function SubjectPicker({ onPick }: { onPick: (code: string) => void }) {
+function SubjectChooser({ onPick }: { onPick: (code: string) => void }) {
   const { user } = useAuth();
   const subjects = useApi(() => catalogApi.subjects(), []);
   const mine = useApi(() => (user ? catalogApi.mySubjects() : Promise.resolve([] as string[])), [user?.id]);
-  const [q, setQ] = useState("");
-  const byCode = useMemo(() => new Map((subjects.data ?? []).map((s) => [s.code, s])), [subjects.data]);
-  const shown = useMemo(() => {
-    const term = q.trim().toLowerCase();
-    const list = subjects.data ?? [];
-    return (term ? list.filter((s) => s.code.toLowerCase().includes(term) || (s.name ?? "").toLowerCase().includes(term)) : list);
-  }, [subjects.data, q]);
-  const myList = (mine.data ?? []).map((c) => byCode.get(c)).filter((s): s is CatalogSubject => !!s);
-
+  const list = useMemo(() => subjects.data?.map((s) => ({ code: s.code, name: s.name, badge: `${s.total} đề` })), [subjects.data]);
   return (
-    <Card>
-      <CardHeader title="Chọn môn" />
-      <div className="space-y-4 p-5">
-        {myList.length > 0 && !q && (
-          <div>
-            <p className="md-label-large mb-2 text-on-surface-variant">Môn của tôi</p>
-            <div className="flex flex-wrap gap-2">
-              {myList.map((s) => (
-                <button key={s.code} type="button" onClick={() => onPick(s.code)} className="md-state inline-flex h-9 items-center gap-2 rounded-full border border-outline-variant px-4 text-sm font-medium text-on-surface">
-                  {s.code} <span className="text-xs font-normal text-on-surface-variant">{s.total} đề</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-        <label className="relative block">
-          <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tìm môn theo mã hoặc tên, ví dụ PRO192" aria-label="Tìm môn" className="h-11 w-full rounded-m3-md border border-outline-variant bg-surface-container-lowest pl-9 pr-3 text-sm outline-none focus:border-primary" />
-        </label>
-        {subjects.loading && !subjects.data ? (
-          <Loading />
-        ) : subjects.error ? (
-          <ErrorBox message={subjects.error} onRetry={subjects.reload} />
-        ) : shown.length === 0 ? (
-          <Empty icon={BookOpen} title="Chưa có môn nào khớp">
-            Thử mã môn khác, hoặc dán link FuOverflow ở trang chủ để lấy đề mới.
-          </Empty>
-        ) : (
-          <>
-            <p className="md-body-small text-on-surface-variant" aria-live="polite">
-              {q.trim() ? `Tìm thấy ${shown.length}/${subjects.data?.length ?? 0} môn.` : `Có ${shown.length} môn. Cuộn xuống để xem hết, hoặc gõ vào ô trên để tìm.`}
-            </p>
-            <div className="max-h-[28rem] overflow-y-auto rounded-m3-md border border-outline-variant p-2" tabIndex={0} aria-label="Danh sách môn, cuộn để xem thêm">
-          <ul className="grid gap-2 sm:grid-cols-2">
-            {shown.map((s) => (
-              <li key={s.code}>
-                <button type="button" onClick={() => onPick(s.code)} className="md-state flex w-full items-center gap-3 rounded-m3-md border border-outline-variant px-4 py-3 text-left">
-                  <span className="md-title-small w-20 shrink-0 text-primary">{s.code}</span>
-                  <span className="md-body-medium min-w-0 flex-1 truncate text-on-surface">{s.name ?? "Môn học"}</span>
-                  <Badge tone="info">{s.total} đề</Badge>
-                </button>
-              </li>
-            ))}
-          </ul>
-            </div>
-          </>
-        )}
-      </div>
-    </Card>
+    <SubjectPicker
+      subjects={list}
+      loading={subjects.loading}
+      error={subjects.error}
+      onRetry={subjects.reload}
+      onPick={onPick}
+      mine={mine.data ?? []}
+      emptyHint="Thử mã môn khác, hoặc dán link FuOverflow ở trang chủ để lấy đề mới."
+    />
   );
 }
 
@@ -142,15 +95,7 @@ function ExamList({ code, onBack }: { code: string; onBack: () => void }) {
 
   return (
     <>
-      <Card>
-        <CardHeader
-          title={`Môn ${code}`}
-          action={
-            <Button size="sm" variant="text" onClick={onBack}>
-              <ArrowLeft size={15} /> Đổi môn
-            </Button>
-          }
-        />
+      <SubjectCard title={`Môn ${code}`} onBack={onBack}>
         <div className="space-y-3 border-b border-outline-variant px-5 py-4">
           <label className="relative block">
             <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
@@ -214,7 +159,7 @@ function ExamList({ code, onBack }: { code: string; onBack: () => void }) {
             <Pagination meta={d.meta} onPage={(p) => setUrl({ page: String(p) })} />
           </div>
         )}
-      </Card>
+      </SubjectCard>
 
       {confirm && (
         <ConfirmFetchDialog

@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Check, Layers, Loader2, Play, Search } from "lucide-react";
+import { Check, Layers, Loader2, Play } from "lucide-react";
 import { LinkImport } from "@/features/exam-import/components/LinkImport";
 import { examImportApi } from "@/features/exam-import/exam-import.api";
 import type { ImportedExam } from "@/features/exam-import/types";
-import { useApi } from "@/shared/hooks/useApi";
 import { Button } from "@/shared/ui/Button";
-import { Card, CardHeader, PageHeader } from "@/shared/ui/Card";
-import { ErrorBox, Loading } from "@/shared/ui/Feedback";
+import { PageHeader } from "@/shared/ui/Card";
 import { Segmented } from "@/shared/ui/Segmented";
-import { chapterSetApi, type SubjectItem } from "./chapter-set.api";
+import { AllSubjectsPicker } from "@/features/subject/AllSubjectsPicker";
+import { SubjectCard } from "@/features/subject/SubjectCard";
+import type { SubjectItem } from "./chapter-set.api";
 
 const POLL_MS = 4000;
 const POLL_MAX = 20; // chủ đề của đề mới lấy về đến sau đáp án vài giây; chờ tối đa chừng này lần
@@ -25,79 +25,20 @@ export default function ChapterSetPage() {
     <div className="space-y-6">
       <PageHeader eyebrow="Học tập" title="Bộ đề theo chương" description="Chọn môn và đề FE, rồi chỉ luyện các câu thuộc chương bạn đang muốn ôn." />
       {!subject ? (
-        <SubjectStep onPick={setSubject} />
+        <AllSubjectsPicker title="Bước 1: chọn môn" onPick={setSubject} />
       ) : !exam ? (
-        <Card>
-          <CardHeader
-            title={`Bước 2: lấy đề môn ${subject.code}`}
-            action={
-              <Button size="sm" variant="text" onClick={() => setSubject(null)}>
-                <ArrowLeft size={15} /> Đổi môn
-              </Button>
-            }
-          />
+        <SubjectCard title={`Bước 2: lấy đề môn ${subject.code}`} onBack={() => setSubject(null)}>
           <div className="space-y-4 p-5">
             <p className="md-body-medium text-on-surface-variant">
               <b className="text-on-surface">{subject.code}</b> · {subject.name}. Dán link bài trên FuOverflow: phải là bài có nhãn “Đề Thi FE” và thuộc đúng môn này. Hệ thống kiểm tra trước, đạt mới hỏi xác nhận phí.
             </p>
             <LinkImport subject={subject.code} onImported={setExam} />
           </div>
-        </Card>
+        </SubjectCard>
       ) : (
         <ChapterStep key={exam.id} subject={subject} exam={exam} onBack={() => setExam(null)} />
       )}
     </div>
-  );
-}
-
-export function SubjectStep({ onPick, title = "Bước 1: chọn môn" }: { onPick: (s: SubjectItem) => void; title?: string }) {
-  const subjects = useApi(() => chapterSetApi.subjects(), []);
-  const [q, setQ] = useState("");
-  const shown = useMemo(() => {
-    const term = q.trim().toLowerCase();
-    const list = subjects.data ?? [];
-    return (term ? list.filter((s) => s.code.toLowerCase().includes(term) || s.name.toLowerCase().includes(term)) : list);
-  }, [subjects.data, q]);
-
-  return (
-    <Card>
-      <CardHeader title={title} />
-      <div className="space-y-3 p-5">
-        <label className="relative block">
-          <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Gõ mã môn hoặc tên môn, ví dụ PRO192"
-            aria-label="Tìm môn"
-            className="h-11 w-full rounded-m3-md border border-outline-variant bg-surface-container-lowest pl-9 pr-3 text-sm outline-none focus:border-primary"
-          />
-        </label>
-        {subjects.loading && !subjects.data ? (
-          <Loading />
-        ) : subjects.error ? (
-          <ErrorBox message={subjects.error} onRetry={subjects.reload} />
-        ) : shown.length === 0 ? (
-          <p className="md-body-medium text-on-surface-variant">Không có môn nào khớp “{q}”.</p>
-        ) : (
-          <>
-            <p className="md-body-small text-on-surface-variant" aria-live="polite">
-              {q.trim() ? `Tìm thấy ${shown.length}/${subjects.data?.length ?? 0} môn.` : `Có ${shown.length} môn. Cuộn xuống để xem hết, hoặc gõ vào ô trên để tìm.`}
-            </p>
-          <ul className="max-h-[28rem] divide-y divide-outline-variant overflow-y-auto rounded-m3-md border border-outline-variant" tabIndex={0} aria-label="Danh sách môn, cuộn để xem thêm">
-            {shown.map((s) => (
-              <li key={s.code}>
-                <button type="button" onClick={() => onPick(s)} className="md-state flex w-full items-baseline gap-3 px-4 py-3 text-left">
-                  <span className="md-title-small w-20 shrink-0 text-primary">{s.code}</span>
-                  <span className="md-body-medium min-w-0 truncate text-on-surface">{s.name}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-          </>
-        )}
-      </div>
-    </Card>
   );
 }
 
@@ -160,15 +101,7 @@ function ChapterStep({ subject, exam, onBack }: { subject: SubjectItem; exam: Im
   };
 
   return (
-    <Card>
-      <CardHeader
-        title="Bước 3: chọn chương muốn ôn"
-        action={
-          <Button size="sm" variant="text" onClick={onBack}>
-            <ArrowLeft size={15} /> Lấy đề khác
-          </Button>
-        }
-      />
+    <SubjectCard title="Bước 3: chọn chương muốn ôn" backLabel="Lấy đề khác" onBack={onBack}>
       <div className="space-y-4 p-5">
         <p className="md-body-medium text-on-surface-variant">
           <b className="text-on-surface">{exam.title}</b> · {subject.code} · {total} câu
@@ -234,6 +167,6 @@ function ChapterStep({ subject, exam, onBack }: { subject: SubjectItem; exam: Im
           </>
         )}
       </div>
-    </Card>
+    </SubjectCard>
   );
 }
