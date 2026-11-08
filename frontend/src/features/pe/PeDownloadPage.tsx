@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { Download, FileArchive, Loader2 } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useToast } from "@/shared/context/ToastContext";
+import { fuoThreadUrl } from "@/shared/utils/fuo-link";
 import { useApi } from "@/shared/hooks/useApi";
 import { Button, buttonClass } from "@/shared/ui/Button";
 import { Card, CardHeader, PageHeader } from "@/shared/ui/Card";
@@ -127,7 +128,7 @@ export default function PeDownloadPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS[r.status]?.cls}`}>{STATUS[r.status]?.text}</span>
-                  <Button size="sm" onClick={() => { const l = `https://fuoverflow.com/threads/${r.threadId}/`; setUrl(l); void openConfirm(l); }} disabled={busy}>
+                  <Button size="sm" onClick={() => { const l = fuoThreadUrl(r.threadId); setUrl(l); void openConfirm(l); }} disabled={busy}>
                     Tải lại
                   </Button>
                 </div>
