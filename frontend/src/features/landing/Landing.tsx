@@ -3,6 +3,7 @@ import { ExtensionBar } from "./components/ExtensionBar";
 import type { PickFolder } from "@/features/practice/components/FolderInput";
 import { Footer } from "@/shared/layout/Footer";
 import { CtaSection } from "./components/CtaSection";
+import { FeatureShowcase } from "./components/FeatureShowcase";
 import { HeroSection } from "./components/HeroSection";
 import { PartnerAiSection } from "./components/PartnerAiSection";
 import { StepsSection } from "./components/StepsSection";
@@ -20,11 +21,12 @@ export function Landing({ onPick, onImported, userName }: Props) {
 
   return (
     <div className="flex flex-1 flex-col overflow-y-auto bg-surface">
-      <ExtensionBar />
       <HeroSection onPick={onPick} onImported={onImported} userName={userName} />
+      <ExtensionBar />
 
       {isGuest && (
         <>
+          <FeatureShowcase />
           <StepsSection />
           <PartnerAiSection />
           <CtaSection />

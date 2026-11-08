@@ -4,7 +4,6 @@ import {
   Award,
   BookOpen,
   Clock,
-  GraduationCap,
   RotateCcw,
   Send,
   Trophy,
@@ -16,6 +15,7 @@ import { formatDuration, formatScore } from "@/features/practice/utils/format";
 import { Logo } from "@/shared/brand/Logo";
 import { Button } from "@/shared/ui/Button";
 import { UserMenu } from "@/shared/layout/UserMenu";
+import { SiteNav } from "@/shared/layout/SiteNav";
 import { ThemeToggle } from "@/shared/theme/ThemeToggle";
 
 interface Props {
@@ -87,16 +87,10 @@ export function Header({
         </div>
       </div>
 
-      {/* Thông điệp đối tượng phục vụ: chữ to giữa thanh, chỉ trên PC và khi chưa mở đề (đang làm bài thì nhường chỗ cho tên đề, đồng hồ) */}
+      {/* Điều hướng chính, chỉ trên PC/tablet và khi chưa mở đề (đang làm bài thì nhường chỗ cho tên đề, đồng hồ).
+          Điện thoại: các mục này nằm ở menu tài khoản và chân trang. */}
       {!loaded && (
-        <div className="hidden min-w-0 flex-1 items-center justify-center px-4 lg:flex">
-          <span className="inline-flex min-w-0 items-center gap-2.5 rounded-full border border-brand-200 bg-brand-50 px-5 py-1.5 text-sm font-semibold text-brand-900">
-            <GraduationCap size={20} className="shrink-0 text-brand-700" />
-            <span className="truncate">
-              Hệ thống phát triển chỉ phục vụ sinh viên FPTU
-            </span>
-          </span>
-        </div>
+        <SiteNav />
       )}
 
       <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
