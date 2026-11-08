@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lấy syllabus từ FLM</title>
+    <link rel="stylesheet" href="crawler.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Lấy syllabus từ FLM</h1>
+      <p class="muted">
+        Nhập mã môn (cách nhau bằng dấu cách, dấu phẩy hoặc xuống dòng). Công cụ dùng phiên đăng nhập FLM sẵn có trong trình duyệt của bạn, nên hãy
+        <a href="https://flm.fpt.edu.vn/gui/role/student/SyllabusManagement" target="_blank" rel="noreferrer">đăng nhập FLM</a> ở một tab khác trước.
+        Chỉ lấy môn có Subject Code <b>trùng hoàn toàn</b> với mã đã nhập (OSG202 sẽ không lấy OSG202c).
+      </p>
+
+      <textarea id="codes" rows="4" placeholder="OSG202&#10;PRO192, CSD201&#10;DBI202"></textarea>
+
+      <div class="row">
+        <button id="start" class="primary">Bắt đầu lấy</button>
+        <button id="stop" disabled>Dừng</button>
+        <label class="check"><input type="checkbox" id="redo" /> Lấy lại cả môn đã có kết quả</label>
+        <span class="spacer"></span>
+        <button id="download">Tải JSON</button>
+        <button id="copy">Sao chép JSON</button>
+        <button id="clear" class="danger">Xóa kết quả</button>
+      </div>
+
+      <p id="status" class="status" role="status"></p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Mã môn</th>
+            <th>Trạng thái</th>
+            <th>Tên môn</th>
+            <th class="num">Chương</th>
+            <th class="num">Chủ đề</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </main>
+    <script src="parser.js"></script>
+    <script src="crawler.js"></script>
+  </body>
+</html>

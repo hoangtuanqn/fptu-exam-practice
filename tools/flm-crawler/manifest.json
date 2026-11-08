@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "FEPass: Lấy syllabus từ FLM",
+  "short_name": "FLM Crawler",
+  "version": "1.0.0",
+  "description": "Công cụ nội bộ: nhập mã môn, lấy syllabus (chương, buổi học, CLO, đánh giá) từ flm.fpt.edu.vn bằng phiên đăng nhập của bạn và xuất ra file JSON.",
+  "action": { "default_title": "Lấy syllabus FLM" },
+  "permissions": ["storage"],
+  "host_permissions": ["https://flm.fpt.edu.vn/*"],
+  "background": { "service_worker": "background.js" }
+}
