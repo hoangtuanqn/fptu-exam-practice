@@ -1,7 +1,6 @@
 // Một lệnh làm xong mọi thứ để đưa frontend lên hosting:  npm run release   (hoặc bấm đúp release.cmd ở thư mục gốc)
-//   1. Build frontend (tsc + vite build) ra frontend/dist
-//   2. Nén chrome-extension/ thành fepass_extension.zip và đặt vào dist (web phục vụ ở /fepass_extension.zip)
-//   3. Nén toàn bộ dist (kể cả .htaccess và file xác minh Google) thành release/fepass-web.zip
+//   1. `npm run build`: tsc + vite build ra frontend/dist, rồi tự nén chrome-extension/ thành dist/fepass_extension.zip
+//   2. Nén toàn bộ dist (kể cả .htaccess và file xác minh Google) thành release/fepass-web.zip
 // Trên hosting chỉ cần giải nén fepass-web.zip vào thư mục gốc của web (public_html), rồi Purge Everything trên Cloudflare.
 import { execSync } from "node:child_process";
 import fs from "node:fs";
@@ -39,21 +38,16 @@ const manifest = JSON.parse(fs.readFileSync(path.join(extDir, "manifest.json"), 
 const published = JSON.parse(fs.readFileSync(path.join(frontend, "public", "extension-version.json"), "utf8"));
 if (manifest.version !== published.version) warn(`Phiên bản tiện ích không khớp: manifest ${manifest.version}, extension-version.json ${published.version}`);
 
-// --- 1. Build
-step("Build frontend (tsc + vite build)");
+// --- 1. Build (tsc + vite build + nén tiện ích Chrome)
+step("Build frontend");
 try {
   execSync("npm run build", { cwd: frontend, stdio: "inherit" });
 } catch {
   fail("build thất bại, xem lỗi ở trên.");
 }
 
-// --- 2. Nén tiện ích Chrome vào dist
-step(`Nén tiện ích Chrome (v${manifest.version})`);
-const extFiles = collect(extDir, (rel, e) => e.name === "fepass_extension.zip" || e.name.startsWith(".") || e.name === "node_modules");
-if (!extFiles["manifest.json"]) fail("không thấy chrome-extension/manifest.json");
-const extZip = zipSync(extFiles, { level: 9 });
-fs.writeFileSync(path.join(dist, "fepass_extension.zip"), extZip);
-console.log(`   ${Object.keys(extFiles).length} file → dist/fepass_extension.zip (${fmt(extZip.length)})`);
+// (Tiện ích Chrome đã được nén vào dist/fepass_extension.zip ngay trong `npm run build`.)
+if (!fs.existsSync(path.join(dist, "fepass_extension.zip"))) fail("thiếu dist/fepass_extension.zip sau khi build");
 
 // --- 3. Nén cả dist thành một file để upload một lần
 step("Nén toàn bộ web thành một file");
