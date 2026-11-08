@@ -1,3 +1,7 @@
+# Trang công khai có sẵn thư mục riêng (pro/, features/...): phục vụ thẳng tại /pro, không chuyển sang /pro/
+DirectorySlash Off
+Options -Indexes
+
 <IfModule mod_rewrite.c>
 RewriteEngine On
 RewriteBase /
