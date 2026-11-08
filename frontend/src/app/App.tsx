@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Route, Routes, useParams } from "react-router-dom";
-import { Layers, Library, NotebookPen, Download, BookOpen, Gift, History, MessageSquareWarning, UserPlus, ListChecks, LayoutDashboard, UserRound, Wallet } from "lucide-react";
+import { Flame, Layers, Library, NotebookPen, Download, BookOpen, Gift, History, MessageSquareWarning, UserPlus, ListChecks, LayoutDashboard, UserRound, Wallet } from "lucide-react";
 import { PanelLayout, type NavItem } from "@/shared/layout/PanelLayout";
 import { Loading } from "@/shared/ui/Feedback";
 import LoginPage from "@/features/auth/pages/LoginPage";
@@ -35,6 +35,7 @@ const TransactionsPage = lazy(() => import("@/features/account/pages/Transaction
 const LibraryPage = lazy(() => import("@/features/account/pages/LibraryPage"));
 const ReviewPage = lazy(() => import("@/features/review/ReviewPage"));
 const CatalogPage = lazy(() => import("@/features/catalog/CatalogPage"));
+const FrequentPage = lazy(() => import("@/features/chapter-set/FrequentPage"));
 const ChapterSetPage = lazy(() => import("@/features/chapter-set/ChapterSetPage"));
 const ReviewPracticePage = lazy(() => import("@/features/review/ReviewPracticePage"));
 const MyReportsPage = lazy(() => import("@/features/account/pages/MyReportsPage"));
@@ -53,6 +54,7 @@ const ACCOUNT_NAV: NavItem[] = [
   { to: "/account", label: "Tổng quan", icon: LayoutDashboard, end: true, group: "Chung" },
   { to: "/account/exams", label: "Kho đề của tôi", icon: BookOpen, group: "Học tập" },
   { to: "/account/catalog", label: "Thư viện đề", icon: Library, group: "Học tập" },
+  { to: "/account/frequent", label: "Câu hay ra", icon: Flame, group: "Học tập" },
   { to: "/account/chapters", label: "Bộ đề theo chương", icon: Layers, group: "Học tập" },
   { to: "/account/review", label: "Sổ câu sai", icon: NotebookPen, group: "Học tập" },
   { to: "/account/pe", label: "Tải đề thi PE", icon: Download, group: "Học tập" },
@@ -111,6 +113,7 @@ export default function App() {
             <Route path="deposit/:code" element={<DepositPage />} />
             <Route path="exams" element={<LibraryPage />} />
             <Route path="catalog" element={<CatalogPage />} />
+            <Route path="frequent" element={<FrequentPage />} />
             <Route path="chapters" element={<ChapterSetPage />} />
             <Route path="review" element={<ReviewPage />} />
             <Route path="review/practice" element={<ReviewPracticePage />} />
