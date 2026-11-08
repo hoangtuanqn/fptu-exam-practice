@@ -70,7 +70,7 @@ export function Header({
 
   return (
     <header className="z-30 flex h-16 shrink-0 items-center justify-between gap-2 border-b border-outline-variant bg-surface px-2 sm:px-4">
-      <div className="flex min-w-0 items-center gap-3">
+      <div className="flex shrink-0 items-center gap-3 sm:min-w-0 sm:shrink">
         <Link
           to="/"
           className="shrink-0"
@@ -79,7 +79,15 @@ export function Header({
             if (loaded && !onHome()) e.preventDefault();
           }}
         >
-          <Logo variant="full" className="h-10 sm:h-11" />
+          {/* Đang làm bài trên điện thoại: chỉ mascot cho đỡ chật, để logo không bị chip đồng hồ và nút che mất */}
+          {loaded ? (
+            <>
+              <Logo variant="mark" className="h-9 sm:hidden" />
+              <Logo variant="full" className="hidden h-11 sm:block" />
+            </>
+          ) : (
+            <Logo variant="full" className="h-10 sm:h-11" />
+          )}
         </Link>
         <span className="hidden h-5 w-px shrink-0 bg-slate-200 sm:block" />
         <div className="hidden truncate text-base font-semibold tracking-tight text-slate-900 sm:block">
@@ -93,13 +101,13 @@ export function Header({
         <SiteNav />
       )}
 
-      <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+      <div className="flex min-w-0 items-center justify-end gap-1.5 sm:shrink-0 sm:gap-2">
         {loaded && (
           <>
             {bestScore != null && (
               <span
                 title={`Điểm cao nhất của bạn ở đề này: ${formatScore(bestScore)}`}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-sm font-medium text-amber-800 sm:px-3"
+                className="hidden items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-sm font-medium text-amber-800 sm:inline-flex sm:px-3"
               >
                 <Trophy size={14} />
                 <span className="hidden sm:inline">Cao nhất</span>
@@ -134,7 +142,7 @@ export function Header({
               <Clock size={14} className="sm:hidden" />
               {waiting ? (
                 <span className="whitespace-nowrap">
-                  Chờ đáp án · chưa tính giờ
+                  Chờ đáp án<span className="max-sm:hidden"> · chưa tính giờ</span>
                 </span>
               ) : left !== null && !submitted ? (
                 <span title="Thời gian còn lại" className={`whitespace-nowrap tabular-nums ${low ? "font-semibold text-rose-600" : ""}`}>
@@ -185,7 +193,7 @@ export function Header({
             <span className="mx-1 hidden h-6 w-px bg-slate-200 sm:block" />
           </>
         )}
-        <ThemeToggle />
+        <ThemeToggle className={loaded ? "max-sm:hidden" : ""} />
         <UserMenu />
       </div>
     </header>

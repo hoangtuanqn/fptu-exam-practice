@@ -28,7 +28,7 @@ export interface ExamAnswersPayload {
   examId: number;
   status: AnswerSource; // PENDING = đang giải, FAILED = lỗi, còn lại = đã có đáp án
   answerError: string | null; // lời nhắn cho người dùng khi lỗi
-  answers: { number: number; correct: string[] }[];
+  answers: { number: number; correct: string[]; topic?: string | null }[];
   references?: number[]; // số câu là tài liệu tham khảo (không phải câu hỏi)
 }
 

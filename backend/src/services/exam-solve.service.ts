@@ -58,7 +58,12 @@ async function run(examId: number) {
     lastError.delete(examId);
     void realtimeHub.publishExam(examId);
     // Gắn chủ đề cho các câu (việc phụ, chạy nền): lỗi ở đây không ảnh hưởng đáp án vừa có
-    void topicLabelerService.labelExam(examId).catch((err) => console.error(`[ai] gắn chủ đề đề ${exam.threadId} lỗi: ${(err as Error).message}`));
+    void topicLabelerService
+      .labelExam(examId)
+      .then((r) => {
+        if (r.labels.some((l) => l.topic)) void realtimeHub.publishExam(examId);
+      })
+      .catch((err) => console.error(`[ai] gắn chủ đề đề ${exam.threadId} lỗi: ${(err as Error).message}`));
     const gaps = solved.unanswered.length ? `, thiếu ${solved.unanswered.length} câu (${solved.unanswered.join(",")})` : "";
     const skipped = solved.notQuestions.length ? `, ${solved.notQuestions.length} ảnh không phải câu hỏi (${solved.notQuestions.join(",")})` : "";
     console.log(`[ai] đề ${exam.threadId} đã có đáp án (${solved.answers.length} câu${gaps}${skipped}) sau ${((Date.now() - t0) / 1000).toFixed(1)}s`);
