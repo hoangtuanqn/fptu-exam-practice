@@ -1,4 +1,4 @@
-import { BarChart3, Bot, CalendarCheck, Crown, FileDown, Link2, MessageCircleQuestion, Puzzle, Save, Sparkles, Timer, Wallet, type LucideIcon } from "lucide-react";
+import { BarChart3, Bot, CalendarCheck, Crown, FileDown, GraduationCap, Link2, MessageCircleQuestion, Puzzle, Save, Sparkles, Timer, Wallet, type LucideIcon } from "lucide-react";
 
 export interface Feature {
   icon: LucideIcon;
@@ -43,6 +43,7 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
       { icon: Puzzle, title: "Tiện ích Chrome", text: "Nút làm đề ngay cạnh bài “Đề Thi FE” trên FuOverflow, bấm là mở sang FEPass." },
       { icon: FileDown, title: "Tải đề PE trọn bộ", text: "Tải toàn bộ tài nguyên đề PE thành một file zip.", pro: true },
       { icon: Save, title: "Làm dở, làm tiếp", text: "Bài đang làm được lưu lại, vào lại là tiếp tục đúng chỗ đã dừng." },
+      { icon: GraduationCap, title: "Kết nối trực tiếp với FLM", text: "Syllabus của FPTU được tích hợp vào hệ thống: câu hỏi gắn theo chương và chủ đề của từng môn." },
     ],
   },
   {

@@ -10,7 +10,7 @@ export function FeatureShowcase({ standalone = false }: { standalone?: boolean }
         <p className="md-label-large text-center uppercase tracking-widest text-primary">Tính năng chính</p>
         <h2 className="md-section-title mt-2 text-center text-on-surface">Mọi thứ bạn cần để ôn thi FE, trong một nơi</h2>
 
-        <div className="mt-8 grid gap-4 sm:mt-10 md:grid-cols-2">
+        <div className="mt-8 grid items-start gap-4 sm:mt-10 md:grid-cols-2">
           {FEATURE_GROUPS.map((g) => (
             <article key={g.title} className="overflow-hidden rounded-m3-lg border border-outline-variant bg-surface-container-lowest shadow-m3-1">
               <header className="flex items-center gap-3 bg-gradient-to-r from-[#2a1d00] to-[#4a3500] px-5 py-3.5 text-[#fff6dc]">
