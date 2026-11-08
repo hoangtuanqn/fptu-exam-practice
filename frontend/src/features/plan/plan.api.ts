@@ -10,6 +10,7 @@ export interface PlanInfo {
   savings: number;
   savingsPercent: number;
   pricePerMonth: number;
+  sprint: { code: string; name: string; days: number; price: number }; // gói Nước rút ngắn hạn
   benefits: { freeFetch: boolean; freeExplain: boolean; freePe: boolean; unlimitedReview?: boolean; topicReport?: boolean };
 }
 
@@ -22,5 +23,5 @@ export interface PurchaseResult {
 
 export const planApi = {
   info: () => http.get<PlanInfo>("/plan"),
-  purchase: () => http.post<PurchaseResult>("/plan/purchase"),
+  purchase: (plan: "PRO" | "SPRINT" = "PRO") => http.post<PurchaseResult>("/plan/purchase", { plan }),
 };
