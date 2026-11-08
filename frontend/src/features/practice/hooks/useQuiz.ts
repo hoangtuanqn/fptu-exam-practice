@@ -27,6 +27,7 @@ export interface ResumeState {
   flagged: Record<number, boolean>;
   current: number;
   elapsedSec: number;
+  submitted?: boolean; // lượt đã nộp: mở lại chỉ để xem kết quả, không tạo lượt mới và không lưu lịch sử lần nữa
 }
 
 type IncomingQuestion = { number: number; imageUrl: string; correct: string[] };
@@ -60,6 +61,7 @@ export function useQuiz() {
   const [flagged, setFlagged] = useState<Record<number, boolean>>({}); // câu đánh dấu cần xem lại
   const [session, setSession] = useState(0); // tăng mỗi lần bắt đầu/làm lại -> đặt lại đồng hồ
   const [sessionId, setSessionId] = useState<number | null>(null); // lượt làm lưu trên server (null = chưa tạo / đề mở từ thư mục)
+  const [restoredSubmitted, setRestoredSubmitted] = useState(false); // bài đã nộp được mở lại sau khi tải lại trang
   const [resumedElapsed, setResumedElapsed] = useState(0); // số giây đã làm ở lượt được làm tiếp
 
   // Đồng hồ chỉ chạy khi có đáp án để làm: chờ AI phân tích xong mới bắt đầu tính, dừng khi nộp bài
@@ -75,6 +77,7 @@ export function useQuiz() {
     setSubmitted(false);
     setCurrent(0);
     setSessionId(null);
+    setRestoredSubmitted(false);
     setResumedElapsed(0);
     setSession((s) => s + 1);
   }
@@ -140,6 +143,10 @@ export function useQuiz() {
       setCurrent(Math.max(0, Math.min(resume.current, split.questions.length - 1)));
       setResumedElapsed(resume.elapsedSec);
       setSessionId(resume.sessionId);
+      if (resume.submitted) {
+        setSubmitted(true);
+        setRestoredSubmitted(true);
+      }
     }
   }
 
@@ -286,6 +293,7 @@ export function useQuiz() {
     timeLimitSec: timeLimitMin ? timeLimitMin * 60 : null,
     timing,
     sessionId,
+    restoredSubmitted,
     setSessionId,
     toggleFlag,
     answeredCount: Object.values(answers).filter((a) => a.length > 0).length,
