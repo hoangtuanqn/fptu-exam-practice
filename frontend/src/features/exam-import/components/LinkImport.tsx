@@ -129,6 +129,11 @@ export function LinkImport({ onImported }: Props) {
     const link = url.trim();
     if (!link || running || quoting || linkInvalid) return;
     if (!user) return setConfirming(true);
+    if (pro) {
+      // Pro: không trừ tiền, nhưng vẫn báo cho người dùng biết lần này miễn phí nhờ Pro (cả khi đi từ tiện ích Chrome)
+      setQuotedFee(0);
+      return void setConfirming(true);
+    }
     if (fee <= 0) return void job.start(link);
 
     // Hỏi trước phí thực tế: đề đã từng lấy thì miễn phí, mở luôn và báo cho người dùng biết
@@ -310,6 +315,7 @@ export function LinkImport({ onImported }: Props) {
       <ConfirmFetchDialog
         url={url.trim()}
         fee={quotedFee ?? fee}
+        pro={pro}
         balance={user ? user.balance : null}
         onCancel={() => setConfirming(false)}
         onConfirm={confirm}
