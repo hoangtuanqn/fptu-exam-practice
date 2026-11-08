@@ -16,6 +16,7 @@ import {
 } from "../rules/requests/review.request";
 import { ResponseClient } from "../rules/response";
 import { reviewService } from "../services/review.service";
+import { readinessService } from "../services/readiness.service";
 import { studyService } from "../services/study.service";
 import { AppError } from "../rules/error";
 import { topicStatsService } from "../services/topic-stats.service";
@@ -56,6 +57,9 @@ export const studyRouter = Router();
 studyRouter.use(authenticate, limiter);
 studyRouter.get("/stats", async (req: Request, res: Response) => {
   res.json(new ResponseClient({ data: await studyService.stats(req.user!.id) }));
+});
+studyRouter.get("/readiness", async (req: Request, res: Response) => {
+  res.json(new ResponseClient({ data: await readinessService.forUser(req.user!.id) }));
 });
 studyRouter.get("/topics", async (req: Request, res: Response) => {
   res.json(new ResponseClient({ data: await topicStatsService.forUser(req.user!.id, hasTopicReport(req.user)) }));
