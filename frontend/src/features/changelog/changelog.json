@@ -1,52 +1,47 @@
 {
   "web": [
     {
-      "version": "1.8.0",
-      "date": "2026-11-09",
-      "title": "Câu hay ra",
-      "highlights": [
-        "Biết câu nào lặp lại ở nhiều đề của cùng một môn để ôn trước",
-        "Pro: xem đầy đủ danh sách câu hay ra",
-        "Thư viện đề theo môn và gói Nước rút 14 ngày chỉ 29.000đ"
-      ],
-      "changes": [
-        { "type": "new", "text": "Trang “Câu hay ra” (Tài khoản): chọn môn, xem những câu xuất hiện ở từ 2 đề trở lên, xếp từ lặp nhiều nhất, kèm đáp án" },
-        { "type": "new", "text": "Cảnh báo khi các đề ghi đáp án khác nhau cho cùng một câu, để bạn kiểm tra và báo cáo" },
-        { "type": "new", "text": "Thư viện đề (Tài khoản): chọn môn và lấy ngay các đề hệ thống đã có sẵn, không cần tìm link FuOverflow" },
-        { "type": "new", "text": "Gói Nước rút: 14 ngày, 29.000đ, đủ quyền lợi Pro, không tự gia hạn, cộng dồn vào hạn hiện có" },
-        { "type": "new", "text": "Trang riêng cho từng môn (/mon/pro192...) với các chương theo syllabus" },
-        { "type": "improved", "text": "Gói thường xem 5 câu đầu; gói Pro xem toàn bộ" }
-      ]
-    },
-    {
-      "version": "1.7.0",
-      "date": "2026-11-09",
-      "title": "Bộ đề theo chương",
-      "highlights": [
-        "Bộ đề theo chương: chọn môn, lấy đề FE rồi chỉ luyện các chương bạn muốn ôn",
-        "Tải lại trang sau khi nộp bài vẫn giữ nguyên kết quả",
-        "Mức sẵn sàng theo môn và email nhắc ôn (tự bật trong Hồ sơ)"
-      ],
-      "changes": [
-        { "type": "new", "text": "Bộ đề theo chương (Tài khoản > Bộ đề theo chương): chọn môn, dán link đề FE đúng môn (kiểm tra trước khi trừ phí), rồi chọn các chương để chỉ làm những câu thuộc chương đó" },
-        { "type": "new", "text": "Trang Tổng quan hiện mức sẵn sàng của từng môn (Cần ôn thêm / Khá ổn / Sẵn sàng) dựa trên các bài thi thử gần nhất" },
-        { "type": "new", "text": "Email nhắc ôn: tự bật trong Hồ sơ, tối đa 1 thư mỗi ngày khi có câu đến hạn, có thể đặt ngày thi và hủy bất cứ lúc nào" },
-        { "type": "improved", "text": "Làm bài: chủ đề hiện ngay trên đầu câu, bỏ các thông báo gây xao nhãng, header gọn hơn trên điện thoại" },
-        { "type": "fixed", "text": "Tải lại trang sau khi nộp bài không còn tạo lượt làm mới" }
-      ]
-    },
-    {
       "version": "1.6.0",
       "date": "2026-11-08",
-      "title": "Điểm mạnh và yếu theo chủ đề",
+      "title": "Học thông minh hơn: Kho đề, Câu hay ra, theo chương",
       "highlights": [
-        "Biết mình yếu chủ đề nào của từng môn sau khi làm bài",
-        "Pro: báo cáo đầy đủ theo chủ đề và luyện đúng phần yếu"
+        "Kho đề: xem toàn bộ đề FE của từng môn, lấy khi cần",
+        "Câu hay ra và bộ đề theo chương để ôn đúng trọng tâm",
+        "Biết mình yếu chủ đề nào, mức sẵn sàng theo môn"
       ],
       "changes": [
-        { "type": "new", "text": "Mỗi câu hỏi được gắn chủ đề theo syllabus của môn; trang Sổ câu sai hiện tỷ lệ đúng theo từng chủ đề" },
-        { "type": "new", "text": "Gói thường xem được chủ đề cần ôn nhất; gói Pro xem toàn bộ các chủ đề của từng môn" },
-        { "type": "new", "text": "Pro: nút “Luyện” ôn riêng các câu bạn từng sai ở một chủ đề" }
+        {
+          "type": "new",
+          "text": "Kho đề có hai tab “Của tôi” và “Theo môn”: chọn môn, xem tất cả đề FE, lọc theo kỳ, tìm theo tên"
+        },
+        {
+          "type": "new",
+          "text": "Câu hay ra: những câu lặp lại ở nhiều đề của một môn, kèm đáp án (Pro xem đầy đủ)"
+        },
+        {
+          "type": "new",
+          "text": "Bộ đề theo chương: chỉ làm các câu thuộc chương bạn chọn"
+        },
+        {
+          "type": "new",
+          "text": "Mỗi câu có chủ đề, xem tỷ lệ đúng theo chủ đề; Pro xem đủ và luyện riêng phần yếu"
+        },
+        {
+          "type": "new",
+          "text": "Tổng quan hiện mức sẵn sàng của từng môn; email nhắc ôn (tự bật trong Hồ sơ)"
+        },
+        {
+          "type": "new",
+          "text": "Gói Nước rút 14 ngày, đủ quyền lợi Pro, không tự gia hạn"
+        },
+        {
+          "type": "improved",
+          "text": "Thanh bên xếp lại theo việc bạn làm; danh sách môn hiện đủ; màn làm bài gọn hơn"
+        },
+        {
+          "type": "fixed",
+          "text": "Tải lại trang sau khi nộp bài vẫn giữ nguyên kết quả"
+        }
       ]
     },
     {
@@ -54,18 +49,27 @@
       "date": "2026-11-08",
       "title": "Sổ câu sai và chuỗi ngày học",
       "highlights": [
-        "Sổ câu sai: câu làm sai tự vào sổ và được nhắc ôn lại sau 1, 3, 7, 14, 30 ngày",
-        "Chuỗi ngày học và mục tiêu tuần, hiện ở trang tổng quan",
-        "Trước khi nộp bài, bấm số câu đã đánh dấu hoặc chưa làm để quay lại xem"
+        "Sổ câu sai: câu làm sai tự vào sổ và được nhắc ôn lại đúng lúc",
+        "Chuỗi ngày học và mục tiêu tuần",
+        "Xem lại câu đã đánh dấu trước khi nộp bài"
       ],
       "changes": [
-        { "type": "new", "text": "Sổ câu sai: mọi câu bạn làm sai hoặc bỏ qua tự được lưu, có chế độ ôn lần lượt từng câu và chấm ngay" },
-        { "type": "new", "text": "Lịch nhắc ôn kiểu lặp lại ngắt quãng: đúng thì lần ôn sau xa hơn, sai thì quay lại vào ngày mai; đúng đủ 5 lần là đã nhớ" },
-        { "type": "new", "text": "Câu bạn đánh dấu phân vân cũng vào sổ dù làm đúng, để ôn lại cho chắc" },
-        { "type": "new", "text": "Chuỗi ngày học liên tiếp, tiến độ tuần và mục tiêu 3, 5 hoặc 7 ngày mỗi tuần" },
-        { "type": "new", "text": "Gói thường lưu tối đa 50 câu trong sổ, Pro không giới hạn" },
-        { "type": "improved", "text": "Hộp xác nhận nộp bài liệt kê câu đã đánh dấu và câu chưa trả lời, bấm để nhảy tới câu đó" },
-        { "type": "improved", "text": "Giảm lỗi “Bạn thao tác hơi nhanh” khi nhiều bạn dùng chung mạng wifi" }
+        {
+          "type": "new",
+          "text": "Sổ câu sai: câu làm sai hoặc bỏ qua tự được lưu và nhắc ôn lại đúng lúc, có chế độ ôn từng câu"
+        },
+        {
+          "type": "new",
+          "text": "Câu bạn đánh dấu phân vân cũng vào sổ"
+        },
+        {
+          "type": "new",
+          "text": "Chuỗi ngày học liên tiếp và mục tiêu học mỗi tuần"
+        },
+        {
+          "type": "improved",
+          "text": "Trước khi nộp bài, bấm vào câu đã đánh dấu hoặc chưa làm để quay lại xem"
+        }
       ]
     },
     {
@@ -73,19 +77,30 @@
       "date": "2026-11-08",
       "title": "Gói Pro và trang chủ mới",
       "highlights": [
-        "Gói Pro 4 tháng chỉ 99.000đ, tiết kiệm 93.000đ so với mua trên FuOverflow",
-        "Pro: lấy đề, giải thích AI, AI giải đề không giới hạn lượt, không bị trừ credit",
-        "Trang chủ gọn hơn, ô nhập link lên ngay đầu trang"
+        "Gói Pro 4 tháng: lấy đề và xem giải thích AI không bị trừ credit",
+        "Trang chủ gọn hơn, ô nhập link ngay đầu trang"
       ],
       "changes": [
-        { "type": "new", "text": "Gói Pro (một cấp duy nhất): trả 99.000 credit dùng 4 tháng, mua thêm khi còn hạn thì cộng dồn" },
-        { "type": "new", "text": "Trang giới thiệu gói Pro với bảng so sánh tính năng, các bước mua và câu hỏi thường gặp" },
-        { "type": "new", "text": "Pro không bị giới hạn số lượt lấy đề và tải đề PE, giải thích AI mọi câu không mất credit" },
-        { "type": "new", "text": "Dán link hoặc đi từ tiện ích Chrome khi đang là Pro: hiện thông báo “Bạn đang ở gói Pro, lần này miễn phí” thay cho hộp thoại trừ tiền" },
-        { "type": "new", "text": "Email xác nhận khi mua hoặc gia hạn Pro, nhắc gia hạn khi còn 7 ngày, huy hiệu PRO cạnh tên" },
-        { "type": "new", "text": "Trang “Có gì mới” này: xem lịch sử thay đổi của web và tiện ích Chrome" },
-        { "type": "improved", "text": "Trang chủ cho khách: dải quà đăng ký mỏng một dòng, ô nhập link ngay bên dưới, thẻ ưu đãi xuống dưới" },
-        { "type": "improved", "text": "Không còn hiệu ứng chồng thẻ khi cuộn làm che nội dung" }
+        {
+          "type": "new",
+          "text": "Gói Pro: dùng 4 tháng, mua thêm khi còn hạn thì cộng dồn"
+        },
+        {
+          "type": "new",
+          "text": "Trang giới thiệu gói Pro với bảng so sánh và câu hỏi thường gặp"
+        },
+        {
+          "type": "new",
+          "text": "Email xác nhận khi mua Pro và nhắc gia hạn khi sắp hết hạn"
+        },
+        {
+          "type": "new",
+          "text": "Trang “Có gì mới” để xem lịch sử cập nhật của web và tiện ích Chrome"
+        },
+        {
+          "type": "improved",
+          "text": "Trang chủ gọn hơn, ô nhập link lên ngay đầu trang"
+        }
       ]
     },
     {
@@ -93,63 +108,94 @@
       "date": "2026-11-07",
       "title": "Giao diện mới, điểm danh hằng ngày",
       "highlights": [
-        "Giao diện mới màu vàng Cóc Pass, có chế độ sáng và tối",
-        "Điểm danh mỗi ngày nhận 25 credit, đủ 7 ngày liên tiếp nhận thêm 100",
+        "Giao diện mới, có chế độ sáng và tối",
+        "Điểm danh hằng ngày nhận credit",
         "Chế độ Thi có đếm ngược thời gian"
       ],
       "changes": [
-        { "type": "new", "text": "Giao diện mới theo Material Design 3: chọn sáng, tối hoặc theo hệ thống, chữ và nút rõ hơn" },
-        { "type": "new", "text": "Điểm danh hằng ngày nhận 25 credit; đủ 7 ngày liên tiếp nhận thêm 100 credit" },
-        { "type": "new", "text": "Chế độ Thi có giới hạn thời gian: đếm ngược, nhắc còn 5 phút và 1 phút, hết giờ tự nộp bài" },
-        { "type": "new", "text": "Đăng nhập bằng GitHub; đăng nhập Google tự lấy ảnh đại diện" },
-        { "type": "new", "text": "Kiểm tra link FuOverflow ngay khi dán, báo lý do nếu link không hợp lệ" },
-        { "type": "new", "text": "Trợ lý Cóc Pass tra đề FuOverflow theo môn học" },
-        { "type": "new", "text": "Logo và màu chủ đạo mới theo mascot Cóc Pass; toàn bộ chữ dùng phông Inter" },
-        { "type": "improved", "text": "Thông báo lỗi dễ hiểu hơn khi mất mạng, thao tác quá nhanh hoặc hết phiên đăng nhập" },
-        { "type": "improved", "text": "Xóa lượt làm dở hoặc ảnh đại diện có nút “Hoàn tác” thay cho hộp thoại xác nhận" },
-        { "type": "improved", "text": "Thoát khỏi đề mở từ thư mục có hộp thoại nói rõ bài làm sẽ mất; nút gửi không còn bị bấm đúp" },
-        { "type": "improved", "text": "Email thông báo thiết kế lại, trang nạp tiền nhắc lệnh nạp đang chờ thanh toán" },
-        { "type": "fixed", "text": "Đổi ảnh đại diện nhưng vẫn hiện ảnh cũ" },
-        { "type": "fixed", "text": "Lấy đề bị trừ phí rồi mới báo link sai nhãn: nay kiểm tra trước khi trừ phí" }
+        {
+          "type": "new",
+          "text": "Giao diện mới, chọn sáng, tối hoặc theo thiết bị"
+        },
+        {
+          "type": "new",
+          "text": "Điểm danh hằng ngày nhận credit, đủ 7 ngày liên tiếp nhận thêm thưởng"
+        },
+        {
+          "type": "new",
+          "text": "Chế độ Thi có giới hạn thời gian: đếm ngược, nhắc khi sắp hết giờ, hết giờ tự nộp bài"
+        },
+        {
+          "type": "new",
+          "text": "Đăng nhập bằng GitHub"
+        },
+        {
+          "type": "improved",
+          "text": "Thông báo lỗi dễ hiểu hơn; xóa lượt làm dở hoặc ảnh đại diện có nút “Hoàn tác”"
+        },
+        {
+          "type": "fixed",
+          "text": "Đổi ảnh đại diện nhưng vẫn hiện ảnh cũ"
+        }
       ]
     },
     {
       "version": "1.2.0",
       "date": "2026-11-06",
-      "title": "Cóc Pass trợ lý và mở khóa giải thích",
+      "title": "Trợ lý Cóc Pass và mở khóa giải thích",
       "highlights": [
-        "Trợ lý Cóc Pass trả lời mọi thắc mắc về cách dùng web",
-        "Mở khóa giải thích AI cả đề với giá gói rẻ hơn mua lẻ",
-        "Tải trọn bộ tài nguyên đề PE (file zip)"
+        "Trợ lý Cóc Pass trả lời thắc mắc về cách dùng web",
+        "Mở khóa giải thích AI cả đề với giá rẻ hơn mua lẻ",
+        "Tải trọn bộ tài nguyên đề PE"
       ],
       "changes": [
-        { "type": "new", "text": "Trợ lý Cóc Pass: hỏi cách dùng web và xem dữ liệu tài khoản của bạn" },
-        { "type": "new", "text": "Mở khóa toàn bộ giải thích AI của một đề trong một lần, rẻ hơn mua lẻ từng câu" },
-        { "type": "new", "text": "Tải bộ tài nguyên đề PE dạng file zip; tải lại lần sau miễn phí sau khi đã trả phí" },
-        { "type": "new", "text": "Thưởng thêm credit khi nạp từ một mức nhất định" },
-        { "type": "new", "text": "Tiện ích Chrome FePass: thêm nút làm đề trên FuOverflow, thanh hướng dẫn cài đặt trên web" },
-        { "type": "new", "text": "Tải ảnh đại diện riêng (JPG, PNG hoặc WebP, tối đa 5 MB)" },
-        { "type": "improved", "text": "Phần “Đang làm dở” và “Đề của tôi” ở trang chủ gọn và dễ nhìn hơn" }
+        {
+          "type": "new",
+          "text": "Trợ lý Cóc Pass: hỏi cách dùng web, tra đề theo môn"
+        },
+        {
+          "type": "new",
+          "text": "Mở khóa toàn bộ giải thích AI của một đề trong một lần, rẻ hơn mua lẻ từng câu"
+        },
+        {
+          "type": "new",
+          "text": "Tải bộ tài nguyên đề PE dạng file zip"
+        },
+        {
+          "type": "new",
+          "text": "Thưởng thêm credit khi nạp nhiều"
+        },
+        {
+          "type": "new",
+          "text": "Tiện ích Chrome FEPass và ảnh đại diện riêng"
+        }
       ]
     },
     {
       "version": "1.1.0",
       "date": "2026-11-04",
-      "title": "Làm tiếp bài dở, đăng nhập an toàn hơn",
+      "title": "Làm tiếp bài dở",
       "highlights": [
         "Lưu và làm tiếp đúng chỗ đã dừng",
-        "Hiện điểm cao nhất khi luyện và lịch sử theo từng đề",
-        "Phiên đăng nhập an toàn hơn"
+        "Điểm cao nhất và lịch sử theo từng đề"
       ],
       "changes": [
-        { "type": "new", "text": "Lưu bài đang làm để vào lại làm tiếp đúng chỗ; bài dở quá 7 ngày tự dọn" },
-        { "type": "new", "text": "Hiện điểm cao nhất khi đang luyện và lịch sử làm bài theo từng đề trong kho" },
-        { "type": "new", "text": "Mở lại đề đã có trong kho miễn phí, hộp thoại xác nhận phí rõ ràng hơn" },
-        { "type": "new", "text": "Đề cũ hơn 4 tháng được tự làm mới ảnh và bình luận, giải lại đáp án" },
-        { "type": "improved", "text": "Phiên đăng nhập ngắn hạn và tự làm mới, an toàn hơn khi dùng chung máy" },
-        { "type": "improved", "text": "Bấm Enter để sang câu kế, ở câu cuối thì nộp bài; tải trước ảnh câu kế tiếp cho mượt hơn" },
-        { "type": "improved", "text": "Giao diện trang chủ mới kèm thẻ ưu đãi sinh viên" },
-        { "type": "improved", "text": "Đồng hồ chỉ bắt đầu chạy khi đáp án AI đã sẵn sàng" }
+        {
+          "type": "new",
+          "text": "Lưu bài đang làm, vào lại là làm tiếp đúng chỗ đã dừng"
+        },
+        {
+          "type": "new",
+          "text": "Hiện điểm cao nhất khi luyện và lịch sử làm bài theo từng đề"
+        },
+        {
+          "type": "new",
+          "text": "Mở lại đề đã có trong kho miễn phí"
+        },
+        {
+          "type": "improved",
+          "text": "Bấm Enter để sang câu kế, ở câu cuối thì nộp bài"
+        }
       ]
     },
     {
@@ -159,14 +205,29 @@
       "highlights": [
         "Lấy đề FuOverflow bằng một link, có đáp án AI",
         "Chấm điểm thang 10, lưu lịch sử làm bài",
-        "Nạp credit bằng chuyển khoản, cộng tự động"
+        "Nạp credit bằng chuyển khoản"
       ],
       "changes": [
-        { "type": "new", "text": "Lấy đề từ FuOverflow bằng một link, hệ thống tự lấy ảnh và lưu vào kho của bạn" },
-        { "type": "new", "text": "AI giải đáp án cho cả đề; làm bài, chấm điểm thang 10 và lưu lịch sử" },
-        { "type": "new", "text": "Đăng ký, đăng nhập (kể cả Google), quên mật khẩu, xác minh email" },
-        { "type": "new", "text": "Nạp credit bằng chuyển khoản ngân hàng, cộng tự động; giftcode và giới thiệu bạn bè" },
-        { "type": "new", "text": "Báo cáo đáp án sai và nhận thưởng khi được xác nhận; giải thích AI từng câu" }
+        {
+          "type": "new",
+          "text": "Lấy đề từ FuOverflow bằng một link, lưu vào kho riêng của bạn"
+        },
+        {
+          "type": "new",
+          "text": "Làm bài có đáp án AI, chấm điểm thang 10 và lưu lịch sử"
+        },
+        {
+          "type": "new",
+          "text": "Đăng ký, đăng nhập (kể cả Google), quên mật khẩu"
+        },
+        {
+          "type": "new",
+          "text": "Nạp credit bằng chuyển khoản, giftcode và giới thiệu bạn bè"
+        },
+        {
+          "type": "new",
+          "text": "Báo cáo đáp án sai và nhận thưởng khi được xác nhận"
+        }
       ]
     }
   ],
@@ -175,37 +236,64 @@
       "version": "1.3.0",
       "date": "2026-11-08",
       "title": "Giao diện mới",
-      "highlights": ["Biểu tượng và màu vàng Cóc Pass mới", "Dùng phông Inter đồng bộ với web"],
+      "highlights": [
+        "Biểu tượng và màu sắc mới"
+      ],
       "changes": [
-        { "type": "improved", "text": "Biểu tượng và màu sắc mới theo mascot Cóc Pass" },
-        { "type": "improved", "text": "Phông Inter được đóng gói sẵn trong tiện ích, chữ đồng bộ với web" }
+        {
+          "type": "improved",
+          "text": "Biểu tượng và màu sắc mới, đồng bộ với web"
+        }
       ]
     },
     {
       "version": "1.2.0",
       "date": "2026-11-06",
-      "title": "Báo bản mới mỗi ngày",
-      "highlights": ["Tự kiểm tra bản mới mỗi ngày và nhắc bạn cập nhật"],
-      "changes": [{ "type": "new", "text": "Mỗi ngày tự kiểm tra xem có bản mới không và báo ở cửa sổ tiện ích (không tự tải hay cài gì)" }]
+      "title": "Báo bản mới",
+      "highlights": [
+        "Nhắc bạn khi có bản tiện ích mới"
+      ],
+      "changes": [
+        {
+          "type": "new",
+          "text": "Tự báo khi có bản tiện ích mới"
+        }
+      ]
     },
     {
       "version": "1.1.0",
       "date": "2026-11-06",
       "title": "Thông báo cập nhật",
-      "highlights": ["Có thông báo khi ra bản tiện ích mới"],
+      "highlights": [
+        "Có thông báo khi ra bản mới"
+      ],
       "changes": [
-        { "type": "new", "text": "Thông báo khi có bản tiện ích mới kèm link tải" },
-        { "type": "fixed", "text": "Sửa hiển thị mức phí lấy đề trên nút" }
+        {
+          "type": "new",
+          "text": "Thông báo khi có bản mới kèm link tải"
+        },
+        {
+          "type": "fixed",
+          "text": "Sửa hiển thị mức phí lấy đề trên nút"
+        }
       ]
     },
     {
       "version": "1.0.0",
       "date": "2026-11-06",
       "title": "Ra mắt tiện ích Chrome",
-      "highlights": ["Thêm nút làm đề ngay cạnh bài “Đề Thi FE” trên FuOverflow"],
+      "highlights": [
+        "Thêm nút làm đề ngay cạnh bài “Đề Thi FE” trên FuOverflow"
+      ],
       "changes": [
-        { "type": "new", "text": "Thêm nút “Làm đề thi trên fepass.top” cạnh các bài có nhãn Đề Thi FE trên FuOverflow" },
-        { "type": "new", "text": "Bấm nút là mở FEPass và hiện hộp xác nhận lấy đề; chỉ trừ credit khi bạn bấm xác nhận" }
+        {
+          "type": "new",
+          "text": "Thêm nút “Làm đề thi trên fepass.top” cạnh các bài có nhãn Đề Thi FE trên FuOverflow"
+        },
+        {
+          "type": "new",
+          "text": "Bấm nút là mở FEPass và hỏi xác nhận trước khi lấy đề; chỉ trừ credit khi bạn đồng ý"
+        }
       ]
     }
   ]
