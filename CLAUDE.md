@@ -16,6 +16,7 @@ Web app for FPT University students to practise FE exams: import exams from FuOv
 5. Never put secrets, IPs, credentials, internal limits or infra details in committed files, changelog or UI text.
 6. Before saying a change is done, run the checks in the `verify-changes` skill and report honestly what was and was not verified (the project has no automated tests yet).
 7. Reuse before writing: check `frontend/src/shared` and `backend/src/utils|middlewares` first (see `fepass-conventions`).
+8. Frontend and backend ship separately: keep API changes additive (see `architecture-rules`).
 
 ## Skills in `.claude/skills`
 
@@ -25,6 +26,7 @@ Web app for FPT University students to practise FE exams: import exams from FuOv
 | `verify-changes` | before reporting done: type-check, build, how to test backend/frontend |
 | `prisma-migration` | schema or migration changes |
 | `fepass-conventions` | writing backend/frontend code, folders, shared components, UI copy |
+| `architecture-rules` | new module/endpoint/feature folder, changes across layers, API shape changes, AI/external calls, money flows |
 | `changelog-entry` | a user-visible feature ships |
 | `deploy-checklist` | the user asks to deploy or import data on the VPS |
 
