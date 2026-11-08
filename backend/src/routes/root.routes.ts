@@ -17,6 +17,7 @@ import giftCodeRouter from "./gift-code.routes";
 import offersPublicRouter from "./offers-public.routes";
 import peRouter from "./pe.routes";
 import { referralPublicRouter, referralRouter } from "./referral.routes";
+import subjectRouter from "./subject.routes";
 import userRouter from "./user.routes";
 
 const rootRouter = Router();
@@ -40,6 +41,7 @@ rootRouter.use("/public/referrals", referralPublicRouter);
 rootRouter.use("/public/offers", offersPublicRouter);
 rootRouter.use("/pe", peRouter);
 rootRouter.use("/chat", chatRouter);
+rootRouter.use("/subjects", subjectRouter);
 rootRouter.use("/attempts", attemptRouter);
 rootRouter.use("/review", reviewRouter);
 rootRouter.use("/study", studyRouter);
