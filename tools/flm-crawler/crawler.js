@@ -58,17 +58,7 @@ async function crawlOne(code) {
     if (e.message === "NOT_DETAIL_PAGE") throw new Error("Trang chi tiết syllabus không đúng định dạng (có thể FLM đã đổi giao diện)");
     throw e;
   }
-  return {
-    code,
-    status: "ok",
-    syllabusId: search.best.syllabusId,
-    decision: search.best.decision,
-    // các syllabus khác cùng mã (bản cũ) và mã gần giống bị bỏ qua, ghi lại để biết
-    otherSyllabusIds: search.exact.slice(1).map((r) => r.syllabusId),
-    ignoredSimilarCodes: search.others,
-    ...detail,
-    crawledAt: Date.now(),
-  };
+  return { code, status: "ok", syllabusId: search.best.syllabusId, subjectName: detail.subjectName, chapters: detail.chapters, crawledAt: Date.now() };
 }
 
 function render() {
@@ -94,9 +84,9 @@ function render() {
       small.textContent = note;
       statusCell.appendChild(small);
     }
-    cell(r && r.status === "ok" ? r.syllabusName : "");
+    cell(r && r.status === "ok" ? r.subjectName : "");
     cell(r && r.status === "ok" ? String(r.chapters.length) : "", "num");
-    cell(r && r.status === "ok" ? String(r.sessions.length) : "", "num");
+    cell(r && r.status === "ok" ? String(r.chapters.reduce((n, ch) => n + ch.topics.length, 0)) : "", "num");
     tbody.appendChild(tr);
   }
   const done = Object.values(results).filter((r) => r.status === "ok").length;

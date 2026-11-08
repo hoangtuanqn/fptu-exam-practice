@@ -64,7 +64,7 @@
     const open = (number, title) => {
       let c = number != null ? byNum(number) : null;
       if (!c) {
-        c = { number, title: clean(title), sessions: [], topics: [] };
+        c = { number, title: clean(title), topics: [] };
         chapters.push(c);
       }
       return c;
@@ -79,13 +79,19 @@
         else if (sub && byNum(Number(sub[1]))) cur = byNum(Number(sub[1]));
         else if (sub) cur = open(Number(sub[1]), "");
         else if (!cur) cur = open(null, "Khác");
-        if (!cur.sessions.includes(s.no)) cur.sessions.push(s.no);
-        cur.topics.push(line);
+        if (!cur.topics.includes(line)) cur.topics.push(line); // nhiều buổi lặp lại “Chapter 2 Problems”: chỉ giữ một
       }
+    }
+    // Chỉ giữ các mục nội dung có đánh số ("1.1 ...", "2.3. ..."); bỏ dòng tên chương, "Chapter N Problems", bài Lab, Review, Progress Test.
+    // Chương nào không có mục đánh số thì giữ các dòng còn lại (trừ dòng tên chương) để không bị trống.
+    for (const c of chapters) {
+      const numbered = c.topics.filter((t) => /^\d+\.\d+/.test(t));
+      c.topics = numbered.length ? numbered : c.topics.filter((t) => !CHAPTER_HEAD.test(t) && !CHAPTER_REF.test(t));
     }
     return chapters;
   }
 
+  // Chỉ lấy phần cần dùng: mã môn, tên môn, và các chương kèm chủ đề (suy ra từ cột Topic của lịch học)
   function parseDetail(doc) {
     const info = {};
     const infoTable = doc.querySelector("#table-detail");
@@ -94,31 +100,13 @@
       const td = tr.querySelectorAll("td");
       if (td.length >= 2) info[text(td[0]).replace(/:$/, "")] = lines(td[1]).join("\n");
     });
-
     const sessions = tableRows(doc.querySelector("#gvSchedule")).map((r) => ({
-      no: clean(r["Session"]),
       topicLines: (r["Topic"] || "").split("\n").map(clean).filter(Boolean),
-      type: clean(r["Learning-Teaching Type"]),
-      lo: clean(r["LO"]),
-      itu: clean(r["ITU"]),
-      materials: (r["Student Materials"] || "").split("\n").map(clean).filter(Boolean),
-      tasks: (r["Student's Tasks"] || "").split("\n").map(clean).filter(Boolean),
     }));
-
     return {
-      syllabusId: info["Syllabus ID"] || "",
       subjectCode: info["Subject Code"] || "",
-      syllabusName: info["Syllabus Name"] || "",
-      courseNameEn: info["Course Name English"] || "",
-      credits: info["NoCredit"] || "",
-      prerequisite: info["Pre-Requisite"] || "",
-      description: info["Description"] || "",
-      info,
-      clos: tableRows(doc.querySelector("#gvLO")).map((r) => ({ name: clean(r["CLO Name"]), details: clean(r["CLO Details"]) })),
+      subjectName: info["Course Name English"] || info["Syllabus Name"] || "",
       chapters: deriveChapters(sessions),
-      sessions,
-      assessments: tableRows(doc.querySelector("#gvAssessment")),
-      materials: tableRows(doc.querySelector("#gvMaterial")),
     };
   }
 
