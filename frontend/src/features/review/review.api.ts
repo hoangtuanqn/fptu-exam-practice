@@ -81,7 +81,15 @@ export const reviewApi = {
   remove: (id: number) => http.delete(`/review/${id}`),
 };
 
+export interface ReminderSettings {
+  enabled: boolean;
+  examDate: string | null; // YYYY-MM-DD
+  emailVerified: boolean;
+}
+
 export const studyApi = {
+  reminder: () => http.get<ReminderSettings>("/study/reminder"),
+  setReminder: (enabled: boolean, examDate: string | null) => http.put<ReminderSettings>("/study/reminder", { enabled, examDate }),
   stats: () => http.get<StudyStats>("/study/stats"),
   topics: () => http.get<TopicReportData>("/study/topics"),
   setGoal: (days: number) => http.put<StudyStats>("/study/goal", { days }),

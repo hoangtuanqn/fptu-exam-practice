@@ -2,6 +2,7 @@ import path from "node:path";
 import { env } from "../configs/env";
 import { isMailConfigured, mailer, mailFrom } from "../configs/mailer";
 import { MAIL_ASSETS_DIR, MAIL_BRAND, MAIL_IMAGES } from "../constants/mail";
+import { renderReminderEmail, type ReminderEmailInput } from "../mail/templates/study-reminder";
 import { renderResetPasswordEmail } from "../mail/templates/reset-password";
 import { renderVerifyEmail } from "../mail/templates/verify-email";
 import {
@@ -41,7 +42,7 @@ interface Rendered {
 }
 
 // Gửi một thư đã dựng sẵn. Ném lỗi nếu chưa cấu hình SMTP hoặc gửi thất bại (nơi gọi quyết định xử lý)
-const send = async (to: string, subject: string, { html, text }: Rendered) => {
+const send = async (to: string, subject: string, { html, text }: Rendered, headers?: Record<string, string>) => {
   if (!isMailConfigured) throw new Error("Chưa cấu hình SMTP (SMTP_USER, SMTP_PASS)");
   await mailer.sendMail({
     from: mailFrom,
@@ -49,6 +50,7 @@ const send = async (to: string, subject: string, { html, text }: Rendered) => {
     subject,
     html,
     text,
+    ...(headers && { headers }),
     // Ảnh bìa + logo nhúng thẳng vào thư (cid) nên hiển thị cả khi chạy local, không cần ảnh trên internet
     attachments: Object.values(MAIL_IMAGES).map(({ file, cid }) => ({ filename: file, path: path.join(MAIL_ASSETS_DIR, file), cid })),
   });
@@ -90,6 +92,10 @@ export const mailService = {
 
   sendReferralReward: (to: string, input: ReferralEmailInput) =>
     send(to, `${tag} ${input.kind === "commission" ? "Hoa hồng giới thiệu" : "Thưởng giới thiệu"} +${credit(input.amount)}`, renderReferralEmail(input)),
+
+  // Thư nhắc ôn: có header List-Unsubscribe để Gmail/Outlook hiện nút hủy đăng ký (giảm nguy cơ bị đánh dấu spam)
+  sendReviewReminder: (to: string, input: ReminderEmailInput) =>
+    send(to, `${tag} Hôm nay có ${input.due} câu cần ôn`, renderReminderEmail(input), { "List-Unsubscribe": `<${input.unsubscribeLink}>` }),
 
   sendWelcome: (to: string, input: WelcomeEmailInput) =>
     send(to, `${tag} Chào mừng bạn, tài khoản đã sẵn sàng`, renderWelcomeEmail(input)),
