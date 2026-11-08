@@ -13,6 +13,7 @@ import NotFoundPage from "./NotFoundPage";
 import { ADMIN_NAV, adminRoutes } from "@/features/admin/admin.routes";
 import { GuestSync } from "@/features/guest-sync/GuestSync";
 import { DailyCheckInPopup } from "@/features/check-in/DailyCheckInPopup";
+import { WhatsNewDialog } from "@/features/changelog/WhatsNewDialog";
 import PracticePage from "@/features/practice/PracticePage";
 
 // "/" và "/exam/:threadId" dùng chung một thể hiện của trang để đổi địa chỉ không làm mất bài đang làm
@@ -37,6 +38,7 @@ const ReferralPage = lazy(() => import("@/features/account/pages/ReferralPage"))
 const GiftCodePage = lazy(() => import("@/features/account/pages/GiftCodePage"));
 const PeDownloadPage = lazy(() => import("@/features/pe/PeDownloadPage"));
 const FeaturesPage = lazy(() => import("@/features/landing/FeaturesPage"));
+const ChangelogPage = lazy(() => import("@/features/changelog/ChangelogPage"));
 const PlanPage = lazy(() => import("@/features/plan/PlanPage"));
 const ProfilePage = lazy(() => import("@/features/account/pages/ProfilePage"));
 
@@ -62,6 +64,7 @@ export default function App() {
       <PageMeta />
       <GuestSync />
       <DailyCheckInPopup />
+      <WhatsNewDialog />
       <ChatWidget />
       <Routes>
         <Route path="/" element={<PracticeRoute />} />
@@ -70,6 +73,8 @@ export default function App() {
 
         {/* Bảng tính năng của hệ thống (để giới thiệu/chụp màn hình): công khai */}
         <Route path="/features" element={<FeaturesPage />} />
+        {/* Lịch sử thay đổi (Có gì mới) của web và tiện ích Chrome: công khai */}
+        <Route path="/changelog" element={<ChangelogPage />} />
 
         {/* Trang bán gói Pro: công khai, khách bấm mua sẽ được dẫn đi đăng nhập */}
         <Route path="/pro" element={<PlanPage />} />

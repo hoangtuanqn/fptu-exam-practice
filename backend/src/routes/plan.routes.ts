@@ -6,7 +6,7 @@ import { idempotent } from "../middlewares/idempotency.middlewares";
 import { ResponseClient } from "../rules/response";
 import { planService } from "../services/plan.service";
 
-const limiter = rateLimit({ windowMs: 60 * 1000, limit: 20, standardHeaders: true, legacyHeaders: false, message: { status: false, message: "Bạn thao tác quá nhanh, vui lòng thử lại sau ít phút" } });
+const limiter = rateLimit({ windowMs: 60 * 1000, limit: 60, standardHeaders: true, legacyHeaders: false, message: { status: false, message: "Bạn thao tác quá nhanh, vui lòng thử lại sau ít phút" } });
 
 const planRouter = Router();
 

@@ -6,6 +6,7 @@ import { useClampPage } from "@/shared/hooks/useClampPage";
 import { useUrlSearch } from "@/shared/hooks/useUrlSearch";
 import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
 import { Badge, type Tone } from "@/shared/ui/Badge";
+import { ExpandableText } from "@/shared/ui/ExpandableText";
 import { Card, PageHeader } from "@/shared/ui/Card";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { inputClass } from "@/shared/ui/Input";
@@ -69,7 +70,7 @@ export default function PurchasesPage() {
                     {d.title}
                   </div>
                   <div className="text-xs text-slate-500">Thread {d.threadId}</div>
-                  {d.error && <div className="max-w-xs truncate text-xs text-rose-600" title={d.error}>{d.error}</div>}
+                  {d.error && <ExpandableText text={d.error} className="max-w-sm text-xs text-rose-600" />}
                 </Td>
                 <Td>
                   <Badge tone={(PE_STATUS[d.status] ?? ["", "neutral"])[1]}>{(PE_STATUS[d.status] ?? [d.status])[0]}</Badge>
