@@ -52,6 +52,7 @@ model User {
   planPurchases      PlanPurchase[]
   reviewItems        ReviewItem[]
   studyDays          StudyDay[]
+  questionAsks       QuestionAsk[]
   referredBy         User?                @relation("Referral", fields: [referredById], references: [id], onDelete: SetNull)
   referrals          User[]               @relation("Referral")
   rewardsAsReferrer  ReferralReward[]     @relation("RewardReferrer")
@@ -676,4 +677,18 @@ model SubjectChapter {
 
   @@unique([subjectId, number])
   @@map("subject_chapters")
+}
+
+// Moi luot hoi AI ve mot cau (de gioi han so luot moi ngay: thuong it, Pro nhieu hon)
+model QuestionAsk {
+  id             Int      @id @default(autoincrement())
+  userId         Int      @map("user_id")
+  examId         Int      @map("exam_id")
+  questionNumber Int      @map("question_number")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("question_asks")
 }

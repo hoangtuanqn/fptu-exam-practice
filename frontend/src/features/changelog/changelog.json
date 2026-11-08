@@ -1,6 +1,20 @@
 {
   "web": [
     {
+      "version": "1.7.0",
+      "date": "2026-11-09",
+      "title": "Hỏi thêm AI về từng câu",
+      "highlights": [
+        "Chưa hiểu lời giải thì hỏi tiếp ngay trên câu đó",
+        "Tải lại trang sau khi nộp bài vẫn giữ nguyên kết quả"
+      ],
+      "changes": [
+        { "type": "new", "text": "Khung giải thích có ô hỏi thêm AI về đúng câu đang xem (gói thường 5 lượt mỗi ngày, Pro 40 lượt)" },
+        { "type": "improve", "text": "Làm bài: chủ đề hiện ngay trên đầu câu, bỏ các thông báo gây xao nhãng, header gọn hơn trên điện thoại" },
+        { "type": "fix", "text": "Tải lại trang sau khi nộp bài không còn tạo lượt làm mới" }
+      ]
+    },
+    {
       "version": "1.6.0",
       "date": "2026-11-08",
       "title": "Điểm mạnh và yếu theo chủ đề",

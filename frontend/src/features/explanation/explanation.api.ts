@@ -33,7 +33,24 @@ export interface UnlockResult {
   balanceAfter: number;
 }
 
+export interface AskTurn {
+  role: "user" | "assistant";
+  content: string;
+}
+export interface AskQuota {
+  limit: number; // số lượt hỏi AI mỗi ngày của gói hiện tại
+  remaining: number;
+  pro: boolean;
+}
+export interface AskResult {
+  reply: string;
+  remaining: number;
+  limit: number;
+}
+
 export const explanationApi = {
+  askQuota: () => http.get<AskQuota>("/explanations/ask/quota"),
+  ask: (examId: number, questionNumber: number, sessionId: number, messages: AskTurn[]) => http.post<AskResult>("/explanations/ask", { examId, questionNumber, sessionId, messages }),
   info: (examId: number) => http.get<ExplanationInfo>(`/explanations/exams/${examId}`),
   explain: (examId: number, questionNumber: number) => http.post<ExplanationResult>("/explanations", { examId, questionNumber }),
   unlock: (examId: number, price: number) => http.post<UnlockResult>("/explanations/unlock", { examId, price }),

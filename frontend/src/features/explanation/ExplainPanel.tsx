@@ -5,12 +5,14 @@ import { useFakeProgress } from "@/shared/hooks/useFakeProgress";
 import { useResizableWidth } from "@/shared/hooks/useResizableWidth";
 import { Button } from "@/shared/ui/Button";
 import { Markdown } from "@/shared/ui/Markdown";
+import { AskBox } from "./AskBox";
 import { explanationApi } from "./explanation.api";
 import { errorMessage } from "@/shared/api/errors";
 
 interface Props {
   examId: number;
   questionNumber: number;
+  sessionId: number | null; // lượt làm bài đang mở (máy chủ dùng để kiểm đã được xem đáp án chưa); chưa có thì không hiện ô hỏi AI
   firstTime: boolean; // vừa trả phí lần đầu: hiện hiệu ứng "AI đang phân tích". Đã mua rồi thì chỉ hiển thị.
   onClose: () => void;
   onBought: () => void; // báo đã mua (để nút đổi sang "xem giải thích")
@@ -33,7 +35,7 @@ const CACHED_WAIT_JITTER_MS = 2000;
  * Lời giải thích AI của một câu, đặt cạnh đề để người học vừa xem đề vừa đọc lời giải:
  * màn hình rộng là cột bên phải, màn hình hẹp là tấm trượt từ dưới lên (đề vẫn thấy phía trên).
  */
-export function ExplainPanel({ examId, questionNumber, firstTime, onClose, onBought }: Props) {
+export function ExplainPanel({ examId, questionNumber, sessionId, firstTime, onClose, onBought }: Props) {
   const { refresh } = useAuth();
   const [phase, setPhase] = useState<Phase>("loading");
   const [content, setContent] = useState("");
@@ -142,6 +144,7 @@ export function ExplainPanel({ examId, questionNumber, firstTime, onClose, onBou
         )}
 
         {phase === "done" && <Markdown>{content}</Markdown>}
+        {phase === "done" && sessionId !== null && <AskBox examId={examId} questionNumber={questionNumber} sessionId={sessionId} />}
       </div>
 
       {phase === "done" && (

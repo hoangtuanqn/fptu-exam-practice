@@ -385,6 +385,7 @@ function Benefits({ plan, fetchPrice }: { plan: PlanInfo; fetchPrice: number }) 
     plan.benefits.freeExplain && { icon: Sparkles, title: "Giải thích AI mọi câu", text: "Bấm xem lời giải của bất kỳ câu nào, không cần mở khóa từng đề.", was: "trả theo câu" },
     plan.benefits.freePe && { icon: Download, title: "Tải đề PE miễn phí", text: "Tải trọn bộ tài nguyên đề PE (file zip), không giới hạn số lần tải.", was: "trả mỗi lần" },
     plan.benefits.topicReport && { icon: Target, title: "Báo cáo điểm yếu theo chủ đề", text: "Biết chính xác mình yếu chủ đề nào của môn, và luyện đúng phần đó. Gói thường chỉ thấy chủ đề yếu nhất.", was: "1 chủ đề" },
+    plan.benefits.askMore && { icon: MessageCircleQuestion, title: "Hỏi thêm AI về từng câu", text: "Chưa hiểu lời giải thì hỏi tiếp ngay trên câu đó. Pro có 40 lượt mỗi ngày, gói thường 5 lượt.", was: "5 lượt/ngày" },
     plan.benefits.unlimitedReview && { icon: NotebookPen, title: "Sổ câu sai không giới hạn", text: "Mọi câu sai đều được lưu và nhắc ôn lại đúng lịch. Gói thường lưu tối đa 50 câu.", was: "50 câu" },
   ].filter(Boolean) as { icon: typeof Link2; title: string; text: string; was: string | null }[];
   return (

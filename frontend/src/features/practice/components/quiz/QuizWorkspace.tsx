@@ -105,6 +105,7 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit }: Props)
           key={question.number}
           examId={quiz.examId}
           questionNumber={question.number}
+          sessionId={quiz.sessionId}
           firstTime={panel!.firstTime}
           onClose={() => setPanel(null)}
           onBought={() => {

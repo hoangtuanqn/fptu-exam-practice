@@ -13,5 +13,6 @@ export const PRO_BENEFITS = {
   freeExplain: true, // xem giải thích AI mọi câu không bị trừ phí
   freePe: true, // tải bộ tài nguyên đề PE không bị trừ phí
   topicReport: true, // báo cáo điểm mạnh/yếu đầy đủ theo chủ đề và luyện đúng phần yếu (gói thường chỉ thấy chủ đề yếu nhất)
+  askMore: true, // hỏi thêm AI về từng câu: Pro nhiều lượt mỗi ngày hơn (ASK_PRO_PER_DAY so với ASK_FREE_PER_DAY)
   unlimitedReview: true, // Sổ câu sai không giới hạn số câu (gói thường tối đa REVIEW_FREE_LIMIT)
 } as const;
