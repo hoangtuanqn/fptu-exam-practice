@@ -8,8 +8,8 @@ import { userApi } from "@/features/account/api/user.api";
 import { TransactionTable } from "@/features/account/components/TransactionTable";
 import { useAuth } from "@/features/auth/AuthContext";
 import { ResumeList } from "@/features/practice-session/ResumeList";
-import { useOnLibraryChanged } from "@/features/exam-library/libraryEvents";
-import { examLibraryApi } from "@/features/exam-library/exam-library.api";
+import { useOnLibraryChanged } from "@/features/exam-store/libraryEvents";
+import { examLibraryApi } from "@/features/exam-store/exam-library.api";
 import { historyApi } from "@/features/history/history.api";
 import { PASS_SCORE } from "@/features/practice/config/scoring";
 import { formatScore } from "@/features/practice/utils/format";
@@ -17,7 +17,8 @@ import { useApi } from "@/shared/hooks/useApi";
 import { Badge } from "@/shared/ui/Badge";
 import { buttonClass } from "@/shared/ui/Button";
 import { Card, CardHeader } from "@/shared/ui/Card";
-import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
+import { Empty } from "@/shared/ui/Feedback";
+import { QueryBoundary } from "@/shared/ui/QueryBoundary";
 import { formatDateTime } from "@/shared/utils/formatters";
 
 const seeAll = (to: string, label = "Xem tất cả") => (
@@ -44,7 +45,7 @@ function TransactionList() {
   const tx = useApi(() => userApi.transactions(1, 5), []);
   return (
     <div className="border-t border-outline-variant">
-      {tx.loading && !tx.data ? <Loading /> : tx.error ? <ErrorBox message={tx.error} onRetry={tx.reload} /> : tx.data && <TransactionTable items={tx.data.items} />}
+      <QueryBoundary query={tx}>{(d) => <TransactionTable items={d.items} />}</QueryBoundary>
       <div className="border-t border-outline-variant px-5 py-3 text-right">{seeAll("/account/transactions")}</div>
     </div>
   );
@@ -101,31 +102,31 @@ export default function OverviewPage() {
 
       <Card>
         <CardHeader title="Bài làm gần đây" action={seeAll("/account/attempts")} />
-        {attempts.loading && !attempts.data ? (
-          <Loading />
-        ) : attempts.error ? (
-          <ErrorBox message={attempts.error} onRetry={attempts.reload} />
-        ) : recent.length === 0 ? (
-          <Empty icon={ClipboardCheck} title="Chưa có bài làm nào">
-            Lấy một đề ở trang chủ hoặc trong Kho đề rồi nộp bài, kết quả sẽ hiện ở đây.
-          </Empty>
-        ) : (
-          <ul className="divide-y divide-outline-variant">
-            {recent.slice(0, 5).map((a) => (
-              <li key={a.id}>
-                <Link to={`/account/attempts/${a.id}`} className="md-state flex items-center gap-3 px-5 py-3">
-                  <div className="min-w-0 flex-1">
-                    <div className="md-title-small truncate text-on-surface">{a.exam.title}</div>
-                    <div className="md-body-small mt-0.5 text-on-surface-variant">
-                      {a.mode === "EXAM" ? "Thi" : "Luyện tập"} · {formatDateTime(a.createdAt)} · {a.correct}/{a.totalGraded}
-                    </div>
-                  </div>
-                  <Badge tone={a.score >= PASS_SCORE ? "success" : "danger"}>{formatScore(a.score)}</Badge>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
+        <QueryBoundary query={attempts}>
+          {() =>
+            recent.length === 0 ? (
+              <Empty icon={ClipboardCheck} title="Chưa có bài làm nào">
+                Lấy một đề ở trang chủ hoặc trong Kho đề rồi nộp bài, kết quả sẽ hiện ở đây.
+              </Empty>
+            ) : (
+              <ul className="divide-y divide-outline-variant">
+                {recent.slice(0, 5).map((a) => (
+                  <li key={a.id}>
+                    <Link to={`/account/attempts/${a.id}`} className="md-state flex items-center gap-3 px-5 py-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="md-title-small truncate text-on-surface">{a.exam.title}</div>
+                        <div className="md-body-small mt-0.5 text-on-surface-variant">
+                          {a.mode === "EXAM" ? "Thi" : "Luyện tập"} · {formatDateTime(a.createdAt)} · {a.correct}/{a.totalGraded}
+                        </div>
+                      </div>
+                      <Badge tone={a.score >= PASS_SCORE ? "success" : "danger"}>{formatScore(a.score)}</Badge>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )
+          }
+        </QueryBoundary>
       </Card>
 
       <RecentTransactions />

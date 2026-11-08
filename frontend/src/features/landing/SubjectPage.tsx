@@ -6,14 +6,14 @@ import { SiteHeader } from "@/shared/layout/SiteHeader";
 import { useApi } from "@/shared/hooks/useApi";
 import { buttonClass } from "@/shared/ui/Button";
 import { Loading } from "@/shared/ui/Feedback";
-import { chapterSetApi } from "@/features/chapter-set/chapter-set.api";
+import { subjectApi } from "@/features/subject/subject.api";
 import NotFoundPage from "@/app/NotFoundPage";
 
 // Trang giới thiệu một môn (SEO): /mon/pro192. Nội dung chính (tên, mô tả) có sẵn trong HTML lúc build; số đề và các chương lấy từ máy chủ khi mở trang.
 export default function SubjectPage() {
   const { code = "" } = useParams();
   const subject = SUBJECTS.find((s) => s.code.toLowerCase() === code.toLowerCase());
-  const info = useApi(() => (subject ? chapterSetApi.info(subject.code) : Promise.reject(new Error("no subject"))), [subject?.code]);
+  const info = useApi(() => (subject ? subjectApi.info(subject.code) : Promise.reject(new Error("no subject"))), [subject?.code]);
   if (!subject) return <NotFoundPage />;
   const d = info.data;
 

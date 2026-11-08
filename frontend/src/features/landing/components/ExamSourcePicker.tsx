@@ -1,6 +1,6 @@
 import { useRef, useState, type KeyboardEvent } from "react";
 import { FolderOpen, Link2 } from "lucide-react";
-import { MyExams } from "@/features/exam-library/MyExams";
+import { MyExams } from "@/features/exam-store/MyExams";
 import type { PickFolder } from "@/features/practice/components/FolderInput";
 import { LinkImport } from "@/features/exam-import/components/LinkImport";
 import type { ImportedExam } from "@/features/exam-import/types";
