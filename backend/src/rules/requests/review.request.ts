@@ -2,7 +2,11 @@ import { z } from "zod";
 import { STUDY_GOAL_CHOICES } from "../../constants/review";
 import { paginationQuery } from "../../utils/pagination";
 
-export const reviewQueueQuery = z.object({ all: z.enum(["0", "1"]).default("0") });
+export const reviewQueueQuery = z.object({
+  all: z.enum(["0", "1"]).default("0"),
+  subject: z.string().max(20).optional(), // có cả subject và topic = ôn riêng một chủ đề (Pro)
+  topic: z.string().max(255).optional(),
+});
 export const reviewListQuery = paginationQuery.extend({ status: z.enum(["active", "mastered"]).default("active") });
 export const reviewAnswerBody = z.object({ chosen: z.array(z.string().regex(/^[A-Z]$/)).max(8) });
 export const studyGoalBody = z.object({
