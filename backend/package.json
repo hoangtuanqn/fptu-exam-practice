@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate deploy",
-    "seed": "tsx src/seeders/admin.seeder.ts"
+    "seed": "tsx src/seeders/admin.seeder.ts",
+    "import:syllabus": "tsx scripts/import-syllabus.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.4.0",
