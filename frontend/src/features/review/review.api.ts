@@ -81,7 +81,20 @@ export const reviewApi = {
   remove: (id: number) => http.delete(`/review/${id}`),
 };
 
+export interface SubjectReadiness {
+  code: string;
+  level: "insufficient" | "needs-work" | "fair" | "ready";
+  attempts: number;
+  needed: number; // còn thiếu bao nhiêu bài thi thử để kết luận
+  average: number | null;
+  spread: number | null;
+  trend: "up" | "down" | "flat" | null;
+  weakTopics: number;
+  lastAt: string;
+}
+
 export const studyApi = {
+  readiness: () => http.get<SubjectReadiness[]>("/study/readiness"),
   stats: () => http.get<StudyStats>("/study/stats"),
   topics: () => http.get<TopicReportData>("/study/topics"),
   setGoal: (days: number) => http.put<StudyStats>("/study/goal", { days }),
