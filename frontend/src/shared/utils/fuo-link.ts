@@ -2,6 +2,9 @@
 // để báo lỗi tức thì khi người dùng gõ/dán, khỏi phải bấm "Lấy đề" mới biết. Backend vẫn kiểm tra lại.
 export const FUO_HOST = "fuoverflow.com";
 
+// Link thread từ mã bài: dùng khi chọn đề trong danh sách (Kho đề, tải đề PE...) thay vì tự ghép chuỗi ở từng nơi
+export const fuoThreadUrl = (threadId: string) => `https://${FUO_HOST}/threads/${threadId}/`;
+
 export type FuoLinkCheck = { ok: true; threadId: string } | { ok: false; message: string };
 
 export function checkFuoLink(raw: string): FuoLinkCheck {
