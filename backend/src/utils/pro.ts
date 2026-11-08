@@ -7,4 +7,7 @@ export const isProUser = (user: unknown) => !!user && isProUntil((user as { proE
 // Pro và quyền lợi Sổ câu sai không giới hạn đang bật
 export const hasUnlimitedReview = (user: unknown) => PRO_BENEFITS.unlimitedReview && isProUser(user);
 
+// Pro và quyền lợi báo cáo chủ đề đang bật
+export const hasTopicReport = (user: unknown) => PRO_BENEFITS.topicReport && isProUser(user);
+
 export const isProUntil = (proExpiresAt: Date | null | undefined, now = new Date()) => !!proExpiresAt && proExpiresAt.getTime() > now.getTime();

@@ -13,6 +13,7 @@ import { Pagination } from "@/shared/ui/Table";
 import { Segmented } from "@/shared/ui/Segmented";
 import { boxLabel, dueText, reviewApi, type ReviewRow } from "./review.api";
 import { StudyStreakCard } from "./StudyStreakCard";
+import { TopicReport } from "./TopicReport";
 
 type Status = "active" | "mastered";
 
@@ -99,6 +100,8 @@ export default function ReviewPage() {
       )}
 
       <StudyStreakCard />
+
+      <TopicReport />
 
       <Card>
         <CardHeader

@@ -58,9 +58,24 @@ export interface StudyStats {
   goalMet: boolean;
 }
 
+export interface TopicStat {
+  topic: string;
+  answered: number;
+  correct: number;
+  rate: number; // 0..1
+  enough: boolean; // đủ số câu để đánh giá
+}
+export interface TopicReportData {
+  minSample: number;
+  weakest: (TopicStat & { subject: string }) | null; // chủ đề yếu nhất (gói thường chỉ thấy cái này)
+  totalTopics: number;
+  locked: boolean; // gói thường: chưa xem được toàn bộ
+  subjects: { code: string; topics: TopicStat[] }[]; // rỗng khi locked
+}
+
 export const reviewApi = {
   summary: () => http.get<ReviewSummary>("/review/summary"),
-  queue: (all = false) => http.get<ReviewQuestion[]>("/review/queue", { all: all ? "1" : "0" }),
+  queue: (all = false, byTopic?: { subject: string; topic: string }) => http.get<ReviewQuestion[]>("/review/queue", { all: all ? "1" : "0", ...byTopic }),
   list: (page = 1, status: "active" | "mastered" = "active", limit = PAGE_SIZE) => http.list<ReviewRow>("/review", { page, limit, status }),
   answer: (id: number, chosen: string[]) => http.post<ReviewAnswerResult>(`/review/${id}/answer`, { chosen }),
   remove: (id: number) => http.delete(`/review/${id}`),
@@ -68,6 +83,7 @@ export const reviewApi = {
 
 export const studyApi = {
   stats: () => http.get<StudyStats>("/study/stats"),
+  topics: () => http.get<TopicReportData>("/study/topics"),
   setGoal: (days: number) => http.put<StudyStats>("/study/goal", { days }),
 };
 

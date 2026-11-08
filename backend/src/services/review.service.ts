@@ -4,6 +4,7 @@ import { REVIEW_FREE_LIMIT, REVIEW_SESSION_SIZE } from "../constants/review";
 import { AppError } from "../rules/error";
 import { fileUrlOf } from "../utils/file-url";
 import { toMeta, toSkipTake, type PaginationQuery } from "../utils/pagination";
+import { subjectCodeFromTitle } from "../utils/subject-code";
 import { afterCorrect, afterWrong, doubtfulStart, sameAnswers } from "../utils/review-schedule";
 import type { GradedQuestion } from "./grading.service";
 import { studyService } from "./study.service";
@@ -15,10 +16,10 @@ const answersOf = (answer: string) => answer.split(/\s+/).filter(Boolean);
 
 // Lấy ảnh và đáp án hiện tại của các câu (đáp án có thể đã được sửa sau lúc làm sai nên luôn lấy bản mới nhất)
 async function questionsOf(items: { examId: number; questionNumber: number }[]) {
-  if (items.length === 0) return new Map<string, { imagePath: string; answer: string }>();
+  if (items.length === 0) return new Map<string, { imagePath: string; answer: string; topic: string | null }>();
   const rows = await prisma.examQuestion.findMany({
     where: { isReference: false, OR: items.map((i) => ({ examId: i.examId, number: i.questionNumber })) },
-    select: { examId: true, number: true, imagePath: true, answer: true },
+    select: { examId: true, number: true, imagePath: true, answer: true, topic: true },
   });
   return new Map(rows.map((q) => [`${q.examId}:${q.number}`, q]));
 }
@@ -105,15 +106,18 @@ export const reviewService = {
   },
 
   /** Các câu để ôn trong một lượt: mặc định chỉ câu đến hạn (quá hạn lâu nhất trước); `all` = ôn thêm cả câu chưa đến hạn */
-  async queue(userId: number, all: boolean, limit = REVIEW_SESSION_SIZE) {
+  async queue(userId: number, all: boolean, limit = REVIEW_SESSION_SIZE, byTopic?: { subject: string; topic: string }) {
     const now = new Date();
-    const rows = await prisma.reviewItem.findMany({
+    const found = await prisma.reviewItem.findMany({
       where: { userId, mastered: false, exam: USABLE_EXAM, ...(all ? {} : { nextReviewAt: { lte: now } }) },
       orderBy: [{ nextReviewAt: "asc" }, { id: "asc" }],
-      take: limit,
+      take: byTopic ? 300 : limit, // lọc theo chủ đề thì lấy rộng rồi lọc, vì chủ đề nằm ở bảng câu hỏi
       include: { exam: { select: { title: true, threadId: true } } },
     });
-    const qs = await questionsOf(rows);
+    const qs = await questionsOf(found);
+    const rows = byTopic
+      ? found.filter((r) => subjectCodeFromTitle(r.exam.title) === byTopic.subject && qs.get(`${r.examId}:${r.questionNumber}`)?.topic === byTopic.topic).slice(0, limit)
+      : found;
     return rows.flatMap((r) => {
       const q = qs.get(`${r.examId}:${r.questionNumber}`);
       if (!q) return []; // câu đã bị xoá hoặc chuyển thành tài liệu tham khảo
