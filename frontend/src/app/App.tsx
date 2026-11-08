@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Route, Routes, useParams } from "react-router-dom";
-import { Flame, Layers, Library, NotebookPen, Download, BookOpen, Gift, History, MessageSquareWarning, UserPlus, ListChecks, LayoutDashboard, UserRound, Wallet } from "lucide-react";
+import { Crown, Flame, Layers, Library, NotebookPen, Download, BookOpen, Gift, History, MessageSquareWarning, UserPlus, ListChecks, LayoutDashboard, UserRound, Wallet } from "lucide-react";
 import { PanelLayout, type NavItem } from "@/shared/layout/PanelLayout";
 import { Loading } from "@/shared/ui/Feedback";
 import LoginPage from "@/features/auth/pages/LoginPage";
@@ -51,21 +51,23 @@ const ProfilePage = lazy(() => import("@/features/account/pages/ProfilePage"));
 const AttemptsPage = lazy(() => import("@/features/history/pages/AttemptsPage"));
 const AttemptDetailPage = lazy(() => import("@/features/history/pages/AttemptDetailPage"));
 
+// Thanh bên của người dùng, xếp theo việc người học làm: tìm và làm đề -> ôn tập -> xem kết quả -> ví và Pro -> hồ sơ
 const ACCOUNT_NAV: NavItem[] = [
-  { to: "/account", label: "Tổng quan", icon: LayoutDashboard, end: true, group: "Chung" },
-  { to: "/account/exams", label: "Kho đề của tôi", icon: BookOpen, group: "Học tập" },
-  { to: "/account/catalog", label: "Thư viện đề", icon: Library, group: "Học tập" },
-  { to: "/account/frequent", label: "Câu hay ra", icon: Flame, group: "Học tập" },
-  { to: "/account/chapters", label: "Bộ đề theo chương", icon: Layers, group: "Học tập" },
-  { to: "/account/review", label: "Sổ câu sai", icon: NotebookPen, group: "Học tập" },
-  { to: "/account/pe", label: "Tải đề thi PE", icon: Download, group: "Học tập" },
-  { to: "/account/reports", label: "Báo cáo đáp án", icon: MessageSquareWarning, group: "Học tập" },
-  { to: "/account/attempts", label: "Lịch sử làm bài", icon: ListChecks, group: "Học tập" },
-  { to: "/account/deposit", label: "Nạp credit", icon: Wallet, group: "Ví" },
-  { to: "/account/referral", label: "Giới thiệu bạn bè", icon: UserPlus, group: "Ví" },
-  { to: "/account/giftcode", label: "Giftcode", icon: Gift, group: "Ví" },
-  { to: "/account/transactions", label: "Lịch sử giao dịch", icon: History, group: "Ví" },
-  { to: "/account/profile", label: "Hồ sơ", icon: UserRound, group: "Cài đặt" },
+  { to: "/account", label: "Tổng quan", icon: LayoutDashboard, end: true },
+  { to: "/account/catalog", label: "Thư viện đề", icon: Library, group: "Luyện đề" },
+  { to: "/account/exams", label: "Kho đề của tôi", icon: BookOpen, group: "Luyện đề" },
+  { to: "/account/chapters", label: "Bộ đề theo chương", icon: Layers, group: "Luyện đề" },
+  { to: "/account/pe", label: "Tải đề thi PE", icon: Download, group: "Luyện đề" },
+  { to: "/account/review", label: "Sổ câu sai", icon: NotebookPen, group: "Ôn tập" },
+  { to: "/account/frequent", label: "Câu hay ra", icon: Flame, group: "Ôn tập" },
+  { to: "/account/attempts", label: "Lịch sử làm bài", icon: ListChecks, group: "Kết quả" },
+  { to: "/account/reports", label: "Báo cáo đáp án", icon: MessageSquareWarning, group: "Kết quả" },
+  { to: "/pro", label: "Gói Pro", icon: Crown, group: "Ví và Pro" },
+  { to: "/account/deposit", label: "Nạp credit", icon: Wallet, group: "Ví và Pro" },
+  { to: "/account/transactions", label: "Lịch sử giao dịch", icon: History, group: "Ví và Pro" },
+  { to: "/account/giftcode", label: "Giftcode", icon: Gift, group: "Ví và Pro" },
+  { to: "/account/referral", label: "Giới thiệu bạn bè", icon: UserPlus, group: "Ví và Pro" },
+  { to: "/account/profile", label: "Hồ sơ", icon: UserRound, group: "Tài khoản" },
 ];
 
 export default function App() {
