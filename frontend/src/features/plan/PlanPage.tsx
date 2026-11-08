@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, BadgeCheck, CalendarClock, Check, ChevronDown, Crown, Download, Link2, ShieldCheck, Sparkles, Wallet } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
+import { useToast } from "@/shared/context/ToastContext";
 import { examImportApi } from "@/features/exam-import/exam-import.api";
 import { VerifyEmailNotice } from "@/features/verify-email/VerifyEmailNotice";
 import { brand, logos } from "@/shared/brand/brand";
@@ -30,6 +31,7 @@ const FAQ: [string, string][] = [
 export default function PlanPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const toast = useToast();
   const info = useApi(() => planApi.info(), []);
   const fetchPrice = useApi(() => examImportApi.price(), []).data?.price ?? 0;
   const [open, setOpen] = useState(false);
@@ -37,10 +39,15 @@ export default function PlanPage() {
   const pro = isPro(user);
   const unverified = !!user && !user.emailVerifiedAt;
   const plan = info.data;
+  // Chữ nút theo ngữ cảnh: khách được báo trước sẽ phải đăng nhập (đỡ bất ngờ), người đang là Pro thấy "Gia hạn"
+  const label = !user ? "Đăng nhập để nâng cấp Pro" : pro ? "Gia hạn Pro" : "Nâng cấp Pro ngay";
 
   const cta = () => {
     if (!user) return navigate("/login", { state: { from: "/pro" } });
-    if (unverified) return document.getElementById("pro-verify")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (unverified) {
+      toast.error("Hãy xác minh email trước khi nâng cấp Pro. Mình đã đưa bạn tới mục xác minh bên dưới.");
+      return document.getElementById("pro-verify")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
     setOpen(true);
   };
 
@@ -62,7 +69,7 @@ export default function PlanPage() {
           </div>
         ) : (
           <>
-            <Hero plan={plan} pro={pro} daysLeft={proDaysLeft(user)} expiresAt={user?.proExpiresAt ?? null} onBuy={cta} />
+            <Hero plan={plan} pro={pro} label={label} daysLeft={proDaysLeft(user)} expiresAt={user?.proExpiresAt ?? null} onBuy={cta} />
             {unverified && (
               <div id="pro-verify" className="mx-auto max-w-3xl px-4 pt-6">
                 <VerifyEmailNotice variant="inline" message="Bạn cần xác minh email trước khi nâng cấp Pro." />
@@ -71,7 +78,7 @@ export default function PlanPage() {
             <Compare plan={plan} />
             <Benefits plan={plan} fetchPrice={fetchPrice} />
             <Faq />
-            <FinalCta plan={plan} pro={pro} onBuy={cta} />
+            <FinalCta plan={plan} label={label} onBuy={cta} />
           </>
         )}
       </main>
@@ -84,19 +91,20 @@ export default function PlanPage() {
               <div className="text-lg font-extrabold tabular-nums text-[#ffc61f]">{vnd(plan.price)}</div>
             </div>
             <button onClick={cta} className={`pro-cta md-label-large inline-flex h-12 items-center gap-2 rounded-full px-6 font-bold shadow-m3-2 ${GOLD}`}>
-              <Crown size={18} /> {pro ? "Gia hạn Pro" : "Nâng cấp Pro"}
+              <Crown size={18} /> {label}
             </button>
           </div>
         </div>
       )}
 
       <Footer />
+      <div aria-hidden className="h-20 expanded:hidden" /> {/* chừa chỗ cho thanh mua cố định ở đáy (mobile) để không che chân trang */}
       {open && plan && <UpgradeDialog plan={plan} onClose={() => setOpen(false)} />}
     </div>
   );
 }
 
-function Hero({ plan, pro, daysLeft, expiresAt, onBuy }: { plan: PlanInfo; pro: boolean; daysLeft: number; expiresAt: string | null; onBuy: () => void }) {
+function Hero({ plan, pro, label, daysLeft, expiresAt, onBuy }: { plan: PlanInfo; pro: boolean; label: string; daysLeft: number; expiresAt: string | null; onBuy: () => void }) {
   const price = useCountUp(plan.price, 1100);
   const newExpiry = addMonths(pro && expiresAt ? new Date(expiresAt) : new Date(), plan.months);
   return (
@@ -147,7 +155,7 @@ function Hero({ plan, pro, daysLeft, expiresAt, onBuy }: { plan: PlanInfo; pro: 
           <div className="mt-6 flex flex-col items-center gap-3 expanded:items-start">
             <button onClick={onBuy} className={`pro-cta md-label-large inline-flex h-14 items-center gap-2.5 rounded-full px-9 text-base font-extrabold shadow-[0_10px_40px_-6px_rgba(255,198,31,0.6)] transition-transform hover:scale-[1.03] active:scale-[0.98] ${GOLD}`}>
               <Crown size={20} strokeWidth={2.4} />
-              {pro ? `Gia hạn thêm ${plan.months} tháng` : "Nâng cấp Pro ngay"}
+              {pro ? `Gia hạn thêm ${plan.months} tháng` : label}
               <ArrowRight size={18} />
             </button>
             <p className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-[#fff6dc]/65 expanded:justify-start">
@@ -255,7 +263,7 @@ function Faq() {
   );
 }
 
-function FinalCta({ plan, pro, onBuy }: { plan: PlanInfo; pro: boolean; onBuy: () => void }) {
+function FinalCta({ plan, label, onBuy }: { plan: PlanInfo; label: string; onBuy: () => void }) {
   return (
     <section className="mx-auto max-w-3xl px-4 pt-14">
       <div className="relative overflow-hidden rounded-m3-xl bg-[radial-gradient(ellipse_at_top,#5a4100_0%,#1d1500_100%)] px-6 py-9 text-center text-[#fff6dc]">
@@ -266,7 +274,7 @@ function FinalCta({ plan, pro, onBuy }: { plan: PlanInfo; pro: boolean; onBuy: (
           {vnd(plan.price)} cho {plan.months} tháng, tiết kiệm {vnd(plan.savings)} so với FuOverflow VIP.
         </p>
         <button onClick={onBuy} className={`pro-cta md-label-large relative mt-5 inline-flex h-12 items-center gap-2 rounded-full px-8 font-extrabold shadow-[0_10px_36px_-6px_rgba(255,198,31,0.55)] ${GOLD}`}>
-          <Crown size={18} /> {pro ? "Gia hạn Pro" : "Nâng cấp Pro ngay"}
+          <Crown size={18} /> {label}
         </button>
       </div>
     </section>

@@ -93,7 +93,7 @@ export default function DepositPage() {
 
       {need > 0 && !activeCode && (
         <div className="mb-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950">
-          Bạn đang thiếu <b>{formatCredit(need)}</b>. {min > need ? `Mức nạp tối thiểu là ${formatMoney(min)}, phần dư vẫn nằm trong ví để dùng tiếp.` : "Mình đã điền sẵn số tiền vừa đủ."} Nạp xong là quay lại mở khóa ngay.
+          Bạn đang thiếu <b>{formatCredit(need)}</b>. {min > need ? `Mức nạp tối thiểu là ${formatMoney(min)}, phần dư vẫn nằm trong ví để dùng tiếp.` : "Mình đã điền sẵn số tiền vừa đủ."} Nạp xong là quay lại {back?.startsWith("/pro") ? "nâng cấp Pro" : "mở khóa"} ngay.
         </div>
       )}
       {openOrder && !activeCode && (
@@ -118,7 +118,7 @@ export default function DepositPage() {
           }}
           className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-brand-700 hover:text-brand-900"
         >
-          <ArrowLeft size={15} /> Quay lại làm bài
+          <ArrowLeft size={15} /> {back.startsWith("/pro") ? "Quay lại nâng cấp Pro" : "Quay lại làm bài"}
         </Link>
       )}
 

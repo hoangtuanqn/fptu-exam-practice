@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Crown, PartyPopper, Sparkles } from "lucide-react";
+import { Check, Crown, PartyPopper, Sparkles } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { depositLink } from "@/features/explanation/depositLink";
 import { errorMessage } from "@/shared/api/errors";
@@ -90,6 +90,11 @@ export function UpgradeDialog({ plan, onClose }: { plan: PlanInfo; onClose: () =
         </li>
         <li>Trả một lần, <b className="text-on-surface">không tự động gia hạn</b>, không bị trừ thêm.</li>
       </ul>
+      <ul className="md-body-small mt-2 flex flex-wrap gap-x-3 gap-y-1 text-on-surface-variant">
+        {plan.benefits.freeFetch && <li className="inline-flex items-center gap-1"><Check size={14} className="text-primary" /> Lấy đề miễn phí</li>}
+        {plan.benefits.freeExplain && <li className="inline-flex items-center gap-1"><Check size={14} className="text-primary" /> Giải thích AI mọi câu</li>}
+        {plan.benefits.freePe && <li className="inline-flex items-center gap-1"><Check size={14} className="text-primary" /> Tải đề PE miễn phí</li>}
+      </ul>
       <div className="mt-4">
         <ChargeSummary amount={plan.price} balance={balance} />
       </div>
@@ -107,7 +112,7 @@ export function UpgradeDialog({ plan, onClose }: { plan: PlanInfo; onClose: () =
             Nạp thêm {formatCredit(plan.price - balance)}
           </Link>
         ) : (
-          <Button variant="filled" grow onClick={() => void buy()} disabled={busy}>
+          <Button variant="filled" grow onClick={() => void buy()} disabled={busy} className="!bg-gradient-to-b !from-[#ffd75e] !to-[#f0a800] !text-[#3a2600] font-bold">
             <PartyPopper size={16} /> {busy ? "Đang nâng cấp…" : `Trả ${formatCredit(plan.price)}`}
           </Button>
         )}
