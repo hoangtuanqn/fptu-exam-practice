@@ -10,7 +10,7 @@ export interface PlanInfo {
   savings: number;
   savingsPercent: number;
   pricePerMonth: number;
-  benefits: { freeFetch: boolean; freeExplain: boolean; freePe: boolean; unlimitedReview?: boolean; topicReport?: boolean };
+  benefits: { freeFetch: boolean; freeExplain: boolean; freePe: boolean; unlimitedReview?: boolean; frequentQuestions?: boolean; topicReport?: boolean };
 }
 
 export interface PurchaseResult {

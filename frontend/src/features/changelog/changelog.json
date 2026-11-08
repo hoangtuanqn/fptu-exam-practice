@@ -1,6 +1,20 @@
 {
   "web": [
     {
+      "version": "1.8.0",
+      "date": "2026-11-09",
+      "title": "Câu hay ra",
+      "highlights": [
+        "Biết câu nào lặp lại ở nhiều đề của cùng một môn để ôn trước",
+        "Pro: xem đầy đủ danh sách câu hay ra"
+      ],
+      "changes": [
+        { "type": "new", "text": "Trang “Câu hay ra” (Tài khoản): chọn môn, xem những câu xuất hiện ở từ 2 đề trở lên, xếp từ lặp nhiều nhất, kèm đáp án" },
+        { "type": "new", "text": "Cảnh báo khi các đề ghi đáp án khác nhau cho cùng một câu, để bạn kiểm tra và báo cáo" },
+        { "type": "improved", "text": "Gói thường xem 5 câu đầu; gói Pro xem toàn bộ" }
+      ]
+    },
+    {
       "version": "1.7.0",
       "date": "2026-11-09",
       "title": "Bộ đề theo chương",
