@@ -80,6 +80,8 @@ export const PRIVATE_PAGES: Record<string, PageSeo> = {
   "/admin/reports": { title: "Quản trị: báo cáo đáp án", description: "Xử lý báo cáo đáp án sai từ người dùng." },
   "/admin/crawler": { title: "Quản trị: cấu hình lấy đề", description: "Thiết lập bộ lấy đề từ FuOverflow." },
   "/admin/ai": { title: "Quản trị: AI giải đáp án", description: "Thiết lập mô hình AI giải đáp án và giải thích." },
+  "/admin/funnel": { title: "Quản trị: phễu người dùng", description: "Người đăng ký đi được tới đâu: lấy đề, nộp bài, nạp tiền, mua Pro." },
+  "/admin/quality": { title: "Quản trị: chất lượng đề", description: "Câu nhiều người sai và đáp án có thể sai theo bài làm thực tế." },
   "/admin/chatbot": { title: "Quản trị: chatbot hỗ trợ", description: "Cấu hình trợ lý Cóc Pass." },
 };
 

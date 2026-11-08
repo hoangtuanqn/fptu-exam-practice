@@ -1,6 +1,6 @@
 import { lazy } from "react";
 import { Navigate, Route } from "react-router-dom";
-import { MessagesSquare, ShoppingBag, Megaphone, Bot, ClipboardList, DatabaseZap, FileText, History, SlidersHorizontal, Wallet, Gift, MessageSquareWarning, UserPlus, Landmark, LayoutDashboard, Receipt, Settings, Users } from "lucide-react";
+import { Activity, ShieldCheck as QualityIcon, MessagesSquare, ShoppingBag, Megaphone, Bot, ClipboardList, DatabaseZap, FileText, History, SlidersHorizontal, Wallet, Gift, MessageSquareWarning, UserPlus, Landmark, LayoutDashboard, Receipt, Settings, Users } from "lucide-react";
 import type { NavItem } from "@/shared/layout/PanelLayout";
 
 /**
@@ -31,6 +31,8 @@ const CrawlerPage = lazy(() => import("./content/CrawlerPage"));
 const ReportsPage = lazy(() => import("./content/ReportsPage"));
 const ChatbotPage = lazy(() => import("./content/ChatbotPage"));
 const AiPage = lazy(() => import("./content/AiPage"));
+const FunnelPage = lazy(() => import("./insights/FunnelPage"));
+const QualityPage = lazy(() => import("./insights/QualityPage"));
 
 export const ADMIN_NAV: NavItem[] = [
   { to: "/admin", label: "Tổng quan", icon: LayoutDashboard, end: true, group: "Chung" },
@@ -51,6 +53,8 @@ export const ADMIN_NAV: NavItem[] = [
   { to: "/admin/crawler", label: "Cấu hình lấy đề", icon: DatabaseZap, group: "Nội dung & AI" },
   { to: "/admin/ai", label: "AI giải đáp án", icon: Bot, group: "Nội dung & AI" },
   { to: "/admin/chatbot", label: "Chatbot hỗ trợ", icon: MessagesSquare, group: "Nội dung & AI" },
+  { to: "/admin/funnel", label: "Phễu người dùng", icon: Activity, group: "Phân tích" },
+  { to: "/admin/quality", label: "Chất lượng đề", icon: QualityIcon, group: "Phân tích" },
 ];
 
 // Các route con của /admin
@@ -76,6 +80,8 @@ export const adminRoutes = (
     <Route path="crawler" element={<CrawlerPage />} />
     <Route path="ai" element={<AiPage />} />
     <Route path="chatbot" element={<ChatbotPage />} />
+    <Route path="funnel" element={<FunnelPage />} />
+    <Route path="quality" element={<QualityPage />} />
     {/* Địa chỉ cũ */}
     <Route path="settings" element={<Navigate to="/admin/sepay" replace />} />
   </>
