@@ -2,7 +2,7 @@ import path from "node:path";
 import { prisma } from "../../configs/prisma";
 import { storageDir } from "../../configs/env";
 import { aiReady } from "../../constants/ai";
-import { subjectCodeOf } from "../../prompts";
+import { subjectCodeFromTitle } from "../../utils/subject-code";
 import { createLimiter } from "../../utils/limiter";
 import { buildTopicItems, type TopicItem } from "../../utils/topic-items";
 import { aiSettingService } from "../ai-setting.service";
@@ -40,9 +40,6 @@ const SCHEMA = {
   required: ["labels"],
   additionalProperties: false,
 };
-
-// Tiêu đề kiểu "MAD101_SP26_FE": dấu gạch dưới là ký tự chữ nên subjectCodeOf (dùng \b) không nhận ra mã
-const codeWithUnderscore = (title: string) => title.match(/(?<![A-Za-z0-9])[A-Za-z]{2,4}\d{3}[A-Za-z]?(?![A-Za-z0-9])/)?.[0].toUpperCase() ?? null;
 
 export interface LabelResult {
   examId: number;
@@ -85,7 +82,7 @@ export const topicLabelerService = {
     const base: LabelResult = { examId, title: exam?.title ?? "", subject: null, labels: [] };
     if (!exam) return { ...base, skipped: "không thấy đề" };
 
-    const code = subjectCodeOf(exam.title) ?? codeWithUnderscore(exam.title);
+    const code = subjectCodeFromTitle(exam.title);
     // Mã trong tiêu đề có thể thiếu/thừa chữ cuối (SWE201 và SWE201c): thử khớp đúng, rồi khớp theo phần số
     const subject = code
       ? ((await prisma.subject.findUnique({ where: { code }, include: { chapters: { orderBy: { number: "asc" } } } })) ??

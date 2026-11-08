@@ -14,9 +14,12 @@ import { boxLabel, dueText, reviewApi, type ReviewAnswerResult } from "./review.
 export default function ReviewPracticePage() {
   const toast = useToast();
   const [params] = useSearchParams();
-  const all = params.get("all") === "1";
+  const subject = params.get("subject");
+  const topic = params.get("topic");
+  const byTopic = subject && topic ? { subject, topic } : undefined; // ôn riêng một chủ đề (Pro)
+  const all = params.get("all") === "1" || !!byTopic;
   const [round, setRound] = useState(0); // đổi để nạp lượt mới
-  const queue = useApi(() => reviewApi.queue(all), [all, round]);
+  const queue = useApi(() => reviewApi.queue(all, byTopic), [all, subject, topic, round]);
 
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<string[]>([]);
@@ -38,8 +41,8 @@ export default function ReviewPracticePage() {
 
   if (items.length === 0) {
     return (
-      <Empty icon={PartyPopper} title={all ? "Sổ câu sai đang trống" : "Hôm nay không còn câu nào cần ôn"}>
-        <p>{all ? "Làm đề rồi nộp bài, câu sai sẽ tự vào sổ." : "Quay lại vào ngày mai nhé, hoặc ôn thêm cả những câu chưa đến hạn."}</p>
+      <Empty icon={PartyPopper} title={byTopic ? "Không có câu sai nào ở chủ đề này" : all ? "Sổ câu sai đang trống" : "Hôm nay không còn câu nào cần ôn"}>
+        <p>{byTopic ? `Bạn chưa có câu sai nào về “${byTopic.topic}” trong sổ. Làm thêm đề của môn ${byTopic.subject} để có thêm câu luyện.` : all ? "Làm đề rồi nộp bài, câu sai sẽ tự vào sổ." : "Quay lại vào ngày mai nhé, hoặc ôn thêm cả những câu chưa đến hạn."}</p>
         <div className="mt-4 flex flex-wrap justify-center gap-2">
           <Link to="/account/review" className={buttonClass()}>
             <ArrowLeft size={16} /> Về Sổ câu sai

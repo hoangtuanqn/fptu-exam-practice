@@ -17,7 +17,9 @@ import {
 import { ResponseClient } from "../rules/response";
 import { reviewService } from "../services/review.service";
 import { studyService } from "../services/study.service";
-import { hasUnlimitedReview } from "../utils/pro";
+import { AppError } from "../rules/error";
+import { topicStatsService } from "../services/topic-stats.service";
+import { hasTopicReport, hasUnlimitedReview } from "../utils/pro";
 
 const limiter = rateLimit({ windowMs: 60 * 1000, limit: 240, standardHeaders: true, legacyHeaders: false, message: { status: false, message: "Bạn thao tác quá nhanh, vui lòng thử lại sau ít phút" } });
 
@@ -29,8 +31,11 @@ reviewRouter.get("/summary", async (req: Request, res: Response) => {
   res.json(new ResponseClient({ data: await reviewService.summary(req.user!.id, hasUnlimitedReview(req.user)) }));
 });
 reviewRouter.get("/queue", validate(reviewQueueQuery, "query"), async (req: Request, res: Response) => {
-  const { all } = getValidated<ReviewQueueQuery>(res, "query");
-  res.json(new ResponseClient({ data: await reviewService.queue(req.user!.id, all === "1") }));
+  const { all, subject, topic } = getValidated<ReviewQueueQuery>(res, "query");
+  if (topic && !subject) throw new AppError("Thiếu mã môn");
+  if (topic && !hasTopicReport(req.user)) throw AppError.forbidden("Luyện theo chủ đề là quyền lợi của gói Pro");
+  const byTopic = topic && subject ? { subject: subject.toUpperCase(), topic } : undefined;
+  res.json(new ResponseClient({ data: await reviewService.queue(req.user!.id, all === "1" || !!byTopic, undefined, byTopic) }));
 });
 reviewRouter.get("/", validate(reviewListQuery, "query"), async (req: Request, res: Response) => {
   const q = getValidated<ReviewListQuery>(res, "query");
@@ -51,6 +56,9 @@ export const studyRouter = Router();
 studyRouter.use(authenticate, limiter);
 studyRouter.get("/stats", async (req: Request, res: Response) => {
   res.json(new ResponseClient({ data: await studyService.stats(req.user!.id) }));
+});
+studyRouter.get("/topics", async (req: Request, res: Response) => {
+  res.json(new ResponseClient({ data: await topicStatsService.forUser(req.user!.id, hasTopicReport(req.user)) }));
 });
 studyRouter.put("/goal", validate(studyGoalBody), async (req: Request, res: Response) => {
   res.json(new ResponseClient({ message: "Đã lưu mục tiêu", data: await studyService.setGoal(req.user!.id, getValidated<StudyGoalBody>(res).days) }));

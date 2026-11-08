@@ -1,6 +1,20 @@
 {
   "web": [
     {
+      "version": "1.6.0",
+      "date": "2026-11-08",
+      "title": "Điểm mạnh và yếu theo chủ đề",
+      "highlights": [
+        "Biết mình yếu chủ đề nào của từng môn sau khi làm bài",
+        "Pro: báo cáo đầy đủ theo chủ đề và luyện đúng phần yếu"
+      ],
+      "changes": [
+        { "type": "new", "text": "Mỗi câu hỏi được gắn chủ đề theo syllabus của môn; trang Sổ câu sai hiện tỷ lệ đúng theo từng chủ đề" },
+        { "type": "new", "text": "Gói thường xem được chủ đề cần ôn nhất; gói Pro xem toàn bộ các chủ đề của từng môn" },
+        { "type": "new", "text": "Pro: nút “Luyện” ôn riêng các câu bạn từng sai ở một chủ đề" }
+      ]
+    },
+    {
       "version": "1.5.0",
       "date": "2026-11-08",
       "title": "Sổ câu sai và chuỗi ngày học",
