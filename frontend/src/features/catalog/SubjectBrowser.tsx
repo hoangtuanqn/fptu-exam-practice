@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, BookOpen, Check, Download, Loader2, MessageSquare, Play, Search } from "lucide-react";
+import { ArrowLeft, BookOpen, Check, Download, Loader2, Play, Search } from "lucide-react";
 import { ConfirmFetchDialog } from "@/features/exam-import/components/ConfirmFetchDialog";
 import { examImportApi } from "@/features/exam-import/exam-import.api";
 import { useExamImport } from "@/features/exam-import/useExamImport";
@@ -36,7 +36,7 @@ function SubjectPicker({ onPick }: { onPick: (code: string) => void }) {
   const shown = useMemo(() => {
     const term = q.trim().toLowerCase();
     const list = subjects.data ?? [];
-    return (term ? list.filter((s) => s.code.toLowerCase().includes(term) || (s.name ?? "").toLowerCase().includes(term)) : list).slice(0, 40);
+    return (term ? list.filter((s) => s.code.toLowerCase().includes(term) || (s.name ?? "").toLowerCase().includes(term)) : list);
   }, [subjects.data, q]);
   const myList = (mine.data ?? []).map((c) => byCode.get(c)).filter((s): s is CatalogSubject => !!s);
 
@@ -69,6 +69,11 @@ function SubjectPicker({ onPick }: { onPick: (code: string) => void }) {
             Thử mã môn khác, hoặc dán link FuOverflow ở trang chủ để lấy đề mới.
           </Empty>
         ) : (
+          <>
+            <p className="md-body-small text-on-surface-variant" aria-live="polite">
+              {q.trim() ? `Tìm thấy ${shown.length}/${subjects.data?.length ?? 0} môn.` : `Có ${shown.length} môn. Cuộn xuống để xem hết, hoặc gõ vào ô trên để tìm.`}
+            </p>
+            <div className="max-h-[28rem] overflow-y-auto rounded-m3-md border border-outline-variant p-2" tabIndex={0} aria-label="Danh sách môn, cuộn để xem thêm">
           <ul className="grid gap-2 sm:grid-cols-2">
             {shown.map((s) => (
               <li key={s.code}>
@@ -80,6 +85,8 @@ function SubjectPicker({ onPick }: { onPick: (code: string) => void }) {
               </li>
             ))}
           </ul>
+            </div>
+          </>
         )}
       </div>
     </Card>
@@ -194,11 +201,6 @@ function ExamList({ code, onBack }: { code: string; onBack: () => void }) {
                     <p className="md-body-small flex flex-wrap items-center gap-x-3 text-on-surface-variant">
                       {e.postedAt && <span>{formatDate(e.postedAt)}</span>}
                       {e.questions !== null ? <span>{e.questions} câu</span> : null}
-                      {e.replies > 0 && (
-                        <span className="inline-flex items-center gap-1">
-                          <MessageSquare size={12} /> {e.replies}
-                        </span>
-                      )}
                     </p>
                   </div>
                   <StatusBadge status={e.status} />

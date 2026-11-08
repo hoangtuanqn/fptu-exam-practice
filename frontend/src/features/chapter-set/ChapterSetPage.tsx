@@ -56,7 +56,7 @@ export function SubjectStep({ onPick, title = "Bước 1: chọn môn" }: { onPi
   const shown = useMemo(() => {
     const term = q.trim().toLowerCase();
     const list = subjects.data ?? [];
-    return (term ? list.filter((s) => s.code.toLowerCase().includes(term) || s.name.toLowerCase().includes(term)) : list).slice(0, 12);
+    return (term ? list.filter((s) => s.code.toLowerCase().includes(term) || s.name.toLowerCase().includes(term)) : list);
   }, [subjects.data, q]);
 
   return (
@@ -80,7 +80,11 @@ export function SubjectStep({ onPick, title = "Bước 1: chọn môn" }: { onPi
         ) : shown.length === 0 ? (
           <p className="md-body-medium text-on-surface-variant">Không có môn nào khớp “{q}”.</p>
         ) : (
-          <ul className="divide-y divide-outline-variant overflow-hidden rounded-m3-md border border-outline-variant">
+          <>
+            <p className="md-body-small text-on-surface-variant" aria-live="polite">
+              {q.trim() ? `Tìm thấy ${shown.length}/${subjects.data?.length ?? 0} môn.` : `Có ${shown.length} môn. Cuộn xuống để xem hết, hoặc gõ vào ô trên để tìm.`}
+            </p>
+          <ul className="max-h-[28rem] divide-y divide-outline-variant overflow-y-auto rounded-m3-md border border-outline-variant" tabIndex={0} aria-label="Danh sách môn, cuộn để xem thêm">
             {shown.map((s) => (
               <li key={s.code}>
                 <button type="button" onClick={() => onPick(s)} className="md-state flex w-full items-baseline gap-3 px-4 py-3 text-left">
@@ -90,6 +94,7 @@ export function SubjectStep({ onPick, title = "Bước 1: chọn môn" }: { onPi
               </li>
             ))}
           </ul>
+          </>
         )}
       </div>
     </Card>
