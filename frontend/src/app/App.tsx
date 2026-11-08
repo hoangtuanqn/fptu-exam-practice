@@ -13,6 +13,7 @@ import NotFoundPage from "./NotFoundPage";
 import { ADMIN_NAV, adminRoutes } from "@/features/admin/admin.routes";
 import { GuestSync } from "@/features/guest-sync/GuestSync";
 import { DailyCheckInPopup } from "@/features/check-in/DailyCheckInPopup";
+import { WhatsNewDialog } from "@/features/changelog/WhatsNewDialog";
 import PracticePage from "@/features/practice/PracticePage";
 
 // "/" và "/exam/:threadId" dùng chung một thể hiện của trang để đổi địa chỉ không làm mất bài đang làm
@@ -35,6 +36,7 @@ const MyReportsPage = lazy(() => import("@/features/account/pages/MyReportsPage"
 const ReferralPage = lazy(() => import("@/features/account/pages/ReferralPage"));
 const GiftCodePage = lazy(() => import("@/features/account/pages/GiftCodePage"));
 const PeDownloadPage = lazy(() => import("@/features/pe/PeDownloadPage"));
+const ChangelogPage = lazy(() => import("@/features/changelog/ChangelogPage"));
 const PlanPage = lazy(() => import("@/features/plan/PlanPage"));
 const ProfilePage = lazy(() => import("@/features/account/pages/ProfilePage"));
 
@@ -59,11 +61,15 @@ export default function App() {
     <Suspense fallback={<Loading />}>
       <GuestSync />
       <DailyCheckInPopup />
+      <WhatsNewDialog />
       <ChatWidget />
       <Routes>
         <Route path="/" element={<PracticeRoute />} />
         <Route path="/exam/:threadId" element={<PracticeRoute />} />
         {M3Gallery && <Route path="/dev/m3" element={<Suspense fallback={null}><M3Gallery /></Suspense>} />}
+
+        {/* Lịch sử thay đổi (Có gì mới) của web và tiện ích Chrome: công khai */}
+        <Route path="/changelog" element={<ChangelogPage />} />
 
         {/* Trang bán gói Pro: công khai, khách bấm mua sẽ được dẫn đi đăng nhập */}
         <Route path="/pro" element={<PlanPage />} />
