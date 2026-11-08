@@ -1,4 +1,5 @@
-import { Check, Flame } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ArrowRight, Check, Flame } from "lucide-react";
 import { useToast } from "@/shared/context/ToastContext";
 import { errorMessage } from "@/shared/api/errors";
 import { useApi } from "@/shared/hooks/useApi";
@@ -9,7 +10,8 @@ import { studyApi } from "./review.api";
 const DAYS = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
 
 // Chuỗi ngày học + tiến độ tuần + mục tiêu. Một ngày tính là có học khi nộp một bài (làm trên nửa số câu) hoặc ôn xong vài câu trong sổ câu sai.
-export function StudyStreakCard() {
+// compact: một dòng gọn cho trang Tổng quan (chuỗi ngày + các ngày trong tuần), chi tiết và mục tiêu nằm ở Sổ câu sai > Tiến độ
+export function StudyStreakCard({ compact = false }: { compact?: boolean }) {
   const toast = useToast();
   const stats = useApi(() => studyApi.stats(), []);
   const s = stats.data;
@@ -20,6 +22,32 @@ export function StudyStreakCard() {
       .setGoal(days)
       .then(() => stats.reload())
       .catch((err: unknown) => toast.error(errorMessage(err, "Chưa lưu được mục tiêu")));
+
+  if (compact) {
+    return (
+      <Card>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3.5">
+          <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${s.streak > 0 ? "bg-gradient-to-b from-[#ffd75e] to-[#f0a800] text-[#3a2600]" : "bg-surface-container-high text-on-surface-variant"}`}>
+            <Flame size={18} strokeWidth={2.2} />
+          </span>
+          <p className="md-title-small min-w-0 flex-1 text-on-surface">
+            {s.streak > 0 ? `${s.streak} ngày học liên tiếp` : s.studiedToday ? "Hôm nay bạn đã học" : "Học hôm nay để bắt đầu chuỗi ngày"}
+            <span className="md-body-small ml-2 font-normal text-on-surface-variant">
+              tuần này {s.weekDone}/{s.goal} ngày
+            </span>
+          </p>
+          <ol className="flex items-center gap-1" aria-label={`Tuần này đã học ${s.weekDone} trên ${s.goal} ngày mục tiêu`}>
+            {DAYS.map((d, i) => (
+              <li key={d} title={d} className={`h-2.5 w-2.5 rounded-full ${s.week[i] ? "bg-primary" : i === s.todayIndex ? "border border-primary" : "bg-surface-container-highest"}`} />
+            ))}
+          </ol>
+          <Link to="/account/review?tab=progress" className="md-label-large inline-flex shrink-0 items-center gap-1 text-primary hover:underline">
+            Chi tiết <ArrowRight size={14} />
+          </Link>
+        </div>
+      </Card>
+    );
+  }
 
   const message = s.goalMet
     ? "Đã đạt mục tiêu tuần này. Giữ nhịp nhé!"
