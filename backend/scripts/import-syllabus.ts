@@ -13,8 +13,8 @@ import { z } from "zod";
 
 const chapterSchema = z.object({
   number: z.number().int().min(0).max(999).nullable(), // null = nhóm "Khác" (dòng đứng trước chương đầu tiên)
-  title: z.string().max(255),
-  topics: z.array(z.string().min(1).max(300)).max(200),
+  title: z.string().transform((t) => t.slice(0, 255)), // cột title dài 255 ký tự: cắt bớt thay vì bỏ cả môn
+  topics: z.array(z.string().min(1).max(2000)).max(1000), // JSON nên không cần chặt; chỉ chặn dữ liệu bất thường
 });
 const subjectSchema = z.object({
   code: z.string().regex(/^[A-Za-z0-9_.-]{3,20}$/, "mã môn không hợp lệ"),
