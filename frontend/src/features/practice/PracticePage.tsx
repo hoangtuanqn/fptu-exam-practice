@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ApiError } from "@/shared/api/client";
 import { historyApi } from "@/features/history/history.api";
+import type { TopicSummary } from "@/features/history/types";
 import { pendingAttempt } from "@/features/guest-sync/pendingAttempt";
 import { examImportApi } from "@/features/exam-import/exam-import.api";
 import { sessionApi } from "@/features/practice-session/session.api";
@@ -47,6 +48,7 @@ export default function PracticePage({ threadId }: Props) {
   const [trialEnded, setTrialEnded] = useState(false);
   const [referencesOpen, setReferencesOpen] = useState(false); // đang xem tài liệu tham khảo của đề
   const [bestScore, setBestScore] = useState<number | null>(null); // điểm cao nhất của người dùng ở đề đang mở
+  const [topicSummary, setTopicSummary] = useState<TopicSummary>(null); // kết quả theo chủ đề của bài vừa nộp, hiện trong bảng điểm
 
   const hasQuiz = quiz.questions.length > 0;
   const anyDialogOpen = !!dialog || !!quiz.pending || quiz.notFound || trialEnded || referencesOpen;
@@ -150,6 +152,7 @@ export default function PracticePage({ threadId }: Props) {
   useEffect(() => {
     if (!quiz.submitted) {
       savedFor.current = null;
+      setTopicSummary(null);
       return;
     }
     if (quiz.examId === null || quiz.answersPending || savedFor.current === quiz.session) return;
@@ -164,9 +167,11 @@ export default function PracticePage({ threadId }: Props) {
       pendingAttempt.save({ examId: quiz.examId, payload });
       return;
     }
+    setTopicSummary("loading");
     historyApi
       .save(quiz.examId, payload)
       .then((saved) => {
+        setTopicSummary(saved.topics && saved.topics.length > 0 ? { topics: saved.topics, hidden: saved.topicsHidden ?? 0 } : null);
         const review = saved.review;
         if (review && review.added > 0) {
           toast.success(`Đã lưu bài và thêm ${review.added} câu vào Sổ câu sai`, { action: { label: "Xem sổ", onClick: () => navigate("/account/review") } });
@@ -175,7 +180,10 @@ export default function PracticePage({ threadId }: Props) {
         } else toast.success("Đã lưu vào lịch sử làm bài");
         if (quiz.examId !== null) void loadBest(quiz.examId);
       })
-      .catch(() => toast.error("Không lưu được lịch sử làm bài"));
+      .catch(() => {
+        setTopicSummary(null);
+        toast.error("Không lưu được lịch sử làm bài");
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quiz.submitted, quiz.answersPending]);
 
@@ -266,7 +274,7 @@ export default function PracticePage({ threadId }: Props) {
         onShowResult={() => setDialog("result")}
       />
 
-      <QuizDialogs quiz={quiz} dialog={dialog} onDialogChange={setDialog} onCloseZoom={() => setZoomOpen(false)} />
+      <QuizDialogs quiz={quiz} topicSummary={topicSummary} dialog={dialog} onDialogChange={setDialog} onCloseZoom={() => setZoomOpen(false)} />
       {leaveAsk && (
         <Modal onClose={() => setLeaveAsk(false)}>
           <ModalTitle icon={TriangleAlert}>Thoát và bỏ bài đang làm?</ModalTitle>

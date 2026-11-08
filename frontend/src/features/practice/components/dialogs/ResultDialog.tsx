@@ -1,4 +1,6 @@
-import { Eye, Loader2, RotateCcw } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Crown, Eye, Loader2, RotateCcw, Target } from "lucide-react";
+import type { TopicSummary } from "@/features/history/types";
 import { useAuth } from "@/features/auth/AuthContext";
 import type { AnswerSource } from "@/features/practice/types";
 import { SignUpCta } from "@/features/trial/SignUpCta";
@@ -12,6 +14,7 @@ import { ScoreRing } from "@/shared/ui/ScoreRing";
 
 interface Props {
   result: GradeResult;
+  topicSummary?: TopicSummary; // kết quả theo chủ đề của bài vừa nộp
   elapsed: number; // số giây làm bài
   answersPending: boolean; // AI chưa phân tích xong: điểm sẽ cập nhật khi có đáp án
   answerSource: AnswerSource | null; // nguồn đáp án, để ghi chú độ tin cậy của điểm
@@ -21,7 +24,7 @@ interface Props {
 }
 
 // Bảng điểm sau khi nộp
-export function ResultDialog({ result, elapsed, savable, answersPending, answerSource, onReview, onRetry }: Props) {
+export function ResultDialog({ result, topicSummary = null, elapsed, savable, answersPending, answerSource, onReview, onRetry }: Props) {
   const { user } = useAuth();
   const passed = result.score >= PASS_SCORE;
   const tone = result.total === 0 ? "neutral" : passed ? "success" : "danger";
@@ -76,6 +79,8 @@ export function ResultDialog({ result, elapsed, savable, answersPending, answerS
         <p className="mt-4 text-center text-xs text-slate-500">Chưa có đáp án trong ans.txt nên không thể chấm điểm.</p>
       )}
 
+      {!answersPending && topicSummary && <TopicBreakdown summary={topicSummary} />}
+
       {!user && (
         <div className="mt-5 rounded-xl bg-brand-50 p-4">
           <div className="text-sm font-medium text-brand-900">Muốn giữ lại kết quả này?</div>
@@ -99,6 +104,55 @@ export function ResultDialog({ result, elapsed, savable, answersPending, answerS
         </Button>
       </ModalActions>
     </Modal>
+  );
+}
+
+// Kết quả theo chủ đề của chính bài vừa làm. Chủ đề yếu nhất đứng đầu và được nhấn mạnh; gói thường chỉ thấy chủ đề này.
+function TopicBreakdown({ summary }: { summary: Exclude<TopicSummary, null> }) {
+  if (summary === "loading") {
+    return (
+      <p className="mt-5 flex items-center justify-center gap-2 text-xs text-slate-500">
+        <Loader2 size={14} className="animate-spin" /> Đang phân tích theo chủ đề…
+      </p>
+    );
+  }
+  const { topics, hidden } = summary;
+  return (
+    <section className="mt-5 rounded-xl border border-slate-200 p-4" aria-label="Kết quả theo chủ đề">
+      <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+        <Target size={16} className="text-brand-700" /> Kết quả theo chủ đề
+      </h3>
+      <ul className="mt-3 space-y-3">
+        {topics.map((t, i) => {
+          const rate = t.total ? t.correct / t.total : 0;
+          const weak = i === 0 && rate < 0.75;
+          return (
+            <li key={t.topic}>
+              <div className="flex items-baseline justify-between gap-3 text-sm">
+                <span className="min-w-0 truncate text-slate-800">
+                  {t.topic}
+                  {weak && <span className="ml-2 rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-700">Cần ôn</span>}
+                </span>
+                <span className="shrink-0 tabular-nums text-xs text-slate-500">
+                  {t.correct}/{t.total} câu
+                </span>
+              </div>
+              <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100" aria-hidden>
+                <div className={`h-full rounded-full ${rate < 0.5 ? "bg-rose-500" : rate < 0.75 ? "bg-amber-500" : "bg-emerald-500"}`} style={{ width: `${Math.max(4, rate * 100)}%` }} />
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+      {hidden > 0 && (
+        <p className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">
+          <span>Còn {hidden} chủ đề nữa trong bài này.</span>
+          <Link to="/pro" className="inline-flex items-center gap-1 font-semibold text-brand-800 hover:underline">
+            <Crown size={12} className="text-[#f0a800]" /> Xem đủ với Pro
+          </Link>
+        </p>
+      )}
+    </section>
   );
 }
 

@@ -69,3 +69,30 @@ export const topicStatsService = {
     return { minSample: TOPIC_MIN_SAMPLE, weakest, totalTopics, locked: !isPro, subjects: isPro ? subjects : [] };
   },
 };
+
+export interface AttemptTopic {
+  topic: string;
+  correct: number;
+  total: number; // số câu đã trả lời ở chủ đề này trong bài vừa nộp
+}
+
+/**
+ * Kết quả theo chủ đề của CHÍNH bài vừa nộp (hiện ngay trong bảng điểm). Chủ đề có ít câu nhất cũng được hiện, vì đây là thống kê một bài chứ không phải kết luận dài hạn.
+ * Gói thường chỉ nhận chủ đề yếu nhất (kèm số chủ đề còn lại để mời nâng cấp); Pro nhận đủ, xếp yếu nhất trước. Khóa ở máy chủ.
+ */
+export async function topicsOfAttempt(examId: number, items: GradedQuestion[], full: boolean) {
+  const questions = await prisma.examQuestion.findMany({ where: { examId, topic: { not: null }, isReference: false }, select: { number: true, topic: true } });
+  if (questions.length === 0) return { topics: [] as AttemptTopic[], hidden: 0 };
+  const topicOf = new Map(questions.map((q) => [q.number, q.topic!]));
+  const tally = new Map<string, AttemptTopic>();
+  for (const d of items) {
+    if (d.outcome !== "correct" && d.outcome !== "wrong") continue;
+    const topic = topicOf.get(d.number);
+    if (!topic) continue;
+    const t = tally.get(topic) ?? tally.set(topic, { topic, correct: 0, total: 0 }).get(topic)!;
+    t.total++;
+    if (d.outcome === "correct") t.correct++;
+  }
+  const all = [...tally.values()].sort((a, b) => a.correct / a.total - b.correct / b.total || b.total - a.total);
+  return full ? { topics: all, hidden: 0 } : { topics: all.slice(0, 1), hidden: Math.max(0, all.length - 1) };
+}
