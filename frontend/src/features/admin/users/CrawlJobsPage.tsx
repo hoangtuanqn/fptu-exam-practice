@@ -7,6 +7,7 @@ import { useUrlSearch } from "@/shared/hooks/useUrlSearch";
 import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
 import type { AdminCrawlJob, CrawlJobStatus } from "@/shared/types/api";
 import { Badge, type Tone } from "@/shared/ui/Badge";
+import { ExpandableText } from "@/shared/ui/ExpandableText";
 import { Card, PageHeader } from "@/shared/ui/Card";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { inputClass } from "@/shared/ui/Input";
@@ -107,9 +108,7 @@ export default function CrawlJobsPage() {
                         <Badge tone={STATUS[j.status][1]}>{STATUS[j.status][0]}</Badge>
                       </Td>
                       <Td className="whitespace-nowrap text-right tabular-nums">{formatCredit(j.chargedAmount)}</Td>
-                      <Td className="max-w-xs truncate text-rose-600" title={j.error ?? undefined}>
-                        {j.error ?? ""}
-                      </Td>
+                      <Td className="w-full min-w-44 text-rose-600">{j.error ? <ExpandableText text={j.error} /> : ""}</Td>
                     </Tr>
                   ))}
                 </tbody>
