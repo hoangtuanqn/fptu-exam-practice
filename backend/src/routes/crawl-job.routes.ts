@@ -1,5 +1,5 @@
 import { Router } from "express";
-import rateLimit from "express-rate-limit";
+import { makeLimiter } from "../middlewares/rateLimit.middlewares";
 import { crawlJobController } from "../controllers/crawl-job.controllers";
 import { identify, requireVerifiedMember } from "../middlewares/auth.middlewares";
 import { isProUser } from "../utils/pro";
@@ -11,26 +11,13 @@ import { idParam, importExamBody } from "../rules/requests/crawl.request";
 // thành viên 10 lượt/giờ; khách 5 lượt/ngày (chặn việc xoá dữ liệu trình duyệt để đổi ID khách,
 // còn giới hạn 1 lượt/ngày chính xác theo ID khách nằm ở crawl-job.service)
 const limiter = (windowMs: number, limit: number, skip: (user: unknown) => boolean, who: string) =>
-  rateLimit({
-    windowMs,
-    limit,
-    skip: (req) => skip(req.user),
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: { status: false, message: `${who} nhập đề quá nhiều lần, vui lòng thử lại sau` },
-  });
+  makeLimiter({ windowMs, limit, skip: (req) => skip(req.user), message: `${who} nhập đề quá nhiều lần, vui lòng thử lại sau` });
 // Thành viên Pro không bị giới hạn lượt; thành viên thường 10 lượt/giờ
 const memberLimiter = limiter(60 * 60 * 1000, 10, (user) => !user || isProUser(user), "Bạn");
 const guestLimiter = limiter(24 * 60 * 60 * 1000, 5, (user) => !!user, "Khách");
 
 // Giao diện gọi /quote để kiểm tra link ngay khi người dùng gõ/dán (đã gộp bằng debounce), nên cho nhiều hơn lượt nhập đề
-const quoteLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  limit: 240,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { status: false, message: "Bạn kiểm tra link quá nhanh, vui lòng thử lại sau ít giây" },
-});
+const quoteLimiter = makeLimiter({ limit: 240, message: "Bạn kiểm tra link quá nhanh, vui lòng thử lại sau ít giây" });
 
 const crawlJobRouter = Router();
 

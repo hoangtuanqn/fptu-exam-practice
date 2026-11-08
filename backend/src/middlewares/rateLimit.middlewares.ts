@@ -1,40 +1,31 @@
-import rateLimit from "express-rate-limit";
+import rateLimit, { type Options } from "express-rate-limit";
+
+export const TOO_FAST = "Bạn thao tác quá nhanh, vui lòng thử lại sau ít phút";
+
+type LimiterOptions = Partial<Omit<Options, "message">> & { limit: number; message?: string };
+
+/**
+ * Bộ giới hạn tốc độ dùng chung: mặc định 60 giây, header chuẩn, thông báo lỗi dạng { status, message } như mọi API khác.
+ * Chỉ cần nói số lượt (limit); đổi windowMs, message, skip, keyGenerator... khi cần.
+ */
+export const makeLimiter = ({ limit, windowMs = 60 * 1000, message = TOO_FAST, ...rest }: LimiterOptions) =>
+  rateLimit({ windowMs, limit, standardHeaders: true, legacyHeaders: false, message: { status: false, message }, ...rest });
 
 // Yêu cầu quên mật khẩu gửi email thật nên giới hạn chặt hơn: 5 lần / 15 phút / IP
-export const forgotPasswordLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 5,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { status: false, message: "Bạn yêu cầu quá nhiều lần, vui lòng thử lại sau ít phút" },
-});
+export const forgotPasswordLimiter = makeLimiter({ windowMs: 15 * 60 * 1000, limit: 5, message: "Bạn yêu cầu quá nhiều lần, vui lòng thử lại sau ít phút" });
 
 // Làm mới phiên chạy ngầm mỗi khi access token hết hạn; nhiều người dùng chung một IP (mạng trường) nên nới hơn đăng nhập
-export const refreshLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  limit: 300,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { status: false, message: "Làm mới phiên quá nhanh, vui lòng thử lại sau giây lát" },
-});
+export const refreshLimiter = makeLimiter({ limit: 300, message: "Làm mới phiên quá nhanh, vui lòng thử lại sau giây lát" });
 
 // Chống dò mật khẩu: 30 lần / 15 phút / IP (nới hơn một chút vì nhiều sinh viên dùng chung IP wifi trường/ký túc xá)
-export const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 30,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { status: false, message: "Thử quá nhiều lần, vui lòng quay lại sau" },
-});
+export const authLimiter = makeLimiter({ windowMs: 15 * 60 * 1000, limit: 30, message: "Thử quá nhiều lần, vui lòng quay lại sau" });
 
 // Chống dò giftcode: chỉ đếm các lần nhập SAI, 10 lần / 15 phút / tài khoản
-export const giftCodeLimiter = rateLimit({
+export const giftCodeLimiter = makeLimiter({
   windowMs: 15 * 60 * 1000,
   limit: 10,
   skipSuccessfulRequests: true,
   keyGenerator: (req) => `user:${req.user?.id ?? "anon"}`,
-  standardHeaders: true,
-  legacyHeaders: false,
   validate: { keyGeneratorIpFallback: false },
-  message: { status: false, message: "Bạn nhập sai quá nhiều lần, vui lòng thử lại sau ít phút" },
+  message: "Bạn nhập sai quá nhiều lần, vui lòng thử lại sau ít phút",
 });
