@@ -4,6 +4,7 @@ import { adminApi } from "@/features/admin/api/admin.api";
 import { GiftCodeDialog } from "@/features/admin/finance/GiftCodeDialog";
 import { GiftCodeRedemptionsDialog } from "@/features/admin/finance/GiftCodeRedemptionsDialog";
 import { GiftCodeStatusBadge } from "@/shared/components/StatusBadge";
+import { ExpandableText } from "@/shared/ui/ExpandableText";
 import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
 import { useDebounce } from "@/shared/hooks/useDebounce";
@@ -115,7 +116,7 @@ export default function GiftCodesPage() {
                       Đã dùng {g.usedCount}/{g.maxUses} · {g.expiresAt ? `hạn ${formatDate(g.expiresAt)}` : "không hết hạn"}
                     </span>
                   </div>
-                  {g.note && <div className="truncate text-xs text-slate-500">{g.note}</div>}
+                  {g.note && <ExpandableText text={g.note} className="text-xs text-slate-500" />}
                   {actions(g)}
                 </li>
               ))}
@@ -138,7 +139,7 @@ export default function GiftCodesPage() {
                           {g.code}
                           <CopyButton text={g.code} label="Sao chép mã" />
                         </div>
-                        {g.note && <div className="max-w-[16rem] truncate text-xs text-slate-500">{g.note}</div>}
+                        {g.note && <ExpandableText text={g.note} className="max-w-[18rem] text-xs text-slate-500" />}
                       </Td>
                       <Td className="text-right tabular-nums">{formatCredit(g.amount)}</Td>
                       <Td className="text-right tabular-nums">
