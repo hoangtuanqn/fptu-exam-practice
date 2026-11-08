@@ -12,6 +12,8 @@ import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
 import { useUrlSearch } from "@/shared/hooks/useUrlSearch";
 import type { Role, UserStatus } from "@/shared/types/api";
 import { formatDate, formatCredit, initials } from "@/shared/utils/formatters";
+import { ProBadge } from "@/features/plan/ProBadge";
+import { isPro } from "@/shared/utils/pro";
 import { useClampPage } from "@/shared/hooks/useClampPage";
 
 export default function UsersPage() {
@@ -81,7 +83,7 @@ export default function UsersPage() {
                   <button onClick={() => open(u.id)} className="flex w-full items-center gap-3 px-4 py-3 text-left transition active:bg-slate-50">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-100 text-xs font-semibold text-brand-800">{initials(u.fullName)}</span>
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-medium text-slate-900">{u.fullName}</div>
+                      <div className="flex items-center gap-1.5 text-sm font-medium text-slate-900"><span className="truncate">{u.fullName}</span>{isPro(u) && <ProBadge />}</div>
                       <div className="truncate text-xs text-slate-500">{u.email}</div>
                       <div className="mt-1 flex flex-wrap items-center gap-1.5">
                         <RoleBadge value={u.role} />
@@ -114,7 +116,7 @@ export default function UsersPage() {
                           {initials(u.fullName)}
                         </span>
                         <div className="min-w-0">
-                          <div className="truncate font-medium text-slate-800">{u.fullName}</div>
+                          <div className="flex items-center gap-1.5 font-medium text-slate-800"><span className="truncate">{u.fullName}</span>{isPro(u) && <ProBadge />}</div>
                           <div className="truncate text-xs text-slate-500">{u.email}</div>
                         </div>
                       </div>

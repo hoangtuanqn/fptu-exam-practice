@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Crown } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useApi } from "@/shared/hooks/useApi";
-import { isPro } from "@/shared/utils/pro";
+import { isPro, proDaysLeft } from "@/shared/utils/pro";
 import { planApi } from "./plan.api";
 
 const vnd = (n: number) => `${n.toLocaleString("vi-VN")}đ`;
@@ -11,7 +11,27 @@ const vnd = (n: number) => `${n.toLocaleString("vi-VN")}đ`;
 export function ProTeaser() {
   const { user } = useAuth();
   const plan = useApi(() => planApi.info(), []).data;
-  if (!plan || isPro(user)) return null;
+  if (!plan) return null;
+  const days = proDaysLeft(user);
+  // Đang là Pro và còn nhiều ngày: không làm phiền. Còn ≤ 7 ngày: nhắc gia hạn (một dòng, cùng kiểu dải vàng).
+  if (isPro(user) && days > 7) return null;
+  if (isPro(user)) {
+    return (
+      <Link
+        to="/pro"
+        className="pro-cta group mx-auto mt-6 flex max-w-xl items-center gap-3 rounded-full bg-gradient-to-r from-[#2a1d00] to-[#4a3500] py-2 pl-2 pr-4 text-left text-[#fff6dc] shadow-m3-2 ring-1 ring-[#ffc61f]/50 transition hover:ring-[#ffc61f]"
+      >
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-[#ffd75e] to-[#f0a800] text-[#3a2600]">
+          <Crown size={18} strokeWidth={2.4} />
+        </span>
+        <span className="min-w-0 flex-1 text-sm leading-tight">
+          <b className="text-[#ffc61f]">Pro của bạn còn {days} ngày</b>
+          <span className="block truncate text-xs text-[#fff6dc]/75">Gia hạn sớm để không bị gián đoạn, thời gian được cộng dồn</span>
+        </span>
+        <ArrowRight size={18} className="shrink-0 text-[#ffc61f] transition group-hover:translate-x-0.5" />
+      </Link>
+    );
+  }
   return (
     <Link
       to="/pro"

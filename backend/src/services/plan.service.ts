@@ -3,6 +3,7 @@ import { PRO_BENEFITS, PRO_PLAN } from "../constants/plan";
 import { userRepository } from "../repositories/user.repository";
 import { AppError } from "../rules/error";
 import { isProUntil } from "../utils/pro";
+import { notificationService } from "./notification.service";
 import { walletService } from "./wallet.service";
 
 const addMonths = (from: Date, months: number) => {
@@ -52,6 +53,7 @@ export const planService = {
       await tx.planPurchase.create({ data: { userId, plan: PRO_PLAN.code, months, price, startsAt, endsAt } });
       return { proExpiresAt: endsAt, renewed: startsAt > now, balanceAfter: entry.balanceAfter };
     });
+    notificationService.proPurchased({ userId, planName: PRO_PLAN.name, months, price, renewed: result.renewed, expiresAt: result.proExpiresAt, balanceAfter: result.balanceAfter });
     return { ...result, user: await userRepository.findById(userId) };
   },
 };

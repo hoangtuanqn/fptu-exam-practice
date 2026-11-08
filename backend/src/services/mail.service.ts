@@ -8,12 +8,14 @@ import {
   renderChargeEmail,
   renderDepositEmail,
   renderGiftCodeEmail,
+  renderProPurchasedEmail,
   renderReportRewardEmail,
   renderReferralEmail,
   renderOrderEmail,
   type ChargeEmailInput,
   type DepositEmailInput,
   type GiftCodeEmailInput,
+  type ProEmailInput,
   type ReportRewardEmailInput,
   type ReferralEmailInput,
   type OrderEmailInput,
@@ -79,6 +81,9 @@ export const mailService = {
 
   sendGiftCodeRedeemed: (to: string, input: GiftCodeEmailInput) =>
     send(to, `${tag} Nhận giftcode +${credit(input.amount)} · ${input.code}`, renderGiftCodeEmail(input)),
+
+  sendProPurchased: (to: string, input: ProEmailInput) =>
+    send(to, `${tag} ${input.renewed ? "Gia hạn" : "Kích hoạt"} gói ${input.planName} thành công`, renderProPurchasedEmail(input)),
 
   sendReportRewarded: (to: string, input: ReportRewardEmailInput) =>
     send(to, `${tag} Báo cáo đáp án được xác nhận +${credit(input.amount)}`, renderReportRewardEmail(input)),
