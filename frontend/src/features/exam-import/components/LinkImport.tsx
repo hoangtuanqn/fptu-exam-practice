@@ -42,12 +42,13 @@ const FINISH_DELAY_MS = 600; // cho người dùng thấy thanh chạm 100% trư
 
 interface Props {
   onImported: (exam: ImportedExam) => void;
+  subject?: string; // bộ đề theo chương: đề phải đúng môn này (mã như PRO192), máy chủ kiểm trước khi trừ phí
 }
 
 const DEFAULT_PRICE = 500; // phí niêm yết hiện khi chưa lấy được từ máy chủ
 
 // Nhập link đề FuOverflow: server crawl ở nền, ở đây hiện thanh tiến độ và mở đề khi xong
-export function LinkImport({ onImported }: Props) {
+export function LinkImport({ onImported, subject }: Props) {
   const { user, refresh, loading: authLoading } = useAuth();
   // /?url=<link FuOverflow> điền sẵn ô nhập; không tự lấy đề vì mỗi lần lấy có thể bị tính phí.
   // Thêm &confirm=1 (nút trên FuOverflow của tiện ích Chrome) thì mở luôn hộp xác nhận: vẫn phải bấm xác nhận mới bị trừ phí.
@@ -91,7 +92,7 @@ export function LinkImport({ onImported }: Props) {
       clearTimeout(id);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [link, local.ok, user?.id]);
+  }, [link, local.ok, user?.id, subject]);
   const current = remote?.link === link ? remote : null;
   const linkError = link ? (local.ok ? (current?.status === "error" ? current.message ?? "Link không hợp lệ" : null) : local.message) : null;
   const linkInvalid = !!linkError;
@@ -134,15 +135,15 @@ export function LinkImport({ onImported }: Props) {
       setQuotedFee(0);
       return void setConfirming(true);
     }
-    if (fee <= 0) return void job.start(link);
+    if (fee <= 0) return void job.start(link, subject);
 
     // Hỏi trước phí thực tế: đề đã từng lấy thì miễn phí, mở luôn và báo cho người dùng biết
     setQuoting(true);
     try {
-      const quote = current?.status === "ok" && current.quote ? current.quote : await examImportApi.quote(link);
+      const quote = current?.status === "ok" && current.quote ? current.quote : await examImportApi.quote(link, subject);
       if (quote.free) {
         toast.success("Bạn đã lấy đề này trước đó nên được mở lại miễn phí, không bị trừ credit");
-        void job.start(link);
+        void job.start(link, subject);
       } else {
         setQuotedFee(quote.fee);
         setConfirming(true);
@@ -190,7 +191,7 @@ export function LinkImport({ onImported }: Props) {
 
   const confirm = () => {
     setConfirming(false);
-    void job.start(url.trim());
+    void job.start(url.trim(), subject);
   };
 
   return (
