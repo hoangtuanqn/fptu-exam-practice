@@ -2,7 +2,7 @@ import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { loadBrand } from "./brand.config";
-import { PUBLIC_PAGES, fullTitle } from "./seo.config";
+import { PUBLIC_PAGES, SUBJECTS, fullTitle, subjectPath, subjectSeo } from "./seo.config";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -38,8 +38,10 @@ export default defineConfig(({ mode }) => {
       const base = fs.readFileSync(path.join(dist, "index.html"), "utf8");
       const setTag = (html: string, re: RegExp, tag: string) => (re.test(html) ? html.replace(re, () => tag) : html.replace("</head>", () => `  ${tag}
   </head>`));
-      for (const [route, seo] of Object.entries(PUBLIC_PAGES)) {
-        const title = esc(fullTitle(route, seo));
+      // Mỗi môn một trang /mon/<mã>: PUBLIC_PAGES cộng thêm các trang môn
+      const pages: [string, { title: string; description: string }][] = [...Object.entries(PUBLIC_PAGES), ...SUBJECTS.map((s): [string, { title: string; description: string }] => [subjectPath(s.code), subjectSeo(s)])];
+      for (const [route, seo] of pages) {
+        const title = esc(fullTitle(route, seo as Parameters<typeof fullTitle>[1]));
         const desc = esc(seo.description);
         const url = brand.siteUrl ? esc(brand.siteUrl + (route === "/" ? "/" : route)) : "";
         let html = base;
@@ -57,6 +59,16 @@ export default defineConfig(({ mode }) => {
         else {
           fs.mkdirSync(path.join(dist, route), { recursive: true });
           fs.writeFileSync(path.join(dist, route, "index.html"), html);
+        }
+      }
+      // Thêm các trang môn vào sitemap (nếu có sitemap.xml): lấy domain từ chính sitemap để khỏi cấu hình thêm
+      const sitemap = path.join(dist, "sitemap.xml");
+      if (fs.existsSync(sitemap)) {
+        const xml = fs.readFileSync(sitemap, "utf8");
+        const origin = xml.match(/<loc>(https?:\/\/[^/<]+)/)?.[1];
+        if (origin && !xml.includes("/mon/")) {
+          const urls = SUBJECTS.map((s) => `  <url>\n    <loc>${origin}${subjectPath(s.code)}</loc>\n    <changefreq>monthly</changefreq>\n    <priority>0.5</priority>\n  </url>\n`).join("");
+          fs.writeFileSync(sitemap, xml.replace("</urlset>", () => `${urls}</urlset>`));
         }
       }
     },
