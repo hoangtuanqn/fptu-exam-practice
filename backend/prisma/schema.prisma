@@ -31,6 +31,9 @@ model User {
   githubId     String?   @unique @map("github_id") @db.VarChar(32) // tai khoan GitHub da lien ket (id so)
   avatarPath   String?   @map("avatar_path") @db.VarChar(120) // null = dung mascot mac dinh
   proExpiresAt DateTime? @map("pro_expires_at") // het han goi Pro; null hoac da qua = khong phai Pro
+  reminderEnabled Boolean   @default(false) @map("reminder_enabled") // nhac on qua email (mac dinh tat, nguoi dung tu bat)
+  examDate        DateTime? @map("exam_date") @db.Date // ngay thi nguoi dung dat de thu nhac co dem nguoc
+  reminderSentOn  DateTime? @map("reminder_sent_on") @db.Date // ngay gan nhat da gui thu nhac (toi da 1 thu moi ngay)
   studyGoalDays Int @default(3) @map("study_goal_days") // muc tieu so ngay hoc moi tuan (3, 5 hoac 7)
   emailVerifiedAt DateTime? @map("email_verified_at") // chÆ°a xĂ¡c minh email thĂ¬ chÆ°a dĂ¹ng Ä‘Æ°á»£c cĂ¡c dá»‹ch vá»¥ trá»« credit
   createdAt DateTime   @default(now()) @map("created_at")

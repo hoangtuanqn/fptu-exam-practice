@@ -6,10 +6,13 @@
       "title": "Bộ đề theo chương",
       "highlights": [
         "Bộ đề theo chương: chọn môn, lấy đề FE rồi chỉ luyện các chương bạn muốn ôn",
-        "Tải lại trang sau khi nộp bài vẫn giữ nguyên kết quả"
+        "Tải lại trang sau khi nộp bài vẫn giữ nguyên kết quả",
+        "Mức sẵn sàng theo môn và email nhắc ôn (tự bật trong Hồ sơ)"
       ],
       "changes": [
         { "type": "new", "text": "Bộ đề theo chương (Tài khoản > Bộ đề theo chương): chọn môn, dán link đề FE đúng môn (kiểm tra trước khi trừ phí), rồi chọn các chương để chỉ làm những câu thuộc chương đó" },
+        { "type": "new", "text": "Trang Tổng quan hiện mức sẵn sàng của từng môn (Cần ôn thêm / Khá ổn / Sẵn sàng) dựa trên các bài thi thử gần nhất" },
+        { "type": "new", "text": "Email nhắc ôn: tự bật trong Hồ sơ, tối đa 1 thư mỗi ngày khi có câu đến hạn, có thể đặt ngày thi và hủy bất cứ lúc nào" },
         { "type": "improved", "text": "Làm bài: chủ đề hiện ngay trên đầu câu, bỏ các thông báo gây xao nhãng, header gọn hơn trên điện thoại" },
         { "type": "fixed", "text": "Tải lại trang sau khi nộp bài không còn tạo lượt làm mới" }
       ]

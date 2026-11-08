@@ -81,6 +81,12 @@ export const reviewApi = {
   remove: (id: number) => http.delete(`/review/${id}`),
 };
 
+export interface ReminderSettings {
+  enabled: boolean;
+  examDate: string | null; // YYYY-MM-DD
+  emailVerified: boolean;
+}
+
 export interface SubjectReadiness {
   code: string;
   level: "insufficient" | "needs-work" | "fair" | "ready";
@@ -94,6 +100,8 @@ export interface SubjectReadiness {
 }
 
 export const studyApi = {
+  reminder: () => http.get<ReminderSettings>("/study/reminder"),
+  setReminder: (enabled: boolean, examDate: string | null) => http.put<ReminderSettings>("/study/reminder", { enabled, examDate }),
   readiness: () => http.get<SubjectReadiness[]>("/study/readiness"),
   stats: () => http.get<StudyStats>("/study/stats"),
   topics: () => http.get<TopicReportData>("/study/topics"),

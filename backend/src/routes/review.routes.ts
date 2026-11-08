@@ -8,14 +8,17 @@ import {
   reviewAnswerBody,
   reviewListQuery,
   reviewQueueQuery,
+  reminderBody,
   studyGoalBody,
   type ReviewAnswerBody,
   type ReviewListQuery,
   type ReviewQueueQuery,
+  type ReminderBody,
   type StudyGoalBody,
 } from "../rules/requests/review.request";
 import { ResponseClient } from "../rules/response";
 import { reviewService } from "../services/review.service";
+import { reminderService } from "../services/reminder.service";
 import { readinessService } from "../services/readiness.service";
 import { studyService } from "../services/study.service";
 import { AppError } from "../rules/error";
@@ -57,6 +60,13 @@ export const studyRouter = Router();
 studyRouter.use(authenticate, limiter);
 studyRouter.get("/stats", async (req: Request, res: Response) => {
   res.json(new ResponseClient({ data: await studyService.stats(req.user!.id) }));
+});
+studyRouter.get("/reminder", async (req: Request, res: Response) => {
+  res.json(new ResponseClient({ data: await reminderService.get(req.user!.id) }));
+});
+studyRouter.put("/reminder", validate(reminderBody), async (req: Request, res: Response) => {
+  const b = getValidated<ReminderBody>(res);
+  res.json(new ResponseClient({ message: "Đã lưu", data: await reminderService.update(req.user!.id, b) }));
 });
 studyRouter.get("/readiness", async (req: Request, res: Response) => {
   res.json(new ResponseClient({ data: await readinessService.forUser(req.user!.id) }));

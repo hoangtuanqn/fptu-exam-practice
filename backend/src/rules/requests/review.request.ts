@@ -15,5 +15,15 @@ export const studyGoalBody = z.object({
 
 export type ReviewQueueQuery = z.infer<typeof reviewQueueQuery>;
 export type ReviewListQuery = z.infer<typeof reviewListQuery>;
+export const reminderBody = z.object({
+  enabled: z.boolean(),
+  examDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Ngày thi không hợp lệ")
+    .refine((s) => !Number.isNaN(Date.parse(`${s}T00:00:00Z`)) && Date.parse(`${s}T00:00:00Z`) < Date.now() + 3 * 365 * 86_400_000, "Ngày thi không hợp lệ")
+    .nullable(),
+});
+
 export type ReviewAnswerBody = z.infer<typeof reviewAnswerBody>;
+export type ReminderBody = z.infer<typeof reminderBody>;
 export type StudyGoalBody = z.infer<typeof studyGoalBody>;
