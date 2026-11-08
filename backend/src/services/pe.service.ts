@@ -1,3 +1,5 @@
+import { PRO_BENEFITS } from "../constants/plan";
+import { planService } from "./plan.service";
 import fs from "node:fs/promises";
 import path from "node:path";
 import * as cheerio from "cheerio";
@@ -126,7 +128,7 @@ export const peService = {
   async quote(userId: number, url: string) {
     const threadId = parseThreadId(url);
     if (!threadId) throw new AppError("Link không hợp lệ");
-    const free = await this.hasPaid(userId, threadId);
+    const free = (PRO_BENEFITS.freePe && (await planService.isPro(userId))) || (await this.hasPaid(userId, threadId));
     return { price: PE_PRICE, fee: free ? 0 : PE_PRICE, free };
   },
 
@@ -138,7 +140,8 @@ export const peService = {
     const threadId = parseThreadId(url);
     if (!threadId) throw new AppError("Link không hợp lệ");
 
-    const fee = (await this.hasPaid(userId, threadId)) ? 0 : PE_PRICE; // đã trả tiền rồi thì tải lại miễn phí
+    const pro = PRO_BENEFITS.freePe && (await planService.isPro(userId));
+    const fee = pro || (await this.hasPaid(userId, threadId)) ? 0 : PE_PRICE; // đã trả tiền rồi thì tải lại miễn phí
     const row = await prisma.$transaction(async (tx) => {
       if (fee > 0) await walletService.charge(tx, { userId, amount: fee, type: "PE_CHARGE", note: `Tải đề PE thread ${threadId}` });
       return tx.peDownload.create({ data: { userId, threadId, title: `Thread ${threadId}`, price: fee } });

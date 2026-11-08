@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { AlertCircle, BadgeCheck, CheckCircle2, Link2, Loader2 } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { ApiError } from "@/shared/api/client";
+import { isPro } from "@/shared/utils/pro";
 import { useToast } from "@/shared/context/ToastContext";
 import { SignUpCta } from "@/features/trial/SignUpCta";
 import { useApi } from "@/shared/hooks/useApi";
@@ -58,7 +59,8 @@ export function LinkImport({ onImported }: Props) {
   const price = useApi(() => examImportApi.price(), [user?.id]);
   const listPrice = price.data?.price ?? null;
   const shownPrice = listPrice ?? DEFAULT_PRICE; // chưa tải được thì hiện giá mặc định
-  const fee = user ? (listPrice ?? 0) : 0;
+  const pro = isPro(user); // Pro: lấy đề không bị trừ phí
+  const fee = user && !pro ? (listPrice ?? 0) : 0;
   const [confirming, setConfirming] = useState(false); // hộp thoại xác nhận trước khi lấy (và trừ phí)
   const [quoting, setQuoting] = useState(false); // đang hỏi server phí thực tế của lần lấy này
   const [quotedFee, setQuotedFee] = useState<number | null>(null);
@@ -214,7 +216,7 @@ export function LinkImport({ onImported }: Props) {
           </span>
           {/* Hạn mức nhìn thấy TRƯỚC khi bấm (không phải đợi hết lượt mới biết) */}
           <span className="md-body-small text-on-surface-variant">
-            {user ? (fee > 0 ? `Số dư của bạn: ${user.balance.toLocaleString("vi-VN")} credit. Đề đã từng lấy được mở lại miễn phí.` : "Đề đã từng lấy được mở lại miễn phí.") : price.data?.guestRemaining !== undefined ? `Hôm nay bạn còn ${price.data.guestRemaining}/${price.data.guestLimit} lượt lấy đề miễn phí.` : "Khách được lấy miễn phí 1 đề mỗi ngày."}
+            {user ? (pro ? "Bạn đang dùng Pro: lấy đề không bị trừ credit." : fee > 0 ? `Số dư của bạn: ${user.balance.toLocaleString("vi-VN")} credit. Đề đã từng lấy được mở lại miễn phí.` : "Đề đã từng lấy được mở lại miễn phí.") : price.data?.guestRemaining !== undefined ? `Hôm nay bạn còn ${price.data.guestRemaining}/${price.data.guestLimit} lượt lấy đề miễn phí.` : "Khách được lấy miễn phí 1 đề mỗi ngày."}
           </span>
         </div>
       </div>

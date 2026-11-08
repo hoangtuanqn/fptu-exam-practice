@@ -13,6 +13,7 @@ export const publicUserSelect = {
   role: true,
   status: true,
   balance: true,
+  proExpiresAt: true,
   emailVerifiedAt: true,
   createdAt: true,
 } satisfies Prisma.UserSelect;
