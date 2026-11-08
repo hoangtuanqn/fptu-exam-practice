@@ -9,7 +9,7 @@ import { PageHeader } from "@/shared/ui/Card";
 import { Segmented } from "@/shared/ui/Segmented";
 import { AllSubjectsPicker } from "@/features/subject/AllSubjectsPicker";
 import { SubjectCard } from "@/features/subject/SubjectCard";
-import type { SubjectItem } from "./chapter-set.api";
+import type { SubjectItem } from "@/features/subject/subject.api";
 
 const POLL_MS = 4000;
 const POLL_MAX = 20; // chủ đề của đề mới lấy về đến sau đáp án vài giây; chờ tối đa chừng này lần

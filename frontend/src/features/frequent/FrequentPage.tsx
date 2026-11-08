@@ -10,7 +10,7 @@ import { Empty } from "@/shared/ui/Feedback";
 import { QueryBoundary } from "@/shared/ui/QueryBoundary";
 import { AllSubjectsPicker } from "@/features/subject/AllSubjectsPicker";
 import { SubjectCard } from "@/features/subject/SubjectCard";
-import { chapterSetApi, type FrequentItem } from "./chapter-set.api";
+import { frequentApi, type FrequentItem } from "./frequent.api";
 
 const RECHECK_MS = 6000;
 
@@ -27,7 +27,7 @@ export default function FrequentPage() {
 }
 
 function Result({ code, onBack }: { code: string; onBack: () => void }) {
-  const q = useApi(() => chapterSetApi.frequent(code), [code]);
+  const q = useApi(() => frequentApi.forSubject(code), [code]);
   const d = q.data;
 
   // Ảnh được phân tích dần: còn câu chưa phân tích thì hỏi lại để danh sách đầy đủ lên

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useAuth } from "@/features/auth/AuthContext";
-import { examLibraryApi } from "@/features/exam-library/exam-library.api";
-import { notifyLibraryChanged } from "@/features/exam-library/libraryEvents";
+import { examLibraryApi } from "@/features/exam-store/exam-library.api";
+import { notifyLibraryChanged } from "@/features/exam-store/libraryEvents";
 import { historyApi } from "@/features/history/history.api";
 import { resubscribeRooms } from "@/shared/realtime/socket";
 import { useToast } from "@/shared/context/ToastContext";
