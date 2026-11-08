@@ -648,3 +648,31 @@ model StudyDay {
   @@unique([userId, day])
   @@map("study_days")
 }
+
+// Mon hoc (lay tu syllabus FLM bang tools/flm-crawler, nhap bang npm run import:syllabus). Dung de gan chu de cho cau hoi
+model Subject {
+  id         Int      @id @default(autoincrement())
+  code       String   @unique @db.VarChar(20)
+  name       String   @db.VarChar(200)
+  syllabusId String?  @map("syllabus_id") @db.VarChar(20)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  chapters SubjectChapter[]
+
+  @@map("subjects")
+}
+
+// Mot chuong cua mon (number 0 = nhom "Khac"); topics la mang cac muc noi dung, vd ["1.1. What is an operating system"]
+model SubjectChapter {
+  id        Int    @id @default(autoincrement())
+  subjectId Int    @map("subject_id")
+  number    Int
+  title     String @db.VarChar(255)
+  topics    Json
+
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([subjectId, number])
+  @@map("subject_chapters")
+}
