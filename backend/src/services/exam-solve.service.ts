@@ -7,6 +7,7 @@ import { realtimeHub } from "../realtime/hub";
 import { compactCommentsText } from "./crawler/comments-file.service";
 import { examRepository } from "../repositories/exam.repository";
 import { solveExam } from "./ai/exam-solver.service";
+import { topicLabelerService } from "./ai/topic-labeler.service";
 import { aiSettingService } from "./ai-setting.service";
 
 /**
@@ -56,6 +57,8 @@ async function run(examId: number) {
     await fs.writeFile(path.join(dir, "ai-report.md"), `${solved.report}\n`, "utf-8");
     lastError.delete(examId);
     void realtimeHub.publishExam(examId);
+    // Gắn chủ đề cho các câu (việc phụ, chạy nền): lỗi ở đây không ảnh hưởng đáp án vừa có
+    void topicLabelerService.labelExam(examId).catch((err) => console.error(`[ai] gắn chủ đề đề ${exam.threadId} lỗi: ${(err as Error).message}`));
     const gaps = solved.unanswered.length ? `, thiếu ${solved.unanswered.length} câu (${solved.unanswered.join(",")})` : "";
     const skipped = solved.notQuestions.length ? `, ${solved.notQuestions.length} ảnh không phải câu hỏi (${solved.notQuestions.join(",")})` : "";
     console.log(`[ai] đề ${exam.threadId} đã có đáp án (${solved.answers.length} câu${gaps}${skipped}) sau ${((Date.now() - t0) / 1000).toFixed(1)}s`);
