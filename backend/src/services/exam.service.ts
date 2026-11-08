@@ -69,6 +69,7 @@ export const examService = {
         imageUrl: imageUrlOf(q.imagePath),
         correct: q.answer.split(/\s+/).filter(Boolean),
         isReference: q.isReference,
+        topic: q.topic, // chủ đề theo syllabus môn (null nếu chưa gắn)
       })),
     };
   },

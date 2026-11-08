@@ -185,8 +185,9 @@ export function useQuiz() {
 
   // AI phân tích xong: gắn đáp án đúng vào các câu đang làm (không đụng tới đáp án người dùng đã chọn)
   // `referenceNumbers`: các câu AI cho là tài liệu tham khảo (trang công thức...): chuyển sang mục "Tài liệu", bỏ khỏi danh sách câu
-  function applyAnswers(list: { number: number; correct: string[] }[], source: AnswerSource, referenceNumbers: number[] = []) {
+  function applyAnswers(list: { number: number; correct: string[]; topic?: string | null }[], source: AnswerSource, referenceNumbers: number[] = []) {
     const byNumber = new Map(list.map((a) => [a.number, a.correct]));
+    const topicOf = new Map(list.map((a) => [a.number, a.topic]));
     const refSet = new Set(referenceNumbers);
     if (refSet.size > 0) {
       const moved = questions.filter((qn) => refSet.has(qn.number)).map((qn) => ({ ...qn, isReference: true, answerPending: false }));
@@ -198,7 +199,7 @@ export function useQuiz() {
       setChecked(omit);
       setFlagged(omit);
     }
-    setQuestions((prev) => prev.filter((qn) => !refSet.has(qn.number)).map((qn) => ({ ...qn, correct: byNumber.get(qn.number) ?? qn.correct, answerPending: false })));
+    setQuestions((prev) => prev.filter((qn) => !refSet.has(qn.number)).map((qn) => ({ ...qn, correct: byNumber.get(qn.number) ?? qn.correct, topic: topicOf.get(qn.number) ?? qn.topic, answerPending: false })));
     setAnswerSource(source);
   }
 
