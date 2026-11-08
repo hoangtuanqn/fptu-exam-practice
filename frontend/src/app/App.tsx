@@ -23,6 +23,7 @@ function PracticeRoute() {
 import { GuestOnly, RequireAuth } from "@/features/auth/guards";
 
 // Panel tách riêng thành chunk: người chỉ luyện đề không phải tải code của panel
+import { PageMeta } from "@/shared/seo/PageMeta";
 const ChatWidget = lazy(() => import("@/features/chat/ChatWidget"));
 // Thư viện thành phần M3 (chỉ khi chạy npm run dev)
 const M3Gallery = import.meta.env.DEV ? lazy(() => import("@/features/design-system/M3Gallery")) : null;
@@ -58,6 +59,7 @@ const ACCOUNT_NAV: NavItem[] = [
 export default function App() {
   return (
     <Suspense fallback={<Loading />}>
+      <PageMeta />
       <GuestSync />
       <DailyCheckInPopup />
       <ChatWidget />
