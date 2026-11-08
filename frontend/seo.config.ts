@@ -53,8 +53,11 @@ export const PRIVATE_PAGES: Record<string, PageSeo> = {
   "/auth/github/callback": { title: "Đăng nhập bằng GitHub", description: "Đang hoàn tất đăng nhập bằng tài khoản GitHub của bạn." },
 
   "/account": { title: "Tổng quan tài khoản", description: "Số dư credit, đề đã lấy, lần làm bài gần đây và các lối tắt trong tài khoản của bạn." },
-  "/account/exams": { title: "Kho đề của tôi", description: "Danh sách đề thi bạn đã lấy về, bấm vào để luyện tập hoặc thi thử." },
-  "/account/review": { title: "Sổ câu sai", description: "Các câu bạn từng làm sai, tự nhắc ôn lại theo lịch 1, 3, 7, 14, 30 ngày để nhớ lâu." },
+  "/account/exams": { title: "Kho đề", description: "Đề bạn đã lấy và toàn bộ đề FE của từng môn. Bấm vào một đề để luyện tập hoặc thi thử." },
+  "/account/catalog": { title: "Kho đề", description: "Chuyển sang Kho đề, tab Theo môn." },
+  "/account/frequent": { title: "Câu hay ra", description: "Những câu lặp lại ở nhiều đề của cùng một môn, ôn trước để đạt hiệu quả cao nhất." },
+  "/account/chapters": { title: "Bộ đề theo chương", description: "Chọn môn và chương, chỉ luyện các câu thuộc chương bạn đang muốn ôn." },
+  "/account/review": { title: "Sổ câu sai", description: "Các câu bạn từng làm sai, tự nhắc ôn lại đúng lúc để nhớ lâu." },
   "/account/review/practice": { title: "Ôn câu sai", description: "Ôn lần lượt các câu đến hạn trong sổ câu sai của bạn." },
   "/account/pe": { title: "Tải đề thi PE", description: "Tải trọn bộ tài nguyên đề thi PE thành một file zip." },
   "/account/reports": { title: "Báo cáo đáp án", description: "Theo dõi các báo cáo đáp án sai bạn đã gửi và trạng thái xử lý." },
