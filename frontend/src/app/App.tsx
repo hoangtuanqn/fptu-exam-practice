@@ -35,6 +35,7 @@ const MyReportsPage = lazy(() => import("@/features/account/pages/MyReportsPage"
 const ReferralPage = lazy(() => import("@/features/account/pages/ReferralPage"));
 const GiftCodePage = lazy(() => import("@/features/account/pages/GiftCodePage"));
 const PeDownloadPage = lazy(() => import("@/features/pe/PeDownloadPage"));
+const FeaturesPage = lazy(() => import("@/features/landing/FeaturesPage"));
 const PlanPage = lazy(() => import("@/features/plan/PlanPage"));
 const ProfilePage = lazy(() => import("@/features/account/pages/ProfilePage"));
 
@@ -64,6 +65,9 @@ export default function App() {
         <Route path="/" element={<PracticeRoute />} />
         <Route path="/exam/:threadId" element={<PracticeRoute />} />
         {M3Gallery && <Route path="/dev/m3" element={<Suspense fallback={null}><M3Gallery /></Suspense>} />}
+
+        {/* Bảng tính năng của hệ thống (để giới thiệu/chụp màn hình): công khai */}
+        <Route path="/features" element={<FeaturesPage />} />
 
         {/* Trang bán gói Pro: công khai, khách bấm mua sẽ được dẫn đi đăng nhập */}
         <Route path="/pro" element={<PlanPage />} />
