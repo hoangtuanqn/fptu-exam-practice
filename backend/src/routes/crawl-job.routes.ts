@@ -26,7 +26,7 @@ const guestLimiter = limiter(24 * 60 * 60 * 1000, 5, (user) => !!user, "Khách")
 // Giao diện gọi /quote để kiểm tra link ngay khi người dùng gõ/dán (đã gộp bằng debounce), nên cho nhiều hơn lượt nhập đề
 const quoteLimiter = rateLimit({
   windowMs: 60 * 1000,
-  limit: 60,
+  limit: 240,
   standardHeaders: true,
   legacyHeaders: false,
   message: { status: false, message: "Bạn kiểm tra link quá nhanh, vui lòng thử lại sau ít giây" },

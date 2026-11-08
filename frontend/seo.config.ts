@@ -26,6 +26,11 @@ export const PUBLIC_PAGES: Record<string, PageSeo> = {
     description: "Một lần 99.000đ dùng 4 tháng, rẻ hơn 93.000đ so với mua lẻ trên FuOverflow. Không giới hạn lượt lấy đề, giải thích AI và tải đề PE.",
     index: true,
   },
+  "/changelog": {
+    title: "Có gì mới: lịch sử cập nhật web và tiện ích",
+    description: "Danh sách tính năng mới, cải tiến và sửa lỗi theo từng phiên bản của Luyện thi FE FPTU và tiện ích Chrome.",
+    index: true,
+  },
   "/register": {
     title: "Đăng ký tài khoản, nhận credit miễn phí",
     description: "Tạo tài khoản Luyện thi FE FPTU bằng email, Google hoặc GitHub. Đăng ký lần đầu nhận ngay credit để lấy đề và làm thử không tốn phí.",

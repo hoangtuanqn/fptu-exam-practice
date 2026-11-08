@@ -11,6 +11,7 @@ import { Card, PageHeader } from "@/shared/ui/Card";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { inputClass } from "@/shared/ui/Input";
 import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
+import { ExpandableText } from "@/shared/ui/ExpandableText";
 import { formatCredit, formatCreditSigned, formatDateTime } from "@/shared/utils/formatters";
 
 const amountClass = (n: number) => (n > 0 ? "text-emerald-600" : n < 0 ? "text-rose-600" : "text-slate-600");
@@ -97,12 +98,10 @@ export default function WalletHistoryPage() {
                       <Td>
                         <UserCell user={t.user} />
                       </Td>
-                      <Td className="whitespace-nowrap">{TRANSACTION_LABEL[t.type]}</Td>
+                      <Td className="min-w-32">{TRANSACTION_LABEL[t.type]}</Td>
                       <Td className={`whitespace-nowrap text-right font-medium tabular-nums ${amountClass(t.amount)}`}>{formatCreditSigned(t.amount)}</Td>
                       <Td className="whitespace-nowrap text-right tabular-nums">{formatCredit(t.balanceAfter)}</Td>
-                      <Td className="max-w-xs truncate text-slate-500" title={t.note ?? undefined}>
-                        {t.note ?? "—"}
-                      </Td>
+                      <Td className="w-full min-w-44 text-slate-500">{t.note ? <ExpandableText text={t.note} /> : "—"}</Td>
                     </Tr>
                   ))}
                 </tbody>
