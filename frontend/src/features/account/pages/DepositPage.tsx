@@ -15,7 +15,7 @@ import { useSubmit } from "@/shared/hooks/useSubmit";
 import { formatCredit, formatDateTime, formatMoney } from "@/shared/utils/formatters";
 import { useClampPage } from "@/shared/hooks/useClampPage";
 
-const PRESETS = [50_000, 100_000, 200_000, 500_000, 1_000_000];
+const PRESETS = [10_000, 50_000, 100_000, 200_000, 500_000, 1_000_000];
 const BACK_KEY = "deposit_back";
 
 // Thưởng thêm theo bậc (bậc cao nhất thỏa điều kiện), khớp với máy chủ
