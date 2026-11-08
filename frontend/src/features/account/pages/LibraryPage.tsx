@@ -34,7 +34,7 @@ const AttemptsCell = ({ e }: { e: LibraryExam }) =>
   );
 
 // Toàn bộ đề đã lấy về, phân trang trên server (trang chủ chỉ hiện vài đề gần nhất)
-export default function LibraryPage() {
+export default function LibraryPage({ embedded = false }: { embedded?: boolean }) {
   const navigate = useNavigate();
   const [url, setUrl] = useUrlState({ page: "1" });
   const page = toPage(url.page);
@@ -45,7 +45,7 @@ export default function LibraryPage() {
 
   return (
     <>
-      <PageHeader title="Kho đề của tôi" description="Các đề bạn đã lấy từ FuOverflow. Mỗi lần bấm vào một đề là một lượt làm mới, lượt đang dở được lưu lại để làm tiếp." />
+      {!embedded && <PageHeader title="Kho đề của tôi" description="Các đề bạn đã lấy từ FuOverflow. Mỗi lần bấm vào một đề là một lượt làm mới, lượt đang dở được lưu lại để làm tiếp." />}
       <ResumeList limit={10} className="mb-5" />
       <Card>
         {loading && !data ? (
