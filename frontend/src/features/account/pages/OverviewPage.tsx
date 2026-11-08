@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, ClipboardCheck, Library, PenLine, Plus } from "lucide-react";
+import { ArrowRight, ClipboardCheck, Library, NotebookPen, PenLine, Plus } from "lucide-react";
+import { reviewApi } from "@/features/review/review.api";
+import { StudyStreakCard } from "@/features/review/StudyStreakCard";
 import { userApi } from "@/features/account/api/user.api";
 import { TransactionTable } from "@/features/account/components/TransactionTable";
 import { useAuth } from "@/features/auth/AuthContext";
@@ -28,6 +30,7 @@ export default function OverviewPage() {
   useOnLibraryChanged(library.reload);
   const attempts = useApi(() => historyApi.list(1, 20), []);
   const recentTx = useApi(() => userApi.transactions(1, 5), []);
+  const review = useApi(() => reviewApi.summary(), []);
   if (!user) return null;
 
   const recent = attempts.data?.items ?? [];
@@ -57,6 +60,24 @@ export default function OverviewPage() {
 
       {/* Các lượt đang làm dở: hiện ngay đầu trang để vào làm tiếp (không có thì không chiếm chỗ) */}
       <ResumeList limit={5} />
+
+      {/* Nhắc ôn câu sai: chỉ hiện khi có câu đến hạn */}
+      {review.data && review.data.due > 0 && (
+        <Link to="/account/review/practice" className="md-state md-motion flex items-center gap-3 rounded-m3-md border border-outline-variant bg-surface-container-low px-4 py-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-container text-on-primary-container">
+            <NotebookPen size={20} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="md-title-small text-on-surface">Có {review.data.due} câu đến hạn ôn trong Sổ câu sai</p>
+            <p className="md-body-small text-on-surface-variant">Ôn vài phút mỗi ngày để nhớ lâu hơn.</p>
+          </div>
+          <span className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-primary">
+            Ôn ngay <ArrowRight size={14} />
+          </span>
+        </Link>
+      )}
+
+      <StudyStreakCard />
 
       <StatGrid className="grid-cols-2 xl:grid-cols-4">
         <StatCard label="Số dư ví" value={formatCredit(user.balance)} note="Dùng để lấy đề từ FuOverflow" />

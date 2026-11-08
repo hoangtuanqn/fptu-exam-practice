@@ -158,6 +158,7 @@ export default function PracticePage({ threadId }: Props) {
       mode: quiz.mode === "exam" ? ("EXAM" as const) : ("PRACTICE" as const),
       durationSec: quiz.elapsed,
       answers: quiz.answers,
+      flagged: Object.keys(quiz.flagged).filter((n) => quiz.flagged[Number(n)]).map(Number),
     };
     if (!user) {
       pendingAttempt.save({ examId: quiz.examId, payload });
@@ -165,8 +166,13 @@ export default function PracticePage({ threadId }: Props) {
     }
     historyApi
       .save(quiz.examId, payload)
-      .then(() => {
-        toast.success("Đã lưu vào lịch sử làm bài");
+      .then((saved) => {
+        const review = saved.review;
+        if (review && review.added > 0) {
+          toast.success(`Đã lưu bài và thêm ${review.added} câu vào Sổ câu sai`, { action: { label: "Xem sổ", onClick: () => navigate("/account/review") } });
+        } else if (review && review.capped > 0) {
+          toast.error("Sổ câu sai đã đầy nên một số câu chưa được lưu. Pro không giới hạn.", { action: { label: "Xem gói Pro", onClick: () => navigate("/pro") } });
+        } else toast.success("Đã lưu vào lịch sử làm bài");
         if (quiz.examId !== null) void loadBest(quiz.examId);
       })
       .catch(() => toast.error("Không lưu được lịch sử làm bài"));

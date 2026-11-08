@@ -52,6 +52,8 @@ export const PRIVATE_PAGES: Record<string, PageSeo> = {
 
   "/account": { title: "Tổng quan tài khoản", description: "Số dư credit, đề đã lấy, lần làm bài gần đây và các lối tắt trong tài khoản của bạn." },
   "/account/exams": { title: "Kho đề của tôi", description: "Danh sách đề thi bạn đã lấy về, bấm vào để luyện tập hoặc thi thử." },
+  "/account/review": { title: "Sổ câu sai", description: "Các câu bạn từng làm sai, tự nhắc ôn lại theo lịch 1, 3, 7, 14, 30 ngày để nhớ lâu." },
+  "/account/review/practice": { title: "Ôn câu sai", description: "Ôn lần lượt các câu đến hạn trong sổ câu sai của bạn." },
   "/account/pe": { title: "Tải đề thi PE", description: "Tải trọn bộ tài nguyên đề thi PE thành một file zip." },
   "/account/reports": { title: "Báo cáo đáp án", description: "Theo dõi các báo cáo đáp án sai bạn đã gửi và trạng thái xử lý." },
   "/account/attempts": { title: "Lịch sử làm bài", description: "Xem lại các lần luyện tập, thi thử cùng điểm số từng lần." },
