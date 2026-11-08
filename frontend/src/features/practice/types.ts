@@ -6,6 +6,7 @@ export interface Question {
   imageUrl: string; // blob URL của ảnh
   answerPending?: boolean; // AI chưa phân tích xong: chưa biết câu chọn một hay nhiều, nên tạm cho chọn nhiều
   correct: string[]; // đáp án đúng từ ans.txt, ví dụ ["A"] hoặc ["A","B","C"]; rỗng = không có đáp án
+  topic?: string | null; // chủ đề theo syllabus môn học (null/không có = chưa gắn)
   isReference?: boolean; // tài liệu tham khảo (trang công thức...), không phải câu hỏi: không làm, không chấm, nằm trong mục "Tài liệu"
 }
 
