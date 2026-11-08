@@ -43,6 +43,13 @@ export function QuizDialogs({ quiz, dialog, onDialogChange, onCloseZoom }: Props
           answersPending={quiz.answersPending}
           savable={quiz.examId !== null}
           total={quiz.questions.length}
+          flagged={quiz.questions.filter((q) => quiz.flagged[q.number]).map((q) => q.number)}
+          unanswered={quiz.questions.filter((q) => !q.isReference && !(quiz.answers[q.number]?.length > 0)).map((q) => q.number)}
+          onJump={(number) => {
+            quiz.goTo(quiz.questions.findIndex((q) => q.number === number));
+            onCloseZoom();
+            onDialogChange(null);
+          }}
           onCancel={() => onDialogChange(null)}
           onConfirm={() => {
             quiz.submit();

@@ -1,6 +1,25 @@
 {
   "web": [
     {
+      "version": "1.5.0",
+      "date": "2026-11-08",
+      "title": "Sổ câu sai và chuỗi ngày học",
+      "highlights": [
+        "Sổ câu sai: câu làm sai tự vào sổ và được nhắc ôn lại sau 1, 3, 7, 14, 30 ngày",
+        "Chuỗi ngày học và mục tiêu tuần, hiện ở trang tổng quan",
+        "Trước khi nộp bài, bấm số câu đã đánh dấu hoặc chưa làm để quay lại xem"
+      ],
+      "changes": [
+        { "type": "new", "text": "Sổ câu sai: mọi câu bạn làm sai hoặc bỏ qua tự được lưu, có chế độ ôn lần lượt từng câu và chấm ngay" },
+        { "type": "new", "text": "Lịch nhắc ôn kiểu lặp lại ngắt quãng: đúng thì lần ôn sau xa hơn, sai thì quay lại vào ngày mai; đúng đủ 5 lần là đã nhớ" },
+        { "type": "new", "text": "Câu bạn đánh dấu phân vân cũng vào sổ dù làm đúng, để ôn lại cho chắc" },
+        { "type": "new", "text": "Chuỗi ngày học liên tiếp, tiến độ tuần và mục tiêu 3, 5 hoặc 7 ngày mỗi tuần" },
+        { "type": "new", "text": "Gói thường lưu tối đa 50 câu trong sổ, Pro không giới hạn" },
+        { "type": "improved", "text": "Hộp xác nhận nộp bài liệt kê câu đã đánh dấu và câu chưa trả lời, bấm để nhảy tới câu đó" },
+        { "type": "improved", "text": "Giảm lỗi “Bạn thao tác hơi nhanh” khi nhiều bạn dùng chung mạng wifi" }
+      ]
+    },
+    {
       "version": "1.4.0",
       "date": "2026-11-08",
       "title": "Gói Pro và trang chủ mới",

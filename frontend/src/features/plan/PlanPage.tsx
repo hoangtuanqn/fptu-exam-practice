@@ -15,6 +15,7 @@ import {
   Link2,
   MessageCircleQuestion,
   Minus,
+  NotebookPen,
   ShieldCheck,
   Sparkles,
   Timer,
@@ -382,13 +383,14 @@ function Benefits({ plan, fetchPrice }: { plan: PlanInfo; fetchPrice: number }) 
     },
     plan.benefits.freeExplain && { icon: Sparkles, title: "Giải thích AI mọi câu", text: "Bấm xem lời giải của bất kỳ câu nào, không cần mở khóa từng đề.", was: "trả theo câu" },
     plan.benefits.freePe && { icon: Download, title: "Tải đề PE miễn phí", text: "Tải trọn bộ tài nguyên đề PE (file zip), không giới hạn số lần tải.", was: "trả mỗi lần" },
+    plan.benefits.unlimitedReview && { icon: NotebookPen, title: "Sổ câu sai không giới hạn", text: "Mọi câu sai đều được lưu và nhắc ôn lại đúng lịch. Gói thường lưu tối đa 50 câu.", was: "50 câu" },
   ].filter(Boolean) as { icon: typeof Link2; title: string; text: string; was: string | null }[];
   return (
     <section className="mx-auto max-w-5xl px-4 pt-14">
       <Reveal>
         <h2 className="md-headline-small text-center text-on-surface">Mọi thứ mở khóa khi bạn lên Pro</h2>
       </Reveal>
-      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {items.map(({ icon: Icon, title, text, was }, i) => (
           <Reveal key={title} delay={i * 100}>
             <div className="h-full rounded-m3-lg border border-outline-variant bg-surface-container-lowest p-5 transition hover:-translate-y-1 hover:shadow-m3-2">
