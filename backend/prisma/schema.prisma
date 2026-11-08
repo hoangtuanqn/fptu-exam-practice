@@ -30,6 +30,7 @@ model User {
   googleSub    String?   @unique @map("google_sub") @db.VarChar(64) // tĂ i khoáº£n Google Ä‘Ă£ liĂªn káº¿t
   githubId     String?   @unique @map("github_id") @db.VarChar(32) // tai khoan GitHub da lien ket (id so)
   avatarPath   String?   @map("avatar_path") @db.VarChar(120) // null = dung mascot mac dinh
+  proExpiresAt DateTime? @map("pro_expires_at") // het han goi Pro; null hoac da qua = khong phai Pro
   emailVerifiedAt DateTime? @map("email_verified_at") // chÆ°a xĂ¡c minh email thĂ¬ chÆ°a dĂ¹ng Ä‘Æ°á»£c cĂ¡c dá»‹ch vá»¥ trá»« credit
   createdAt DateTime   @default(now()) @map("created_at")
   updatedAt DateTime   @updatedAt @map("updated_at")
@@ -47,6 +48,7 @@ model User {
   explanationUnlocks ExplanationUnlock[]
   peDownloads        PeDownload[]
   dailyCheckIns      DailyCheckIn[]
+  planPurchases      PlanPurchase[]
   referredBy         User?                @relation("Referral", fields: [referredById], references: [id], onDelete: SetNull)
   referrals          User[]               @relation("Referral")
   rewardsAsReferrer  ReferralReward[]     @relation("RewardReferrer")
@@ -135,6 +137,7 @@ enum TransactionType {
   DEPOSIT_BONUS // thÆ°á»Ÿng thĂªm khi náº¡p tá»« má»™t má»©c nháº¥t Ä‘á»‹nh
   PE_CHARGE // phĂ­ táº£i bá»™ tĂ i nguyĂªn Ä‘á» thi PE (file zip)
   PE_REFUND // hoĂ n phĂ­ khi khĂ´ng táº¡o Ä‘Æ°á»£c file zip
+  PLAN_CHARGE // mua gói Pro
   CHECKIN_REWARD // thưởng điểm danh hằng ngày (kể cả thưởng đủ 7 ngày)
 }
 
@@ -585,4 +588,21 @@ model ChatAnswerCache {
 
   @@index([version])
   @@map("chat_answer_cache")
+}
+
+// Lich su mua goi Pro (mua khi con han thi cong don: startsAt = ngay het han cu)
+model PlanPurchase {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  plan      String   @db.VarChar(20)
+  months    Int
+  price     Int
+  startsAt  DateTime @map("starts_at")
+  endsAt    DateTime @map("ends_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("plan_purchases")
 }
