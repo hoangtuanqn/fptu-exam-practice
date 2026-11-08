@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "FEPass: Lấy danh sách đề từ FuOverflow",
+  "short_name": "FUO Catalog",
+  "version": "1.0.0",
+  "description": "Công cụ nội bộ: duyệt từng môn trên fuoverflow.com, chỉ lấy danh sách đề có nhãn Đề Thi FE (tên đề, ngày đăng) và xuất ra file JSON để nhập vào FEPass. Không tải ảnh đề.",
+  "action": { "default_title": "Lấy danh sách đề FuOverflow" },
+  "permissions": ["storage"],
+  "host_permissions": ["https://fuoverflow.com/*", "https://*.fuoverflow.com/*"],
+  "background": { "service_worker": "background.js" }
+}
