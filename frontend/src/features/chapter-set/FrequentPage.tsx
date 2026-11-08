@@ -1,13 +1,14 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { AlertTriangle, ArrowLeft, Crown, Flame, Loader2, Tag } from "lucide-react";
+import { AlertTriangle, Crown, Flame, Loader2, Tag } from "lucide-react";
 import { useApi } from "@/shared/hooks/useApi";
 import { useUrlState } from "@/shared/hooks/useUrlState";
 import { Badge } from "@/shared/ui/Badge";
-import { Button, buttonClass } from "@/shared/ui/Button";
-import { Card, CardHeader, PageHeader } from "@/shared/ui/Card";
+import { buttonClass } from "@/shared/ui/Button";
+import { PageHeader } from "@/shared/ui/Card";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
-import { SubjectStep } from "./ChapterSetPage";
+import { AllSubjectsPicker } from "@/features/subject/AllSubjectsPicker";
+import { SubjectCard } from "@/features/subject/SubjectCard";
 import { chapterSetApi, type FrequentItem } from "./chapter-set.api";
 
 const RECHECK_MS = 6000;
@@ -19,7 +20,7 @@ export default function FrequentPage() {
   return (
     <div className="space-y-6">
       <PageHeader eyebrow="Học tập" title="Câu hay ra" description="Những câu xuất hiện lặp lại ở nhiều đề của cùng một môn. Ôn trước những câu này là hiệu quả nhất." />
-      {code ? <Result code={code} onBack={() => setUrl({ subject: "" })} /> : <SubjectStep title="Chọn môn" onPick={(s) => setUrl({ subject: s.code })} />}
+      {code ? <Result code={code} onBack={() => setUrl({ subject: "" })} /> : <AllSubjectsPicker title="Chọn môn" onPick={(s) => setUrl({ subject: s.code })} />}
     </div>
   );
 }
@@ -36,15 +37,7 @@ function Result({ code, onBack }: { code: string; onBack: () => void }) {
   }, [d, q]);
 
   return (
-    <Card>
-      <CardHeader
-        title={`Môn ${code}`}
-        action={
-          <Button size="sm" variant="text" onClick={onBack}>
-            <ArrowLeft size={15} /> Đổi môn
-          </Button>
-        }
-      />
+    <SubjectCard title={`Môn ${code}`} onBack={onBack}>
       {q.loading && !d ? (
         <Loading label="Đang phân tích các đề của môn…" />
       ) : q.error ? (
@@ -84,7 +77,7 @@ function Result({ code, onBack }: { code: string; onBack: () => void }) {
           )}
         </div>
       )}
-    </Card>
+    </SubjectCard>
   );
 }
 
