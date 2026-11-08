@@ -155,7 +155,7 @@ export default function PracticePage({ threadId }: Props) {
       setTopicSummary(null);
       return;
     }
-    if (quiz.examId === null || quiz.answersPending || savedFor.current === quiz.session) return;
+    if (quiz.examId === null || quiz.answersPending || quiz.restoredSubmitted || savedFor.current === quiz.session) return; // bài đã nộp được mở lại thì kết quả đã lưu từ trước
     savedFor.current = quiz.session;
     const payload = {
       mode: quiz.mode === "exam" ? ("EXAM" as const) : ("PRACTICE" as const),
@@ -204,7 +204,7 @@ export default function PracticePage({ threadId }: Props) {
         loadedFor.current = threadId; // đã tải xong đề này
         setOpenedThread(exam.threadId);
         const mode = params.get("mode");
-        if (saved && saved.examId === exam.id && saved.status === "IN_PROGRESS") {
+        if (saved && saved.examId === exam.id) {
           quiz.openExam(exam.questions, exam.title, exam.id, saved.mode === "EXAM" ? "exam" : "practice", exam.answerStatus, exam.totalQuestions, {
             sessionId: saved.id,
             answers: saved.answers,
@@ -212,6 +212,7 @@ export default function PracticePage({ threadId }: Props) {
             flagged: saved.flagged,
             current: saved.current,
             elapsedSec: saved.elapsedSec,
+            submitted: saved.status === "SUBMITTED",
           });
         } else if (mode === "practice" || mode === "exam") quiz.openExam(exam.questions, exam.title, exam.id, mode, exam.answerStatus, exam.totalQuestions);
         else quiz.loadExam(exam.questions, exam.title, exam.id, exam.answerStatus, exam.totalQuestions);
