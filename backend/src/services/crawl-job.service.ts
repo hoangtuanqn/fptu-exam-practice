@@ -1,3 +1,5 @@
+import { PRO_BENEFITS } from "../constants/plan";
+import { planService } from "./plan.service";
 import type { CrawlJob } from "@prisma/client";
 import { prisma } from "../configs/prisma";
 import { crawlJobRepository } from "../repositories/crawl-job.repository";
@@ -57,8 +59,9 @@ export const crawlJobService = {
     const exam = found && (await examRepository.isComplete(found)) ? found : null;
     const owned = !!exam && (await userExamRepository.has(owner, exam.id));
     if (!exam && !active) await assertThreadAccepted(threadId); // đề phải lấy mới: bài sai thì không cho tới bước xác nhận phí
-    const free = isMember(owner) && price > 0 && (owned || !!active);
-    return { price, fee: free ? 0 : price, free, reason: free ? (owned ? ("owned" as const) : ("in-progress" as const)) : null, title: owned ? exam.title : null };
+    const pro = isMember(owner) && PRO_BENEFITS.freeFetch && (await planService.isPro(owner.userId));
+    const free = isMember(owner) && price > 0 && (pro || owned || !!active);
+    return { price, fee: free ? 0 : price, free, reason: free ? (pro ? ("pro" as const) : owned ? ("owned" as const) : ("in-progress" as const)) : null, title: owned ? exam.title : null };
   },
 
   /**
@@ -90,7 +93,9 @@ export const crawlJobService = {
     if (!exam) await assertThreadAccepted(threadId); // chặn trước khi trừ phí (xem thread-preflight.service)
     // Đã có đề này trong kho của mình thì mở lại miễn phí
     const alreadyOwned = isMember(owner) && !!exam && (await userExamRepository.has(owner, exam.id));
-    const fetchPrice = isMember(owner) && !alreadyOwned ? (await crawlerSettingService.get()).fetchPrice : 0;
+    // Pro: lấy đề không bị trừ phí (vẫn tính là thành viên, vẫn lưu vào kho)
+    const isPro = isMember(owner) && PRO_BENEFITS.freeFetch && (await planService.isPro(owner.userId));
+    const fetchPrice = isMember(owner) && !alreadyOwned && !isPro ? (await crawlerSettingService.get()).fetchPrice : 0;
 
     // Đề đã cũ quá hạn: người này vẫn mở được ngay bản hiện có, đồng thời xếp một lượt làm mới chạy nền
     // (lấy lại ảnh + bình luận, giải lại đáp án). Chưa tạo thêm nếu đang làm mới hoặc vừa thất bại gần đây.

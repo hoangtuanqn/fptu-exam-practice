@@ -23,6 +23,7 @@ export const listWalletQuery = paginationQuery.extend({
       "DEPOSIT_BONUS",
       "PE_CHARGE",
       "PE_REFUND",
+      "PLAN_CHARGE",
       "CHECKIN_REWARD",
     ])
     .optional(),

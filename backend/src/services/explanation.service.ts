@@ -1,3 +1,5 @@
+import { PRO_BENEFITS } from "../constants/plan";
+import { planService } from "./plan.service";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { Prisma } from "@prisma/client";
@@ -58,6 +60,7 @@ export const explanationService = {
     await examService.assertAccess(actor, examId);
     const [ai, promo, purchased] = await Promise.all([aiSettingService.get(), promoSettingService.get(), explanationRepository.purchasedNumbers(userId, examId)]);
     const bundle = await this.bundleQuote(userId, examId, ai.explainPrice, purchased, promo);
+    if (PRO_BENEFITS.freeExplain && (await planService.isPro(userId))) bundle.unlocked = true; // Pro: xem mọi câu miễn phí như đã mở khóa
     const trialsUsed = ai.explainPrice > 0 ? await explanationRepository.trialsUsed(userId) : 0;
     return { price: ai.explainPrice, purchased, unlocked: bundle.unlocked, bundle, freeTrialsLeft: ai.explainPrice > 0 ? Math.max(0, promo.freeTrials - trialsUsed) : 0 };
   },
@@ -73,6 +76,7 @@ export const explanationService = {
     if (exam.answerSource !== "AI" && exam.answerSource !== "MANUAL") throw new AppError("Đề chưa có đáp án chính thức nên chưa thể mở khóa giải thích");
     const [ai, promo] = await Promise.all([aiSettingService.get(), promoSettingService.get()]);
     const purchased = await explanationRepository.purchasedNumbers(userId, examId);
+    if (PRO_BENEFITS.freeExplain && (await planService.isPro(userId))) throw new AppError("Gói Pro của bạn đã xem được mọi lời giải thích, không cần mở khóa");
     const quote = await this.bundleQuote(userId, examId, ai.explainPrice, purchased, promo);
     if (quote.unlocked) throw new AppError("Bạn đã mở khóa toàn bộ lời giải thích của đề này rồi");
     if (quote.price !== expectedPrice) throw new AppError(`Giá gói vừa thay đổi (hiện là ${quote.price} credit). Vui lòng kiểm tra lại rồi mở khóa.`, 409);
@@ -115,7 +119,7 @@ export const explanationService = {
     // Trả phí (nếu chưa mua). Trừ tiền và ghi nhận lượt mua cùng một transaction.
     let charged = 0;
     let trial = false; // lượt xem thử miễn phí (không trừ credit nhưng tính vào số lượt thử)
-    const unlockedAll = await explanationRepository.hasUnlocked(userId, examId);
+    const unlockedAll = (await explanationRepository.hasUnlocked(userId, examId)) || (PRO_BENEFITS.freeExplain && (await planService.isPro(userId)));
     if (!unlockedAll && !(await explanationRepository.hasPurchased(userId, examId, questionNumber))) {
       try {
         trial = ai.explainPrice > 0 && (await explanationRepository.trialsUsed(userId)) < (await promoSettingService.get()).freeTrials;

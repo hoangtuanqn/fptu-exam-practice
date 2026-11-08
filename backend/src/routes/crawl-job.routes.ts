@@ -2,6 +2,7 @@ import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { crawlJobController } from "../controllers/crawl-job.controllers";
 import { identify, requireVerifiedMember } from "../middlewares/auth.middlewares";
+import { isProUser } from "../utils/pro";
 import { idempotent } from "../middlewares/idempotency.middlewares";
 import { validate } from "../middlewares/validate.middlewares";
 import { idParam, importExamBody } from "../rules/requests/crawl.request";
@@ -18,7 +19,8 @@ const limiter = (windowMs: number, limit: number, skip: (user: unknown) => boole
     legacyHeaders: false,
     message: { status: false, message: `${who} nhập đề quá nhiều lần, vui lòng thử lại sau` },
   });
-const memberLimiter = limiter(60 * 60 * 1000, 10, (user) => !user, "Bạn");
+// Thành viên Pro không bị giới hạn lượt; thành viên thường 10 lượt/giờ
+const memberLimiter = limiter(60 * 60 * 1000, 10, (user) => !user || isProUser(user), "Bạn");
 const guestLimiter = limiter(24 * 60 * 60 * 1000, 5, (user) => !!user, "Khách");
 
 // Giao diện gọi /quote để kiểm tra link ngay khi người dùng gõ/dán (đã gộp bằng debounce), nên cho nhiều hơn lượt nhập đề

@@ -4,6 +4,8 @@ import { brand, logos } from "@/shared/brand/brand";
 import { FEATURES, splitSlogan } from "../content";
 import { ExamSourcePicker } from "./ExamSourcePicker";
 import { PromoCard } from "./PromoCard";
+import { SignupGiftBanner } from "./SignupGiftBanner";
+import { ProTeaser } from "@/features/plan/ProTeaser";
 import { useScrollOverlap } from "../useScrollOverlap";
 
 interface Props {
@@ -22,8 +24,8 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
   const accentCount = words.length >= 3 ? 2 : 1;
   const titleLead = words.slice(0, -accentCount).join(" ");
   const titleAccent = words.slice(-accentCount).join(" ");
-  // Hiệu ứng xấp thẻ đang TẮT: ô nhập đề trượt lên che gần hết thẻ ưu đãi, làm khuất dòng quà đăng ký. Muốn bật lại: useScrollOverlap(isGuest)
-  const { under, over } = useScrollOverlap(false);
+  // Hiệu ứng xấp thẻ (khách, màn rộng): kéo xuống thì ô nhập đề trượt lên chồng thẻ ưu đãi, chừa lại dòng quà đăng ký ở đầu thẻ
+  const { under, over } = useScrollOverlap(isGuest);
 
   return (
     <section className="relative isolate shrink-0 border-b border-outline-variant">
@@ -75,8 +77,9 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
         </div>
 
         {/* Ưu đãi đặt ngay đầu trang để khách thấy liền, không phải cuộn */}
+        {isGuest && <SignupGiftBanner />}
         {isGuest && (
-          <div className="relative z-0 mt-7 animate-fade-up [animation-delay:60ms]">
+          <div className="relative z-0 mt-4 animate-fade-up [animation-delay:60ms]">
             <div ref={under} className="origin-bottom-left will-change-transform">
               <PromoCard />
             </div>
@@ -88,6 +91,8 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
             <ExamSourcePicker onPick={onPick} onImported={onImported} />
           </div>
         </div>
+
+        <ProTeaser />
 
         <ul className="mt-8 hidden flex-wrap items-center justify-center gap-2.5 sm:flex">
           {FEATURES.map(({ icon: Icon, text }) => (

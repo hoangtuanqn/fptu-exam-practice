@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { CalendarCheck, Check, ChevronDown, LayoutDashboard, LogOut, Monitor, Moon, ShieldCheck, Sun, Wallet } from "lucide-react";
+import { CalendarCheck, Check, ChevronDown, Crown, LayoutDashboard, LogOut, Monitor, Moon, ShieldCheck, Sun, Wallet } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { formatCredit } from "@/shared/utils/formatters";
 import { buttonClass } from "@/shared/ui/Button";
 import { UserAvatar } from "@/shared/ui/UserAvatar";
 import { OPEN_CHECKIN_EVENT } from "@/features/check-in/DailyCheckInPopup";
+import { ProBadge } from "@/features/plan/ProBadge";
+import { isPro, proDaysLeft } from "@/shared/utils/pro";
 import { useTheme, type ThemeMode } from "@/shared/theme/ThemeContext";
 
 // Mục menu M3: cao 48dp, chữ label-large, state layer khi di chuột/focus/nhấn
@@ -79,7 +81,10 @@ export function UserMenu() {
       >
         <UserAvatar avatarPath={user.avatarPath} alt={user.fullName} className="h-9 w-9" />
         <span className="hidden min-w-0 flex-col items-start text-left sm:flex">
-          <span className="md-label-large max-w-[9rem] truncate text-on-surface">{user.fullName}</span>
+          <span className="md-label-large flex max-w-[11rem] items-center gap-1.5 text-on-surface">
+            <span className="truncate">{user.fullName}</span>
+            {isPro(user) && <ProBadge />}
+          </span>
           <span className="md-label-small flex items-center gap-1 text-on-surface-variant">
             <Wallet size={11} /> <b className="tabular-nums text-primary">{formatCredit(user.balance)}</b>
           </span>
@@ -98,7 +103,10 @@ export function UserMenu() {
           <div className="flex items-center gap-3 px-4 pb-2 pt-1">
             <UserAvatar avatarPath={user.avatarPath} alt={user.fullName} className="h-10 w-10" />
             <div className="min-w-0 flex-1">
-              <div className="md-title-small truncate">{user.fullName}</div>
+              <div className="md-title-small flex items-center gap-1.5">
+                <span className="truncate">{user.fullName}</span>
+                {isPro(user) && <ProBadge />}
+              </div>
               <div className="md-body-small truncate text-on-surface-variant">{user.email}</div>
             </div>
           </div>
@@ -116,6 +124,10 @@ export function UserMenu() {
           >
             <CalendarCheck size={20} className="text-on-surface-variant" /> Điểm danh nhận thưởng
           </button>
+          <Link role="menuitem" to="/pro" className={`${item} font-semibold`} onClick={() => close(false)}>
+            <Crown size={20} className="text-[#f0a800]" />
+            {isPro(user) ? `Gói Pro · còn ${proDaysLeft(user)} ngày` : "Nâng cấp Pro"}
+          </Link>
           <Link role="menuitem" to="/account" className={item} onClick={() => close(false)}>
             <LayoutDashboard size={20} className="text-on-surface-variant" /> Tài khoản của tôi
           </Link>

@@ -162,6 +162,59 @@ export function renderGiftCodeEmail(i: GiftCodeEmailInput) {
   };
 }
 
+// ---------- Mua / gia hạn gói Pro
+
+export interface ProEmailInput {
+  name: string;
+  planName: string;
+  months: number;
+  price: number;
+  renewed: boolean;
+  expiresAt: Date;
+  balanceAfter: number;
+  at: Date;
+  proUrl: string;
+}
+
+export function renderProPurchasedEmail(i: ProEmailInput) {
+  const action = i.renewed ? "gia hạn" : "kích hoạt";
+  const bodyHtml = [
+    p(`<strong>Xin chào ${esc(i.name)},</strong>`),
+    p(`Bạn đã ${action} gói <strong>${esc(i.planName)}</strong> thành công. Trong thời hạn này, lấy đề, giải thích AI và tải đề PE đều không bị trừ credit.`),
+    details([
+      { label: "Gói", value: esc(`${i.planName} ${i.months} tháng`) },
+      { label: "Thời gian", value: esc(formatDateTimeVN(i.at)) },
+      { label: "Đã trừ", value: `-${esc(formatCredit(i.price))}`, strong: true },
+      { label: "Pro có hiệu lực đến", value: esc(formatDateTimeVN(i.expiresAt)), strong: true },
+      { label: "Số dư hiện tại", value: esc(formatCredit(i.balanceAfter)) },
+    ]),
+    button("Xem gói Pro của tôi", i.proUrl),
+    note("Gói không tự động gia hạn: hết hạn bạn trở về dùng bình thường và không bị trừ thêm."),
+    signature(),
+  ].join("");
+
+  return {
+    html: renderLayout({
+      title: i.renewed ? "Gia hạn Pro thành công" : "Chào mừng thành viên Pro",
+      preheader: `Pro có hiệu lực đến ${formatDateTimeVN(i.expiresAt)}. Đã trừ ${formatCredit(i.price)}.`,
+      bodyHtml,
+    }),
+    text: [
+      `Xin chào ${i.name},`,
+      "",
+      `Bạn đã ${action} gói ${i.planName} ${i.months} tháng thành công.`,
+      `Đã trừ: -${formatCredit(i.price)}`,
+      `Pro có hiệu lực đến: ${formatDateTimeVN(i.expiresAt)}`,
+      `Số dư hiện tại: ${formatCredit(i.balanceAfter)}`,
+      "",
+      `Xem gói Pro: ${i.proUrl}`,
+      "",
+      "Trân trọng,",
+      company,
+    ].join("\n"),
+  };
+}
+
 // ---------- Thưởng báo cáo đáp án
 
 export interface ReportRewardEmailInput {
