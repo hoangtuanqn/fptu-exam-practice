@@ -87,9 +87,22 @@ export interface ReminderSettings {
   emailVerified: boolean;
 }
 
+export interface SubjectReadiness {
+  code: string;
+  level: "insufficient" | "needs-work" | "fair" | "ready";
+  attempts: number;
+  needed: number; // còn thiếu bao nhiêu bài thi thử để kết luận
+  average: number | null;
+  spread: number | null;
+  trend: "up" | "down" | "flat" | null;
+  weakTopics: number;
+  lastAt: string;
+}
+
 export const studyApi = {
   reminder: () => http.get<ReminderSettings>("/study/reminder"),
   setReminder: (enabled: boolean, examDate: string | null) => http.put<ReminderSettings>("/study/reminder", { enabled, examDate }),
+  readiness: () => http.get<SubjectReadiness[]>("/study/readiness"),
   stats: () => http.get<StudyStats>("/study/stats"),
   topics: () => http.get<TopicReportData>("/study/topics"),
   setGoal: (days: number) => http.put<StudyStats>("/study/goal", { days }),
