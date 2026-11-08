@@ -19,6 +19,7 @@ import {
 import { ResponseClient } from "../rules/response";
 import { reviewService } from "../services/review.service";
 import { reminderService } from "../services/reminder.service";
+import { readinessService } from "../services/readiness.service";
 import { studyService } from "../services/study.service";
 import { AppError } from "../rules/error";
 import { topicStatsService } from "../services/topic-stats.service";
@@ -66,6 +67,9 @@ studyRouter.get("/reminder", async (req: Request, res: Response) => {
 studyRouter.put("/reminder", validate(reminderBody), async (req: Request, res: Response) => {
   const b = getValidated<ReminderBody>(res);
   res.json(new ResponseClient({ message: "Đã lưu", data: await reminderService.update(req.user!.id, b) }));
+});
+studyRouter.get("/readiness", async (req: Request, res: Response) => {
+  res.json(new ResponseClient({ data: await readinessService.forUser(req.user!.id) }));
 });
 studyRouter.get("/topics", async (req: Request, res: Response) => {
   res.json(new ResponseClient({ data: await topicStatsService.forUser(req.user!.id, hasTopicReport(req.user)) }));

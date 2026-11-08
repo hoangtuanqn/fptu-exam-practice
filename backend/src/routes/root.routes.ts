@@ -18,6 +18,7 @@ import offersPublicRouter from "./offers-public.routes";
 import peRouter from "./pe.routes";
 import { referralPublicRouter, referralRouter } from "./referral.routes";
 import reminderPublicRouter from "./reminder-public.routes";
+import subjectRouter from "./subject.routes";
 import userRouter from "./user.routes";
 
 const rootRouter = Router();
@@ -42,6 +43,7 @@ rootRouter.use("/public/offers", offersPublicRouter);
 rootRouter.use("/pe", peRouter);
 rootRouter.use("/chat", chatRouter);
 rootRouter.use("/public/reminder", reminderPublicRouter);
+rootRouter.use("/subjects", subjectRouter);
 rootRouter.use("/attempts", attemptRouter);
 rootRouter.use("/review", reviewRouter);
 rootRouter.use("/study", studyRouter);

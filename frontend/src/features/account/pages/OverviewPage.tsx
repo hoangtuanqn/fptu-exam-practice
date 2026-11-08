@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, ClipboardCheck, Library, NotebookPen, PenLine, Plus } from "lucide-react";
 import { reviewApi } from "@/features/review/review.api";
+import { ReadinessCard } from "@/features/review/ReadinessCard";
 import { StudyStreakCard } from "@/features/review/StudyStreakCard";
 import { userApi } from "@/features/account/api/user.api";
 import { TransactionTable } from "@/features/account/components/TransactionTable";
@@ -78,6 +79,8 @@ export default function OverviewPage() {
       )}
 
       <StudyStreakCard />
+
+      <ReadinessCard />
 
       <StatGrid className="grid-cols-2 xl:grid-cols-4">
         <StatCard label="Số dư ví" value={formatCredit(user.balance)} note="Dùng để lấy đề từ FuOverflow" />
