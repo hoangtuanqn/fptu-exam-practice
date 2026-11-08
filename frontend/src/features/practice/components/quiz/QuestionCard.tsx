@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { ChevronLeft, Maximize2, MessageSquareWarning, Sparkles } from "lucide-react";
+import { ChevronLeft, Maximize2, MessageSquareWarning, Sparkles, Tag } from "lucide-react";
 import { Button } from "@/shared/ui/Button";
 import { AnswerOptions } from "./AnswerOptions";
 import { AnswerStatus } from "./AnswerStatus";
@@ -11,6 +11,7 @@ import type { QuestionViewProps } from "./types";
 interface Props extends QuestionViewProps {
   onZoom: () => void;
   nudge?: ReactNode; // thanh mời giữa ảnh đề và thanh trả lời (ví dụ mời xem giải thích khi làm sai)
+  topic?: string | null; // chủ đề của câu, hiện trên đầu câu (luyện tập: luôn hiện; thi: sau khi nộp bài)
 }
 
 // Bố cục: [thanh công cụ câu hỏi] / [ảnh đề — chiếm hết chỗ còn lại] / [thanh trả lời]
@@ -30,6 +31,7 @@ export function QuestionCard({
   explainBought,
   explainFree,
   nudge,
+  topic,
   onChoose,
   onCheck,
   onPrev,
@@ -43,6 +45,13 @@ export function QuestionCard({
     <div className="flex min-h-[360px] w-full flex-1 sm:min-h-[480px] animate-fade-in flex-col gap-2">
       {/* Đề bài: thông tin + công cụ ở trên, ảnh ngay dưới */}
       <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-slate-200 bg-surface-container-lowest shadow-sm">
+        {topic && (
+          <div className="flex shrink-0 items-center gap-2 border-b border-slate-200 bg-brand-50 px-3 py-1.5 text-xs text-brand-900 sm:px-4">
+            <Tag size={13} className="shrink-0 text-brand-700" />
+            <span className="font-medium text-slate-500">Chủ đề</span>
+            <span className="min-w-0 truncate font-semibold">{topic}</span>
+          </div>
+        )}
         <div className="flex shrink-0 items-center justify-between gap-2 border-b border-slate-200 px-3 py-2 sm:gap-3 sm:px-4">
           <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
             <h2 className="whitespace-nowrap text-lg font-semibold text-slate-900">

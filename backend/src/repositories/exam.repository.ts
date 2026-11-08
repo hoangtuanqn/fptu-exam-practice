@@ -50,7 +50,7 @@ export const examRepository = {
   findDetail: (id: number) =>
     prisma.exam.findUnique({
       where: { id },
-      include: { questions: { orderBy: { number: "asc" }, select: { number: true, imagePath: true, answer: true, isReference: true } } },
+      include: { questions: { orderBy: { number: "asc" }, select: { number: true, imagePath: true, answer: true, isReference: true, topic: true } } },
     }),
 
   // Admin xem/sửa đề: thông tin đề + từng câu (ảnh, đáp án, có phải tài liệu tham khảo)
@@ -81,7 +81,7 @@ export const examRepository = {
   findAnswers: (id: number) =>
     prisma.exam.findUnique({
       where: { id },
-      select: { answerSource: true, aiReport: true, questions: { orderBy: { number: "asc" }, select: { number: true, answer: true, isReference: true } } },
+      select: { answerSource: true, aiReport: true, questions: { orderBy: { number: "asc" }, select: { number: true, answer: true, isReference: true, topic: true } } },
     }),
 
   // Đề đang dùng đáp án tạm mà AI chưa từng chạy: chuyển sang chờ AI (xóa đáp án A giả)

@@ -1,7 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { Sparkles } from "lucide-react";
+import { useState } from "react";
 import { ExplainBundleBanner } from "@/features/explanation/ExplainBundleBanner";
-import { ExplainBundlePopup } from "@/features/explanation/ExplainBundlePopup";
 import { ExplainConfirmDialog } from "@/features/explanation/ExplainConfirmDialog";
 import { ExplainUnlockDialog } from "@/features/explanation/ExplainUnlockDialog";
 import { WrongAnswerNudge } from "@/features/explanation/WrongAnswerNudge";
@@ -37,19 +35,8 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit }: Props)
   const info = useApi(() => (explainEnabled ? explanationApi.info(quiz.examId!) : Promise.resolve(null)), [explainEnabled, quiz.examId]);
   const [reported, setReported] = useState<Set<number>>(new Set()); // các câu đã báo cáo trong phiên này
   const [unlockOpen, setUnlockOpen] = useState(false); // hộp xác nhận mở khóa cả đề
-  const [popupOpen, setPopupOpen] = useState(false); // popup mời mua gói khi vừa vào làm đề
   const [bannerCollapsed, setBannerCollapsed] = useState(false); // thẻ ưu đãi thu thành viên thuốc
-  const popupShown = useRef(false); // mỗi lần vào đề chỉ tự hiện một lần
   usePreloadImages(quiz);
-
-  const popupWanted = !!info.data?.bundle && !info.data.unlocked && info.data.bundle.price > 0 && info.data.bundle.remaining > 1 && !quiz.answersPending;
-  // Chưa mua gói và còn câu chưa mua lẻ (đã mua gói hoặc đã xem hết các câu thì showBundle = false, không hiện nữa)
-  useEffect(() => {
-    if (popupWanted && !popupShown.current) {
-      popupShown.current = true;
-      setPopupOpen(true);
-    }
-  }, [popupWanted]);
 
   const question = quiz.questions[quiz.current];
   if (!question) return null;
@@ -60,7 +47,8 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit }: Props)
   const unlockedAll = !!info.data?.unlocked;
   const explainBought = unlockedAll || !!info.data?.purchased.includes(question.number) || bought.has(question.number);
   const bundle = info.data?.bundle;
-  const showBundle = !!bundle && !bundle.unlocked && bundle.price > 0 && bundle.remaining > 1 && !quiz.answersPending;
+  // Thẻ mời mua gói chỉ hiện khi đã nộp bài (đang làm bài thì không làm xao nhãng); lúc đó mới là lúc cần xem lời giải
+  const showBundle = !!bundle && !bundle.unlocked && bundle.price > 0 && bundle.remaining > 1 && !quiz.answersPending && quiz.submitted;
   const trialsLeft = info.data?.freeTrialsLeft ?? 0;
   const explainFree = !explainBought && trialsLeft > 0;
   // Còn lượt xem thử thì mở thẳng (không hỏi phí); hết lượt mới hiện hộp xác nhận trả phí
@@ -109,12 +97,7 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit }: Props)
         {showBundle && bundle && (
           <ExplainBundleBanner bundle={bundle} unitPrice={info.data!.price} collapsed={bannerCollapsed} onCollapse={() => setBannerCollapsed(true)} onUnlock={() => setUnlockOpen(true)} />
         )}
-        {unlockedAll && (
-          <div className="mb-2 inline-flex w-fit items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200">
-            <Sparkles size={13} /> Đã mở khóa toàn bộ giải thích của đề này
-          </div>
-        )}
-        <QuestionCard key={question.number} {...view} nudge={nudge} onZoom={() => onZoomChange(true)} />
+        <QuestionCard key={question.number} {...view} nudge={nudge} topic={quiz.mode === "practice" || quiz.submitted ? question.topic : null} onZoom={() => onZoomChange(true)} />
       </main>
 
       {panelOpen && quiz.examId !== null && (
@@ -144,19 +127,6 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit }: Props)
           onConfirm={() => {
             setConfirmExplain(false);
             setPanel({ number: question.number, firstTime: true });
-          }}
-        />
-      )}
-
-      {popupOpen && showBundle && bundle && info.data && (
-        <ExplainBundlePopup
-          bundle={bundle}
-          unitPrice={info.data.price}
-          freeTrials={trialsLeft}
-          onClose={() => setPopupOpen(false)}
-          onBuy={() => {
-            setPopupOpen(false);
-            setUnlockOpen(true);
           }}
         />
       )}
