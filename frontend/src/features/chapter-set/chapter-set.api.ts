@@ -5,6 +5,13 @@ export interface SubjectItem {
   name: string;
 }
 
+export interface SubjectInfo {
+  code: string;
+  name: string;
+  chapters: { number: number; title: string }[];
+  exams: number;
+}
+
 export interface FrequentItem {
   count: number; // số đề có câu này
   examId: number;
@@ -27,6 +34,7 @@ export interface FrequentResult {
 }
 
 export const chapterSetApi = {
+  info: (code: string) => http.get<SubjectInfo>(`/subjects/${encodeURIComponent(code)}`),
   frequent: (code: string) => http.get<FrequentResult>(`/subjects/${encodeURIComponent(code)}/frequent`),
   subjects: () => http.get<SubjectItem[]>("/subjects"),
 };

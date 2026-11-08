@@ -23,4 +23,13 @@ subjectRouter.get("/:code/frequent", frequentLimiter, identify, validate(codePar
   res.json(new ResponseClient({ data: await frequentQuestionsService.forSubject(code, req.user) }));
 });
 
+// Thông tin công khai của một môn cho trang /mon/<mã>: tên, các chương theo syllabus và số đề hệ thống đang có
+subjectRouter.get("/:code", frequentLimiter, validate(codeParam, "params"), async (_req, res) => {
+  const { code } = getValidated<z.infer<typeof codeParam>>(res, "params");
+  const subject = await prisma.subject.findUnique({ where: { code: code.toUpperCase() }, select: { code: true, name: true, chapters: { orderBy: { number: "asc" }, select: { number: true, title: true } } } });
+  if (!subject) return void res.status(404).json({ status: false, message: "Không tìm thấy môn học" });
+  const exams = await prisma.exam.count({ where: { title: { contains: subject.code }, answerSource: { in: ["AI", "MANUAL"] } } });
+  res.json(new ResponseClient({ data: { code: subject.code, name: subject.name, chapters: subject.chapters.filter((c) => c.number > 0), exams } }));
+});
+
 export default subjectRouter;

@@ -6,11 +6,15 @@
       "title": "Câu hay ra",
       "highlights": [
         "Biết câu nào lặp lại ở nhiều đề của cùng một môn để ôn trước",
-        "Pro: xem đầy đủ danh sách câu hay ra"
+        "Pro: xem đầy đủ danh sách câu hay ra",
+        "Thư viện đề theo môn và gói Nước rút 14 ngày chỉ 29.000đ"
       ],
       "changes": [
         { "type": "new", "text": "Trang “Câu hay ra” (Tài khoản): chọn môn, xem những câu xuất hiện ở từ 2 đề trở lên, xếp từ lặp nhiều nhất, kèm đáp án" },
         { "type": "new", "text": "Cảnh báo khi các đề ghi đáp án khác nhau cho cùng một câu, để bạn kiểm tra và báo cáo" },
+        { "type": "new", "text": "Thư viện đề (Tài khoản): chọn môn và lấy ngay các đề hệ thống đã có sẵn, không cần tìm link FuOverflow" },
+        { "type": "new", "text": "Gói Nước rút: 14 ngày, 29.000đ, đủ quyền lợi Pro, không tự gia hạn, cộng dồn vào hạn hiện có" },
+        { "type": "new", "text": "Trang riêng cho từng môn (/mon/pro192...) với các chương theo syllabus" },
         { "type": "improved", "text": "Gói thường xem 5 câu đầu; gói Pro xem toàn bộ" }
       ]
     },
