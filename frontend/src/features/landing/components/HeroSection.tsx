@@ -6,7 +6,6 @@ import { ExamSourcePicker } from "./ExamSourcePicker";
 import { PromoCard } from "./PromoCard";
 import { SignupGiftBanner } from "./SignupGiftBanner";
 import { ProTeaser } from "@/features/plan/ProTeaser";
-import { useScrollOverlap } from "../useScrollOverlap";
 
 interface Props {
   onPick: PickFolder;
@@ -24,8 +23,6 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
   const accentCount = words.length >= 3 ? 2 : 1;
   const titleLead = words.slice(0, -accentCount).join(" ");
   const titleAccent = words.slice(-accentCount).join(" ");
-  // Hiệu ứng xấp thẻ (khách, màn rộng): kéo xuống thì ô nhập đề trượt lên chồng thẻ ưu đãi, chừa lại dòng quà đăng ký ở đầu thẻ
-  const { under, over } = useScrollOverlap(isGuest);
 
   return (
     <section className="relative isolate shrink-0 border-b border-outline-variant">
@@ -76,23 +73,23 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
           )}
         </div>
 
-        {/* Ưu đãi đặt ngay đầu trang để khách thấy liền, không phải cuộn */}
+        {/* Bố cục: dải quà mỏng → ô nhập link (hành động chính, thấy ngay không cần cuộn) → dải Pro → thẻ ưu đãi.
+            Không còn chồng/che nhau khi cuộn. */}
         {isGuest && <SignupGiftBanner />}
-        {isGuest && (
-          <div className="relative z-0 mt-4 animate-fade-up [animation-delay:60ms]">
-            <div ref={under} className="origin-bottom-left will-change-transform">
-              <PromoCard />
-            </div>
-          </div>
-        )}
 
-        <div className="relative z-10 animate-fade-up [animation-delay:120ms]">
-          <div ref={isGuest ? over : undefined} className="will-change-transform">
+        <div className="relative animate-fade-up [animation-delay:60ms]">
+          <div className={isGuest ? "mt-3" : ""}>
             <ExamSourcePicker onPick={onPick} onImported={onImported} />
           </div>
         </div>
 
         <ProTeaser />
+
+        {isGuest && (
+          <div className="mt-8 animate-fade-up [animation-delay:120ms]">
+            <PromoCard />
+          </div>
+        )}
 
         <ul className="mt-8 hidden flex-wrap items-center justify-center gap-2.5 sm:flex">
           {FEATURES.map(({ icon: Icon, text }) => (
