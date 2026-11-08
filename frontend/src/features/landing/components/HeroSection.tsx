@@ -4,6 +4,7 @@ import { brand, logos } from "@/shared/brand/brand";
 import { FEATURES, splitSlogan } from "../content";
 import { ExamSourcePicker } from "./ExamSourcePicker";
 import { PromoCard } from "./PromoCard";
+import { SignupGiftBanner } from "./SignupGiftBanner";
 import { ProTeaser } from "@/features/plan/ProTeaser";
 import { useScrollOverlap } from "../useScrollOverlap";
 
@@ -76,8 +77,9 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
         </div>
 
         {/* Ưu đãi đặt ngay đầu trang để khách thấy liền, không phải cuộn */}
+        {isGuest && <SignupGiftBanner />}
         {isGuest && (
-          <div className="relative z-0 mt-7 animate-fade-up [animation-delay:60ms]">
+          <div className="relative z-0 mt-4 animate-fade-up [animation-delay:60ms]">
             <div ref={under} className="origin-bottom-left will-change-transform">
               <PromoCard />
             </div>

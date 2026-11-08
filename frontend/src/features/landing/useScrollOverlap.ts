@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-const PEEK_PX = 30; // phần mép thẻ phía sau còn lộ ra khi ô phía trước đã che gần hết (thẻ có phần tử [data-stack-peek] ở đầu thì chừa đúng chiều cao phần đó)
+const PEEK_PX = 30; // phần mép thẻ phía sau còn lộ ra khi ô phía trước đã che gần hết (thẻ có phần tử [data-stack-peek] ở đầu thì chừa đúng chiều cao phần đó; hiện không dùng vì quà đăng ký đã có banner riêng ngoài thẻ)
 const TILT_DEG = 3.5; // thẻ phía sau nghiêng chừng này độ (góc phải nhô lên), ô phía trước vẫn thẳng để thao tác
 const SHIFT_PX = 16; // thẻ phía sau lệch sang trái một chút: hai thẻ bắt chéo nhau thay vì chồng thẳng lên nhau
 const SCROLL_RANGE = 220; // cuộn chừng này px thì hiệu ứng hoàn tất
