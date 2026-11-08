@@ -1,6 +1,6 @@
 import { Router } from "express";
+import { makeLimiter } from "../middlewares/rateLimit.middlewares";
 import type { Request, Response } from "express";
-import rateLimit from "express-rate-limit";
 import { authenticate } from "../middlewares/auth.middlewares";
 import { getValidated, validate } from "../middlewares/validate.middlewares";
 import { idParam, type IdParam } from "../rules/requests/admin.request";
@@ -25,7 +25,7 @@ import { AppError } from "../rules/error";
 import { topicStatsService } from "../services/topic-stats.service";
 import { hasTopicReport, hasUnlimitedReview } from "../utils/pro";
 
-const limiter = rateLimit({ windowMs: 60 * 1000, limit: 240, standardHeaders: true, legacyHeaders: false, message: { status: false, message: "Bạn thao tác quá nhanh, vui lòng thử lại sau ít phút" } });
+const limiter = makeLimiter({ limit: 240 });
 
 // Sổ câu sai: ôn lại theo lịch (lặp lại ngắt quãng)
 const reviewRouter = Router();

@@ -1,10 +1,10 @@
 import { Router } from "express";
-import rateLimit from "express-rate-limit";
+import { makeLimiter } from "../middlewares/rateLimit.middlewares";
 import { reminderService } from "../services/reminder.service";
 
 // Liên kết "Hủy nhận thư nhắc ôn" trong email: không cần đăng nhập, xác thực bằng chữ ký riêng của từng người
 const reminderPublicRouter = Router();
-const limiter = rateLimit({ windowMs: 60 * 1000, limit: 20, standardHeaders: true, legacyHeaders: false });
+const limiter = makeLimiter({ limit: 20 });
 
 const page = (title: string, body: string) =>
   `<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${title}</title></head><body style="font-family:sans-serif;max-width:420px;margin:15vh auto;padding:0 20px;text-align:center;color:#333"><h1 style="font-size:20px">${title}</h1><p>${body}</p></body></html>`;
