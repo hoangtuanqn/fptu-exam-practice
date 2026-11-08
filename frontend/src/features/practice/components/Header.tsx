@@ -4,8 +4,6 @@ import {
   Award,
   BookOpen,
   Clock,
-  Crown,
-  LayoutGrid,
   RotateCcw,
   Send,
   Trophy,
@@ -17,6 +15,7 @@ import { formatDuration, formatScore } from "@/features/practice/utils/format";
 import { Logo } from "@/shared/brand/Logo";
 import { Button } from "@/shared/ui/Button";
 import { UserMenu } from "@/shared/layout/UserMenu";
+import { SiteNav } from "@/shared/layout/SiteNav";
 import { ThemeToggle } from "@/shared/theme/ThemeToggle";
 
 interface Props {
@@ -91,14 +90,7 @@ export function Header({
       {/* Điều hướng chính, chỉ trên PC/tablet và khi chưa mở đề (đang làm bài thì nhường chỗ cho tên đề, đồng hồ).
           Điện thoại: các mục này nằm ở menu tài khoản và chân trang. */}
       {!loaded && (
-        <nav aria-label="Điều hướng chính" className="hidden min-w-0 flex-1 items-center justify-center gap-1 px-4 md:flex">
-          <Link to="/features" className="md-state md-motion md-label-large inline-flex h-10 items-center gap-2 rounded-full px-4 text-on-surface-variant hover:text-on-surface">
-            <LayoutGrid size={18} /> Tính năng
-          </Link>
-          <Link to="/pro" className="md-state md-motion md-label-large inline-flex h-10 items-center gap-2 rounded-full px-4 text-on-surface-variant hover:text-on-surface">
-            <Crown size={18} className="text-[#f0a800]" /> Gói Pro
-          </Link>
-        </nav>
+        <SiteNav />
       )}
 
       <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">

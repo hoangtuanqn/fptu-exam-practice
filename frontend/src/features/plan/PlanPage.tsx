@@ -24,12 +24,11 @@ import { useAuth } from "@/features/auth/AuthContext";
 import { examImportApi } from "@/features/exam-import/exam-import.api";
 import { VerifyEmailNotice } from "@/features/verify-email/VerifyEmailNotice";
 import { brand, logos } from "@/shared/brand/brand";
-import { Logo } from "@/shared/brand/Logo";
 import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
 import { useCountUp } from "@/shared/hooks/useCountUp";
 import { Footer } from "@/shared/layout/Footer";
-import { UserMenu } from "@/shared/layout/UserMenu";
+import { SiteHeader } from "@/shared/layout/SiteHeader";
 import { ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { formatDate } from "@/shared/utils/formatters";
 import { addMonths, isPro, proDaysLeft } from "@/shared/utils/pro";
@@ -122,12 +121,7 @@ export default function PlanPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-surface">
-      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-outline-variant bg-surface/90 px-3 backdrop-blur sm:px-4">
-        <Link to="/" title={brand.company}>
-          <Logo variant="full" className="h-10" />
-        </Link>
-        <UserMenu />
-      </header>
+      <SiteHeader />
 
       <main className="flex-1 pb-20">
         {info.loading ? (
