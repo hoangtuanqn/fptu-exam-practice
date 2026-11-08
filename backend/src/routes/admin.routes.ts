@@ -1,4 +1,5 @@
 import { Router } from "express";
+import adminInsightsRouter from "./admin-insights.routes";
 import { adminDashboardController } from "../controllers/admin.dashboard.controllers";
 import { adminUserController } from "../controllers/admin.user.controllers";
 import { listBankTxQuery, listDepositsQuery } from "../rules/requests/deposit.request";
@@ -30,6 +31,7 @@ const adminRouter = Router();
 adminRouter.use(authenticate, requireAdmin);
 
 adminRouter.get("/dashboard", adminDashboardController.overview);
+adminRouter.use("/insights", adminInsightsRouter);
 
 adminRouter.get("/users",validate(listUsersQuery, "query"), adminUserController.list);
 adminRouter.get("/users/:id", validate(idParam, "params"), adminUserController.get);
