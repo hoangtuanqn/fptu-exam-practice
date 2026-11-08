@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
-import { Route, Routes, useParams } from "react-router-dom";
-import { Crown, Flame, Layers, Library, NotebookPen, Download, BookOpen, Gift, History, MessageSquareWarning, UserPlus, ListChecks, LayoutDashboard, UserRound, Wallet } from "lucide-react";
+import { Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
+import { Crown, Flame, Layers, NotebookPen, Download, BookOpen, Gift, History, MessageSquareWarning, UserPlus, ListChecks, LayoutDashboard, UserRound, Wallet } from "lucide-react";
 import { PanelLayout, type NavItem } from "@/shared/layout/PanelLayout";
 import { Loading } from "@/shared/ui/Feedback";
 import LoginPage from "@/features/auth/pages/LoginPage";
@@ -32,10 +32,9 @@ const PublicDepositPage = lazy(() => import("@/features/account/pages/PublicDepo
 const OverviewPage = lazy(() => import("@/features/account/pages/OverviewPage"));
 const DepositPage = lazy(() => import("@/features/account/pages/DepositPage"));
 const TransactionsPage = lazy(() => import("@/features/account/pages/TransactionsPage"));
-const LibraryPage = lazy(() => import("@/features/account/pages/LibraryPage"));
+const ExamStorePage = lazy(() => import("@/features/account/pages/ExamStorePage"));
 const ReviewPage = lazy(() => import("@/features/review/ReviewPage"));
 const SubjectPage = lazy(() => import("@/features/landing/SubjectPage"));
-const CatalogPage = lazy(() => import("@/features/catalog/CatalogPage"));
 const FrequentPage = lazy(() => import("@/features/chapter-set/FrequentPage"));
 const ChapterSetPage = lazy(() => import("@/features/chapter-set/ChapterSetPage"));
 const ReviewPracticePage = lazy(() => import("@/features/review/ReviewPracticePage"));
@@ -54,8 +53,7 @@ const AttemptDetailPage = lazy(() => import("@/features/history/pages/AttemptDet
 // Thanh bên của người dùng, xếp theo việc người học làm: tìm và làm đề -> ôn tập -> xem kết quả -> ví và Pro -> hồ sơ
 const ACCOUNT_NAV: NavItem[] = [
   { to: "/account", label: "Tổng quan", icon: LayoutDashboard, end: true },
-  { to: "/account/catalog", label: "Thư viện đề", icon: Library, group: "Luyện đề" },
-  { to: "/account/exams", label: "Kho đề của tôi", icon: BookOpen, group: "Luyện đề" },
+  { to: "/account/exams", label: "Kho đề", icon: BookOpen, group: "Luyện đề" },
   { to: "/account/chapters", label: "Bộ đề theo chương", icon: Layers, group: "Luyện đề" },
   { to: "/account/pe", label: "Tải đề thi PE", icon: Download, group: "Luyện đề" },
   { to: "/account/review", label: "Sổ câu sai", icon: NotebookPen, group: "Ôn tập" },
@@ -69,6 +67,13 @@ const ACCOUNT_NAV: NavItem[] = [
   { to: "/account/referral", label: "Giới thiệu bạn bè", icon: UserPlus, group: "Ví và Pro" },
   { to: "/account/profile", label: "Hồ sơ", icon: UserRound, group: "Tài khoản" },
 ];
+
+// Đường dẫn cũ của Thư viện đề (và liên kết từ trang môn): chuyển sang Kho đề > Theo môn, giữ mã môn
+function CatalogRedirect() {
+  const { search } = useLocation();
+  const subject = new URLSearchParams(search).get("subject");
+  return <Navigate to={`/account/exams?tab=subject${subject ? `&subject=${encodeURIComponent(subject)}` : ""}`} replace />;
+}
 
 export default function App() {
   return (
@@ -116,8 +121,8 @@ export default function App() {
             <Route path="attempts/:id" element={<AttemptDetailPage />} />
             <Route path="deposit" element={<DepositPage />} />
             <Route path="deposit/:code" element={<DepositPage />} />
-            <Route path="exams" element={<LibraryPage />} />
-            <Route path="catalog" element={<CatalogPage />} />
+            <Route path="exams" element={<ExamStorePage />} />
+            <Route path="catalog" element={<CatalogRedirect />} />
             <Route path="frequent" element={<FrequentPage />} />
             <Route path="chapters" element={<ChapterSetPage />} />
             <Route path="review" element={<ReviewPage />} />

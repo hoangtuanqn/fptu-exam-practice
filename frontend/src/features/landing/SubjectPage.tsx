@@ -28,7 +28,7 @@ export default function SubjectPage() {
         </p>
 
         <div className="mt-6 flex flex-wrap gap-2">
-          <Link to={`/account/catalog?subject=${subject.code}`} className={buttonClass({ variant: "primary" })}>
+          <Link to={`/account/exams?tab=subject&subject=${subject.code}`} className={buttonClass({ variant: "primary" })}>
             <Play size={16} /> {d && d.exams > 0 ? `Xem ${d.exams} đề có sẵn` : "Xem đề có sẵn"}
           </Link>
           <Link to="/" className={buttonClass()}>
