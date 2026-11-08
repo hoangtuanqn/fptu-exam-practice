@@ -11,7 +11,8 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate deploy",
     "seed": "tsx src/seeders/admin.seeder.ts",
-    "import:syllabus": "tsx scripts/import-syllabus.ts"
+    "import:syllabus": "tsx scripts/import-syllabus.ts",
+    "label:topics": "tsx scripts/label-topics.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.4.0",
