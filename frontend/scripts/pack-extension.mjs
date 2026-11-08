@@ -26,6 +26,11 @@ export function packExtension() {
   if (manifest.version !== published.version) {
     console.warn(`\x1b[33m!!  Phiên bản tiện ích không khớp: manifest ${manifest.version}, public/extension-version.json ${published.version}. Người dùng sẽ không được báo cập nhật đúng.\x1b[0m`);
   }
+  // Phiên bản mới nhất trong lịch sử thay đổi (hiện cho người dùng ở /changelog) phải khớp manifest
+  const logged = JSON.parse(fs.readFileSync(path.join(frontend, "src", "features", "changelog", "changelog.json"), "utf8")).extension?.[0]?.version;
+  if (logged !== manifest.version) {
+    console.warn(`\x1b[33m!!  Lịch sử thay đổi của tiện ích đang ghi v${logged}, nhưng manifest là v${manifest.version}. Thêm mục v${manifest.version} vào đầu "extension" trong src/features/changelog/changelog.json.\x1b[0m`);
+  }
   if (!fs.existsSync(dist)) throw new Error("chưa có frontend/dist: build trước rồi mới nén tiện ích");
   const files = collect(extDir);
   if (!files["manifest.json"]) throw new Error("không thấy chrome-extension/manifest.json");
