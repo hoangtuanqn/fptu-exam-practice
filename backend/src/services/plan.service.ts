@@ -1,10 +1,12 @@
 import { prisma } from "../configs/prisma";
-import { PRO_BENEFITS, PRO_PLAN } from "../constants/plan";
+import { PRO_BENEFITS, PRO_PLAN, SPRINT_PLAN, type PlanCode } from "../constants/plan";
 import { userRepository } from "../repositories/user.repository";
 import { AppError } from "../rules/error";
 import { isProUntil } from "../utils/pro";
 import { notificationService } from "./notification.service";
 import { walletService } from "./wallet.service";
+
+const addDays = (from: Date, days: number) => new Date(from.getTime() + days * 86_400_000);
 
 const addMonths = (from: Date, months: number) => {
   const d = new Date(from);
@@ -27,6 +29,7 @@ export const planService = {
       savingsPercent: fuoPrice > 0 ? Math.round((savings / fuoPrice) * 100) : 0,
       pricePerMonth: Math.round(price / months),
       benefits: PRO_BENEFITS,
+      sprint: { code: SPRINT_PLAN.code, name: SPRINT_PLAN.name, days: SPRINT_PLAN.days, price: SPRINT_PLAN.price },
     };
   },
 
@@ -40,20 +43,24 @@ export const planService = {
    * chạy lần lượt; đọc hạn hiện tại SAU khi đã khóa nên mua liên tiếp luôn cộng dồn đúng, không ghi đè nhau.
    * Còn hạn thì tính từ ngày hết hạn cũ, hết hạn rồi thì tính từ bây giờ.
    */
-  async purchase(userId: number) {
-    const { price, months } = PRO_PLAN;
+  async purchase(userId: number, code: PlanCode = "PRO") {
+    const sprint = code === "SPRINT";
+    const plan = sprint ? SPRINT_PLAN : PRO_PLAN;
+    const { price } = plan;
+    const months = sprint ? 0 : PRO_PLAN.months; // gói Nước rút tính theo ngày, lưu months = 0
+    const duration = sprint ? `${SPRINT_PLAN.days} ngày` : `${PRO_PLAN.months} tháng`;
     const result = await prisma.$transaction(async (tx) => {
-      const entry = await walletService.charge(tx, { userId, amount: price, type: "PLAN_CHARGE", note: `Mua gói ${PRO_PLAN.name} ${months} tháng` });
+      const entry = await walletService.charge(tx, { userId, amount: price, type: "PLAN_CHARGE", note: `Mua gói ${plan.name} ${duration}` });
       const row = await tx.user.findUnique({ where: { id: userId }, select: { proExpiresAt: true } });
       if (!row) throw AppError.notFound("Không tìm thấy tài khoản");
       const now = new Date();
       const startsAt = isProUntil(row.proExpiresAt, now) ? row.proExpiresAt! : now;
-      const endsAt = addMonths(startsAt, months);
+      const endsAt = sprint ? addDays(startsAt, SPRINT_PLAN.days) : addMonths(startsAt, months);
       await tx.user.update({ where: { id: userId }, data: { proExpiresAt: endsAt } });
-      await tx.planPurchase.create({ data: { userId, plan: PRO_PLAN.code, months, price, startsAt, endsAt } });
+      await tx.planPurchase.create({ data: { userId, plan: plan.code, months, price, startsAt, endsAt } });
       return { proExpiresAt: endsAt, renewed: startsAt > now, balanceAfter: entry.balanceAfter };
     });
-    notificationService.proPurchased({ userId, planName: PRO_PLAN.name, months, price, renewed: result.renewed, expiresAt: result.proExpiresAt, balanceAfter: result.balanceAfter });
+    notificationService.proPurchased({ userId, planName: plan.name, duration, price, renewed: result.renewed, expiresAt: result.proExpiresAt, balanceAfter: result.balanceAfter });
     return { ...result, user: await userRepository.findById(userId) };
   },
 };

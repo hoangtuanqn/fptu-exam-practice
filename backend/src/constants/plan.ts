@@ -7,6 +7,17 @@ export const PRO_PLAN = {
   fuoPrice: 192_000, // giá mua trực tiếp gói VIP trên FuOverflow cho cùng thời hạn, dùng để tính mức tiết kiệm
 } as const;
 
+// Gói Nước rút: cùng quyền lợi Pro nhưng ngắn hạn và rẻ, cho người chỉ cần ôn gấp trước kỳ thi
+export const SPRINT_PLAN = {
+  code: "SPRINT",
+  name: "Pro Nước rút",
+  days: 14,
+  price: 29_000, // credit (1 credit = 1đ)
+} as const;
+
+export const PLAN_CODES = ["PRO", "SPRINT"] as const;
+export type PlanCode = (typeof PLAN_CODES)[number];
+
 // Quyền lợi của Pro (bật/tắt từng mục ở đây; giao diện đọc từ /plan nên luôn khớp)
 export const PRO_BENEFITS = {
   freeFetch: true, // lấy đề FuOverflow không bị trừ phí

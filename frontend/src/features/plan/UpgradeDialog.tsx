@@ -15,7 +15,7 @@ import { planApi, type PlanInfo, type PurchaseResult } from "./plan.api";
 const CONFETTI = ["#ffc61f", "#fff1c2", "#f0a800", "#ffffff", "#e7c26c", "#ff8a3d"];
 
 // Hộp thoại xác nhận mua / gia hạn Pro: nói rõ trừ bao nhiêu, còn lại bao nhiêu, hạn mới là ngày nào. Thành công thì chúc mừng.
-export function UpgradeDialog({ plan, onClose }: { plan: PlanInfo; onClose: () => void }) {
+export function UpgradeDialog({ plan, kind = "pro", onClose }: { plan: PlanInfo; kind?: "pro" | "sprint"; onClose: () => void }) {
   const { user, setUser } = useAuth();
   const location = useLocation();
   const [busy, setBusy] = useState(false);
@@ -23,17 +23,19 @@ export function UpgradeDialog({ plan, onClose }: { plan: PlanInfo; onClose: () =
   const [done, setDone] = useState<PurchaseResult | null>(null);
 
   const balance = user?.balance ?? 0;
-  const short = balance < plan.price;
+  const sprint = kind === "sprint";
+  const price = sprint ? plan.sprint.price : plan.price;
+  const short = balance < price;
   const renewing = isPro(user);
   const base = renewing ? new Date(user!.proExpiresAt!) : new Date();
-  const newExpiry = addMonths(base, plan.months);
+  const newExpiry = sprint ? new Date(base.getTime() + plan.sprint.days * 86_400_000) : addMonths(base, plan.months);
 
   const buy = async () => {
     if (busy) return;
     setBusy(true);
     setError(null);
     try {
-      const result = await planApi.purchase();
+      const result = await planApi.purchase(sprint ? "SPRINT" : "PRO");
       setUser(result.user);
       setDone(result);
     } catch (err) {
@@ -82,10 +84,10 @@ export function UpgradeDialog({ plan, onClose }: { plan: PlanInfo; onClose: () =
 
   return (
     <Modal onClose={busy ? undefined : onClose}>
-      <ModalTitle icon={Crown}>{renewing ? "Gia hạn gói Pro" : "Nâng cấp lên Pro"}</ModalTitle>
+      <ModalTitle icon={Crown}>{sprint ? "Gói Nước rút" : renewing ? "Gia hạn gói Pro" : "Nâng cấp lên Pro"}</ModalTitle>
       <ul className="md-body-medium mt-3 space-y-1.5 text-on-surface-variant">
         <li>
-          Thêm <b className="text-on-surface">{plan.months} tháng</b> Pro, hạn mới đến <b className="text-on-surface">{formatDate(newExpiry.toISOString())}</b>
+          Thêm <b className="text-on-surface">{sprint ? `${plan.sprint.days} ngày` : `${plan.months} tháng`}</b> Pro, hạn mới đến <b className="text-on-surface">{formatDate(newExpiry.toISOString())}</b>
           {renewing && " (cộng dồn vào hạn hiện tại)"}.
         </li>
         <li>Trả một lần, <b className="text-on-surface">không tự động gia hạn</b>, không bị trừ thêm.</li>
@@ -98,7 +100,7 @@ export function UpgradeDialog({ plan, onClose }: { plan: PlanInfo; onClose: () =
         {plan.benefits.unlimitedReview && <li className="inline-flex items-center gap-1"><Check size={14} className="text-primary" /> Sổ câu sai không giới hạn</li>}
       </ul>
       <div className="mt-4">
-        <ChargeSummary amount={plan.price} balance={balance} />
+        <ChargeSummary amount={price} balance={balance} />
       </div>
       {error && (
         <div className="mt-3">
@@ -110,12 +112,12 @@ export function UpgradeDialog({ plan, onClose }: { plan: PlanInfo; onClose: () =
           Để sau
         </Button>
         {short ? (
-          <Link to={depositLink(plan.price - balance, location.pathname)} className={buttonClass({ variant: "filled", grow: true })} onClick={onClose}>
-            Nạp thêm {formatCredit(plan.price - balance)}
+          <Link to={depositLink(price - balance, location.pathname)} className={buttonClass({ variant: "filled", grow: true })} onClick={onClose}>
+            Nạp thêm {formatCredit(price - balance)}
           </Link>
         ) : (
           <Button variant="filled" grow onClick={() => void buy()} disabled={busy} className="!bg-gradient-to-b !from-[#ffd75e] !to-[#f0a800] !text-[#3a2600] font-bold">
-            <PartyPopper size={16} /> {busy ? "Đang nâng cấp…" : `Trả ${formatCredit(plan.price)}`}
+            <PartyPopper size={16} /> {busy ? "Đang nâng cấp…" : `Trả ${formatCredit(price)}`}
           </Button>
         )}
       </ModalActions>
