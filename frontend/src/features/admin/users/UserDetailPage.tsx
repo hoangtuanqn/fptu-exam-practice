@@ -8,6 +8,7 @@ import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
 import { useSubmit } from "@/shared/hooks/useSubmit";
 import type { Role, User, UserStatus } from "@/shared/types/api";
+import { isPro } from "@/shared/utils/pro";
 import { formatCredit, formatDate, formatDateTime, initials } from "@/shared/utils/formatters";
 import { Badge } from "@/shared/ui/Badge";
 import { Button } from "@/shared/ui/Button";
@@ -195,7 +196,7 @@ function UserDetail({ initial }: { initial: User }) {
       </div>
 
       <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat icon={<Wallet size={12} />} label="Số dư" value={current.balance.toLocaleString("vi-VN")} hint="credit" />
+        <Stat icon={<Wallet size={12} />} label="Số dư" value={current.balance.toLocaleString("vi-VN")} hint={isPro(current) ? `Pro đến ${formatDate(current.proExpiresAt!)}` : "credit"} />
         <Stat icon={<Coins size={12} />} label="Đã nạp" value={summary ? `${summary.depositTotal.toLocaleString("vi-VN")} ₫` : "…"} hint={summary ? `${summary.deposits} lệnh thành công` : undefined} />
         <Stat icon={<ClipboardList size={12} />} label="Bài làm" value={summary ? summary.attempts : "…"} hint={summary ? `${summary.exams} đề trong kho` : undefined} />
         <Stat

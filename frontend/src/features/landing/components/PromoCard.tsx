@@ -1,11 +1,6 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Check, Gift } from "lucide-react";
-import { authApi } from "@/features/auth/auth.api";
-import { examImportApi } from "@/features/exam-import/exam-import.api";
-import { useApi } from "@/shared/hooks/useApi";
-
-const EXAMS = 4; // số đề trong ưu đãi
-const DEFAULT_PRICE = 500; // phí mỗi đề hiện khi chưa lấy được phí thật từ máy chủ
+import { ArrowRight, Check } from "lucide-react";
+import { GIFT_EXAMS as EXAMS, useSignupGift } from "../useSignupGift";
 
 const vnd = (n: number) => `${n.toLocaleString("vi-VN")}đ`;
 
@@ -71,14 +66,9 @@ function ExamPaper() {
  * Giá và số đề được tặng lấy từ cấu hình admin nên luôn khớp số tiền thật; admin không tặng thì phần quà tự ẩn.
  */
 export function PromoCard() {
-  const price =
-    useApi(() => examImportApi.price(), []).data?.price ?? DEFAULT_PRICE;
-  const bonus = useApi(() => authApi.signupBonus(), []).data?.credit ?? 0;
+  const { price, hasGift } = useSignupGift();
 
   const total = price * EXAMS;
-  const gifted =
-    price <= 0 ? EXAMS : Math.min(EXAMS, Math.floor(bonus / price)); // số đề đã mở sẵn bằng quà đăng ký
-  const hasGift = gifted > 0;
 
   const rows: [string, string][] = [
     ["Số đề thi", `${EXAMS} đề`],
@@ -132,40 +122,6 @@ export function PromoCard() {
         </div>
       </div>
 
-      {/* Quà đăng ký: một hàng gọn, bốn ô đề (ô đã mở được đánh dấu) */}
-      {hasGift && (
-        <div className="flex flex-col gap-3 border-t border-slate-200 bg-surface px-5 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-8">
-          <div className="flex items-center gap-3">
-            <Gift
-              size={22}
-              strokeWidth={1.6}
-              className="shrink-0 text-brand-700"
-            />
-            <div className="leading-tight">
-              <div className="text-xs font-semibold text-slate-600">
-                Đăng ký lần đầu nhận ngay
-              </div>
-              <div className="font-display text-xl font-bold text-brand-900">
-                {bonus.toLocaleString("vi-VN")} credit
-              </div>
-            </div>
-          </div>
-
-          <div className="text-xs font-semibold text-slate-500 sm:text-right">
-            {gifted < EXAMS ? (
-              <>
-                Mở sẵn{" "}
-                <b className="text-brand-900">
-                  {gifted}/{EXAMS}
-                </b>{" "}
-                đề
-              </>
-            ) : (
-              <b className="text-brand-900">Bộ đề thi FE FPTU</b>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

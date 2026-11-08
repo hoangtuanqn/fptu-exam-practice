@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-const PEEK_PX = 30; // phần mép thẻ phía sau còn lộ ra khi ô phía trước đã che gần hết
+const PEEK_PX = 30; // phần mép thẻ phía sau còn lộ ra khi ô phía trước đã che gần hết (thẻ có phần tử [data-stack-peek] ở đầu thì chừa đúng chiều cao phần đó; hiện không dùng vì quà đăng ký đã có banner riêng ngoài thẻ)
 const TILT_DEG = 3.5; // thẻ phía sau nghiêng chừng này độ (góc phải nhô lên), ô phía trước vẫn thẳng để thao tác
 const SHIFT_PX = 16; // thẻ phía sau lệch sang trái một chút: hai thẻ bắt chéo nhau thay vì chồng thẳng lên nhau
 const SCROLL_RANGE = 220; // cuộn chừng này px thì hiệu ứng hoàn tất
@@ -47,8 +47,10 @@ export function useScrollOverlap(enabled: boolean) {
     const apply = () => {
       frame = 0;
       // Vị trí tự nhiên của khối `over` khi chưa bị kéo lên = vị trí hiện tại + phần đã kéo
+      const marked = u.querySelector<HTMLElement>("[data-stack-peek]");
+      const peekPx = marked ? marked.offsetHeight + 4 + 6 : PEEK_PX; // 4px viền trên của thẻ + 6px đệm
       const naturalTop = oOuter.offsetTop + applied;
-      const distance = Math.max(naturalTop - uOuter.offsetTop - PEEK_PX, 0);
+      const distance = Math.max(naturalTop - uOuter.offsetTop - peekPx, 0);
 
       const p = media.matches ? Math.min(Math.max(scrollTop() / SCROLL_RANGE, 0), 1) : 0;
       const e = 1 - Math.pow(1 - p, 3); // nhanh lúc đầu, chậm dần khi chạm: "nhảy" lên rồi êm xuống
@@ -60,7 +62,7 @@ export function useScrollOverlap(enabled: boolean) {
         applied = pull;
       }
       // Thẻ sau cao hơn ô phía trước: cắt phần đáy thò ra để chỉ còn mép trên lộ ra, phần còn lại nằm khuất dưới ô phía trước
-      const exposed = Math.max(0, u.offsetHeight - o.offsetHeight - PEEK_PX);
+      const exposed = Math.max(0, u.offsetHeight - o.offsetHeight - peekPx);
       const cut = exposed ? Math.round((exposed + 8) * e) : 0;
       u.style.clipPath = cut ? `inset(0 0 ${cut}px 0)` : "";
       u.style.transform = e ? `translateY(${sink.toFixed(1)}px) translateX(${(-SHIFT_PX * e).toFixed(1)}px) rotate(${-TILT_DEG * e}deg) scale(${1 - 0.03 * e})` : "";
