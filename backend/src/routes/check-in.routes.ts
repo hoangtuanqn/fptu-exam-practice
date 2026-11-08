@@ -1,11 +1,11 @@
 import { Router } from "express";
-import rateLimit from "express-rate-limit";
+import { makeLimiter } from "../middlewares/rateLimit.middlewares";
 import type { Request, Response } from "express";
 import { authenticate, requireVerifiedMember } from "../middlewares/auth.middlewares";
 import { ResponseClient } from "../rules/response";
 import { checkInService } from "../services/check-in.service";
 
-const limiter = rateLimit({ windowMs: 60 * 1000, limit: 120, standardHeaders: true, legacyHeaders: false, message: { status: false, message: "Bạn thao tác quá nhanh, vui lòng thử lại sau ít phút" } });
+const limiter = makeLimiter({ limit: 120 });
 
 const checkInRouter = Router();
 

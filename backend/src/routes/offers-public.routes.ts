@@ -1,10 +1,10 @@
 import { Router } from "express";
-import rateLimit from "express-rate-limit";
+import { makeLimiter } from "../middlewares/rateLimit.middlewares";
 import type { Request, Response } from "express";
 import { ResponseClient } from "../rules/response";
 import { offersService } from "../services/offers.service";
 
-const limiter = rateLimit({ windowMs: 60 * 1000, limit: 240, standardHeaders: true, legacyHeaders: false, message: { status: false, message: "Bạn thao tác quá nhanh, vui lòng thử lại sau ít phút" } });
+const limiter = makeLimiter({ limit: 240 });
 
 const offersPublicRouter = Router();
 
