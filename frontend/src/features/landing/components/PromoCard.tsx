@@ -87,6 +87,40 @@ export function PromoCard() {
 
   return (
     <div className="relative mx-auto max-w-3xl overflow-hidden rounded-lg border border-slate-200 border-t-4 border-t-brand-900 bg-surface-container-lowest text-left shadow-[0_18px_40px_-28px_rgba(11,23,48,0.5)]">
+      {/* Quà đăng ký: nằm ĐẦU thẻ để hiệu ứng xấp thẻ khi cuộn (ô nhập đề trượt lên che thẻ) luôn chừa nó lại, không bị che */}
+      {hasGift && (
+        <div data-stack-peek className="flex flex-col gap-3 border-b border-slate-200 bg-surface px-5 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+          <div className="flex items-center gap-3">
+            <Gift
+              size={22}
+              strokeWidth={1.6}
+              className="shrink-0 text-brand-700"
+            />
+            <div className="leading-tight">
+              <div className="text-xs font-semibold text-slate-600">
+                Đăng ký lần đầu nhận ngay
+              </div>
+              <div className="font-display text-xl font-bold text-brand-900">
+                {bonus.toLocaleString("vi-VN")} credit
+              </div>
+            </div>
+          </div>
+
+          <div className="text-xs font-semibold text-slate-500 sm:text-right">
+            {gifted < EXAMS ? (
+              <>
+                Mở sẵn{" "}
+                <b className="text-brand-900">
+                  {gifted}/{EXAMS}
+                </b>{" "}
+                đề
+              </>
+            ) : (
+              <b className="text-brand-900">Bộ đề thi FE FPTU</b>
+            )}
+          </div>
+        </div>
+      )}
       <div className="grid sm:grid-cols-[1.1fr_1fr]">
         <div className="p-5 sm:p-8">
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-brand-700">
@@ -132,40 +166,6 @@ export function PromoCard() {
         </div>
       </div>
 
-      {/* Quà đăng ký: một hàng gọn, bốn ô đề (ô đã mở được đánh dấu) */}
-      {hasGift && (
-        <div className="flex flex-col gap-3 border-t border-slate-200 bg-surface px-5 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-8">
-          <div className="flex items-center gap-3">
-            <Gift
-              size={22}
-              strokeWidth={1.6}
-              className="shrink-0 text-brand-700"
-            />
-            <div className="leading-tight">
-              <div className="text-xs font-semibold text-slate-600">
-                Đăng ký lần đầu nhận ngay
-              </div>
-              <div className="font-display text-xl font-bold text-brand-900">
-                {bonus.toLocaleString("vi-VN")} credit
-              </div>
-            </div>
-          </div>
-
-          <div className="text-xs font-semibold text-slate-500 sm:text-right">
-            {gifted < EXAMS ? (
-              <>
-                Mở sẵn{" "}
-                <b className="text-brand-900">
-                  {gifted}/{EXAMS}
-                </b>{" "}
-                đề
-              </>
-            ) : (
-              <b className="text-brand-900">Bộ đề thi FE FPTU</b>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

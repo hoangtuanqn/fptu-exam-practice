@@ -1,12 +1,31 @@
-import { useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, BadgeCheck, CalendarClock, Check, ChevronDown, Crown, Download, Link2, ShieldCheck, Sparkles, Wallet } from "lucide-react";
+import {
+  ArrowRight,
+  BadgeCheck,
+  Bot,
+  CalendarClock,
+  Check,
+  ChevronDown,
+  Crown,
+  Download,
+  FileDown,
+  History,
+  Infinity as InfinityIcon,
+  Link2,
+  MessageCircleQuestion,
+  Minus,
+  ShieldCheck,
+  Sparkles,
+  Timer,
+  Wallet,
+} from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
-import { useToast } from "@/shared/context/ToastContext";
 import { examImportApi } from "@/features/exam-import/exam-import.api";
 import { VerifyEmailNotice } from "@/features/verify-email/VerifyEmailNotice";
 import { brand, logos } from "@/shared/brand/brand";
 import { Logo } from "@/shared/brand/Logo";
+import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
 import { useCountUp } from "@/shared/hooks/useCountUp";
 import { Footer } from "@/shared/layout/Footer";
@@ -22,12 +41,51 @@ const GOLD = "bg-gradient-to-b from-[#ffd75e] to-[#f0a800] text-[#3a2600]";
 
 const FAQ: [string, string][] = [
   ["Mình trả bằng gì?", "Bằng credit trong ví (1 credit = 1đ). Chưa đủ thì nạp thêm bằng chuyển khoản, xong là quay lại nâng cấp được ngay."],
+  ["Pro có giới hạn lượt dùng không?", "Không. Trong thời hạn Pro, bạn lấy đề, xem giải thích AI và nhờ AI giải đề bao nhiêu lần cũng được, không bị trừ credit và không bị giới hạn số lượt mỗi giờ."],
   ["Pro có tự động gia hạn không?", "Không. Bạn trả một lần cho đủ thời hạn, hết hạn là trở về dùng bình thường và không bị trừ thêm đồng nào."],
   ["Mua khi Pro còn hạn thì sao?", "Thời gian được cộng dồn vào hạn hiện tại, không mất ngày nào."],
   ["Hết hạn Pro thì mình mất gì không?", "Không mất gì. Đề đã lấy vẫn nằm trong kho, lời giải đã xem vẫn xem lại được. Chỉ là lần lấy đề mới sẽ tính phí như thường."],
 ];
 
-// Trang bán hàng gói Pro (công khai). Nền tối vàng cố định (không đổi theo giao diện sáng/tối) để chữ vàng/trắng luôn đủ tương phản.
+// Tính năng do FEPass xây thêm trên kho đề (cột FuOverflow VIP: chỉ dòng đầu có, các dòng còn lại là tính năng riêng của FEPass)
+const FEATURES: { icon: typeof Bot; text: string; fuo: boolean }[] = [
+  { icon: Link2, text: "Xem đề thi FE đầy đủ từ kho FuOverflow", fuo: true },
+  { icon: Bot, text: "AI giải đáp án cho cả đề, kèm đối chiếu bình luận", fuo: false },
+  { icon: Sparkles, text: "Giải thích AI từng câu, nói rõ vì sao sai", fuo: false },
+  { icon: History, text: "Chấm điểm thang 10, lưu lịch sử và điểm cao nhất", fuo: false },
+  { icon: Timer, text: "Chế độ Thi có đếm ngược, tự nộp khi hết giờ", fuo: false },
+  { icon: FileDown, text: "Tải trọn bộ tài nguyên đề PE (file zip)", fuo: false },
+  { icon: MessageCircleQuestion, text: "Trợ lý Cóc Pass trả lời mọi lúc", fuo: false },
+  { icon: InfinityIcon, text: "Không giới hạn lượt lấy đề, giải thích, AI giải đề", fuo: false },
+];
+
+// Hiện dần khi cuộn tới (người bật "giảm chuyển động" thấy ngay)
+function Reveal({ children, delay = 0, className = "" }: { children: ReactNode; delay?: number; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === "undefined" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return setShown(true);
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (e?.isIntersecting) {
+          setShown(true);
+          io.disconnect();
+        }
+      },
+      { threshold: 0.1 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  return (
+    <div ref={ref} style={{ transitionDelay: `${delay}ms` }} className={`transition-all duration-700 ease-out ${shown ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"} ${className}`}>
+      {children}
+    </div>
+  );
+}
+
+// Trang bán gói Pro (công khai). Phần nền tối vàng dùng màu cố định (không đổi theo giao diện sáng/tối) để chữ vàng/trắng luôn đủ tương phản.
 export default function PlanPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -35,12 +93,23 @@ export default function PlanPage() {
   const info = useApi(() => planApi.info(), []);
   const fetchPrice = useApi(() => examImportApi.price(), []).data?.price ?? 0;
   const [open, setOpen] = useState(false);
+  const [heroVisible, setHeroVisible] = useState(true);
+  const heroRef = useRef<HTMLDivElement>(null);
 
   const pro = isPro(user);
   const unverified = !!user && !user.emailVerifiedAt;
   const plan = info.data;
   // Chữ nút theo ngữ cảnh: khách được báo trước sẽ phải đăng nhập (đỡ bất ngờ), người đang là Pro thấy "Gia hạn"
   const label = !user ? "Đăng nhập để nâng cấp Pro" : pro ? "Gia hạn Pro" : "Nâng cấp Pro ngay";
+
+  // Thanh mua nổi: chỉ hiện khi đã cuộn qua phần đầu (nút chính không còn trong tầm mắt)
+  useEffect(() => {
+    const el = heroRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(([e]) => setHeroVisible(!!e?.isIntersecting), { threshold: 0.2 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [plan]);
 
   const cta = () => {
     if (!user) return navigate("/login", { state: { from: "/pro" } });
@@ -60,7 +129,7 @@ export default function PlanPage() {
         <UserMenu />
       </header>
 
-      <main className="flex-1 pb-24 expanded:pb-0">
+      <main className="flex-1 pb-20">
         {info.loading ? (
           <Loading />
         ) : info.error || !plan ? (
@@ -69,36 +138,48 @@ export default function PlanPage() {
           </div>
         ) : (
           <>
-            <Hero plan={plan} pro={pro} label={label} daysLeft={proDaysLeft(user)} expiresAt={user?.proExpiresAt ?? null} onBuy={cta} />
+            <div ref={heroRef}>
+              <Hero plan={plan} pro={pro} label={label} daysLeft={proDaysLeft(user)} expiresAt={user?.proExpiresAt ?? null} onBuy={cta} />
+            </div>
             {unverified && (
               <div id="pro-verify" className="mx-auto max-w-3xl px-4 pt-6">
                 <VerifyEmailNotice variant="inline" message="Bạn cần xác minh email trước khi nâng cấp Pro." />
               </div>
             )}
+            <Unlimited />
             <Compare plan={plan} />
+            <FeatureTable plan={plan} />
             <Benefits plan={plan} fetchPrice={fetchPrice} />
+            <Steps plan={plan} />
             <Faq />
             <FinalCta plan={plan} label={label} onBuy={cta} />
           </>
         )}
       </main>
 
-      {plan && (
-        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-[#ffc61f]/30 bg-[#1d1500]/95 px-4 py-3 backdrop-blur expanded:hidden">
-          <div className="mx-auto flex max-w-3xl items-center gap-3">
+      {/* Chân trang: nền liền với footer nên phần đệm cho thanh mua nổi (mobile) không lộ thành một dải trống bên dưới */}
+      <div className="bg-surface-container-low pb-[84px] expanded:pb-0">
+        <Footer />
+      </div>
+
+      {plan && !heroVisible && (
+        <div className="fixed inset-x-0 bottom-0 z-30 px-3 pb-3 expanded:bottom-5 expanded:left-1/2 expanded:right-auto expanded:w-[34rem] expanded:-translate-x-1/2 expanded:px-0 expanded:pb-0">
+          <div className="pro-rise flex items-center gap-3 rounded-full border border-[#ffc61f]/40 bg-[#1d1500]/95 py-2 pl-5 pr-2 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.6)] backdrop-blur">
             <div className="min-w-0 flex-1 leading-tight">
-              <div className="text-xs text-[#fff1c2]/70 line-through">{vnd(plan.fuoPrice)}</div>
-              <div className="text-lg font-extrabold tabular-nums text-[#ffc61f]">{vnd(plan.price)}</div>
+              <div className="truncate text-xs text-[#fff6dc]/70">
+                <span className="line-through">{vnd(plan.fuoPrice)}</span> · tiết kiệm {vnd(plan.savings)}
+              </div>
+              <div className="text-lg font-extrabold tabular-nums text-[#ffc61f]">
+                {vnd(plan.price)} <span className="text-xs font-semibold text-[#fff6dc]/70">/ {plan.months} tháng</span>
+              </div>
             </div>
-            <button onClick={cta} className={`pro-cta md-label-large inline-flex h-12 items-center gap-2 rounded-full px-6 font-bold shadow-m3-2 ${GOLD}`}>
-              <Crown size={18} /> {label}
+            <button onClick={cta} className={`pro-cta md-label-large inline-flex h-11 shrink-0 items-center gap-2 rounded-full px-5 font-extrabold ${GOLD}`}>
+              <Crown size={17} /> {pro ? "Gia hạn" : user ? "Nâng cấp" : "Đăng nhập"}
             </button>
           </div>
         </div>
       )}
 
-      <Footer />
-      <div aria-hidden className="h-20 expanded:hidden" /> {/* chừa chỗ cho thanh mua cố định ở đáy (mobile) để không che chân trang */}
       {open && plan && <UpgradeDialog plan={plan} onClose={() => setOpen(false)} />}
     </div>
   );
@@ -106,7 +187,8 @@ export default function PlanPage() {
 
 function Hero({ plan, pro, label, daysLeft, expiresAt, onBuy }: { plan: PlanInfo; pro: boolean; label: string; daysLeft: number; expiresAt: string | null; onBuy: () => void }) {
   const price = useCountUp(plan.price, 1100);
-  const newExpiry = addMonths(pro && expiresAt ? new Date(expiresAt) : new Date(), plan.months);
+  const startsAt = pro && expiresAt ? new Date(expiresAt) : new Date();
+  const newExpiry = addMonths(startsAt, plan.months);
   return (
     <section className="relative isolate overflow-hidden bg-[radial-gradient(ellipse_at_top,#5a4100_0%,#2a1d00_48%,#140e00_100%)] text-[#fff6dc]">
       <div aria-hidden className="pro-glow absolute -right-24 -top-24 -z-10 h-96 w-96 rounded-full bg-[#ffc61f]/30 blur-3xl" />
@@ -120,10 +202,10 @@ function Hero({ plan, pro, label, daysLeft, expiresAt, onBuy }: { plan: PlanInfo
           </span>
           <h1 className="mt-4 text-4xl font-extrabold leading-[1.08] tracking-tight sm:text-5xl">
             Học thả ga <span className="bg-gradient-to-r from-[#ffe58a] via-[#ffc61f] to-[#ff9d2f] bg-clip-text text-transparent">{plan.months} tháng</span>,
-            <br className="hidden sm:block" /> không lo trừ credit
+            <br className="hidden sm:block" /> không giới hạn lượt
           </h1>
           <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-[#fff6dc]/80 expanded:mx-0">
-            Lấy đề, xem giải thích AI từng câu và tải đề PE <b className="text-white">hoàn toàn miễn phí</b> trong suốt thời hạn Pro.
+            Lấy đề, xem giải thích AI và nhờ AI giải đề <b className="text-white">không giới hạn và không bị trừ credit</b> trong suốt thời hạn Pro.
           </p>
 
           <div className="mt-7 flex flex-col items-center gap-2 expanded:items-start">
@@ -163,7 +245,20 @@ function Hero({ plan, pro, label, daysLeft, expiresAt, onBuy }: { plan: PlanInfo
               <span className="inline-flex items-center gap-1"><Check size={13} /> Không tự gia hạn</span>
               <span className="inline-flex items-center gap-1"><Wallet size={13} /> Dùng credit trong ví</span>
             </p>
-            {pro && <p className="text-xs text-[#fff6dc]/65">Gia hạn xong, Pro đến {formatDate(newExpiry.toISOString())}.</p>}
+          </div>
+
+          {/* Mốc thời gian: cho người xem hình dung ngay "mua hôm nay thì dùng đến bao giờ" */}
+          <div className="mx-auto mt-6 max-w-sm rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 expanded:mx-0">
+            <div className="flex items-center justify-between text-xs text-[#fff6dc]/70">
+              <span>{pro ? "Hết hạn hiện tại" : "Hôm nay"}</span>
+              <span className="font-bold text-[#ffc61f]">Pro đến {formatDate(newExpiry.toISOString())}</span>
+            </div>
+            <div className="relative mt-2 h-2 rounded-full bg-white/15">
+              <div className="pro-bar absolute inset-y-0 left-0 w-full rounded-full bg-gradient-to-r from-[#ffd75e] to-[#f0a800]" />
+              <span className="absolute -left-1 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full border-2 border-[#1d1500] bg-[#ffd75e]" />
+              <Crown size={18} className="absolute -right-1 top-1/2 -translate-y-1/2 fill-[#ffc61f] text-[#ffe58a]" />
+            </div>
+            <div className="mt-1.5 text-center text-xs text-[#fff6dc]/60">{plan.months} tháng liên tục, không giới hạn lượt</div>
           </div>
         </div>
 
@@ -181,37 +276,104 @@ function Hero({ plan, pro, label, daysLeft, expiresAt, onBuy }: { plan: PlanInfo
   );
 }
 
+// Ba ô "∞": thứ người học quan tâm nhất là không bị đếm lượt
+function Unlimited() {
+  const items = [
+    { icon: Link2, title: "Lấy đề", sub: "không giới hạn" },
+    { icon: Sparkles, title: "Giải thích AI", sub: "mọi câu, mọi đề" },
+    { icon: Bot, title: "AI giải đề", sub: "không đếm lượt" },
+  ];
+  return (
+    <section className="relative z-10 mx-auto -mt-6 max-w-3xl px-4">
+      <Reveal>
+        <div className="grid grid-cols-3 overflow-hidden rounded-m3-lg border border-[#ffc61f]/40 bg-surface-container-lowest shadow-m3-2">
+          {items.map(({ icon: Icon, title, sub }, i) => (
+            <div key={title} className={`flex flex-col items-center gap-1 px-2 py-4 text-center ${i > 0 ? "border-l border-outline-variant" : ""}`}>
+              <InfinityIcon size={30} strokeWidth={2.6} className="text-primary" />
+              <span className="md-label-large flex items-center gap-1 text-on-surface">
+                <Icon size={14} className="text-primary" /> {title}
+              </span>
+              <span className="md-body-small text-on-surface-variant">{sub}</span>
+            </div>
+          ))}
+        </div>
+      </Reveal>
+    </section>
+  );
+}
+
 // So sánh trực quan: hai thanh dài theo giá, thanh Pro ngắn hơn rõ rệt và vàng nổi bật
 function Compare({ plan }: { plan: PlanInfo }) {
   const ratio = plan.fuoPrice > 0 ? plan.price / plan.fuoPrice : 1;
   return (
-    <section className="mx-auto max-w-3xl px-4 pt-12">
-      <h2 className="md-headline-small text-center text-on-surface">Cùng {plan.months} tháng, bạn giữ lại <span className="text-primary">{vnd(plan.savings)}</span></h2>
-      <div className="mt-6 space-y-4 rounded-m3-lg border border-outline-variant bg-surface-container-low p-5">
-        <div>
-          <div className="mb-1.5 flex items-baseline justify-between text-sm">
-            <span className="text-on-surface-variant">FuOverflow VIP · {plan.months} tháng</span>
-            <b className="tabular-nums text-on-surface">{vnd(plan.fuoPrice)}</b>
+    <section className="mx-auto max-w-3xl px-4 pt-14">
+      <Reveal>
+        <h2 className="md-headline-small text-center text-on-surface">
+          Cùng {plan.months} tháng, bạn giữ lại <span className="text-primary">{vnd(plan.savings)}</span>
+        </h2>
+        <div className="mt-6 space-y-4 rounded-m3-lg border border-outline-variant bg-surface-container-low p-5">
+          <div>
+            <div className="mb-1.5 flex items-baseline justify-between text-sm">
+              <span className="text-on-surface-variant">FuOverflow VIP · {plan.months} tháng</span>
+              <b className="tabular-nums text-on-surface">{vnd(plan.fuoPrice)}</b>
+            </div>
+            <div className="h-5 overflow-hidden rounded-full bg-surface-container-highest">
+              <div className="pro-bar h-full w-full rounded-full bg-outline" />
+            </div>
           </div>
-          <div className="h-5 overflow-hidden rounded-full bg-surface-container-highest">
-            <div className="pro-bar h-full w-full rounded-full bg-outline" />
+          <div>
+            <div className="mb-1.5 flex items-baseline justify-between text-sm">
+              <span className="inline-flex items-center gap-1.5 font-semibold text-on-surface">
+                <Crown size={15} className="text-primary" /> FEPass Pro · {plan.months} tháng
+              </span>
+              <b className="tabular-nums text-primary">{vnd(plan.price)}</b>
+            </div>
+            <div className="h-5 overflow-hidden rounded-full bg-surface-container-highest">
+              <div className="pro-bar h-full rounded-full bg-gradient-to-r from-[#ffd75e] to-[#f0a800] [animation-delay:0.55s]" style={{ width: `${Math.max(8, ratio * 100)}%` }} />
+            </div>
+          </div>
+          <p className="flex items-center justify-center gap-2 rounded-xl bg-primary-container px-3 py-2 text-center text-sm font-semibold text-on-primary-container">
+            <BadgeCheck size={17} /> Rẻ hơn {plan.savingsPercent}%, mà còn thêm nhiều thứ ngoài kho đề
+          </p>
+        </div>
+      </Reveal>
+    </section>
+  );
+}
+
+// Bảng "chỉ có ở FEPass": cột FuOverflow VIP chỉ có tính năng xem đề; phần còn lại là tính năng FEPass tự xây
+function FeatureTable({ plan }: { plan: PlanInfo }) {
+  return (
+    <section className="mx-auto max-w-3xl px-4 pt-14">
+      <Reveal>
+        <h2 className="md-headline-small text-center text-on-surface">Chỉ có ở FEPass Pro</h2>
+        <p className="md-body-medium mx-auto mt-1 max-w-md text-center text-on-surface-variant">Không chỉ là kho đề: FEPass biến đề thi thành một buổi học có người kèm.</p>
+        <div className="mt-6 overflow-hidden rounded-m3-lg border border-outline-variant bg-surface-container-lowest">
+          <div className="grid grid-cols-[1fr_72px_88px] items-center border-b border-outline-variant bg-surface-container px-4 py-3 text-center text-xs font-semibold text-on-surface-variant sm:grid-cols-[1fr_110px_120px]">
+            <span className="text-left">Tính năng</span>
+            <span>FuOverflow VIP</span>
+            <span className="inline-flex items-center justify-center gap-1 text-primary"><Crown size={13} /> FEPass Pro</span>
+          </div>
+          {FEATURES.map(({ icon: Icon, text, fuo }) => (
+            <div key={text} className="grid grid-cols-[1fr_72px_88px] items-center border-b border-outline-variant px-4 py-3 last:border-b-0 sm:grid-cols-[1fr_110px_120px]">
+              <span className="md-body-medium flex items-start gap-2.5 pr-2 text-on-surface">
+                <Icon size={18} className="mt-0.5 shrink-0 text-primary" /> {text}
+              </span>
+              <span className="flex justify-center">{fuo ? <Check size={18} className="text-on-surface-variant" /> : <Minus size={18} className="text-outline" aria-label="Không có" />}</span>
+              <span className="flex justify-center">
+                <span className={`flex h-6 w-6 items-center justify-center rounded-full ${GOLD}`}>
+                  <Check size={15} strokeWidth={3} />
+                </span>
+              </span>
+            </div>
+          ))}
+          <div className="grid grid-cols-[1fr_72px_88px] items-center bg-surface-container px-4 py-3 text-center sm:grid-cols-[1fr_110px_120px]">
+            <span className="md-label-large text-left text-on-surface">Giá {plan.months} tháng</span>
+            <span className="md-body-medium tabular-nums text-on-surface-variant line-through">{vnd(plan.fuoPrice)}</span>
+            <span className="md-title-small tabular-nums text-primary">{vnd(plan.price)}</span>
           </div>
         </div>
-        <div>
-          <div className="mb-1.5 flex items-baseline justify-between text-sm">
-            <span className="inline-flex items-center gap-1.5 font-semibold text-on-surface">
-              <Crown size={15} className="text-primary" /> FEPass Pro · {plan.months} tháng
-            </span>
-            <b className="tabular-nums text-primary">{vnd(plan.price)}</b>
-          </div>
-          <div className="h-5 overflow-hidden rounded-full bg-surface-container-highest">
-            <div className="pro-bar h-full rounded-full bg-gradient-to-r from-[#ffd75e] to-[#f0a800] [animation-delay:0.55s]" style={{ width: `${Math.max(8, ratio * 100)}%` }} />
-          </div>
-        </div>
-        <p className="flex items-center justify-center gap-2 rounded-xl bg-primary-container px-3 py-2 text-center text-sm font-semibold text-on-primary-container">
-          <BadgeCheck size={17} /> Rẻ hơn {plan.savingsPercent}%, mà còn có giải thích AI và tải đề PE
-        </p>
-      </div>
+      </Reveal>
     </section>
   );
 }
@@ -221,25 +383,62 @@ function Benefits({ plan, fetchPrice }: { plan: PlanInfo; fetchPrice: number }) 
     plan.benefits.freeFetch && {
       icon: Link2,
       title: "Lấy đề không giới hạn",
-      text: fetchPrice > 0 ? `Dán link FuOverflow là có đề, không mất ${vnd(fetchPrice)}/đề như thường.` : "Dán link FuOverflow là có đề, không bị tính phí.",
+      text: "Dán link FuOverflow là có đề, kèm đáp án AI. Không bị giới hạn số đề mỗi giờ.",
+      was: fetchPrice > 0 ? `${vnd(fetchPrice)}/đề` : null,
     },
-    plan.benefits.freeExplain && { icon: Sparkles, title: "Giải thích AI mọi câu", text: "Bấm xem lời giải của bất kỳ câu nào, không cần mở khóa từng đề." },
-    plan.benefits.freePe && { icon: Download, title: "Tải đề PE miễn phí", text: "Tải trọn bộ tài nguyên đề PE (file zip) mà không bị trừ credit." },
-  ].filter(Boolean) as { icon: typeof Link2; title: string; text: string }[];
+    plan.benefits.freeExplain && { icon: Sparkles, title: "Giải thích AI mọi câu", text: "Bấm xem lời giải của bất kỳ câu nào, không cần mở khóa từng đề.", was: "trả theo câu" },
+    plan.benefits.freePe && { icon: Download, title: "Tải đề PE miễn phí", text: "Tải trọn bộ tài nguyên đề PE (file zip), không giới hạn số lần tải.", was: "trả mỗi lần" },
+  ].filter(Boolean) as { icon: typeof Link2; title: string; text: string; was: string | null }[];
   return (
     <section className="mx-auto max-w-5xl px-4 pt-14">
-      <h2 className="md-headline-small text-center text-on-surface">Mọi thứ mở khóa khi bạn lên Pro</h2>
+      <Reveal>
+        <h2 className="md-headline-small text-center text-on-surface">Mọi thứ mở khóa khi bạn lên Pro</h2>
+      </Reveal>
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
-        {items.map(({ icon: Icon, title, text }, i) => (
-          <div key={title} className="pro-rise rounded-m3-lg border border-outline-variant bg-surface-container-lowest p-5 transition hover:-translate-y-0.5 hover:shadow-m3-2" style={{ animationDelay: `${i * 90}ms` }}>
-            <span className={`flex h-12 w-12 items-center justify-center rounded-2xl shadow-m3-1 ${GOLD}`}>
-              <Icon size={24} strokeWidth={2.2} />
-            </span>
-            <h3 className="md-title-medium mt-4 text-on-surface">{title}</h3>
-            <p className="md-body-medium mt-1 text-on-surface-variant">{text}</p>
-          </div>
+        {items.map(({ icon: Icon, title, text, was }, i) => (
+          <Reveal key={title} delay={i * 100}>
+            <div className="h-full rounded-m3-lg border border-outline-variant bg-surface-container-lowest p-5 transition hover:-translate-y-1 hover:shadow-m3-2">
+              <div className="flex items-start justify-between gap-2">
+                <span className={`flex h-12 w-12 items-center justify-center rounded-2xl shadow-m3-1 ${GOLD}`}>
+                  <Icon size={24} strokeWidth={2.2} />
+                </span>
+                {was && (
+                  <span className="md-label-small rounded-full bg-surface-container px-2.5 py-1 text-on-surface-variant">
+                    <s>{was}</s> → <b className="text-primary">0đ</b>
+                  </span>
+                )}
+              </div>
+              <h3 className="md-title-medium mt-4 text-on-surface">{title}</h3>
+              <p className="md-body-medium mt-1 text-on-surface-variant">{text}</p>
+            </div>
+          </Reveal>
         ))}
       </div>
+    </section>
+  );
+}
+
+// Ba bước từ "chưa có gì" tới "dán link lấy đề": giảm cảm giác phức tạp trước khi mua
+function Steps({ plan }: { plan: PlanInfo }) {
+  const steps = [
+    { n: 1, title: "Đăng nhập, xác minh email", text: "Mất chưa tới một phút." },
+    { n: 2, title: `Trả ${vnd(plan.price)} bằng credit`, text: "Thiếu thì nạp thêm, xong quay lại ngay." },
+    { n: 3, title: "Dán link và học", text: `Lấy đề, xem giải thích, không bị trừ credit suốt ${plan.months} tháng.` },
+  ];
+  return (
+    <section className="mx-auto max-w-4xl px-4 pt-14">
+      <Reveal>
+        <h2 className="md-headline-small text-center text-on-surface">Bắt đầu chỉ với 3 bước</h2>
+        <ol className="mt-6 grid gap-3 sm:grid-cols-3">
+          {steps.map((s) => (
+            <li key={s.n} className="rounded-m3-md border border-outline-variant bg-surface-container-low p-4">
+              <span className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-extrabold ${GOLD}`}>{s.n}</span>
+              <div className="md-title-small mt-3 text-on-surface">{s.title}</div>
+              <p className="md-body-small mt-1 text-on-surface-variant">{s.text}</p>
+            </li>
+          ))}
+        </ol>
+      </Reveal>
     </section>
   );
 }
@@ -247,18 +446,20 @@ function Benefits({ plan, fetchPrice }: { plan: PlanInfo; fetchPrice: number }) 
 function Faq() {
   return (
     <section className="mx-auto max-w-3xl px-4 pt-14">
-      <h2 className="md-headline-small text-center text-on-surface">Câu hỏi thường gặp</h2>
-      <div className="mt-5 divide-y divide-outline-variant overflow-hidden rounded-m3-md border border-outline-variant bg-surface-container-lowest">
-        {FAQ.map(([q, a]) => (
-          <details key={q} className="group">
-            <summary className="md-state md-title-small flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 text-on-surface [&::-webkit-details-marker]:hidden">
-              {q}
-              <ChevronDown size={18} className="shrink-0 text-on-surface-variant transition group-open:rotate-180" />
-            </summary>
-            <p className="md-body-medium px-4 pb-4 text-on-surface-variant">{a}</p>
-          </details>
-        ))}
-      </div>
+      <Reveal>
+        <h2 className="md-headline-small text-center text-on-surface">Câu hỏi thường gặp</h2>
+        <div className="mt-5 divide-y divide-outline-variant overflow-hidden rounded-m3-md border border-outline-variant bg-surface-container-lowest">
+          {FAQ.map(([q, a]) => (
+            <details key={q} className="group">
+              <summary className="md-state md-title-small flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 text-on-surface [&::-webkit-details-marker]:hidden">
+                {q}
+                <ChevronDown size={18} className="shrink-0 text-on-surface-variant transition group-open:rotate-180" />
+              </summary>
+              <p className="md-body-medium px-4 pb-4 text-on-surface-variant">{a}</p>
+            </details>
+          ))}
+        </div>
+      </Reveal>
     </section>
   );
 }
@@ -266,17 +467,19 @@ function Faq() {
 function FinalCta({ plan, label, onBuy }: { plan: PlanInfo; label: string; onBuy: () => void }) {
   return (
     <section className="mx-auto max-w-3xl px-4 pt-14">
-      <div className="relative overflow-hidden rounded-m3-xl bg-[radial-gradient(ellipse_at_top,#5a4100_0%,#1d1500_100%)] px-6 py-9 text-center text-[#fff6dc]">
-        <div aria-hidden className="pro-glow absolute -top-16 left-1/2 h-40 w-72 -translate-x-1/2 rounded-full bg-[#ffc61f]/30 blur-3xl" />
-        <Crown size={34} className="relative mx-auto text-[#ffc61f]" />
-        <h2 className="relative mt-2 text-2xl font-extrabold">Sẵn sàng học không giới hạn?</h2>
-        <p className="relative mt-1.5 text-sm text-[#fff6dc]/75">
-          {vnd(plan.price)} cho {plan.months} tháng, tiết kiệm {vnd(plan.savings)} so với FuOverflow VIP.
-        </p>
-        <button onClick={onBuy} className={`pro-cta md-label-large relative mt-5 inline-flex h-12 items-center gap-2 rounded-full px-8 font-extrabold shadow-[0_10px_36px_-6px_rgba(255,198,31,0.55)] ${GOLD}`}>
-          <Crown size={18} /> {label}
-        </button>
-      </div>
+      <Reveal>
+        <div className="relative overflow-hidden rounded-m3-xl bg-[radial-gradient(ellipse_at_top,#5a4100_0%,#1d1500_100%)] px-6 py-10 text-center text-[#fff6dc]">
+          <div aria-hidden className="pro-glow absolute -top-16 left-1/2 h-40 w-72 -translate-x-1/2 rounded-full bg-[#ffc61f]/30 blur-3xl" />
+          <img src={logos.mark} alt="" className="pro-float relative mx-auto h-20 drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]" draggable={false} />
+          <h2 className="relative mt-3 text-2xl font-extrabold">Sẵn sàng học không giới hạn?</h2>
+          <p className="relative mt-1.5 text-sm text-[#fff6dc]/75">
+            {vnd(plan.price)} cho {plan.months} tháng, tiết kiệm {vnd(plan.savings)} so với FuOverflow VIP.
+          </p>
+          <button onClick={onBuy} className={`pro-cta md-label-large relative mt-5 inline-flex h-12 items-center gap-2 rounded-full px-8 font-extrabold shadow-[0_10px_36px_-6px_rgba(255,198,31,0.55)] ${GOLD}`}>
+            <Crown size={18} /> {label}
+          </button>
+        </div>
+      </Reveal>
     </section>
   );
 }
