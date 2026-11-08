@@ -1,4 +1,5 @@
 import type { Quiz } from "@/features/practice/hooks/useQuiz";
+import type { TopicSummary } from "@/features/history/types";
 import { ConfirmSubmitDialog } from "./ConfirmSubmitDialog";
 import { NotFoundDialog } from "./NotFoundDialog";
 import { ResultDialog } from "./ResultDialog";
@@ -8,13 +9,14 @@ export type SubmitDialog = "confirm" | "result" | null;
 
 interface Props {
   quiz: Quiz;
+  topicSummary: TopicSummary;
   dialog: SubmitDialog;
   onDialogChange: (dialog: SubmitDialog) => void;
   onCloseZoom: () => void;
 }
 
 // Quyết định hộp thoại nào đang hiện: bắt đầu / lỗi thư mục / xác nhận nộp / bảng điểm
-export function QuizDialogs({ quiz, dialog, onDialogChange, onCloseZoom }: Props) {
+export function QuizDialogs({ quiz, topicSummary, dialog, onDialogChange, onCloseZoom }: Props) {
   const { pending } = quiz;
 
   return (
@@ -61,6 +63,7 @@ export function QuizDialogs({ quiz, dialog, onDialogChange, onCloseZoom }: Props
       {dialog === "result" && quiz.result && (
         <ResultDialog
           result={quiz.result}
+          topicSummary={topicSummary}
           answersPending={quiz.answersPending}
           answerSource={quiz.answerSource}
           savable={quiz.examId !== null}

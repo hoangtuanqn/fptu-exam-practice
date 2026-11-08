@@ -8,10 +8,11 @@ import { examService } from "./exam.service";
 import { gradeAttempt, type GradedQuestion } from "./grading.service";
 import { reviewService } from "./review.service";
 import { studyService } from "./study.service";
+import { topicsOfAttempt } from "./topic-stats.service";
 
 export const attemptService = {
   // Nhận đáp án người dùng chọn, chấm theo đáp án trong DB rồi lưu lịch sử
-  async submit(actor: Actor, examId: number, body: SubmitAttemptBody, isPro = false) {
+  async submit(actor: Actor, examId: number, body: SubmitAttemptBody, perks: { unlimitedReview?: boolean; topicReport?: boolean } = {}) {
     if (!isMember(actor.owner)) throw AppError.unauthorized(); // lịch sử chỉ dành cho thành viên
     await examService.assertAccess(actor, examId);
     // AI chưa phân tích xong thì chưa chấm được: bắt giao diện chờ rồi gửi lại, không ghi điểm sai vào lịch sử
@@ -39,12 +40,14 @@ export const attemptService = {
     const userId = actor.owner.userId;
     let review = { added: 0, capped: 0 };
     try {
-      review = await reviewService.recordAttempt(userId, examId, grade.items, body.flagged ?? [], isPro);
+      review = await reviewService.recordAttempt(userId, examId, grade.items, body.flagged ?? [], !!perks.unlimitedReview);
       if (grade.totalGraded > 0 && grade.correct + grade.wrong >= grade.totalGraded / 2) await studyService.bump(userId, { attempts: 1 });
     } catch (err) {
       console.error("[review] recordAttempt lỗi:", err);
     }
-    return { ...attempt, review };
+    // Kết quả theo chủ đề của bài vừa nộp (việc phụ: lỗi thì bỏ qua)
+    const topics = await topicsOfAttempt(examId, grade.items, !!perks.topicReport).catch(() => ({ topics: [], hidden: 0 }));
+    return { ...attempt, review, topics: topics.topics, topicsHidden: topics.hidden };
   },
 
   async listMine(userId: number, query: ListAttemptsQuery) {

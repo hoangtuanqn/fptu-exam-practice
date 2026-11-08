@@ -3,7 +3,7 @@ import { HTTP_STATUS } from "../constants/httpStatus";
 import { getValidated } from "../middlewares/validate.middlewares";
 import type { IdParam } from "../rules/requests/admin.request";
 import type { SubmitAttemptBody, ThreadParam } from "../rules/requests/attempt.request";
-import { hasUnlimitedReview } from "../utils/pro";
+import { hasTopicReport, hasUnlimitedReview } from "../utils/pro";
 import { ResponseClient } from "../rules/response";
 import { attemptService } from "../services/attempt.service";
 import { examService } from "../services/exam.service";
@@ -43,7 +43,7 @@ export const examController = {
 
   async submitAttempt(req: Request, res: Response) {
     const { id } = getValidated<IdParam>(res, "params");
-    const data = await attemptService.submit(actorOf(req), id, getValidated<SubmitAttemptBody>(res), hasUnlimitedReview(req.user));
+    const data = await attemptService.submit(actorOf(req), id, getValidated<SubmitAttemptBody>(res), { unlimitedReview: hasUnlimitedReview(req.user), topicReport: hasTopicReport(req.user) });
     res.status(HTTP_STATUS.CREATED).json(new ResponseClient({ message: "Đã lưu lịch sử làm bài", data }));
   },
 };
