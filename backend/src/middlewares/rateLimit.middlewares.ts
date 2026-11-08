@@ -12,7 +12,7 @@ export const forgotPasswordLimiter = rateLimit({
 // Làm mới phiên chạy ngầm mỗi khi access token hết hạn; nhiều người dùng chung một IP (mạng trường) nên nới hơn đăng nhập
 export const refreshLimiter = rateLimit({
   windowMs: 60 * 1000,
-  limit: 120,
+  limit: 300,
   standardHeaders: true,
   legacyHeaders: false,
   message: { status: false, message: "Làm mới phiên quá nhanh, vui lòng thử lại sau giây lát" },

@@ -5,7 +5,7 @@ import { authenticate, requireVerifiedMember } from "../middlewares/auth.middlew
 import { ResponseClient } from "../rules/response";
 import { checkInService } from "../services/check-in.service";
 
-const limiter = rateLimit({ windowMs: 60 * 1000, limit: 30, standardHeaders: true, legacyHeaders: false, message: { status: false, message: "Bạn thao tác quá nhanh, vui lòng thử lại sau ít phút" } });
+const limiter = rateLimit({ windowMs: 60 * 1000, limit: 120, standardHeaders: true, legacyHeaders: false, message: { status: false, message: "Bạn thao tác quá nhanh, vui lòng thử lại sau ít phút" } });
 
 const checkInRouter = Router();
 
