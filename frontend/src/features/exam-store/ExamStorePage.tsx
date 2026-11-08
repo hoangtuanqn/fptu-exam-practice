@@ -1,8 +1,8 @@
-import { SubjectBrowser } from "@/features/catalog/SubjectBrowser";
+import { SubjectBrowser } from "./SubjectBrowser";
 import { PageHeader } from "@/shared/ui/Card";
 import { Segmented } from "@/shared/ui/Segmented";
 import { useUrlState } from "@/shared/hooks/useUrlState";
-import LibraryPage from "./LibraryPage";
+import { MyExamsTab } from "./MyExamsTab";
 
 type Tab = "mine" | "subject";
 
@@ -27,7 +27,7 @@ export default function ExamStorePage() {
         ]}
         onChange={(v) => setUrl({ tab: v, subject: "", term: "", q: "", page: "1" })}
       />
-      {tab === "mine" ? <LibraryPage embedded /> : <SubjectBrowser />}
+      {tab === "mine" ? <MyExamsTab /> : <SubjectBrowser />}
     </div>
   );
 }

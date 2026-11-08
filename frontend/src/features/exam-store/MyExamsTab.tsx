@@ -1,14 +1,14 @@
 import { Link, useNavigate } from "react-router-dom";
 import { BookOpen, History } from "lucide-react";
-import { useOnLibraryChanged } from "@/features/exam-library/libraryEvents";
-import { examLibraryApi, type LibraryExam } from "@/features/exam-library/exam-library.api";
+import { useOnLibraryChanged } from "@/features/exam-store/libraryEvents";
+import { examLibraryApi, type LibraryExam } from "@/features/exam-store/exam-library.api";
 import { ResumeList } from "@/features/practice-session/ResumeList";
 import { formatScore } from "@/features/practice/utils/format";
 import { useApi } from "@/shared/hooks/useApi";
 import { useClampPage } from "@/shared/hooks/useClampPage";
 import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
 import { Badge } from "@/shared/ui/Badge";
-import { Card, PageHeader } from "@/shared/ui/Card";
+import { Card } from "@/shared/ui/Card";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
 import { formatDate } from "@/shared/utils/formatters";
@@ -33,8 +33,8 @@ const AttemptsCell = ({ e }: { e: LibraryExam }) =>
     <>{attemptsText(e)}</>
   );
 
-// Toàn bộ đề đã lấy về, phân trang trên server (trang chủ chỉ hiện vài đề gần nhất)
-export default function LibraryPage({ embedded = false }: { embedded?: boolean }) {
+// Tab "Của tôi" trong Kho đề: toàn bộ đề đã lấy về, phân trang trên server (trang chủ chỉ hiện vài đề gần nhất)
+export function MyExamsTab() {
   const navigate = useNavigate();
   const [url, setUrl] = useUrlState({ page: "1" });
   const page = toPage(url.page);
@@ -45,7 +45,6 @@ export default function LibraryPage({ embedded = false }: { embedded?: boolean }
 
   return (
     <>
-      {!embedded && <PageHeader title="Kho đề của tôi" description="Các đề bạn đã lấy từ FuOverflow. Mỗi lần bấm vào một đề là một lượt làm mới, lượt đang dở được lưu lại để làm tiếp." />}
       <ResumeList limit={10} className="mb-5" />
       <Card>
         {loading && !data ? (

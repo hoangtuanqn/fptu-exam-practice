@@ -32,10 +32,10 @@ const PublicDepositPage = lazy(() => import("@/features/account/pages/PublicDepo
 const OverviewPage = lazy(() => import("@/features/account/pages/OverviewPage"));
 const DepositPage = lazy(() => import("@/features/account/pages/DepositPage"));
 const TransactionsPage = lazy(() => import("@/features/account/pages/TransactionsPage"));
-const ExamStorePage = lazy(() => import("@/features/account/pages/ExamStorePage"));
+const ExamStorePage = lazy(() => import("@/features/exam-store/ExamStorePage"));
 const ReviewPage = lazy(() => import("@/features/review/ReviewPage"));
 const SubjectPage = lazy(() => import("@/features/landing/SubjectPage"));
-const FrequentPage = lazy(() => import("@/features/chapter-set/FrequentPage"));
+const FrequentPage = lazy(() => import("@/features/frequent/FrequentPage"));
 const ChapterSetPage = lazy(() => import("@/features/chapter-set/ChapterSetPage"));
 const ReviewPracticePage = lazy(() => import("@/features/review/ReviewPracticePage"));
 const MyReportsPage = lazy(() => import("@/features/account/pages/MyReportsPage"));
