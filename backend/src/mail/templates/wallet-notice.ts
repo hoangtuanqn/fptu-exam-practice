@@ -167,7 +167,7 @@ export function renderGiftCodeEmail(i: GiftCodeEmailInput) {
 export interface ProEmailInput {
   name: string;
   planName: string;
-  months: number;
+  duration: string; // ví dụ "4 tháng" hoặc "14 ngày"
   price: number;
   renewed: boolean;
   expiresAt: Date;
@@ -182,7 +182,7 @@ export function renderProPurchasedEmail(i: ProEmailInput) {
     p(`<strong>Xin chào ${esc(i.name)},</strong>`),
     p(`Bạn đã ${action} gói <strong>${esc(i.planName)}</strong> thành công. Trong thời hạn này, lấy đề, giải thích AI và tải đề PE đều không bị trừ credit.`),
     details([
-      { label: "Gói", value: esc(`${i.planName} ${i.months} tháng`) },
+      { label: "Gói", value: esc(`${i.planName} ${i.duration}`) },
       { label: "Thời gian", value: esc(formatDateTimeVN(i.at)) },
       { label: "Đã trừ", value: `-${esc(formatCredit(i.price))}`, strong: true },
       { label: "Pro có hiệu lực đến", value: esc(formatDateTimeVN(i.expiresAt)), strong: true },
@@ -202,7 +202,7 @@ export function renderProPurchasedEmail(i: ProEmailInput) {
     text: [
       `Xin chào ${i.name},`,
       "",
-      `Bạn đã ${action} gói ${i.planName} ${i.months} tháng thành công.`,
+      `Bạn đã ${action} gói ${i.planName} ${i.duration} thành công.`,
       `Đã trừ: -${formatCredit(i.price)}`,
       `Pro có hiệu lực đến: ${formatDateTimeVN(i.expiresAt)}`,
       `Số dư hiện tại: ${formatCredit(i.balanceAfter)}`,
