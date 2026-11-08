@@ -13,6 +13,7 @@ import {
   History,
   Infinity as InfinityIcon,
   Link2,
+  Flame,
   MessageCircleQuestion,
   Minus,
   NotebookPen,
@@ -93,7 +94,7 @@ export default function PlanPage() {
   const toast = useToast();
   const info = useApi(() => planApi.info(), []);
   const fetchPrice = useApi(() => examImportApi.price(), []).data?.price ?? 0;
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState<false | "pro" | "sprint">(false);
   const [heroVisible, setHeroVisible] = useState(true);
   const heroRef = useRef<HTMLDivElement>(null);
 
@@ -112,13 +113,13 @@ export default function PlanPage() {
     return () => io.disconnect();
   }, [plan]);
 
-  const cta = () => {
+  const cta = (kind: "pro" | "sprint" = "pro") => {
     if (!user) return navigate("/login", { state: { from: "/pro" } });
     if (unverified) {
       toast.error("Hãy xác minh email trước khi nâng cấp Pro. Mình đã đưa bạn tới mục xác minh bên dưới.");
       return document.getElementById("pro-verify")?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
-    setOpen(true);
+    setOpen(kind);
   };
 
   return (
@@ -135,20 +136,21 @@ export default function PlanPage() {
         ) : (
           <>
             <div ref={heroRef}>
-              <Hero plan={plan} pro={pro} label={label} daysLeft={proDaysLeft(user)} expiresAt={user?.proExpiresAt ?? null} onBuy={cta} />
+              <Hero plan={plan} pro={pro} label={label} daysLeft={proDaysLeft(user)} expiresAt={user?.proExpiresAt ?? null} onBuy={() => cta()} />
             </div>
             {unverified && (
               <div id="pro-verify" className="mx-auto max-w-3xl px-4 pt-6">
                 <VerifyEmailNotice variant="inline" message="Bạn cần xác minh email trước khi nâng cấp Pro." />
               </div>
             )}
+            <SprintCard plan={plan} onBuy={() => cta("sprint")} />
             <Unlimited />
             <Compare plan={plan} />
             <FeatureTable plan={plan} />
             <Benefits plan={plan} fetchPrice={fetchPrice} />
             <Steps plan={plan} />
             <Faq />
-            <FinalCta plan={plan} label={label} onBuy={cta} />
+            <FinalCta plan={plan} label={label} onBuy={() => cta()} />
           </>
         )}
       </main>
@@ -169,15 +171,35 @@ export default function PlanPage() {
                 {vnd(plan.price)} <span className="text-xs font-semibold text-[#fff6dc]/70">/ {plan.months} tháng</span>
               </div>
             </div>
-            <button onClick={cta} className={`pro-cta md-label-large inline-flex h-11 shrink-0 items-center gap-2 rounded-full px-5 font-extrabold ${GOLD}`}>
+            <button onClick={() => cta()} className={`pro-cta md-label-large inline-flex h-11 shrink-0 items-center gap-2 rounded-full px-5 font-extrabold ${GOLD}`}>
               <Crown size={17} /> {pro ? "Gia hạn" : user ? "Nâng cấp" : "Đăng nhập"}
             </button>
           </div>
         </div>
       )}
 
-      {open && plan && <UpgradeDialog plan={plan} onClose={() => setOpen(false)} />}
+      {open && plan && <UpgradeDialog plan={plan} kind={open} onClose={() => setOpen(false)} />}
     </div>
+  );
+}
+
+// Gói Nước rút: cho người chỉ cần ôn gấp trước kỳ thi, trả ít và không phải cam kết cả học kỳ
+function SprintCard({ plan, onBuy }: { plan: PlanInfo; onBuy: () => void }) {
+  const s = plan.sprint;
+  return (
+    <section className="mx-auto max-w-3xl px-4 pt-8">
+      <div className="flex flex-col gap-4 rounded-2xl border border-outline-variant bg-surface-container-low p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <p className="md-title-medium text-on-surface">Chỉ cần ôn gấp trước kỳ thi?</p>
+          <p className="md-body-medium mt-1 text-on-surface-variant">
+            Gói <b className="text-on-surface">{s.name} {s.days} ngày</b> chỉ <b className="text-on-surface">{vnd(s.price)}</b>: đủ mọi quyền lợi Pro, không cam kết lâu dài, không tự gia hạn.
+          </p>
+        </div>
+        <button onClick={onBuy} className="md-state md-label-large inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full border border-primary px-6 font-semibold text-primary">
+          <Crown size={16} /> Mua {s.days} ngày · {vnd(s.price)}
+        </button>
+      </div>
+    </section>
   );
 }
 
@@ -385,6 +407,7 @@ function Benefits({ plan, fetchPrice }: { plan: PlanInfo; fetchPrice: number }) 
     plan.benefits.freeExplain && { icon: Sparkles, title: "Giải thích AI mọi câu", text: "Bấm xem lời giải của bất kỳ câu nào, không cần mở khóa từng đề.", was: "trả theo câu" },
     plan.benefits.freePe && { icon: Download, title: "Tải đề PE miễn phí", text: "Tải trọn bộ tài nguyên đề PE (file zip), không giới hạn số lần tải.", was: "trả mỗi lần" },
     plan.benefits.topicReport && { icon: Target, title: "Báo cáo điểm yếu theo chủ đề", text: "Biết chính xác mình yếu chủ đề nào của môn, và luyện đúng phần đó. Gói thường chỉ thấy chủ đề yếu nhất.", was: "1 chủ đề" },
+    plan.benefits.frequentQuestions && { icon: Flame, title: "Xem đủ “Câu hay ra”", text: "Biết câu nào lặp lại ở nhiều đề của môn để ôn trước. Gói thường chỉ xem vài câu đầu.", was: "5 câu" },
     plan.benefits.unlimitedReview && { icon: NotebookPen, title: "Sổ câu sai không giới hạn", text: "Mọi câu sai đều được lưu và nhắc ôn lại đúng lịch. Gói thường lưu tối đa 50 câu.", was: "50 câu" },
   ].filter(Boolean) as { icon: typeof Link2; title: string; text: string; was: string | null }[];
   return (

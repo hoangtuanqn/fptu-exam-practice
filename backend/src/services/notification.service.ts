@@ -182,7 +182,7 @@ export const notificationService = {
   },
 
   // Vừa mua / gia hạn gói Pro (gọi SAU khi transaction đã commit)
-  proPurchased(n: { userId: number; planName: string; months: number; price: number; renewed: boolean; expiresAt: Date; balanceAfter: number }) {
+  proPurchased(n: { userId: number; planName: string; duration: string; price: number; renewed: boolean; expiresAt: Date; balanceAfter: number }) {
     notify("mua gói Pro", async () => {
       const user = await userRepository.findById(n.userId);
       if (!user) return;

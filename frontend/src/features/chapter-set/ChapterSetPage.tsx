@@ -50,7 +50,7 @@ export default function ChapterSetPage() {
   );
 }
 
-function SubjectStep({ onPick }: { onPick: (s: SubjectItem) => void }) {
+export function SubjectStep({ onPick, title = "Bước 1: chọn môn" }: { onPick: (s: SubjectItem) => void; title?: string }) {
   const subjects = useApi(() => chapterSetApi.subjects(), []);
   const [q, setQ] = useState("");
   const shown = useMemo(() => {
@@ -61,7 +61,7 @@ function SubjectStep({ onPick }: { onPick: (s: SubjectItem) => void }) {
 
   return (
     <Card>
-      <CardHeader title="Bước 1: chọn môn" />
+      <CardHeader title={title} />
       <div className="space-y-3 p-5">
         <label className="relative block">
           <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
