@@ -11,7 +11,7 @@ export interface PlanInfo {
   savingsPercent: number;
   pricePerMonth: number;
   sprint: { code: string; name: string; days: number; price: number }; // gói Nước rút ngắn hạn
-  benefits: { freeFetch: boolean; freeExplain: boolean; freePe: boolean; unlimitedReview?: boolean; topicReport?: boolean };
+  benefits: { freeFetch: boolean; freeExplain: boolean; freePe: boolean; unlimitedReview?: boolean; frequentQuestions?: boolean; topicReport?: boolean };
 }
 
 export interface PurchaseResult {

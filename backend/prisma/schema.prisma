@@ -222,6 +222,7 @@ model ExamQuestion {
   // áº¢nh tĂ i liá»‡u tham kháº£o (trang cĂ´ng thá»©c...), khĂ´ng pháº£i cĂ¢u há»i: khĂ´ng cháº¥m Ä‘iá»ƒm, giao diá»‡n Ä‘Æ°a vĂ o má»¥c "TĂ i liá»‡u tham kháº£o"
   isReference Boolean @default(false) @map("is_reference")
   topic       String? @db.VarChar(255) // chu de cua cau (lay tu syllabus mon hoc, do AI gan); null = chua gan
+  imageHash   Bytes?  @map("image_hash") @db.VarBinary(192) // dau van tay vung chu cua anh (de nhan ra cau lap lai giua cac de); null = chua tinh
 
   exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
 
