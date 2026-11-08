@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+import { APP_VERSION } from "@/features/changelog/changelog";
 import { brand } from "@/shared/brand/brand";
 import { FacebookIcon } from "@/shared/brand/FacebookIcon";
 import { Logo } from "@/shared/brand/Logo";
@@ -19,6 +21,11 @@ export function Footer() {
               <a href={home} target="_blank" rel="noreferrer" className="font-medium text-primary hover:underline">
                 {brand.company}
               </a>
+            </div>
+            <div>
+              <Link to="/changelog" className="font-medium text-primary hover:underline">
+                Phiên bản v{APP_VERSION} · Có gì mới
+              </Link>
             </div>
             <div>
               Founder: {brand.founder}
