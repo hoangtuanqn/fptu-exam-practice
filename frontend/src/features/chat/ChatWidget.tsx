@@ -158,7 +158,7 @@ export default function ChatWidget() {
       {!open && (
         <div className={`fixed right-2 ${lift} z-[55] flex flex-col items-end sm:right-4`}>
           {tip && (
-            <div className="mascot-chat-tip relative mb-1 mr-2 max-w-[11rem] rounded-2xl rounded-br-sm border border-amber-200 bg-surface-container-lowest px-3 py-2 text-xs font-medium text-slate-700 shadow-lg">
+            <div className="mascot-chat-tip relative mb-1 hidden sm:block mr-2 max-w-[11rem] rounded-2xl rounded-br-sm border border-amber-200 bg-surface-container-lowest px-3 py-2 text-xs font-medium text-slate-700 shadow-lg">
               Bạn có thắc mắc gì không? Hỏi Cóc Pass nhé!
               <button onClick={() => setTip(false)} aria-label="Ẩn lời chào" className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-slate-500 hover:bg-slate-300">
                 <X size={11} />

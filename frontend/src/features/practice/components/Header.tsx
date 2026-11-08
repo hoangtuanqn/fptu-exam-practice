@@ -4,7 +4,8 @@ import {
   Award,
   BookOpen,
   Clock,
-  GraduationCap,
+  Crown,
+  LayoutGrid,
   RotateCcw,
   Send,
   Trophy,
@@ -87,16 +88,17 @@ export function Header({
         </div>
       </div>
 
-      {/* Thông điệp đối tượng phục vụ: chữ to giữa thanh, chỉ trên PC và khi chưa mở đề (đang làm bài thì nhường chỗ cho tên đề, đồng hồ) */}
+      {/* Điều hướng chính, chỉ trên PC/tablet và khi chưa mở đề (đang làm bài thì nhường chỗ cho tên đề, đồng hồ).
+          Điện thoại: các mục này nằm ở menu tài khoản và chân trang. */}
       {!loaded && (
-        <div className="hidden min-w-0 flex-1 items-center justify-center px-4 lg:flex">
-          <span className="inline-flex min-w-0 items-center gap-2.5 rounded-full border border-brand-200 bg-brand-50 px-5 py-1.5 text-sm font-semibold text-brand-900">
-            <GraduationCap size={20} className="shrink-0 text-brand-700" />
-            <span className="truncate">
-              Hệ thống phát triển chỉ phục vụ sinh viên FPTU
-            </span>
-          </span>
-        </div>
+        <nav aria-label="Điều hướng chính" className="hidden min-w-0 flex-1 items-center justify-center gap-1 px-4 md:flex">
+          <Link to="/features" className="md-state md-motion md-label-large inline-flex h-10 items-center gap-2 rounded-full px-4 text-on-surface-variant hover:text-on-surface">
+            <LayoutGrid size={18} /> Tính năng
+          </Link>
+          <Link to="/pro" className="md-state md-motion md-label-large inline-flex h-10 items-center gap-2 rounded-full px-4 text-on-surface-variant hover:text-on-surface">
+            <Crown size={18} className="text-[#f0a800]" /> Gói Pro
+          </Link>
+        </nav>
       )}
 
       <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
