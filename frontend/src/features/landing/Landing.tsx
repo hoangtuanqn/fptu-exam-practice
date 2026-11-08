@@ -3,6 +3,7 @@ import { ExtensionBar } from "./components/ExtensionBar";
 import type { PickFolder } from "@/features/practice/components/FolderInput";
 import { Footer } from "@/shared/layout/Footer";
 import { CtaSection } from "./components/CtaSection";
+import { FeatureShowcase } from "./components/FeatureShowcase";
 import { HeroSection } from "./components/HeroSection";
 import { PartnerAiSection } from "./components/PartnerAiSection";
 import { StepsSection } from "./components/StepsSection";
@@ -25,6 +26,7 @@ export function Landing({ onPick, onImported, userName }: Props) {
 
       {isGuest && (
         <>
+          <FeatureShowcase />
           <StepsSection />
           <PartnerAiSection />
           <CtaSection />

@@ -94,7 +94,7 @@ export default function ChatWidget() {
   }, [open]);
 
   // Không hiện ở khu quản trị và ở màn hình làm bài/luyện tập (tránh gây xao nhãng)
-  if (!enabled || pathname.startsWith("/admin") || pathname.startsWith("/exam/") || pathname === "/pro") return null; // /pro: thanh mua cố định ở đáy bị mascot che nút
+  if (!enabled || pathname.startsWith("/admin") || pathname.startsWith("/exam/") || pathname === "/pro" || pathname === "/features") return null; // /pro: thanh mua cố định ở đáy bị mascot che nút; /features: trang để chụp màn hình giới thiệu nên không để mascot vướng
 
   async function send(text: string, history: Msg[] = messages) {
     const content = text.trim().slice(0, MAX_CHARS);
