@@ -1,6 +1,6 @@
 # Tiện ích lấy danh sách đề từ FuOverflow
 
-Công cụ nội bộ (không nằm trong bản phát hành FEPass). Duyệt từng môn trên `fuoverflow.com` và **chỉ lấy danh sách bài**: tên đề, nhãn (Đề Thi FE / Đề Thi PE), ngày đăng, số trả lời. Không tải ảnh đề, không lấy bình luận. Kết quả xuất ra một file JSON để nhập vào FEPass (`npm run import:fuo-catalog`), nhờ đó mục **Kho đề > Theo môn** hiện được toàn bộ đề có trên FuOverflow. Ảnh chỉ được lấy thật khi người dùng bấm lấy đề và đồng ý trừ phí.
+Công cụ nội bộ (không nằm trong bản phát hành FEPass). Duyệt từng môn trên `fuoverflow.com` và **chỉ lấy các bài có nhãn "Đề Thi FE"** (các nhãn khác như Đề Thi PE bị bỏ): tên đề, ngày đăng, số trả lời. Không tải ảnh đề, không lấy bình luận. Kết quả xuất ra một file JSON để nhập vào FEPass (`npm run import:fuo-catalog`), nhờ đó mục **Kho đề > Theo môn** hiện được toàn bộ đề có trên FuOverflow. Ảnh chỉ được lấy thật khi người dùng bấm lấy đề và đồng ý trừ phí.
 
 Chạy thủ công, lâu lâu một lần (ví dụ đầu mỗi kỳ hoặc khi cần thêm đề mới).
 
@@ -27,7 +27,8 @@ npm run import:fuo-catalog -- đường/dẫn/fuo-catalog-2026-11-09.json       
 ```
 { "source", "exportedAt", "subjects": [ {
   "code", "forumUrl", "pages", "truncated",
-  "threads": [ { "threadId", "title", "prefix", "postedAt", "replies" } ]
+  "scanned",   // số bài đã quét (mọi nhãn)
+  "threads": [ { "threadId", "title", "prefix": "Đề Thi FE", "postedAt", "replies" } ]   // chỉ đề FE
 } ] }
 ```
 

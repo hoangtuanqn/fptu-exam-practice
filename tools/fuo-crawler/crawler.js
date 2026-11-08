@@ -4,7 +4,7 @@ const BASE = "https://fuoverflow.com";
 const STORE_KEY = "fuo.results";
 const DELAY_MS = 500; // nghỉ giữa hai yêu cầu để không dồn tải lên FuOverflow
 const MAX_PAGES = 80; // chặn vòng lặp vô hạn nếu phân trang đọc sai
-const FE_LABEL = "Đề Thi FE";
+const FE_LABEL = "Đề Thi FE"; // chỉ giữ các bài có nhãn này (các nhãn khác như Đề Thi PE bị bỏ)
 
 const $ = (id) => document.getElementById(id);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -62,10 +62,9 @@ async function crawlOne(code) {
     if (!next) break;
     for (const t of FuoParser.parseForumPage(next.doc).threads) byId.set(t.threadId, t); // khử trùng (bài mới đẩy bài cũ sang trang sau)
   }
-  return { code, status: "ok", forumUrl: base, pages: lastPage, truncated: page1.lastPage > MAX_PAGES, threads: [...byId.values()], crawledAt: Date.now() };
+  const all = [...byId.values()];
+  return { code, status: "ok", forumUrl: base, pages: lastPage, truncated: page1.lastPage > MAX_PAGES, scanned: all.length, threads: all.filter((t) => t.prefix === FE_LABEL), crawledAt: Date.now() };
 }
-
-const feCount = (r) => r.threads.filter((t) => t.prefix === FE_LABEL).length;
 
 function render() {
   const tbody = $("rows");
@@ -91,8 +90,8 @@ function render() {
       statusCell.appendChild(small);
     }
     const ok = r && r.status === "ok";
+    cell(ok ? String(r.scanned ?? r.threads.length) : "", "num");
     cell(ok ? String(r.threads.length) : "", "num");
-    cell(ok ? String(feCount(r)) : "", "num");
     cell(ok ? String(r.pages) : "", "num");
     tbody.appendChild(tr);
   }
@@ -110,7 +109,7 @@ function exportJson() {
   const subjects = Object.values(results)
     .filter((r) => r.status === "ok")
     .sort((a, b) => a.code.localeCompare(b.code))
-    .map(({ code, forumUrl, pages, truncated, threads }) => ({ code, forumUrl, pages, truncated, threads }));
+    .map(({ code, forumUrl, pages, truncated, threads }) => ({ code, forumUrl, pages, truncated, threads })); // threads chỉ gồm đề FE
   return JSON.stringify({ source: BASE, exportedAt: new Date().toISOString(), subjects }, null, 1);
 }
 
