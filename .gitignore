@@ -12,3 +12,6 @@ release/
 # File JSON do extension tools/fuo-crawler va tools/flm-crawler xuat ra (nhap vao DB roi khong can giu trong git)
 fuo-catalog-*.json
 flm-syllabus-*.json
+
+# Chi muc cua CodeGraph (tao lai bang: codegraph init)
+.codegraph/
