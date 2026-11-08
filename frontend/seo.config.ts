@@ -3,6 +3,8 @@
 //  - lúc build (vite.config.ts sinh sẵn file HTML cho các trang công khai, để Facebook/Zalo/bot đọc được mà không cần chạy JS)
 // Mỗi trang một mô tả khác nhau, vì bot coi các trang trùng mô tả là một trang.
 
+import subjectList from "./seo.subjects.json";
+
 export interface PageSeo {
   title: string; // ngắn gọn, khoảng 60 ký tự trở xuống
   description: string; // khoảng 150 ký tự trở xuống, khác nhau giữa các trang
@@ -97,8 +99,25 @@ export const PATTERN_PAGES: { test: RegExp; seo: PageSeo }[] = [
 
 export const NOT_FOUND_SEO: PageSeo = { title: "Không tìm thấy trang", description: "Địa chỉ này không tồn tại hoặc đã được chuyển đi. Quay về trang chủ để tiếp tục luyện đề." };
 
+// Trang SEO của từng môn: /mon/<mã môn viết thường>. Danh sách lấy từ seo.subjects.json (npm run export:subjects ở backend).
+export const SUBJECTS: { code: string; name: string }[] = subjectList;
+const subjectByPath = new Map(SUBJECTS.map((s) => [`/mon/${s.code.toLowerCase()}`, s]));
+
+export const subjectPath = (code: string) => `/mon/${code.toLowerCase()}`;
+
+// Mỗi môn một tiêu đề và mô tả riêng (có mã môn và tên môn), nên không trùng nhau giữa 300+ trang
+export function subjectSeo(s: { code: string; name: string }): PageSeo {
+  return {
+    title: `Đề thi FE ${s.code}: ${s.name}`,
+    description: `Luyện đề thi FE môn ${s.code} (${s.name}) tại FEPass: đề có đáp án AI, giải thích từng câu, câu hay ra qua các kỳ thi, chấm điểm thang 10.`,
+    index: true,
+  };
+}
+
 export function seoFor(pathname: string): PageSeo {
   const path = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
+  const subject = subjectByPath.get(path.toLowerCase());
+  if (subject) return subjectSeo(subject);
   return PUBLIC_PAGES[path] ?? PRIVATE_PAGES[path] ?? PATTERN_PAGES.find((p) => p.test.test(path))?.seo ?? NOT_FOUND_SEO;
 }
 
