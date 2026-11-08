@@ -1,6 +1,20 @@
 {
   "web": [
     {
+      "version": "1.7.0",
+      "date": "2026-11-09",
+      "title": "Bộ đề theo chương",
+      "highlights": [
+        "Bộ đề theo chương: chọn môn, lấy đề FE rồi chỉ luyện các chương bạn muốn ôn",
+        "Tải lại trang sau khi nộp bài vẫn giữ nguyên kết quả"
+      ],
+      "changes": [
+        { "type": "new", "text": "Bộ đề theo chương (Tài khoản > Bộ đề theo chương): chọn môn, dán link đề FE đúng môn (kiểm tra trước khi trừ phí), rồi chọn các chương để chỉ làm những câu thuộc chương đó" },
+        { "type": "improved", "text": "Làm bài: chủ đề hiện ngay trên đầu câu, bỏ các thông báo gây xao nhãng, header gọn hơn trên điện thoại" },
+        { "type": "fixed", "text": "Tải lại trang sau khi nộp bài không còn tạo lượt làm mới" }
+      ]
+    },
+    {
       "version": "1.6.0",
       "date": "2026-11-08",
       "title": "Điểm mạnh và yếu theo chủ đề",

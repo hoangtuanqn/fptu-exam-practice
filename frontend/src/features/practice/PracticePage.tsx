@@ -161,6 +161,7 @@ export default function PracticePage({ threadId }: Props) {
       mode: quiz.mode === "exam" ? ("EXAM" as const) : ("PRACTICE" as const),
       durationSec: quiz.elapsed,
       answers: quiz.answers,
+      ...(new URLSearchParams(location.search).has("t") && { only: quiz.questions.map((q) => q.number) }), // bộ đề theo chương: chỉ chấm các câu đang làm
       flagged: Object.keys(quiz.flagged).filter((n) => quiz.flagged[Number(n)]).map(Number),
     };
     if (!user) {
@@ -204,6 +205,19 @@ export default function PracticePage({ threadId }: Props) {
         loadedFor.current = threadId; // đã tải xong đề này
         setOpenedThread(exam.threadId);
         const mode = params.get("mode");
+        // Bộ đề theo chương (?t=chương&t=chương): chỉ giữ các câu thuộc những chương đã chọn
+        const chapters = new Set(params.getAll("t"));
+        if (chapters.size > 0) {
+          const kept = exam.questions.filter((q) => !q.isReference && q.topic && chapters.has(q.topic));
+          if (kept.length === 0) {
+            toast.error("Không có câu nào thuộc các chương đã chọn");
+            navigate("/account/chapters", { replace: true });
+            return;
+          }
+          const m = mode === "exam" ? "exam" : "practice";
+          quiz.openExam(kept, `${exam.title} (${kept.length} câu theo chương)`, exam.id, saved && saved.examId === exam.id ? (saved.mode === "EXAM" ? "exam" : "practice") : m, exam.answerStatus, kept.length, saved && saved.examId === exam.id ? { sessionId: saved.id, answers: saved.answers, checked: saved.checked, flagged: saved.flagged, current: saved.current, elapsedSec: saved.elapsedSec, submitted: saved.status === "SUBMITTED" } : undefined);
+          return;
+        }
         if (saved && saved.examId === exam.id) {
           quiz.openExam(exam.questions, exam.title, exam.id, saved.mode === "EXAM" ? "exam" : "practice", exam.answerStatus, exam.totalQuestions, {
             sessionId: saved.id,
@@ -236,7 +250,8 @@ export default function PracticePage({ threadId }: Props) {
   // Địa chỉ luôn khớp với đề đang làm: đề hệ thống -> /exam/:threadId?mode=..., đề mở từ thư mục -> "/"
   useEffect(() => {
     if (!hasQuiz) return;
-    const target = openedId !== null && openedThread ? `/exam/${openedThread}?mode=${quiz.mode}${quiz.sessionId ? `&session=${quiz.sessionId}` : ""}` : "/";
+    const chapterQs = new URLSearchParams(location.search).getAll("t").map((t) => `&t=${encodeURIComponent(t)}`).join(""); // giữ bộ đề theo chương khi tải lại
+    const target = openedId !== null && openedThread ? `/exam/${openedThread}?mode=${quiz.mode}${quiz.sessionId ? `&session=${quiz.sessionId}` : ""}${chapterQs}` : "/";
     if (location.pathname + location.search !== target) navigate(target, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasQuiz, openedId, openedThread, quiz.mode, quiz.sessionId]);
