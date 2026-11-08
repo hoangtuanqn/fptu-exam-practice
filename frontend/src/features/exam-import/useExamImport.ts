@@ -32,7 +32,7 @@ export function useExamImport() {
     };
   }, []);
 
-  const start = useCallback(async (url: string) => {
+  const start = useCallback(async (url: string, subject?: string) => {
     abort.current.abort();
     abort.current = new AbortController();
     const mine = ++runId.current;
@@ -52,7 +52,7 @@ export function useExamImport() {
     };
 
     try {
-      const result = await examImportApi.submit(url);
+      const result = await examImportApi.submit(url, subject);
       let examId: number;
 
       if (result.existed) {

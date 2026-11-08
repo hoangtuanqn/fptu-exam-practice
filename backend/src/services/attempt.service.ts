@@ -19,7 +19,9 @@ export const attemptService = {
     if ((await examRepository.findAnswerSource(examId))?.answerSource === "PENDING") {
       throw AppError.conflict("Đáp án đang được AI phân tích, vui lòng thử lại sau ít phút");
     }
-    const questions = await examRepository.findQuestionsForGrading(examId);
+    const all = await examRepository.findQuestionsForGrading(examId);
+    const only = body.only && body.only.length > 0 ? new Set(body.only) : null;
+    const questions = only ? all.filter((q) => only.has(q.number)) : all;
     if (questions.length === 0) throw AppError.notFound("Không tìm thấy đề");
 
     const grade = gradeAttempt(questions, body.answers);

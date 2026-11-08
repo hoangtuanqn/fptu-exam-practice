@@ -37,6 +37,7 @@ export interface AttemptPayload {
   mode: AttemptMode;
   durationSec: number;
   answers: Record<number, string[]>;
+  only?: number[]; // bộ đề theo chương: chỉ chấm các câu này
   flagged?: number[]; // các câu đã đánh dấu phân vân (vào Sổ câu sai dù làm đúng)
 }
 

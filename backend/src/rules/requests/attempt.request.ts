@@ -12,6 +12,7 @@ export const submitAttemptBody = z.object({
   mode: z.enum(["PRACTICE", "EXAM"]),
   durationSec: z.number().int().min(0).max(24 * 3600),
   answers,
+  only: z.array(z.number().int().min(1).max(9999)).max(500).optional(), // bộ đề theo chương: chỉ chấm các câu này
   flagged: z.array(z.number().int().min(1).max(9999)).max(500).optional(), // các câu đã đánh dấu phân vân
 });
 
