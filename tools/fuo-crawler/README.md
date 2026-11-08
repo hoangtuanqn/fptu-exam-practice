@@ -33,8 +33,8 @@ npm run import:fuo-catalog -- đường/dẫn/fuo-catalog-2026-11-09.json       
 ```
 
 ## Lưu ý
-- Nghỉ 0,5 giây giữa hai yêu cầu để không dồn tải lên FuOverflow. 356 môn, mỗi môn vài trang thì mất khoảng một đến hai giờ ở lần đầu.
-- Bị Cloudflare chặn (mã 403/429/503 hoặc trang "Just a moment") thì dừng ngay và báo rõ, các môn đã xong vẫn được giữ.
+- Chạy song song có kiểm soát: nhiều môn được lấy cùng lúc, các trang page-2, page-3... của một môn cũng tải cùng lúc. Ô **Song song** (1 đến 6, mặc định 3) là số yêu cầu tối đa đang chạy cùng lúc; hai yêu cầu bắt đầu cách nhau tối thiểu 0,15 giây. Với mặc định 3, lần đầu cho 356 môn mất khoảng 15 đến 30 phút (trước đây một đến hai giờ). Tăng cao hơn thì nhanh hơn nhưng dễ bị FuOverflow chặn; không nên quá 4.
+- FuOverflow báo quá tải (429/503) thì tự giảm một nửa số yêu cầu song song và thử lại có chờ. Bị chặn hẳn (403 hoặc trang Cloudflare) thì dừng tất cả; các môn đã xong vẫn được giữ.
 - Bộ phân tích (`parser.js`) dùng cùng bộ chọn với backend (`.structItem--thread`...), đã thử bằng trang mẫu. Nếu FuOverflow đổi giao diện, chỉ cần sửa file này.
 - `codes.js` là danh sách mã môn của FEPass lấy từ `frontend/seo.subjects.json`. Tạo lại khi có thêm môn:
   `node -e "const l=require('./frontend/seo.subjects.json').map(s=>s.code);require('fs').writeFileSync('tools/fuo-crawler/codes.js','window.FEPASS_SUBJECT_CODES = '+JSON.stringify(l)+';\n')"` (chạy ở thư mục gốc dự án).
