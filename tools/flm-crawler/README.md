@@ -1,5 +1,7 @@
 # Tiện ích lấy syllabus từ FLM
 
+> Hướng dẫn đầy đủ từ lấy dữ liệu đến nhập vào DB: [../HUONG-DAN.md](../HUONG-DAN.md)
+
 Công cụ nội bộ (không nằm trong bản phát hành FEPass). Lấy tên môn và các chương (kèm chủ đề trong chương) của từng môn từ `flm.fpt.edu.vn` bằng phiên đăng nhập FLM sẵn có trong trình duyệt của bạn. FLM chặn Cloudflare nên không gọi được từ máy chủ, chỉ gọi được từ trình duyệt.
 
 ## Cài
