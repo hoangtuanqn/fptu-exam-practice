@@ -31,6 +31,7 @@ model User {
   githubId     String?   @unique @map("github_id") @db.VarChar(32) // tai khoan GitHub da lien ket (id so)
   avatarPath   String?   @map("avatar_path") @db.VarChar(120) // null = dung mascot mac dinh
   proExpiresAt DateTime? @map("pro_expires_at") // het han goi Pro; null hoac da qua = khong phai Pro
+  studyGoalDays Int @default(3) @map("study_goal_days") // muc tieu so ngay hoc moi tuan (3, 5 hoac 7)
   emailVerifiedAt DateTime? @map("email_verified_at") // chÆ°a xĂ¡c minh email thĂ¬ chÆ°a dĂ¹ng Ä‘Æ°á»£c cĂ¡c dá»‹ch vá»¥ trá»« credit
   createdAt DateTime   @default(now()) @map("created_at")
   updatedAt DateTime   @updatedAt @map("updated_at")
@@ -49,6 +50,8 @@ model User {
   peDownloads        PeDownload[]
   dailyCheckIns      DailyCheckIn[]
   planPurchases      PlanPurchase[]
+  reviewItems        ReviewItem[]
+  studyDays          StudyDay[]
   referredBy         User?                @relation("Referral", fields: [referredById], references: [id], onDelete: SetNull)
   referrals          User[]               @relation("Referral")
   rewardsAsReferrer  ReferralReward[]     @relation("RewardReferrer")
@@ -196,6 +199,7 @@ model Exam {
   reports   AnswerReport[]
   explanations QuestionExplanation[]
   explanationBuys ExplanationPurchase[]
+  reviewItems ReviewItem[]
   explanationUnlocks ExplanationUnlock[]
 
   @@map("exams")
@@ -605,4 +609,42 @@ model PlanPurchase {
 
   @@index([userId, createdAt])
   @@map("plan_purchases")
+}
+
+// So cau sai: moi (nguoi dung, de, cau) la mot muc. Lap lai ngat quang kieu Leitner: sai thi ve hop 1 (on lai sau 1 ngay),
+// dung thi len hop tiep theo (3, 7, 14, 30 ngay); dung o hop cuoi thi "tot nghiep" (mastered).
+model ReviewItem {
+  id             Int       @id @default(autoincrement())
+  userId         Int       @map("user_id")
+  examId         Int       @map("exam_id")
+  questionNumber Int       @map("question_number")
+  box            Int       @default(1)
+  nextReviewAt   DateTime  @map("next_review_at")
+  wrongCount     Int       @default(1) @map("wrong_count")
+  doubtful       Boolean   @default(false) // dung nhung da danh dau phan van luc lam bai
+  mastered       Boolean   @default(false)
+  lastReviewedAt DateTime? @map("last_reviewed_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, examId, questionNumber])
+  @@index([userId, mastered, nextReviewAt])
+  @@map("review_items")
+}
+
+// Ngay co hoc that (theo gio Viet Nam): co nop bai hoac on xong cau trong so cau sai. Dung de tinh chuoi ngay hoc va muc tieu tuan
+model StudyDay {
+  id       Int      @id @default(autoincrement())
+  userId   Int      @map("user_id")
+  day      DateTime @db.Date
+  attempts Int      @default(0)
+  reviews  Int      @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, day])
+  @@map("study_days")
 }
