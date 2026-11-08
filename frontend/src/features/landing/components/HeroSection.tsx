@@ -26,11 +26,11 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
 
   return (
     <section className="relative isolate shrink-0 border-b border-outline-variant">
-      <div className={`mx-auto w-full max-w-3xl px-5 pb-14 text-center ${isGuest ? "pt-8 sm:pt-12" : "pt-12 sm:pt-16"}`}>
+      <div className={`mx-auto w-full max-w-3xl px-5 pb-10 text-center ${isGuest ? "pt-5 sm:pt-7" : "pt-12 sm:pt-16"}`}>
         <div className="animate-fade-up">
-          {isGuest && <p className="md-label-large uppercase tracking-[0.3em] text-primary">Hệ thống ôn thi</p>}
+          {isGuest && <p className="md-label-large uppercase tracking-[0.2em] text-primary">Ôn thi dành riêng cho sinh viên FPTU</p>}
 
-          <h1 className={`md-hero-title text-on-surface ${isGuest ? "mt-3" : "mt-5"}`}>
+          <h1 className={`md-hero-title text-on-surface ${isGuest ? "mt-2" : "mt-5"}`}>
             {userName ? (
               <>
                 Chào <span className="italic text-primary">{userName}</span>, vào luyện thôi

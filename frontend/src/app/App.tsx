@@ -24,6 +24,7 @@ function PracticeRoute() {
 import { GuestOnly, RequireAuth } from "@/features/auth/guards";
 
 // Panel tách riêng thành chunk: người chỉ luyện đề không phải tải code của panel
+import { PageMeta } from "@/shared/seo/PageMeta";
 const ChatWidget = lazy(() => import("@/features/chat/ChatWidget"));
 // Thư viện thành phần M3 (chỉ khi chạy npm run dev)
 const M3Gallery = import.meta.env.DEV ? lazy(() => import("@/features/design-system/M3Gallery")) : null;
@@ -36,6 +37,7 @@ const MyReportsPage = lazy(() => import("@/features/account/pages/MyReportsPage"
 const ReferralPage = lazy(() => import("@/features/account/pages/ReferralPage"));
 const GiftCodePage = lazy(() => import("@/features/account/pages/GiftCodePage"));
 const PeDownloadPage = lazy(() => import("@/features/pe/PeDownloadPage"));
+const FeaturesPage = lazy(() => import("@/features/landing/FeaturesPage"));
 const ChangelogPage = lazy(() => import("@/features/changelog/ChangelogPage"));
 const PlanPage = lazy(() => import("@/features/plan/PlanPage"));
 const ProfilePage = lazy(() => import("@/features/account/pages/ProfilePage"));
@@ -59,6 +61,7 @@ const ACCOUNT_NAV: NavItem[] = [
 export default function App() {
   return (
     <Suspense fallback={<Loading />}>
+      <PageMeta />
       <GuestSync />
       <DailyCheckInPopup />
       <WhatsNewDialog />
@@ -68,6 +71,8 @@ export default function App() {
         <Route path="/exam/:threadId" element={<PracticeRoute />} />
         {M3Gallery && <Route path="/dev/m3" element={<Suspense fallback={null}><M3Gallery /></Suspense>} />}
 
+        {/* Bảng tính năng của hệ thống (để giới thiệu/chụp màn hình): công khai */}
+        <Route path="/features" element={<FeaturesPage />} />
         {/* Lịch sử thay đổi (Có gì mới) của web và tiện ích Chrome: công khai */}
         <Route path="/changelog" element={<ChangelogPage />} />
 
