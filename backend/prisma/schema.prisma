@@ -681,3 +681,17 @@ model SubjectChapter {
   @@unique([subjectId, number])
   @@map("subject_chapters")
 }
+
+// Danh muc de thi FE tren FuOverflow (chi ten de, nhap tu file JSON do tools/fuo-crawler xuat ra): de Kho de hien du de.
+// Anh de chi duoc lay khi nguoi dung bam lay va dong y tru phi.
+model FuoThread {
+  threadId    String    @id @map("thread_id") @db.VarChar(20)
+  subjectCode String    @map("subject_code") @db.VarChar(20)
+  title       String    @db.VarChar(255)
+  postedAt    DateTime? @map("posted_at")
+  replies     Int       @default(0)
+  syncedAt    DateTime  @default(now()) @map("synced_at")
+
+  @@index([subjectCode, postedAt])
+  @@map("fuo_threads")
+}
