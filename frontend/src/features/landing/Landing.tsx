@@ -7,7 +7,6 @@ import { FeatureShowcase } from "./components/FeatureShowcase";
 import { HeroSection } from "./components/HeroSection";
 import { PartnerAiSection } from "./components/PartnerAiSection";
 import { StepsSection } from "./components/StepsSection";
-import { SyllabusSection } from "./components/SyllabusSection";
 
 interface Props {
   onPick: PickFolder;
@@ -28,7 +27,6 @@ export function Landing({ onPick, onImported, userName }: Props) {
       {isGuest && (
         <>
           <FeatureShowcase />
-          <SyllabusSection />
           <StepsSection />
           <PartnerAiSection />
           <CtaSection />

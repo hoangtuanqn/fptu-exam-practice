@@ -5,6 +5,7 @@ import { FEATURES, splitSlogan } from "../content";
 import { ExamSourcePicker } from "./ExamSourcePicker";
 import { PromoCard } from "./PromoCard";
 import { SignupGiftBanner } from "./SignupGiftBanner";
+import { ValueTrio } from "./ValueTrio";
 import { ProTeaser } from "@/features/plan/ProTeaser";
 
 interface Props {
@@ -28,7 +29,7 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
     <section className="relative isolate shrink-0 border-b border-outline-variant">
       <div className={`mx-auto w-full max-w-3xl px-5 pb-10 text-center ${isGuest ? "pt-5 sm:pt-7" : "pt-12 sm:pt-16"}`}>
         <div className="animate-fade-up">
-          {isGuest && <p className="md-label-large uppercase tracking-[0.2em] text-primary">Ôn thi dành riêng cho sinh viên FPTU</p>}
+          {isGuest && <p className="md-label-large uppercase tracking-[0.2em] text-primary">Ôn thi FE cho mọi ngành FPTU</p>}
 
           <h1 className={`md-hero-title text-on-surface ${isGuest ? "mt-2" : "mt-5"}`}>
             {userName ? (
@@ -50,6 +51,7 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
                 {sloganLead}
                 {sloganAccent && <span className="font-semibold not-italic text-on-surface">{sloganAccent}</span>}
               </p>
+              <ValueTrio />
             </>
           )}
 
@@ -91,6 +93,7 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
           </div>
         )}
 
+        {!isGuest && (
         <ul className="mt-8 hidden flex-wrap items-center justify-center gap-2.5 sm:flex">
           {FEATURES.map(({ icon: Icon, text }) => (
             <li key={text} className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-surface-container-lowest/70 px-3.5 py-1.5 text-sm text-slate-600">
@@ -99,6 +102,7 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
             </li>
           ))}
         </ul>
+        )}
       </div>
     </section>
   );
