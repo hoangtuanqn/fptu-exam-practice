@@ -2,13 +2,40 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../configs/prisma";
 import { AppError } from "../rules/error";
 import type { GradeSyncBody } from "../rules/requests/grade.request";
-import { adviseGrade, type GradeComponent, type SyllabusAssessment } from "../utils/grade-advice";
+import { adviseGrade, type GradeComponent, type MockStats, type SyllabusAssessment } from "../utils/grade-advice";
 import { buildGpaReport, GPA_TIERS, MIN_TERM_CREDITS, requiredAverage, termOrder } from "../utils/gpa";
 
 // Điểm FAP của sinh viên: chỉ lưu khi sinh viên bật đồng bộ; tắt đồng bộ là xoá hết điểm đã lưu.
 // Tiện ích trình duyệt đọc điểm trên FAP bằng phiên đăng nhập của chính sinh viên rồi website gửi lên đây; server không bao giờ gọi FAP.
 
 const num = (d: Prisma.Decimal | null) => (d === null ? null : Number(d));
+const MOCK_WINDOW = 5; // số bài thi thử gần nhất của mỗi môn được xét (giống mức sẵn sàng)
+
+/** Điểm các bài THI THỬ (không tính luyện tập, vì luyện tập xem đáp án ngay) gần nhất của từng môn */
+async function mockStatsFor(userId: number, codes: string[]): Promise<Map<string, MockStats>> {
+  const out = new Map<string, MockStats>();
+  if (codes.length === 0) return out;
+  const rows = await prisma.examAttempt.findMany({
+    where: { userId, mode: "EXAM", totalGraded: { gt: 0 }, exam: { subjectCode: { in: codes } } },
+    orderBy: { id: "desc" },
+    take: 100,
+    select: { score: true, exam: { select: { subjectCode: true } } },
+  });
+  const by = new Map<string, number[]>();
+  for (const r of rows) {
+    const code = r.exam.subjectCode;
+    if (!code) continue;
+    const list = by.get(code) ?? by.set(code, []).get(code)!;
+    if (list.length < MOCK_WINDOW) list.push(r.score);
+  }
+  for (const [code, scores] of by) {
+    const n = scores.length;
+    const average = scores.reduce((a, b) => a + b, 0) / n;
+    const spread = Math.sqrt(scores.reduce((a, b) => a + (b - average) ** 2, 0) / n);
+    out.set(code, { n, average: Math.round(average * 100) / 100, spread: Math.round(spread * 100) / 100 });
+  }
+  return out;
+}
 
 export const gradeService = {
   async setting(userId: number) {
@@ -57,6 +84,7 @@ export const gradeService = {
     const [setting, rows] = await Promise.all([this.setting(userId), prisma.userGrade.findMany({ where: { userId }, orderBy: [{ syncedAt: "desc" }, { id: "desc" }] })]);
     const subjects = await prisma.subject.findMany({ where: { code: { in: [...new Set(rows.map((r) => r.subjectCode))] } }, select: { code: true, minPassMark: true, assessments: true, credits: true } });
     const byCode = new Map(subjects.map((s) => [s.code, s]));
+    const mocks = await mockStatsFor(userId, [...new Set(rows.filter((r) => r.status === "studying").map((r) => r.subjectCode))]);
     const advices = new Map(
       rows.map((r) => {
         const subject = byCode.get(r.subjectCode);
@@ -66,6 +94,7 @@ export const gradeService = {
             minPass: num(subject?.minPassMark ?? null),
             assessments: (subject?.assessments ?? null) as SyllabusAssessment[] | null,
             fapStatus: r.status,
+            mock: r.status === "studying" ? (mocks.get(r.subjectCode) ?? null) : null,
           }),
         ] as const;
       }),
@@ -80,7 +109,7 @@ export const gradeService = {
           status: r.status,
           average: num(r.average),
           credits: byCode.get(r.subjectCode)?.credits ?? null,
-          projected: r.status === "studying" && a.projected !== null ? { score: a.projected, pass: a.projectedPass } : null,
+          projected: r.status === "studying" && a.projected !== null ? { score: a.projected, pass: a.projectedPass, low: a.projectedLow, high: a.projectedHigh } : null,
         };
       }),
     );
@@ -128,7 +157,7 @@ export const gradeService = {
         needAverage: cur && !blocked && !reached && cur.studyingCredits > 0 ? requiredAverage(cur.gpa, cur.credits, cur.studyingCredits, t.min) : null,
       };
     });
-    const currentTerm = cur && { termName: cur.termName, gpa: cur.gpa, credits: cur.credits, studyingCredits: cur.studyingCredits, projectedGpa: cur.projectedGpa, predictedCredits: cur.predictedCredits, unpredictedCredits: cur.unpredictedCredits };
+    const currentTerm = cur && { termName: cur.termName, gpa: cur.gpa, credits: cur.credits, studyingCredits: cur.studyingCredits, projectedGpa: cur.projectedGpa, projectedLow: cur.projectedLow, projectedHigh: cur.projectedHigh, predictedCredits: cur.predictedCredits, unpredictedCredits: cur.unpredictedCredits };
     const terms = report.terms.map((t) => ({ ...t, courses: courses.filter((c) => c.termName === t.termName).sort((a, b) => a.subjectCode.localeCompare(b.subjectCode)) }));
     terms.sort((a, b) => termOrder(b.termName) - termOrder(a.termName));
     return { ...setting, courses, terms, cumulative, currentTerm, tiers };
