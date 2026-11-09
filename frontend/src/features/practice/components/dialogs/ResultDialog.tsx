@@ -11,6 +11,8 @@ import { Badge } from "@/shared/ui/Badge";
 import { Button } from "@/shared/ui/Button";
 import { Modal, ModalActions } from "@/shared/ui/Modal";
 import { ScoreRing } from "@/shared/ui/ScoreRing";
+import { ResultToad } from "./ResultToad";
+import { toadFor } from "./toadMood";
 
 interface Props {
   result: GradeResult;
@@ -28,9 +30,12 @@ export function ResultDialog({ result, topicSummary = null, elapsed, savable, an
   const { user } = useAuth();
   const passed = result.score >= PASS_SCORE;
   const tone = result.total === 0 ? "neutral" : passed ? "success" : "danger";
+  const showToad = !answersPending && result.total > 0;
+  const toad = toadFor(result.score);
 
   return (
     <Modal onClose={onReview}>
+      {showToad && <ResultToad key={toad.mood} mood={toad.mood} board={toad.board} />}
       <div className="text-center">
         {answersPending ? (
           // AI chưa xong: chưa có điểm. Khi có đáp án, màn hình này tự chuyển sang điểm thật.
@@ -57,6 +62,7 @@ export function ResultDialog({ result, topicSummary = null, elapsed, savable, an
         {!answersPending && result.total > 0 && (
           <div className="mt-3">
             <Badge tone={passed ? "success" : "danger"}>{passed ? "Đạt" : "Chưa đạt"}</Badge>
+            <p className="md-body-medium mx-auto mt-2 max-w-xs text-on-surface-variant">{toad.say}</p>
           </div>
         )}
       </div>
