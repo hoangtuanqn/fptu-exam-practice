@@ -193,6 +193,7 @@ model Exam {
   aiReport       String?   @map("ai_report") @db.Text
   createdById    Int?      @map("created_by_id")
   createdAt      DateTime  @default(now()) @map("created_at")
+  subjectCode    String?   @map("subject_code") @db.VarChar(20) // subject code taken from the title (PRO192...); null = no code found. Set on import/rename, filled at boot for old rows
   refreshedAt    DateTime? @map("refreshed_at") // láº§n lĂ m má»›i gáº§n nháº¥t (láº¥y láº¡i áº£nh, bĂ¬nh luáº­n, giáº£i láº¡i Ä‘Ă¡p Ă¡n); null = chÆ°a tá»«ng
 
   questions ExamQuestion[]
@@ -205,6 +206,7 @@ model Exam {
   reviewItems ReviewItem[]
   explanationUnlocks ExplanationUnlock[]
 
+  @@index([subjectCode, answerSource])
   @@map("exams")
   practiceSessions PracticeSession[]
 }
