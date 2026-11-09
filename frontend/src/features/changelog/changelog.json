@@ -31,6 +31,10 @@
         },
         {
           "type": "new",
+          "text": "Điểm dự kiến có bảng cách tính, và tính cả kết quả các bài thi thử của bạn trên FePass"
+        },
+        {
+          "type": "new",
           "text": "Lịch thi sắp tới lấy từ FAP: ngày, giờ, phòng, loại thi (FE, PE, thi lần 2) và còn bao nhiêu ngày"
         }
       ]

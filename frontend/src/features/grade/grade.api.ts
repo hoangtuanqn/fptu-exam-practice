@@ -11,6 +11,29 @@ export interface ExamPart {
   minScore: number | null;
 }
 
+export interface MockStats {
+  n: number;
+  average: number;
+  spread: number;
+}
+
+export interface BreakdownRow {
+  group: string;
+  name: string;
+  weight: number;
+  score: number | null;
+  value: number; // điểm được dùng để tính (điểm thật hoặc dự đoán)
+  predicted: boolean;
+}
+
+export interface FinalPrediction {
+  base: number;
+  mock: MockStats | null;
+  mockWeight: number;
+  floor: number;
+  value: number;
+}
+
 export interface GradeAdvice {
   minPass: number;
   earned: number;
@@ -22,6 +45,10 @@ export interface GradeAdvice {
   pendingWeight: number;
   projected: number | null;
   projectedPass: boolean;
+  projectedLow: number | null;
+  projectedHigh: number | null;
+  finalPrediction: FinalPrediction | null;
+  breakdown: BreakdownRow[];
   state: AdviceState;
 }
 
@@ -87,7 +114,7 @@ export interface GradeOverview {
   courses: GradeCourse[];
   terms: GradeTerm[];
   cumulative: { gpa: number | null; credits: number; tier: string | null; studyingCredits: number };
-  currentTerm: { termName: string; gpa: number | null; credits: number; studyingCredits: number; projectedGpa: number | null; predictedCredits: number; unpredictedCredits: number } | null;
+  currentTerm: { termName: string; gpa: number | null; credits: number; studyingCredits: number; projectedGpa: number | null; projectedLow: number | null; projectedHigh: number | null; predictedCredits: number; unpredictedCredits: number } | null;
   tiers: GradeTier[];
   exams: ExamSlot[];
 }

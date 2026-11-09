@@ -42,21 +42,88 @@ const TONE_TEXT = { ok: "text-success", warn: "text-primary", bad: "text-error",
 
 function Detail({ c }: { c: GradeCourse }) {
   const a = c.advice;
-  const lines: string[] = [];
-  if (a.gradedWeight > 0) lines.push(`Đã có ${fmt(a.gradedWeight)}% trọng số, tích lũy ${fmt(a.earned)} điểm.`);
-  if (a.pendingWeight > 0) lines.push(`${fmt(a.pendingWeight)}% trọng số chưa có điểm, tạm tính bằng mức trung bình hiện tại (${fmt(a.assumedOthers ?? a.minPass)}).`);
-  if (a.final?.minScore) lines.push(`${a.final.group} tối thiểu ${fmt(a.final.minScore)} (điểm liệt).`);
-  if (a.practical) lines.push(`Có thi thực hành (${fmt(a.practical.weight)}%), tối thiểu ${fmt(a.practical.minScore ?? 1)}.`);
-  lines.push(`Qua môn khi trung bình ≥ ${fmt(a.minPass)}${c.syllabusKnown ? "" : " (chưa có syllabus, dùng ngưỡng mặc định)"}.`);
-  if (!c.creditsKnown) lines.push("Chưa có số tín chỉ nên môn này chưa tính vào điểm TB kỳ.");
+  const fp = a.finalPrediction;
+  // Gộp các cột điểm cùng nhóm thành một dòng (Lab 1..6 -> Labs)
+  const groups = new Map<string, { weight: number; points: number; predicted: boolean }>();
+  for (const r of a.breakdown) {
+    const g = groups.get(r.group) ?? { weight: 0, points: 0, predicted: false };
+    g.weight += r.weight;
+    g.points += (r.weight * r.value) / 100;
+    g.predicted ||= r.predicted;
+    groups.set(r.group, g);
+  }
+  const notes: string[] = [];
+  if (a.final?.minScore) notes.push(`${a.final.group} tối thiểu ${fmt(a.final.minScore)} (điểm liệt).`);
+  if (a.practical) notes.push(`Có thi thực hành (${fmt(a.practical.weight)}%), tối thiểu ${fmt(a.practical.minScore ?? 1)}.`);
+  notes.push(`Qua môn khi điểm môn ≥ ${fmt(a.minPass)}${c.syllabusKnown ? "" : " (chưa có syllabus, dùng ngưỡng mặc định)"}.`);
+  if (!c.creditsKnown) notes.push("Chưa có số tín chỉ nên môn này chưa tính vào điểm TB kỳ.");
   return (
     <details className="mt-2 text-sm">
-      <summary className="cursor-pointer text-primary">Chi tiết</summary>
-      <ul className="mt-1 list-disc space-y-0.5 pl-5 text-on-surface-variant">
-        {lines.map((l) => (
-          <li key={l}>{l}</li>
-        ))}
-      </ul>
+      <summary className="cursor-pointer text-primary">Cách ra điểm dự kiến</summary>
+      <div className="mt-2 space-y-2">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="md-label-medium text-on-surface-variant">
+                <th className="py-1 pr-3 font-medium">Phần điểm</th>
+                <th className="py-1 pr-3 font-medium">Trọng số</th>
+                <th className="py-1 pr-3 font-medium">Điểm</th>
+                <th className="py-1 font-medium">Đóng góp</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[...groups.entries()].map(([name, g]) => (
+                <tr key={name} className="border-t border-outline-variant">
+                  <td className="py-1 pr-3 text-on-surface">{name}</td>
+                  <td className="py-1 pr-3">{fmt(g.weight)}%</td>
+                  <td className={`py-1 pr-3 ${g.predicted ? "italic text-primary" : ""}`}>
+                    {g.predicted ? "~" : ""}
+                    {fmt((g.points * 100) / g.weight)}
+                  </td>
+                  <td className="py-1">{fmt(g.points)}</td>
+                </tr>
+              ))}
+              <tr className="border-t border-outline-variant font-medium text-on-surface">
+                <td className="py-1 pr-3" colSpan={3}>
+                  Điểm môn dự kiến
+                </td>
+                <td className="py-1">{a.projected === null ? "–" : fmt(a.projected)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p className="text-on-surface-variant">Dấu ~ là điểm dự đoán cho phần chưa có điểm. Điểm môn = tổng (trọng số × điểm) ÷ 100.</p>
+        {fp && (
+          <div className="rounded-m3-md bg-surface-container px-3 py-2 text-on-surface-variant">
+            <p className="font-medium text-on-surface">
+              Dự đoán {a.final?.group ?? "bài thi cuối kỳ"}: {fmt(fp.value)}
+            </p>
+            {fp.mock ? (
+              <p>
+                Dự đoán dựa {Math.round(fp.mockWeight * 100)}% vào {fp.mock.n} bài thi thử gần nhất trên FePass (trung bình {fmt(fp.mock.average)}) và {100 - Math.round(fp.mockWeight * 100)}% vào điểm các phần đã có ({fmt(fp.base)}).
+                {fp.value <= fp.floor ? ` Không dưới điểm liệt ${fmt(fp.floor)}.` : ""}
+                <br />
+                Công thức: (1 − {fmt(fp.mockWeight)}) × {fmt(fp.base)} + {fmt(fp.mockWeight)} × {fmt(fp.mock.average)} = {fmt(fp.value)}, với tỉ lệ thi thử = n ÷ (n + 3), tối đa 0,7 (n là số bài thi thử).
+                {a.projectedLow !== null && a.projectedHigh !== null ? ` Khoảng dự kiến ${fmt(a.projectedLow)} đến ${fmt(a.projectedHigh)} lấy theo độ lệch của các bài thi thử.` : ""}
+              </p>
+            ) : (
+              <p>
+                Chưa có bài thi thử nào nên lấy bằng điểm trung bình các phần đã có ({fmt(fp.base)}), không dưới điểm liệt {fmt(fp.floor)}.
+              </p>
+            )}
+            {(!fp.mock || fp.mock.n < 2) && (
+              <Link to={`/account/exams?tab=subject&subject=${encodeURIComponent(c.subjectCode)}`} className="mt-1 inline-block text-primary underline">
+                Làm thêm đề thi thử {c.subjectCode} để dự đoán sát hơn
+              </Link>
+            )}
+          </div>
+        )}
+        <ul className="list-disc space-y-0.5 pl-5 text-on-surface-variant">
+          {notes.map((n) => (
+            <li key={n}>{n}</li>
+          ))}
+        </ul>
+      </div>
     </details>
   );
 }
@@ -90,6 +157,11 @@ function CourseCard({ c, latest, exams }: { c: GradeCourse; latest: boolean; exa
           <div className="shrink-0 text-right">
             <p className="md-headline-small text-on-surface">{result.value}</p>
             <Badge tone={result.tone}>{result.label}</Badge>
+            {studying && c.advice.projectedLow !== null && c.advice.projectedHigh !== null && (
+              <p className="md-body-small mt-0.5 text-on-surface-variant">
+                {fmt(c.advice.projectedLow)} – {fmt(c.advice.projectedHigh)}
+              </p>
+            )}
           </div>
         )}
       </div>
@@ -137,6 +209,58 @@ function Conditions() {
   );
 }
 
+function Formula({ term }: { term: GradeTerm }) {
+  const rows = term.courses.map((c) => {
+    if (c.note === "excluded") return { c, credits: 0, value: null as number | null, label: "Không tính điểm TB" };
+    if (!c.creditsKnown) return { c, credits: 0, value: null, label: "Chưa có số tín chỉ nên chưa tính" };
+    if (c.status === "studying") {
+      if (c.projected === null) return { c, credits: 0, value: null, label: "Chưa có điểm nào nên chưa tính" };
+      return c.projectedPass ? { c, credits: c.credits, value: c.projected, label: "Dự kiến" } : { c, credits: c.credits, value: 0, label: "Dự đoán chưa qua nên tính 0" };
+    }
+    if (c.status === "failed") return { c, credits: c.credits, value: 0, label: "Trượt, tính 0" };
+    if (c.status === "passed" && c.average !== null) return { c, credits: c.credits, value: c.average, label: "Đã tổng kết" };
+    return { c, credits: 0, value: null, label: "Chưa rõ" };
+  });
+  const used = rows.filter((r) => r.value !== null);
+  const total = used.reduce((n, r) => n + r.credits, 0);
+  const points = used.reduce((n, r) => n + r.credits * (r.value as number), 0);
+  return (
+    <details className="text-sm">
+      <summary className="cursor-pointer text-on-surface-variant">Cách tính điểm TB kỳ</summary>
+      <div className="mt-2 space-y-2 text-on-surface-variant">
+        <p>Điểm TB kỳ = tổng (tín chỉ × điểm môn) ÷ tổng tín chỉ. Môn trượt tính 0 nhưng vẫn cộng tín chỉ.</p>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="md-label-medium">
+                <th className="py-1 pr-3 font-medium">Môn</th>
+                <th className="py-1 pr-3 font-medium">Tín chỉ</th>
+                <th className="py-1 pr-3 font-medium">Điểm dùng</th>
+                <th className="py-1 font-medium">Ghi chú</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.c.courseId} className="border-t border-outline-variant">
+                  <td className="py-1 pr-3 text-on-surface">{r.c.subjectCode}</td>
+                  <td className="py-1 pr-3">{r.value === null ? "–" : r.credits}</td>
+                  <td className="py-1 pr-3">{r.value === null ? "–" : fmt(r.value)}</td>
+                  <td className="py-1">{r.label}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {total > 0 && (
+          <p className="font-medium text-on-surface">
+            = {fmt(points)} ÷ {total} = {fmt(points / total)}
+          </p>
+        )}
+      </div>
+    </details>
+  );
+}
+
 function LatestSummary({ data }: { data: GradeOverview }) {
   const cur = data.currentTerm;
   if (!cur) return null;
@@ -148,6 +272,11 @@ function LatestSummary({ data }: { data: GradeOverview }) {
         <div>
           <p className="md-label-medium text-on-surface-variant">{done ? "Điểm trung bình kỳ" : "Điểm trung bình kỳ (dự kiến)"}</p>
           <p className="md-display-small text-primary">{cur.projectedGpa === null ? "–" : fmt(cur.projectedGpa)}</p>
+          {!done && cur.projectedLow !== null && cur.projectedHigh !== null && (
+            <p className="md-body-small text-on-surface-variant">
+              khoảng {fmt(cur.projectedLow)} – {fmt(cur.projectedHigh)}
+            </p>
+          )}
         </div>
         <p className="md-body-small max-w-md pb-2 text-on-surface-variant">
           {cur.projectedGpa === null
@@ -173,6 +302,7 @@ function LatestSummary({ data }: { data: GradeOverview }) {
           ))}
       </div>
       {blocked && <p className="md-body-small text-error">{blocked}.</p>}
+      <Formula term={data.terms[0]!} />
       <Conditions />
     </div>
   );

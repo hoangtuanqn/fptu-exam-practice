@@ -16,6 +16,9 @@ export interface SyllabusAssessment {
 
 export const DEFAULT_MIN_PASS = 5;
 export const DEFAULT_FINAL_MIN = 4; // điểm liệt của bài thi cuối kỳ (FE < 4 là không qua)
+// Trộn kết quả thi thử vào dự đoán FE: độ tin w = n / (n + MOCK_K), tối đa MOCK_MAX_WEIGHT (n = số bài thi thử)
+export const MOCK_K = 3;
+export const MOCK_MAX_WEIGHT = 0.7;
 export const DEFAULT_PRACTICAL_MIN = 1; // điểm tối thiểu của bài thi thực hành (PE >= 1)
 
 const RESIT = /\s*\(\s*resit\s*\)\s*$/i;
@@ -43,6 +46,32 @@ export interface ExamPart {
   minScore: number | null; // điểm tối thiểu của riêng phần này (theo syllabus)
 }
 
+/** Kết quả các bài THI THỬ gần nhất của môn trên FePass (thang 10) */
+export interface MockStats {
+  n: number;
+  average: number;
+  spread: number; // độ lệch chuẩn
+}
+
+export interface BreakdownRow {
+  group: string;
+  name: string;
+  weight: number;
+  score: number | null;
+  /** Điểm được dùng để tính (điểm thật, hoặc điểm dự đoán nếu chưa có) */
+  value: number;
+  predicted: boolean;
+}
+
+/** Cách ra điểm FE dự đoán khi chưa thi */
+export interface FinalPrediction {
+  base: number; // trung bình các phần đã có (hoặc ngưỡng qua môn nếu chưa có phần nào)
+  mock: MockStats | null;
+  mockWeight: number; // 0 nếu chưa có bài thi thử
+  floor: number; // điểm liệt
+  value: number;
+}
+
 export interface GradeAdvice {
   minPass: number;
   earned: number; // điểm đã tích lũy trên thang 10 của cả môn
@@ -59,6 +88,11 @@ export interface GradeAdvice {
   projected: number | null;
   /** Dự đoán có qua môn không (đủ điểm trung bình, FE >= 4, PE >= 1) */
   projectedPass: boolean;
+  /** Khoảng dự kiến (chỉ khi có từ 2 bài thi thử và FE chưa thi) */
+  projectedLow: number | null;
+  projectedHigh: number | null;
+  finalPrediction: FinalPrediction | null;
+  breakdown: BreakdownRow[];
   state: AdviceState;
 }
 
@@ -75,7 +109,7 @@ function toPart(items: { group: string; weight: number; score: number | null }[]
 
 export function adviseGrade(
   components: GradeComponent[],
-  opts: { minPass?: number | null; assessments?: SyllabusAssessment[] | null; fapStatus?: string },
+  opts: { minPass?: number | null; assessments?: SyllabusAssessment[] | null; fapStatus?: string; mock?: MockStats | null },
 ): GradeAdvice {
   const minPass = opts.minPass ?? DEFAULT_MIN_PASS;
   const assessments = opts.assessments ?? [];
@@ -90,11 +124,11 @@ export function adviseGrade(
   }
 
   // Mỗi nhóm lấy lần tính điểm: đã có điểm thi lại thì lấy thi lại, không thì lấy lần đầu
-  const effective: { group: string; weight: number; score: number | null; resit: boolean }[] = [];
+  const effective: { group: string; name: string; weight: number; score: number | null; resit: boolean }[] = [];
   for (const [key, g] of groups) {
     const useResit = g.resit.some((i) => i.score !== null);
     const src = useResit ? g.resit : g.base.length ? g.base : g.resit;
-    for (const i of src) effective.push({ group: key, weight: i.weight, score: i.score, resit: useResit });
+    for (const i of src) effective.push({ group: key, name: i.name, weight: i.weight, score: i.score, resit: useResit });
   }
 
   const isFinal = (g: string) => FINAL.test(g) && !PRACTICAL.test(g);
@@ -134,9 +168,26 @@ export function adviseGrade(
   const projected = othersProjected + (final?.score != null ? (finalW * final.score) / 100 : 0);
   const belowPractical = !!practical && practical.score !== null && practical.minScore !== null && practical.score < practical.minScore;
 
-  // Dự đoán điểm môn: FE chưa thi thì lấy mức trung bình hiện tại nhưng không dưới điểm liệt
-  const finalValue = final ? (final.score ?? Math.max(assumed, final.minScore ?? 0)) : null;
+  // Dự đoán FE chưa thi: trộn mức trung bình các phần đã có với kết quả thi thử (độ tin w tăng theo số bài), không dưới điểm liệt
+  const mock = opts.mock && opts.mock.n > 0 ? opts.mock : null;
+  const mockWeight = mock ? Math.min(mock.n / (mock.n + MOCK_K), MOCK_MAX_WEIGHT) : 0;
+  const feFloor = final?.minScore ?? 0;
+  const feAt = (m: number) => Math.min(10, Math.max((1 - mockWeight) * assumed + mockWeight * m, feFloor));
+  const finalValue = final ? (final.score ?? feAt(mock ? mock.average : assumed)) : null;
+  const showRange = !!final && final.score === null && !!mock && mock.n >= 2;
+  const rangeAt = (v: number) => othersProjected + (finalW * v) / 100;
   const predicted = gradedWeight > 0 ? othersProjected + (final && finalValue !== null ? (finalW * finalValue) / 100 : 0) : null;
+  const projectedLow = showRange && gradedWeight > 0 ? round2(rangeAt(feAt(mock!.average - mock!.spread))) : null;
+  const projectedHigh = showRange && gradedWeight > 0 ? round2(rangeAt(feAt(mock!.average + mock!.spread))) : null;
+  const finalPrediction: FinalPrediction | null = final && final.score === null && finalValue !== null ? { base: round2(assumed), mock, mockWeight: round2(mockWeight), floor: feFloor, value: round2(finalValue) } : null;
+  const breakdown: BreakdownRow[] = effective.map((i) => ({
+    group: i.group,
+    name: i.name,
+    weight: i.weight,
+    score: i.score,
+    value: round2(i.score ?? (isFinal(i.group) ? (finalValue ?? assumed) : pendingValue(i))),
+    predicted: i.score === null,
+  }));
   const projectedPass = predicted !== null && predicted + 1e-9 >= minPass && (!final || finalValue === null || final.minScore === null || finalValue + 1e-9 >= final.minScore) && !belowPractical;
   const fapPassed = opts.fapStatus === "passed";
   const fapFailed = opts.fapStatus === "failed";
@@ -150,7 +201,7 @@ export function adviseGrade(
     else state = neededFinal !== null && neededFinal > 10 ? "impossible" : "resit";
   } else state = "waiting";
 
-  return { minPass, earned: round2(earned), gradedWeight: round2(gradedWeight), final, practical, neededFinal, assumedOthers, pendingWeight: round2(othersPendingW), projected: predicted === null ? null : round2(predicted), projectedPass, state };
+  return { minPass, earned: round2(earned), gradedWeight: round2(gradedWeight), final, practical, neededFinal, assumedOthers, pendingWeight: round2(othersPendingW), projected: predicted === null ? null : round2(predicted), projectedPass, projectedLow, projectedHigh, finalPrediction, breakdown, state };
 }
 
 /** Điều kiện hoàn thành trong syllabus (">=4", "> 0", "4") -> điểm tối thiểu; không có thì null */
