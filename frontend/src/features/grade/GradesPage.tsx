@@ -72,13 +72,13 @@ function CourseRow({ c, latest }: { c: GradeCourse; latest: boolean }) {
             {c.subjectCode} <span className="md-body-medium text-on-surface-variant">· {c.subjectName}</span>
           </p>
           <p className="md-body-small text-on-surface-variant">
-            {c.credits} tín chỉ{c.creditsKnown ? "" : " (tạm tính)"}
+            {c.creditsKnown ? `${c.credits} tín chỉ` : "Chưa có số tín chỉ (chưa tính vào điểm)"}
             {c.classCode ? ` · ${c.classCode}` : ""}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {c.kind !== "first" && <Badge tone="warning">{KIND_LABEL[c.kind]}</Badge>}
-          {c.note === "superseded" && <Badge tone="neutral">Đã được lần học sau thay</Badge>}
+          {c.note === "superseded" && <Badge tone="neutral">Không tính (có lần học điểm cao hơn)</Badge>}
           {c.note === "excluded" && <Badge tone="neutral">Không tính GPA</Badge>}
           {c.average !== null && c.status !== "studying" && <span className="md-title-small text-on-surface">{fmt(c.average)}</span>}
           <Badge tone={s.tone}>{s.label}</Badge>
@@ -170,13 +170,13 @@ function Summary({ data }: { data: GradeOverview }) {
           </table>
         </div>
         <div className="rounded-m3-md bg-surface-container px-4 py-3">
-          <p className="md-label-medium text-on-surface-variant">GPA tích lũy (dùng khi xét tốt nghiệp, không dùng xét danh hiệu kỳ)</p>
+          <p className="md-label-medium text-on-surface-variant">GPA tích lũy (dùng khi xét tốt nghiệp, không dùng xét danh hiệu kỳ; học cải thiện lấy điểm cao nhất)</p>
           <p className="md-title-medium text-on-surface">
             {cum.gpa === null ? "–" : fmt(cum.gpa)} <span className="md-body-small text-on-surface-variant">· {cum.credits} tín chỉ đã tính</span>
           </p>
         </div>
         <p className="md-body-small text-on-surface-variant">
-          Sinh viên Xuất sắc: điểm TB kỳ từ 9 trở lên. Sinh viên Giỏi: từ 8 trở lên. Môn học lại hoặc cải thiện chỉ lấy kết quả đã qua gần nhất cho GPA tích lũy. Hạng tốt nghiệp xuất sắc và giỏi còn có thể bị hạ một mức nếu học lại quá 5% số tín chỉ hoặc bị kỷ luật cấp trường. Môn chưa có syllabus được tạm tính 3 tín chỉ; môn như Vovinam, thể chất, OJT không tính điểm.
+          Sinh viên Xuất sắc: điểm TB kỳ từ 9 trở lên. Sinh viên Giỏi: từ 8 trở lên. Môn học lại hoặc cải thiện: điểm kỳ cũ giữ nguyên, GPA tích lũy lấy điểm cao nhất trong các lần đã qua. Hạng tốt nghiệp xuất sắc và giỏi còn có thể bị hạ một mức nếu học lại quá 5% số tín chỉ hoặc bị kỷ luật cấp trường. Môn chưa có trong syllabus được coi là 0 tín chỉ nên chưa tính vào điểm; tiếng Anh chuẩn bị, Vovinam, thể chất, OJT cũng không tính.
         </p>
       </div>
     </Card>

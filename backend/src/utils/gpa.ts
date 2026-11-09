@@ -2,7 +2,7 @@
 // Điểm TB kỳ: môn đã qua tính theo điểm, môn trượt tính 0 (tín chỉ vẫn ở mẫu số). GPA tích lũy: chỉ các môn đã Đạt. Trọng số là số tín chỉ, làm tròn 2 chữ số; học cải thiện thì kết quả lần trước bị hủy.
 // Chỉ có hai bậc xếp loại sinh viên: Xuất sắc (GPA >= 9) và Giỏi (GPA >= 8); dưới 8 không xếp bậc.
 
-export const DEFAULT_CREDITS = 3; // phần lớn môn FPTU 3 tín chỉ: dùng khi chưa có syllabus của môn
+export const DEFAULT_CREDITS = 0; // môn chưa có syllabus coi như 0 tín chỉ, tức chưa tính vào điểm
 // Các môn không tính vào GPA, nhận ra theo tiền tố mã môn: tiếng Anh chuẩn bị (TRS1-6, LUK1-6), tiếng Nhật dự bị (JPD),
 // Vovinam (VOV), thể chất (PES), quốc phòng (GDQP, QPD), thực tập doanh nghiệp (OJT), định hướng (DOM, ORG).
 // Môn 0 tín chỉ cũng không tính (xem buildGpaReport).
@@ -73,12 +73,12 @@ export function buildGpaReport(input: GpaInput[]): GpaReport {
   const courses = new Map<string, GpaCourse>();
   for (const list of bySubject.values()) {
     list.sort((a, b) => termOrder(a.termName) - termOrder(b.termName));
-    // Kết quả được tính = lần học đã đạt gần nhất (học cải thiện thì lần trước bị hủy)
-    const lastPassed = [...list].reverse().find(scored);
+    // GPA tích lũy lấy điểm cao nhất trong các lần học đã đạt (học cải thiện chỉ cập nhật khi điểm mới cao hơn); điểm kỳ cũ giữ nguyên
+    const lastPassed = list.filter(scored).reduce<GpaInput | undefined>((best, c) => (!best || (c.average as number) >= (best.average as number) ? c : best), undefined);
     list.forEach((c, i) => {
       const prev = list.slice(0, i);
       const kind: AttemptKind = prev.length === 0 ? "first" : prev.some(scored) ? "improve" : "retake";
-      const isExcluded = excluded(c.subjectCode) || c.credits === 0;
+      const isExcluded = excluded(c.subjectCode) || (c.credits ?? DEFAULT_CREDITS) === 0;
       const counted = !isExcluded && lastPassed === c;
       courses.set(c.courseId, {
         courseId: c.courseId,
