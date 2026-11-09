@@ -15,3 +15,6 @@ flm-syllabus-*.json
 
 # Chi muc cua CodeGraph (tao lai bang: codegraph init)
 .codegraph/
+
+# Ghi chú cá nhân (IP, lệnh SSH...): không commit
+/workspace/
