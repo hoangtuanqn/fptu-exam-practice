@@ -129,6 +129,10 @@
         return Number.isFinite(n) ? n : null;
       })(),
       assessments: parseAssessments(doc),
+      credits: (() => {
+        const n = parseInt(info["NoCredit"] || info["No Credit"] || "", 10);
+        return Number.isFinite(n) && n > 0 && n < 30 ? n : null;
+      })(),
     };
   }
 
