@@ -58,7 +58,7 @@ async function crawlOne(code) {
     if (e.message === "NOT_DETAIL_PAGE") throw new Error("Trang chi tiết syllabus không đúng định dạng (có thể FLM đã đổi giao diện)");
     throw e;
   }
-  return { code, status: "ok", syllabusId: search.best.syllabusId, subjectName: detail.subjectName, chapters: detail.chapters, crawledAt: Date.now() };
+  return { code, status: "ok", syllabusId: search.best.syllabusId, subjectName: detail.subjectName, chapters: detail.chapters, minAvgMarkToPass: detail.minAvgMarkToPass, assessments: detail.assessments, crawledAt: Date.now() };
 }
 
 function render() {
