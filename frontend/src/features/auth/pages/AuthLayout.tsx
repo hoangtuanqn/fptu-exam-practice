@@ -20,7 +20,7 @@ export function AuthLayout({ title, subtitle, children }: { title: string; subti
         <div aria-hidden className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-brand-200/50 blur-3xl" />
         <div aria-hidden className="absolute -bottom-32 -left-24 h-80 w-80 rounded-full bg-accent-soft/50 blur-3xl" />
 
-        <Link to="/" className="relative w-fit">
+        <Link to="/" className="relative w-fit" aria-label="Trang chủ" title="Trang chủ">
           <Logo variant="full" className="h-20" />
         </Link>
 
@@ -47,7 +47,7 @@ export function AuthLayout({ title, subtitle, children }: { title: string; subti
       <div className="flex min-h-screen flex-col">
         <main className="flex flex-1 items-center justify-center px-5 py-10">
           <div className="w-full max-w-sm animate-fade-up">
-            <Link to="/" className="mb-8 block w-fit lg:hidden">
+            <Link to="/" className="mb-8 block w-fit lg:hidden" aria-label="Trang chủ" title="Trang chủ">
               <Logo className="h-9" />
             </Link>
 

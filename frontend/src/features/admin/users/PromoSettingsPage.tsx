@@ -124,7 +124,7 @@ function PromoForm({ initial, explainPrice, onSaved }: { initial: PromoSettings;
                   nạp {Number(t.min).toLocaleString("vi-VN")}đ nhận thêm {Math.floor((Number(t.min) * Number(t.percent)) / 100).toLocaleString("vi-VN")} credit
                 </span>
               )}
-              <Button type="button" size="sm" onClick={() => setTiers((all) => all.filter((_, j) => j !== i))} aria-label="Xóa bậc" className="mb-0.5">
+              <Button type="button" size="sm" onClick={() => setTiers((all) => all.filter((_, j) => j !== i))} aria-label="Xóa bậc" title="Xóa bậc" className="mb-0.5">
                 <Trash2 size={14} />
               </Button>
             </div>
