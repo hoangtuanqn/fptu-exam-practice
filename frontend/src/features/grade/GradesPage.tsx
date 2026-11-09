@@ -81,6 +81,7 @@ function CourseRow({ c, latest }: { c: GradeCourse; latest: boolean }) {
           {c.kind !== "first" && <Badge tone="warning">{KIND_LABEL[c.kind]}</Badge>}
           {c.note === "excluded" && <Badge tone="neutral">Không tính điểm TB</Badge>}
           {c.average !== null && c.status !== "studying" && <span className="md-title-small text-on-surface">{fmt(c.average)}</span>}
+          {c.status === "studying" && c.projected !== null && <Badge tone={c.projectedPass ? "info" : "danger"}>Dự kiến {fmt(c.projected)}{c.projectedPass ? "" : " (chưa qua)"}</Badge>}
           <Badge tone={s.tone}>{s.label}</Badge>
         </div>
       </div>
@@ -124,18 +125,23 @@ function TermSection({ term, open, laterOf }: { term: GradeTerm; open: boolean; 
 function Summary({ data }: { data: GradeOverview }) {
   const { tiers, currentTerm: cur } = data;
   if (!cur) return null;
-  const hasResult = cur.credits > 0;
+  const done = cur.studyingCredits === 0;
   return (
     <Card>
       <CardHeader title={`Điểm trung bình kỳ ${cur.termName}`} description="Mục tiêu Sinh viên Giỏi hoặc Xuất sắc của kỳ này" />
       <div className="space-y-4 p-5">
         <div>
-          <p className="md-display-small text-primary">{cur.gpa === null ? "–" : fmt(cur.gpa)}</p>
+          <p className="md-label-medium text-on-surface-variant">{done ? "Điểm TB kỳ" : "Điểm TB kỳ dự kiến"}</p>
+          <p className="md-display-small text-primary">{cur.projectedGpa === null ? "–" : fmt(cur.projectedGpa)}</p>
           <p className="md-body-small text-on-surface-variant">
-            {hasResult
-              ? `Tính từ ${cur.credits} tín chỉ đã có điểm tổng kết${cur.studyingCredits > 0 ? `, còn ${cur.studyingCredits} tín chỉ đang học` : ""}.`
-              : `Chưa có môn nào có điểm tổng kết nên chưa tính được điểm trung bình kỳ.${cur.studyingCredits > 0 ? ` Kỳ này đang học ${cur.studyingCredits} tín chỉ.` : ""}`}
+            {cur.projectedGpa === null
+              ? "Chưa có điểm nào để tính."
+              : `Tính từ ${cur.credits} tín chỉ đã tổng kết${cur.predictedCredits > 0 ? ` và ${cur.predictedCredits} tín chỉ dự đoán từ điểm đã có` : ""}.`}
+            {cur.unpredictedCredits > 0 ? ` ${cur.unpredictedCredits} tín chỉ chưa có điểm nào nên chưa tính.` : ""}
           </p>
+          {!done && cur.projectedGpa !== null && (
+            <p className="md-body-small text-on-surface-variant">Môn chưa có điểm thi tính theo mức trung bình hiện tại của môn, nhưng FE không dưới 4 và PE không dưới 1. Số này đổi khi bạn có thêm điểm.</p>
+          )}
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
@@ -152,18 +158,14 @@ function Summary({ data }: { data: GradeOverview }) {
                   <td className="py-2 pr-4 text-on-surface">Sinh viên {t.label}</td>
                   <td className="py-2 pr-4 text-on-surface">≥ {fmt(t.min)}</td>
                   <td className="py-2 text-on-surface-variant">
-                    {t.reached ? (
-                      <Badge tone="success">Đã đạt</Badge>
-                    ) : t.blocked ? (
+                    {t.blocked ? (
                       t.blocked
-                    ) : t.needAverage === null ? (
-                      "Chưa đạt"
-                    ) : t.needAverage > 10 ? (
-                      "Không thể đạt trong kỳ này"
+                    ) : t.meets ? (
+                      <Badge tone="success">{done ? "Đã đạt" : "Dự kiến đạt"}</Badge>
+                    ) : t.gap !== null ? (
+                      `Dự kiến còn thiếu ${fmt(t.gap)} điểm`
                     ) : (
-                      <>
-                        Điểm trung bình các môn còn lại cần ≥ <strong className="text-on-surface">{fmt(t.needAverage)}</strong>
-                      </>
+                      "Chưa có điểm để dự kiến"
                     )}
                   </td>
                 </tr>
