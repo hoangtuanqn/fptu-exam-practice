@@ -11,6 +11,8 @@ import { AppError } from "../rules/error";
 import { toMeta, type PaginationQuery } from "../utils/pagination";
 import { aiSettingService } from "./ai-setting.service";
 import { aiReady } from "../constants/ai";
+import { solveExam } from "./ai/exam-solver.service";
+import { compactCommentsText } from "./crawler/comments-file.service";
 import { examSolveService } from "./exam-solve.service";
 
 export const adminExamService = {
@@ -32,6 +34,32 @@ export const adminExamService = {
     if (!aiReady(ai)) throw new AppError("Chưa bật AI hoặc chưa có khóa API ở Quản trị → AI giải đáp án");
     if (!(await examRepository.findByThreadIdOfId(id))) throw AppError.notFound("Không tìm thấy đề");
     if (!examSolveService.enqueue(id)) throw AppError.conflict("Đề này đang được AI giải");
+  },
+
+  /**
+   * AI giải lại MỘT câu để admin đối chiếu. Dùng đúng bộ prompt giải đề (base + module môn, đã cache) nên chất lượng như khi giải cả đề,
+   * nhưng chỉ gửi ảnh và bình luận của đúng câu này nên rẻ hơn nhiều. Không ghi DB: trả gợi ý để admin duyệt rồi lưu.
+   */
+  async resolveQuestion(id: number, number: number) {
+    const ai = await aiSettingService.get();
+    if (!aiReady(ai)) throw new AppError("Chưa bật AI hoặc chưa có khóa API ở Quản trị → AI giải đáp án");
+    const exam = await examRepository.findForSolve(id);
+    if (!exam) throw AppError.notFound("Không tìm thấy đề");
+    const q = exam.questions.find((x) => x.number === number);
+    if (!q) throw AppError.notFound("Không tìm thấy câu này");
+    if (exam.answerSource === "PENDING" || examSolveService.isBusy(id)) throw AppError.conflict("AI đang giải cả đề này, chờ xong rồi giải lại từng câu");
+
+    const raw = await fs.readFile(path.join(storageDir, EXAM_STORAGE_DIR, exam.threadId, "comments.txt"), "utf-8").catch(() => null);
+    try {
+      const r = await solveExam(ai, {
+        title: exam.title,
+        commentsText: raw ? compactCommentsText(raw) : null,
+        questions: [{ number: q.number, name: q.name, file: path.join(storageDir, q.imagePath) }],
+      });
+      return { number, answer: r.answers[0] ?? "", notQuestion: r.notQuestions.includes(number), report: r.report };
+    } catch (err) {
+      throw new AppError(`AI chưa giải được câu này: ${(err as Error).message}`);
+    }
   },
 
   async report(id: number) {

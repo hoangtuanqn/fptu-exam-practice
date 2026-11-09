@@ -3,6 +3,7 @@ import { Server, type Socket } from "socket.io";
 import { env } from "../configs/env";
 import { userRepository } from "../repositories/user.repository";
 import { crawlJobService } from "../services/crawl-job.service";
+import { topicLabelerService } from "../services/ai/topic-labeler.service";
 import { examService } from "../services/exam.service";
 import type { Actor } from "../utils/actor";
 import { verifyToken } from "../utils/jwt";
@@ -36,6 +37,7 @@ async function subscribe(socket: Socket, actor: Actor, kind: RoomKind, id: numbe
     // Gửi các câu đã có để không lỡ câu nào tải xong trước khi vào phòng (kể cả khi đề vừa đủ câu: giao diện còn đang thiếu)
     const loaded = await questionsPayload(id);
     if (loaded) socket.emit(EVENTS.examQuestions, loaded);
+    if (topicLabelerService.isRunning(id)) socket.emit(EVENTS.examTopics, { examId: id, state: "running", topics: [] });
   } else {
     await crawlJobService.getForActor(id, actor); // ném lỗi nếu không phải job của người này
     await socket.join(roomOf(kind, id));

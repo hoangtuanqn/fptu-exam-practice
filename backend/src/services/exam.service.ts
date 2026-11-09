@@ -2,6 +2,7 @@ import { examAttemptRepository } from "../repositories/exam-attempt.repository";
 import { examRepository } from "../repositories/exam.repository";
 import { userExamRepository } from "../repositories/user-exam.repository";
 import type { Db } from "../repositories/wallet.repository";
+import { topicLabelerService } from "./ai/topic-labeler.service";
 import { examSolveService } from "./exam-solve.service";
 import { AppError } from "../rules/error";
 import { isMember, type Actor, type Owner } from "../utils/actor";
@@ -56,6 +57,7 @@ export const examService = {
     await examSolveService.upgradeIfNeeded(id);
     const exam = await examRepository.findDetail(id);
     if (!exam) throw AppError.notFound("Không tìm thấy đề");
+    void topicLabelerService.ensure(id); // đề còn câu chưa có chủ đề: gắn nền, kết quả về qua realtime
     return {
       id: exam.id,
       threadId: exam.threadId,

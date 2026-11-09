@@ -345,4 +345,16 @@ h3 {
 }
 @media (prefers-reduced-motion: reduce) {
   .toad-confetti { display: none; }
+
+/* Thanh "đang phân loại chủ đề": vệt sáng chạy ngang để người dùng biết dữ liệu đang được cập nhật */
+.topic-scan { position: relative; overflow: hidden; }
+@media (prefers-reduced-motion: no-preference) {
+  .topic-scan::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.55) 50%, transparent 70%);
+    animation: promo-shine 1.8s ease-in-out infinite;
+  }
 }
