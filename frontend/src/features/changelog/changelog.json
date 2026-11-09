@@ -28,6 +28,10 @@
         {
           "type": "new",
           "text": "Đồng bộ điểm FAP mặc định tắt, tắt là xoá hết điểm đã lưu"
+        },
+        {
+          "type": "new",
+          "text": "Điểm dự kiến có bảng cách tính, và tính cả kết quả các bài thi thử của bạn trên FePass"
         }
       ]
     },
