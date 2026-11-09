@@ -1,6 +1,7 @@
 import { prisma } from "../configs/prisma";
 import { PRO_BENEFITS, PRO_PLAN, SPRINT_PLAN, type PlanCode } from "../constants/plan";
 import { userRepository } from "../repositories/user.repository";
+import { userCache } from "../utils/user-cache";
 import { AppError } from "../rules/error";
 import { isProUntil } from "../utils/pro";
 import { notificationService } from "./notification.service";
@@ -61,6 +62,7 @@ export const planService = {
       return { proExpiresAt: endsAt, renewed: startsAt > now, balanceAfter: entry.balanceAfter };
     });
     notificationService.proPurchased({ userId, planName: plan.name, duration, price, renewed: result.renewed, expiresAt: result.proExpiresAt, balanceAfter: result.balanceAfter });
+    userCache.invalidate(userId); // đã commit: lần xác thực sau thấy ngay gói Pro mới
     return { ...result, user: await userRepository.findById(userId) };
   },
 };

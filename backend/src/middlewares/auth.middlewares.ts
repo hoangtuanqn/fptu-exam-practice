@@ -3,16 +3,18 @@ import type { Request, RequestHandler } from "express";
 import { userRepository } from "../repositories/user.repository";
 import { AppError } from "../rules/error";
 import { verifyToken } from "../utils/jwt";
+import { userCache } from "../utils/user-cache";
 
 const GUEST_ID = /^[A-Za-z0-9-]{16,64}$/;
 
-// Đọc Bearer token, nạp user mới nhất từ DB (để khoá/đổi quyền có hiệu lực ngay)
+// Đọc Bearer token, nạp user (bản lưu tạm tối đa vài giây, xoá ngay khi bảng users bị ghi nên khoá/đổi quyền có hiệu lực ngay)
 const loadUser = async (req: Request) => {
   const [scheme, token] = (req.headers.authorization ?? "").split(" ");
   if (scheme !== "Bearer" || !token) throw AppError.unauthorized();
 
   const { sub } = verifyToken(token);
-  const user = await userRepository.findById(Number(sub));
+  const id = Number(sub);
+  const user = await userCache.get(id, () => userRepository.findById(id));
   if (!user) throw AppError.unauthorized();
   if (user.status === "BANNED") throw AppError.forbidden("Tài khoản đã bị khoá");
   req.user = user;

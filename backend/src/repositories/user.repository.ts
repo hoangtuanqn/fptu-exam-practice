@@ -2,6 +2,7 @@ import type { Prisma, Role, UserStatus } from "@prisma/client";
 import { prisma } from "../configs/prisma";
 import type { ListUsersQuery } from "../rules/requests/admin.request";
 import { toSkipTake } from "../utils/pagination";
+import { userCache } from "../utils/user-cache";
 import type { Db } from "./wallet.repository";
 
 // Không bao giờ trả password ra ngoài: mọi truy vấn trả về client dùng select này
@@ -22,6 +23,12 @@ export type SocialProvider = "google" | "github";
 
 export type PublicUser = Prisma.UserGetPayload<{ select: typeof publicUserSelect }>;
 
+// Ghi vào bảng users xong thì bỏ bản lưu tạm dùng khi xác thực request
+const fresh = <T>(id: number, result: T): T => {
+  userCache.invalidate(id);
+  return result;
+};
+
 export const userRepository = {
   findById: (id: number, db: Db = prisma) => db.user.findUnique({ where: { id }, select: publicUserSelect }),
 
@@ -33,8 +40,8 @@ export const userRepository = {
   findBySocial: (provider: SocialProvider, id: string) =>
     prisma.user.findUnique({ where: provider === "google" ? { googleSub: id } : { githubId: id }, select: { id: true, status: true } }),
   findByEmailForLink: (email: string) => prisma.user.findUnique({ where: { email }, select: { id: true, status: true, emailVerifiedAt: true } }),
-  linkSocial: (id: number, provider: SocialProvider, sub: string, emailVerifiedAt: Date) =>
-    prisma.user.update({ where: { id }, data: { ...(provider === "google" ? { googleSub: sub } : { githubId: sub }), emailVerifiedAt } }),
+  linkSocial: async (id: number, provider: SocialProvider, sub: string, emailVerifiedAt: Date) =>
+    fresh(id, await prisma.user.update({ where: { id }, data: { ...(provider === "google" ? { googleSub: sub } : { githubId: sub }), emailVerifiedAt } })),
 
   // Hồ sơ tối thiểu để xét điều kiện nhập mã giới thiệu
   findReferralProfile: (id: number) => prisma.user.findUnique({ where: { id }, select: { id: true, fullName: true, createdAt: true, referredById: true } }),
@@ -56,17 +63,16 @@ export const userRepository = {
     return { items, total };
   },
 
-  update: (id: number, data: { fullName?: string; avatarPath?: string | null; role?: Role; status?: UserStatus; emailVerifiedAt?: Date | null }) =>
-    prisma.user.update({ where: { id }, data, select: publicUserSelect }),
+  update: async (id: number, data: { fullName?: string; avatarPath?: string | null; role?: Role; status?: UserStatus; emailVerifiedAt?: Date | null }) =>
+    fresh(id, await prisma.user.update({ where: { id }, data, select: publicUserSelect })),
 
   countByStatus: () => prisma.user.groupBy({ by: ["status"], _count: { _all: true } }),
 
-  updateProfile: (id: number, data: { fullName: string }) =>
-    prisma.user.update({ where: { id }, data, select: publicUserSelect }),
+  updateProfile: async (id: number, data: { fullName: string }) => fresh(id, await prisma.user.update({ where: { id }, data, select: publicUserSelect })),
 
   // Xác minh email xong: đặt (hoặc đổi) email và đánh dấu đã xác minh
-  markEmailVerified: (db: Db, id: number, email: string) =>
-    db.user.update({ where: { id }, data: { email, emailVerifiedAt: new Date() }, select: { id: true, fullName: true } }),
+  markEmailVerified: async (db: Db, id: number, email: string) =>
+    fresh(id, await db.user.update({ where: { id }, data: { email, emailVerifiedAt: new Date() }, select: { id: true, fullName: true } })),
 
   updatePassword: (id: number, password: string, db: Db = prisma) => db.user.update({ where: { id }, data: { password } }),
 
@@ -77,7 +83,7 @@ export const userRepository = {
       data: { balance: { increment: amount } },
       select: { balance: true },
     });
-    return balance;
+    return fresh(id, balance);
   },
 
   create: (data: { email: string; fullName: string; password: string; role?: Role; status?: UserStatus; referralCode?: string; emailVerifiedAt?: Date }, db: Db = prisma) =>
