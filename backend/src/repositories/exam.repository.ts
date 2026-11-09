@@ -118,7 +118,14 @@ export const examRepository = {
       }),
       prisma.exam.count(),
     ]);
-    return { items, total };
+    // Số câu cần chấm mà chưa có đáp án, theo từng đề của trang này (để admin thấy ngay đề nào đang thiếu)
+    const blanks = await prisma.examQuestion.groupBy({
+      by: ["examId"],
+      where: { examId: { in: items.map((e) => e.id) }, isReference: false, answer: "" },
+      _count: { _all: true },
+    });
+    const blankOf = new Map(blanks.map((b) => [b.examId, b._count._all]));
+    return { items: items.map((e) => ({ ...e, blankAnswers: blankOf.get(e.id) ?? 0 })), total };
   },
 
   // Đề được tạo TRƯỚC khi có ảnh: câu hỏi thêm dần qua addQuestions, `totalQuestions` là tổng số ảnh sẽ có.

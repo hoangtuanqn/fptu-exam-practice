@@ -119,6 +119,7 @@ export interface AdminExam {
   createdAt: string;
   solving: boolean; // AI đang giải lại
   solveError: string | null; // lần giải lại gần nhất bị lỗi
+  blankAnswers?: number; // số câu cần chấm mà chưa có đáp án (máy chủ cũ không trả trường này)
 }
 
 export interface SyncResult {

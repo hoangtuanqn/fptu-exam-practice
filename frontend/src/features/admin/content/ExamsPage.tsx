@@ -89,6 +89,9 @@ export default function ExamsPage() {
     }
   }
 
+  // Đề đã có đáp án nhưng còn câu trống: người dùng không chấm được các câu đó, nên báo đỏ để admin giải lại hoặc sửa tay
+  const blankBadge = (e: AdminExam) => (e.blankAnswers ?? 0) > 0 && <Badge tone="danger">Thiếu đáp án {e.blankAnswers} câu</Badge>;
+
   // Lỗi AI: xuống dòng, tối đa 3 dòng; dài hơn thì có nút mở toàn văn (không còn bị cắt mất nội dung)
   const errorLine = (e: AdminExam) =>
     e.solveError && (
@@ -133,6 +136,7 @@ export default function ExamsPage() {
                   <div className="truncate text-sm font-medium text-slate-900">{e.title}</div>
                   <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
                     <Badge tone={SOURCE[e.answerSource][1]}>{SOURCE[e.answerSource][0]}</Badge>
+                    {blankBadge(e)}
                     <span>
                       Thread {e.threadId} · {e.totalQuestions} câu
                     </span>
@@ -164,7 +168,10 @@ export default function ExamsPage() {
                       <Td className="text-slate-500">{e.threadId}</Td>
                       <Td className="text-right tabular-nums">{e.totalQuestions}</Td>
                       <Td>
-                        <Badge tone={SOURCE[e.answerSource][1]}>{SOURCE[e.answerSource][0]}</Badge>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <Badge tone={SOURCE[e.answerSource][1]}>{SOURCE[e.answerSource][0]}</Badge>
+                          {blankBadge(e)}
+                        </div>
                       </Td>
                       <Td className="whitespace-nowrap text-slate-500">{formatDateTime(e.createdAt)}</Td>
                       <Td>{action(e)}</Td>
