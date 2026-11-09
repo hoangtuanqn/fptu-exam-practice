@@ -40,6 +40,7 @@ function Advice({ c }: { c: GradeCourse }) {
           <p className="md-body-small text-on-surface-variant">
             Đã tích lũy {fmt(a.earned)} điểm từ {fmt(a.gradedWeight)}% trọng số.{final?.minScore ? ` Syllabus yêu cầu ${finalName} tối thiểu ${fmt(final.minScore)}.` : ""}
             {pe}
+            {a.pendingWeight > 0 ? ` Còn ${fmt(a.pendingWeight)}% trọng số chưa có điểm, mình tạm tính bằng mức trung bình hiện tại của bạn (${fmt(a.assumedOthers ?? a.minPass)}).` : ""}
           </p>
         </div>
       );

@@ -52,6 +52,8 @@ export interface GradeAdvice {
   neededFinal: number | null;
   /** Điểm trung bình hiện tại nếu xét điểm các phần khác đã có (không tính phần chưa thi) */
   assumedOthers: number | null;
+  /** % trọng số của các phần ngoài bài thi cuối kỳ chưa có điểm (được ước lượng bằng assumedOthers) */
+  pendingWeight: number;
   state: AdviceState;
 }
 
@@ -131,7 +133,7 @@ export function adviseGrade(
     else state = neededFinal !== null && neededFinal > 10 ? "impossible" : "resit";
   } else state = "waiting";
 
-  return { minPass, earned: round2(earned), gradedWeight: round2(gradedWeight), final, practical, neededFinal, assumedOthers, state };
+  return { minPass, earned: round2(earned), gradedWeight: round2(gradedWeight), final, practical, neededFinal, assumedOthers, pendingWeight: round2(othersPendingW), state };
 }
 
 /** Điều kiện hoàn thành trong syllabus (">=4", "> 0", "4") -> điểm tối thiểu; không có thì null */

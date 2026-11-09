@@ -19,6 +19,7 @@ export interface GradeAdvice {
   practical: ExamPart | null;
   neededFinal: number | null;
   assumedOthers: number | null;
+  pendingWeight: number;
   state: AdviceState;
 }
 
