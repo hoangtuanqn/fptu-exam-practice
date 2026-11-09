@@ -12,6 +12,7 @@ interface Props extends QuestionViewProps {
   onZoom: () => void;
   nudge?: ReactNode; // thanh mời giữa ảnh đề và thanh trả lời (ví dụ mời xem giải thích khi làm sai)
   topic?: string | null; // chủ đề của câu, hiện trên đầu câu (luyện tập: luôn hiện; thi: sau khi nộp bài)
+  topicLoading?: boolean; // chủ đề đang được gắn nền: hiện thanh chờ có hiệu ứng thay cho chủ đề
 }
 
 // Bố cục: [thanh công cụ câu hỏi] / [ảnh đề — chiếm hết chỗ còn lại] / [thanh trả lời]
@@ -32,6 +33,7 @@ export function QuestionCard({
   explainFree,
   nudge,
   topic,
+  topicLoading,
   onChoose,
   onCheck,
   onPrev,
@@ -45,8 +47,14 @@ export function QuestionCard({
     <div className="flex min-h-[360px] w-full flex-1 sm:min-h-[480px] animate-fade-in flex-col gap-2">
       {/* Đề bài: thông tin + công cụ ở trên, ảnh ngay dưới */}
       <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-slate-200 bg-surface-container-lowest shadow-sm">
+        {!topic && topicLoading && (
+          <div role="status" className="topic-scan flex shrink-0 items-center gap-2 border-b border-slate-200 bg-brand-50 px-3 py-1.5 text-xs text-brand-900 sm:px-4">
+            <Sparkles size={13} className="shrink-0 animate-pulse text-brand-700" />
+            <span className="font-medium text-slate-500">Đang phân loại chủ đề cho câu này…</span>
+          </div>
+        )}
         {topic && (
-          <div className="flex shrink-0 items-center gap-2 border-b border-slate-200 bg-brand-50 px-3 py-1.5 text-xs text-brand-900 sm:px-4">
+          <div className="flex shrink-0 animate-fade-in items-center gap-2 border-b border-slate-200 bg-brand-50 px-3 py-1.5 text-xs text-brand-900 sm:px-4">
             <Tag size={13} className="shrink-0 text-brand-700" />
             <span className="font-medium text-slate-500">Chủ đề</span>
             <span className="min-w-0 truncate font-semibold">{topic}</span>

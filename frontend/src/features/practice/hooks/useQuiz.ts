@@ -210,6 +210,12 @@ export function useQuiz() {
     setAnswerSource(source);
   }
 
+  // Chủ đề vừa được gắn nền: chỉ cập nhật chủ đề, không đụng đáp án hay bài đang làm
+  function applyTopics(list: { number: number; topic: string }[]) {
+    const topicOf = new Map(list.map((t) => [t.number, t.topic]));
+    setQuestions((prev) => prev.map((qn) => (topicOf.has(qn.number) ? { ...qn, topic: topicOf.get(qn.number) } : qn)));
+  }
+
   // AI giải lỗi (đề vẫn chỉ xem được)
   function markFailed() {
     setAnswerSource("FAILED");
@@ -265,6 +271,7 @@ export function useQuiz() {
   }
 
   return {
+    applyTopics,
     questions,
     answers,
     checked,
