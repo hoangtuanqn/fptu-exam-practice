@@ -294,6 +294,38 @@ export async function solveExam(config: AiConfig, input: SolveInput, deps: Solve
     }
   });
 
+  // Lượt vá: câu còn trống (cả lô lỗi hay Claude bỏ sót) được gửi lại thêm một lần, gom thành lô nhỏ, để đề không bị thiếu đáp án âm thầm
+  const skipped = new Set(notQuestions);
+  const blank = input.questions.map((q, i) => ({ q, i })).filter(({ q, i }) => !answers[i] && !skipped.has(q.number));
+  if (blank.length > 0) {
+    const repairJobs: { slice: typeof blank; run: () => Promise<BatchResult> }[] = [];
+    for (let at = 0; at < blank.length; at += AI_BATCH_SIZE) {
+      const slice = blank.slice(at, at + AI_BATCH_SIZE);
+      const items = slice.map(({ q }, k) => ({ label: k + 1, name: q.name, file: q.file }));
+      repairJobs.push({ slice, run: () => solveBatch(ctx, items, (label) => slice[label - 1]?.q.number ?? label) });
+    }
+    const second = await Promise.allSettled(repairJobs.map((j) => j.run()));
+    second.forEach((r, k) => {
+      const { slice } = repairJobs[k]!;
+      if (r.status !== "fulfilled") {
+        reports.push(`[System] Second attempt failed for questions ${slice.map(({ q }) => q.number).join(", ")}: ${(r.reason as Error)?.message ?? "unknown error"}`);
+        return;
+      }
+      slice.forEach(({ q, i }, j) => {
+        const choice = r.value.choices[j] ?? "";
+        if (choice) answers[i] = choice;
+        else if (r.value.notQuestions.includes(q.number)) notQuestions.push(q.number);
+      });
+      unsure.push(...r.value.unsure);
+      if (r.value.report) reports.push(`[Second attempt for questions ${slice.map(({ q }) => q.number).join(", ")}]
+${r.value.report}`);
+    });
+    // Còn trống sau lượt vá mới là thiếu thật
+    const stillSkipped = new Set(notQuestions);
+    unanswered.length = 0;
+    unanswered.push(...input.questions.filter((q, i) => !answers[i] && !stillSkipped.has(q.number)).map((q) => q.number));
+  }
+
   const solvable = n - notQuestions.length;
   const solved = answers.filter(Boolean).length;
   if (solved === 0 || solved < solvable * AI_MIN_SOLVED_RATIO) {
