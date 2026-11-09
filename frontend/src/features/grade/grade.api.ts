@@ -32,12 +32,38 @@ export interface GradeCourse {
   average: number | null;
   syllabusKnown: boolean;
   advice: GradeAdvice;
+  credits: number;
+  creditsKnown: boolean;
+  attempt: number; // lần học thứ mấy của môn
+  kind: "first" | "retake" | "improve";
+  counted: boolean; // có tính vào GPA không
+  note: "excluded" | "superseded" | null;
+}
+
+export interface GradeTerm {
+  termName: string;
+  gpa: number | null;
+  credits: number;
+  tier: string | null;
+  studyingCredits: number;
+  courses: GradeCourse[];
+}
+
+export interface GradeTier {
+  key: string;
+  label: string;
+  min: number;
+  reached: boolean;
+  needAverage: number | null; // trung bình cần ở các môn đang học để chạm mức này; > 10 = không thể trong kỳ này
 }
 
 export interface GradeOverview {
   enabled: boolean;
   syncedAt: string | null;
   courses: GradeCourse[];
+  terms: GradeTerm[];
+  cumulative: { gpa: number | null; credits: number; tier: string | null; studyingCredits: number };
+  tiers: GradeTier[];
 }
 
 /** Dữ liệu do tiện ích Chrome đọc từ FAP (xem chrome-extension/fap.js) */

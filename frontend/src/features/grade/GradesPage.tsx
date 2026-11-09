@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useApi } from "@/shared/hooks/useApi";
 import { Badge, type Tone } from "@/shared/ui/Badge";
@@ -6,7 +5,7 @@ import { buttonClass } from "@/shared/ui/Button";
 import { Card, CardHeader, PageHeader } from "@/shared/ui/Card";
 import { Empty } from "@/shared/ui/Feedback";
 import { QueryBoundary } from "@/shared/ui/QueryBoundary";
-import { gradeApi, type GradeCourse } from "./grade.api";
+import { gradeApi, type GradeCourse, type GradeOverview, type GradeTerm } from "./grade.api";
 import { GradeSyncCard } from "./GradeSyncCard";
 
 const STATUS: Record<GradeCourse["status"], { label: string; tone: Tone }> = {
@@ -15,34 +14,23 @@ const STATUS: Record<GradeCourse["status"], { label: string; tone: Tone }> = {
   failed: { label: "Chưa qua", tone: "danger" },
   unknown: { label: "Chưa rõ", tone: "neutral" },
 };
+const TIER_LABEL: Record<string, string> = { excellent: "Xuất sắc", good: "Giỏi", fair: "Khá", "average-fair": "Trung bình khá", average: "Trung bình" };
+const KIND_LABEL = { retake: "Học lại", improve: "Học cải thiện" } as const;
 
 const fmt = (n: number) => String(Math.round(n * 100) / 100).replace(".", ",");
 
-// "Fall2026" -> số để xếp học kỳ mới trước
+// "Fall2026" -> số để so sánh học kỳ
 const termRank = (t: string) => {
   const m = t.match(/(Spring|Summer|Fall)\s*(\d{4})/i);
   return m ? Number(m[2]) * 10 + ({ spring: 1, summer: 2, fall: 3 }[m[1]!.toLowerCase() as "spring"] ?? 0) : 0;
 };
 
-// Mỗi môn chỉ hiện lần học gần nhất (học lại thì lấy kỳ sau)
-function latestPerSubject(courses: GradeCourse[]) {
-  const best = new Map<string, GradeCourse>();
-  for (const c of courses) {
-    const cur = best.get(c.subjectCode);
-    if (!cur || termRank(c.termName) > termRank(cur.termName)) best.set(c.subjectCode, c);
-  }
-  const order = { need: 0, resit: 0, impossible: 1, waiting: 2, failed: 1, passed: 3 } as const;
-  return [...best.values()].sort((a, b) => order[a.advice.state] - order[b.advice.state] || termRank(b.termName) - termRank(a.termName));
-}
-
 function Advice({ c }: { c: GradeCourse }) {
   const a = c.advice;
   const final = a.final;
   const finalName = final?.group ?? "bài thi cuối kỳ";
-  const pe = a.practical && a.practical.score === null ? ` Môn có thi thực hành (${fmt(a.practical.weight)}%): điểm này cũng ảnh hưởng, tính theo mức trung bình các phần bạn đã có.` : "";
+  const pe = a.practical && a.practical.score === null ? ` Môn có thi thực hành (${fmt(a.practical.weight)}%) nên điểm phần này cũng ảnh hưởng; mình tạm tính theo mức trung bình các phần bạn đã có.` : "";
   switch (a.state) {
-    case "passed":
-      return <p className="md-body-medium text-on-surface-variant">Bạn đã qua môn{c.average !== null ? ` với điểm trung bình ${fmt(c.average)}` : ""}.</p>;
     case "need":
       return (
         <div className="space-y-1">
@@ -50,7 +38,7 @@ function Advice({ c }: { c: GradeCourse }) {
             Cần ≥ <span className="text-primary">{fmt(a.neededFinal ?? 0)}</span> điểm ở {finalName} ({fmt(final?.weight ?? 0)}%) để đạt trung bình ≥ {fmt(a.minPass)}.
           </p>
           <p className="md-body-small text-on-surface-variant">
-            Hiện đã tích lũy {fmt(a.earned)} điểm từ {fmt(a.gradedWeight)}% trọng số.{final?.minScore ? ` Syllabus yêu cầu ${finalName} tối thiểu ${fmt(final.minScore)}.` : ""}
+            Đã tích lũy {fmt(a.earned)} điểm từ {fmt(a.gradedWeight)}% trọng số.{final?.minScore ? ` Syllabus yêu cầu ${finalName} tối thiểu ${fmt(final.minScore)}.` : ""}
             {pe}
           </p>
         </div>
@@ -66,35 +54,154 @@ function Advice({ c }: { c: GradeCourse }) {
       );
     case "impossible":
       return <p className="md-body-medium text-on-surface-variant">Với điểm hiện tại, dù thi {finalName} 10 điểm cũng khó đạt trung bình {fmt(a.minPass)}. Cân nhắc học lại môn này.</p>;
+    case "waiting":
+      return c.status === "studying" ? <p className="md-body-small text-on-surface-variant">Chưa đủ điểm thành phần để gợi ý. Có điểm trên FAP rồi, tiện ích sẽ cập nhật.</p> : null;
     default:
-      return <p className="md-body-medium text-on-surface-variant">Chưa đủ điểm thành phần để gợi ý. Có điểm trên FAP rồi, tiện ích sẽ cập nhật.</p>;
+      return null;
   }
 }
 
-function CourseCard({ c }: { c: GradeCourse }) {
+function CourseRow({ c, latest }: { c: GradeCourse; latest: boolean }) {
   const s = STATUS[c.status];
-  const practise = c.advice.state === "need" || c.advice.state === "resit";
+  const practise = latest && (c.advice.state === "need" || c.advice.state === "resit");
   return (
-    <Card>
-      <div className="space-y-3 p-5">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <p className="md-title-medium text-on-surface">
-              {c.subjectCode} <span className="md-body-medium text-on-surface-variant">· {c.subjectName}</span>
-            </p>
-            <p className="md-body-small text-on-surface-variant">{c.termName}{c.classCode ? ` · ${c.classCode}` : ""}</p>
-          </div>
+    <div className="space-y-2 border-t border-outline-variant px-5 py-4 first:border-t-0">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="md-title-small text-on-surface">
+            {c.subjectCode} <span className="md-body-medium text-on-surface-variant">· {c.subjectName}</span>
+          </p>
+          <p className="md-body-small text-on-surface-variant">
+            {c.credits} tín chỉ{c.creditsKnown ? "" : " (tạm tính)"}
+            {c.classCode ? ` · ${c.classCode}` : ""}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {c.kind !== "first" && <Badge tone="warning">{KIND_LABEL[c.kind]}</Badge>}
+          {c.note === "superseded" && <Badge tone="neutral">Đã được lần học sau thay</Badge>}
+          {c.note === "excluded" && <Badge tone="neutral">Không tính GPA</Badge>}
+          {c.average !== null && c.status !== "studying" && <span className="md-title-small text-on-surface">{fmt(c.average)}</span>}
           <Badge tone={s.tone}>{s.label}</Badge>
         </div>
-        <Advice c={c} />
-        {!c.syllabusKnown && <p className="md-body-small text-on-surface-variant">Chưa có syllabus của môn này nên tạm dùng ngưỡng qua môn {fmt(c.advice.minPass)}.</p>}
-        {practise && (
-          <Link to={`/account/exams?tab=subject&subject=${encodeURIComponent(c.subjectCode)}`} className={buttonClass({ variant: "primary", size: "sm" })}>
-            Luyện đề {c.subjectCode}
-          </Link>
-        )}
+      </div>
+      {latest && <Advice c={c} />}
+      {latest && !c.syllabusKnown && c.status !== "passed" && <p className="md-body-small text-on-surface-variant">Chưa có syllabus của môn này nên tạm dùng ngưỡng qua môn {fmt(c.advice.minPass)}.</p>}
+      {practise && (
+        <Link to={`/account/exams?tab=subject&subject=${encodeURIComponent(c.subjectCode)}`} className={buttonClass({ variant: "primary", size: "sm" })}>
+          Luyện đề {c.subjectCode}
+        </Link>
+      )}
+    </div>
+  );
+}
+
+function TermSection({ term, open, laterOf }: { term: GradeTerm; open: boolean; laterOf: (c: GradeCourse) => boolean }) {
+  return (
+    <details open={open} className="overflow-hidden rounded-m3-lg border border-outline-variant bg-surface-container-lowest">
+      <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-2 px-5 py-4">
+        <span className="md-title-medium text-on-surface">{term.termName}</span>
+        <span className="flex flex-wrap items-center gap-2">
+          <span className="md-body-small text-on-surface-variant">{term.courses.length} môn</span>
+          {term.gpa !== null ? (
+            <>
+              <span className="md-title-small text-on-surface">GPA {fmt(term.gpa)}</span>
+              {term.tier && <Badge tone="info">{TIER_LABEL[term.tier]}</Badge>}
+            </>
+          ) : (
+            <Badge tone="neutral">Chưa có GPA kỳ</Badge>
+          )}
+        </span>
+      </summary>
+      <div>
+        {term.courses.map((c) => (
+          <CourseRow key={c.courseId} c={c} latest={!laterOf(c)} />
+        ))}
+      </div>
+    </details>
+  );
+}
+
+function Summary({ data }: { data: GradeOverview }) {
+  const { cumulative: cum, tiers } = data;
+  return (
+    <Card>
+      <CardHeader title="GPA tích lũy" description="Thang 10, chỉ tính các môn đã qua, trọng số theo tín chỉ. Môn học lại hoặc cải thiện chỉ lấy kết quả lần học đã qua gần nhất." />
+      <div className="space-y-4 p-5">
+        <div className="flex flex-wrap items-end gap-x-6 gap-y-2">
+          <p className="md-display-small text-primary">{cum.gpa === null ? "–" : fmt(cum.gpa)}</p>
+          <div className="space-y-1">
+            {cum.tier && <Badge tone="info">{TIER_LABEL[cum.tier]}</Badge>}
+            <p className="md-body-small text-on-surface-variant">
+              {cum.credits} tín chỉ đã tính{cum.studyingCredits > 0 ? ` · ${cum.studyingCredits} tín chỉ đang học` : ""}
+            </p>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="md-label-medium text-on-surface-variant">
+                <th className="py-2 pr-4 font-medium">Mức xếp loại</th>
+                <th className="py-2 pr-4 font-medium">GPA từ</th>
+                <th className="py-2 font-medium">Của bạn</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tiers.map((t) => (
+                <tr key={t.key} className="border-t border-outline-variant">
+                  <td className="py-2 pr-4 text-on-surface">{t.label}</td>
+                  <td className="py-2 pr-4 text-on-surface">{fmt(t.min)}</td>
+                  <td className="py-2 text-on-surface-variant">
+                    {t.reached ? (
+                      <Badge tone="success">Đã đạt</Badge>
+                    ) : t.needAverage === null ? (
+                      "–"
+                    ) : t.needAverage > 10 ? (
+                      "Kỳ này chưa thể đạt, cần nhiều kỳ"
+                    ) : (
+                      <>
+                        Kỳ này cần trung bình ≥ <strong className="text-on-surface">{fmt(t.needAverage)}</strong> cho {cum.studyingCredits} tín chỉ đang học
+                      </>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="md-body-small text-on-surface-variant">
+          Các mốc 9 / 8 / 7 / 6 / 5 chỉ mang tính tham khảo: quy chế của trường chỉ ghi rõ hạng điểm từng môn, không ghi ngưỡng xếp loại học kỳ. Hạng tốt nghiệp xuất sắc và giỏi còn có thể bị hạ một mức nếu học lại quá 5% số tín chỉ hoặc bị kỷ luật cấp trường. Môn chưa có syllabus được tạm tính 3 tín chỉ; môn như Vovinam, thể chất, OJT không tính vào GPA.
+        </p>
       </div>
     </Card>
+  );
+}
+
+function Body({ data, reload }: { data: GradeOverview; reload: () => void }) {
+  // Môn có lần học sau thì lần học này không cần gợi ý nữa
+  const laterOf = (c: GradeCourse) => data.courses.some((o) => o.subjectCode === c.subjectCode && termRank(o.termName) > termRank(c.termName));
+  return (
+    <div className="space-y-6">
+      <GradeSyncCard overview={data} onChange={reload} />
+      {data.enabled &&
+        (data.terms.length === 0 ? (
+          <Card>
+            <div className="p-5">
+              <Empty title="Chưa có điểm nào">Mở Báo cáo điểm trên FAP (đã cài tiện ích) để đồng bộ.</Empty>
+            </div>
+          </Card>
+        ) : (
+          <>
+            <Summary data={data} />
+            <div className="space-y-3">
+              <h2 className="md-title-medium text-on-surface">Theo học kỳ</h2>
+              {data.terms.map((t, i) => (
+                <TermSection key={t.termName} term={t} open={i === 0} laterOf={laterOf} />
+              ))}
+              {data.syncedAt && <p className="md-body-small text-on-surface-variant">Đồng bộ lần cuối: {new Date(data.syncedAt).toLocaleString("vi-VN")}</p>}
+            </div>
+          </>
+        ))}
+    </div>
   );
 }
 
@@ -102,27 +209,8 @@ export default function GradesPage() {
   const query = useApi(() => gradeApi.overview(), []);
   return (
     <div>
-      <PageHeader title="Điểm FAP" eyebrow="Cá nhân hoá" description="Điểm cần đạt ở bài thi cuối kỳ (FE) để qua từng môn, tính từ điểm thành phần của bạn trên FAP." />
-      <QueryBoundary query={query}>
-        {(data) => <Body data={data} reload={query.reload} />}
-      </QueryBoundary>
-    </div>
-  );
-}
-
-function Body({ data, reload }: { data: Awaited<ReturnType<typeof gradeApi.overview>>; reload: () => void }) {
-  const courses = useMemo(() => latestPerSubject(data.courses), [data.courses]);
-  return (
-    <div className="space-y-6">
-      <GradeSyncCard overview={data} onChange={reload} />
-      {data.enabled && (
-        <Card>
-          <CardHeader title="Gợi ý theo từng môn" description={data.syncedAt ? `Đồng bộ lần cuối: ${new Date(data.syncedAt).toLocaleString("vi-VN")}` : undefined} />
-          <div className="space-y-3 p-5">
-            {courses.length === 0 ? <Empty title="Chưa có điểm nào">Mở Báo cáo điểm trên FAP (đã cài tiện ích) để đồng bộ.</Empty> : courses.map((c) => <CourseCard key={c.courseId} c={c} />)}
-          </div>
-        </Card>
-      )}
+      <PageHeader title="Điểm FAP" eyebrow="Cá nhân hoá" description="GPA, điểm cần đạt ở bài thi cuối kỳ để qua từng môn và mức xếp loại bạn có thể chạm, theo từng học kỳ." />
+      <QueryBoundary query={query}>{(data) => <Body data={data} reload={query.reload} />}</QueryBoundary>
     </div>
   );
 }
