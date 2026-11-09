@@ -1,5 +1,5 @@
 // TẠM THỜI (chỉ để thử con cóc ở bảng điểm): xoá file này và 2 dòng "ToadTestPanel" trong QuizWorkspace.tsx sau khi test xong.
-// Chỉ hiện khi địa chỉ có ?toadtest=1. Bấm một mức điểm, bảng này tự chọn đáp án để bài đạt đúng điểm đó, rồi bạn bấm "Nộp bài" như bình thường.
+// Chỉ hiện khi đã mở địa chỉ có ?toadtest=1 (nhớ trong phiên; ?toadtest=0 để tắt). Bấm một mức điểm, bảng này tự chọn đáp án để bài đạt đúng điểm đó, rồi bạn bấm "Nộp bài" như bình thường.
 import { useState } from "react";
 import type { Quiz } from "@/features/practice/hooks/useQuiz";
 import { hasAnswer, isMultiple } from "@/features/practice/utils/question";
@@ -8,11 +8,23 @@ import type { Question } from "@/features/practice/types";
 const SCORES = [0, 2, 4, 6, 7, 9, 9.7, 10];
 const LETTERS = "ABCDEFGH".split("");
 
+// Ứng dụng tự chuẩn hoá địa chỉ nên ?toadtest=1 sẽ bị xoá: nhớ cờ này trong phiên (tắt bằng ?toadtest=0)
+function enabled() {
+  try {
+    const flag = new URLSearchParams(window.location.search).get("toadtest");
+    if (flag === "1") sessionStorage.setItem("toadtest", "1");
+    if (flag === "0") sessionStorage.removeItem("toadtest");
+    return sessionStorage.getItem("toadtest") === "1";
+  } catch {
+    return false;
+  }
+}
+
 const wrongOf = (q: Question) => LETTERS.find((l) => !q.correct.includes(l)) ?? "A";
 
 export function ToadTestPanel({ quiz }: { quiz: Quiz }) {
   const [note, setNote] = useState("");
-  if (new URLSearchParams(window.location.search).get("toadtest") !== "1" || quiz.submitted) return null;
+  if (!enabled() || quiz.submitted) return null;
 
   // Đưa đáp án đang chọn của một câu về đúng tập `want` bằng chính hàm chọn của bài làm (không đụng logic chấm)
   const setSelection = (q: Question, want: string[]) => {
