@@ -21,6 +21,8 @@ const subjectSchema = z.object({
   subjectName: z.string().min(1).max(200),
   syllabusId: z.string().max(20).optional(),
   chapters: z.array(chapterSchema).max(100),
+  minAvgMarkToPass: z.number().min(0).max(10).nullable().optional(), // MinAvgMarkToPass of the syllabus
+  assessments: z.array(z.object({ category: z.string().max(120), weight: z.number().min(0).max(100).nullable(), minScore: z.number().min(0).max(10).nullable() })).max(40).optional(),
 });
 const fileSchema = z.object({ subjects: z.array(z.unknown()) });
 
@@ -59,6 +61,12 @@ function readInput(file: string) {
   return { resolved, valid, skipped };
 }
 
+// Only touch the grading columns when the file carries them (files from older crawler versions keep what is stored)
+const grading = (s: SubjectInput) => ({
+  ...(s.minAvgMarkToPass !== undefined ? { minPassMark: s.minAvgMarkToPass } : {}),
+  ...(s.assessments ? { assessments: s.assessments } : {}),
+});
+
 async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes("--dry-run");
@@ -86,8 +94,8 @@ async function main() {
         const existing = await tx.subject.findUnique({ where: { code: s.code }, select: { id: true } });
         const subject = await tx.subject.upsert({
           where: { code: s.code },
-          create: { code: s.code, name: s.subjectName, syllabusId: s.syllabusId ?? null },
-          update: { name: s.subjectName, syllabusId: s.syllabusId ?? null },
+          create: { code: s.code, name: s.subjectName, syllabusId: s.syllabusId ?? null, ...grading(s) },
+          update: { name: s.subjectName, syllabusId: s.syllabusId ?? null, ...grading(s) },
         });
         existing ? updated++ : created++;
         const numbers = s.chapters.map((c) => c.number as number);
