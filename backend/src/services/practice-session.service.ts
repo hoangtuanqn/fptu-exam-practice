@@ -52,12 +52,15 @@ export const practiceSessionService = {
   },
 
   async save(actor: Actor, id: number, body: SaveSessionBody) {
+    const { submitted, ...state } = body;
+    // Trường hợp thường gặp: lượt còn đang làm -> một câu UPDATE là xong
+    if ((await practiceSessionRepository.saveIfOpen(actor.owner, id, state, submitted === true)) > 0) {
+      return { id, status: submitted === true ? ("SUBMITTED" as const) : ("IN_PROGRESS" as const), updatedAt: new Date() };
+    }
+    // Không ghi được: không có lượt này, hoặc lượt đã nộp (tab cũ gửi muộn thì khoá lại, không ghi đè)
     const s = await practiceSessionRepository.findOfOwner(actor.owner, id);
     if (!s) throw notFound();
-    // Lượt đã nộp thì khoá lại, tab cũ gửi muộn cũng không ghi đè
-    if (s.status === "SUBMITTED") return { id: s.id, status: s.status, updatedAt: s.updatedAt };
-    const { submitted, ...state } = body;
-    return practiceSessionRepository.save(id, state, submitted === true);
+    return { id: s.id, status: s.status, updatedAt: s.updatedAt };
   },
 
   async listMine(actor: Actor, query: ListSessionsQuery) {
