@@ -21,6 +21,16 @@ export const practiceSessionRepository = {
 
   findOfOwner: (owner: Owner, id: number) => prisma.practiceSession.findFirst({ where: { id, ...whereOf(owner) }, include: withExam }),
 
+  // Lưu tiến độ bằng MỘT câu UPDATE có điều kiện (đúng chủ, còn đang làm). Trả số dòng đã ghi: 0 = không tồn tại, không phải của bạn, hoặc đã nộp.
+  // Đây là đường nóng nhất của phần làm bài (tự lưu liên tục) nên không đọc trước rồi mới ghi.
+  async saveIfOpen(owner: Owner, id: number, state: SessionState, submitted: boolean) {
+    const { count } = await prisma.practiceSession.updateMany({
+      where: { id, ...whereOf(owner), status: "IN_PROGRESS" },
+      data: { ...state, ...(submitted && { status: "SUBMITTED" as const }) },
+    });
+    return count;
+  },
+
   save: (id: number, state: SessionState, submitted: boolean) =>
     prisma.practiceSession.update({
       where: { id },
