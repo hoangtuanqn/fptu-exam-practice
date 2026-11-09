@@ -79,8 +79,7 @@ function CourseRow({ c, latest }: { c: GradeCourse; latest: boolean }) {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {c.kind !== "first" && <Badge tone="warning">{KIND_LABEL[c.kind]}</Badge>}
-          {c.note === "superseded" && <Badge tone="neutral">Không tính (có lần học điểm cao hơn)</Badge>}
-          {c.note === "excluded" && <Badge tone="neutral">Không tính GPA</Badge>}
+          {c.note === "excluded" && <Badge tone="neutral">Không tính điểm TB</Badge>}
           {c.average !== null && c.status !== "studying" && <span className="md-title-small text-on-surface">{fmt(c.average)}</span>}
           <Badge tone={s.tone}>{s.label}</Badge>
         </div>
@@ -109,7 +108,7 @@ function TermSection({ term, open, laterOf }: { term: GradeTerm; open: boolean; 
               {term.tier && <Badge tone="info">{TIER_LABEL[term.tier]}</Badge>}
             </>
           ) : (
-            <Badge tone="neutral">Chưa có điểm TB kỳ</Badge>
+            <Badge tone="neutral">Chưa có môn tổng kết</Badge>
           )}
         </span>
       </summary>
@@ -123,19 +122,19 @@ function TermSection({ term, open, laterOf }: { term: GradeTerm; open: boolean; 
 }
 
 function Summary({ data }: { data: GradeOverview }) {
-  const { cumulative: cum, tiers, currentTerm: cur } = data;
+  const { tiers, currentTerm: cur } = data;
   if (!cur) return null;
+  const hasResult = cur.credits > 0;
   return (
     <Card>
-      <CardHeader title={`Danh hiệu kỳ ${cur.termName}`} description="Xét theo điểm trung bình từng kỳ (thang 10, trọng số theo tín chỉ). Môn trượt tính 0 điểm nhưng vẫn cộng tín chỉ nên kéo điểm kỳ xuống." />
+      <CardHeader title={`Điểm trung bình kỳ ${cur.termName}`} description="Mục tiêu Sinh viên Giỏi hoặc Xuất sắc của kỳ này" />
       <div className="space-y-4 p-5">
-        <div className="flex flex-wrap items-end gap-x-6 gap-y-2">
-          <div>
-            <p className="md-label-medium text-on-surface-variant">Điểm trung bình kỳ</p>
-            <p className="md-display-small text-primary">{cur.gpa === null ? "–" : fmt(cur.gpa)}</p>
-          </div>
+        <div>
+          <p className="md-display-small text-primary">{cur.gpa === null ? "–" : fmt(cur.gpa)}</p>
           <p className="md-body-small text-on-surface-variant">
-            {cur.credits} tín chỉ đã có điểm{cur.studyingCredits > 0 ? ` · ${cur.studyingCredits} tín chỉ đang học` : ""}
+            {hasResult
+              ? `Tính từ ${cur.credits} tín chỉ đã có điểm tổng kết${cur.studyingCredits > 0 ? `, còn ${cur.studyingCredits} tín chỉ đang học` : ""}.`
+              : `Chưa có môn nào có điểm tổng kết nên chưa tính được điểm trung bình kỳ.${cur.studyingCredits > 0 ? ` Kỳ này đang học ${cur.studyingCredits} tín chỉ.` : ""}`}
           </p>
         </div>
         <div className="overflow-x-auto">
@@ -143,15 +142,15 @@ function Summary({ data }: { data: GradeOverview }) {
             <thead>
               <tr className="md-label-medium text-on-surface-variant">
                 <th className="py-2 pr-4 font-medium">Danh hiệu</th>
-                <th className="py-2 pr-4 font-medium">Điểm TB kỳ từ</th>
-                <th className="py-2 font-medium">Của bạn</th>
+                <th className="py-2 pr-4 font-medium">Điểm TB kỳ cần</th>
+                <th className="py-2 font-medium">Tình trạng</th>
               </tr>
             </thead>
             <tbody>
               {tiers.map((t) => (
                 <tr key={t.key} className="border-t border-outline-variant">
                   <td className="py-2 pr-4 text-on-surface">Sinh viên {t.label}</td>
-                  <td className="py-2 pr-4 text-on-surface">{fmt(t.min)}</td>
+                  <td className="py-2 pr-4 text-on-surface">≥ {fmt(t.min)}</td>
                   <td className="py-2 text-on-surface-variant">
                     {t.reached ? (
                       <Badge tone="success">Đã đạt</Badge>
@@ -163,7 +162,7 @@ function Summary({ data }: { data: GradeOverview }) {
                       "Không thể đạt trong kỳ này"
                     ) : (
                       <>
-                        Cần trung bình ≥ <strong className="text-on-surface">{fmt(t.needAverage)}</strong> ở {cur.studyingCredits} tín chỉ đang học
+                        Điểm trung bình các môn còn lại cần ≥ <strong className="text-on-surface">{fmt(t.needAverage)}</strong>
                       </>
                     )}
                   </td>
@@ -172,14 +171,8 @@ function Summary({ data }: { data: GradeOverview }) {
             </tbody>
           </table>
         </div>
-        <div className="rounded-m3-md bg-surface-container px-4 py-3">
-          <p className="md-label-medium text-on-surface-variant">GPA tích lũy (dùng khi xét tốt nghiệp, không dùng xét danh hiệu kỳ; học cải thiện lấy điểm cao nhất)</p>
-          <p className="md-title-medium text-on-surface">
-            {cum.gpa === null ? "–" : fmt(cum.gpa)} <span className="md-body-small text-on-surface-variant">· {cum.credits} tín chỉ đã tính</span>
-          </p>
-        </div>
         <p className="md-body-small text-on-surface-variant">
-          Danh hiệu học kỳ cần đủ 4 điều kiện: (1) điểm TB kỳ từ 9 trở lên là Xuất sắc, từ 8 trở lên là Giỏi; (2) qua 100% các môn trong kỳ; (3) đủ số tín chỉ tối thiểu của kỳ (thường từ 12); (4) không bị kỷ luật (FePass không biết điều này, bạn tự đối chiếu). FPT không dùng điểm rèn luyện. Môn học lại hoặc cải thiện: điểm kỳ cũ giữ nguyên, GPA tích lũy lấy điểm cao nhất trong các lần đã qua. Hạng tốt nghiệp xuất sắc và giỏi còn có thể bị hạ một mức nếu học lại quá 5% số tín chỉ hoặc bị kỷ luật cấp trường. Môn chưa có trong syllabus được coi là 0 tín chỉ nên chưa tính vào điểm; tiếng Anh chuẩn bị, Vovinam, thể chất, OJT cũng không tính.
+          Điều kiện xét danh hiệu kỳ: (1) điểm TB kỳ đủ mức; (2) qua 100% các môn trong kỳ; (3) đủ số tín chỉ tối thiểu của kỳ (thường từ 12); (4) không bị kỷ luật (FePass không biết điều này, bạn tự đối chiếu). Môn trượt tính 0 điểm nhưng vẫn cộng tín chỉ. Môn chưa có trong syllabus, tiếng Anh chuẩn bị, Vovinam, thể chất, OJT không tính.
         </p>
       </div>
     </Card>
@@ -219,7 +212,7 @@ export default function GradesPage() {
   const query = useApi(() => gradeApi.overview(), []);
   return (
     <div>
-      <PageHeader title="Điểm FAP" eyebrow="Cá nhân hoá" description="Điểm trung bình từng kỳ, danh hiệu Giỏi/Xuất sắc và điểm cần đạt ở bài thi cuối kỳ để qua từng môn." />
+      <PageHeader title="Điểm FAP" eyebrow="Cá nhân hoá" description="Điểm trung bình từng kỳ và điểm cần đạt ở bài thi cuối kỳ để qua từng môn." />
       <QueryBoundary query={query}>{(data) => <Body data={data} reload={query.reload} />}</QueryBoundary>
     </div>
   );
