@@ -112,7 +112,7 @@ export const examRepository = {
   async listAll(query: PaginationQuery) {
     const [items, total] = await Promise.all([
       prisma.exam.findMany({
-        select: { id: true, title: true, threadId: true, totalQuestions: true, answerSource: true, createdAt: true },
+        select: { id: true, title: true, threadId: true, sourceUrl: true, totalQuestions: true, answerSource: true, createdAt: true },
         orderBy: { id: "desc" },
         ...toSkipTake(query),
       }),

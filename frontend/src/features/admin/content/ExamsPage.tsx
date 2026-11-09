@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Copy, FileText, Loader2, PencilLine, Sparkles } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Copy, ExternalLink, FileText, Loader2, Sparkles } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { adminApi } from "@/features/admin/api/admin.api";
 import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
@@ -11,7 +11,8 @@ import { Button } from "@/shared/ui/Button";
 import { Card, PageHeader } from "@/shared/ui/Card";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { Modal, ModalActions, ModalTitle } from "@/shared/ui/Modal";
-import { Pagination } from "@/shared/ui/Table";
+import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
+import { formatDateTime } from "@/shared/utils/formatters";
 import { useClampPage } from "@/shared/hooks/useClampPage";
 import { errorMessage } from "@/shared/api/errors";
 
@@ -59,6 +60,7 @@ function ReportDialog({ id, onClose }: { id: number; onClose: () => void }) {
 
 export default function ExamsPage() {
   const toast = useToast();
+  const navigate = useNavigate();
   const [url, setUrl] = useUrlState({ page: "1" });
   const page = toPage(url.page);
   const { data, error, loading, reload } = useApi(() => adminApi.exams(page), [page]);
@@ -88,14 +90,13 @@ export default function ExamsPage() {
     }
   }
 
-  // Một chip NGẮN, không xuống dòng: "50/50" (số câu có đáp án / số câu cần chấm), xanh khi đủ, đỏ khi thiếu
-  const statusChip = (e: AdminExam) => {
-    if (e.answerSource === "PENDING") return <Badge tone="info">Đang giải</Badge>;
-    if (e.answerSource === "FAILED" || e.answerSource === "DEFAULT") return <Badge tone="danger">Chưa có</Badge>;
-    if (e.gradedQuestions === undefined || e.answeredQuestions === undefined) return <Badge tone={SOURCE[e.answerSource][1]}>{SOURCE[e.answerSource][0]}</Badge>; // máy chủ cũ chưa trả số liệu
+  // Chip NGẮN, không xuống dòng: "50/50" = số câu có đáp án / số câu cần chấm; xanh khi đủ, đỏ khi thiếu
+  const answersChip = (e: AdminExam) => {
+    if (e.gradedQuestions === undefined || e.answeredQuestions === undefined) return null; // máy chủ cũ chưa trả số liệu
+    const full = e.answeredQuestions >= e.gradedQuestions;
     return (
       <span title={`${e.answeredQuestions} trên ${e.gradedQuestions} câu cần chấm đã có đáp án (không tính tài liệu tham khảo)`}>
-        <Badge tone={e.answeredQuestions >= e.gradedQuestions ? "success" : "danger"}>
+        <Badge tone={full ? "success" : "danger"}>
           <span className="whitespace-nowrap tabular-nums">
             {e.answeredQuestions}/{e.gradedQuestions}
           </span>
@@ -110,16 +111,42 @@ export default function ExamsPage() {
       <div className="text-xs text-rose-600">
         <p className="line-clamp-3 break-words">Lỗi AI: {e.solveError}</p>
         {e.solveError.length > 90 && (
-          <button type="button" onClick={() => setFullError({ title: `Lỗi AI · ${e.title}`, text: e.solveError! })} className="mt-0.5 font-medium underline underline-offset-2 hover:text-rose-800">
+          <button type="button" onClick={(ev) => { ev.stopPropagation(); setFullError({ title: `Lỗi AI · ${e.title}`, text: e.solveError! }); }} className="mt-0.5 font-medium underline underline-offset-2 hover:text-rose-800">
             Xem đầy đủ
           </button>
         )}
       </div>
     );
 
+  // Thread trên FuOverflow: bấm mở bài gốc ở tab mới (để biết đề này là đề nào trên FuO)
+  const threadLink = (e: AdminExam) =>
+    e.sourceUrl ? (
+      <a href={e.sourceUrl} target="_blank" rel="noreferrer" onClick={(ev) => ev.stopPropagation()} title="Mở bài gốc trên FuOverflow" className="inline-flex items-center gap-1 text-brand-700 hover:underline">
+        {e.threadId} <ExternalLink size={12} />
+      </a>
+    ) : (
+      <span>{e.threadId}</span>
+    );
+
+  // Thao tác gọn: hai nút biểu tượng (xem chi tiết/sửa là bấm vào dòng đề)
+  const iconBtn = "inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:opacity-40";
+  const action = (e: AdminExam) => {
+    const busy = e.solving || starting === e.id;
+    return (
+      <div className="flex items-center justify-end gap-1.5">
+        <button type="button" className={iconBtn} title="Báo cáo của AI" aria-label="Báo cáo của AI" onClick={(ev) => { ev.stopPropagation(); setReport(e.id); }}>
+          <FileText size={15} />
+        </button>
+        <button type="button" className={iconBtn} title={busy ? "AI đang giải…" : "AI giải lại cả đề"} aria-label="AI giải lại cả đề" disabled={busy} onClick={(ev) => { ev.stopPropagation(); void solve(e); }}>
+          {busy ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
+        </button>
+      </div>
+    );
+  };
+
   return (
     <>
-      <PageHeader eyebrow="Quản trị" title="Đề thi" description="Số câu có đáp án của từng đề. Đề thiếu đáp án hiện màu đỏ." />
+      <PageHeader eyebrow="Quản trị" title="Đề thi" description="Bấm vào một đề để xem và sửa đáp án. Mục Có đáp án đỏ là đề đang thiếu." />
       <Card>
         {loading && !data ? (
           <Loading />
@@ -127,35 +154,53 @@ export default function ExamsPage() {
           <ErrorBox message={error} onRetry={reload} />
         ) : data && data.items.length > 0 ? (
           <>
-            <div className="flex gap-3 border-b border-slate-100 px-4 py-2 text-xs font-medium text-slate-500">
-              <span className="w-20 shrink-0">Có đáp án</span>
-              <span>Đề</span>
-            </div>
-            <ul className="divide-y divide-slate-100">
+            <ul className="divide-y divide-slate-100 md:hidden">
               {data.items.map((e) => (
-                <li key={e.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">
-                  <div className="w-20 shrink-0">{statusChip(e)}</div>
-                  <div className="min-w-0 flex-1 basis-56 space-y-1">
-                    <div className="truncate text-sm font-medium text-slate-900" title={`Thread ${e.threadId}`}>
-                      {e.title}
-                    </div>
-                    {errorLine(e)}
+                <li key={e.id} className="space-y-2 px-4 py-3" onClick={() => navigate(`/admin/exams/${e.id}`)}>
+                  <div className="truncate text-sm font-medium text-slate-900">{e.title}</div>
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                    {answersChip(e)}
+                    <Badge tone={SOURCE[e.answerSource][1]}>{SOURCE[e.answerSource][0]}</Badge>
+                    <span>{threadLink(e)}</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button size="sm" onClick={() => setReport(e.id)}>
-                      Báo cáo
-                    </Button>
-                    <Button size="sm" onClick={() => void solve(e)} disabled={e.solving || starting === e.id}>
-                      {e.solving || starting === e.id ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-                      {e.solving ? "Đang giải…" : "AI giải lại"}
-                    </Button>
-                    <Link to={`/admin/exams/${e.id}`} className="inline-flex items-center gap-1.5 rounded-xl bg-brand-50 px-3 py-2 text-sm font-medium text-brand-700 transition hover:bg-brand-100">
-                      <PencilLine size={14} /> Xem & sửa
-                    </Link>
-                  </div>
+                  {errorLine(e)}
+                  {action(e)}
                 </li>
               ))}
             </ul>
+            <div className="hidden md:block">
+              <Table>
+                <Thead>
+                  <Th>Đề</Th>
+                  <Th>Thread</Th>
+                  <Th className="text-right">Số câu</Th>
+                  <Th>Có đáp án</Th>
+                  <Th>Nguồn đáp án</Th>
+                  <Th>Lấy lúc</Th>
+                  <Th />
+                </Thead>
+                <tbody>
+                  {data.items.map((e) => (
+                    <Tr key={e.id} onClick={() => navigate(`/admin/exams/${e.id}`)}>
+                      <Td className="max-w-xs">
+                        <Link to={`/admin/exams/${e.id}`} className="block truncate font-medium text-slate-800 hover:text-brand-700" title={e.title} onClick={(ev) => ev.stopPropagation()}>
+                          {e.title}
+                        </Link>
+                        {errorLine(e)}
+                      </Td>
+                      <Td className="whitespace-nowrap text-slate-500">{threadLink(e)}</Td>
+                      <Td className="text-right tabular-nums">{e.totalQuestions}</Td>
+                      <Td>{answersChip(e)}</Td>
+                      <Td>
+                        <Badge tone={SOURCE[e.answerSource][1]}>{SOURCE[e.answerSource][0]}</Badge>
+                      </Td>
+                      <Td className="whitespace-nowrap text-slate-500">{formatDateTime(e.createdAt)}</Td>
+                      <Td>{action(e)}</Td>
+                    </Tr>
+                  ))}
+                </tbody>
+              </Table>
+            </div>
             <Pagination meta={data.meta} onPage={(p) => setUrl({ page: String(p) })} />
           </>
         ) : (
