@@ -11,8 +11,7 @@ import { Button } from "@/shared/ui/Button";
 import { Card, PageHeader } from "@/shared/ui/Card";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { Modal, ModalActions, ModalTitle } from "@/shared/ui/Modal";
-import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
-import { formatDateTime } from "@/shared/utils/formatters";
+import { Pagination } from "@/shared/ui/Table";
 import { useClampPage } from "@/shared/hooks/useClampPage";
 import { errorMessage } from "@/shared/api/errors";
 
@@ -89,20 +88,22 @@ export default function ExamsPage() {
     }
   }
 
-  // Số câu có đáp án / số câu cần chấm. Còn câu trống thì báo đỏ: người dùng không chấm được các câu đó, admin nên giải lại hoặc sửa tay
-  const answersBadge = (e: AdminExam) => {
-    if (e.gradedQuestions === undefined || e.answeredQuestions === undefined) return null; // máy chủ cũ chưa trả số liệu
+  // Trạng thái đáp án trong MỘT chip: đủ thì xanh, thiếu thì đỏ kèm số câu (người dùng không chấm được các câu trống)
+  const statusChip = (e: AdminExam) => {
+    if (e.answerSource === "PENDING") return <Badge tone="info">AI đang giải…</Badge>;
+    if (e.answerSource === "FAILED" || e.answerSource === "DEFAULT") return <Badge tone="danger">Chưa có đáp án</Badge>;
+    if (e.gradedQuestions === undefined || e.answeredQuestions === undefined) return <Badge tone={SOURCE[e.answerSource][1]}>{SOURCE[e.answerSource][0]}</Badge>; // máy chủ cũ chưa trả số liệu
     const full = e.answeredQuestions >= e.gradedQuestions;
     return (
       <span title="Số câu đã có đáp án / số câu cần chấm (không tính tài liệu tham khảo)">
         <Badge tone={full ? "success" : "danger"}>
-          {e.answeredQuestions}/{e.gradedQuestions} có đáp án
+          {e.answeredQuestions}/{e.gradedQuestions} câu có đáp án
         </Badge>
       </span>
     );
   };
 
-  // Lỗi AI: xuống dòng, tối đa 3 dòng; dài hơn thì có nút mở toàn văn (không còn bị cắt mất nội dung)
+  // Lỗi AI: tối đa 3 dòng; dài hơn thì có nút mở toàn văn
   const errorLine = (e: AdminExam) =>
     e.solveError && (
       <div className="text-xs text-rose-600">
@@ -115,24 +116,9 @@ export default function ExamsPage() {
       </div>
     );
 
-  const action = (e: AdminExam) => (
-    <div className="flex items-center justify-end gap-2">
-      <Link to={`/admin/exams/${e.id}`} className="inline-flex items-center gap-1.5 rounded-xl bg-brand-50 px-3 py-2 text-sm font-medium text-brand-700 transition hover:bg-brand-100">
-        <PencilLine size={14} /> Xem & sửa
-      </Link>
-      <Button size="sm" onClick={() => setReport(e.id)}>
-        Báo cáo
-      </Button>
-      <Button size="sm" variant="primary" onClick={() => void solve(e)} disabled={e.solving || starting === e.id}>
-        {e.solving || starting === e.id ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-        {e.solving ? "Đang giải…" : "AI giải lại"}
-      </Button>
-    </div>
-  );
-
   return (
     <>
-      <PageHeader eyebrow="Quản trị" title="Đề thi" description="Các đề đã lấy về, nguồn đáp án và nhờ AI giải lại." />
+      <PageHeader eyebrow="Quản trị" title="Đề thi" description="Số câu có đáp án của từng đề. Đề thiếu đáp án hiện màu đỏ." />
       <Card>
         {loading && !data ? (
           <Loading />
@@ -140,56 +126,33 @@ export default function ExamsPage() {
           <ErrorBox message={error} onRetry={reload} />
         ) : data && data.items.length > 0 ? (
           <>
-            <ul className="divide-y divide-slate-100 md:hidden">
+            <ul className="divide-y divide-slate-100">
               {data.items.map((e) => (
-                <li key={e.id} className="space-y-2 px-4 py-3">
-                  <div className="truncate text-sm font-medium text-slate-900">{e.title}</div>
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                    <Badge tone={SOURCE[e.answerSource][1]}>{SOURCE[e.answerSource][0]}</Badge>
-                    {answersBadge(e)}
-                    <span>
-                      Thread {e.threadId} · {e.totalQuestions} câu
-                    </span>
+                <li key={e.id} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
+                  <div className="min-w-0 flex-1 basis-64 space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="truncate text-sm font-medium text-slate-900" title={`Thread ${e.threadId}`}>
+                        {e.title}
+                      </span>
+                      {statusChip(e)}
+                    </div>
+                    {errorLine(e)}
                   </div>
-                  {errorLine(e)}
-                  {action(e)}
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" onClick={() => setReport(e.id)}>
+                      Báo cáo
+                    </Button>
+                    <Button size="sm" onClick={() => void solve(e)} disabled={e.solving || starting === e.id}>
+                      {e.solving || starting === e.id ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                      {e.solving ? "Đang giải…" : "AI giải lại"}
+                    </Button>
+                    <Link to={`/admin/exams/${e.id}`} className="inline-flex items-center gap-1.5 rounded-xl bg-brand-50 px-3 py-2 text-sm font-medium text-brand-700 transition hover:bg-brand-100">
+                      <PencilLine size={14} /> Xem & sửa
+                    </Link>
+                  </div>
                 </li>
               ))}
             </ul>
-            <div className="hidden md:block">
-              <Table>
-                <Thead>
-                  <Th>Đề</Th>
-                  <Th>Thread</Th>
-                  <Th className="text-right">Số câu</Th>
-                  <Th>Đáp án</Th>
-                  <Th>Lấy lúc</Th>
-                  <Th />
-                </Thead>
-                <tbody>
-                  {data.items.map((e) => (
-                    <Tr key={e.id}>
-                      <Td className="max-w-xs">
-                        <div className="truncate font-medium text-slate-800" title={e.title}>
-                          {e.title}
-                        </div>
-                        {errorLine(e)}
-                      </Td>
-                      <Td className="text-slate-500">{e.threadId}</Td>
-                      <Td className="text-right tabular-nums">{e.totalQuestions}</Td>
-                      <Td>
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          <Badge tone={SOURCE[e.answerSource][1]}>{SOURCE[e.answerSource][0]}</Badge>
-                          {answersBadge(e)}
-                        </div>
-                      </Td>
-                      <Td className="whitespace-nowrap text-slate-500">{formatDateTime(e.createdAt)}</Td>
-                      <Td>{action(e)}</Td>
-                    </Tr>
-                  ))}
-                </tbody>
-              </Table>
-            </div>
             <Pagination meta={data.meta} onPage={(p) => setUrl({ page: String(p) })} />
           </>
         ) : (
