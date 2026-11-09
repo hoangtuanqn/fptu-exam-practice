@@ -145,20 +145,24 @@ export default function DepositPage() {
               placeholder="Ví dụ: 100.000"
             />
             {tiers.length > 0 && (
-              <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-sm text-emerald-900">
-                <div className="flex items-center gap-2 font-medium">
-                  <Gift size={15} className="shrink-0 text-emerald-600" />
-                  {bonus > 0 ? (
-                    <span>
-                      Nạp {formatMoney(amount)} nhận thêm <b>+{bonus.toLocaleString("vi-VN")} credit</b> thưởng
-                    </span>
-                  ) : (
-                    <span>Nạp nhiều được thưởng thêm credit</span>
-                  )}
-                </div>
-                <div className="mt-1 text-xs text-emerald-800">
-                  {[...tiers].sort((a, b) => a.min - b.min).map((t) => `từ ${formatMoney(t.min)}: +${t.percent}%`).join(" · ")}
-                </div>
+              <div className="space-y-1 text-sm text-slate-600" aria-live="polite">
+                {amount > 0 && !tooLow && (
+                  <p className="flex items-center gap-1.5 text-slate-800">
+                    <Gift size={15} className="shrink-0 text-emerald-600" />
+                    Bạn nhận <b className="tabular-nums">{formatCredit(amount + bonus)}</b>
+                    {bonus > 0 && <span className="text-emerald-600">(gồm +{bonus.toLocaleString("vi-VN")} thưởng)</span>}
+                  </p>
+                )}
+                <details>
+                  <summary className="cursor-pointer text-xs text-emerald-700">Nạp nhiều được thưởng thêm credit</summary>
+                  <ul className="mt-1 space-y-0.5 text-xs tabular-nums">
+                    {[...tiers].sort((x, y) => x.min - y.min).map((t) => (
+                      <li key={t.min}>
+                        Từ {formatMoney(t.min)}: thưởng +{t.percent}%
+                      </li>
+                    ))}
+                  </ul>
+                </details>
               </div>
             )}
             <div className="flex flex-wrap gap-1.5" role="group" aria-label="Gợi ý số tiền">
