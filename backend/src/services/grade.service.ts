@@ -30,7 +30,7 @@ export const gradeService = {
 
   async sync(userId: number, body: GradeSyncBody) {
     const s = await prisma.userGradeSetting.findUnique({ where: { userId }, select: { enabled: true } });
-    if (!s?.enabled) throw AppError.forbidden("Bạn chưa bật đồng bộ điểm trong Hồ sơ");
+    if (!s?.enabled) throw AppError.forbidden("Bạn chưa bật đồng bộ điểm ở trang Điểm FAP");
     const now = new Date();
     await prisma.$transaction([
       ...body.courses.map((c) => {

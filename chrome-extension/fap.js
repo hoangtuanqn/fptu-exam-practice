@@ -1,5 +1,5 @@
 // Chạy trên fap.fpt.edu.vn: đọc Báo cáo điểm của CHÍNH sinh viên đang đăng nhập (bằng phiên FAP của họ, ngay trong trang)
-// rồi lưu vào bộ nhớ tiện ích. Chỉ làm khi sinh viên đã bật "Đồng bộ điểm FAP" trong Hồ sơ trên fepass.top.
+// rồi lưu vào bộ nhớ tiện ích. Chỉ làm khi sinh viên đã bật "Đồng bộ điểm FAP" ở trang Điểm FAP trên fepass.top.
 // Tiện ích không gửi điểm đi đâu: website fepass.top (đang đăng nhập) lấy từ đây rồi tự gửi lên tài khoản của sinh viên.
 (async () => {
   const DELAY_MS = 600; // nghỉ giữa hai yêu cầu để không dồn tải lên FAP
@@ -60,7 +60,7 @@
   }
   if (!onGrade) return;
   if (!sync) {
-    show("Muốn FePass gợi ý điểm cần đạt cho từng môn? Bật “Đồng bộ điểm FAP” trong Hồ sơ trên fepass.top (bạn có thể tắt và xoá dữ liệu bất cứ lúc nào).", { link: { label: "Bật đồng bộ điểm", href: siteLink } });
+    show("Muốn FePass gợi ý điểm cần đạt cho từng môn? Bật “Đồng bộ điểm FAP” ở trang Điểm FAP trên fepass.top (bạn có thể tắt và xoá dữ liệu bất cứ lúc nào).", { link: { label: "Bật đồng bộ điểm", href: siteLink } });
     return;
   }
 

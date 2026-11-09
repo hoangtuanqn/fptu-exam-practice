@@ -27,7 +27,7 @@
   publish();
   new MutationObserver(publish).observe(root, { attributes: true, attributeFilter: ["data-fepass-auth", "data-fepass-user"] });
 
-  // ---- Đồng bộ điểm FAP (chỉ khi sinh viên tự bật trong Hồ sơ)
+  // ---- Đồng bộ điểm FAP (chỉ khi sinh viên tự bật ở trang Điểm FAP)
   // Website công bố công tắc qua data-fepass-grade-sync (on|off); tiện ích nhớ để trang FAP biết có được đọc điểm không.
   let lastSync = "";
   const publishSync = () => {
