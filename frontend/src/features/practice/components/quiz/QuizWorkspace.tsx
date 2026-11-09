@@ -16,7 +16,6 @@ import { AnswerPendingBanner } from "./AnswerPendingBanner";
 import { LoadingMoreBanner } from "./LoadingMoreBanner";
 import { ImageViewer } from "./ImageViewer";
 import { QuestionCard } from "./QuestionCard";
-import { ToadTestPanel } from "@/features/practice/components/dev/ToadTestPanel"; // TẠM THỜI: xoá sau khi test cóc
 import type { QuestionViewProps } from "./types";
 
 interface Props {
@@ -103,7 +102,6 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit }: Props)
         )}
         <QuestionCard key={question.number} {...view} nudge={nudge} topic={showTopic ? question.topic : null} topicLoading={showTopic && topicsLabeling} onZoom={() => onZoomChange(true)} />
       </main>
-      <ToadTestPanel quiz={quiz} /> {/* TẠM THỜI: xoá sau khi test cóc */}
 
       {panelOpen && quiz.examId !== null && (
         <ExplainPanel
