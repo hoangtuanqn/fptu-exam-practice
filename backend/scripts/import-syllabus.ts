@@ -21,8 +21,9 @@ const subjectSchema = z.object({
   subjectName: z.string().min(1).max(200),
   syllabusId: z.string().max(20).optional(),
   chapters: z.array(chapterSchema).max(100),
+  credits: z.number().int().min(0).max(29).nullable().optional(),
   minAvgMarkToPass: z.number().min(0).max(10).nullable().optional(), // MinAvgMarkToPass of the syllabus
-  assessments: z.array(z.object({ category: z.string().max(120), weight: z.number().min(0).max(100).nullable(), minScore: z.number().min(0).max(10).nullable() })).max(40).optional(),
+  assessments: z.array(z.object({ category: z.string().transform((t) => t.slice(0, 120)), weight: z.number().min(0).max(100).nullable(), minScore: z.number().min(0).max(10).nullable() })).max(40).optional(),
 });
 const fileSchema = z.object({ subjects: z.array(z.unknown()) });
 
@@ -65,6 +66,7 @@ function readInput(file: string) {
 const grading = (s: SubjectInput) => ({
   ...(s.minAvgMarkToPass !== undefined ? { minPassMark: s.minAvgMarkToPass } : {}),
   ...(s.assessments ? { assessments: s.assessments } : {}),
+  ...(s.credits !== undefined ? { credits: s.credits } : {}),
 });
 
 async function main() {

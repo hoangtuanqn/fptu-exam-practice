@@ -5,13 +5,21 @@
       "date": "2026-11-09",
       "title": "Gợi ý điểm cần đạt theo bảng điểm FAP",
       "highlights": [
-        "Biết cần bao nhiêu điểm thi cuối kỳ để qua từng môn",
+        "Biết GPA, mức xếp loại và điểm cần đạt để qua từng môn",
         "Tự lấy điểm từ FAP qua tiện ích Chrome, chỉ khi bạn bật"
       ],
       "changes": [
         {
           "type": "new",
           "text": "Trang Điểm FAP: cần ≥ bao nhiêu điểm ở bài thi cuối kỳ để qua môn, tính từ điểm thành phần của bạn"
+        },
+        {
+          "type": "new",
+          "text": "Điểm FAP chia theo học kỳ, có điểm trung bình từng kỳ; kỳ này cần trung bình bao nhiêu để đạt Sinh viên Giỏi, Xuất sắc"
+        },
+        {
+          "type": "new",
+          "text": "Môn học lại hoặc học cải thiện vẫn hiện đủ từng lần học, GPA chỉ lấy kết quả đã qua gần nhất"
         },
         {
           "type": "new",

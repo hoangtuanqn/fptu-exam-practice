@@ -15,10 +15,19 @@ export interface SyllabusAssessment {
 }
 
 export const DEFAULT_MIN_PASS = 5;
+export const DEFAULT_FINAL_MIN = 4; // điểm liệt của bài thi cuối kỳ khi chưa có syllabus
 
 const RESIT = /\s*\(\s*resit\s*\)\s*$/i;
 const FINAL = /^(final exam|final|fe|te|theory exam)\b/i;
 const PRACTICAL = /practical|^pe\b/i;
+
+// Tên phần điểm viết tắt/đầy đủ về cùng một dạng để so FAP với syllabus: "TE" = "Theoretical Exam (TE)", "FE" = "Final Exam"...
+const ALIAS: Record<string, string> = { "theoretical exam": "te", "theory exam": "te", "final exam": "fe", "practical exam": "pe" };
+const canonical = (name: string) => {
+  const n = name.toLowerCase().replace(RESIT, "").trim();
+  const short = n.match(/\(([a-z]{2,4})\)$/); // "theoretical exam (te)" -> "te"
+  return short ? short[1]! : (ALIAS[n] ?? n);
+};
 
 const round1Up = (n: number) => Math.ceil(n * 10 - 1e-9) / 10;
 const round2 = (n: number) => Math.round(n * 100) / 100;
@@ -43,6 +52,8 @@ export interface GradeAdvice {
   neededFinal: number | null;
   /** Điểm trung bình hiện tại nếu xét điểm các phần khác đã có (không tính phần chưa thi) */
   assumedOthers: number | null;
+  /** % trọng số của các phần ngoài bài thi cuối kỳ chưa có điểm (được ước lượng bằng assumedOthers) */
+  pendingWeight: number;
   state: AdviceState;
 }
 
@@ -52,7 +63,8 @@ function toPart(items: { group: string; weight: number; score: number | null }[]
   const graded = items.filter((i) => i.score !== null);
   const score = graded.length === items.length && weight > 0 ? items.reduce((n, i) => n + i.weight * (i.score as number), 0) / weight : null;
   const base = items[0]!.group.replace(RESIT, "");
-  const a = assessments.find((x) => x.category.toLowerCase().replace(RESIT, "").trim() === base.toLowerCase());
+  const key = canonical(base);
+  const a = assessments.find((x) => canonical(x.category) === key);
   return { group: base, weight, score: score === null ? null : round2(score), resit, minScore: a?.minScore ?? null };
 }
 
@@ -85,6 +97,8 @@ export function adviseGrade(
   const practicalItems = effective.filter((i) => PRACTICAL.test(i.group));
   const final = toPart(finalItems.map((i) => ({ ...i })), assessments, finalItems.some((i) => i.resit));
   if (final && finalItems.some((i) => i.resit)) final.resit = true;
+  // Điểm liệt: bài thi cuối kỳ dưới 4 là không qua dù trung bình đủ; syllabus ghi mức khác thì theo syllabus
+  if (final && final.minScore === null) final.minScore = DEFAULT_FINAL_MIN;
   const practical = toPart(practicalItems.map((i) => ({ ...i })), assessments, practicalItems.some((i) => i.resit));
 
   const graded = effective.filter((i) => i.score !== null);
@@ -119,7 +133,7 @@ export function adviseGrade(
     else state = neededFinal !== null && neededFinal > 10 ? "impossible" : "resit";
   } else state = "waiting";
 
-  return { minPass, earned: round2(earned), gradedWeight: round2(gradedWeight), final, practical, neededFinal, assumedOthers, state };
+  return { minPass, earned: round2(earned), gradedWeight: round2(gradedWeight), final, practical, neededFinal, assumedOthers, pendingWeight: round2(othersPendingW), state };
 }
 
 /** Điều kiện hoàn thành trong syllabus (">=4", "> 0", "4") -> điểm tối thiểu; không có thì null */
