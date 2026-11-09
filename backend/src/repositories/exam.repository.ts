@@ -75,7 +75,7 @@ export const examRepository = {
   findForSolve: (id: number) =>
     prisma.exam.findUnique({
       where: { id },
-      include: { questions: { orderBy: { number: "asc" }, select: { number: true, name: true, imagePath: true } } },
+      include: { questions: { orderBy: { number: "asc" }, select: { number: true, name: true, imagePath: true, mediaUrl: true } } },
     }),
 
   // Trạng thái đáp án và đáp án từng câu, để giao diện hỏi lại khi AI đang phân tích

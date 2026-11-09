@@ -12,7 +12,10 @@ import { toMeta, type PaginationQuery } from "../utils/pagination";
 import { aiSettingService } from "./ai-setting.service";
 import { aiReady } from "../constants/ai";
 import { solveExam } from "./ai/exam-solver.service";
-import { compactCommentsText } from "./crawler/comments-file.service";
+import { compactCommentsText, replaceQuestionComments } from "./crawler/comments-file.service";
+import { fetchMediaComments } from "./crawler/comment-scraper.service";
+import { createFuoClient } from "./crawler/fuo-client";
+import { crawlerSettingService } from "./crawler-setting.service";
 import { examSolveService } from "./exam-solve.service";
 import { subjectCodeFromTitle } from "../utils/subject-code";
 
@@ -38,8 +41,11 @@ export const adminExamService = {
   },
 
   /**
-   * AI giải lại MỘT câu để admin đối chiếu. Dùng đúng bộ prompt giải đề (base + module môn, đã cache) nên chất lượng như khi giải cả đề,
-   * nhưng chỉ gửi ảnh và bình luận của đúng câu này nên rẻ hơn nhiều. Không ghi DB: trả gợi ý để admin duyệt rồi lưu.
+   * AI giải lại MỘT câu để admin đối chiếu. Trước khi giải, lấy LẠI bình luận của đúng câu này từ FuOverflow (người dùng có thể
+   * đã bình luận thêm) và ghi đè phần của câu đó trong comments.txt. Dùng đúng bộ prompt giải đề (base + module môn, đã cache)
+   * nên chất lượng như khi giải cả đề, nhưng chỉ gửi ảnh và bình luận của đúng câu này nên rẻ hơn nhiều.
+   * Không ghi đáp án vào DB: trả gợi ý để admin duyệt rồi lưu. Không lấy lại được bình luận (hết phiên, mất mạng...) thì vẫn
+   * giải bằng bình luận đã lưu và báo rõ lý do trong `commentsNote`.
    */
   async resolveQuestion(id: number, number: number) {
     const ai = await aiSettingService.get();
@@ -50,14 +56,32 @@ export const adminExamService = {
     if (!q) throw AppError.notFound("Không tìm thấy câu này");
     if (exam.answerSource === "PENDING" || examSolveService.isBusy(id)) throw AppError.conflict("AI đang giải cả đề này, chờ xong rồi giải lại từng câu");
 
-    const raw = await fs.readFile(path.join(storageDir, EXAM_STORAGE_DIR, exam.threadId, "comments.txt"), "utf-8").catch(() => null);
+    const dir = path.join(storageDir, EXAM_STORAGE_DIR, exam.threadId);
+    let refreshed = false;
+    let commentsNote: string | null = null;
+    let commentsCount: number | null = null;
+    if (!q.mediaUrl) commentsNote = "Câu này không có trang bình luận để lấy lại";
+    else {
+      try {
+        const config = await crawlerSettingService.get();
+        if (!config.cookie) throw new Error("Chưa cấu hình cookie FuOverflow (Quản trị → Cấu hình lấy đề)");
+        const comments = await fetchMediaComments(createFuoClient(config), q.mediaUrl);
+        await replaceQuestionComments(dir, { image: { url: "", name: q.name, fileBase: q.name, mediaUrl: q.mediaUrl }, comments });
+        refreshed = true;
+        commentsCount = comments.length;
+      } catch (err) {
+        commentsNote = `Không lấy lại được bình luận: ${(err as Error).message}. Dùng bình luận đã lưu.`;
+      }
+    }
+
+    const raw = await fs.readFile(path.join(dir, "comments.txt"), "utf-8").catch(() => null);
     try {
       const r = await solveExam(ai, {
         title: exam.title,
         commentsText: raw ? compactCommentsText(raw) : null,
         questions: [{ number: q.number, name: q.name, file: path.join(storageDir, q.imagePath) }],
       });
-      return { number, answer: r.answers[0] ?? "", notQuestion: r.notQuestions.includes(number), report: r.report };
+      return { number, answer: r.answers[0] ?? "", notQuestion: r.notQuestions.includes(number), report: r.report, commentsRefreshed: refreshed, commentsCount, commentsNote };
     } catch (err) {
       throw new AppError(`AI chưa giải được câu này: ${(err as Error).message}`);
     }
