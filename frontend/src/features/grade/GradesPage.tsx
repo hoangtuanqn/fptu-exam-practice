@@ -99,9 +99,10 @@ function Detail({ c }: { c: GradeCourse }) {
             </p>
             {fp.mock ? (
               <p>
-                = (1 − {fmt(fp.mockWeight)}) × {fmt(fp.base)} + {fmt(fp.mockWeight)} × {fmt(fp.mock.average)}
-                {fp.value <= fp.floor ? `, không dưới điểm liệt ${fmt(fp.floor)}` : ""}. Trong đó {fmt(fp.base)} là điểm trung bình các phần đã có, {fmt(fp.mock.average)} là trung bình {fp.mock.n} bài thi thử gần nhất trên FePass,{" "}
-                {fmt(fp.mockWeight)} là độ tin vào thi thử = n ÷ (n + 3), tối đa 0,7.
+                Dự đoán dựa {Math.round(fp.mockWeight * 100)}% vào {fp.mock.n} bài thi thử gần nhất trên FePass (trung bình {fmt(fp.mock.average)}) và {100 - Math.round(fp.mockWeight * 100)}% vào điểm các phần đã có ({fmt(fp.base)}).
+                {fp.value <= fp.floor ? ` Không dưới điểm liệt ${fmt(fp.floor)}.` : ""}
+                <br />
+                Công thức: (1 − {fmt(fp.mockWeight)}) × {fmt(fp.base)} + {fmt(fp.mockWeight)} × {fmt(fp.mock.average)} = {fmt(fp.value)}, với tỉ lệ thi thử = n ÷ (n + 3), tối đa 0,7 (n là số bài thi thử).
                 {a.projectedLow !== null && a.projectedHigh !== null ? ` Khoảng dự kiến ${fmt(a.projectedLow)} đến ${fmt(a.projectedHigh)} lấy theo độ lệch của các bài thi thử.` : ""}
               </p>
             ) : (
