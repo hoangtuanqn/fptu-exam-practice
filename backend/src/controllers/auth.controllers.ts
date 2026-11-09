@@ -112,7 +112,8 @@ export const authController = {
     res.json(new ResponseClient({ message: "Đã đăng xuất" }));
   },
 
-  me(req: Request, res: Response) {
-    res.json(new ResponseClient({ data: req.user }));
+  // Đọc mới từ DB (không dùng bản lưu tạm của xác thực) để số dư hiển thị luôn đúng ngay sau khi nạp/trừ
+  async me(req: Request, res: Response) {
+    res.json(new ResponseClient({ data: await userRepository.findById(req.user!.id) }));
   },
 };

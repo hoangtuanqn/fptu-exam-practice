@@ -112,3 +112,10 @@ Lưu ý:
 Nên định kỳ tải thư mục `~/backups` về máy khác. Ảnh đề ở `~/storage` có thể lấy lại bằng cách crawl, nhưng backup cùng lúc cho chắc.
 
 Cổng 8000 không mở ra ngoài (tường lửa chỉ cho 22/80/443); chỉ Nginx gọi vào được.
+
+## Theo dõi truy vấn chậm
+
+- App tự ghi cảnh báo `[db] truy vấn chậm ...` vào log PM2 khi một truy vấn quá 300ms (đổi bằng biến `SLOW_QUERY_MS`). Xem: `pm2 logs fepass-api --lines 200 | grep "\[db\]"`.
+- Số kết nối tối đa của app tới MySQL mặc định 10 (đổi bằng `DB_POOL_SIZE`, hoặc đặt `connection_limit` trong `DATABASE_URL`).
+- Máy mới do `setup-server.sh` dựng đã bật sẵn slow query log của MySQL (ngưỡng 0,5 giây, file `/var/log/mysql/slow.log`). Máy cũ bật tay một lần (cần root):
+  `sudo mysql -e "SET GLOBAL slow_query_log=ON; SET GLOBAL long_query_time=0.5;"` rồi thêm ba dòng `slow_query_log`, `long_query_time`, `slow_query_log_file` vào `/etc/mysql/mysql.conf.d/99-lowmem.cnf` để giữ sau khi khởi động lại.

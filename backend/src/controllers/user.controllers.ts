@@ -12,8 +12,8 @@ import type { PaginationQuery } from "../utils/pagination";
 
 // Bảng điều khiển người dùng: chỉ thao tác trên chính tài khoản đang đăng nhập (req.user)
 export const userController = {
-  profile(req: Request, res: Response) {
-    res.json(new ResponseClient({ data: req.user }));
+  async profile(req: Request, res: Response) {
+    res.json(new ResponseClient({ data: await userRepository.findById(req.user!.id) }));
   },
 
   async updateProfile(req: Request, res: Response) {

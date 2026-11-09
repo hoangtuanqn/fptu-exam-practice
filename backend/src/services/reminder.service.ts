@@ -46,6 +46,29 @@ export const reminderService = {
   },
 
   /**
+   * Trong số `userIds`, ai có câu đến hạn ôn và hôm nay chưa học. Trả map userId -> số câu đến hạn.
+   * Gom theo lô (2 truy vấn cho mỗi 500 người) thay vì hỏi riêng từng người.
+   */
+  async collectDue(userIds: number[], now = Date.now()) {
+    const today = vnDate(now);
+    const result = new Map<number, number>();
+    for (let i = 0; i < userIds.length; i += 500) {
+      const ids = userIds.slice(i, i + 500);
+      const [due, studied] = await Promise.all([
+        prisma.reviewItem.groupBy({
+          by: ["userId"],
+          where: { userId: { in: ids }, mastered: false, nextReviewAt: { lte: new Date(now) }, exam: { answerSource: { in: ["AI", "MANUAL"] } } },
+          _count: { _all: true },
+        }),
+        prisma.studyDay.findMany({ where: { userId: { in: ids }, day: today, OR: [{ attempts: { gt: 0 } }, { reviews: { gt: 0 } }] }, select: { userId: true } }),
+      ]);
+      const done = new Set(studied.map((s) => s.userId));
+      for (const d of due) if (!done.has(d.userId)) result.set(d.userId, d._count._all);
+    }
+    return result;
+  },
+
+  /**
    * Chạy mỗi ngày: gửi cho người đã bật nhắc, hôm nay chưa nhận thư, có câu đến hạn ôn và hôm nay CHƯA học
    * (đã học rồi thì không nhắc nữa). Trả số thư đã gửi.
    */
@@ -57,14 +80,12 @@ export const reminderService = {
       select: { id: true, email: true, fullName: true, examDate: true },
     });
 
+    const dueOf = await this.collectDue(users.map((u) => u.id), now);
     let sent = 0;
     for (const u of users) {
       try {
-        const [due, day] = await Promise.all([
-          prisma.reviewItem.count({ where: { userId: u.id, mastered: false, nextReviewAt: { lte: new Date(now) }, exam: { answerSource: { in: ["AI", "MANUAL"] } } } }),
-          prisma.studyDay.findUnique({ where: { userId_day: { userId: u.id, day: today } }, select: { attempts: true, reviews: true } }),
-        ]);
-        if (due === 0 || (day && (day.attempts > 0 || day.reviews > 0))) continue;
+        const due = dueOf.get(u.id);
+        if (!due) continue; // không có câu đến hạn, hoặc hôm nay đã học rồi
 
         const daysLeft = u.examDate ? Math.round((u.examDate.getTime() - today.getTime()) / DAY_MS) : null;
         await mailService.sendReviewReminder(u.email, {

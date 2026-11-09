@@ -5,6 +5,7 @@ import { prisma } from "./configs/prisma";
 import { startCrawlWorker } from "./jobs/crawl.worker";
 import { knowledgeService } from "./services/knowledge.service";
 import { examSolveService } from "./services/exam-solve.service";
+import { examRepository } from "./repositories/exam.repository";
 import { initRealtime } from "./realtime/socket.server";
 import { startSepayCron } from "./jobs/sepay.cron";
 import { startReminderCron } from "./jobs/reminder.cron";
@@ -16,6 +17,8 @@ server.listen(env.PORT, () => {
   console.log(`Server chạy tại http://localhost:${env.PORT}`);
   // DB chưa sẵn sàng thì API vẫn lên, chỉ cron không khởi động được
   startSepayCron().catch((err) => console.error("Không khởi động được sepay cron:", err.message));
+  // Đề cũ chưa có mã môn (cột thêm sau): điền một lần, các lần khởi động sau không còn gì để làm
+  examRepository.backfillSubjectCodes().then((n) => n > 0 && console.log(`[db] đã điền mã môn cho ${n} đề`)).catch((err) => console.error("Không điền được mã môn:", err.message));
   startSessionCleanup();
   startReminderCron();
   // Nạp tài liệu hướng dẫn của chatbot (chỉ tạo embedding cho mục mới/đã sửa nên các lần khởi động sau gần như không tốn gì)

@@ -14,6 +14,7 @@ import { aiReady } from "../constants/ai";
 import { solveExam } from "./ai/exam-solver.service";
 import { compactCommentsText } from "./crawler/comments-file.service";
 import { examSolveService } from "./exam-solve.service";
+import { subjectCodeFromTitle } from "../utils/subject-code";
 
 export const adminExamService = {
   async list(query: PaginationQuery) {
@@ -122,7 +123,7 @@ export const adminExamService = {
 
   async rename(adminId: number, id: number, { title }: RenameExamBody) {
     if (!(await examRepository.findByThreadIdOfId(id))) throw AppError.notFound("Không tìm thấy đề");
-    await prisma.exam.update({ where: { id }, data: { title } });
+    await prisma.exam.update({ where: { id }, data: { title, subjectCode: subjectCodeFromTitle(title) } });
     console.log(`[admin] #${adminId} đổi tên đề #${id}`);
     return this.detail(id);
   },

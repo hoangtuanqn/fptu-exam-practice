@@ -3,6 +3,7 @@ import { prisma } from "../configs/prisma";
 import { parseSiteTime } from "../utils/html";
 import type { Db } from "./wallet.repository";
 import { toSkipTake, type PaginationQuery } from "../utils/pagination";
+import { subjectCodeFromTitle } from "../utils/subject-code";
 
 // PENDING = AI đang phân tích đáp án (đề đã dùng được, chỉ chưa chấm được)
 export type AnswerSource = "PENDING" | "FAILED" | "DEFAULT" | "AI" | "MANUAL";
@@ -127,6 +128,7 @@ export const examRepository = {
       data: {
         threadId: data.threadId,
         title: data.title,
+        subjectCode: subjectCodeFromTitle(data.title),
         sourceUrl: data.sourceUrl,
         author: data.author,
         postedAt: parseSiteTime(data.postedAt),
@@ -141,14 +143,14 @@ export const examRepository = {
     prisma.examQuestion.createMany({ data: questions.map((q) => ({ ...q, examId })), skipDuplicates: true }),
 
   // Làm mới đề: ghi đè từng câu theo số câu (giữ nguyên id đề và đáp án cũ cho tới khi giải xong lại)
+  // Một câu INSERT ... ON DUPLICATE KEY cho cả đề (thay vì mỗi câu một lượt upsert): câu đã có chỉ đổi ảnh/tên, giữ đáp án cũ
   async upsertQuestions(examId: number, questions: NewExam["questions"]) {
-    for (const { answer, ...q } of questions) {
-      await prisma.examQuestion.upsert({
-        where: { examId_number: { examId, number: q.number } },
-        update: q,
-        create: { ...q, answer, examId },
-      });
-    }
+    if (questions.length === 0) return;
+    const rows = questions.map((q) => Prisma.sql`(${examId}, ${q.number}, ${q.name}, ${q.imagePath}, ${q.sourceImage}, ${q.mediaUrl ?? null}, ${q.answer})`);
+    await prisma.$executeRaw`
+      INSERT INTO exam_questions (exam_id, number, name, image_path, source_image, media_url, answer)
+      VALUES ${Prisma.join(rows)} AS new
+      ON DUPLICATE KEY UPDATE name = new.name, image_path = new.image_path, source_image = new.source_image, media_url = COALESCE(new.media_url, exam_questions.media_url)`;
   },
 
   // Làm mới xong phần lấy dữ liệu: cập nhật thông tin đề, bỏ các câu thừa (thread bớt ảnh) và lời giải thích cũ
@@ -158,6 +160,7 @@ export const examRepository = {
         where: { id: examId },
         data: {
           title: data.title,
+          subjectCode: subjectCodeFromTitle(data.title),
           sourceUrl: data.sourceUrl,
           author: data.author,
           postedAt: parseSiteTime(data.postedAt),
@@ -168,6 +171,18 @@ export const examRepository = {
       prisma.examQuestion.deleteMany({ where: { examId, number: { gt: data.total } } }),
       prisma.questionExplanation.deleteMany({ where: { examId } }),
     ]),
+
+  // Điền mã môn cho các đề cũ chưa có (chạy lúc khởi động, an toàn khi chạy lại). Đề không có mã trong tên vẫn để null.
+  async backfillSubjectCodes() {
+    const rows = await prisma.exam.findMany({ where: { subjectCode: null }, select: { id: true, title: true } });
+    const byCode = new Map<string, number[]>();
+    for (const r of rows) {
+      const code = subjectCodeFromTitle(r.title);
+      if (code) (byCode.get(code) ?? byCode.set(code, []).get(code)!).push(r.id);
+    }
+    for (const [code, ids] of byCode) await prisma.exam.updateMany({ where: { id: { in: ids } }, data: { subjectCode: code } });
+    return [...byCode.values()].reduce((n, ids) => n + ids.length, 0);
+  },
 
   countQuestions: (examId: number) => prisma.examQuestion.count({ where: { examId } }),
 
@@ -192,6 +207,7 @@ export const examRepository = {
           data: {
             threadId: data.threadId,
             title: data.title,
+            subjectCode: subjectCodeFromTitle(data.title),
             sourceUrl: data.sourceUrl,
             author: data.author,
             postedAt: parseSiteTime(data.postedAt),
@@ -211,8 +227,10 @@ export const examRepository = {
   // `references`: số câu mà AI cho là tài liệu tham khảo (trang công thức...). Mỗi lần giải đặt lại cờ cho cả đề.
   updateAnswers: (examId: number, answers: string[], source: AnswerSource, report: string | null, references: number[] = []) =>
     prisma.$transaction(async (tx) => {
-      for (const [i, answer] of answers.entries()) {
-        await tx.examQuestion.updateMany({ where: { examId, number: i + 1 }, data: { answer } });
+      if (answers.length) {
+        // Một câu UPDATE ... CASE cho cả đề thay vì mỗi câu một lượt ghi (giữ khoá ngắn hơn)
+        const cases = answers.map((a, i) => Prisma.sql`WHEN ${i + 1} THEN ${a}`);
+        await tx.$executeRaw`UPDATE exam_questions SET answer = CASE number ${Prisma.join(cases, " ")} END WHERE exam_id = ${examId} AND number <= ${answers.length}`;
       }
       await tx.examQuestion.updateMany({ where: { examId, number: { notIn: references } }, data: { isReference: false } });
       if (references.length) await tx.examQuestion.updateMany({ where: { examId, number: { in: references } }, data: { isReference: true } });
