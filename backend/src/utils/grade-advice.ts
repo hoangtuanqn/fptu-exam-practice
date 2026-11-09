@@ -15,6 +15,7 @@ export interface SyllabusAssessment {
 }
 
 export const DEFAULT_MIN_PASS = 5;
+export const DEFAULT_FINAL_MIN = 4; // điểm liệt của bài thi cuối kỳ khi chưa có syllabus
 
 const RESIT = /\s*\(\s*resit\s*\)\s*$/i;
 const FINAL = /^(final exam|final|fe|te|theory exam)\b/i;
@@ -94,6 +95,8 @@ export function adviseGrade(
   const practicalItems = effective.filter((i) => PRACTICAL.test(i.group));
   const final = toPart(finalItems.map((i) => ({ ...i })), assessments, finalItems.some((i) => i.resit));
   if (final && finalItems.some((i) => i.resit)) final.resit = true;
+  // Điểm liệt: bài thi cuối kỳ dưới 4 là không qua dù trung bình đủ; syllabus ghi mức khác thì theo syllabus
+  if (final && final.minScore === null) final.minScore = DEFAULT_FINAL_MIN;
   const practical = toPart(practicalItems.map((i) => ({ ...i })), assessments, practicalItems.some((i) => i.resit));
 
   const graded = effective.filter((i) => i.score !== null);
