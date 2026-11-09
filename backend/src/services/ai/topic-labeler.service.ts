@@ -2,6 +2,7 @@ import path from "node:path";
 import { prisma } from "../../configs/prisma";
 import { storageDir } from "../../configs/env";
 import { aiReady } from "../../constants/ai";
+import { realtimeHub } from "../../realtime/hub";
 import { subjectCodeFromTitle } from "../../utils/subject-code";
 import { createLimiter } from "../../utils/limiter";
 import { buildTopicItems, type TopicItem } from "../../utils/topic-items";
@@ -69,7 +70,61 @@ async function askBatch(model: { apiKey: string; model: string }, items: TopicIt
   return out.labels ?? [];
 }
 
+// Gắn chủ đề chạy nền khi người dùng mở đề còn thiếu nhãn: mỗi đề chỉ chạy một lần tại một thời điểm, và nghỉ một lúc nếu không gắn được (tránh gọi AI lặp lại)
+const claimed = new Set<number>(); // giữ chỗ ngay từ lúc vào ensure (hai lần mở đề cùng lúc chỉ chạy một)
+const running = new Set<number>(); // đã qua kiểm tra và đang gọi AI
+const retryAt = new Map<number, number>();
+const RETRY_PARTIAL_MS = 10 * 60_000;
+const RETRY_SKIPPED_MS = 30 * 60_000;
+
+async function findSubject(title: string) {
+  const code = subjectCodeFromTitle(title);
+  if (!code) return { code, subject: null };
+  // Mã trong tiêu đề có thể thiếu/thừa chữ cuối (SWE201 và SWE201c): thử khớp đúng, rồi khớp theo phần số
+  const include = { chapters: { orderBy: { number: "asc" as const } } };
+  const subject = (await prisma.subject.findUnique({ where: { code }, include })) ?? (await prisma.subject.findFirst({ where: { code: { startsWith: code.replace(/[A-Z]$/, "") } }, include }));
+  return { code, subject };
+}
+
 export const topicLabelerService = {
+  isRunning: (examId: number) => running.has(examId),
+
+  /**
+   * Gọi khi mở đề: nếu còn câu chưa có chủ đề và môn đã có syllabus thì gắn nền, báo "running"/"done" qua realtime.
+   * Không bao giờ ném lỗi và không chờ kết quả (không làm chậm việc mở đề).
+   */
+  async ensure(examId: number): Promise<void> {
+    if (claimed.has(examId) || (retryAt.get(examId) ?? 0) > Date.now()) return;
+    claimed.add(examId);
+    try {
+      const exam = await prisma.exam.findUnique({ where: { id: examId }, select: { title: true, answerSource: true } });
+      if (!exam || exam.answerSource === "PENDING") return; // đang giải đáp án: xong sẽ tự gắn chủ đề
+      if ((await prisma.examQuestion.count({ where: { examId, isReference: false, topic: null } })) === 0) return;
+      if (!(await findSubject(exam.title)).subject || !aiReady(await aiSettingService.get())) return;
+
+      running.add(examId);
+      realtimeHub.publishExamTopics(examId, "running");
+      let topics: { number: number; topic: string }[] = [];
+      try {
+        const r = await this.labelExam(examId);
+        topics = r.labels.flatMap((l) => (l.topic ? [{ number: l.number, topic: l.topic }] : []));
+        if (r.skipped) retryAt.set(examId, Date.now() + RETRY_SKIPPED_MS);
+        else if (topics.length < r.labels.length) retryAt.set(examId, Date.now() + RETRY_PARTIAL_MS);
+      } catch (err) {
+        retryAt.set(examId, Date.now() + RETRY_PARTIAL_MS);
+        console.error(`[ai] gắn chủ đề nền đề ${examId} lỗi: ${(err as Error).message}`);
+      } finally {
+        running.delete(examId);
+        if (retryAt.size > 2000) retryAt.clear();
+        realtimeHub.publishExamTopics(examId, "done", topics);
+      }
+    } catch (err) {
+      console.error(`[ai] gắn chủ đề nền lỗi: ${(err as Error).message}`);
+    } finally {
+      claimed.delete(examId);
+    }
+  },
+
   /** Gắn chủ đề cho các câu của một đề, dựa trên chương/mục của syllabus môn học (bảng subjects). */
   async labelExam(examId: number, opts: LabelOptions = {}): Promise<LabelResult> {
     const exam = await prisma.exam.findUnique({
@@ -82,12 +137,7 @@ export const topicLabelerService = {
     const base: LabelResult = { examId, title: exam?.title ?? "", subject: null, labels: [] };
     if (!exam) return { ...base, skipped: "không thấy đề" };
 
-    const code = subjectCodeFromTitle(exam.title);
-    // Mã trong tiêu đề có thể thiếu/thừa chữ cuối (SWE201 và SWE201c): thử khớp đúng, rồi khớp theo phần số
-    const subject = code
-      ? ((await prisma.subject.findUnique({ where: { code }, include: { chapters: { orderBy: { number: "asc" } } } })) ??
-        (await prisma.subject.findFirst({ where: { code: { startsWith: code.replace(/[A-Z]$/, "") } }, include: { chapters: { orderBy: { number: "asc" } } } })))
-      : null;
+    const { code, subject } = await findSubject(exam.title);
     if (!subject) return { ...base, skipped: code ? `môn ${code} chưa có trong bảng subjects` : "không nhận ra mã môn trong tiêu đề" };
     base.subject = subject.code;
 
