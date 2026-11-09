@@ -1,6 +1,29 @@
 {
   "web": [
     {
+      "version": "1.7.0",
+      "date": "2026-11-09",
+      "title": "Gợi ý điểm cần đạt theo bảng điểm FAP",
+      "highlights": [
+        "Biết cần bao nhiêu điểm thi cuối kỳ để qua từng môn",
+        "Tự lấy điểm từ FAP qua tiện ích Chrome, chỉ khi bạn bật"
+      ],
+      "changes": [
+        {
+          "type": "new",
+          "text": "Trang Điểm FAP: cần ≥ bao nhiêu điểm ở bài thi cuối kỳ để qua môn, tính từ điểm thành phần của bạn"
+        },
+        {
+          "type": "new",
+          "text": "Môn đã thi lại thì tính điểm thi lại; môn có thi thực hành được tính vào gợi ý"
+        },
+        {
+          "type": "new",
+          "text": "Đồng bộ điểm FAP mặc định tắt, tắt là xoá hết điểm đã lưu"
+        }
+      ]
+    },
+    {
       "version": "1.6.0",
       "date": "2026-11-08",
       "title": "Học thông minh hơn: Kho đề, Câu hay ra, theo chương",
@@ -232,6 +255,20 @@
     }
   ],
   "extension": [
+    {
+      "version": "1.4.0",
+      "date": "2026-11-09",
+      "title": "Đồng bộ điểm FAP",
+      "highlights": [
+        "Đọc Báo cáo điểm FAP của bạn để gợi ý điểm cần đạt"
+      ],
+      "changes": [
+        {
+          "type": "new",
+          "text": "Đọc Báo cáo điểm trên FAP khi bạn bật đồng bộ điểm; nhắc hoàn thành kiểm tra Cloudflare và đăng nhập FAP"
+        }
+      ]
+    },
     {
       "version": "1.3.0",
       "date": "2026-11-08",

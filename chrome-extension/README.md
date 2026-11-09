@@ -29,9 +29,20 @@ Sửa code xong chỉ cần bấm nút tải lại (⟳) ở thẻ tiện ích t
 Liên kết nút trỏ tới: `https://fepass.top/?link=<link bài>&confirm=1&src=ext`.
 Phía website (`frontend/src/features/exam-import/components/LinkImport.tsx`) đọc `link` và `confirm=1` để điền sẵn link rồi mở hộp xác nhận. Trang **không tự lấy đề**: luôn chờ người dùng bấm xác nhận.
 
+## Đồng bộ điểm FAP (từ bản 1.4.0)
+
+Chỉ hoạt động khi sinh viên tự bật **Đồng bộ điểm FAP** ở trang *Điểm FAP* trên fepass.top (mặc định tắt).
+
+- `fap-parser.js`: phân tích trang `fap.fpt.edu.vn/Report/Grade` (học kỳ, môn, bảng điểm, trạng thái). Hàm thuần, kiểm thử được với HTML lưu sẵn.
+- `fap.js`: chạy trên `fap.fpt.edu.vn`. Dùng phiên đăng nhập FAP của chính sinh viên để đọc điểm từng môn (có nghỉ giữa các yêu cầu), lưu vào `chrome.storage.local`. Gặp trang Cloudflare hoặc trang đăng nhập thì nhắc sinh viên hoàn thành kiểm tra, đăng nhập rồi mở lại Báo cáo điểm.
+- `site.js`: cầu nối với website. Website công bố công tắc qua `data-fepass-grade-sync`; tiện ích trả điểm qua sự kiện `fepass:grades` (chuỗi JSON) và website đang đăng nhập tự gửi lên `POST /grades/sync`. Tiện ích không giữ token, không tự gọi API bằng tài khoản người dùng.
+- Tắt công tắc: tiện ích xoá điểm đã đọc, server xoá điểm đã lưu.
+
+Điểm cần đạt tính ở backend (`backend/src/utils/grade-advice.ts`) từ điểm thành phần, trọng số, `MinAvgMarkToPass` và điều kiện của bài thi cuối kỳ lấy từ syllabus (crawler `tools/flm-crawler`). Phần thi lại (Resit) thay cho lần trước.
+
 ## Quyền riêng tư
 
-Tiện ích không đọc nội dung bài viết ngoài tiêu đề/nhãn, không lưu tài khoản hay mật khẩu, không gửi dữ liệu người dùng đi đâu. Chỉ gọi đúng một endpoint công khai để lấy giá.
+Tiện ích không đọc nội dung bài viết ngoài tiêu đề/nhãn, không lưu tài khoản hay mật khẩu. Trên FuOverflow chỉ gọi một endpoint công khai để lấy giá. Điểm FAP chỉ được đọc khi sinh viên bật đồng bộ, và chỉ gửi lên tài khoản fepass.top của chính họ.
 
 ## Chạy thử với máy local
 

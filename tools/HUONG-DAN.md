@@ -5,7 +5,7 @@ Có **hai extension nội bộ** trong thư mục `tools/`. Chúng chạy trên 
 | Extension | Lấy gì | Từ đâu | File JSON | Lệnh nhập vào DB |
 |---|---|---|---|---|
 | `tools/fuo-crawler` | **Danh sách đề FE** của từng môn (tên đề, ngày đăng). Không tải ảnh | fuoverflow.com | `fuo-catalog-YYYY-MM-DD.json` | `npm run import:fuo-catalog` |
-| `tools/flm-crawler` | **Syllabus** của từng môn (tên môn, các chương, chủ đề) | flm.fpt.edu.vn (cần đăng nhập FLM) | `flm-syllabus-YYYY-MM-DD.json` | `npm run import:syllabus` |
+| `tools/flm-crawler` | **Syllabus** của từng môn (tên môn, các chương, chủ đề, điểm trung bình tối thiểu để qua môn và các phần đánh giá) | flm.fpt.edu.vn (cần đăng nhập FLM) | `flm-syllabus-YYYY-MM-DD.json` | `npm run import:syllabus` |
 
 Toàn bộ luồng:
 ```
@@ -86,7 +86,7 @@ Chạy lại nhiều lần được: bài đã có thì cập nhật, bài mới
 
 ## 3. Lấy syllabus FLM (extension `flm-crawler`)
 
-Dùng khi nhập môn mới hoặc syllabus đổi (hiếm). Syllabus cho biết **chương và chủ đề** của từng môn, để gắn chủ đề cho câu hỏi và hiện trang SEO của môn.
+Dùng khi nhập môn mới hoặc syllabus đổi (hiếm). Syllabus cho biết **chương và chủ đề** của từng môn, để gắn chủ đề cho câu hỏi và hiện trang SEO của môn. Từ bản này file còn có `minAvgMarkToPass` và `assessments` (điều kiện bài thi cuối kỳ) để gợi ý điểm cần đạt cho sinh viên đã bật đồng bộ điểm FAP; nhập lại syllabus các môn để có số liệu này.
 
 1. Đăng nhập https://flm.fpt.edu.vn ở một tab (FLM chặn máy chủ nên bắt buộc dùng trình duyệt của bạn).
 2. Bấm biểu tượng extension **Lấy syllabus từ FLM**, tab công cụ mở ra.

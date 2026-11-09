@@ -26,4 +26,28 @@
 
   publish();
   new MutationObserver(publish).observe(root, { attributes: true, attributeFilter: ["data-fepass-auth", "data-fepass-user"] });
+
+  // ---- Đồng bộ điểm FAP (chỉ khi sinh viên tự bật ở trang Điểm FAP)
+  // Website công bố công tắc qua data-fepass-grade-sync (on|off); tiện ích nhớ để trang FAP biết có được đọc điểm không.
+  let lastSync = "";
+  const publishSync = () => {
+    const v = root.dataset.fepassGradeSync;
+    if (v !== "on" && v !== "off") return;
+    if (v === lastSync) return;
+    lastSync = v;
+    chrome.storage.local.set({ gradeSync: { enabled: v === "on", origin: location.origin, at: Date.now() } });
+    if (v === "off") chrome.storage.local.remove("fapGrades"); // tắt đồng bộ thì xoá luôn điểm đã đọc trong tiện ích
+  };
+  publishSync();
+  new MutationObserver(publishSync).observe(root, { attributes: true, attributeFilter: ["data-fepass-grade-sync"] });
+
+  // Trang web xin điểm đã đọc: trả lại dưới dạng chuỗi JSON (website tự gửi lên tài khoản của chính sinh viên)
+  const sendGrades = async () => {
+    const { fapGrades } = await chrome.storage.local.get("fapGrades");
+    document.dispatchEvent(new CustomEvent("fepass:grades", { detail: JSON.stringify(fapGrades || null) }));
+  };
+  document.addEventListener("fepass:grades-request", sendGrades);
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === "local" && changes.fapGrades) sendGrades();
+  });
 })();

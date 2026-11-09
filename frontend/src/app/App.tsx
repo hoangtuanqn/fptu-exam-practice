@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
-import { Crown, Flame, Layers, NotebookPen, Download, BookOpen, Gift, History, MessageSquareWarning, UserPlus, ListChecks, LayoutDashboard, UserRound, Wallet } from "lucide-react";
+import { Crown, Flame, Layers, NotebookPen, Download, BookOpen, Gift, History, MessageSquareWarning, UserPlus, ListChecks, GraduationCap, LayoutDashboard, UserRound, Wallet } from "lucide-react";
 import { PanelLayout, type NavItem } from "@/shared/layout/PanelLayout";
 import { Loading } from "@/shared/ui/Feedback";
 import LoginPage from "@/features/auth/pages/LoginPage";
@@ -45,6 +45,7 @@ const PeDownloadPage = lazy(() => import("@/features/pe/PeDownloadPage"));
 const FeaturesPage = lazy(() => import("@/features/landing/FeaturesPage"));
 const ChangelogPage = lazy(() => import("@/features/changelog/ChangelogPage"));
 const PlanPage = lazy(() => import("@/features/plan/PlanPage"));
+const GradesPage = lazy(() => import("@/features/grade/GradesPage"));
 const ProfilePage = lazy(() => import("@/features/account/pages/ProfilePage"));
 
 const AttemptsPage = lazy(() => import("@/features/history/pages/AttemptsPage"));
@@ -60,6 +61,7 @@ const ACCOUNT_NAV: NavItem[] = [
   { to: "/account/frequent", label: "Câu hay ra", icon: Flame, group: "Ôn tập" },
   { to: "/account/attempts", label: "Lịch sử làm bài", icon: ListChecks, group: "Kết quả" },
   { to: "/account/reports", label: "Báo cáo đáp án", icon: MessageSquareWarning, group: "Kết quả" },
+  { to: "/account/grades", label: "Điểm FAP", icon: GraduationCap, group: "Kết quả" },
   { to: "/pro", label: "Gói Pro", icon: Crown, group: "Ví và Pro" },
   { to: "/account/deposit", label: "Nạp credit", icon: Wallet, group: "Ví và Pro" },
   { to: "/account/transactions", label: "Lịch sử giao dịch", icon: History, group: "Ví và Pro" },
@@ -129,6 +131,7 @@ export default function App() {
             <Route path="review/practice" element={<ReviewPracticePage />} />
             <Route path="pe" element={<PeDownloadPage />} />
             <Route path="reports" element={<MyReportsPage />} />
+            <Route path="grades" element={<GradesPage />} />
             <Route path="referral" element={<ReferralPage />} />
             <Route path="giftcode" element={<GiftCodePage />} />
             <Route path="transactions" element={<TransactionsPage />} />

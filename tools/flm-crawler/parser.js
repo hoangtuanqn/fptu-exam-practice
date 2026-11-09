@@ -91,6 +91,22 @@
     return chapters;
   }
 
+  // Số đầu tiên trong cột Completion Criteria (">=4" -> 4, ">0" -> 0); không có số thì null
+  const minScoreOf = (criteria) => {
+    const m = String(criteria || "").match(/(\d+(?:[.,]\d+)?)/);
+    return m ? Number(m[1].replace(",", ".")) : null;
+  };
+
+  // Bảng Assessment của syllabus: loại điểm, trọng số (%) và điểm tối thiểu của từng phần
+  function parseAssessments(doc) {
+    return tableRows(doc.querySelector("#gvAssessment"))
+      .map((r) => {
+        const w = clean(r["Weight"]).match(/(\d+(?:[.,]\d+)?)\s*%/);
+        return { category: clean(r["Category"]), weight: w ? Number(w[1].replace(",", ".")) : null, minScore: minScoreOf(r["Completion Criteria"]) };
+      })
+      .filter((a) => a.category);
+  }
+
   // Chỉ lấy phần cần dùng: mã môn, tên môn, và các chương kèm chủ đề (suy ra từ cột Topic của lịch học)
   function parseDetail(doc) {
     const info = {};
@@ -107,6 +123,12 @@
       subjectCode: info["Subject Code"] || "",
       subjectName: info["Course Name English"] || info["Syllabus Name"] || "",
       chapters: deriveChapters(sessions),
+      // Điểm trung bình tối thiểu để qua môn (null nếu syllabus không ghi) và các phần đánh giá
+      minAvgMarkToPass: (() => {
+        const n = parseFloat(String(info["MinAvgMarkToPass"] || "").replace(",", "."));
+        return Number.isFinite(n) ? n : null;
+      })(),
+      assessments: parseAssessments(doc),
     };
   }
 

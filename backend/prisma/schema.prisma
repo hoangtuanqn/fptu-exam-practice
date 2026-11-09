@@ -55,6 +55,8 @@ model User {
   planPurchases      PlanPurchase[]
   reviewItems        ReviewItem[]
   studyDays          StudyDay[]
+  gradeSetting       UserGradeSetting?
+  grades             UserGrade[]
   referredBy         User?                @relation("Referral", fields: [referredById], references: [id], onDelete: SetNull)
   referrals          User[]               @relation("Referral")
   rewardsAsReferrer  ReferralReward[]     @relation("RewardReferrer")
@@ -662,6 +664,8 @@ model Subject {
   code       String   @unique @db.VarChar(20)
   name       String   @db.VarChar(200)
   syllabusId String?  @map("syllabus_id") @db.VarChar(20)
+  minPassMark Decimal? @map("min_pass_mark") @db.Decimal(3, 1) // MinAvgMarkToPass of the syllabus (null = unknown, assume 5)
+  assessments Json?    // syllabus assessment list: [{category, type, weight, minScore}]
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 
@@ -696,4 +700,36 @@ model FuoThread {
 
   @@index([subjectCode, postedAt])
   @@map("fuo_threads")
+}
+
+// Opt-in to sync FAP grades (off by default; turning it off deletes the synced grades)
+model UserGradeSetting {
+  userId   Int       @id @map("user_id")
+  enabled  Boolean   @default(false)
+  syncedAt DateTime? @map("synced_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_grade_settings")
+}
+
+// One course of one student as shown on the FAP grade report; components keeps the rows of the mark sheet
+model UserGrade {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  courseId    String   @map("course_id") @db.VarChar(40) // FAP course id
+  subjectCode String   @map("subject_code") @db.VarChar(20)
+  subjectName String   @map("subject_name") @db.VarChar(200)
+  termName    String   @map("term_name") @db.VarChar(40)
+  classCode   String   @map("class_code") @db.VarChar(60)
+  status      String   @db.VarChar(12) // studying | passed | failed | unknown
+  average     Decimal? @db.Decimal(4, 2)
+  components  Json
+  syncedAt    DateTime @default(now()) @map("synced_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@index([userId, subjectCode])
+  @@map("user_grades")
 }
