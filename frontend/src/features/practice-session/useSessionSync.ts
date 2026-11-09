@@ -30,11 +30,17 @@ export function useSessionSync(quiz: Quiz) {
     } as unknown as SessionState,
   };
 
-  const flush = useCallback((submit = false, keepalive = false) => {
+  // Dấu của lần lưu thành công gần nhất (không tính thời gian): lần lưu theo thay đổi mà nội dung y hệt thì bỏ qua, đỡ gửi thừa
+  const savedSig = useRef<string | null>(null);
+  const sigOf = (st: SessionState) => JSON.stringify([st.answers, st.checked, st.flagged, st.current]);
+
+  const flush = useCallback((submit = false, keepalive = false, onlyIfChanged = false) => {
     const { sessionId: id, state } = latest.current;
     if (id === null || !state) return Promise.resolve();
+    const sig = `${id}:${sigOf(state)}`;
+    if (onlyIfChanged && savedSig.current === sig) return Promise.resolve();
     return sessionApi.save(id, state, submit, keepalive).then(
-      () => undefined,
+      () => void (savedSig.current = sig),
       () => undefined, // mất mạng thoáng qua: lần lưu sau sẽ bù
     );
   }, []);
@@ -77,13 +83,14 @@ export function useSessionSync(quiz: Quiz) {
   // Lưu sau mỗi thay đổi (gộp các lần bấm liên tiếp)
   useEffect(() => {
     if (sessionId === null || submitted) return;
-    const t = setTimeout(() => void flush(), SAVE_DELAY_MS);
+    const t = setTimeout(() => void flush(false, false, true), SAVE_DELAY_MS);
     return () => clearTimeout(t);
   }, [sessionId, submitted, quiz.answers, quiz.checked, quiz.flagged, quiz.current, flush]);
 
   useEffect(() => {
     if (sessionId === null || submitted) return;
-    const t = setInterval(() => void flush(), HEARTBEAT_MS);
+    // Tab đang ẩn thì không cần nhịp lưu: lúc ẩn đã lưu nốt (visibilitychange bên dưới)
+    const t = setInterval(() => document.visibilityState === "visible" && void flush(), HEARTBEAT_MS);
     return () => clearInterval(t);
   }, [sessionId, submitted, flush]);
 
