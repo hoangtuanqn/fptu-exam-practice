@@ -57,15 +57,37 @@ export const gradeService = {
     const [setting, rows] = await Promise.all([this.setting(userId), prisma.userGrade.findMany({ where: { userId }, orderBy: [{ syncedAt: "desc" }, { id: "desc" }] })]);
     const subjects = await prisma.subject.findMany({ where: { code: { in: [...new Set(rows.map((r) => r.subjectCode))] } }, select: { code: true, minPassMark: true, assessments: true, credits: true } });
     const byCode = new Map(subjects.map((s) => [s.code, s]));
-    const report = buildGpaReport(rows.map((r) => ({ courseId: r.courseId, subjectCode: r.subjectCode, termName: r.termName, status: r.status, average: num(r.average), credits: byCode.get(r.subjectCode)?.credits ?? null })));
+    const advices = new Map(
+      rows.map((r) => {
+        const subject = byCode.get(r.subjectCode);
+        return [
+          r.courseId,
+          adviseGrade(r.components as unknown as GradeComponent[], {
+            minPass: num(subject?.minPassMark ?? null),
+            assessments: (subject?.assessments ?? null) as SyllabusAssessment[] | null,
+            fapStatus: r.status,
+          }),
+        ] as const;
+      }),
+    );
+    const report = buildGpaReport(
+      rows.map((r) => {
+        const a = advices.get(r.courseId)!;
+        return {
+          courseId: r.courseId,
+          subjectCode: r.subjectCode,
+          termName: r.termName,
+          status: r.status,
+          average: num(r.average),
+          credits: byCode.get(r.subjectCode)?.credits ?? null,
+          projected: r.status === "studying" && a.projected !== null ? { score: a.projected, pass: a.projectedPass } : null,
+        };
+      }),
+    );
     const courses = rows.map((r) => {
       const subject = byCode.get(r.subjectCode);
       const gpa = report.courses.get(r.courseId)!;
-      const advice = adviseGrade(r.components as unknown as GradeComponent[], {
-        minPass: num(subject?.minPassMark ?? null),
-        assessments: (subject?.assessments ?? null) as SyllabusAssessment[] | null,
-        fapStatus: r.status,
-      });
+      const advice = advices.get(r.courseId)!;
       return {
         courseId: r.courseId,
         subjectCode: r.subjectCode,
@@ -76,6 +98,8 @@ export const gradeService = {
         average: num(r.average),
         syllabusKnown: !!subject?.minPassMark,
         advice,
+        projected: r.status === "studying" ? advice.projected : null,
+        projectedPass: advice.projectedPass,
         credits: gpa.credits,
         creditsKnown: gpa.creditsKnown,
         attempt: gpa.attempt,
@@ -90,10 +114,13 @@ export const gradeService = {
     const { cumulative } = report;
     const cur = report.terms[0] ?? null;
     const tiers = GPA_TIERS.map((t) => {
-      const blocked = !cur ? null : cur.failedCount > 0 ? "Kỳ này có môn trượt nên không xét danh hiệu" : cur.registeredCredits < MIN_TERM_CREDITS ? `Kỳ này chưa đủ ${MIN_TERM_CREDITS} tín chỉ tối thiểu` : null;
+      const blocked = !cur ? null : cur.projectedFailCount > 0 ? "Có môn trượt hoặc dự đoán không qua nên không đủ điều kiện" : cur.registeredCredits < MIN_TERM_CREDITS ? `Kỳ này chưa đủ ${MIN_TERM_CREDITS} tín chỉ tối thiểu` : null;
+      const meets = !blocked && !!cur && cur.projectedGpa !== null && cur.projectedGpa >= t.min;
       const reached = !blocked && !!cur && cur.gpa !== null && cur.studyingCredits === 0 && cur.gpa >= t.min;
       return {
         blocked,
+        meets, // đạt theo điểm dự kiến (đã đạt nếu kỳ đã xong)
+        gap: cur && !blocked && !meets && cur.projectedGpa !== null ? Math.round((t.min - cur.projectedGpa) * 100) / 100 : null,
         key: t.key,
         label: t.label,
         min: t.min,
@@ -101,7 +128,7 @@ export const gradeService = {
         needAverage: cur && !blocked && !reached && cur.studyingCredits > 0 ? requiredAverage(cur.gpa, cur.credits, cur.studyingCredits, t.min) : null,
       };
     });
-    const currentTerm = cur && { termName: cur.termName, gpa: cur.gpa, credits: cur.credits, studyingCredits: cur.studyingCredits };
+    const currentTerm = cur && { termName: cur.termName, gpa: cur.gpa, credits: cur.credits, studyingCredits: cur.studyingCredits, projectedGpa: cur.projectedGpa, predictedCredits: cur.predictedCredits, unpredictedCredits: cur.unpredictedCredits };
     const terms = report.terms.map((t) => ({ ...t, courses: courses.filter((c) => c.termName === t.termName).sort((a, b) => a.subjectCode.localeCompare(b.subjectCode)) }));
     terms.sort((a, b) => termOrder(b.termName) - termOrder(a.termName));
     return { ...setting, courses, terms, cumulative, currentTerm, tiers };
