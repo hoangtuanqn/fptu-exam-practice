@@ -30,7 +30,7 @@ export interface GpaInput {
   average: number | null;
   credits: number | null;
   /** Môn đang học: điểm dự đoán từ điểm thành phần đã có (null = chưa có điểm nào để dự đoán) */
-  projected?: { score: number; pass: boolean } | null;
+  projected?: { score: number; pass: boolean; low?: number | null; high?: number | null } | null;
 }
 
 export type AttemptKind = "first" | "retake" | "improve";
@@ -55,6 +55,9 @@ export interface GpaTerm {
   registeredCredits: number; // tín chỉ của mọi môn tính điểm trong kỳ, kể cả đang học và trượt
   /** Điểm TB kỳ dự kiến = môn đã tổng kết + môn đang học theo điểm dự đoán (môn dự đoán không qua tính 0) */
   projectedGpa: number | null;
+  /** Khoảng dự kiến của điểm TB kỳ (chỉ khi có môn dự đoán kèm khoảng) */
+  projectedLow: number | null;
+  projectedHigh: number | null;
   predictedCredits: number; // tín chỉ của các môn đang học đã dự đoán được
   unpredictedCredits: number; // tín chỉ của các môn đang học chưa có điểm nào nên chưa dự đoán
   projectedFailCount: number; // số môn trượt + số môn dự đoán không qua
@@ -141,9 +144,17 @@ export function buildGpaReport(input: GpaInput[]): GpaReport {
     const projCredits = credits + predictedCredits;
     const projPoints = own.reduce((n, c) => n + courses.get(c.courseId)!.credits * pts(c), 0) + predicted.reduce((n, c) => n + courses.get(c.courseId)!.credits * (c.projected!.pass ? c.projected!.score : 0), 0);
     const projectedGpa = projCredits > 0 ? round2(projPoints / projCredits) : null;
+    const rangeOf = (pick: "low" | "high") => {
+      if (!predicted.some((c) => c.projected![pick] != null)) return null;
+      const extra = predicted.reduce((n, c) => n + courses.get(c.courseId)!.credits * (c.projected!.pass ? (c.projected![pick] ?? c.projected!.score) : 0), 0);
+      const base = own.reduce((n, c) => n + courses.get(c.courseId)!.credits * pts(c), 0);
+      return projCredits > 0 ? round2((base + extra) / projCredits) : null;
+    };
+    const projectedLow = rangeOf("low");
+    const projectedHigh = rangeOf("high");
     const projectedFailCount = failedCount + predicted.filter((c) => !c.projected!.pass).length;
     const projectedTier = projectedFailCount === 0 && registeredCredits >= MIN_TERM_CREDITS ? tierOf(projectedGpa) : null;
-    return { termName, gpa, credits, tier: eligible ? tierOf(gpa) : null, studyingCredits: studying, failedCount, registeredCredits, projectedGpa, predictedCredits, unpredictedCredits, projectedFailCount, projectedTier };
+    return { termName, gpa, credits, tier: eligible ? tierOf(gpa) : null, studyingCredits: studying, failedCount, registeredCredits, projectedGpa, projectedLow, projectedHigh, predictedCredits, unpredictedCredits, projectedFailCount, projectedTier };
   });
 
   const all = gpaOf(input);
