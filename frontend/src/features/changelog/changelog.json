@@ -28,6 +28,10 @@
         {
           "type": "new",
           "text": "Đồng bộ điểm FAP mặc định tắt, tắt là xoá hết điểm đã lưu"
+        },
+        {
+          "type": "new",
+          "text": "Lịch thi sắp tới lấy từ FAP: ngày, giờ, phòng, loại thi (FE, PE, thi lần 2) và còn bao nhiêu ngày"
         }
       ]
     },
@@ -274,6 +278,10 @@
         {
           "type": "new",
           "text": "Đọc Báo cáo điểm trên FAP khi bạn bật đồng bộ điểm; nhắc hoàn thành kiểm tra Cloudflare và đăng nhập FAP"
+        },
+        {
+          "type": "new",
+          "text": "Đọc thêm Lịch thi trên FAP khi bạn bật đồng bộ điểm"
         }
       ]
     },
