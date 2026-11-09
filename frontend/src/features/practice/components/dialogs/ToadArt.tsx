@@ -6,7 +6,7 @@ const OUT = "#9a5f00";
 export function ToadArt({ mood, board }: { mood: ToadMood; board: string }) {
   const sad = mood === "cry" || mood === "worry";
   return (
-    <svg viewBox="0 0 132 108" width="150" height="123" xmlns="http://www.w3.org/2000/svg" role="presentation" aria-hidden="true">
+    <svg viewBox="0 0 132 108" width="118" height="97" xmlns="http://www.w3.org/2000/svg" role="presentation" aria-hidden="true">
       <defs>
         <radialGradient id="rt-gold" cx=".42" cy=".28" r=".85">
           <stop offset="0" stopColor="#fff08a" />

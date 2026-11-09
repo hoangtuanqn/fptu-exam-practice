@@ -305,7 +305,7 @@ h3 {
 }
 
 /* Cóc Pass ở bảng điểm: rơi từ trên xuống rồi làm động tác theo mức điểm (chỉ chạy khi người dùng không tắt chuyển động) */
-.toad-layer { position: fixed; z-index: 70; width: 150px; margin-left: -75px; pointer-events: none; }
+.toad-layer { position: fixed; z-index: 70; width: 118px; margin-left: -59px; pointer-events: none; }
 .toad-confetti { position: absolute; left: -40px; right: -40px; top: 0; height: 1px; }
 .toad-confetti span { position: absolute; top: 0; width: 7px; height: 11px; border-radius: 2px; opacity: 0; }
 @keyframes toad-fall {
@@ -316,6 +316,7 @@ h3 {
   86% { transform: translateY(-9px); animation-timing-function: ease-in; }
   100% { transform: translateY(0) scale(1, 1); }
 }
+@keyframes toad-fly-x { from { transform: translateX(var(--toad-dx)); } to { transform: translateX(0); } }
 @keyframes toad-sway { 0%, 100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
 @keyframes toad-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 @keyframes toad-hop { 0%, 60%, 100% { transform: translateY(0) scale(1, 1); } 30% { transform: translateY(-16px) scale(0.97, 1.05); } 66% { transform: translateY(0) scale(1.05, 0.93); } }
@@ -324,6 +325,7 @@ h3 {
 @keyframes toad-sweat { 0%, 100% { transform: translateY(0); opacity: 1; } 60% { transform: translateY(7px); opacity: 0.4; } }
 @keyframes toad-confetti { 0% { transform: translateY(-10px) rotate(0); opacity: 0; } 12% { opacity: 1; } 100% { transform: translateY(300px) rotate(var(--spin)); opacity: 0; } }
 @media (prefers-reduced-motion: no-preference) {
+  .toad-fly { animation: toad-fly-x 0.95s cubic-bezier(0.2, 0.7, 0.3, 1) both; }
   .toad-fall { animation: toad-fall 1.15s both; }
   .toad-idle { animation-delay: 1.2s; animation-iteration-count: infinite; animation-fill-mode: backwards; transform-origin: 50% 90%; }
   .toad-idle-cry { animation-name: toad-sway; animation-duration: 0.9s; animation-timing-function: ease-in-out; }
@@ -365,7 +367,8 @@ h3 {
 .toad-bubble {
   position: relative;
   flex: none;
-  width: min(290px, calc(100vw - 64px));
+  width: min(250px, calc(100vw - 24px));
+  margin-left: var(--bshift, 0px);
   padding: 9px 14px;
   border-radius: 18px;
   border: 1px solid var(--md-sys-color-outline-variant);
@@ -380,7 +383,7 @@ h3 {
 .toad-bubble::after {
   content: "";
   position: absolute;
-  left: 50%;
+  left: calc(50% + var(--tail, 0px));
   bottom: -7px;
   width: 12px;
   height: 12px;
