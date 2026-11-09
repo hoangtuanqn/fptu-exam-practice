@@ -37,7 +37,7 @@ let fuoCache: { at: number; threads: { threadId: string; subjectCode: string }[]
 async function usableExams(): Promise<UsableExam[]> {
   if (examCache && Date.now() - examCache.at < CACHE_MS) return examCache.exams;
   const [exams, counts] = await Promise.all([
-    prisma.exam.findMany({ where: { answerSource: { in: ["AI", "MANUAL"] } }, select: { id: true, threadId: true, title: true, totalQuestions: true, createdAt: true } }),
+    prisma.exam.findMany({ where: { answerSource: { in: ["AI", "MANUAL"] } }, select: { id: true, threadId: true, title: true, subjectCode: true, totalQuestions: true, createdAt: true } }),
     prisma.examQuestion.groupBy({ by: ["examId", "isReference"], _count: { _all: true } }),
   ]);
   const all = new Map<number, number>(); // tất cả ảnh đã lưu (gồm tài liệu tham khảo): so với totalQuestions để biết đã lấy đủ chưa
@@ -48,7 +48,7 @@ async function usableExams(): Promise<UsableExam[]> {
   }
   const list = exams
     .filter((e) => (real.get(e.id) ?? 0) > 0 && (all.get(e.id) ?? 0) >= e.totalQuestions)
-    .map((e) => ({ id: e.id, threadId: e.threadId, title: e.title, questions: real.get(e.id) ?? 0, createdAt: e.createdAt, code: subjectCodeFromTitle(e.title) }));
+    .map((e) => ({ id: e.id, threadId: e.threadId, title: e.title, questions: real.get(e.id) ?? 0, createdAt: e.createdAt, code: e.subjectCode ?? subjectCodeFromTitle(e.title) }));
   examCache = { at: Date.now(), exams: list };
   return list;
 }

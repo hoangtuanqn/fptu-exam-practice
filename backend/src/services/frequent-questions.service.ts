@@ -6,7 +6,6 @@ import { PRO_BENEFITS } from "../constants/plan";
 import { fileUrlOf } from "../utils/file-url";
 import { isProUser } from "../utils/pro";
 import { hammingWithin, hashQuestionImage, toWords } from "../utils/question-hash";
-import { subjectCodeFromTitle } from "../utils/subject-code";
 
 // "Câu hay ra": những câu xuất hiện lặp lại ở nhiều đề của cùng một môn. Ảnh được so bằng dấu vân tay vùng chữ (xem utils/question-hash),
 // dấu vân tay tính một lần cho mỗi câu rồi lưu vào DB (tính dần, mỗi lượt tối đa FREQUENT_MAX_NEW_HASHES ảnh nên lượt đầu của một môn lớn có thể báo "đang phân tích").
@@ -35,12 +34,10 @@ const cache = new Map<string, { at: number; sig: string; data: Computed }>();
 const norm = (answer: string) => answer.split(/\s+/).filter(Boolean).sort().join(" ");
 
 async function compute(code: string): Promise<Computed> {
-  const exams = (
-    await prisma.exam.findMany({
-      where: { title: { contains: code }, answerSource: { in: ["AI", "MANUAL"] } },
-      select: { id: true, title: true, threadId: true },
-    })
-  ).filter((e) => subjectCodeFromTitle(e.title) === code);
+  const exams = await prisma.exam.findMany({
+    where: { subjectCode: code, answerSource: { in: ["AI", "MANUAL"] } },
+    select: { id: true, title: true, threadId: true },
+  });
   if (exams.length === 0) return { totalExams: 0, analyzed: 0, total: 0, items: [] };
 
   const examOf = new Map(exams.map((e) => [e.id, e]));
@@ -105,23 +102,15 @@ export const frequentQuestionsService = {
   /** Câu hay ra của một môn. Gói thường chỉ nhận FREQUENT_FREE_LIMIT câu đầu (khóa ở máy chủ), phần còn lại chỉ báo số lượng. */
   async forSubject(codeRaw: string, user: unknown) {
     const code = codeRaw.toUpperCase();
-    const sig = String(
-      (await prisma.exam.count({ where: { title: { contains: code }, answerSource: { in: ["AI", "MANUAL"] } } })) +
-        ":" +
-        (await prisma.examQuestion.count({ where: { exam: { title: { contains: code } }, imageHash: { not: null } } })),
-    );
+    // Chữ ký = số đề dùng được của môn (một truy vấn đếm theo chỉ mục, không quét bảng). Có đề mới thì tính lại ngay;
+    // còn dấu vân tay tính dần thì tính tiếp khi cache hết hạn.
     const hit = cache.get(code);
     let data: Computed;
-    if (hit && hit.sig === sig && Date.now() - hit.at < FREQUENT_CACHE_MS) data = hit.data;
+    if (hit && Date.now() - hit.at < FREQUENT_CACHE_MS && hit.sig === String(await prisma.exam.count({ where: { subjectCode: code, answerSource: { in: ["AI", "MANUAL"] } } }))) data = hit.data;
     else {
+      const sig = String(await prisma.exam.count({ where: { subjectCode: code, answerSource: { in: ["AI", "MANUAL"] } } }));
       data = await compute(code);
-      // chữ ký tính lại sau khi có thêm dấu vân tay mới, để lượt sau không dùng bản cũ
-      const sigAfter = String(
-        (await prisma.exam.count({ where: { title: { contains: code }, answerSource: { in: ["AI", "MANUAL"] } } })) +
-          ":" +
-          (await prisma.examQuestion.count({ where: { exam: { title: { contains: code } }, imageHash: { not: null } } })),
-      );
-      cache.set(code, { at: Date.now(), sig: sigAfter, data });
+      cache.set(code, { at: Date.now(), sig, data });
     }
 
     const pro = PRO_BENEFITS.frequentQuestions && isProUser(user);
