@@ -477,7 +477,7 @@ export default function ExamEditPage() {
       {locked && <div className="mb-3 rounded-xl border border-sky-200 bg-sky-50 px-4 py-2.5 text-sm text-sky-800">AI đang giải đề này, chờ AI xong rồi mới sửa tay được.</div>}
 
       {/* Thanh công cụ dính khi cuộn */}
-      <div className="sticky top-0 z-20 -mx-1 mb-4 rounded-2xl border border-slate-200 bg-surface-container-lowest/90 p-3 shadow-soft backdrop-blur">
+      <div className="sticky top-16 z-20 -mx-1 mb-4 rounded-2xl border border-slate-200 bg-surface-container-lowest/90 p-3 shadow-soft backdrop-blur">
         <div className="flex flex-wrap items-center gap-2">
           <Segmented
             label="Lọc câu hỏi"
