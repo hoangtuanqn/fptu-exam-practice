@@ -367,7 +367,7 @@ h3 {
 .toad-bubble {
   position: relative;
   flex: none;
-  width: min(250px, calc(100vw - 24px));
+  width: var(--bw, min(250px, calc(100vw - 24px)));
   left: var(--bshift, 0px);
   padding: 9px 14px;
   border-radius: 18px;
@@ -403,4 +403,18 @@ h3 {
 }
 @media (prefers-reduced-motion: no-preference) {
   .toad-bubble { animation: toad-bubble-fly 0.7s cubic-bezier(0.2, 0.8, 0.3, 1) 1.25s both; }
+}
+
+/* Điện thoại: cóc ở góc trên bên phải, bong bóng nằm bên trái cóc, đuôi chỉ sang phải; tự mờ đi để không che bảng điểm */
+.toad-bubble-wrap-side { bottom: auto; top: 6px; left: auto; right: 100%; width: auto; margin: 0 8px 0 0; justify-content: flex-end; transition: opacity 0.7s ease; }
+.toad-bubble-wrap-side.is-faded { opacity: 0; }
+.toad-bubble-side { font-size: 12.5px; transform-origin: 100% 30%; }
+.toad-bubble-side::after {
+  left: auto;
+  right: -7px;
+  bottom: auto;
+  top: 18px;
+  margin: 0;
+  border-bottom: 0;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
 }
