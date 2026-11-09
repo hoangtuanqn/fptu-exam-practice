@@ -51,6 +51,8 @@ export interface GradeTerm {
   credits: number;
   tier: string | null;
   studyingCredits: number;
+  failedCount: number;
+  registeredCredits: number;
   courses: GradeCourse[];
 }
 
