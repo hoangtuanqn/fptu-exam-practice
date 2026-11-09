@@ -42,6 +42,29 @@ export function GradeSyncCard({ overview, onChange }: { overview: GradeOverview;
     }
   };
 
+  // Đã bật và có điểm: chỉ còn một dòng gọn, hướng dẫn đầy đủ chỉ hiện khi cần
+  if (overview.enabled && overview.courses.length > 0 && installed && !outdated && !error) {
+    return (
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-m3-lg border border-outline-variant bg-surface-container-lowest px-4 py-3">
+        <div className="flex items-center gap-3">
+          <Switch checked onChange={(v) => void toggle(v)} label="Đồng bộ điểm FAP" disabled={busy} />
+          <div>
+            <p className="md-title-small text-on-surface">Đồng bộ điểm FAP đang bật</p>
+            <p className="md-body-small text-on-surface-variant">{overview.syncedAt ? `Cập nhật lần cuối: ${new Date(overview.syncedAt).toLocaleString("vi-VN")}` : "Chưa có lần cập nhật nào"}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <a href={FAP_GRADE_URL} target="_blank" rel="noopener noreferrer" className="md-label-large text-primary underline">
+            Mở FAP để cập nhật
+          </a>
+          <Button variant="outlined" size="sm" onClick={() => void clear()} disabled={busy}>
+            Xoá điểm đã lưu
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Card>
       <CardHeader title="Đồng bộ điểm FAP" description="Cá nhân hoá: biết bạn cần bao nhiêu điểm thi cuối kỳ để qua từng môn" />
