@@ -19,6 +19,7 @@ import offersPublicRouter from "./offers-public.routes";
 import peRouter from "./pe.routes";
 import { referralPublicRouter, referralRouter } from "./referral.routes";
 import reminderPublicRouter from "./reminder-public.routes";
+import gradeRouter from "./grade.routes";
 import subjectRouter from "./subject.routes";
 import userRouter from "./user.routes";
 
@@ -46,6 +47,7 @@ rootRouter.use("/chat", chatRouter);
 rootRouter.use("/catalog", catalogRouter);
 rootRouter.use("/public/reminder", reminderPublicRouter);
 rootRouter.use("/subjects", subjectRouter);
+rootRouter.use("/grades", gradeRouter);
 rootRouter.use("/attempts", attemptRouter);
 rootRouter.use("/review", reviewRouter);
 rootRouter.use("/study", studyRouter);
