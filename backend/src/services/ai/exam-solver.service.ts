@@ -31,6 +31,7 @@ type Confidence = "certain" | "likely" | "unsure";
 type Kind = "question" | "not_question";
 interface ClaudeAnswer {
   question: number;
+  file?: string; // tên file ghi trên nhãn ảnh: định danh chắc chắn nhất, không lẫn với số in sẵn trong ảnh
   kind: Kind;
   choice: string;
   confidence: Confidence;
@@ -71,7 +72,12 @@ const OUTPUT_SCHEMA = {
       items: {
         type: "object",
         properties: {
-          question: { type: "integer", description: "Number from the image label. Identify an item only by this number." },
+          question: {
+            type: "integer",
+            description:
+              "The number written in the label BEFORE the image in the request ('Question <number> (file <name>)'). Never use a number printed inside the image: the image's own numbering is different.",
+          },
+          file: { type: "string", description: "The file name from the same label, copied exactly, for example 'Q50.webp'." },
           kind: {
             type: "string",
             enum: ["question", "not_question"],
@@ -88,7 +94,7 @@ const OUTPUT_SCHEMA = {
             description: "'certain' when you solved it and nothing contradicts it, 'likely' when you are fairly sure, 'unsure' when you are choosing between options.",
           },
         },
-        required: ["question", "kind", "choice", "confidence"],
+        required: ["question", "file", "kind", "choice", "confidence"],
         additionalProperties: false,
       },
     },
@@ -107,18 +113,32 @@ interface Parsed {
  * (câu trùng giữ lần đầu, câu lạ không có trong đề bị bỏ), để các câu còn lại vẫn dùng được. Câu nào không có trong
  * `byLabel` là câu chưa có đáp án hợp lệ và sẽ được thử lại riêng.
  */
-export function parseOutput(out: ClaudeOutput, labels: number[]): Map<number, Parsed> {
+export function parseOutput(out: ClaudeOutput, labels: number[], files: string[] = []): Map<number, Parsed> {
   const wanted = new Set(labels);
+  const byFile = new Map(files.map((f, i) => [f.toLowerCase(), labels[i]!]));
+  const answers = out?.answers ?? [];
+
+  // Claude đôi khi ghi số in sẵn trong ảnh ("Question: 50") thay vì nhãn được gửi, nên câu trả lời bị coi là câu lạ.
+  // Ưu tiên tên file (duy nhất), rồi tới nhãn. Chỉ khi KHÔNG câu nào khớp mà số mục trả về đúng bằng số ảnh mới ghép theo thứ tự.
+  const resolve = (a: ClaudeAnswer): number | undefined => {
+    const byName = a.file ? byFile.get(path.basename(String(a.file)).toLowerCase()) : undefined;
+    if (byName !== undefined) return byName;
+    return wanted.has(a.question) ? a.question : undefined;
+  };
+  const resolved = answers.map(resolve);
+  const positional = resolved.every((r) => r === undefined) && answers.length === labels.length && labels.length > 0;
+
   const byLabel = new Map<number, Parsed>();
-  for (const a of out?.answers ?? []) {
-    if (!wanted.has(a.question) || byLabel.has(a.question)) continue;
+  answers.forEach((a, i) => {
+    const label = positional ? labels[i]! : resolved[i];
+    if (label === undefined || byLabel.has(label)) return;
     if (a.kind === "not_question") {
-      byLabel.set(a.question, { choice: "", confidence: a.confidence });
-      continue;
+      byLabel.set(label, { choice: "", confidence: a.confidence });
+      return;
     }
     const choice = String(a.choice ?? "").trim().toUpperCase().replace(/[.,;]+/g, " ").replace(/\s+/g, " ").trim();
-    if (CHOICE.test(choice)) byLabel.set(a.question, { choice, confidence: a.confidence });
-  }
+    if (CHOICE.test(choice)) byLabel.set(label, { choice, confidence: a.confidence });
+  });
   return byLabel;
 }
 
@@ -212,7 +232,7 @@ interface BatchResult {
  */
 async function solveBatch(ctx: Context, items: BatchItem[], display: (label: number) => number): Promise<BatchResult> {
   const first = await askOnce(ctx, items);
-  const byLabel = parseOutput(first, items.map((it) => it.label));
+  const byLabel = parseOutput(first, items.map((it) => it.label), items.map((it) => path.basename(it.file)));
   const reports = [first.report?.trim() ?? ""];
 
   const missing = items.filter((it) => !byLabel.has(it.label));
@@ -220,7 +240,7 @@ async function solveBatch(ctx: Context, items: BatchItem[], display: (label: num
     const retryItems = missing.map((it, i) => ({ ...it, label: i + 1 }));
     try {
       const second = await askOnce(ctx, retryItems);
-      const got = parseOutput(second, retryItems.map((r) => r.label));
+      const got = parseOutput(second, retryItems.map((r) => r.label), retryItems.map((r) => path.basename(r.file)));
       retryItems.forEach((r, i) => {
         const a = got.get(r.label);
         if (a) byLabel.set(missing[i]!.label, a);
