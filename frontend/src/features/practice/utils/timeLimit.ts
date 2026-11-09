@@ -2,7 +2,9 @@
 // vẫn giữ đúng giới hạn đã chọn lúc bắt đầu (server chỉ lưu số giây đã làm).
 const KEY = (examId: number) => `fepass.timeLimit.${examId}`;
 
-export const TIME_LIMIT_OPTIONS = [0, 30, 45, 60, 90] as const; // 0 = không giới hạn
+export const TIME_LIMIT_OPTIONS = [0, 60, 90] as const; // 0 = không giới hạn; ngoài ra người dùng tự nhập số phút khác
+export const TIME_LIMIT_MIN = 1;
+export const TIME_LIMIT_MAX = 300; // phút
 
 export function readTimeLimit(examId: number | null): number | null {
   if (examId === null) return null;

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Check, FileText, Play } from "lucide-react";
 import type { Mode } from "@/features/practice/types.ts";
 import { MODES } from "@/features/practice/config/modes";
-import { TIME_LIMIT_OPTIONS } from "@/features/practice/utils/timeLimit";
+import { TIME_LIMIT_MAX, TIME_LIMIT_MIN, TIME_LIMIT_OPTIONS } from "@/features/practice/utils/timeLimit";
 import { Button } from "@/shared/ui/Button";
 import { Modal, ModalActions } from "@/shared/ui/Modal";
 
@@ -21,6 +21,12 @@ interface Props {
 export function StartDialog({ title, total, graded, answersPending, replacing, onCancel, onStart }: Props) {
   const [mode, setMode] = useState<Mode>("practice");
   const [limit, setLimit] = useState<number>(0); // phút; 0 = không giới hạn (chỉ dùng ở chế độ Thi)
+  const [custom, setCustom] = useState(false); // chọn "Khác": người dùng tự nhập số phút
+  const [customText, setCustomText] = useState("");
+  const customMin = Number(customText);
+  const customValid = Number.isInteger(customMin) && customMin >= TIME_LIMIT_MIN && customMin <= TIME_LIMIT_MAX;
+  const effectiveLimit = mode !== "exam" ? 0 : custom ? (customValid ? customMin : 0) : limit;
+  const blocked = mode === "exam" && custom && !customValid; // chọn "Khác" mà chưa nhập số hợp lệ
 
   return (
     <Modal onClose={onCancel}>
@@ -69,12 +75,15 @@ export function StartDialog({ title, total, graded, answersPending, replacing, o
           <div className="md-label-large text-on-surface-variant">Thời gian làm bài</div>
           <div role="group" aria-label="Thời gian làm bài" className="mt-2 flex flex-wrap gap-2">
             {TIME_LIMIT_OPTIONS.map((m) => {
-              const on = limit === m;
+              const on = !custom && limit === m;
               return (
                 <button
                   key={m}
                   type="button"
-                  onClick={() => setLimit(m)}
+                  onClick={() => {
+                    setCustom(false);
+                    setLimit(m);
+                  }}
                   aria-pressed={on}
                   className={`md-state md-motion md-label-large relative inline-flex h-8 items-center gap-1.5 rounded-m3-sm border px-3 after:absolute after:-inset-y-2 after:inset-x-0 after:content-[''] ${
                     on ? "border-transparent bg-secondary-container text-on-secondary-container" : "border-outline text-on-surface-variant"
@@ -85,8 +94,38 @@ export function StartDialog({ title, total, graded, answersPending, replacing, o
                 </button>
               );
             })}
+            <button
+              type="button"
+              onClick={() => setCustom(true)}
+              aria-pressed={custom}
+              className={`md-state md-motion md-label-large relative inline-flex h-8 items-center gap-1.5 rounded-m3-sm border px-3 after:absolute after:-inset-y-2 after:inset-x-0 after:content-[''] ${
+                custom ? "border-transparent bg-secondary-container text-on-secondary-container" : "border-outline text-on-surface-variant"
+              }`}
+            >
+              {custom && <Check size={16} />}
+              Khác
+            </button>
           </div>
-          <p className="md-body-small mt-1.5 text-on-surface-variant">{limit > 0 ? "Hết giờ, bài sẽ được tự nộp và chấm điểm." : "Đồng hồ chỉ để bạn theo dõi thời gian làm bài."}</p>
+          {custom && (
+            <label className="mt-2.5 flex items-center gap-2">
+              <input
+                type="text"
+                inputMode="numeric"
+                autoFocus
+                value={customText}
+                onChange={(e) => setCustomText(e.target.value.replace(/\D/g, "").slice(0, 3))}
+                placeholder="Ví dụ: 75"
+                aria-label="Số phút làm bài"
+                aria-invalid={customText !== "" && !customValid}
+                className="md-body-large h-10 w-28 rounded-m3-sm border border-outline bg-transparent px-3 text-on-surface outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              />
+              <span className="md-body-medium text-on-surface-variant">phút</span>
+            </label>
+          )}
+          {custom && customText !== "" && !customValid && (
+            <p className="md-body-small mt-1.5 text-error">Nhập số phút từ {TIME_LIMIT_MIN} đến {TIME_LIMIT_MAX}.</p>
+          )}
+          <p className="md-body-small mt-1.5 text-on-surface-variant">{effectiveLimit > 0 ? "Hết giờ, bài sẽ được tự nộp và chấm điểm." : "Đồng hồ chỉ để bạn theo dõi thời gian làm bài."}</p>
         </div>
       )}
       <p className="md-body-small mt-3 text-on-surface-variant">Không đổi được chế độ khi đang làm bài.</p>
@@ -95,7 +134,7 @@ export function StartDialog({ title, total, graded, answersPending, replacing, o
         <Button variant="text" onClick={onCancel}>
           Hủy
         </Button>
-        <Button variant="filled" onClick={() => onStart(mode, mode === "exam" && limit > 0 ? limit : null)}>
+        <Button variant="filled" disabled={blocked} onClick={() => onStart(mode, effectiveLimit > 0 ? effectiveLimit : null)}>
           <Play size={18} />
           <span className="sm:hidden">Bắt đầu</span>
           <span className="hidden sm:inline">Bắt đầu làm bài</span>
