@@ -18,6 +18,9 @@ import { useClampPage } from "@/shared/hooks/useClampPage";
 const PRESETS = [10_000, 50_000, 100_000, 200_000, 500_000, 1_000_000];
 const BACK_KEY = "deposit_back";
 
+// 10.000 -> 10K, 1.000.000 -> 1M: nút gợi ý gọn, dễ đọc
+const shortMoney = (n: number) => (n >= 1_000_000 && n % 1_000_000 === 0 ? `${n / 1_000_000}M` : n >= 1000 && n % 1000 === 0 ? `${n / 1000}K` : n.toLocaleString("vi-VN"));
+
 // Thưởng thêm theo bậc (bậc cao nhất thỏa điều kiện), khớp với máy chủ
 const bonusOf = (amount: number, tiers: { min: number; percent: number }[]) => {
   const tier = [...tiers].sort((a, b) => b.min - a.min).find((t) => amount >= t.min);
@@ -142,34 +145,39 @@ export default function DepositPage() {
               placeholder="Ví dụ: 100.000"
             />
             {tiers.length > 0 && (
-              <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-sm text-emerald-900">
-                <div className="flex items-center gap-2 font-medium">
-                  <Gift size={15} className="shrink-0 text-emerald-600" />
-                  {bonus > 0 ? (
-                    <span>
-                      Nạp {formatMoney(amount)} nhận thêm <b>+{bonus.toLocaleString("vi-VN")} credit</b> thưởng
-                    </span>
-                  ) : (
-                    <span>Nạp nhiều được thưởng thêm credit</span>
-                  )}
-                </div>
-                <div className="mt-1 text-xs text-emerald-800">
-                  {[...tiers].sort((a, b) => a.min - b.min).map((t) => `từ ${formatMoney(t.min)}: +${t.percent}%`).join(" · ")}
-                </div>
+              <div className="space-y-1 text-sm text-slate-600" aria-live="polite">
+                {amount > 0 && !tooLow && (
+                  <p className="flex items-center gap-1.5 text-slate-800">
+                    <Gift size={15} className="shrink-0 text-emerald-600" />
+                    Bạn nhận <b className="tabular-nums">{formatCredit(amount + bonus)}</b>
+                    {bonus > 0 && <span className="text-emerald-600">(gồm +{bonus.toLocaleString("vi-VN")} thưởng)</span>}
+                  </p>
+                )}
+                <details>
+                  <summary className="cursor-pointer text-xs text-emerald-700">Nạp nhiều được thưởng thêm credit</summary>
+                  <ul className="mt-1 space-y-0.5 text-xs tabular-nums">
+                    {[...tiers].sort((x, y) => x.min - y.min).map((t) => (
+                      <li key={t.min}>
+                        Từ {formatMoney(t.min)}: thưởng +{t.percent}%
+                      </li>
+                    ))}
+                  </ul>
+                </details>
               </div>
             )}
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5" role="group" aria-label="Gợi ý số tiền">
               {PRESETS.filter((p) => p >= min).map((p) => (
                 <button
                   key={p}
                   type="button"
                   onClick={() => setDigits(String(p))}
-                  className={`rounded-lg border px-3 py-1.5 text-sm tabular-nums transition ${
-                    amount === p ? "border-brand-700 bg-brand-50 text-brand-900" : "border-slate-300 text-slate-600 hover:bg-slate-50"
+                  aria-pressed={amount === p}
+                  className={`rounded-full border px-3 py-1 text-xs font-medium tabular-nums transition ${
+                    amount === p ? "border-brand-700 bg-brand-50 text-brand-900" : "border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50"
                   }`}
                 >
-                  {p.toLocaleString("vi-VN")}
-                  {bonusOf(p, tiers) > 0 && <span className="ml-1.5 text-xs font-medium text-emerald-600">+{bonusOf(p, tiers).toLocaleString("vi-VN")}</span>}
+                  {shortMoney(p)}
+                  {bonusOf(p, tiers) > 0 && <span className="ml-1 text-emerald-600">+{shortMoney(bonusOf(p, tiers))}</span>}
                 </button>
               ))}
             </div>
