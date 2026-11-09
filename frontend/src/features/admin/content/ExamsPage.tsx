@@ -89,8 +89,18 @@ export default function ExamsPage() {
     }
   }
 
-  // Đề đã có đáp án nhưng còn câu trống: người dùng không chấm được các câu đó, nên báo đỏ để admin giải lại hoặc sửa tay
-  const blankBadge = (e: AdminExam) => (e.blankAnswers ?? 0) > 0 && <Badge tone="danger">Thiếu đáp án {e.blankAnswers} câu</Badge>;
+  // Số câu có đáp án / số câu cần chấm. Còn câu trống thì báo đỏ: người dùng không chấm được các câu đó, admin nên giải lại hoặc sửa tay
+  const answersBadge = (e: AdminExam) => {
+    if (e.gradedQuestions === undefined || e.answeredQuestions === undefined) return null; // máy chủ cũ chưa trả số liệu
+    const full = e.answeredQuestions >= e.gradedQuestions;
+    return (
+      <span title="Số câu đã có đáp án / số câu cần chấm (không tính tài liệu tham khảo)">
+        <Badge tone={full ? "success" : "danger"}>
+          {e.answeredQuestions}/{e.gradedQuestions} có đáp án
+        </Badge>
+      </span>
+    );
+  };
 
   // Lỗi AI: xuống dòng, tối đa 3 dòng; dài hơn thì có nút mở toàn văn (không còn bị cắt mất nội dung)
   const errorLine = (e: AdminExam) =>
@@ -136,7 +146,7 @@ export default function ExamsPage() {
                   <div className="truncate text-sm font-medium text-slate-900">{e.title}</div>
                   <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
                     <Badge tone={SOURCE[e.answerSource][1]}>{SOURCE[e.answerSource][0]}</Badge>
-                    {blankBadge(e)}
+                    {answersBadge(e)}
                     <span>
                       Thread {e.threadId} · {e.totalQuestions} câu
                     </span>
@@ -152,7 +162,7 @@ export default function ExamsPage() {
                   <Th>Đề</Th>
                   <Th>Thread</Th>
                   <Th className="text-right">Số câu</Th>
-                  <Th>Nguồn đáp án</Th>
+                  <Th>Đáp án</Th>
                   <Th>Lấy lúc</Th>
                   <Th />
                 </Thead>
@@ -170,7 +180,7 @@ export default function ExamsPage() {
                       <Td>
                         <div className="flex flex-wrap items-center gap-1.5">
                           <Badge tone={SOURCE[e.answerSource][1]}>{SOURCE[e.answerSource][0]}</Badge>
-                          {blankBadge(e)}
+                          {answersBadge(e)}
                         </div>
                       </Td>
                       <Td className="whitespace-nowrap text-slate-500">{formatDateTime(e.createdAt)}</Td>
