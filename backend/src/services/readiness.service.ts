@@ -1,5 +1,6 @@
 import { prisma } from "../configs/prisma";
 import { subjectCodeFromTitle } from "../utils/subject-code";
+import { userStatsCache } from "../utils/user-stats-cache";
 import { topicStatsService } from "./topic-stats.service";
 
 // Mức sẵn sàng theo từng môn, dựa trên các bài THI THỬ gần nhất. Cố ý không đưa phần trăm "khả năng qua môn": hệ thống không biết đề thi thật,
@@ -34,7 +35,11 @@ export function levelOf(average: number, spread: number, weakTopics: number): Ex
 }
 
 export const readinessService = {
-  async forUser(userId: number): Promise<SubjectReadiness[]> {
+  forUser(userId: number): Promise<SubjectReadiness[]> {
+    return userStatsCache.readiness.wrap(userId, () => this.compute(userId));
+  },
+
+  async compute(userId: number): Promise<SubjectReadiness[]> {
     const rows = await prisma.examAttempt.findMany({
       where: { userId, mode: "EXAM", totalGraded: { gt: 0 } },
       orderBy: { id: "desc" },

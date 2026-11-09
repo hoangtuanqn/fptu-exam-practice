@@ -1,5 +1,6 @@
 import type { AttemptMode, Prisma } from "@prisma/client";
 import { prisma } from "../configs/prisma";
+import { userStatsCache } from "../utils/user-stats-cache";
 import { newestFirst, toSkipTake, type PaginationQuery } from "../utils/pagination";
 
 export interface NewAttempt {
@@ -33,7 +34,11 @@ const listSelect = {
 } satisfies Prisma.ExamAttemptSelect;
 
 export const examAttemptRepository = {
-  create: (data: NewAttempt) => prisma.examAttempt.create({ data, select: listSelect }),
+  create: async (data: NewAttempt) => {
+    const attempt = await prisma.examAttempt.create({ data, select: listSelect });
+    userStatsCache.invalidate(data.userId); // báo cáo chủ đề / mức sẵn sàng phải tính lại với bài mới
+    return attempt;
+  },
 
   findOfUser: (id: number, userId: number) =>
     prisma.examAttempt.findFirst({ where: { id, userId }, include: withExam }),

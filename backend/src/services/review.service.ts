@@ -96,12 +96,13 @@ export const reviewService = {
   async summary(userId: number, isPro: boolean) {
     const now = new Date();
     const active = { userId, mastered: false, exam: USABLE_EXAM };
-    const [due, total, mastered, next] = await Promise.all([
+    const [due, counts, next] = await Promise.all([
       prisma.reviewItem.count({ where: { ...active, nextReviewAt: { lte: now } } }),
-      prisma.reviewItem.count({ where: { userId, mastered: false } }),
-      prisma.reviewItem.count({ where: { userId, mastered: true } }),
+      prisma.reviewItem.groupBy({ by: ["mastered"], where: { userId }, _count: { _all: true } }), // đang ôn + đã nhớ trong một truy vấn
       prisma.reviewItem.findFirst({ where: { ...active, nextReviewAt: { gt: now } }, orderBy: { nextReviewAt: "asc" }, select: { nextReviewAt: true } }),
     ]);
+    const total = counts.find((c) => !c.mastered)?._count._all ?? 0;
+    const mastered = counts.find((c) => c.mastered)?._count._all ?? 0;
     return { due, total, mastered, limit: isPro ? null : REVIEW_FREE_LIMIT, nextDueAt: next?.nextReviewAt ?? null };
   },
 

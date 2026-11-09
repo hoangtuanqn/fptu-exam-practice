@@ -1,6 +1,7 @@
 import { prisma } from "../configs/prisma";
 import type { GradedQuestion } from "./grading.service";
 import { subjectCodeFromTitle } from "../utils/subject-code";
+import { userStatsCache } from "../utils/user-stats-cache";
 
 // Một chủ đề cần ít nhất chừng này câu đã trả lời mới được kết luận mạnh/yếu (ít hơn thì chỉ hiện số liệu, không xếp hạng)
 export const TOPIC_MIN_SAMPLE = 5;
@@ -19,7 +20,11 @@ export interface SubjectStats {
 }
 
 /** Tỷ lệ đúng theo chủ đề của một người, tính từ bài làm MỚI NHẤT của mỗi đề (làm lại nhiều lần không làm lệch số liệu). */
-async function compute(userId: number) {
+async function compute(userId: number): Promise<SubjectStats[]> {
+  return userStatsCache.topics.wrap(userId, () => computeUncached(userId));
+}
+
+async function computeUncached(userId: number) {
   const latest = await prisma.examAttempt.groupBy({ by: ["examId"], where: { userId }, _max: { id: true }, orderBy: { _max: { id: "desc" } }, take: MAX_EXAMS });
   const attemptIds = latest.map((l) => l._max.id!).filter(Boolean);
   if (attemptIds.length === 0) return [] as SubjectStats[];
