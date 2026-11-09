@@ -29,6 +29,8 @@ export interface GpaInput {
   status: string; // studying | passed | failed | unknown
   average: number | null;
   credits: number | null;
+  /** Môn đang học: điểm dự đoán từ điểm thành phần đã có (null = chưa có điểm nào để dự đoán) */
+  projected?: { score: number; pass: boolean } | null;
 }
 
 export type AttemptKind = "first" | "retake" | "improve";
@@ -51,6 +53,12 @@ export interface GpaTerm {
   studyingCredits: number;
   failedCount: number; // số môn trượt trong kỳ (không tính môn không vào điểm)
   registeredCredits: number; // tín chỉ của mọi môn tính điểm trong kỳ, kể cả đang học và trượt
+  /** Điểm TB kỳ dự kiến = môn đã tổng kết + môn đang học theo điểm dự đoán (môn dự đoán không qua tính 0) */
+  projectedGpa: number | null;
+  predictedCredits: number; // tín chỉ của các môn đang học đã dự đoán được
+  unpredictedCredits: number; // tín chỉ của các môn đang học chưa có điểm nào nên chưa dự đoán
+  projectedFailCount: number; // số môn trượt + số môn dự đoán không qua
+  projectedTier: string | null;
 }
 
 export interface GpaReport {
@@ -125,7 +133,17 @@ export function buildGpaReport(input: GpaInput[]): GpaReport {
     const studying = studyingCredits(items);
     // Chỉ có danh hiệu khi kỳ đã xong, không trượt môn nào và đủ tín chỉ tối thiểu
     const eligible = studying === 0 && failedCount === 0 && registeredCredits >= MIN_TERM_CREDITS;
-    return { termName, gpa, credits, tier: eligible ? tierOf(gpa) : null, studyingCredits: studying, failedCount, registeredCredits };
+    // Dự kiến: thêm các môn đang học theo điểm dự đoán
+    const live = items.filter((c) => c.status === "studying" && courses.get(c.courseId)!.note !== "excluded");
+    const predicted = live.filter((c) => c.projected);
+    const unpredictedCredits = live.filter((c) => !c.projected).reduce((n, c) => n + courses.get(c.courseId)!.credits, 0);
+    const predictedCredits = predicted.reduce((n, c) => n + courses.get(c.courseId)!.credits, 0);
+    const projCredits = credits + predictedCredits;
+    const projPoints = own.reduce((n, c) => n + courses.get(c.courseId)!.credits * pts(c), 0) + predicted.reduce((n, c) => n + courses.get(c.courseId)!.credits * (c.projected!.pass ? c.projected!.score : 0), 0);
+    const projectedGpa = projCredits > 0 ? round2(projPoints / projCredits) : null;
+    const projectedFailCount = failedCount + predicted.filter((c) => !c.projected!.pass).length;
+    const projectedTier = projectedFailCount === 0 && registeredCredits >= MIN_TERM_CREDITS ? tierOf(projectedGpa) : null;
+    return { termName, gpa, credits, tier: eligible ? tierOf(gpa) : null, studyingCredits: studying, failedCount, registeredCredits, projectedGpa, predictedCredits, unpredictedCredits, projectedFailCount, projectedTier };
   });
 
   const all = gpaOf(input);

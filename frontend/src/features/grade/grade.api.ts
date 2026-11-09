@@ -20,6 +20,8 @@ export interface GradeAdvice {
   neededFinal: number | null;
   assumedOthers: number | null;
   pendingWeight: number;
+  projected: number | null;
+  projectedPass: boolean;
   state: AdviceState;
 }
 
@@ -33,6 +35,8 @@ export interface GradeCourse {
   average: number | null;
   syllabusKnown: boolean;
   advice: GradeAdvice;
+  projected: number | null; // điểm dự đoán của môn đang học
+  projectedPass: boolean;
   credits: number;
   creditsKnown: boolean;
   attempt: number; // lần học thứ mấy của môn
@@ -47,6 +51,8 @@ export interface GradeTerm {
   credits: number;
   tier: string | null;
   studyingCredits: number;
+  failedCount: number;
+  registeredCredits: number;
   courses: GradeCourse[];
 }
 
@@ -55,6 +61,8 @@ export interface GradeTier {
   label: string;
   min: number;
   reached: boolean;
+  meets: boolean; // đạt theo điểm dự kiến
+  gap: number | null; // còn thiếu bao nhiêu điểm TB kỳ (theo dự kiến)
   blocked: string | null; // lý do kỳ này không được xét danh hiệu (trượt môn, thiếu tín chỉ)
   needAverage: number | null; // trung bình cần ở các môn đang học để chạm mức này; > 10 = không thể trong kỳ này
 }
@@ -65,7 +73,7 @@ export interface GradeOverview {
   courses: GradeCourse[];
   terms: GradeTerm[];
   cumulative: { gpa: number | null; credits: number; tier: string | null; studyingCredits: number };
-  currentTerm: { termName: string; gpa: number | null; credits: number; studyingCredits: number } | null;
+  currentTerm: { termName: string; gpa: number | null; credits: number; studyingCredits: number; projectedGpa: number | null; predictedCredits: number; unpredictedCredits: number } | null;
   tiers: GradeTier[];
 }
 
