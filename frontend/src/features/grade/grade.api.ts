@@ -67,6 +67,20 @@ export interface GradeTier {
   needAverage: number | null; // trung bình cần ở các môn đang học để chạm mức này; > 10 = không thể trong kỳ này
 }
 
+/** Một buổi thi trong Lịch thi trên FAP. kind: FE (cuối kỳ), PE (thực hành), 2NDFE (lượt thi lần 2) */
+export interface ExamSlot {
+  date: string; // YYYY-MM-DD
+  start: string;
+  end: string;
+  room: string;
+  subjectCode: string;
+  subjectName: string;
+  format: string;
+  kind: string;
+  resultDate: string | null;
+  note: string;
+}
+
 export interface GradeOverview {
   enabled: boolean;
   syncedAt: string | null;
@@ -75,17 +89,19 @@ export interface GradeOverview {
   cumulative: { gpa: number | null; credits: number; tier: string | null; studyingCredits: number };
   currentTerm: { termName: string; gpa: number | null; credits: number; studyingCredits: number; projectedGpa: number | null; predictedCredits: number; unpredictedCredits: number } | null;
   tiers: GradeTier[];
+  exams: ExamSlot[];
 }
 
 /** Dữ liệu do tiện ích Chrome đọc từ FAP (xem chrome-extension/fap.js) */
 export interface ExtensionGrades {
   at: number;
   courses: unknown[];
+  exams?: unknown[];
 }
 
 export const gradeApi = {
   overview: () => http.get<GradeOverview>("/grades/me"),
   setEnabled: (enabled: boolean) => http.put<{ enabled: boolean; syncedAt: string | null }>("/grades/setting", { enabled }),
-  sync: (courses: unknown[]) => http.post<{ synced: number }>("/grades/sync", { courses }),
+  sync: (courses: unknown[], exams?: unknown[]) => http.post<{ synced: number; exams: number }>("/grades/sync", { courses, ...(exams && { exams }) }),
   clear: () => http.delete("/grades/me"),
 };
