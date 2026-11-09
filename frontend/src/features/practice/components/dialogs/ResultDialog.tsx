@@ -35,7 +35,7 @@ export function ResultDialog({ result, topicSummary = null, elapsed, savable, an
 
   return (
     <Modal onClose={onReview}>
-      {showToad && <ResultToad key={toad.mood} mood={toad.mood} board={toad.board} />}
+      {showToad && <ResultToad key={toad.mood} mood={toad.mood} say={toad.say} />}
       <div className="text-center">
         {answersPending ? (
           // AI chưa xong: chưa có điểm. Khi có đáp án, màn hình này tự chuyển sang điểm thật.
@@ -62,7 +62,6 @@ export function ResultDialog({ result, topicSummary = null, elapsed, savable, an
         {!answersPending && result.total > 0 && (
           <div className="mt-3">
             <Badge tone={passed ? "success" : "danger"}>{passed ? "Đạt" : "Chưa đạt"}</Badge>
-            <p className="md-body-medium mx-auto mt-2 max-w-xs text-on-surface-variant">{toad.say}</p>
           </div>
         )}
       </div>
