@@ -75,7 +75,7 @@ function Row({ g }: { g: Group }) {
           </p>
           <p className="md-body-small text-on-surface-variant">
             {g.slots.map((s) => `${s.start}–${s.end} (${formatOf(s.format)})`).join(" · ")}
-            {g.slots[0]!.room ? ` · phòng ${g.slots[0]!.room}` : second ? " · chưa xếp phòng" : ""}
+            {g.slots[0]!.room ? ` · phòng ${g.slots[0]!.room}` : ""}
           </p>
           {g.resultDate && <p className="md-body-small text-on-surface-variant">Công bố điểm: {dayMonth(g.resultDate)}</p>}
         </div>
@@ -103,7 +103,7 @@ export function ExamSchedule({ exams }: { exams: ExamSlot[] }) {
       </div>
       {hasSecond && (
         <p className="md-body-small border-t border-outline-variant px-5 py-3 text-on-surface-variant">
-          “Thi lần 2” là lượt thi dự phòng dùng cho thi lại hoặc thi cải thiện. FAP xếp sẵn cho các môn nên không có nghĩa là bạn đã trượt.
+          “Thi lần 2” (2NDFE) là lượt thi lại hoặc thi cải thiện. Qua hay trượt môn xem ở bảng điểm của từng môn.
         </p>
       )}
     </Card>

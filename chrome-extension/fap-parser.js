@@ -70,7 +70,7 @@
   }
 
   // Trang Lịch thi (fap.fpt.edu.vn/ExamSchedule): mỗi dòng là một buổi thi.
-  // Loại thi: FE (cuối kỳ), PE (thực hành), 2NDFE (lượt thi lần 2, dùng cho thi lại hoặc thi cải thiện; FAP xếp sẵn nên không có nghĩa là bạn đã trượt).
+  // Loại thi: FE (cuối kỳ), PE (thực hành), 2NDFE (lượt thi lần 2, dùng cho thi lại hoặc thi cải thiện; qua hay trượt chỉ xem ở bảng điểm).
   // Một môn có thể có nhiều buổi cùng loại (ví dụ FE thực hành và FE trắc nghiệm).
   function parseExamSchedule(doc) {
     const table = doc.querySelector("table.fap-sheet");
