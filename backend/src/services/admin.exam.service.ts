@@ -16,6 +16,7 @@ import { compactCommentsText, replaceQuestionComments } from "./crawler/comments
 import { fetchMediaComments } from "./crawler/comment-scraper.service";
 import { createFuoClient } from "./crawler/fuo-client";
 import { crawlerSettingService } from "./crawler-setting.service";
+import { fuoSessionService, isFuoAuthFailure } from "./crawler/fuo-session.service";
 import { examSolveService } from "./exam-solve.service";
 import { subjectCodeFromTitle } from "../utils/subject-code";
 
@@ -63,9 +64,22 @@ export const adminExamService = {
     if (!q.mediaUrl) commentsNote = "Câu này không có trang bình luận để lấy lại";
     else {
       try {
-        const config = await crawlerSettingService.get();
-        if (!config.cookie) throw new Error("Chưa cấu hình cookie FuOverflow (Quản trị → Cấu hình lấy đề)");
-        const comments = await fetchMediaComments(createFuoClient(config), q.mediaUrl);
+        // Dùng tài khoản FuOverflow đã lưu trong cấu hình: chưa có cookie thì đăng nhập trước, cookie hết hạn thì đăng nhập lại một lần
+        await fuoSessionService.ensureCookie();
+        const fetchFresh = async () => {
+          const config = await crawlerSettingService.get();
+          if (!config.cookie) throw new Error("Chưa có cookie hay tài khoản FuOverflow (Quản trị → Cấu hình lấy đề)");
+          return fetchMediaComments(createFuoClient(config), q.mediaUrl!);
+        };
+        let comments;
+        try {
+          comments = await fetchFresh();
+        } catch (err) {
+          if (!isFuoAuthFailure(err)) throw err;
+          const login = await fuoSessionService.login();
+          if (!login.ok) throw new Error(`phiên FuOverflow hết hạn và đăng nhập lại không được (${login.message})`);
+          comments = await fetchFresh();
+        }
         await replaceQuestionComments(dir, { image: { url: "", name: q.name, fileBase: q.name, mediaUrl: q.mediaUrl }, comments });
         refreshed = true;
         commentsCount = comments.length;
