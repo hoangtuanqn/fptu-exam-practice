@@ -14,7 +14,8 @@
     "import:fuo-catalog": "tsx scripts/import-fuo-catalog.ts",
     "import:syllabus": "tsx scripts/import-syllabus.ts",
     "export:subjects": "tsx scripts/export-subjects-seo.ts",
-    "label:topics": "tsx scripts/label-topics.ts"
+    "label:topics": "tsx scripts/label-topics.ts",
+    "audit:exams": "tsx scripts/audit-exams.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.4.0",
