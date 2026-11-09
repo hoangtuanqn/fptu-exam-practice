@@ -51,6 +51,14 @@
     if (sync) show("FAP đang yêu cầu kiểm tra Cloudflare. Hãy hoàn thành bước kiểm tra, đăng nhập FAP bằng tài khoản của bạn, sau đó mở Báo cáo điểm để đồng bộ.");
     return;
   }
+  if (kind === "schedule") {
+    if (!sync) return;
+    const exams = FapParser.parseExamSchedule(document);
+    const { fapGrades: old } = await chrome.storage.local.get("fapGrades");
+    await chrome.storage.local.set({ fapGrades: { at: Date.now(), courses: old ? old.courses : [], exams } });
+    show(`Đã đọc ${exams.length} buổi thi. Mở fepass.top để xem lịch thi cùng điểm cần đạt của từng môn.`, { link: { label: "Xem lịch thi", href: siteLink } });
+    return;
+  }
   if (kind !== "grade") {
     // Trang đăng nhập (có ô mật khẩu) hoặc trang khác
     if (sync && document.querySelector("input[type=password]")) {
@@ -65,7 +73,7 @@
   }
 
   // ---- Đọc điểm
-  async function fetchDoc(url) {
+  async function fetchDoc(url, want = "grade") {
     let res;
     try {
       res = await fetch(url, { credentials: "include" });
@@ -78,7 +86,7 @@
     const doc = new DOMParser().parseFromString(await res.text(), "text/html");
     const k = FapParser.pageKind(doc);
     if (k === "challenge") throw new Error("FAP đang yêu cầu kiểm tra Cloudflare. Hãy hoàn thành bước kiểm tra rồi thử lại.");
-    if (k !== "grade") throw new Error("Phiên đăng nhập FAP đã hết. Hãy đăng nhập lại FAP rồi thử lại.");
+    if (k !== want) throw new Error("Phiên đăng nhập FAP đã hết. Hãy đăng nhập lại FAP rồi thử lại.");
     return doc;
   }
 
@@ -130,7 +138,16 @@
       }
     }
     const courses = [...results.values()];
-    await chrome.storage.local.set({ fapGrades: { at: Date.now(), courses } });
+
+    // Lịch thi: lỗi ở bước này không làm mất điểm vừa đọc, lần sau đọc lại
+    let exams = stored && stored.exams ? stored.exams : [];
+    try {
+      show("Đang đọc lịch thi…");
+      exams = FapParser.parseExamSchedule(await fetchDoc("/ExamSchedule", "schedule"));
+    } catch {
+      /* giữ lịch thi cũ */
+    }
+    await chrome.storage.local.set({ fapGrades: { at: Date.now(), courses, exams } });
     return courses.length;
   }
 
