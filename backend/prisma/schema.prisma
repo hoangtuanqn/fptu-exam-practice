@@ -57,6 +57,7 @@ model User {
   studyDays          StudyDay[]
   gradeSetting       UserGradeSetting?
   grades             UserGrade[]
+  examSlots          UserExamSlot[]
   referredBy         User?                @relation("Referral", fields: [referredById], references: [id], onDelete: SetNull)
   referrals          User[]               @relation("Referral")
   rewardsAsReferrer  ReferralReward[]     @relation("RewardReferrer")
@@ -733,4 +734,25 @@ model UserGrade {
   @@unique([userId, courseId])
   @@index([userId, subjectCode])
   @@map("user_grades")
+}
+
+// One exam sitting from the student's FAP exam schedule (replaced as a whole on every sync, deleted with the grades)
+model UserExamSlot {
+  id          Int       @id @default(autoincrement())
+  userId      Int       @map("user_id")
+  examDate    DateTime  @map("exam_date") @db.Date
+  startTime   String    @map("start_time") @db.VarChar(5)
+  endTime     String    @map("end_time") @db.VarChar(5)
+  room        String    @db.VarChar(20)
+  subjectCode String    @map("subject_code") @db.VarChar(20)
+  subjectName String    @map("subject_name") @db.VarChar(200)
+  format      String    @db.VarChar(30) // PRACTICAL_EXAM | Multiple_choices | ...
+  kind        String    @db.VarChar(12) // FE | PE | 2NDFE | other (as shown on FAP)
+  resultDate  DateTime? @map("result_date") @db.Date
+  note        String    @db.VarChar(200)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, examDate])
+  @@map("user_exam_slots")
 }
