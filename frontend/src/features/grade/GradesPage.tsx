@@ -126,7 +126,7 @@ function Summary({ data }: { data: GradeOverview }) {
   if (!cur) return null;
   return (
     <Card>
-      <CardHeader title={`Danh hiệu kỳ ${cur.termName}`} description="Xét theo điểm trung bình từng kỳ (thang 10, trọng số theo tín chỉ), chỉ tính các môn đã qua." />
+      <CardHeader title={`Danh hiệu kỳ ${cur.termName}`} description="Xét theo điểm trung bình từng kỳ (thang 10, trọng số theo tín chỉ). Môn trượt tính 0 điểm nhưng vẫn cộng tín chỉ nên kéo điểm kỳ xuống." />
       <div className="space-y-4 p-5">
         <div className="flex flex-wrap items-end gap-x-6 gap-y-2">
           <div>

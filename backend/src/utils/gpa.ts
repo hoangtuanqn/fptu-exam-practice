@@ -1,5 +1,5 @@
 // Điểm trung bình (GPA) thang 10 của sinh viên FPTU, tính từ bảng điểm FAP. Hàm thuần, không đụng DB.
-// Theo Quy chế đào tạo: chỉ tính các môn đã Đạt, trọng số là số tín chỉ, làm tròn 2 chữ số; học cải thiện thì kết quả lần trước bị hủy.
+// Điểm TB kỳ: môn đã qua tính theo điểm, môn trượt tính 0 (tín chỉ vẫn ở mẫu số). GPA tích lũy: chỉ các môn đã Đạt. Trọng số là số tín chỉ, làm tròn 2 chữ số; học cải thiện thì kết quả lần trước bị hủy.
 // Chỉ có hai bậc xếp loại sinh viên: Xuất sắc (GPA >= 9) và Giỏi (GPA >= 8); dưới 8 không xếp bậc.
 
 export const DEFAULT_CREDITS = 3; // phần lớn môn FPTU 3 tín chỉ: dùng khi chưa có syllabus của môn
@@ -109,9 +109,11 @@ export function buildGpaReport(input: GpaInput[]): GpaReport {
   const terms = termNames.map((termName) => {
     const items = input.filter((c) => c.termName === termName);
     // GPA kỳ: các môn đã đạt trong kỳ (kể cả môn sau này bị học cải thiện thay thế thì vẫn là kết quả của kỳ đó)
-    const own = items.filter((c) => scored(c) && courses.get(c.courseId)!.note !== "excluded");
+    // Điểm TB kỳ: môn trượt tính 0 điểm nhưng tín chỉ vẫn nằm ở mẫu số nên kéo điểm kỳ xuống
+    const own = items.filter((c) => (scored(c) || c.status === "failed") && courses.get(c.courseId)!.note !== "excluded");
+    const pts = (c: GpaInput) => (c.status === "failed" ? 0 : (c.average as number));
     const credits = own.reduce((n, c) => n + courses.get(c.courseId)!.credits, 0);
-    const gpa = credits > 0 ? round2(own.reduce((n, c) => n + courses.get(c.courseId)!.credits * (c.average as number), 0) / credits) : null;
+    const gpa = credits > 0 ? round2(own.reduce((n, c) => n + courses.get(c.courseId)!.credits * pts(c), 0) / credits) : null;
     return { termName, gpa, credits, tier: tierOf(gpa), studyingCredits: studyingCredits(items) };
   });
 
