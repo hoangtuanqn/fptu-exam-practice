@@ -3,8 +3,10 @@
 // Chỉ có hai bậc xếp loại sinh viên: Xuất sắc (GPA >= 9) và Giỏi (GPA >= 8); dưới 8 không xếp bậc.
 
 export const DEFAULT_CREDITS = 3; // phần lớn môn FPTU 3 tín chỉ: dùng khi chưa có syllabus của môn
-// Các môn không tính vào GPA (quy chế: GDQP, thể chất, OJT, tiếng Anh dự bị...). Chỉ nhận ra theo tiền tố mã môn nên là gần đúng.
-export const NON_GPA_PREFIXES = ["VOV", "PES", "OJT", "GDQP", "DOM"];
+// Các môn không tính vào GPA, nhận ra theo tiền tố mã môn: tiếng Anh chuẩn bị (TRS1-6, LUK1-6), tiếng Nhật dự bị (JPD),
+// Vovinam (VOV), thể chất (PES), quốc phòng (GDQP, QPD), thực tập doanh nghiệp (OJT), định hướng (DOM, ORG).
+// Môn 0 tín chỉ cũng không tính (xem buildGpaReport).
+export const NON_GPA_PREFIXES = ["TRS", "LUK", "JPD", "VOV", "PES", "GDQP", "QPD", "OJT", "DOM", "ORG"];
 
 export interface GpaTier {
   key: string;
@@ -76,7 +78,7 @@ export function buildGpaReport(input: GpaInput[]): GpaReport {
     list.forEach((c, i) => {
       const prev = list.slice(0, i);
       const kind: AttemptKind = prev.length === 0 ? "first" : prev.some(scored) ? "improve" : "retake";
-      const isExcluded = excluded(c.subjectCode);
+      const isExcluded = excluded(c.subjectCode) || c.credits === 0;
       const counted = !isExcluded && lastPassed === c;
       courses.set(c.courseId, {
         courseId: c.courseId,
@@ -101,13 +103,13 @@ export function buildGpaReport(input: GpaInput[]): GpaReport {
     }
     return { credits, gpa: credits > 0 ? round2(sum / credits) : null };
   };
-  const studyingCredits = (items: GpaInput[]) => items.filter((c) => c.status === "studying" && !excluded(c.subjectCode)).reduce((n, c) => n + courses.get(c.courseId)!.credits, 0);
+  const studyingCredits = (items: GpaInput[]) => items.filter((c) => c.status === "studying" && courses.get(c.courseId)!.note !== "excluded").reduce((n, c) => n + courses.get(c.courseId)!.credits, 0);
 
   const termNames = [...new Set(input.map((c) => c.termName))].sort((a, b) => termOrder(b) - termOrder(a));
   const terms = termNames.map((termName) => {
     const items = input.filter((c) => c.termName === termName);
     // GPA kỳ: các môn đã đạt trong kỳ (kể cả môn sau này bị học cải thiện thay thế thì vẫn là kết quả của kỳ đó)
-    const own = items.filter((c) => scored(c) && !excluded(c.subjectCode));
+    const own = items.filter((c) => scored(c) && courses.get(c.courseId)!.note !== "excluded");
     const credits = own.reduce((n, c) => n + courses.get(c.courseId)!.credits, 0);
     const gpa = credits > 0 ? round2(own.reduce((n, c) => n + courses.get(c.courseId)!.credits * (c.average as number), 0) / credits) : null;
     return { termName, gpa, credits, tier: tierOf(gpa), studyingCredits: studyingCredits(items) };
