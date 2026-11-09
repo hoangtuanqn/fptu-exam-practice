@@ -88,16 +88,17 @@ export default function ExamsPage() {
     }
   }
 
-  // Trạng thái đáp án trong MỘT chip: đủ thì xanh, thiếu thì đỏ kèm số câu (người dùng không chấm được các câu trống)
+  // Một chip NGẮN, không xuống dòng: "50/50" (số câu có đáp án / số câu cần chấm), xanh khi đủ, đỏ khi thiếu
   const statusChip = (e: AdminExam) => {
-    if (e.answerSource === "PENDING") return <Badge tone="info">AI đang giải…</Badge>;
-    if (e.answerSource === "FAILED" || e.answerSource === "DEFAULT") return <Badge tone="danger">Chưa có đáp án</Badge>;
+    if (e.answerSource === "PENDING") return <Badge tone="info">Đang giải</Badge>;
+    if (e.answerSource === "FAILED" || e.answerSource === "DEFAULT") return <Badge tone="danger">Chưa có</Badge>;
     if (e.gradedQuestions === undefined || e.answeredQuestions === undefined) return <Badge tone={SOURCE[e.answerSource][1]}>{SOURCE[e.answerSource][0]}</Badge>; // máy chủ cũ chưa trả số liệu
-    const full = e.answeredQuestions >= e.gradedQuestions;
     return (
-      <span title="Số câu đã có đáp án / số câu cần chấm (không tính tài liệu tham khảo)">
-        <Badge tone={full ? "success" : "danger"}>
-          {e.answeredQuestions}/{e.gradedQuestions} câu có đáp án
+      <span title={`${e.answeredQuestions} trên ${e.gradedQuestions} câu cần chấm đã có đáp án (không tính tài liệu tham khảo)`}>
+        <Badge tone={e.answeredQuestions >= e.gradedQuestions ? "success" : "danger"}>
+          <span className="whitespace-nowrap tabular-nums">
+            {e.answeredQuestions}/{e.gradedQuestions}
+          </span>
         </Badge>
       </span>
     );
@@ -126,15 +127,17 @@ export default function ExamsPage() {
           <ErrorBox message={error} onRetry={reload} />
         ) : data && data.items.length > 0 ? (
           <>
+            <div className="flex gap-3 border-b border-slate-100 px-4 py-2 text-xs font-medium text-slate-500">
+              <span className="w-20 shrink-0">Có đáp án</span>
+              <span>Đề</span>
+            </div>
             <ul className="divide-y divide-slate-100">
               {data.items.map((e) => (
-                <li key={e.id} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
-                  <div className="min-w-0 flex-1 basis-64 space-y-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="truncate text-sm font-medium text-slate-900" title={`Thread ${e.threadId}`}>
-                        {e.title}
-                      </span>
-                      {statusChip(e)}
+                <li key={e.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">
+                  <div className="w-20 shrink-0">{statusChip(e)}</div>
+                  <div className="min-w-0 flex-1 basis-56 space-y-1">
+                    <div className="truncate text-sm font-medium text-slate-900" title={`Thread ${e.threadId}`}>
+                      {e.title}
                     </div>
                     {errorLine(e)}
                   </div>
