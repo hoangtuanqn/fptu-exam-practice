@@ -18,6 +18,9 @@ import { useClampPage } from "@/shared/hooks/useClampPage";
 const PRESETS = [10_000, 50_000, 100_000, 200_000, 500_000, 1_000_000];
 const BACK_KEY = "deposit_back";
 
+// 10.000 -> 10K, 1.000.000 -> 1M: nút gợi ý gọn, dễ đọc
+const shortMoney = (n: number) => (n >= 1_000_000 && n % 1_000_000 === 0 ? `${n / 1_000_000}M` : n >= 1000 && n % 1000 === 0 ? `${n / 1000}K` : n.toLocaleString("vi-VN"));
+
 // Thưởng thêm theo bậc (bậc cao nhất thỏa điều kiện), khớp với máy chủ
 const bonusOf = (amount: number, tiers: { min: number; percent: number }[]) => {
   const tier = [...tiers].sort((a, b) => b.min - a.min).find((t) => amount >= t.min);
@@ -158,18 +161,19 @@ export default function DepositPage() {
                 </div>
               </div>
             )}
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5" role="group" aria-label="Gợi ý số tiền">
               {PRESETS.filter((p) => p >= min).map((p) => (
                 <button
                   key={p}
                   type="button"
                   onClick={() => setDigits(String(p))}
-                  className={`rounded-lg border px-3 py-1.5 text-sm tabular-nums transition ${
-                    amount === p ? "border-brand-700 bg-brand-50 text-brand-900" : "border-slate-300 text-slate-600 hover:bg-slate-50"
+                  aria-pressed={amount === p}
+                  className={`rounded-full border px-3 py-1 text-xs font-medium tabular-nums transition ${
+                    amount === p ? "border-brand-700 bg-brand-50 text-brand-900" : "border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50"
                   }`}
                 >
-                  {p.toLocaleString("vi-VN")}
-                  {bonusOf(p, tiers) > 0 && <span className="ml-1.5 text-xs font-medium text-emerald-600">+{bonusOf(p, tiers).toLocaleString("vi-VN")}</span>}
+                  {shortMoney(p)}
+                  {bonusOf(p, tiers) > 0 && <span className="ml-1 text-emerald-600">+{shortMoney(bonusOf(p, tiers))}</span>}
                 </button>
               ))}
             </div>
