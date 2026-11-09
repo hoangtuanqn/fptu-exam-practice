@@ -55,6 +55,12 @@ export const realtimeHub = {
     if (payload) io.to(roomOf("exam", examId)).emit(EVENTS.examQuestions, payload);
   },
 
+  // Gắn chủ đề chạy nền: "running" khi bắt đầu, "done" kèm các chủ đề vừa gắn khi xong (hoặc không gắn được)
+  publishExamTopics(examId: number, state: "running" | "done", topics: { number: number; topic: string }[] = []) {
+    if (!io) return;
+    io.to(roomOf("exam", examId)).emit(EVENTS.examTopics, { examId, state, topics });
+  },
+
   // Lấy đề thất bại sau khi người dùng đã mở đề: báo để họ thoát ra
   publishExamFailed(examId: number, message: string) {
     if (!io) return;
