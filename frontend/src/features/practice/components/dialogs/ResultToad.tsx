@@ -4,7 +4,7 @@ import { ToadArt } from "./ToadArt";
 import type { ToadMood } from "./toadMood";
 
 const TOAD_H = 123;
-const SPACER_H = 104; // chỗ chừa ở đầu bảng điểm cho cóc đứng
+const SPACER_H = 184; // chỗ chừa ở đầu bảng điểm cho cóc đứng và bong bóng lời nhắn ngay trên đầu nó
 const SETTLE_MS = 380; // chờ hộp thoại bung xong rồi mới đo vị trí (đang bung thì kích thước chưa chuẩn)
 const CONFETTI = ["#ffc61f", "#e53935", "#43a047", "#1e88e5", "#ab47bc", "#ff8f00"];
 
@@ -13,7 +13,7 @@ const CONFETTI = ["#ffc61f", "#e53935", "#43a047", "#1e88e5", "#ab47bc", "#ff8f0
  * Vẽ ra <body> (hộp thoại cắt phần tràn nên cóc không thể rơi từ ngoài hộp xuống nếu nằm trong đó).
  * Người bật "giảm chuyển động" thấy cóc đứng yên đúng chỗ, không rơi, không pháo giấy.
  */
-export function ResultToad({ mood, board }: { mood: ToadMood; board: string }) {
+export function ResultToad({ mood, board, say }: { mood: ToadMood; board: string; say: string }) {
   const spacer = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
 
@@ -34,9 +34,13 @@ export function ResultToad({ mood, board }: { mood: ToadMood; board: string }) {
   return (
     <>
       <div ref={spacer} aria-hidden="true" style={{ height: SPACER_H }} />
+      <p className="sr-only">{say}</p>
       {pos &&
         createPortal(
           <div aria-hidden="true" className="toad-layer" style={{ left: pos.left, top: pos.top }}>
+            <div className="toad-bubble-wrap">
+              <div className={`toad-bubble toad-bubble-${mood}`}>{say}</div>
+            </div>
             <div className="toad-fall" style={{ "--toad-drop": `${pos.top + TOAD_H + 40}px` } as CSSProperties}>
               <div className={`toad-idle toad-idle-${mood}`}>
                 <ToadArt mood={mood} board={board} />

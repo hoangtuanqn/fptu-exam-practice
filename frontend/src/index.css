@@ -359,3 +359,45 @@ h3 {
     animation: promo-shine 1.8s ease-in-out infinite;
   }
 }
+
+/* Bong bóng lời nhắn của cóc: bay tới ngay trên đầu sau khi cóc đáp xuống */
+.toad-bubble-wrap { position: absolute; bottom: 100%; left: 50%; width: 0; display: flex; justify-content: center; margin-bottom: 2px; }
+.toad-bubble {
+  position: relative;
+  flex: none;
+  width: min(290px, calc(100vw - 64px));
+  padding: 9px 14px;
+  border-radius: 18px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  background: var(--md-sys-color-surface-container-lowest);
+  color: var(--md-sys-color-on-surface);
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: center;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.14);
+  transform-origin: 50% 100%;
+}
+.toad-bubble::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  background: var(--md-sys-color-surface-container-lowest);
+  border-right: 1px solid var(--md-sys-color-outline-variant);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  transform: rotate(45deg);
+}
+.toad-bubble-zero, .toad-bubble-cry, .toad-bubble-worry { border-color: #9ec5e8; }
+.toad-bubble-star, .toad-bubble-perfect { border-color: #f0a800; }
+@keyframes toad-bubble-fly {
+  0% { opacity: 0; transform: translate(70px, 90px) scale(0.15) rotate(10deg); }
+  60% { opacity: 1; transform: translate(-4px, -8px) scale(1.07) rotate(-2deg); }
+  80% { transform: translate(0, 2px) scale(0.98) rotate(0); }
+  100% { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .toad-bubble { animation: toad-bubble-fly 0.7s cubic-bezier(0.2, 0.8, 0.3, 1) 1.25s both; }
+}
