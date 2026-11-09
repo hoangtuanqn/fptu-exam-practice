@@ -21,7 +21,26 @@ export const gradeCourseSchema = z.object({
   components: z.array(gradeComponentSchema).max(80),
 });
 
-export const gradeSyncBody = z.object({ courses: z.array(gradeCourseSchema).min(1).max(60) });
+const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+const clock = z.string().regex(/^\d{2}:\d{2}$/);
+
+// Một buổi thi trong Lịch thi trên FAP (loại thi: FE, PE, 2NDFE...)
+export const examSlotSchema = z.object({
+  date: day,
+  start: clock,
+  end: clock,
+  room: z.string().trim().max(20).default(""),
+  subjectCode: subjectCodeSchema,
+  subjectName: z.string().trim().min(1).max(200),
+  format: z.string().trim().max(30),
+  kind: z.string().trim().min(1).max(12),
+  resultDate: day.nullable().default(null),
+  note: z.string().trim().max(200).default(""),
+});
+
+export const gradeSyncBody = z
+  .object({ courses: z.array(gradeCourseSchema).max(60).default([]), exams: z.array(examSlotSchema).max(120).optional() })
+  .refine((b) => b.courses.length > 0 || (b.exams?.length ?? 0) > 0, "Không có dữ liệu để đồng bộ");
 export const gradeSettingBody = z.object({ enabled: z.boolean() });
 
 export type GradeSyncBody = z.infer<typeof gradeSyncBody>;
