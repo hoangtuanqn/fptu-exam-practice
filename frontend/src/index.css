@@ -345,6 +345,7 @@ h3 {
 }
 @media (prefers-reduced-motion: reduce) {
   .toad-confetti { display: none; }
+}
 
 /* Thanh "đang phân loại chủ đề": vệt sáng chạy ngang để người dùng biết dữ liệu đang được cập nhật */
 .topic-scan { position: relative; overflow: hidden; }
