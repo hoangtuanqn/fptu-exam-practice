@@ -6,7 +6,8 @@ import { buttonClass } from "@/shared/ui/Button";
 import { Card, PageHeader } from "@/shared/ui/Card";
 import { Empty } from "@/shared/ui/Feedback";
 import { QueryBoundary } from "@/shared/ui/QueryBoundary";
-import { gradeApi, type GradeCourse, type GradeOverview, type GradeTerm } from "./grade.api";
+import { gradeApi, type ExamSlot, type GradeCourse, type GradeOverview, type GradeTerm } from "./grade.api";
+import { ExamSchedule, examLinesFor } from "./ExamSchedule";
 import { GradeSyncCard } from "./GradeSyncCard";
 
 const fmt = (n: number) => String(Math.round(n * 100) / 100).replace(".", ",");
@@ -60,8 +61,9 @@ function Detail({ c }: { c: GradeCourse }) {
   );
 }
 
-function CourseCard({ c, latest }: { c: GradeCourse; latest: boolean }) {
+function CourseCard({ c, latest, exams }: { c: GradeCourse; latest: boolean; exams: ExamSlot[] }) {
   const h = latest ? headline(c) : { text: "", tone: "muted" as const };
+  const examLines = latest ? examLinesFor(exams, c.subjectCode, c.advice.state === "resit") : [];
   const studying = c.status === "studying";
   const practise = latest && (c.advice.state === "need" || c.advice.state === "resit");
   const result = studying
@@ -92,6 +94,11 @@ function CourseCard({ c, latest }: { c: GradeCourse; latest: boolean }) {
         )}
       </div>
       {h.text && <p className={`md-title-small mt-2 ${TONE_TEXT[h.tone]}`}>{h.text}</p>}
+      {examLines.map((l) => (
+        <p key={l} className="md-body-small mt-1 text-on-surface-variant">
+          {l}
+        </p>
+      ))}
       {latest && studying && <Detail c={c} />}
       {practise && (
         <Link to={`/account/exams?tab=subject&subject=${encodeURIComponent(c.subjectCode)}`} className={`${buttonClass({ variant: "primary", size: "sm" })} mt-3`}>
@@ -199,6 +206,7 @@ function Body({ data, reload }: { data: GradeOverview; reload: () => void }) {
   return (
     <div className="space-y-4">
       <GradeSyncCard overview={data} onChange={reload} />
+      {data.enabled && <ExamSchedule exams={data.exams} />}
       {data.enabled &&
         (!selected ? (
           <Card>
@@ -228,7 +236,7 @@ function Body({ data, reload }: { data: GradeOverview; reload: () => void }) {
                   <h2 className="md-title-medium text-on-surface">Các môn kỳ {selected!.termName}</h2>
                   <div className="grid gap-3 md:grid-cols-2">
                     {selected!.courses.map((c) => (
-                      <CourseCard key={c.courseId} c={c} latest={!laterOf(c)} />
+                      <CourseCard key={c.courseId} c={c} latest={!laterOf(c)} exams={data.exams} />
                     ))}
                   </div>
                 </div>
