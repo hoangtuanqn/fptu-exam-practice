@@ -54,6 +54,7 @@ export interface GradeTier {
   label: string;
   min: number;
   reached: boolean;
+  blocked: string | null; // lý do kỳ này không được xét danh hiệu (trượt môn, thiếu tín chỉ)
   needAverage: number | null; // trung bình cần ở các môn đang học để chạm mức này; > 10 = không thể trong kỳ này
 }
 

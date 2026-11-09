@@ -154,6 +154,8 @@ function Summary({ data }: { data: GradeOverview }) {
                   <td className="py-2 text-on-surface-variant">
                     {t.reached ? (
                       <Badge tone="success">Đã đạt</Badge>
+                    ) : t.blocked ? (
+                      t.blocked
                     ) : t.needAverage === null ? (
                       "Chưa đạt"
                     ) : t.needAverage > 10 ? (
@@ -176,7 +178,7 @@ function Summary({ data }: { data: GradeOverview }) {
           </p>
         </div>
         <p className="md-body-small text-on-surface-variant">
-          Sinh viên Xuất sắc: điểm TB kỳ từ 9 trở lên. Sinh viên Giỏi: từ 8 trở lên. Môn học lại hoặc cải thiện: điểm kỳ cũ giữ nguyên, GPA tích lũy lấy điểm cao nhất trong các lần đã qua. Hạng tốt nghiệp xuất sắc và giỏi còn có thể bị hạ một mức nếu học lại quá 5% số tín chỉ hoặc bị kỷ luật cấp trường. Môn chưa có trong syllabus được coi là 0 tín chỉ nên chưa tính vào điểm; tiếng Anh chuẩn bị, Vovinam, thể chất, OJT cũng không tính.
+          Danh hiệu học kỳ cần đủ 4 điều kiện: (1) điểm TB kỳ từ 9 trở lên là Xuất sắc, từ 8 trở lên là Giỏi; (2) qua 100% các môn trong kỳ; (3) đủ số tín chỉ tối thiểu của kỳ (thường từ 12); (4) không bị kỷ luật (FePass không biết điều này, bạn tự đối chiếu). FPT không dùng điểm rèn luyện. Môn học lại hoặc cải thiện: điểm kỳ cũ giữ nguyên, GPA tích lũy lấy điểm cao nhất trong các lần đã qua. Hạng tốt nghiệp xuất sắc và giỏi còn có thể bị hạ một mức nếu học lại quá 5% số tín chỉ hoặc bị kỷ luật cấp trường. Môn chưa có trong syllabus được coi là 0 tín chỉ nên chưa tính vào điểm; tiếng Anh chuẩn bị, Vovinam, thể chất, OJT cũng không tính.
         </p>
       </div>
     </Card>

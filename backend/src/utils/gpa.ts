@@ -8,6 +8,10 @@ export const DEFAULT_CREDITS = 0; // môn chưa có syllabus coi như 0 tín ch�
 // Môn 0 tín chỉ cũng không tính (xem buildGpaReport).
 export const NON_GPA_PREFIXES = ["TRS", "LUK", "JPD", "VOV", "PES", "GDQP", "QPD", "OJT", "DOM", "ORG"];
 
+// Danh hiệu học kỳ cần đủ: đúng mức điểm TB kỳ, qua 100% môn trong kỳ, đủ số tín chỉ tối thiểu (thường từ 12) và không bị kỷ luật.
+// Hệ thống không biết kỷ luật nên điều kiện này chỉ được nhắc trên giao diện.
+export const MIN_TERM_CREDITS = 12;
+
 export interface GpaTier {
   key: string;
   label: string;
@@ -45,6 +49,8 @@ export interface GpaTerm {
   credits: number; // tín chỉ đã đạt và tính GPA trong kỳ
   tier: string | null;
   studyingCredits: number;
+  failedCount: number; // số môn trượt trong kỳ (không tính môn không vào điểm)
+  registeredCredits: number; // tín chỉ của mọi môn tính điểm trong kỳ, kể cả đang học và trượt
 }
 
 export interface GpaReport {
@@ -114,7 +120,12 @@ export function buildGpaReport(input: GpaInput[]): GpaReport {
     const pts = (c: GpaInput) => (c.status === "failed" ? 0 : (c.average as number));
     const credits = own.reduce((n, c) => n + courses.get(c.courseId)!.credits, 0);
     const gpa = credits > 0 ? round2(own.reduce((n, c) => n + courses.get(c.courseId)!.credits * pts(c), 0) / credits) : null;
-    return { termName, gpa, credits, tier: tierOf(gpa), studyingCredits: studyingCredits(items) };
+    const failedCount = items.filter((c) => c.status === "failed" && courses.get(c.courseId)!.note !== "excluded").length;
+    const registeredCredits = items.filter((c) => courses.get(c.courseId)!.note !== "excluded").reduce((n, c) => n + courses.get(c.courseId)!.credits, 0);
+    const studying = studyingCredits(items);
+    // Chỉ có danh hiệu khi kỳ đã xong, không trượt môn nào và đủ tín chỉ tối thiểu
+    const eligible = studying === 0 && failedCount === 0 && registeredCredits >= MIN_TERM_CREDITS;
+    return { termName, gpa, credits, tier: eligible ? tierOf(gpa) : null, studyingCredits: studying, failedCount, registeredCredits };
   });
 
   const all = gpaOf(input);

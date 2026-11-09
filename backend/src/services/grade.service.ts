@@ -3,7 +3,7 @@ import { prisma } from "../configs/prisma";
 import { AppError } from "../rules/error";
 import type { GradeSyncBody } from "../rules/requests/grade.request";
 import { adviseGrade, type GradeComponent, type SyllabusAssessment } from "../utils/grade-advice";
-import { buildGpaReport, GPA_TIERS, requiredAverage, termOrder } from "../utils/gpa";
+import { buildGpaReport, GPA_TIERS, MIN_TERM_CREDITS, requiredAverage, termOrder } from "../utils/gpa";
 
 // Điểm FAP của sinh viên: chỉ lưu khi sinh viên bật đồng bộ; tắt đồng bộ là xoá hết điểm đã lưu.
 // Tiện ích trình duyệt đọc điểm trên FAP bằng phiên đăng nhập của chính sinh viên rồi website gửi lên đây; server không bao giờ gọi FAP.
@@ -90,13 +90,15 @@ export const gradeService = {
     const { cumulative } = report;
     const cur = report.terms[0] ?? null;
     const tiers = GPA_TIERS.map((t) => {
-      const reached = !!cur && cur.gpa !== null && cur.studyingCredits === 0 && cur.gpa >= t.min;
+      const blocked = !cur ? null : cur.failedCount > 0 ? "Kỳ này có môn trượt nên không xét danh hiệu" : cur.registeredCredits < MIN_TERM_CREDITS ? `Kỳ này chưa đủ ${MIN_TERM_CREDITS} tín chỉ tối thiểu` : null;
+      const reached = !blocked && !!cur && cur.gpa !== null && cur.studyingCredits === 0 && cur.gpa >= t.min;
       return {
+        blocked,
         key: t.key,
         label: t.label,
         min: t.min,
         reached,
-        needAverage: cur && !reached && cur.studyingCredits > 0 ? requiredAverage(cur.gpa, cur.credits, cur.studyingCredits, t.min) : null,
+        needAverage: cur && !blocked && !reached && cur.studyingCredits > 0 ? requiredAverage(cur.gpa, cur.credits, cur.studyingCredits, t.min) : null,
       };
     });
     const currentTerm = cur && { termName: cur.termName, gpa: cur.gpa, credits: cur.credits, studyingCredits: cur.studyingCredits };
