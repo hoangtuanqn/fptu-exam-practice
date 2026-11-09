@@ -61,6 +61,7 @@ export const PRIVATE_PAGES: Record<string, PageSeo> = {
   "/account/review/practice": { title: "Ôn câu sai", description: "Ôn lần lượt các câu đến hạn trong sổ câu sai của bạn." },
   "/account/pe": { title: "Tải đề thi PE", description: "Tải trọn bộ tài nguyên đề thi PE thành một file zip." },
   "/account/reports": { title: "Báo cáo đáp án", description: "Theo dõi các báo cáo đáp án sai bạn đã gửi và trạng thái xử lý." },
+  "/account/grades": { title: "Điểm FAP", description: "Điểm trung bình từng kỳ, lịch thi và điểm cần đạt ở bài thi cuối kỳ để qua từng môn, lấy từ FAP khi bạn bật đồng bộ." },
   "/account/attempts": { title: "Lịch sử làm bài", description: "Xem lại các lần luyện tập, thi thử cùng điểm số từng lần." },
   "/account/deposit": { title: "Nạp credit", description: "Chuyển khoản qua mã QR để nạp credit, credit được cộng tự động." },
   "/account/referral": { title: "Giới thiệu bạn bè", description: "Mời bạn bè bằng mã giới thiệu, cả hai cùng nhận thưởng credit." },
