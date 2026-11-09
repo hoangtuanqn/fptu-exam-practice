@@ -20,6 +20,14 @@ const RESIT = /\s*\(\s*resit\s*\)\s*$/i;
 const FINAL = /^(final exam|final|fe|te|theory exam)\b/i;
 const PRACTICAL = /practical|^pe\b/i;
 
+// Tên phần điểm viết tắt/đầy đủ về cùng một dạng để so FAP với syllabus: "TE" = "Theoretical Exam (TE)", "FE" = "Final Exam"...
+const ALIAS: Record<string, string> = { "theoretical exam": "te", "theory exam": "te", "final exam": "fe", "practical exam": "pe" };
+const canonical = (name: string) => {
+  const n = name.toLowerCase().replace(RESIT, "").trim();
+  const short = n.match(/\(([a-z]{2,4})\)$/); // "theoretical exam (te)" -> "te"
+  return short ? short[1]! : (ALIAS[n] ?? n);
+};
+
 const round1Up = (n: number) => Math.ceil(n * 10 - 1e-9) / 10;
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
@@ -52,12 +60,8 @@ function toPart(items: { group: string; weight: number; score: number | null }[]
   const graded = items.filter((i) => i.score !== null);
   const score = graded.length === items.length && weight > 0 ? items.reduce((n, i) => n + i.weight * (i.score as number), 0) / weight : null;
   const base = items[0]!.group.replace(RESIT, "");
-  const key = base.toLowerCase();
-  // Tên phần trong syllabus có thể dài hơn tên trên FAP, ví dụ "Theoretical Exam (TE)" so với "TE"
-  const a = assessments.find((x) => {
-    const cat = x.category.toLowerCase().replace(RESIT, "").trim();
-    return cat === key || cat.endsWith(`(${key})`);
-  });
+  const key = canonical(base);
+  const a = assessments.find((x) => canonical(x.category) === key);
   return { group: base, weight, score: score === null ? null : round2(score), resit, minScore: a?.minScore ?? null };
 }
 
