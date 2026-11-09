@@ -104,11 +104,11 @@ function TermSection({ term, open, laterOf }: { term: GradeTerm; open: boolean; 
           <span className="md-body-small text-on-surface-variant">{term.courses.length} môn</span>
           {term.gpa !== null ? (
             <>
-              <span className="md-title-small text-on-surface">GPA {fmt(term.gpa)}</span>
+              <span className="md-title-small text-on-surface">TB kỳ {fmt(term.gpa)}</span>
               {term.tier && <Badge tone="info">{TIER_LABEL[term.tier]}</Badge>}
             </>
           ) : (
-            <Badge tone="neutral">Chưa có GPA kỳ</Badge>
+            <Badge tone="neutral">Chưa có điểm TB kỳ</Badge>
           )}
         </span>
       </summary>
@@ -122,44 +122,45 @@ function TermSection({ term, open, laterOf }: { term: GradeTerm; open: boolean; 
 }
 
 function Summary({ data }: { data: GradeOverview }) {
-  const { cumulative: cum, tiers } = data;
+  const { cumulative: cum, tiers, currentTerm: cur } = data;
+  if (!cur) return null;
   return (
     <Card>
-      <CardHeader title="GPA tích lũy" description="Thang 10, chỉ tính các môn đã qua, trọng số theo tín chỉ. Môn học lại hoặc cải thiện chỉ lấy kết quả lần học đã qua gần nhất." />
+      <CardHeader title={`Danh hiệu kỳ ${cur.termName}`} description="Xét theo điểm trung bình từng kỳ (thang 10, trọng số theo tín chỉ), chỉ tính các môn đã qua." />
       <div className="space-y-4 p-5">
         <div className="flex flex-wrap items-end gap-x-6 gap-y-2">
-          <p className="md-display-small text-primary">{cum.gpa === null ? "–" : fmt(cum.gpa)}</p>
-          <div className="space-y-1">
-            {cum.tier && <Badge tone="info">{TIER_LABEL[cum.tier]}</Badge>}
-            <p className="md-body-small text-on-surface-variant">
-              {cum.credits} tín chỉ đã tính{cum.studyingCredits > 0 ? ` · ${cum.studyingCredits} tín chỉ đang học` : ""}
-            </p>
+          <div>
+            <p className="md-label-medium text-on-surface-variant">Điểm trung bình kỳ</p>
+            <p className="md-display-small text-primary">{cur.gpa === null ? "–" : fmt(cur.gpa)}</p>
           </div>
+          <p className="md-body-small text-on-surface-variant">
+            {cur.credits} tín chỉ đã có điểm{cur.studyingCredits > 0 ? ` · ${cur.studyingCredits} tín chỉ đang học` : ""}
+          </p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="md-label-medium text-on-surface-variant">
                 <th className="py-2 pr-4 font-medium">Danh hiệu</th>
-                <th className="py-2 pr-4 font-medium">GPA từ</th>
+                <th className="py-2 pr-4 font-medium">Điểm TB kỳ từ</th>
                 <th className="py-2 font-medium">Của bạn</th>
               </tr>
             </thead>
             <tbody>
               {tiers.map((t) => (
                 <tr key={t.key} className="border-t border-outline-variant">
-                  <td className="py-2 pr-4 text-on-surface">{t.label}</td>
+                  <td className="py-2 pr-4 text-on-surface">Sinh viên {t.label}</td>
                   <td className="py-2 pr-4 text-on-surface">{fmt(t.min)}</td>
                   <td className="py-2 text-on-surface-variant">
                     {t.reached ? (
                       <Badge tone="success">Đã đạt</Badge>
                     ) : t.needAverage === null ? (
-                      "–"
+                      "Chưa đạt"
                     ) : t.needAverage > 10 ? (
-                      "Kỳ này chưa thể đạt, cần nhiều kỳ"
+                      "Không thể đạt trong kỳ này"
                     ) : (
                       <>
-                        Kỳ này cần trung bình ≥ <strong className="text-on-surface">{fmt(t.needAverage)}</strong> cho {cum.studyingCredits} tín chỉ đang học
+                        Cần trung bình ≥ <strong className="text-on-surface">{fmt(t.needAverage)}</strong> ở {cur.studyingCredits} tín chỉ đang học
                       </>
                     )}
                   </td>
@@ -168,8 +169,14 @@ function Summary({ data }: { data: GradeOverview }) {
             </tbody>
           </table>
         </div>
+        <div className="rounded-m3-md bg-surface-container px-4 py-3">
+          <p className="md-label-medium text-on-surface-variant">GPA tích lũy (dùng khi xét tốt nghiệp, không dùng xét danh hiệu kỳ)</p>
+          <p className="md-title-medium text-on-surface">
+            {cum.gpa === null ? "–" : fmt(cum.gpa)} <span className="md-body-small text-on-surface-variant">· {cum.credits} tín chỉ đã tính</span>
+          </p>
+        </div>
         <p className="md-body-small text-on-surface-variant">
-          Sinh viên Xuất sắc: GPA từ 9 trở lên. Sinh viên Giỏi: GPA từ 8 trở lên. Hạng tốt nghiệp xuất sắc và giỏi còn có thể bị hạ một mức nếu học lại quá 5% số tín chỉ hoặc bị kỷ luật cấp trường. Môn chưa có syllabus được tạm tính 3 tín chỉ; môn như Vovinam, thể chất, OJT không tính vào GPA.
+          Sinh viên Xuất sắc: điểm TB kỳ từ 9 trở lên. Sinh viên Giỏi: từ 8 trở lên. Môn học lại hoặc cải thiện chỉ lấy kết quả đã qua gần nhất cho GPA tích lũy. Hạng tốt nghiệp xuất sắc và giỏi còn có thể bị hạ một mức nếu học lại quá 5% số tín chỉ hoặc bị kỷ luật cấp trường. Môn chưa có syllabus được tạm tính 3 tín chỉ; môn như Vovinam, thể chất, OJT không tính điểm.
         </p>
       </div>
     </Card>
@@ -209,7 +216,7 @@ export default function GradesPage() {
   const query = useApi(() => gradeApi.overview(), []);
   return (
     <div>
-      <PageHeader title="Điểm FAP" eyebrow="Cá nhân hoá" description="GPA, điểm cần đạt ở bài thi cuối kỳ để qua từng môn và mức xếp loại bạn có thể chạm, theo từng học kỳ." />
+      <PageHeader title="Điểm FAP" eyebrow="Cá nhân hoá" description="Điểm trung bình từng kỳ, danh hiệu Giỏi/Xuất sắc và điểm cần đạt ở bài thi cuối kỳ để qua từng môn." />
       <QueryBoundary query={query}>{(data) => <Body data={data} reload={query.reload} />}</QueryBoundary>
     </div>
   );

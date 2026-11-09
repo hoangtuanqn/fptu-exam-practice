@@ -85,17 +85,23 @@ export const gradeService = {
       };
     });
 
-    // GPA tích lũy và từng mức xếp loại: còn thiếu bao nhiêu, kỳ này cần trung bình bao nhiêu để chạm mức đó
+    // Danh hiệu (Xuất sắc/Giỏi) xét theo điểm trung bình TỪNG KỲ; GPA tích lũy chỉ để tham khảo cho lúc ra trường.
+    // Kỳ gần nhất: còn môn đang học thì tính điểm trung bình cần ở các môn đó để chạm từng mức.
     const { cumulative } = report;
-    const tiers = GPA_TIERS.map((t) => ({
-      key: t.key,
-      label: t.label,
-      min: t.min,
-      reached: cumulative.gpa !== null && cumulative.gpa >= t.min,
-      needAverage: cumulative.gpa !== null && cumulative.gpa >= t.min ? null : requiredAverage(cumulative.gpa, cumulative.credits, cumulative.studyingCredits, t.min),
-    }));
+    const cur = report.terms[0] ?? null;
+    const tiers = GPA_TIERS.map((t) => {
+      const reached = !!cur && cur.gpa !== null && cur.studyingCredits === 0 && cur.gpa >= t.min;
+      return {
+        key: t.key,
+        label: t.label,
+        min: t.min,
+        reached,
+        needAverage: cur && !reached && cur.studyingCredits > 0 ? requiredAverage(cur.gpa, cur.credits, cur.studyingCredits, t.min) : null,
+      };
+    });
+    const currentTerm = cur && { termName: cur.termName, gpa: cur.gpa, credits: cur.credits, studyingCredits: cur.studyingCredits };
     const terms = report.terms.map((t) => ({ ...t, courses: courses.filter((c) => c.termName === t.termName).sort((a, b) => a.subjectCode.localeCompare(b.subjectCode)) }));
     terms.sort((a, b) => termOrder(b.termName) - termOrder(a.termName));
-    return { ...setting, courses, terms, cumulative, tiers };
+    return { ...setting, courses, terms, cumulative, currentTerm, tiers };
   },
 };

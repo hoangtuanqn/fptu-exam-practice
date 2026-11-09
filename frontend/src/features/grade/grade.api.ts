@@ -63,6 +63,7 @@ export interface GradeOverview {
   courses: GradeCourse[];
   terms: GradeTerm[];
   cumulative: { gpa: number | null; credits: number; tier: string | null; studyingCredits: number };
+  currentTerm: { termName: string; gpa: number | null; credits: number; studyingCredits: number } | null;
   tiers: GradeTier[];
 }
 
