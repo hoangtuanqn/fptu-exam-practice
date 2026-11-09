@@ -1,7 +1,6 @@
 // Điểm trung bình (GPA) thang 10 của sinh viên FPTU, tính từ bảng điểm FAP. Hàm thuần, không đụng DB.
 // Theo Quy chế đào tạo: chỉ tính các môn đã Đạt, trọng số là số tín chỉ, làm tròn 2 chữ số; học cải thiện thì kết quả lần trước bị hủy.
-// Lưu ý: quy chế không ghi ngưỡng xếp loại học kỳ/tốt nghiệp. Các mốc dưới đây là mốc tham khảo (thang 10: 9 / 8 / 7 / 6 / 5)
-// khớp với các hạng điểm môn học trong quy chế, nên giao diện luôn ghi rõ là tham khảo.
+// Chỉ có hai bậc xếp loại sinh viên: Xuất sắc (GPA >= 9) và Giỏi (GPA >= 8); dưới 8 không xếp bậc.
 
 export const DEFAULT_CREDITS = 3; // phần lớn môn FPTU 3 tín chỉ: dùng khi chưa có syllabus của môn
 // Các môn không tính vào GPA (quy chế: GDQP, thể chất, OJT, tiếng Anh dự bị...). Chỉ nhận ra theo tiền tố mã môn nên là gần đúng.
@@ -15,9 +14,6 @@ export interface GpaTier {
 export const GPA_TIERS: GpaTier[] = [
   { key: "excellent", label: "Xuất sắc", min: 9 },
   { key: "good", label: "Giỏi", min: 8 },
-  { key: "fair", label: "Khá", min: 7 },
-  { key: "average-fair", label: "Trung bình khá", min: 6 },
-  { key: "average", label: "Trung bình", min: 5 },
 ];
 
 export interface GpaInput {

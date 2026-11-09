@@ -14,7 +14,7 @@ const STATUS: Record<GradeCourse["status"], { label: string; tone: Tone }> = {
   failed: { label: "Chưa qua", tone: "danger" },
   unknown: { label: "Chưa rõ", tone: "neutral" },
 };
-const TIER_LABEL: Record<string, string> = { excellent: "Xuất sắc", good: "Giỏi", fair: "Khá", "average-fair": "Trung bình khá", average: "Trung bình" };
+const TIER_LABEL: Record<string, string> = { excellent: "Sinh viên Xuất sắc", good: "Sinh viên Giỏi" };
 const KIND_LABEL = { retake: "Học lại", improve: "Học cải thiện" } as const;
 
 const fmt = (n: number) => String(Math.round(n * 100) / 100).replace(".", ",");
@@ -140,7 +140,7 @@ function Summary({ data }: { data: GradeOverview }) {
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="md-label-medium text-on-surface-variant">
-                <th className="py-2 pr-4 font-medium">Mức xếp loại</th>
+                <th className="py-2 pr-4 font-medium">Danh hiệu</th>
                 <th className="py-2 pr-4 font-medium">GPA từ</th>
                 <th className="py-2 font-medium">Của bạn</th>
               </tr>
@@ -169,7 +169,7 @@ function Summary({ data }: { data: GradeOverview }) {
           </table>
         </div>
         <p className="md-body-small text-on-surface-variant">
-          Các mốc 9 / 8 / 7 / 6 / 5 chỉ mang tính tham khảo: quy chế của trường chỉ ghi rõ hạng điểm từng môn, không ghi ngưỡng xếp loại học kỳ. Hạng tốt nghiệp xuất sắc và giỏi còn có thể bị hạ một mức nếu học lại quá 5% số tín chỉ hoặc bị kỷ luật cấp trường. Môn chưa có syllabus được tạm tính 3 tín chỉ; môn như Vovinam, thể chất, OJT không tính vào GPA.
+          Sinh viên Xuất sắc: GPA từ 9 trở lên. Sinh viên Giỏi: GPA từ 8 trở lên. Hạng tốt nghiệp xuất sắc và giỏi còn có thể bị hạ một mức nếu học lại quá 5% số tín chỉ hoặc bị kỷ luật cấp trường. Môn chưa có syllabus được tạm tính 3 tín chỉ; môn như Vovinam, thể chất, OJT không tính vào GPA.
         </p>
       </div>
     </Card>
