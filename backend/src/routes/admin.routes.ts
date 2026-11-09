@@ -23,7 +23,7 @@ import { listReportsQuery, reviewReportBody } from "../rules/requests/answer-rep
 import { createGiftCodeBody, listGiftCodesQuery, updateGiftCodeBody } from "../rules/requests/gift-code.request";
 import { validate } from "../middlewares/validate.middlewares";
 import { paginationQuery } from "../utils/pagination";
-import { adjustBalanceBody, idParam, listUsersQuery, renameExamBody, resetPasswordBody, updateExamQuestionsBody, updateUserBody } from "../rules/requests/admin.request";
+import { adjustBalanceBody, idParam, listUsersQuery, questionParam, renameExamBody, resetPasswordBody, updateExamQuestionsBody, updateUserBody } from "../rules/requests/admin.request";
 
 const adminRouter = Router();
 
@@ -88,6 +88,7 @@ adminRouter.get("/exams/:id", validate(idParam, "params"), adminAiController.exa
 adminRouter.patch("/exams/:id", validate(idParam, "params"), validate(renameExamBody), adminAiController.renameExam);
 adminRouter.delete("/exams/:id", validate(idParam, "params"), adminAiController.removeExam);
 adminRouter.patch("/exams/:id/questions", validate(idParam, "params"), validate(updateExamQuestionsBody), adminAiController.saveQuestions);
+adminRouter.post("/exams/:id/questions/:number/resolve", validate(questionParam, "params"), adminAiController.resolveQuestion);
 adminRouter.post("/exams/:id/solve", validate(idParam, "params"), adminAiController.solve);
 adminRouter.get("/exams/:id/report", validate(idParam, "params"), adminAiController.report);
 
