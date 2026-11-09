@@ -251,7 +251,7 @@ function QuestionCard({ q, answer, isReference, dirty, disabled, solving, aiNote
             type="button"
             onClick={onSolve}
             disabled={disabled || solving}
-            title="Nhờ AI giải lại riêng câu này (chỉ gợi ý, bấm Lưu mới ghi)"
+            title="Lấy lại bình luận của câu này từ FuOverflow rồi nhờ AI giải lại (chỉ gợi ý, bấm Lưu mới ghi)"
             className="inline-flex items-center gap-1.5 rounded-md border border-brand-200 bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-800 transition hover:border-brand-400 disabled:opacity-50"
           >
             {solving ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />}
@@ -383,7 +383,8 @@ export default function ExamEditPage() {
       if (r.notQuestion) toast.error(`Câu ${q.number}: AI cho rằng đây không phải câu hỏi`);
       else if (r.answer) {
         patch(q.number, { answer: normalize(r.answer) }); // chỉ điền vào bản nháp, admin duyệt rồi bấm Lưu
-        toast.success(`Câu ${q.number}: AI gợi ý ${r.answer}`);
+        toast.success(`Câu ${q.number}: AI gợi ý ${r.answer}${r.commentsRefreshed ? ` (đã lấy lại ${r.commentsCount ?? 0} bình luận)` : ""}`);
+        if (r.commentsNote) toast.error(`Câu ${q.number}: ${r.commentsNote}`);
       } else toast.error(`Câu ${q.number}: AI chưa đưa ra được đáp án`);
     } catch (err) {
       toast.error(errorMessage(err));
@@ -458,7 +459,7 @@ export default function ExamEditPage() {
                 · có đáp án {answered}/{gradable.length}
               </span>
               <a href={data.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-brand-700 hover:underline">
-                <ExternalLink size={13} /> Bài gốc
+                <ExternalLink size={13} /> Xem đề này trên FuOverflow
               </a>
               <Link to={`/exam/${data.threadId}`} className="inline-flex items-center gap-1 text-brand-700 hover:underline">
                 <BookOpen size={13} /> Mở làm thử

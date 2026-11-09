@@ -31,6 +31,7 @@ type Confidence = "certain" | "likely" | "unsure";
 type Kind = "question" | "not_question";
 interface ClaudeAnswer {
   question: number;
+  file?: string; // tên file ghi trên nhãn ảnh: định danh chắc chắn nhất, không lẫn với số in sẵn trong ảnh
   kind: Kind;
   choice: string;
   confidence: Confidence;
@@ -71,7 +72,12 @@ const OUTPUT_SCHEMA = {
       items: {
         type: "object",
         properties: {
-          question: { type: "integer", description: "Number from the image label. Identify an item only by this number." },
+          question: {
+            type: "integer",
+            description:
+              "The number written in the label BEFORE the image in the request ('Question <number> (file <name>)'). Never use a number printed inside the image: the image's own numbering is different.",
+          },
+          file: { type: "string", description: "The file name from the same label, copied exactly, for example 'Q50.webp'." },
           kind: {
             type: "string",
             enum: ["question", "not_question"],
@@ -88,7 +94,7 @@ const OUTPUT_SCHEMA = {
             description: "'certain' when you solved it and nothing contradicts it, 'likely' when you are fairly sure, 'unsure' when you are choosing between options.",
           },
         },
-        required: ["question", "kind", "choice", "confidence"],
+        required: ["question", "file", "kind", "choice", "confidence"],
         additionalProperties: false,
       },
     },
@@ -107,18 +113,32 @@ interface Parsed {
  * (câu trùng giữ lần đầu, câu lạ không có trong đề bị bỏ), để các câu còn lại vẫn dùng được. Câu nào không có trong
  * `byLabel` là câu chưa có đáp án hợp lệ và sẽ được thử lại riêng.
  */
-export function parseOutput(out: ClaudeOutput, labels: number[]): Map<number, Parsed> {
+export function parseOutput(out: ClaudeOutput, labels: number[], files: string[] = []): Map<number, Parsed> {
   const wanted = new Set(labels);
+  const byFile = new Map(files.map((f, i) => [f.toLowerCase(), labels[i]!]));
+  const answers = out?.answers ?? [];
+
+  // Claude đôi khi ghi số in sẵn trong ảnh ("Question: 50") thay vì nhãn được gửi, nên câu trả lời bị coi là câu lạ.
+  // Ưu tiên tên file (duy nhất), rồi tới nhãn. Chỉ khi KHÔNG câu nào khớp mà số mục trả về đúng bằng số ảnh mới ghép theo thứ tự.
+  const resolve = (a: ClaudeAnswer): number | undefined => {
+    const byName = a.file ? byFile.get(path.basename(String(a.file)).toLowerCase()) : undefined;
+    if (byName !== undefined) return byName;
+    return wanted.has(a.question) ? a.question : undefined;
+  };
+  const resolved = answers.map(resolve);
+  const positional = resolved.every((r) => r === undefined) && answers.length === labels.length && labels.length > 0;
+
   const byLabel = new Map<number, Parsed>();
-  for (const a of out?.answers ?? []) {
-    if (!wanted.has(a.question) || byLabel.has(a.question)) continue;
+  answers.forEach((a, i) => {
+    const label = positional ? labels[i]! : resolved[i];
+    if (label === undefined || byLabel.has(label)) return;
     if (a.kind === "not_question") {
-      byLabel.set(a.question, { choice: "", confidence: a.confidence });
-      continue;
+      byLabel.set(label, { choice: "", confidence: a.confidence });
+      return;
     }
     const choice = String(a.choice ?? "").trim().toUpperCase().replace(/[.,;]+/g, " ").replace(/\s+/g, " ").trim();
-    if (CHOICE.test(choice)) byLabel.set(a.question, { choice, confidence: a.confidence });
-  }
+    if (CHOICE.test(choice)) byLabel.set(label, { choice, confidence: a.confidence });
+  });
   return byLabel;
 }
 
@@ -212,7 +232,7 @@ interface BatchResult {
  */
 async function solveBatch(ctx: Context, items: BatchItem[], display: (label: number) => number): Promise<BatchResult> {
   const first = await askOnce(ctx, items);
-  const byLabel = parseOutput(first, items.map((it) => it.label));
+  const byLabel = parseOutput(first, items.map((it) => it.label), items.map((it) => path.basename(it.file)));
   const reports = [first.report?.trim() ?? ""];
 
   const missing = items.filter((it) => !byLabel.has(it.label));
@@ -220,7 +240,7 @@ async function solveBatch(ctx: Context, items: BatchItem[], display: (label: num
     const retryItems = missing.map((it, i) => ({ ...it, label: i + 1 }));
     try {
       const second = await askOnce(ctx, retryItems);
-      const got = parseOutput(second, retryItems.map((r) => r.label));
+      const got = parseOutput(second, retryItems.map((r) => r.label), retryItems.map((r) => path.basename(r.file)));
       retryItems.forEach((r, i) => {
         const a = got.get(r.label);
         if (a) byLabel.set(missing[i]!.label, a);
@@ -293,6 +313,38 @@ export async function solveExam(config: AiConfig, input: SolveInput, deps: Solve
       reports.push(`${header}[System] This part could not be solved: ${(r.reason as Error)?.message ?? "unknown error"}`.trim());
     }
   });
+
+  // Lượt vá: câu còn trống (cả lô lỗi hay Claude bỏ sót) được gửi lại thêm một lần, gom thành lô nhỏ, để đề không bị thiếu đáp án âm thầm
+  const skipped = new Set(notQuestions);
+  const blank = input.questions.map((q, i) => ({ q, i })).filter(({ q, i }) => !answers[i] && !skipped.has(q.number));
+  if (blank.length > 0) {
+    const repairJobs: { slice: typeof blank; run: () => Promise<BatchResult> }[] = [];
+    for (let at = 0; at < blank.length; at += AI_BATCH_SIZE) {
+      const slice = blank.slice(at, at + AI_BATCH_SIZE);
+      const items = slice.map(({ q }, k) => ({ label: k + 1, name: q.name, file: q.file }));
+      repairJobs.push({ slice, run: () => solveBatch(ctx, items, (label) => slice[label - 1]?.q.number ?? label) });
+    }
+    const second = await Promise.allSettled(repairJobs.map((j) => j.run()));
+    second.forEach((r, k) => {
+      const { slice } = repairJobs[k]!;
+      if (r.status !== "fulfilled") {
+        reports.push(`[System] Second attempt failed for questions ${slice.map(({ q }) => q.number).join(", ")}: ${(r.reason as Error)?.message ?? "unknown error"}`);
+        return;
+      }
+      slice.forEach(({ q, i }, j) => {
+        const choice = r.value.choices[j] ?? "";
+        if (choice) answers[i] = choice;
+        else if (r.value.notQuestions.includes(q.number)) notQuestions.push(q.number);
+      });
+      unsure.push(...r.value.unsure);
+      if (r.value.report) reports.push(`[Second attempt for questions ${slice.map(({ q }) => q.number).join(", ")}]
+${r.value.report}`);
+    });
+    // Còn trống sau lượt vá mới là thiếu thật
+    const stillSkipped = new Set(notQuestions);
+    unanswered.length = 0;
+    unanswered.push(...input.questions.filter((q, i) => !answers[i] && !stillSkipped.has(q.number)).map((q) => q.number));
+  }
 
   const solvable = n - notQuestions.length;
   const solved = answers.filter(Boolean).length;

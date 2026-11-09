@@ -75,7 +75,7 @@ export const examRepository = {
   findForSolve: (id: number) =>
     prisma.exam.findUnique({
       where: { id },
-      include: { questions: { orderBy: { number: "asc" }, select: { number: true, name: true, imagePath: true } } },
+      include: { questions: { orderBy: { number: "asc" }, select: { number: true, name: true, imagePath: true, mediaUrl: true } } },
     }),
 
   // Trạng thái đáp án và đáp án từng câu, để giao diện hỏi lại khi AI đang phân tích
@@ -112,13 +112,27 @@ export const examRepository = {
   async listAll(query: PaginationQuery) {
     const [items, total] = await Promise.all([
       prisma.exam.findMany({
-        select: { id: true, title: true, threadId: true, totalQuestions: true, answerSource: true, createdAt: true },
+        select: { id: true, title: true, threadId: true, sourceUrl: true, totalQuestions: true, answerSource: true, createdAt: true },
         orderBy: { id: "desc" },
         ...toSkipTake(query),
       }),
       prisma.exam.count(),
     ]);
-    return { items, total };
+    // Số câu cần chấm (không tính tài liệu tham khảo) và số câu đã có đáp án, theo từng đề của trang này: admin thấy ngay đề nào thiếu
+    const ids = items.map((e) => e.id);
+    const [graded, blank] = await Promise.all([
+      prisma.examQuestion.groupBy({ by: ["examId"], where: { examId: { in: ids }, isReference: false }, _count: { _all: true } }),
+      prisma.examQuestion.groupBy({ by: ["examId"], where: { examId: { in: ids }, isReference: false, answer: "" }, _count: { _all: true } }),
+    ]);
+    const gradedOf = new Map(graded.map((g) => [g.examId, g._count._all]));
+    const blankOf = new Map(blank.map((b) => [b.examId, b._count._all]));
+    return {
+      items: items.map((e) => {
+        const gradedQuestions = gradedOf.get(e.id) ?? 0;
+        return { ...e, gradedQuestions, answeredQuestions: gradedQuestions - (blankOf.get(e.id) ?? 0) };
+      }),
+      total,
+    };
   },
 
   // Đề được tạo TRƯỚC khi có ảnh: câu hỏi thêm dần qua addQuestions, `totalQuestions` là tổng số ảnh sẽ có.
