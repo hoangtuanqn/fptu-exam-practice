@@ -5,10 +5,10 @@ const GOLD = "#ffc61f";
 
 // Cóc Pass đứng bằng hai chân (cùng bảng màu với linh vật ở shared/ui/mascot-art.ts). Mỗi mức điểm có nét mặt, dáng tay và phụ kiện riêng.
 // Hệ toạ độ: 120 x 184, phần thân đặt lệch xuống 24 để chừa chỗ phía trên cho tay giơ cao / cúp / sao quay quanh đầu.
-export function ToadArt({ mood }: { mood: ToadMood }) {
+export function ToadArt({ mood, scale = 1 }: { mood: ToadMood; scale?: number }) {
   const crown = mood === "star" || mood === "perfect";
   return (
-    <svg viewBox="0 0 120 184" width="96" height="147" xmlns="http://www.w3.org/2000/svg" role="presentation" aria-hidden="true">
+    <svg viewBox="0 0 120 184" width={96 * scale} height={147 * scale} xmlns="http://www.w3.org/2000/svg" role="presentation" aria-hidden="true">
       <defs>
         <radialGradient id="rt-gold" cx=".42" cy=".28" r=".85">
           <stop offset="0" stopColor="#fff08a" />

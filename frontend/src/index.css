@@ -368,7 +368,7 @@ h3 {
   position: relative;
   flex: none;
   width: min(250px, calc(100vw - 24px));
-  margin-left: var(--bshift, 0px);
+  left: var(--bshift, 0px);
   padding: 9px 14px;
   border-radius: 18px;
   border: 1px solid var(--md-sys-color-outline-variant);
