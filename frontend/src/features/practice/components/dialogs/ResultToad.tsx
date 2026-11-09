@@ -30,7 +30,7 @@ export function ResultToad({ mood, board }: { mood: ToadMood; board: string }) {
     };
   }, []);
 
-  const party = mood === "happy" || mood === "star";
+  const party = mood === "happy" || mood === "star" || mood === "perfect";
   return (
     <>
       <div ref={spacer} aria-hidden="true" style={{ height: SPACER_H }} />
@@ -44,7 +44,7 @@ export function ResultToad({ mood, board }: { mood: ToadMood; board: string }) {
             </div>
             {party && (
               <div className="toad-confetti">
-                {Array.from({ length: mood === "star" ? 22 : 12 }, (_, i) => (
+                {Array.from({ length: mood === "perfect" ? 36 : mood === "star" ? 24 : 12 }, (_, i) => (
                   <span
                     key={i}
                     style={

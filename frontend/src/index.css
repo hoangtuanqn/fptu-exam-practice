@@ -319,6 +319,7 @@ h3 {
 @keyframes toad-sway { 0%, 100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
 @keyframes toad-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 @keyframes toad-hop { 0%, 60%, 100% { transform: translateY(0) scale(1, 1); } 30% { transform: translateY(-16px) scale(0.97, 1.05); } 66% { transform: translateY(0) scale(1.05, 0.93); } }
+@keyframes toad-orbit { to { transform: rotate(360deg); } }
 @keyframes toad-tear { 0% { transform: translateY(0); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(22px); opacity: 0; } }
 @keyframes toad-sweat { 0%, 100% { transform: translateY(0); opacity: 1; } 60% { transform: translateY(7px); opacity: 0.4; } }
 @keyframes toad-confetti { 0% { transform: translateY(-10px) rotate(0); opacity: 0; } 12% { opacity: 1; } 100% { transform: translateY(300px) rotate(var(--spin)); opacity: 0; } }
@@ -330,6 +331,10 @@ h3 {
   .toad-idle-ok { animation-name: toad-bob; animation-duration: 2.2s; animation-timing-function: ease-in-out; }
   .toad-idle-happy { animation-name: toad-hop; animation-duration: 1.3s; }
   .toad-idle-star { animation-name: toad-hop; animation-duration: 1s; }
+  .toad-idle-zero { animation-name: toad-sway; animation-duration: 2.6s; animation-timing-function: ease-in-out; }
+  .toad-idle-good { animation-name: toad-bob; animation-duration: 1.6s; animation-timing-function: ease-in-out; }
+  .toad-idle-perfect { animation-name: toad-hop; animation-duration: 0.85s; }
+  .toad-dizzy { transform-box: view-box; transform-origin: 54px 12px; animation: toad-orbit 1.6s linear infinite 1.1s; }
   .toad-tear { animation: toad-tear 1.3s ease-in infinite 1.2s; transform-box: fill-box; }
   .toad-tear-b { animation-delay: 1.8s; }
   .toad-sweat { animation: toad-sweat 1.6s ease-in-out infinite 1.2s; transform-box: fill-box; }

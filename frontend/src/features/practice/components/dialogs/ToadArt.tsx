@@ -44,7 +44,7 @@ export function ToadArt({ mood, board }: { mood: ToadMood; board: string }) {
         </g>
         <ellipse cx="38" cy="48" rx="14" ry="5.5" fill="#fff" opacity=".28" transform="rotate(-14 38 48)" />
 
-        {mood === "star" && <Crown />}
+        {(mood === "star" || mood === "perfect") && <Crown />}
 
         {/* mắt lồi */}
         <g stroke={OUT} strokeWidth="1.8">
@@ -80,8 +80,10 @@ export function ToadArt({ mood, board }: { mood: ToadMood; board: string }) {
         <Hand x={123} y={90} />
       </g>
 
-      {mood === "happy" && <Sparkles />}
-      {mood === "star" && <Sparkles big />}
+      {mood === "zero" && <Dizzy />}
+      {mood === "perfect" && <Trophy />}
+      {(mood === "good" || mood === "happy") && <Sparkles />}
+      {(mood === "star" || mood === "perfect") && <Sparkles big />}
     </svg>
   );
 }
@@ -96,12 +98,36 @@ function Eyes({ mood }: { mood: ToadMood }) {
       </g>
     );
   }
+  if (mood === "zero") {
+    // mắt xoáy (choáng)
+    return (
+      <g fill="#fff" stroke={OUT} strokeWidth="1">
+        <circle cx="39.5" cy="38.5" r="8" />
+        <circle cx="67.5" cy="37.5" r="9.3" />
+        <g fill="none" stroke="#1a1208" strokeWidth="1.6" strokeLinecap="round">
+          <path d="M39.5 38.5m0 0a1.6 1.6 0 1 1 1.6 1.6a3.4 3.4 0 1 1 -3.4 -3.4a5.2 5.2 0 1 1 5.2 5.2" />
+          <path d="M67.5 37.5m0 0a1.8 1.8 0 1 1 1.8 1.8a3.9 3.9 0 1 1 -3.9 -3.9a6 6 0 1 1 6 6" />
+        </g>
+      </g>
+    );
+  }
+  if (mood === "good") {
+    // nháy một mắt
+    return (
+      <>
+        <circle cx="39.5" cy="38.5" r="8" fill="#fff" stroke={OUT} strokeWidth="1" />
+        <circle cx="41" cy="39" r="5" fill="#1a1208" />
+        <circle cx="42.6" cy="36.8" r="1.8" fill="#fff" />
+        <path d="M57 40Q67.5 30 78 40" fill="none" stroke="#1a1208" strokeWidth="3" strokeLinecap="round" />
+      </>
+    );
+  }
   const dy = mood === "cry" || mood === "worry" ? 3 : 0;
   return (
     <>
       <circle cx="39.5" cy="38.5" r="8" fill="#fff" stroke={OUT} strokeWidth="1" />
       <circle cx="67.5" cy="37.5" r="9.3" fill="#fff" stroke={OUT} strokeWidth="1" />
-      {mood === "star" ? (
+      {mood === "star" || mood === "perfect" ? (
         <g fill="#ffb300" stroke="#b86e00" strokeWidth=".8" strokeLinejoin="round">
           <path d="M40 31l2.4 5 5.4.7-4 3.8 1 5.4-4.8-2.6-4.8 2.6 1-5.4-4-3.8 5.4-.7z" />
           <path d="M68 29.5l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3-5.6-3-5.6 3 1.1-6.3-4.6-4.4 6.3-.9z" />
@@ -124,8 +150,12 @@ function Mouth({ mood }: { mood: ToadMood }) {
       return <path d="M60 78Q76 64 96 74" fill="none" stroke="#7a3f00" strokeWidth="2.6" strokeLinecap="round" />;
     case "worry":
       return <path d="M58 72Q66 66 74 72T92 70" fill="none" stroke="#7a3f00" strokeWidth="2.4" strokeLinecap="round" />;
+    case "zero":
+      return <ellipse cx="76" cy="70" rx="5" ry="6.5" fill="#7a1f12" stroke="#7a3f00" strokeWidth="2" />;
     case "ok":
       return <path d="M54 63Q74 79 96 60" fill="none" stroke="#7a3f00" strokeWidth="2.4" strokeLinecap="round" />;
+    case "good":
+      return <path d="M52 62Q74 86 98 58" fill="none" stroke="#7a3f00" strokeWidth="2.8" strokeLinecap="round" />;
     default:
       // cười há miệng
       return (
@@ -135,6 +165,31 @@ function Mouth({ mood }: { mood: ToadMood }) {
         </g>
       );
   }
+}
+
+// Sao quay quanh đầu khi choáng
+function Dizzy() {
+  return (
+    <g className="toad-dizzy" fill="#ffc61f" stroke="#e08e00" strokeWidth=".6" strokeLinejoin="round">
+      {[0, 1, 2].map((i) => {
+        const a = (i * 120 * Math.PI) / 180;
+        return <path key={i} transform={`translate(${54 + 30 * Math.cos(a)} ${12 + 6 * Math.sin(a)}) scale(.7)`} d="M0 -7C1 -2 2 -1 7 0C2 1 1 2 0 7C-1 2 -2 1 -7 0C-2 -1 -1 -2 0 -7Z" />;
+      })}
+    </g>
+  );
+}
+
+// Cúp vàng cho điểm tuyệt đối
+function Trophy() {
+  return (
+    <g transform="translate(103 4)" stroke="#8a5a00" strokeWidth="1.1" strokeLinejoin="round">
+      <path d="M4 2H22V12C22 18 18 21 13 21C8 21 4 18 4 12Z" fill="url(#rt-gold)" />
+      <path d="M4 5H0C0 11 3 13 6 13M22 5H26C26 11 23 13 20 13" fill="none" />
+      <rect x="10.5" y="21" width="5" height="5" fill="#e29400" />
+      <rect x="6" y="26" width="14" height="4" rx="1.2" fill="#b97d00" />
+      <path d="M13 6l1.3 2.7 3 .4-2.2 2.1.5 3-2.6-1.4-2.6 1.4.5-3L8.7 9.1l3-.4z" fill="#fff6c4" stroke="none" />
+    </g>
+  );
 }
 
 function Crown() {
@@ -154,7 +209,7 @@ function Board({ text }: { text: string }) {
     <g>
       <rect x="64" y="68" width="60" height="31" rx="3.5" fill="url(#rt-wood)" stroke="#3f2606" strokeWidth="1.2" />
       <rect x="67" y="71" width="54" height="25" rx="2" fill="url(#rt-plate)" stroke="#b97d00" strokeWidth="1" />
-      <text x="94.5" y="88.2" textAnchor="middle" fontSize="8.6" fontWeight="800" fill="#6b3d00" fontFamily="Inter,sans-serif">
+      <text x="94.5" y="88.2" textAnchor="middle" fontSize={text.length > 7 ? 7.4 : 8.6} fontWeight="800" fill="#6b3d00" fontFamily="Inter,sans-serif">
         {text}
       </text>
     </g>
