@@ -52,7 +52,12 @@ function toPart(items: { group: string; weight: number; score: number | null }[]
   const graded = items.filter((i) => i.score !== null);
   const score = graded.length === items.length && weight > 0 ? items.reduce((n, i) => n + i.weight * (i.score as number), 0) / weight : null;
   const base = items[0]!.group.replace(RESIT, "");
-  const a = assessments.find((x) => x.category.toLowerCase().replace(RESIT, "").trim() === base.toLowerCase());
+  const key = base.toLowerCase();
+  // Tên phần trong syllabus có thể dài hơn tên trên FAP, ví dụ "Theoretical Exam (TE)" so với "TE"
+  const a = assessments.find((x) => {
+    const cat = x.category.toLowerCase().replace(RESIT, "").trim();
+    return cat === key || cat.endsWith(`(${key})`);
+  });
   return { group: base, weight, score: score === null ? null : round2(score), resit, minScore: a?.minScore ?? null };
 }
 
