@@ -35,7 +35,7 @@ export function ResultDialog({ result, topicSummary = null, elapsed, savable, an
 
   return (
     <Modal onClose={onReview}>
-      {showToad && <ResultToad key={toad.mood} mood={toad.mood} board={toad.board} say={toad.say} />}
+      {showToad && <ResultToad key={toad.mood} mood={toad.mood} say={toad.say} />}
       <div className="text-center">
         {answersPending ? (
           // AI chưa xong: chưa có điểm. Khi có đáp án, màn hình này tự chuyển sang điểm thật.

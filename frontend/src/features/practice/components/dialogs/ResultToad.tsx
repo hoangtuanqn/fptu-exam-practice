@@ -3,8 +3,8 @@ import { createPortal } from "react-dom";
 import { ToadArt } from "./ToadArt";
 import type { ToadMood } from "./toadMood";
 
-const TOAD_W = 118;
-const TOAD_H = 97;
+const TOAD_W = 96;
+const TOAD_H = 147;
 const BUBBLE_W = 250;
 const BUBBLE_H = 84; // chiều cao ước lượng của bong bóng (tối đa 3 dòng)
 const GAP = 12; // khoảng hở với mép màn hình / khung thông báo
@@ -45,7 +45,7 @@ function place(dialog: DOMRect): Place {
  * Cóc Pass từ góc trên bên phải màn hình bay chéo xuống đứng cạnh khung thông báo, kèm bong bóng lời nhắn bay tới trên đầu.
  * Vẽ ra <body> (tách khỏi khung thông báo, không bị cắt khi khung cuộn). Người bật "giảm chuyển động" thấy cóc đứng yên đúng chỗ.
  */
-export function ResultToad({ mood, board, say }: { mood: ToadMood; board: string; say: string }) {
+export function ResultToad({ mood, say }: { mood: ToadMood; say: string }) {
   const sentinel = useRef<HTMLSpanElement>(null);
   const [pos, setPos] = useState<Place | null>(null);
 
@@ -77,7 +77,7 @@ export function ResultToad({ mood, board, say }: { mood: ToadMood; board: string
             <div className="toad-fly" style={{ "--toad-dx": `${pos.fromX}px` } as CSSProperties}>
               <div className="toad-fall" style={{ "--toad-drop": `${pos.top + TOAD_H + 40}px` } as CSSProperties}>
                 <div className={`toad-idle toad-idle-${mood}`}>
-                  <ToadArt mood={mood} board={board} />
+                  <ToadArt mood={mood} />
                 </div>
               </div>
             </div>
