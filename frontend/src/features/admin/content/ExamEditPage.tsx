@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, BookOpen, Check, ClipboardPaste, ExternalLink, Loader2, Pencil, RotateCcw, Save, Search, Trash2, X } from "lucide-react";
-import { adminApi, type ExamAdminDetail, type ExamQuestionAdmin, type QuestionChange } from "@/features/admin/api/admin.api";
+import { ArrowLeft, BookOpen, Check, ClipboardPaste, ExternalLink, Loader2, Pencil, RotateCcw, Save, Search, Sparkles, Trash2, X } from "lucide-react";
+import { adminApi, type ExamAdminDetail, type ExamQuestionAdmin, type QuestionChange, type QuestionResolve } from "@/features/admin/api/admin.api";
 import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
 import type { AnswerSource } from "@/shared/types/api";
@@ -210,12 +210,15 @@ function DeleteExamDialog({ exam, onClose }: { exam: ExamAdminDetail; onClose: (
   );
 }
 
-function QuestionCard({ q, answer, isReference, dirty, disabled, onToggle, onClear, onReference, onReset, onZoom }: {
+function QuestionCard({ q, answer, isReference, dirty, disabled, solving, aiNote, onSolve, onToggle, onClear, onReference, onReset, onZoom }: {
   q: ExamQuestionAdmin;
   answer: string;
   isReference: boolean;
   dirty: boolean;
   disabled: boolean;
+  solving: boolean; // đang nhờ AI giải lại câu này
+  aiNote?: QuestionResolve; // gợi ý gần nhất của AI cho câu này
+  onSolve: () => void;
   onToggle: (letter: string) => void;
   onClear: () => void;
   onReference: (v: boolean) => void;
@@ -238,11 +241,23 @@ function QuestionCard({ q, answer, isReference, dirty, disabled, onToggle, onCle
           {dirty && <Badge tone="info">Đã sửa</Badge>}
           {missing && !dirty && <Badge tone="danger">Chưa có đáp án</Badge>}
         </div>
-        {dirty && (
-          <button onClick={onReset} className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-slate-800">
-            <RotateCcw size={12} /> Hoàn tác
+        <div className="flex items-center gap-3">
+          {dirty && (
+            <button onClick={onReset} className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-slate-800">
+              <RotateCcw size={12} /> Hoàn tác
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onSolve}
+            disabled={disabled || solving}
+            title="Nhờ AI giải lại riêng câu này (chỉ gợi ý, bấm Lưu mới ghi)"
+            className="inline-flex items-center gap-1.5 rounded-md border border-brand-200 bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-800 transition hover:border-brand-400 disabled:opacity-50"
+          >
+            {solving ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />}
+            {solving ? "AI đang giải…" : "Giải lại câu này"}
           </button>
-        )}
+        </div>
       </div>
 
       <button type="button" onClick={onZoom} className="block w-full bg-slate-50 p-2" title="Bấm để xem ảnh lớn">
@@ -279,6 +294,14 @@ function QuestionCard({ q, answer, isReference, dirty, disabled, onToggle, onCle
             <p className="mt-1.5 text-xs text-slate-400">Bấm nhiều chữ cho câu có nhiều đáp án đúng.</p>
           </div>
         )}
+        {aiNote && (
+          <details className="rounded-lg border border-brand-100 bg-brand-50/60 px-3 py-2 text-xs text-slate-600">
+            <summary className="cursor-pointer font-medium text-brand-900">
+              {aiNote.notQuestion ? "AI cho rằng đây không phải câu hỏi" : aiNote.answer ? `AI gợi ý: ${aiNote.answer} (đã điền vào bản nháp, chưa lưu)` : "AI chưa đưa ra được đáp án"}
+            </summary>
+            {aiNote.report && <p className="mt-1.5 whitespace-pre-wrap leading-relaxed">{aiNote.report}</p>}
+          </details>
+        )}
         <label className="flex cursor-pointer items-center gap-2 text-xs text-slate-500">
           <input type="checkbox" checked={isReference} disabled={disabled} onChange={(e) => onReference(e.target.checked)} className="h-4 w-4 rounded border-slate-300" />
           Đây là ảnh tài liệu tham khảo, không phải câu hỏi (không chấm điểm)
@@ -301,6 +324,8 @@ export default function ExamEditPage() {
   const [pasting, setPasting] = useState(false);
   const [zoom, setZoom] = useState<ExamQuestionAdmin | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [solvingNo, setSolvingNo] = useState<number | null>(null); // câu đang nhờ AI giải (mỗi lần một câu để không dồn token)
+  const [aiNotes, setAiNotes] = useState<Record<number, QuestionResolve>>({});
 
   const original = useMemo(() => new Map((data?.questions ?? []).map((q) => [q.number, q])), [data]);
 
@@ -349,6 +374,23 @@ export default function ExamEditPage() {
     else set.add(letter);
     patch(q.number, { answer: [...set].sort().join(" ") });
   };
+
+  async function solveOne(q: ExamQuestionAdmin) {
+    setSolvingNo(q.number);
+    try {
+      const r = await adminApi.resolveQuestion(examId, q.number);
+      setAiNotes((prev) => ({ ...prev, [q.number]: r }));
+      if (r.notQuestion) toast.error(`Câu ${q.number}: AI cho rằng đây không phải câu hỏi`);
+      else if (r.answer) {
+        patch(q.number, { answer: normalize(r.answer) }); // chỉ điền vào bản nháp, admin duyệt rồi bấm Lưu
+        toast.success(`Câu ${q.number}: AI gợi ý ${r.answer}`);
+      } else toast.error(`Câu ${q.number}: AI chưa đưa ra được đáp án`);
+    } catch (err) {
+      toast.error(errorMessage(err));
+    } finally {
+      setSolvingNo(null);
+    }
+  }
 
   async function save() {
     setSaving(true);
@@ -435,7 +477,7 @@ export default function ExamEditPage() {
       {locked && <div className="mb-3 rounded-xl border border-sky-200 bg-sky-50 px-4 py-2.5 text-sm text-sky-800">AI đang giải đề này, chờ AI xong rồi mới sửa tay được.</div>}
 
       {/* Thanh công cụ dính khi cuộn */}
-      <div className="sticky top-0 z-20 -mx-1 mb-4 rounded-2xl border border-slate-200 bg-surface-container-lowest/90 p-3 shadow-soft backdrop-blur">
+      <div className="sticky top-16 z-20 -mx-1 mb-4 rounded-2xl border border-slate-200 bg-surface-container-lowest/90 p-3 shadow-soft backdrop-blur">
         <div className="flex flex-wrap items-center gap-2">
           <Segmented
             label="Lọc câu hỏi"
@@ -500,6 +542,9 @@ export default function ExamEditPage() {
                 isReference={v.isReference}
                 dirty={isDirty(q)}
                 disabled={locked}
+                solving={solvingNo === q.number}
+                aiNote={aiNotes[q.number]}
+                onSolve={() => void solveOne(q)}
                 onToggle={(l) => toggle(q, l)}
                 onClear={() => patch(q.number, { answer: "" })}
                 onReference={(r) => patch(q.number, { isReference: r })}

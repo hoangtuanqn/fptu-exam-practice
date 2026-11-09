@@ -2,6 +2,7 @@ import { z } from "zod";
 import { paginationQuery } from "../../utils/pagination";
 
 export const idParam = z.object({ id: z.coerce.number().int().positive() });
+export const questionParam = z.object({ id: z.coerce.number().int().positive(), number: z.coerce.number().int().positive() });
 
 export const listUsersQuery = paginationQuery.extend({
   search: z.string().trim().max(100).optional(),
@@ -58,6 +59,7 @@ export const renameExamBody = z.object({ title: z.string().trim().min(1, "Tiêu 
 export type RenameExamBody = z.infer<typeof renameExamBody>;
 
 export type IdParam = z.infer<typeof idParam>;
+export type QuestionParam = z.infer<typeof questionParam>;
 export type ListUsersQuery = z.infer<typeof listUsersQuery>;
 export type UpdateUserBody = z.infer<typeof updateUserBody>;
 export type AdjustBalanceBody = z.infer<typeof adjustBalanceBody>;

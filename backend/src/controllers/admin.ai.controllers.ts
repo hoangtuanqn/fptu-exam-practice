@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { HTTP_STATUS } from "../constants/httpStatus";
 import { getValidated } from "../middlewares/validate.middlewares";
-import type { IdParam, RenameExamBody, UpdateExamQuestionsBody } from "../rules/requests/admin.request";
+import type { IdParam, QuestionParam, RenameExamBody, UpdateExamQuestionsBody } from "../rules/requests/admin.request";
 import type { UpdateAiBody } from "../rules/requests/setting.request";
 import { ResponseClient } from "../rules/response";
 import { adminExamService } from "../services/admin.exam.service";
@@ -43,6 +43,12 @@ export const adminAiController = {
     const { id } = getValidated<IdParam>(res, "params");
     const data = await adminExamService.saveQuestions(req.user!.id, id, getValidated<UpdateExamQuestionsBody>(res));
     res.json(new ResponseClient({ message: "Đã lưu đáp án", data }));
+  },
+
+  // AI giải lại MỘT câu: chỉ trả gợi ý, không ghi DB (admin xem rồi lưu bằng nút Lưu như khi sửa tay)
+  async resolveQuestion(_req: Request, res: Response) {
+    const { id, number } = getValidated<QuestionParam>(res, "params");
+    res.json(new ResponseClient({ data: await adminExamService.resolveQuestion(id, number) }));
   },
 
   async renameExam(req: Request, res: Response) {

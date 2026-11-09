@@ -117,6 +117,14 @@ export interface ExamQuestionAdmin {
   isReference: boolean;
 }
 
+// Gợi ý của AI khi giải lại một câu (chưa ghi DB)
+export interface QuestionResolve {
+  number: number;
+  answer: string; // ví dụ "C" hoặc "A C"; rỗng nếu không có
+  notQuestion: boolean; // AI cho rằng ảnh này không phải câu hỏi
+  report: string;
+}
+
 export interface ExamAdminDetail {
   id: number;
   title: string;
@@ -243,6 +251,7 @@ export const adminApi = {
   explanationUnlocks: (f: { page: number; userId?: string; search?: string }) => http.list<AdminExplanationUnlock>("/admin/explanation-unlocks", { ...f, limit: PAGE_SIZE }),
   explanationPurchases: (f: { page: number; userId?: string; search?: string }) => http.list<AdminExplanationPurchase>("/admin/explanation-purchases", { ...f, limit: PAGE_SIZE }),
   examDetail: (id: number) => http.get<ExamAdminDetail>(`/admin/exams/${id}`),
+  resolveQuestion: (id: number, number: number) => http.post<QuestionResolve>(`/admin/exams/${id}/questions/${number}/resolve`),
   saveExamQuestions: (id: number, changes: QuestionChange[]) => http.patch<ExamAdminDetail>(`/admin/exams/${id}/questions`, { changes }),
   solveExam: (id: number) => http.post<null>(`/admin/exams/${id}/solve`),
   examReport: (id: number) => http.get<{ id: number; title: string; aiReport: string | null }>(`/admin/exams/${id}/report`),
