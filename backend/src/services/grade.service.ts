@@ -46,20 +46,36 @@ export const gradeService = {
   async setEnabled(userId: number, enabled: boolean) {
     await prisma.$transaction(async (tx) => {
       await tx.userGradeSetting.upsert({ where: { userId }, create: { userId, enabled }, update: { enabled } });
-      if (!enabled) await tx.userGrade.deleteMany({ where: { userId } });
+      if (!enabled) {
+        await tx.userGrade.deleteMany({ where: { userId } });
+        await tx.userExamSlot.deleteMany({ where: { userId } });
+      }
     });
     return this.setting(userId);
   },
 
   async clear(userId: number) {
-    const { count } = await prisma.userGrade.deleteMany({ where: { userId } });
-    return { deleted: count };
+    const [grades] = await prisma.$transaction([prisma.userGrade.deleteMany({ where: { userId } }), prisma.userExamSlot.deleteMany({ where: { userId } })]);
+    return { deleted: grades.count };
   },
 
   async sync(userId: number, body: GradeSyncBody) {
     const s = await prisma.userGradeSetting.findUnique({ where: { userId }, select: { enabled: true } });
     if (!s?.enabled) throw AppError.forbidden("Bạn chưa bật đồng bộ điểm ở trang Điểm FAP");
     const now = new Date();
+    const slots = body.exams?.map((e) => ({
+      userId,
+      examDate: new Date(`${e.date}T00:00:00.000Z`),
+      startTime: e.start,
+      endTime: e.end,
+      room: e.room,
+      subjectCode: e.subjectCode.toUpperCase(),
+      subjectName: e.subjectName,
+      format: e.format,
+      kind: e.kind.toUpperCase(),
+      resultDate: e.resultDate ? new Date(`${e.resultDate}T00:00:00.000Z`) : null,
+      note: e.note,
+    }));
     await prisma.$transaction([
       ...body.courses.map((c) => {
         const data = {
@@ -74,14 +90,32 @@ export const gradeService = {
         };
         return prisma.userGrade.upsert({ where: { userId_courseId: { userId, courseId: c.courseId } }, create: { userId, courseId: c.courseId, ...data }, update: data });
       }),
+      // Lịch thi gửi lên là bản đầy đủ nên thay cả bộ (không gửi exams thì giữ nguyên bản cũ)
+      ...(slots ? [prisma.userExamSlot.deleteMany({ where: { userId } }), prisma.userExamSlot.createMany({ data: slots })] : []),
       prisma.userGradeSetting.update({ where: { userId }, data: { syncedAt: now } }),
     ]);
-    return { synced: body.courses.length };
+    return { synced: body.courses.length, exams: slots?.length ?? 0 };
   },
 
   /** Các môn đã đồng bộ kèm gợi ý điểm cần đạt (môn đang học hoặc chưa qua trước) */
   async overview(userId: number) {
-    const [setting, rows] = await Promise.all([this.setting(userId), prisma.userGrade.findMany({ where: { userId }, orderBy: [{ syncedAt: "desc" }, { id: "desc" }] })]);
+    const [setting, rows, slotRows] = await Promise.all([
+      this.setting(userId),
+      prisma.userGrade.findMany({ where: { userId }, orderBy: [{ syncedAt: "desc" }, { id: "desc" }] }),
+      prisma.userExamSlot.findMany({ where: { userId }, orderBy: [{ examDate: "asc" }, { startTime: "asc" }] }),
+    ]);
+    const exams = slotRows.map((e) => ({
+      date: e.examDate.toISOString().slice(0, 10),
+      start: e.startTime,
+      end: e.endTime,
+      room: e.room,
+      subjectCode: e.subjectCode,
+      subjectName: e.subjectName,
+      format: e.format,
+      kind: e.kind,
+      resultDate: e.resultDate ? e.resultDate.toISOString().slice(0, 10) : null,
+      note: e.note,
+    }));
     const subjects = await prisma.subject.findMany({ where: { code: { in: [...new Set(rows.map((r) => r.subjectCode))] } }, select: { code: true, minPassMark: true, assessments: true, credits: true } });
     const byCode = new Map(subjects.map((s) => [s.code, s]));
     const mocks = await mockStatsFor(userId, [...new Set(rows.filter((r) => r.status === "studying").map((r) => r.subjectCode))]);
@@ -160,6 +194,6 @@ export const gradeService = {
     const currentTerm = cur && { termName: cur.termName, gpa: cur.gpa, credits: cur.credits, studyingCredits: cur.studyingCredits, projectedGpa: cur.projectedGpa, projectedLow: cur.projectedLow, projectedHigh: cur.projectedHigh, predictedCredits: cur.predictedCredits, unpredictedCredits: cur.unpredictedCredits };
     const terms = report.terms.map((t) => ({ ...t, courses: courses.filter((c) => c.termName === t.termName).sort((a, b) => a.subjectCode.localeCompare(b.subjectCode)) }));
     terms.sort((a, b) => termOrder(b.termName) - termOrder(a.termName));
-    return { ...setting, courses, terms, cumulative, currentTerm, tiers };
+    return { ...setting, courses, terms, cumulative, currentTerm, tiers, exams };
   },
 };

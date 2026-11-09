@@ -32,6 +32,10 @@
         {
           "type": "new",
           "text": "Điểm dự kiến có bảng cách tính, và tính cả kết quả các bài thi thử của bạn trên FePass"
+        },
+        {
+          "type": "new",
+          "text": "Lịch thi sắp tới lấy từ FAP: ngày, giờ, phòng, loại thi (FE, PE, thi lần 2) và còn bao nhiêu ngày"
         }
       ]
     },
@@ -278,6 +282,10 @@
         {
           "type": "new",
           "text": "Đọc Báo cáo điểm trên FAP khi bạn bật đồng bộ điểm; nhắc hoàn thành kiểm tra Cloudflare và đăng nhập FAP"
+        },
+        {
+          "type": "new",
+          "text": "Đọc thêm Lịch thi trên FAP khi bạn bật đồng bộ điểm"
         }
       ]
     },

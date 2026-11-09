@@ -63,13 +63,50 @@
     return { subjectCode, subjectName, classCode: meta[0] || "", termName: meta[1] || "", status, average, components };
   }
 
+  // dd/mm/yyyy -> yyyy-mm-dd; không đúng dạng thì ""
+  function isoDate(raw) {
+    const m = clean(raw).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    return m ? `${m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}` : "";
+  }
+
+  // Trang Lịch thi (fap.fpt.edu.vn/ExamSchedule): mỗi dòng là một buổi thi.
+  // Loại thi: FE (cuối kỳ), PE (thực hành), 2NDFE (lượt thi lần 2, dùng cho thi lại hoặc thi cải thiện; qua hay trượt chỉ xem ở bảng điểm).
+  // Một môn có thể có nhiều buổi cùng loại (ví dụ FE thực hành và FE trắc nghiệm).
+  function parseExamSchedule(doc) {
+    const table = doc.querySelector("table.fap-sheet");
+    if (!table) return [];
+    const out = [];
+    for (const tr of table.querySelectorAll("tbody tr")) {
+      const td = [...tr.children].map(text);
+      if (td.length < 6) continue;
+      const date = isoDate(td[0]);
+      const time = td[1].match(/(\d{1,2})h(\d{2})\s*-\s*(\d{1,2})h(\d{2})/);
+      const subject = td[3].match(/^([A-Za-z]{2,4}\d{3}[A-Za-z]?)\s*-\s*(.+)$/);
+      if (!date || !time || !subject) continue;
+      out.push({
+        date,
+        start: `${time[1].padStart(2, "0")}:${time[2]}`,
+        end: `${time[3].padStart(2, "0")}:${time[4]}`,
+        room: td[2] === "-" ? "" : td[2],
+        subjectCode: subject[1].toUpperCase(),
+        subjectName: subject[2],
+        format: td[4],
+        kind: td[5].toUpperCase(),
+        resultDate: isoDate(td[6] || "") || null,
+        note: [td[7], td[8]].filter(Boolean).join(" ").slice(0, 200),
+      });
+    }
+    return out;
+  }
+
   // Trang chặn của Cloudflare (chưa vượt kiểm tra) hay chưa đăng nhập FAP
   function pageKind(doc) {
     if (doc.querySelector("#grade-report-term")) return "grade";
+    if (doc.querySelector("table.fap-sheet") && /l[ịi]ch thi|exam schedule/i.test(text(doc.querySelector(".fap-page-title__crumb-current")))) return "schedule";
     const title = text(doc.querySelector("title")).toLowerCase();
     if (title.includes("just a moment") || title.includes("attention required") || doc.querySelector("#challenge-form, #cf-challenge-running, .cf-browser-verification")) return "challenge";
     return "other"; // thường là trang đăng nhập
   }
 
-  root.FapParser = { parseTerms, parseCourses, parseSheet, pageKind, num };
+  root.FapParser = { parseTerms, parseCourses, parseSheet, parseExamSchedule, pageKind, num };
 })(typeof window !== "undefined" ? window : globalThis);

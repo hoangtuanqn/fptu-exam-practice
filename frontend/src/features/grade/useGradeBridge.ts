@@ -47,9 +47,9 @@ export function useGradeBridge(enabled: boolean, onUploaded: () => void) {
       } catch {
         return;
       }
-      if (!data || !Array.isArray(data.courses) || data.courses.length === 0 || data.at <= readUploaded()) return;
+      if (!data || !Array.isArray(data.courses) || (data.courses.length === 0 && !data.exams?.length) || data.at <= readUploaded()) return;
       try {
-        await gradeApi.sync(data.courses);
+        await gradeApi.sync(data.courses, Array.isArray(data.exams) ? data.exams : undefined);
         try {
           localStorage.setItem(UPLOADED_KEY, String(data.at));
         } catch {
