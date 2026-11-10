@@ -40,7 +40,7 @@ export function splitSections(markdown: string): { title: string; content: strin
 
 // ---- Tìm đúng từ (BM25): bỏ dấu, tách từ, thêm cặp từ liền nhau để khớp cụm như "phó chủ nhiệm". Bổ sung cho embedding:
 // embedding hiểu nghĩa nhưng hay trượt tên riêng, mã, chức danh; từ khoá thì ngược lại.
-const fold = (s: string) =>
+export const fold = (s: string) =>
   s
     .toLowerCase()
     .replace(/đ/g, "d")
@@ -49,7 +49,7 @@ const fold = (s: string) =>
 const STOP = new Set(["la", "va", "co", "the", "cua", "cho", "toi", "minh", "ban", "nao", "gi", "ai", "nhu", "khong", "duoc", "o", "de", "mot", "nay", "thi", "bi", "se", "thay", "vao", "ma", "hay", "nhe", "a", "oi", "voi", "can", "muon", "lam", "sao"]);
 const words = (s: string) => fold(s).split(/[^a-z0-9]+/).filter((t) => t.length > 1 && !STOP.has(t));
 /** Từ đơn + cặp từ liền nhau (khử trùng). */
-const terms = (s: string) => {
+export const terms = (s: string) => {
   const w = words(s);
   return [...w, ...w.slice(1).map((t, i) => `${w[i]!} ${t}`)];
 };

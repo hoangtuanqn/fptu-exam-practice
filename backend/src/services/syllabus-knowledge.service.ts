@@ -1,21 +1,15 @@
 import { prisma } from "../configs/prisma";
-import { EMBEDDING_DIMS, EMBEDDING_MODEL } from "../constants/chat";
+import { EMBEDDING_MODEL } from "../constants/chat";
 import { buildSyllabusChunks, type SyllabusSubject } from "../utils/syllabus-chunks";
-import { embedDocuments, embedQuery } from "./ai/embedding.client";
+import { toBytes } from "../utils/vector";
+import { embedDocuments } from "./ai/embedding.client";
 import { chatSettingService } from "./chat-setting.service";
+import { syllabusRagService } from "./syllabus-rag.service";
 
 const BATCH = 100; // số đoạn mỗi lần gọi OpenAI
 const MAX_RETRIES = 6;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-// Vector lưu dạng float32 little-endian (768 số = 3 KB), gọn hơn nhiều so với mảng JSON
-export const toBytes = (v: number[]) => Buffer.from(new Float32Array(v).buffer);
-export const fromBytes = (b: Uint8Array) => new Float32Array(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength));
-const dot = (a: Float32Array, b: Float32Array) => {
-  let s = 0;
-  for (let i = 0; i < a.length; i++) s += a[i]! * b[i]!;
-  return s;
-};
 
 async function embedWithRetry(key: string, texts: string[]) {
   for (let attempt = 0; ; attempt++) {
@@ -39,8 +33,6 @@ export interface IndexResult {
   pending: number; // đoạn còn chưa có vector
   chars: number;
 }
-
-let cache: { slug: string; code: string; title: string; content: string; vec: Float32Array }[] | null = null;
 
 export const syllabusKnowledgeService = {
   /**
@@ -81,24 +73,7 @@ export const syllabusKnowledgeService = {
         opts.onProgress?.(result.embedded, todo.length);
       }
     }
-    cache = null;
+    syllabusRagService.invalidate(); // chỉ mục tìm kiếm của chatbot nạp lại từ DB ở lần hỏi kế tiếp
     return result;
-  },
-
-  /** Các đoạn Syllabus gần nghĩa nhất với câu hỏi (có thể giới hạn trong một môn). Cần khoá OpenAI; chưa có thì trả mảng rỗng. */
-  async search(query: string, opts: { subject?: string; limit?: number } = {}) {
-    const { openaiApiKey } = await chatSettingService.get();
-    if (!openaiApiKey) return [];
-    if (!cache) {
-      const rows = await prisma.subjectChunk.findMany({ where: { embedding: { not: null }, model: EMBEDDING_MODEL }, select: { slug: true, subjectCode: true, title: true, content: true, embedding: true } });
-      cache = rows.map((r) => ({ slug: r.slug, code: r.subjectCode, title: r.title, content: r.content, vec: fromBytes(r.embedding!) })).filter((r) => r.vec.length === EMBEDDING_DIMS);
-    }
-    const q = Float32Array.from(await embedQuery(openaiApiKey, query));
-    const code = opts.subject?.toUpperCase();
-    return cache
-      .filter((c) => !code || c.code === code)
-      .map((c) => ({ slug: c.slug, subject: c.code, title: c.title, content: c.content, score: dot(q, c.vec) }))
-      .sort((a, b) => b.score - a.score)
-      .slice(0, opts.limit ?? 5);
   },
 };
