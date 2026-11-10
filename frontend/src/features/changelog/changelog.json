@@ -272,6 +272,53 @@
   ],
   "extension": [
     {
+      "version": "1.5.0",
+      "date": "2026-11-10",
+      "title": "Popup mới, đồng bộ điểm FAP ngay trong tiện ích",
+      "highlights": [
+        "Bật/tắt đồng bộ điểm FAP và bấm “Đồng bộ ngay” ngay trong tiện ích",
+        "Thông báo trên FAP có nút ✕ để ẩn 24 giờ"
+      ],
+      "changes": [
+        {
+          "type": "new",
+          "text": "Bật hoặc tắt đồng bộ điểm FAP ngay trong tiện ích (cần đăng nhập fepass.top)"
+        },
+        {
+          "type": "new",
+          "text": "Nút “Đồng bộ ngay” trong tiện ích, hiện tiến độ và báo rõ khi cần làm gì (đăng nhập FAP, kiểm tra Cloudflare)"
+        },
+        {
+          "type": "new",
+          "text": "Xem trạng thái điểm FAP ngay trong tiện ích: lần đọc gần nhất, số môn, số buổi thi, đã gửi lên FePass chưa"
+        },
+        {
+          "type": "new",
+          "text": "Thông báo nhỏ trên FAP có nút ✕ để ẩn 24 giờ; bật lại ngay trong tiện ích khi cần"
+        },
+        {
+          "type": "new",
+          "text": "Nút xoá điểm đã đọc trong tiện ích"
+        },
+        {
+          "type": "improved",
+          "text": "Điểm đọc từ FAP tự gửi lên tài khoản khi bạn mở bất kỳ trang nào của FePass, không cần mở trang Điểm FAP"
+        },
+        {
+          "type": "improved",
+          "text": "Giao diện tiện ích gọn, đẹp hơn, có chế độ tối và hướng dẫn 3 bước cho người mới"
+        },
+        {
+          "type": "improved",
+          "text": "Hiện dấu “!” trên biểu tượng khi điểm FAP đã cũ hơn 14 ngày"
+        },
+        {
+          "type": "fixed",
+          "text": "Tắt nút làm đề trên FuOverflow không còn làm dừng đồng bộ điểm FAP"
+        }
+      ]
+    },
+    {
       "version": "1.4.0",
       "date": "2026-11-09",
       "title": "Đồng bộ điểm FAP",

@@ -36,10 +36,51 @@
     if (v === lastSync) return;
     lastSync = v;
     chrome.storage.local.set({ gradeSync: { enabled: v === "on", origin: location.origin, at: Date.now() } });
-    if (v === "off") chrome.storage.local.remove("fapGrades"); // tắt đồng bộ thì xoá luôn điểm đã đọc trong tiện ích
+    if (v === "off") chrome.storage.local.remove(["fapGrades", "fapSync", "fapUploadedAt"]); // tắt đồng bộ thì xoá luôn điểm đã đọc trong tiện ích
   };
   publishSync();
   new MutationObserver(publishSync).observe(root, { attributes: true, attributeFilter: ["data-fepass-grade-sync"] });
+
+  // Website ghi lại thời điểm đã gửi điểm lên tài khoản vào localStorage; chuyển cho tiện ích để popup hiện "Đã gửi lên FePass"
+  // (cùng nguồn gốc nên đọc được; chỉ đọc một con số, không đọc dữ liệu nào khác)
+  let lastUploaded = 0;
+  const publishUploaded = () => {
+    let at = 0;
+    try {
+      at = Number(localStorage.getItem("fepass.grades.uploadedAt")) || 0;
+    } catch {
+      return;
+    }
+    if (!at || at === lastUploaded) return;
+    lastUploaded = at;
+    chrome.storage.local.set({ fapUploadedAt: { at, origin: location.origin } });
+  };
+  publishUploaded();
+  setInterval(publishUploaded, 2000);
+
+  // Popup của tiện ích xin bật/tắt đồng bộ: chuyển cho website (chỉ website có phiên đăng nhập để đổi cài đặt trên máy chủ)
+  // rồi trả kết quả cho popup. Website không trả lời kịp (chưa đăng nhập, bản website cũ) thì popup mở trang để hỏi xác nhận.
+  chrome.runtime.onMessage.addListener((m, _sender, sendResponse) => {
+    if (!m || m.type !== "fepass:set-sync") return;
+    let done = false;
+    const finish = (r) => {
+      if (done) return;
+      done = true;
+      document.removeEventListener("fepass:set-sync-result", onResult);
+      sendResponse(r);
+    };
+    const onResult = (e) => {
+      try {
+        finish(JSON.parse(e.detail));
+      } catch {
+        finish({ ok: false, error: "timeout" });
+      }
+    };
+    document.addEventListener("fepass:set-sync-result", onResult);
+    document.dispatchEvent(new CustomEvent("fepass:set-sync", { detail: JSON.stringify({ enabled: !!m.enabled }) }));
+    setTimeout(() => finish({ ok: false, error: "timeout" }), 8000);
+    return true; // trả lời bất đồng bộ
+  });
 
   // Trang web xin điểm đã đọc: trả lại dưới dạng chuỗi JSON (website tự gửi lên tài khoản của chính sinh viên)
   const sendGrades = async () => {

@@ -13,6 +13,7 @@ import NotFoundPage from "./NotFoundPage";
 import { ADMIN_NAV, adminRoutes } from "@/features/admin/admin.routes";
 import { GuestSync } from "@/features/guest-sync/GuestSync";
 import { DailyCheckInPopup } from "@/features/check-in/DailyCheckInPopup";
+import { GradeBridgeHost } from "@/features/grade/GradeBridgeHost";
 import { WhatsNewDialog } from "@/features/changelog/WhatsNewDialog";
 import PracticePage from "@/features/practice/PracticePage";
 
@@ -82,6 +83,7 @@ export default function App() {
     <Suspense fallback={<Loading />}>
       <PageMeta />
       <GuestSync />
+      <GradeBridgeHost />
       <DailyCheckInPopup />
       <WhatsNewDialog />
       <ChatWidget />

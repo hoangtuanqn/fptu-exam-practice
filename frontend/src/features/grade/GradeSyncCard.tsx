@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { GraduationCap, Loader2, ShieldCheck } from "lucide-react";
 import { errorMessage } from "@/shared/api/errors";
 import { useToast } from "@/shared/context/ToastContext";
@@ -6,7 +6,7 @@ import { Button } from "@/shared/ui/Button";
 import { Card, CardHeader } from "@/shared/ui/Card";
 import { Switch } from "@/shared/ui/Switch";
 import { gradeApi, type GradeOverview } from "./grade.api";
-import { useGradeBridge } from "./useGradeBridge";
+import { gradeBridge, useExtensionStatus, useGradeBridgeState } from "./useGradeBridge";
 import { useConfirm } from "@/shared/ui/ConfirmDialog";
 
 const FAP_GRADE_URL = "https://fap.fpt.edu.vn/Report/Grade";
@@ -15,7 +15,10 @@ const FAP_GRADE_URL = "https://fap.fpt.edu.vn/Report/Grade";
 export function GradeSyncCard({ overview, onChange }: { overview: GradeOverview; onChange: () => void }) {
   const toast = useToast();
   const [busy, setBusy] = useState(false);
-  const { installed, outdated, error } = useGradeBridge(overview.enabled, onChange);
+  const { installed, outdated } = useExtensionStatus();
+  const { error } = useGradeBridgeState();
+  useEffect(() => gradeBridge.set({ enabled: overview.enabled }), [overview.enabled]); // GradeBridgeHost (toàn site) công bố cho tiện ích
+  useEffect(() => gradeBridge.onUploaded(onChange), [onChange]); // vừa gửi điểm lên: tải lại trang
   const { confirm, confirmDialog } = useConfirm();
 
   const toggle = async (next: boolean) => {
@@ -23,6 +26,7 @@ export function GradeSyncCard({ overview, onChange }: { overview: GradeOverview;
     setBusy(true);
     try {
       await gradeApi.setEnabled(next);
+      gradeBridge.set({ enabled: next });
       toast.success(next ? "Đã bật đồng bộ điểm FAP" : "Đã tắt đồng bộ và xoá điểm đã lưu");
       onChange();
     } catch (err) {

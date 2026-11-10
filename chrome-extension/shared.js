@@ -47,3 +47,15 @@ async function fepassGetAuth(siteUrl) {
   const ok = fepassAuth && fepassAuth.origin === siteUrl && Date.now() - fepassAuth.at < FEPASS_AUTH_TTL_MS;
   return { loggedIn: !!ok && fepassAuth.state === "in", name: ok ? fepassAuth.name || "" : "" };
 }
+
+// ---- Dùng chung cho popup, trang FAP và nền (từ bản 1.5.0)
+const FEPASS_SNOOZE_MS = 24 * 60 * 60 * 1000; // ẩn thông báo trên FAP: 24 giờ
+const FEPASS_STALE_MS = 14 * 24 * 60 * 60 * 1000; // điểm đã đọc cũ hơn mức này thì nhắc đồng bộ lại
+const FEPASS_GRADE_URL = "https://fap.fpt.edu.vn/Report/Grade";
+
+// 10:32 10/11
+function fepassFormatTime(ts) {
+  const d = new Date(ts);
+  const p = (n) => String(n).padStart(2, "0");
+  return `${p(d.getHours())}:${p(d.getMinutes())} ${p(d.getDate())}/${p(d.getMonth() + 1)}`;
+}

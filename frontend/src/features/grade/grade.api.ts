@@ -128,6 +128,7 @@ export interface ExtensionGrades {
 
 export const gradeApi = {
   overview: () => http.get<GradeOverview>("/grades/me"),
+  setting: () => http.get<{ enabled: boolean; syncedAt: string | null }>("/grades/setting"),
   setEnabled: (enabled: boolean) => http.put<{ enabled: boolean; syncedAt: string | null }>("/grades/setting", { enabled }),
   sync: (courses: unknown[], exams?: unknown[]) => http.post<{ synced: number; exams: number }>("/grades/sync", { courses, ...(exams && { exams }) }),
   clear: () => http.delete("/grades/me"),

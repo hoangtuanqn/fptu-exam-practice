@@ -23,7 +23,7 @@ Sửa code xong chỉ cần bấm nút tải lại (⟳) ở thẻ tiện ích t
 | `manifest.json` | Manifest V3. Chỉ chạy trên `fuoverflow.com`; quyền: `storage`, và gọi API `api.fepass.top` (cùng `localhost` để chạy thử). |
 | `content.js`, `content.css` | Quét trang, tìm bài có nhãn “Đề Thi FE” (danh sách `.structItem-title`, trang bài `h1.p-title-value`), chèn nút. Có theo dõi thay đổi DOM để nút vẫn hiện khi trang nạp thêm nội dung. |
 | `background.js` | Lấy phí lấy đề từ `GET /api/v1/crawl-jobs/price` (endpoint công khai) và nhớ 10 phút. Gọi ở đây vì trang FuOverflow không được phép gọi chéo tên miền. |
-| `popup.html/js/css` | Bật/tắt nút; mục “Nâng cao” để trỏ sang môi trường chạy thử. |
+| `popup.html/js/css` | Popup: thẻ Điểm FAP (trạng thái, nút Đồng bộ ngay, xoá dữ liệu đã đọc), công tắc nút FuOverflow, công tắc thông báo trên FAP; mục “Nâng cao” để trỏ sang môi trường chạy thử. Hỗ trợ chế độ tối. |
 | `shared.js` | Cấu hình mặc định + kiểm tra địa chỉ (chỉ `https`, hoặc `http://localhost`). |
 
 Liên kết nút trỏ tới: `https://fepass.top/?link=<link bài>&confirm=1&src=ext`.
@@ -40,6 +40,17 @@ Chỉ hoạt động khi sinh viên tự bật **Đồng bộ điểm FAP** ở 
 - Tắt công tắc: tiện ích xoá điểm đã đọc, server xoá điểm đã lưu.
 
 Điểm cần đạt tính ở backend (`backend/src/utils/grade-advice.ts`) từ điểm thành phần, trọng số, `MinAvgMarkToPass` và điều kiện của bài thi cuối kỳ lấy từ syllabus (crawler `tools/flm-crawler`). Phần thi lại (Resit) thay cho lần trước.
+
+### Từ bản 1.5.0
+
+- **Đồng bộ ngay** (popup): gửi tin `fepass:sync` cho tab FAP đang mở; nếu không phải trang Báo cáo điểm thì mở `Report/Grade#fepass-sync` (địa chỉ có `#fepass-sync` làm `fap.js` đọc ngay, bỏ qua giới hạn 30 phút). Không cần thêm quyền nào.
+- Tiến độ và kết quả nằm trong `chrome.storage.local.fapSync` (`state`: running, done, error), popup tự cập nhật.
+- Thông báo trên FAP vẽ bằng Shadow DOM (CSS của FAP không ảnh hưởng). Nút ✕ lưu `fapNoticeUntil` (24 giờ) để ẩn; lỗi và tiến độ vẫn hiện khi sinh viên chủ động bấm Đồng bộ ngay.
+- `site.js` đọc thời điểm website đã gửi điểm (`localStorage fepass.grades.uploadedAt`) và lưu `fapUploadedAt` để popup hiện “Đã gửi lên FePass”.
+- `background.js`: dấu “!” trên biểu tượng khi có bản mới hoặc điểm đã đọc quá 14 ngày.
+- Đồng bộ điểm không còn phụ thuộc công tắc “Nút làm đề trên FuOverflow”.
+- **Công tắc đồng bộ trong popup:** extension không có token nên không tự đổi cài đặt trên máy chủ. Popup gửi tin `fepass:set-sync` tới tab fepass.top đang mở; `site.js` phát sự kiện `fepass:set-sync` cho website (`GradeBridgeHost`), website gọi API rồi trả `fepass:set-sync-result`. Không có tab nào trả lời thì popup mở `/account/grades?sync=on|off` và website hỏi xác nhận. Tắt luôn có bước xác nhận vì dữ liệu đã lưu bị xoá.
+- Website chạy cầu nối ở mọi trang (không chỉ trang Điểm FAP), nên điểm tự gửi lên khi có bất kỳ tab FePass nào đang mở.
 
 ## Quyền riêng tư
 
