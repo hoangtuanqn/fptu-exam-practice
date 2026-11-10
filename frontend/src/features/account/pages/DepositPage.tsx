@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Gift, Loader2, Plus } from "lucide-react";
 import { depositApi } from "@/features/account/api/deposit.api";
@@ -15,6 +15,7 @@ import { useSubmit } from "@/shared/hooks/useSubmit";
 import { formatCredit, formatDateTime, formatMoney } from "@/shared/utils/formatters";
 import { useClampPage } from "@/shared/hooks/useClampPage";
 import { useUpsell } from "@/shared/hooks/useUpsell";
+import { trackPrompt } from "@/shared/utils/trackPrompt";
 
 const PRESETS = [10_000, 50_000, 100_000, 200_000, 500_000, 1_000_000];
 const BACK_KEY = "deposit_back";
@@ -79,6 +80,12 @@ export default function DepositPage() {
   const nextTier = [...tiers].sort((x, y) => x.min - y.min).find((t) => t.min > amount);
   const gap = nextTier ? nextTier.min - amount : 0;
   const showTierGap = upsell.depositTier && need === 0 && !!nextTier && amount > 0 && !tooLow && gap <= nextTier.min * 0.4;
+  const tierShownRef = useRef(false);
+  useEffect(() => {
+    if (!showTierGap || tierShownRef.current) return;
+    tierShownRef.current = true; // one "shown" per visit, not on every keystroke
+    trackPrompt("deposit-tier", "shown");
+  }, [showTierGap]);
 
   // Điền sẵn số tiền vừa đủ cho phần còn thiếu (làm tròn lên nghìn, không dưới mức tối thiểu)
   useEffect(() => {
@@ -165,7 +172,10 @@ export default function DepositPage() {
                     <span>
                       Thêm <b className="tabular-nums">{formatMoney(gap)}</b> nữa là được thưởng +{nextTier.percent}% (nhận thêm {(bonusOf(nextTier.min, tiers) - bonus).toLocaleString("vi-VN")} credit).
                     </span>
-                    <button type="button" onClick={() => setDigits(String(nextTier.min))} className="font-semibold text-emerald-700 underline">
+                    <button type="button" onClick={() => {
+                        trackPrompt("deposit-tier", "click");
+                        setDigits(String(nextTier.min));
+                      }} className="font-semibold text-emerald-700 underline">
                       Nạp {formatMoney(nextTier.min)}
                     </button>
                     <span className="text-slate-500">Không bắt buộc.</span>
