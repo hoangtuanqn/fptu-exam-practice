@@ -16,7 +16,7 @@ import { CopyButton } from "@/shared/ui/CopyButton";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { Segmented } from "@/shared/ui/Segmented";
 import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
-import { formatCredit, formatDate } from "@/shared/utils/formatters";
+import { formatCredit, formatDate, formatMinutes } from "@/shared/utils/formatters";
 import { useClampPage } from "@/shared/hooks/useClampPage";
 import { errorMessage } from "@/shared/api/errors";
 import { useConfirm } from "@/shared/ui/ConfirmDialog";
@@ -120,7 +120,7 @@ export default function GiftCodesPage() {
                     <GiftCodeStatusBadge value={g.status} />
                   </div>
                   <div className="flex items-baseline justify-between text-sm">
-                    <span className="font-medium tabular-nums text-emerald-700">{formatCredit(g.amount)}</span>
+                    <span className="font-medium tabular-nums text-emerald-700">{formatCredit(g.amount)}{g.creditTtlMinutes ? ` · dùng trong ${formatMinutes(g.creditTtlMinutes)}` : ""}</span>
                     <span className="text-xs text-slate-500">
                       Đã dùng {g.usedCount}/{g.maxUses} · {g.expiresAt ? `hạn ${formatDate(g.expiresAt)}` : "không hết hạn"}
                     </span>
@@ -150,7 +150,10 @@ export default function GiftCodesPage() {
                         </div>
                         {g.note && <ExpandableText text={g.note} className="max-w-[18rem] text-xs text-slate-500" />}
                       </Td>
-                      <Td className="text-right tabular-nums">{formatCredit(g.amount)}</Td>
+                      <Td className="text-right tabular-nums">
+                        {formatCredit(g.amount)}
+                        {g.creditTtlMinutes ? <div className="text-xs text-amber-700">dùng trong {formatMinutes(g.creditTtlMinutes)}</div> : null}
+                      </Td>
                       <Td className="text-right tabular-nums">
                         {g.usedCount}/{g.maxUses}
                       </Td>

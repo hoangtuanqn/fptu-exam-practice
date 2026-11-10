@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Gift, Loader2 } from "lucide-react";
+import { Gift, Hourglass, Loader2 } from "lucide-react";
 import { userApi } from "@/features/account/api/user.api";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useToast } from "@/shared/context/ToastContext";
@@ -12,7 +12,7 @@ import { Card, CardHeader, PageHeader } from "@/shared/ui/Card";
 import { Empty, ErrorBox, FormError, Loading } from "@/shared/ui/Feedback";
 import { Input } from "@/shared/ui/Input";
 import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
-import { formatCredit, formatDateTime } from "@/shared/utils/formatters";
+import { formatCredit, formatDateTime, timeLeft } from "@/shared/utils/formatters";
 import { useClampPage } from "@/shared/hooks/useClampPage";
 
 // Nhập giftcode nhận credit, kèm lịch sử các mã đã nhập
@@ -27,6 +27,7 @@ export default function GiftCodePage() {
   const page = toPage(url.page);
   const history = useApi(() => userApi.myGiftCodes(page), [page]);
   useClampPage(history.data?.meta, (p) => setUrl({ page: String(p) }));
+  const lots = useApi(() => userApi.myCreditLots(), []);
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -39,6 +40,7 @@ export default function GiftCodePage() {
       await refresh(); // cập nhật số dư trên thanh bên và header
       if (page !== 1) setUrl({ page: "1" });
       else history.reload();
+      lots.reload();
     });
   };
 
@@ -69,10 +71,37 @@ export default function GiftCodePage() {
           {result && (
             <div role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
               Đã cộng <b>{formatCredit(result.amount)}</b> từ mã <b>{result.code}</b>. Số dư hiện tại: <b>{formatCredit(result.balanceAfter)}</b>.
+              {result.creditExpiresAt && (
+                <span className="mt-1 block font-medium text-amber-800">
+                  Credit này có hạn: dùng trước {formatDateTime(result.creditExpiresAt)} ({timeLeft(result.creditExpiresAt)}), chưa dùng sẽ bị thu hồi.
+                </span>
+              )}
             </div>
           )}
         </form>
       </Card>
+
+      {lots.data && lots.data.length > 0 && (
+        <div className="mt-6">
+          <Card>
+            <CardHeader title="Credit sắp hết hạn" description="Credit có hạn được dùng trước credit thường. Chưa dùng hết khi tới hạn thì phần còn lại sẽ mất." />
+            <ul className="divide-y divide-slate-100">
+              {lots.data.map((l) => (
+                <li key={l.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <Hourglass size={18} className="shrink-0 text-amber-600" />
+                    <div className="min-w-0">
+                      <div className="text-sm font-semibold tabular-nums text-slate-900">{formatCredit(l.remaining)}</div>
+                      <div className="truncate text-xs text-slate-500">{l.note ?? "Giftcode"} · hạn {formatDateTime(l.expiresAt)}</div>
+                    </div>
+                  </div>
+                  <span className="shrink-0 whitespace-nowrap rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800">{timeLeft(l.expiresAt)}</span>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        </div>
+      )}
 
       <div className="mt-6">
         <Card>

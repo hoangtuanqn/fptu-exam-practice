@@ -40,6 +40,7 @@ export interface GiftCodeForm {
   maxUses: number;
   expiresAt?: string; // ISO, bỏ trống = không hết hạn
   note?: string;
+  creditTtlMinutes?: number; // credit nhận được hết hạn sau chừng này phút kể từ lúc người dùng nhập; bỏ trống = vĩnh viễn
 }
 
 export interface UserFilter {

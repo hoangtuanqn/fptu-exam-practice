@@ -16,6 +16,9 @@ interface Props {
 // "2026-12-31" (ô chọn ngày) -> hết hạn cuối ngày đó theo giờ máy người dùng
 const endOfDayIso = (date: string) => new Date(`${date}T23:59:59`).toISOString();
 
+const UNITS = { minute: { label: "phút", minutes: 1 }, hour: { label: "giờ", minutes: 60 }, day: { label: "ngày", minutes: 1440 } } as const;
+const MAX_TTL_MINUTES = 60 * 24 * 365; // khớp backend (CREDIT_TTL_MAX_MINUTES)
+
 // Tạo giftcode mới: để trống mã thì hệ thống tự sinh
 export function GiftCodeDialog({ onClose, onCreated }: Props) {
   const toast = useToast();
@@ -25,6 +28,8 @@ export function GiftCodeDialog({ onClose, onCreated }: Props) {
   const [maxUses, setMaxUses] = useState("1");
   const [expires, setExpires] = useState("");
   const [note, setNote] = useState("");
+  const [ttl, setTtl] = useState(""); // thời hạn của credit sau khi nhập (để trống = vĩnh viễn)
+  const [unit, setUnit] = useState<keyof typeof UNITS>("day");
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -35,6 +40,7 @@ export function GiftCodeDialog({ onClose, onCreated }: Props) {
         maxUses: Number(maxUses),
         expiresAt: expires ? endOfDayIso(expires) : undefined,
         note: note.trim() || undefined,
+        creditTtlMinutes: ttlMinutes || undefined,
       });
       toast.success(`Đã tạo giftcode ${created.code}`);
       onCreated();
@@ -42,7 +48,8 @@ export function GiftCodeDialog({ onClose, onCreated }: Props) {
     });
   };
 
-  const valid = Number(amount) > 0 && Number(maxUses) > 0;
+  const ttlMinutes = ttl ? Number(ttl) * UNITS[unit].minutes : 0;
+  const valid = Number(amount) > 0 && Number(maxUses) > 0 && ttlMinutes <= MAX_TTL_MINUTES;
 
   return (
     <Modal onClose={onClose}>
@@ -71,6 +78,31 @@ export function GiftCodeDialog({ onClose, onCreated }: Props) {
           error={fieldErrors.expiresAt}
           hint="Để trống nếu không hết hạn."
         />
+        <div>
+          <div className="grid grid-cols-[1fr_auto] items-end gap-3">
+            <Input
+              label="Credit dùng được trong (tùy chọn)"
+              inputMode="numeric"
+              value={ttl}
+              onChange={(e) => setTtl(e.target.value.replace(/\D/g, ""))}
+              error={fieldErrors.creditTtlMinutes}
+              placeholder="Để trống = credit vĩnh viễn"
+            />
+            <select
+              aria-label="Đơn vị thời hạn credit"
+              value={unit}
+              onChange={(e) => setUnit(e.target.value as keyof typeof UNITS)}
+              className="h-12 rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-800"
+            >
+              {Object.entries(UNITS).map(([k, u]) => (
+                <option key={k} value={k}>
+                  {u.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <p className="mt-1 text-xs text-slate-500">Tính từ lúc người dùng nhập mã. Hết thời hạn mà chưa dùng thì số credit còn lại bị thu hồi (tối đa 1 năm).</p>
+        </div>
         <Input label="Ghi chú (tùy chọn)" value={note} onChange={(e) => setNote(e.target.value)} error={fieldErrors.note} placeholder="Ví dụ: Tặng sinh viên K20" maxLength={200} />
         <ModalActions>
           <Button type="button" onClick={onClose}>
