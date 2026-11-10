@@ -3,6 +3,7 @@ import { planService } from "./plan.service";
 import type { CrawlJob } from "@prisma/client";
 import { prisma } from "../configs/prisma";
 import { crawlJobRepository } from "../repositories/crawl-job.repository";
+import { subjectService } from "./subject.service";
 import { examRepository } from "../repositories/exam.repository";
 import { userExamRepository } from "../repositories/user-exam.repository";
 import { HTTP_STATUS } from "../constants/httpStatus";
@@ -39,6 +40,9 @@ async function assertThreadAccepted(threadId: string) {
 // Không kết luận được (chưa đọc được bài) thì không cho đi tiếp, vì nếu sai môn thì người dùng đã bị trừ phí.
 async function assertSubject(subject: string | undefined, threadId: string, examTitle: string | null) {
   if (!subject) return;
+  // Môn chưa có tên chương thì không làm được bộ đề theo chương: chặn trước khi trừ phí (và ghi báo cáo cho admin)
+  const ready = await subjectService.chapterSetReady(subject);
+  if (!ready.ok) throw new AppError(ready.message!, HTTP_STATUS.UNPROCESSABLE_ENTITY);
   let title = examTitle;
   if (title === null) {
     const check = await threadPreflight.check(threadId);

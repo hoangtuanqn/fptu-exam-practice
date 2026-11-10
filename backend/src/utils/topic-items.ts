@@ -16,6 +16,9 @@ const NOISE = /\b(review|revision|workshop|lab|progress test|midterm|final|exam|
 const SESSION_HEADER = /^(?:tiết|buổi|session|week|tuần)\s*\d+\s*:?$/i;
 const MAX_FLAT_ITEMS = 80;
 
+/** Syllabus có tên cho ít nhất 2 chương có số? Chỉ khi đó mới đủ căn cứ để chia đề theo chương (không tự đặt tên chương). */
+export const hasNamedChapters = (chapters: { number: number; title: string }[]) => chapters.filter((c) => c.number > 0 && c.title.trim()).length >= 2;
+
 const clean = (s: string) => s.replace(/^[\s*+\-•(*)]+/, "").replace(/\s+/g, " ").trim();
 // Syllabus có dòng viết thường ("7.1 translation"): chỉ viết hoa chữ cái đầu cho dễ đọc, không đổi nội dung
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
