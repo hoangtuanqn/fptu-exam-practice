@@ -10,13 +10,16 @@ import { errorMessage } from "@/shared/api/errors";
 // - PENDING: AI đang phân tích, chỉ xem đề, chưa chọn đáp án (kèm thanh tiến trình)
 // - FAILED: AI giải lỗi, đề chỉ xem được, có nút thử lại
 // - AI / MANUAL: không hiện gì
+import { useConfirm } from "@/shared/ui/ConfirmDialog";
 export function AnswerPendingBanner({ source, examId, onRetry }: { source: AnswerSource | null; examId: number | null; onRetry: () => void }) {
   const toast = useToast();
   const [seconds, setSeconds] = useState(0);
   const [retrying, setRetrying] = useState(false);
+  const { confirm, confirmDialog } = useConfirm();
 
   async function retry() {
     if (examId === null) return;
+    if (!(await confirm({ title: "Nhờ AI giải lại đề này?", message: "AI sẽ phân tích lại cả đề, mất khoảng vài phút và tốn chi phí gọi AI của hệ thống (bạn không bị trừ credit). Có thể thử lại sau ít phút nếu lỗi vẫn còn.", confirmLabel: "Giải lại" }))) return;
     setRetrying(true);
     try {
       await examImportApi.retrySolve(examId);
@@ -62,6 +65,7 @@ export function AnswerPendingBanner({ source, examId, onRetry }: { source: Answe
   if (source === "FAILED" || source === "DEFAULT") {
     return (
       <div role="alert" className="mb-2 flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-3 text-sm text-rose-900">
+        {confirmDialog}
         <TriangleAlert size={16} className="mt-0.5 shrink-0 text-rose-600" />
         <div className="min-w-0 flex-1">
           <div className="font-medium">Chưa lấy được đáp án của đề này.</div>

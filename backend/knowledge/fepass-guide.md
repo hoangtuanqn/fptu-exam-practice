@@ -16,9 +16,12 @@ FEPass do Phạm Hoàng Tuấn phát triển và vận hành. Tuấn là Founder
 - Trang làm bài (`/exam/<mã đề>`): hiện từng câu hỏi dạng ảnh, thanh chọn đáp án, nút nộp bài.
 - Đăng nhập (`/login`), Đăng ký (`/register`), Quên mật khẩu (`/forgot-password`).
 - Khu vực tài khoản (`/account`), menu bên trái gồm:
-  - Học tập: Tổng quan, Kho đề của tôi, Tải đề thi PE, Báo cáo đáp án, Lịch sử làm bài.
-  - Ví: Nạp credit, Giới thiệu bạn bè, Giftcode, Lịch sử giao dịch.
-  - Cài đặt: Hồ sơ.
+  - Tổng quan.
+  - Luyện đề: Kho đề (hai tab "Của tôi" và "Theo môn"), Bộ đề theo chương, Tải đề thi PE.
+  - Ôn tập: Sổ câu sai, Câu hay ra.
+  - Kết quả: Lịch sử làm bài, Báo cáo đáp án, Điểm FAP.
+  - Ví và Pro: Gói Pro, Nạp credit, Lịch sử giao dịch, Giftcode, Giới thiệu bạn bè.
+  - Tài khoản: Hồ sơ.
 - Trang quản trị (`/admin`) chỉ dành cho quản trị viên, người dùng thường không thấy.
 
 ## Cần tài khoản không
@@ -118,7 +121,36 @@ Cách cài (thủ công):
 4. Bấm "Tải tiện ích đã giải nén" (Load unpacked) và chọn thư mục vừa giải nén.
 5. Mở FuOverflow, các nút sẽ hiện ở danh sách bài và trong bài.
 6. Đăng nhập fepass.top ở cùng trình duyệt để tiện ích dùng được tài khoản của bạn. Chưa đăng nhập thì tiện ích hiện thông báo yêu cầu đăng nhập.
+Từ bản 1.4.0, nếu bạn tự bật "Đồng bộ điểm FAP" ở trang Điểm FAP, tiện ích còn đọc Báo cáo điểm và Lịch thi trên fap.fpt.edu.vn (xem mục "Điểm FAP"). Không bật thì tiện ích không đụng tới FAP.
 Khi có bản mới, biểu tượng tiện ích hiện dấu "!" và có hướng dẫn cập nhật: tải lại zip, giải nén đè lên thư mục cũ rồi bấm nút tải lại ở trang `chrome://extensions`. Thanh nhắc cài tiện ích ở trang chủ tự ẩn khi bạn đã cài.
+
+## Kho đề theo môn
+Tài khoản → Kho đề có hai tab: "Của tôi" (đề bạn đã lấy và các lượt làm dở) và "Theo môn". Ở tab "Theo môn", chọn một môn để xem toàn bộ đề FE của môn đó, lọc theo kỳ (SP, SU, FA kèm năm) và tìm theo tên đề. Mỗi đề có một trạng thái: "Mở đề" nếu đã nằm trong kho của bạn; "Sẵn sàng · có đáp án" nếu hệ thống đã có ảnh và đáp án (lấy vào kho là làm được ngay); "Lấy từ FuOverflow" nếu chưa có (cần lấy về, có thể mất phí lấy đề như bình thường). Chưa lấy đề thì chỉ thấy tên, ngày đăng và số câu, ảnh câu hỏi chỉ xem được sau khi lấy.
+
+## Bộ đề theo chương
+Tài khoản → Bộ đề theo chương: chọn môn, chọn đề FE, rồi chọn chương bạn muốn ôn để chỉ luyện các câu thuộc chương đó. Chương và chủ đề lấy từ syllabus của môn.
+
+## Sổ câu sai
+Câu bạn làm sai được đưa vào Tài khoản → Sổ câu sai và tự nhắc ôn lại đúng lúc (lặp lại ngắt quãng): làm đúng thì lần nhắc kế tiếp xa hơn, làm sai thì quay lại sớm. Mỗi câu có mức nhớ từ "Mới sai" đến "Sắp thuộc". Câu đã nhớ có thể bỏ khỏi sổ. Gói thường có giới hạn số câu trong sổ, gói Pro không giới hạn. Có thể bật email nhắc ôn ở trang này (mặc định tắt, tối đa 1 thư mỗi ngày, thư nào cũng có liên kết hủy); đặt thêm ngày thi nếu muốn thư có đếm ngược.
+
+## Câu hay ra
+Tài khoản → Câu hay ra: chọn một môn để xem những câu lặp lại ở nhiều đề của môn đó, kèm đáp án, nên ôn trước. Gói thường xem một số câu đầu, gói Pro xem đầy đủ.
+
+## Thống kê theo chủ đề và mức sẵn sàng
+Mỗi câu hỏi được gắn chủ đề theo syllabus. Ở Tổng quan và trang Sổ câu sai, bạn thấy tỷ lệ đúng theo chủ đề (gói Pro xem đủ và luyện riêng phần yếu) và mức sẵn sàng của từng môn. Mức sẵn sàng dựa trên các bài Thi thử gần nhất của môn (tối đa 5 bài, cần ít nhất 2 bài mới kết luận), chia ba mức: cần ôn thêm, khá, sẵn sàng. FEPass không đưa ra phần trăm khả năng qua môn vì không biết đề thi thật.
+
+## Điểm FAP (cá nhân hóa theo bảng điểm)
+Tài khoản → Điểm FAP cho biết điểm trung bình từng học kỳ, danh hiệu Sinh viên Giỏi hoặc Xuất sắc của kỳ, lịch thi sắp tới và điểm cần đạt ở bài thi cuối kỳ (FE) để qua từng môn.
+- Tính năng mặc định TẮT. Bạn tự bật công tắc "Đồng bộ điểm FAP" ở trang Điểm FAP. Tắt công tắc là toàn bộ điểm và lịch thi đã lưu bị xoá; cũng có nút xoá điểm đã lưu.
+- Cần cài tiện ích Chrome FePass bản 1.4.0 trở lên. Tiện ích đọc Báo cáo điểm và Lịch thi của chính bạn trên fap.fpt.edu.vn bằng phiên đăng nhập FAP của bạn trong trình duyệt. FAP có bước kiểm tra Cloudflare: hãy hoàn thành bước đó và đăng nhập FAP rồi mở Báo cáo điểm thì tiện ích mới đọc được. FePass không lưu mật khẩu FAP.
+- Cách tính: điểm môn từ điểm thành phần và trọng số; môn đã thi lại thì tính điểm thi lại. FE dưới 4 là điểm liệt, thi thực hành (PE) không dưới 1. Điểm trung bình kỳ = tổng (tín chỉ × điểm môn) ÷ tổng tín chỉ, môn trượt tính 0 nhưng vẫn cộng tín chỉ. Số tín chỉ lấy từ syllabus; môn chưa có syllabus coi như 0 tín chỉ nên chưa tính. Tiếng Anh chuẩn bị, Vovinam, thể chất, quốc phòng, OJT và môn 0 tín chỉ không tính vào điểm trung bình.
+- Danh hiệu kỳ: Sinh viên Xuất sắc từ 9, Sinh viên Giỏi từ 8, và phải qua 100% các môn trong kỳ, đủ số tín chỉ tối thiểu của kỳ (thường từ 12), không bị kỷ luật (FePass không biết kỷ luật nên bạn tự đối chiếu). FPT không dùng điểm rèn luyện.
+- Kỳ đang học có "điểm trung bình dự kiến": môn nào đã có điểm thành phần thì dự đoán điểm môn; phần chưa thi lấy theo mức trung bình các phần đã có và, nếu bạn đã làm các bài Thi thử của môn trên FePass, trộn thêm kết quả thi thử (càng làm nhiều bài càng được tính nhiều hơn, tối đa 70%). Đây chỉ là ước tính tham khảo, không phải cam kết điểm thật. Bấm "Cách ra điểm dự kiến" ở từng môn để xem công thức và số liệu.
+- Lịch thi sắp tới gồm ngày, giờ, phòng và loại thi: FE (cuối kỳ), PE (thực hành), 2NDFE (thi lần 2, dành cho thi lại hoặc thi cải thiện). Qua hay trượt môn chỉ xem ở bảng điểm, không suy ra từ lịch thi.
+- Hỏi Cóc Pass: Cóc Pass hướng dẫn cách dùng trang này nhưng không đọc được điểm FAP của bạn.
+
+## Gói Pro
+Gói Pro (trang `/pro`) mở rộng quyền lợi: không giới hạn lượt lấy đề, giải thích AI và tải đề PE, xem đầy đủ Câu hay ra, thống kê theo chủ đề và luyện riêng phần yếu, Sổ câu sai không giới hạn số câu. Giá và thời hạn xem ở trang Gói Pro (do quản trị viên cấu hình). Điểm FAP và lịch thi dùng được ở mọi gói.
 
 ## Kho đề của tôi
 Tài khoản → Kho đề của tôi liệt kê mọi đề bạn đã lấy. Từ đây bấm vào đề để làm tiếp, xem trạng thái đáp án (AI giải, chỉnh tay, đang phân tích...).
@@ -138,4 +170,4 @@ Tài khoản bị khoá không đăng nhập được. Hãy liên hệ quản tr
 
 ## Cóc Pass làm được và không làm được gì
 Cóc Pass (chatbot) hướng dẫn cách dùng FEPass. Khi bạn đã đăng nhập, Cóc Pass còn tra cứu giúp dữ liệu của CHÍNH BẠN (chỉ xem, không sửa): số dư và thông tin tài khoản, kho đề, các bài đang làm dở, kết quả các lần nộp bài, lịch sử nạp tiền, biến động số dư, đề PE đã tải, lời giải đã mở khóa, báo cáo đáp án đã gửi, thống kê điểm, giftcode đã nhập. Ngoài ra Cóc Pass tra được danh sách đề của một môn trên FuOverflow (ví dụ "PRO192 có những đề FE nào"), kể cả khi chưa đăng nhập. Ví dụ hỏi "tôi đang làm dở đề nào", "lịch sử nạp của tôi", "số dư còn bao nhiêu". Khách chưa đăng nhập không tra cứu được dữ liệu cá nhân.
-Cóc Pass không thao tác thay bạn (không lấy đề, không nạp tiền, không cộng hay hoàn credit, không đổi mật khẩu), không xem được dữ liệu của người khác, không giải bài hay giải thích kiến thức môn học (hãy dùng nút "Giải thích" ở từng câu) và không xử lý khiếu nại giao dịch. Vấn đề về tiền, tài khoản bị khoá hoặc lỗi hệ thống cần báo quản trị viên.
+Cóc Pass không đọc được điểm FAP và lịch thi của bạn (xem mục "Điểm FAP" để biết cách xem). Cóc Pass không thao tác thay bạn (không lấy đề, không nạp tiền, không cộng hay hoàn credit, không đổi mật khẩu), không xem được dữ liệu của người khác, không giải bài hay giải thích kiến thức môn học (hãy dùng nút "Giải thích" ở từng câu) và không xử lý khiếu nại giao dịch. Vấn đề về tiền, tài khoản bị khoá hoặc lỗi hệ thống cần báo quản trị viên.

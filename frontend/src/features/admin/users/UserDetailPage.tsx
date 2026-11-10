@@ -16,6 +16,7 @@ import { Card } from "@/shared/ui/Card";
 import { CopyButton } from "@/shared/ui/CopyButton";
 import { ErrorBox, FormError, Loading } from "@/shared/ui/Feedback";
 import { Input, Select } from "@/shared/ui/Input";
+import { useConfirm } from "@/shared/ui/ConfirmDialog";
 
 function Stat({ icon, label, value, hint }: { icon: ReactNode; label: string; value: ReactNode; hint?: string }) {
   return (
@@ -79,6 +80,7 @@ export default function UserDetailPage() {
 
 function UserDetail({ initial }: { initial: User }) {
   const { user: me, refresh } = useAuth();
+  const { confirm, confirmDialog } = useConfirm();
   const toast = useToast();
   const userId = initial.id;
   const isSelf = me?.id === userId;
@@ -110,8 +112,13 @@ function UserDetail({ initial }: { initial: User }) {
     if (isSelf) await refresh();
   };
 
-  const saveInfo = (e: FormEvent) => {
+  const saveInfo = async (e: FormEvent) => {
     e.preventDefault();
+    const changes = [
+      role !== current.role && `đổi vai trò thành ${role === "ADMIN" ? "Quản trị" : "Thành viên"}`,
+      status !== current.status && (status === "BANNED" ? "KHOÁ tài khoản (không đăng nhập được)" : "mở khoá tài khoản"),
+    ].filter(Boolean);
+    if (changes.length > 0 && !(await confirm({ title: "Lưu thay đổi quan trọng?", message: `Với ${current.fullName} (${current.email}): ${changes.join(", ")}.`, confirmLabel: "Lưu", tone: status === "BANNED" || role === "ADMIN" ? "danger" : "primary" }))) return;
     void info.run(async () => {
       setCurrent(await adminApi.updateUser(userId, { fullName, role, status, emailVerified: verified }));
       toast.success("Đã cập nhật thành viên");
@@ -119,7 +126,9 @@ function UserDetail({ initial }: { initial: User }) {
     });
   };
 
-  const adjust = (sign: 1 | -1) =>
+  const adjust = async (sign: 1 | -1) => {
+    const amount = Number(digits).toLocaleString("vi-VN");
+    if (!(await confirm({ title: sign > 0 ? "Cộng credit?" : "Trừ credit?", message: `${sign > 0 ? "Cộng" : "Trừ"} ${amount} credit ${sign > 0 ? "cho" : "của"} ${current.fullName} (${current.email}). Số dư hiện tại ${formatCredit(current.balance)}. Lý do ghi vào lịch sử: "${note.trim()}".`, confirmLabel: sign > 0 ? "Cộng credit" : "Trừ credit", tone: sign > 0 ? "primary" : "danger" }))) return;
     void money.run(async () => {
       setCurrent(await adminApi.adjustBalance(userId, { amount: sign * Number(digits), note }));
       setDigits("");
@@ -127,6 +136,7 @@ function UserDetail({ initial }: { initial: User }) {
       toast.success(sign > 0 ? "Đã cộng credit" : "Đã trừ credit");
       await changed();
     });
+  };
 
   const resetPassword = () =>
     void pwd.run(async () => {
@@ -137,11 +147,13 @@ function UserDetail({ initial }: { initial: User }) {
       loadSummary();
     });
 
-  const sendLink = () =>
+  const sendLink = async () => {
+    if (!(await confirm({ title: "Gửi thư đặt lại mật khẩu?", message: `Gửi email tới ${current.email} kèm liên kết để thành viên tự đặt mật khẩu mới.`, confirmLabel: "Gửi thư" }))) return;
     void mail.run(async () => {
       await adminApi.sendResetLink(userId);
       toast.success(`Đã gửi thư tới ${current.email}`);
     });
+  };
 
   const logoutAll = () =>
     void revoke.run(async () => {
@@ -151,12 +163,14 @@ function UserDetail({ initial }: { initial: User }) {
     });
 
   // Mở phiên của thành viên trong tab này (token chỉ nằm ở tab, admin thoát bằng nút nổi ở góc dưới)
-  const loginAs = () =>
+  const loginAs = async () => {
+    if (!(await confirm({ title: `Đăng nhập thay ${current.fullName}?`, message: "Bạn sẽ thấy đúng những gì thành viên này thấy, và mọi thao tác bạn làm (kể cả thao tác tốn credit) sẽ nhân danh họ. Phiên chỉ mở ở tab này.", confirmLabel: "Đăng nhập thay", tone: "danger" }))) return;
     void login.run(async () => {
       const { token } = await adminApi.impersonateUser(userId);
       impersonation.start(token);
       window.location.assign("/");
     });
+  };
 
   const amountOk = Number(digits) > 0 && note.trim().length > 0;
   const canImpersonate = !isSelf && current.role !== "ADMIN" && current.status === "ACTIVE";
@@ -165,6 +179,7 @@ function UserDetail({ initial }: { initial: User }) {
 
   return (
     <>
+      {confirmDialog}
       <Link to="/admin/users" className="mb-4 inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800">
         <ArrowLeft size={15} /> Danh sách thành viên
       </Link>

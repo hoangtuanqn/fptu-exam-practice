@@ -25,7 +25,7 @@ export function extractComments(html: string, baseUrl: string): ScrapedComment[]
 }
 
 /** Lấy toàn bộ bình luận của một trang media (đi qua các trang nếu có phân trang). */
-async function fetchMediaComments(client: FuoClient, mediaUrl: string): Promise<ScrapedComment[]> {
+export async function fetchMediaComments(client: FuoClient, mediaUrl: string): Promise<ScrapedComment[]> {
   const all: ScrapedComment[] = [];
   const visited = new Set<string>();
   let next: string | null = mediaUrl;

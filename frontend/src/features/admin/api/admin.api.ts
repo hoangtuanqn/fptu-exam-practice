@@ -123,6 +123,9 @@ export interface QuestionResolve {
   answer: string; // ví dụ "C" hoặc "A C"; rỗng nếu không có
   notQuestion: boolean; // AI cho rằng ảnh này không phải câu hỏi
   report: string;
+  commentsRefreshed?: boolean; // đã lấy lại bình luận của câu này từ FuOverflow trước khi giải
+  commentsCount?: number | null; // số bình luận lấy được
+  commentsNote?: string | null; // lý do không lấy lại được (vẫn giải bằng bình luận đã lưu)
 }
 
 export interface ExamAdminDetail {

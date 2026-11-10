@@ -15,23 +15,51 @@ function formatTime(iso: string): string {
  * "[thời gian] tác giả [điểm uy tín] (#id): nội dung". Số trong ngoặc vuông là điểm uy tín của người viết trên
  * diễn đàn, KHÔNG phải điểm đúng/sai của đáp án.
  */
+/** Các dòng của MỘT câu trong comments.txt (đầu mục, đường dẫn, bình luận, dòng trống cuối). */
+function sectionLines({ image, comments }: QuestionComments): string[] {
+  const out: string[] = [`## ${image.name}  (${comments.length} bình luận)`];
+  if (image.mediaUrl) out.push(image.mediaUrl);
+  out.push(LINE);
+  if (comments.length === 0) out.push("(chưa có bình luận)");
+  for (const c of comments) {
+    const score = c.authorScore ? ` [${c.authorScore}]` : "";
+    const [first, ...rest] = c.text.split("\n");
+    out.push(`[${formatTime(c.time)}] ${c.author}${score} (#${c.id}): ${first ?? ""}`);
+    for (const line of rest) out.push(`    ${line}`); // dòng tiếp theo thụt 4 dấu cách
+  }
+  out.push("");
+  return out;
+}
+
 export function renderCommentsText(meta: { title: string; url: string; at: Date }, data: QuestionComments[]): string {
   const out: string[] = [meta.title, meta.url, `Crawl lúc: ${meta.at.toISOString()}`, "=".repeat(70), ""];
-
-  for (const { image, comments } of data) {
-    out.push(`## ${image.name}  (${comments.length} bình luận)`);
-    if (image.mediaUrl) out.push(image.mediaUrl);
-    out.push(LINE);
-    if (comments.length === 0) out.push("(chưa có bình luận)");
-    for (const c of comments) {
-      const score = c.authorScore ? ` [${c.authorScore}]` : "";
-      const [first, ...rest] = c.text.split("\n");
-      out.push(`[${formatTime(c.time)}] ${c.author}${score} (#${c.id}): ${first ?? ""}`);
-      for (const line of rest) out.push(`    ${line}`); // dòng tiếp theo thụt 4 dấu cách
-    }
-    out.push("");
-  }
+  for (const q of data) out.push(...sectionLines(q));
   return out.join("\n");
+}
+
+/**
+ * Thay phần bình luận của MỘT câu trong comments.txt bằng bản vừa lấy lại (các câu khác giữ nguyên); chưa có mục đó thì thêm vào cuối.
+ * Trả về nội dung tệp sau khi ghi.
+ */
+export async function replaceQuestionComments(dir: string, data: QuestionComments): Promise<string> {
+  const file = path.join(dir, "comments.txt");
+  const old = (await fs.readFile(file, "utf-8").catch(() => "")).replace(/\r\n/g, "\n");
+  const lines = old.split("\n");
+  const start = lines.findIndex((l) => l.startsWith("## ") && l.slice(3).trim().split(/\s+/)[0] === data.image.name);
+  const fresh = sectionLines(data);
+  let next: string[];
+  if (start < 0) {
+    const kept = lines.length && lines[lines.length - 1] === "" ? lines.slice(0, -1) : lines;
+    next = [...kept, ...(old ? [""] : []), ...fresh];
+  } else {
+    let end = lines.findIndex((l, i) => i > start && l.startsWith("## "));
+    if (end < 0) end = lines.length;
+    next = [...lines.slice(0, start), ...fresh, ...lines.slice(end)];
+  }
+  const text = next.join("\n");
+  await fs.mkdir(dir, { recursive: true });
+  await fs.writeFile(file, text, "utf-8");
+  return text;
 }
 
 // Ghi comments.txt vào thư mục đề (cạnh thư mục images) và trả về nội dung để gửi cho AI

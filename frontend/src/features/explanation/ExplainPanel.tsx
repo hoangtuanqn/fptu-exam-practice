@@ -110,7 +110,7 @@ export function ExplainPanel({ examId, questionNumber, firstTime, onClose, onBou
           </span>
           Giải thích câu {questionNumber}
         </h2>
-        <button onClick={onClose} aria-label="Đóng lời giải thích" className="rounded-md p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700">
+        <button onClick={onClose} aria-label="Đóng lời giải thích" title="Đóng lời giải thích" className="rounded-md p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700">
           <X size={18} />
         </button>
       </header>

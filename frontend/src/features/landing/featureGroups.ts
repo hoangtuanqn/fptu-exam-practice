@@ -40,7 +40,7 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
     title: "Tiện ích và tài nguyên",
     tag: "Tiện lợi",
     features: [
-      { icon: Puzzle, title: "Tiện ích Chrome", text: "Nút làm đề ngay cạnh bài “Đề Thi FE” trên FuOverflow, bấm là mở sang FEPass." },
+      { icon: Puzzle, title: "Tiện ích Chrome", text: "Nút làm đề ngay cạnh bài “Đề Thi FE” trên FuOverflow, bấm là mở sang FEPass. Bật đồng bộ điểm FAP để biết cần bao nhiêu điểm thi cuối kỳ." },
       { icon: FileDown, title: "Tải đề PE trọn bộ", text: "Tải toàn bộ tài nguyên đề PE thành một file zip.", pro: true },
       { icon: Save, title: "Làm dở, làm tiếp", text: "Bài đang làm được lưu lại, vào lại là tiếp tục đúng chỗ đã dừng." },
       { icon: GraduationCap, title: "Kết nối trực tiếp với FLM", text: "Syllabus của FPTU được tích hợp vào hệ thống: câu hỏi gắn theo chương và chủ đề của từng môn." },
