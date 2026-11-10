@@ -3,6 +3,7 @@ import { Crown, Eye, Loader2, RotateCcw, Target } from "lucide-react";
 import type { TopicSummary } from "@/features/history/types";
 import { useAuth } from "@/features/auth/AuthContext";
 import type { AnswerSource } from "@/features/practice/types";
+import { ResultUpgradeCard } from "@/features/plan/ResultUpgradeCard";
 import { SignUpCta } from "@/features/trial/SignUpCta";
 import { MAX_SCORE, PASS_SCORE } from "@/features/practice/config/scoring";
 import { formatDuration, formatScore } from "@/features/practice/utils/format";
@@ -85,6 +86,8 @@ export function ResultDialog({ result, topicSummary = null, elapsed, savable, an
       )}
 
       {!answersPending && topicSummary && <TopicBreakdown summary={topicSummary} />}
+
+      {!answersPending && <ResultUpgradeCard wrong={result.wrong} />}
 
       {!user && (
         <div className="mt-5 rounded-xl bg-brand-50 p-4">
