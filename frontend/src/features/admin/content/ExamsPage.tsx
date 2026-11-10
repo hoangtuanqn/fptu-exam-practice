@@ -15,6 +15,7 @@ import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
 import { formatDateTime } from "@/shared/utils/formatters";
 import { useClampPage } from "@/shared/hooks/useClampPage";
 import { errorMessage } from "@/shared/api/errors";
+import { useConfirm } from "@/shared/ui/ConfirmDialog";
 
 const SOURCE: Record<AnswerSource, [string, Tone]> = {
   PENDING: ["AI đang giải", "info"],
@@ -61,6 +62,7 @@ function ReportDialog({ id, onClose }: { id: number; onClose: () => void }) {
 export default function ExamsPage() {
   const toast = useToast();
   const navigate = useNavigate();
+  const { confirm, confirmDialog } = useConfirm();
   const [url, setUrl] = useUrlState({ page: "1" });
   const page = toPage(url.page);
   const { data, error, loading, reload } = useApi(() => adminApi.exams(page), [page]);
@@ -78,6 +80,7 @@ export default function ExamsPage() {
   }, [anySolving, reload]);
 
   async function solve(exam: AdminExam) {
+    if (!(await confirm({ title: "AI giải lại cả đề?", message: <>Đề <b>{exam.title}</b>: AI sẽ giải lại toàn bộ câu và <b>ghi đè đáp án hiện tại</b> (kể cả đáp án đã sửa tay), đồng thời xoá lời giải thích AI cũ của đề. Việc này tốn chi phí gọi AI và mất vài phút.</>, confirmLabel: "Giải lại", tone: "danger" }))) return;
     setStarting(exam.id);
     try {
       await adminApi.solveExam(exam.id);
@@ -146,6 +149,7 @@ export default function ExamsPage() {
 
   return (
     <>
+      {confirmDialog}
       <PageHeader eyebrow="Quản trị" title="Đề thi" description="Bấm vào một đề để xem và sửa đáp án. Mục Có đáp án đỏ là đề đang thiếu." />
       <Card>
         {loading && !data ? (

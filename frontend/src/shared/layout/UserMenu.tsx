@@ -76,6 +76,8 @@ export function UserMenu() {
         ref={triggerRef}
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="menu"
+        aria-label="Menu tài khoản"
+        title="Menu tài khoản"
         aria-expanded={open}
         className="md-state md-motion relative flex h-12 items-center gap-2 rounded-full pl-1 pr-2 after:absolute after:inset-0 after:content-['']"
       >

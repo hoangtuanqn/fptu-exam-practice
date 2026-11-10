@@ -13,6 +13,7 @@ import { Segmented } from "@/shared/ui/Segmented";
 import { dueText, reviewApi, studyApi, type ReviewRow } from "./review.api";
 import { StudyStreakCard } from "./StudyStreakCard";
 import { TopicReport } from "./TopicReport";
+import { useConfirm } from "@/shared/ui/ConfirmDialog";
 
 type Tab = "active" | "mastered" | "topics" | "progress";
 const TABS: Tab[] = ["active", "mastered", "topics", "progress"];
@@ -67,6 +68,7 @@ export default function ReviewPage() {
   const tab: Tab = (TABS as string[]).includes(url.tab) ? (url.tab as Tab) : "active";
   const page = toPage(url.page);
 
+  const { confirm, confirmDialog } = useConfirm();
   const summary = useApi(() => reviewApi.summary(), []);
   const streak = useApi(() => studyApi.stats(), []);
   const isList = tab === "active" || tab === "mastered";
@@ -78,8 +80,9 @@ export default function ReviewPage() {
   const batch = s ? Math.min(s.due, SESSION) : 0;
   const cta = buttonClass({ variant: "primary", className: "!h-12 !px-8 text-base" });
 
-  const remove = (row: ReviewRow) =>
-    reviewApi
+  const remove = async (row: ReviewRow) => {
+    if (!(await confirm({ title: "Bỏ câu này khỏi sổ?", message: "Câu sẽ bị xoá khỏi sổ câu sai cùng lịch ôn của nó và không khôi phục được. Lần sau làm sai lại thì câu mới tự vào sổ.", confirmLabel: "Bỏ khỏi sổ", tone: "danger" }))) return;
+    await reviewApi
       .remove(row.id)
       .then(() => {
         toast.success("Đã bỏ khỏi sổ");
@@ -87,9 +90,11 @@ export default function ReviewPage() {
         list.reload();
       })
       .catch((err: unknown) => toast.error(errorMessage(err, "Chưa bỏ được câu này")));
+  };
 
   return (
     <div className="space-y-5">
+      {confirmDialog}
       <PageHeader title="Sổ câu sai" description="Câu bạn làm sai tự được lưu ở đây và nhắc ôn lại đúng lúc để nhớ lâu." />
 
       {summary.error && <ErrorBox message={summary.error} onRetry={summary.reload} />}

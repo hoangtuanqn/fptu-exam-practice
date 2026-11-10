@@ -11,6 +11,7 @@ import { FormError } from "@/shared/ui/Feedback";
 import { Field } from "@/shared/ui/Input";
 import { Modal, ModalActions, ModalTitle } from "@/shared/ui/Modal";
 import { formatCredit, formatDateTime } from "@/shared/utils/formatters";
+import { useConfirm } from "@/shared/ui/ConfirmDialog";
 
 interface Props {
   report: AnswerReportAdmin;
@@ -24,8 +25,10 @@ export function ReportReviewDialog({ report, onClose, onDone }: Props) {
   const { run, loading, error } = useSubmit();
   const [note, setNote] = useState("");
   const pending = report.status === "PENDING";
+  const { confirm, confirmDialog } = useConfirm();
 
-  const review = (action: "approve" | "reject") =>
+  const review = async (action: "approve" | "reject") => {
+    if (action === "approve" && !(await confirm({ title: "Duyệt báo cáo này là đúng?", message: `Đáp án của câu ${report.questionNumber} sẽ đổi thành "${report.proposedAnswer}" và ${report.user.fullName} được thưởng ${formatCredit(REPORT_REWARD)}.`, confirmLabel: "Duyệt đúng" }))) return;
     void run(async () => {
       const body = { note: note.trim() || undefined };
       if (action === "approve") await adminApi.approveReport(report.id, body);
@@ -34,9 +37,11 @@ export function ReportReviewDialog({ report, onClose, onDone }: Props) {
       onDone();
       onClose();
     });
+  };
 
   return (
     <Modal onClose={onClose}>
+      {confirmDialog}
       <ModalTitle icon={MessageSquareWarning}>
         {report.exam.title} · câu {report.questionNumber}
       </ModalTitle>

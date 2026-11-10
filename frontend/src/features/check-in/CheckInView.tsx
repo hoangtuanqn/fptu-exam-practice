@@ -110,7 +110,7 @@ export function CheckInView({ status, result, claiming, onClaim, onClose }: Prop
   return (
     <Modal onClose={onClose}>
       <div className="relative">
-        <button type="button" onClick={onClose} aria-label="Đóng" className="absolute -right-1 -top-1 z-10 rounded-full p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700">
+        <button type="button" onClick={onClose} aria-label="Đóng" title="Đóng" className="absolute -right-1 -top-1 z-10 rounded-full p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700">
           <X size={18} />
         </button>
 

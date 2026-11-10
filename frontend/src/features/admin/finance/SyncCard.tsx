@@ -8,21 +8,26 @@ import { Button } from "@/shared/ui/Button";
 import { Card, CardHeader } from "@/shared/ui/Card";
 
 // Trạng thái lần đối soát gần nhất + nút "Chạy ngay"
+import { useConfirm } from "@/shared/ui/ConfirmDialog";
 export function SyncCard() {
   const toast = useToast();
   const status = useApi(() => adminApi.sepayStatus(), []);
   const { run, loading } = useSubmit();
+  const { confirm, confirmDialog } = useConfirm();
 
-  const syncNow = () =>
+  const syncNow = async () => {
+    if (!(await confirm({ title: "Chạy đối soát SePay ngay?", message: "Lấy giao dịch mới từ SePay và cộng credit cho các lệnh nạp khớp mã, giống như lần chạy tự động của cron.", confirmLabel: "Chạy ngay" }))) return;
     void run(async () => {
       const r = await adminApi.syncNow();
       r.ok ? toast.success(`Đối soát xong: ${r.created} giao dịch mới, ${r.matched} khớp lệnh`) : toast.error(r.message);
       status.reload();
     });
+  };
 
   const last = status.data;
   return (
     <Card>
+      {confirmDialog}
       <CardHeader
         title="Đối soát tự động"
         description="Cron lấy giao dịch từ SePay và cộng tiền cho lệnh khớp mã nạp."

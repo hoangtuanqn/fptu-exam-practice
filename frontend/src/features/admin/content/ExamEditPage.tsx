@@ -12,6 +12,7 @@ import { ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { Modal, ModalActions, ModalTitle } from "@/shared/ui/Modal";
 import { Segmented } from "@/shared/ui/Segmented";
 import { errorMessage } from "@/shared/api/errors";
+import { useConfirm } from "@/shared/ui/ConfirmDialog";
 
 const SOURCE: Record<AnswerSource, [string, Tone]> = {
   PENDING: ["AI đang giải", "info"],
@@ -315,6 +316,7 @@ export default function ExamEditPage() {
   const { id } = useParams();
   const examId = Number(id);
   const toast = useToast();
+  const { confirm, confirmDialog } = useConfirm();
   const { data, error, loading, reload } = useApi(() => adminApi.examDetail(examId), [examId]);
 
   const [draft, setDraft] = useState<Record<number, Draft>>({});
@@ -376,6 +378,7 @@ export default function ExamEditPage() {
   };
 
   async function solveOne(q: ExamQuestionAdmin) {
+    if (!(await confirm({ title: `Giải lại câu ${q.number} bằng AI?`, message: "App sẽ lấy lại bình luận của câu này từ FuOverflow rồi gọi AI giải một lần (tốn một lượt gọi AI). Kết quả chỉ là gợi ý điền vào bản nháp, bạn bấm Lưu mới ghi.", confirmLabel: "Giải lại" }))) return;
     setSolvingNo(q.number);
     try {
       const r = await adminApi.resolveQuestion(examId, q.number);
@@ -394,6 +397,7 @@ export default function ExamEditPage() {
   }
 
   async function save() {
+    if (!(await confirm({ title: `Lưu ${changes.length} câu đã sửa?`, message: "Đáp án mới áp dụng ngay cho mọi người dùng. Lời giải thích AI cũ của các câu đổi đáp án sẽ bị xoá, và đề chuyển sang nguồn \"Chỉnh tay\".", confirmLabel: "Lưu" }))) return;
     setSaving(true);
     try {
       await adminApi.saveExamQuestions(examId, changes);
@@ -444,6 +448,7 @@ export default function ExamEditPage() {
 
   return (
     <>
+      {confirmDialog}
       <div className="mb-4">
         <Link to="/admin/exams" className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800">
           <ArrowLeft size={15} /> Danh sách đề
@@ -505,7 +510,7 @@ export default function ExamEditPage() {
               aria-label="Nhảy tới câu"
               className="w-24 rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm focus:border-brand-500 focus:outline-none"
             />
-            <Button size="sm" type="submit" aria-label="Đi tới câu">
+            <Button size="sm" type="submit" aria-label="Đi tới câu" title="Đi tới câu">
               <Search size={14} />
             </Button>
           </form>
@@ -563,7 +568,7 @@ export default function ExamEditPage() {
         <Modal onClose={() => setZoom(null)} wide>
           <div className="flex items-center justify-between">
             <ModalTitle icon={BookOpen}>Câu {zoom.number}</ModalTitle>
-            <button onClick={() => setZoom(null)} aria-label="Đóng" className="rounded-md p-1 text-slate-400 hover:bg-slate-100">
+            <button onClick={() => setZoom(null)} aria-label="Đóng" title="Đóng" className="rounded-md p-1 text-slate-400 hover:bg-slate-100">
               <X size={18} />
             </button>
           </div>
