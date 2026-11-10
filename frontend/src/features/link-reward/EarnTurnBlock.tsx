@@ -51,7 +51,7 @@ export function EarnTurnBlock({ status, onUse, onChange, className = "mt-4 round
           {phase === "waiting" ? (
             <div role="status" className="space-y-2 text-sm text-on-surface-variant">
               <p className="flex items-center gap-2">
-                <Loader2 size={16} className="shrink-0 animate-spin" /> Đang chờ bạn hoàn thành các bước ở tab Link4M. Xong thì quay lại đây, lượt sẽ tự hiện.
+                <Loader2 size={16} className="shrink-0 animate-spin" /> Đang chờ bạn hoàn thành các bước ở tab vượt link. Xong thì quay lại đây, lượt sẽ tự hiện.
               </p>
               {fallbackUrl && (
                 <p>
@@ -73,7 +73,7 @@ export function EarnTurnBlock({ status, onUse, onChange, className = "mt-4 round
                 Vượt link nhận thêm 1 lượt miễn phí
               </Button>
               <p className="md-body-small text-on-surface-variant">
-                Bạn sẽ qua trang Link4M, làm vài bước (khoảng 1 đến 2 phút). Hôm nay còn nhận được {status.remainingToday}/{status.dailyLimit} lần.
+                Bạn sẽ qua trang vượt link, làm vài bước (khoảng 1 đến 2 phút). Hôm nay còn nhận được {status.remainingToday}/{status.dailyLimit} lần.
               </p>
             </>
           )}

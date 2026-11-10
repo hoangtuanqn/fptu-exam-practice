@@ -53,7 +53,7 @@ export const ADMIN_NAV: NavItem[] = [
   { to: "/admin/exams", label: "Đề thi", icon: FileText, group: "Nội dung & AI" },
   { to: "/admin/reports", label: "Báo cáo đáp án", icon: MessageSquareWarning, group: "Nội dung & AI" },
   { to: "/admin/ads", label: "Quảng cáo", icon: Megaphone, group: "Nội dung & AI" },
-  { to: "/admin/link-rewards", label: "Vượt link (Link4M)", icon: Link2, group: "Nội dung & AI" },
+  { to: "/admin/link-rewards", label: "Vượt link", icon: Link2, group: "Nội dung & AI" },
   { to: "/admin/crawler", label: "Cấu hình lấy đề", icon: DatabaseZap, group: "Nội dung & AI" },
   { to: "/admin/ai", label: "AI giải đáp án", icon: Bot, group: "Nội dung & AI" },
   { to: "/admin/chatbot", label: "Chatbot hỗ trợ", icon: MessagesSquare, group: "Nội dung & AI" },

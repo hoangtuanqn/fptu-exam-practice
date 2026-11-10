@@ -339,10 +339,14 @@ export interface AccountSettings {
 export interface LinkRewardAdmin {
   enabled: boolean;
   hasToken: boolean; // đã lưu token Link4M chưa (token không bao giờ trả ra)
-  dailyLimit: number;
+  link4mEnabled: boolean;
+  dailyLimit: number; // số lượt tối đa mỗi người mỗi ngày qua Link4M
+  hasShrinkmeToken: boolean;
+  shrinkmeEnabled: boolean;
+  shrinkmeDailyLimit: number;
   validDays: number;
   minSeconds: number;
-  stats: { issued24h: number; claimed24h: number; claimedTotal: number; activeTurns: number; usedTotal: number };
+  stats: { issued24h: number; claimed24h: number; claimedTotal: number; activeTurns: number; usedTotal: number; byProvider: { provider: string; label: string; issued24h: number; claimed24h: number; claimedTotal: number }[] };
 }
 
 /** Cấu hình quảng cáo (Quản trị → Quảng cáo) */

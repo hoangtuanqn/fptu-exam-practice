@@ -221,7 +221,17 @@ export const adminApi = {
   adsSettings: () => http.get<AdsSettings>("/admin/settings/ads"),
   saveAdsSettings: (body: AdsSettings) => http.put<AdsSettings>("/admin/settings/ads", body),
   linkRewardSettings: () => http.get<LinkRewardAdmin>("/admin/settings/link-reward"),
-  saveLinkRewardSettings: (body: { enabled: boolean; apiToken?: string; dailyLimit: number; validDays: number; minSeconds: number }) =>
+  saveLinkRewardSettings: (body: {
+    enabled: boolean;
+    link4mEnabled: boolean;
+    apiToken?: string;
+    dailyLimit: number;
+    shrinkmeEnabled: boolean;
+    shrinkmeToken?: string;
+    shrinkmeDailyLimit: number;
+    validDays: number;
+    minSeconds: number;
+  }) =>
     http.put<LinkRewardAdmin>("/admin/settings/link-reward", body),
 
   giftCodes: (page: number, filter: { q?: string; active?: "true" | "false" | "" }) =>

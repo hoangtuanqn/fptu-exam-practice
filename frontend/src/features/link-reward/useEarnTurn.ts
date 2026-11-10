@@ -8,9 +8,9 @@ const WAIT_LIMIT_MS = 30 * 60 * 1000; // link vượt link hết hiệu lực sa
 type Phase = "idle" | "starting" | "waiting";
 
 /**
- * Luồng "vượt link nhận lượt": bấm → máy chủ tạo link Link4M → mở ở tab mới → chờ người dùng làm xong rồi quay lại.
+ * Luồng "vượt link nhận lượt": bấm → máy chủ tạo link vượt link → mở ở tab mới → chờ người dùng làm xong rồi quay lại.
  * Trong lúc chờ, hỏi lại trạng thái mỗi 5 giây (và ngay khi người dùng quay lại tab này); thấy số lượt tăng thì báo xong.
- * Tab Link4M mở ngay trong lúc bấm (trình duyệt chỉ cho mở tab do người dùng bấm), rồi mới chuyển sang địa chỉ vừa tạo.
+ * Tab vượt link mở ngay trong lúc bấm (trình duyệt chỉ cho mở tab do người dùng bấm), rồi mới chuyển sang địa chỉ vừa tạo.
  */
 export function useEarnTurn(onGranted?: (status: FreeTurnStatus) => void) {
   const [phase, setPhase] = useState<Phase>("idle");
