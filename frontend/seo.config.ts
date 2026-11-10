@@ -86,6 +86,7 @@ export const PRIVATE_PAGES: Record<string, PageSeo> = {
   "/admin/exams": { title: "Quản trị: đề thi", description: "Quản lý kho đề thi và chỉnh sửa câu hỏi." },
   "/admin/reports": { title: "Quản trị: báo cáo đáp án", description: "Xử lý báo cáo đáp án sai từ người dùng." },
   "/admin/ads": { title: "Quản trị: quảng cáo", description: "Bật tắt và cấu hình quảng cáo." },
+  "/admin/subject-issues": { title: "Quản trị: môn thiếu dữ liệu", description: "Các môn syllabus chưa có tên chương." },
   "/admin/link-rewards": { title: "Quản trị: vượt link", description: "Cấu hình và số liệu vượt link nhận lượt giải thích miễn phí." },
   "/admin/crawler": { title: "Quản trị: cấu hình lấy đề", description: "Thiết lập bộ lấy đề từ FuOverflow." },
   "/admin/ai": { title: "Quản trị: AI giải đáp án", description: "Thiết lập mô hình AI giải đáp án và giải thích." },
