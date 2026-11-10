@@ -119,7 +119,7 @@ async function main() {
 
   type Row = { c: Case; dense: Awaited<ReturnType<typeof candidates>>; lex: Awaited<ReturnType<typeof candidates>> };
   const rows: Row[] = [];
-  for (const c of cases) rows.push({ c, dense: await candidates(c.q, cache[c.q]!), lex: await candidates(c.q, null) });
+  for (const c of cases) rows.push({ c, dense: await candidates(c.q, cache[c.q]!, undefined, { allContent: true }), lex: await candidates(c.q, null, undefined, { allContent: true }) });
 
   // nhãn của một đoạn
   const isPos = (c: Case, h: RagHit) => (c.kind === "subject" ? h.content.toLowerCase().replace(/\s+/g, " ").includes(norm(c.mustContain!)) : c.kind === "cross" ? h.subject === c.code || h.subject.startsWith(c.code!) : false);
@@ -184,7 +184,7 @@ async function main() {
   }
 
   // pipeline đầy đủ với hệ số vừa học (chỉ tính trên phần kiểm tra, không dùng dữ liệu huấn luyện)
-  const refit = async (rs: Row[], mode: "subject" | "cross", dense: boolean) => Promise.all(rs.map(async (r) => ({ ...r, [dense ? "dense" : "lex"]: await candidates(r.c.q, dense ? cache[r.c.q]! : null, fitted[mode]![dense ? "hybrid" : "lexical"]!) })));
+  const refit = async (rs: Row[], mode: "subject" | "cross", dense: boolean) => Promise.all(rs.map(async (r) => ({ ...r, [dense ? "dense" : "lex"]: await candidates(r.c.q, dense ? cache[r.c.q]! : null, fitted[mode]![dense ? "hybrid" : "lexical"]!, { allContent: true }) })));
   const subFit = (await refit(sub, "subject", true)) as Row[];
   const subFitLex = (await refit(sub, "subject", false)) as Row[];
   const crsFit = (await refit(crs, "cross", true)) as Row[];

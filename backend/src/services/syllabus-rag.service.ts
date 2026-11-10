@@ -13,14 +13,15 @@ import { fold, terms } from "./knowledge.service";
  * Không có khoá OpenAI (không tạo được vector câu hỏi) thì chạy bằng BM25 với bộ hệ số riêng.
  */
 
+// Chữ của đoạn KHÔNG giữ trong RAM (12 MB chữ + chỉ mục vượt trần heap 320 MB của máy chủ): chỉ giữ vector và chỉ mục, chữ tải theo yêu cầu cho vài đoạn tốt nhất
 interface Doc {
   slug: string;
   subject: string;
   kind: SyllabusKind;
   title: string;
-  content: string;
   vec: Float32Array | null;
 }
+const CONTENT_TOP = 12; // số đoạn tốt nhất được tải chữ (đủ cho RAG_MAX_CHUNKS và danh sách môn)
 interface Index {
   docs: Doc[];
   bySubject: Map<string, number[]>;
@@ -37,35 +38,68 @@ const TITLE_WEIGHT = 2;
 let index: Index | null = null;
 let loading: Promise<Index> | null = null;
 
-async function build(): Promise<Index> {
-  const rows = await prisma.subjectChunk.findMany({ select: { slug: true, subjectCode: true, kind: true, title: true, content: true, embedding: true, model: true }, orderBy: { id: "asc" } });
-  const docs: Doc[] = rows.map((r) => ({
-    slug: r.slug,
-    subject: r.subjectCode,
-    kind: r.kind as SyllabusKind,
-    title: r.title,
-    content: r.content,
-    // Chỉ dùng vector do mô hình hiện tại tạo (vector của mô hình khác không so sánh được)
-    vec: r.embedding && r.model === EMBEDDING_MODEL ? fromBytes(r.embedding) : null,
-  })).map((d) => (d.vec && d.vec.length !== EMBEDDING_DIMS ? { ...d, vec: null } : d));
+const BUILD_BATCH = 250; // đọc từng lô để đỉnh bộ nhớ nhỏ
 
+// Cặp từ chỉ xuất hiện trong đúng một đoạn gần như không giúp tìm kiếm nhưng chiếm phần lớn bộ nhớ của chỉ mục: lượt đếm đầu (mảng băm 16 MB) loại chúng
+const HASH_BITS = 24;
+const hash = (t: string) => {
+  let h = 2166136261;
+  for (let i = 0; i < t.length; i++) h = Math.imul(h ^ t.charCodeAt(i), 16777619);
+  return (h >>> 0) & ((1 << HASH_BITS) - 1);
+};
+
+async function countBigrams(): Promise<Uint8Array> {
+  const df = new Uint8Array(1 << HASH_BITS);
+  let last = 0;
+  for (;;) {
+    const rows = await prisma.subjectChunk.findMany({ where: { id: { gt: last } }, orderBy: { id: "asc" }, take: BUILD_BATCH, select: { id: true, title: true, content: true } });
+    if (rows.length === 0) break;
+    for (const r of rows) {
+      last = r.id;
+      for (const t of new Set([...terms(r.content), ...terms(r.title)])) if (t.includes(" ")) {
+        const h = hash(t);
+        if (df[h]! < 2) df[h] = df[h]! + 1;
+      }
+    }
+  }
+  return df;
+}
+
+async function build(): Promise<Index> {
+  const bigramDf = await countBigrams();
+  const keep = (t: string) => !t.includes(" ") || bigramDf[hash(t)]! >= 2;
+  const docs: Doc[] = [];
   const bySubject = new Map<string, number[]>();
   const tmp = new Map<string, number[]>(); // term -> [doc, tf, doc, tf, ...]
-  const len = new Float32Array(docs.length);
-  docs.forEach((d, i) => {
-    bySubject.set(d.subject, [...(bySubject.get(d.subject) ?? []), i]);
-    const tf = new Map<string, number>();
-    for (const t of terms(d.content)) tf.set(t, (tf.get(t) ?? 0) + 1);
-    for (const t of terms(d.title)) tf.set(t, (tf.get(t) ?? 0) + TITLE_WEIGHT);
-    let total = 0;
-    for (const [t, f] of tf) {
-      total += f;
-      const arr = tmp.get(t) ?? [];
-      arr.push(i, f);
-      tmp.set(t, arr);
+  const lens: number[] = [];
+  let last = 0;
+  for (;;) {
+    const rows = await prisma.subjectChunk.findMany({ where: { id: { gt: last } }, orderBy: { id: "asc" }, take: BUILD_BATCH, select: { id: true, slug: true, subjectCode: true, kind: true, title: true, content: true, embedding: true, model: true } });
+    if (rows.length === 0) break;
+    for (const r of rows) {
+      last = r.id;
+      const i = docs.length;
+      // Chỉ dùng vector do mô hình hiện tại tạo (vector của mô hình khác không so sánh được)
+      let vec = r.embedding && r.model === EMBEDDING_MODEL ? fromBytes(r.embedding) : null;
+      if (vec && vec.length !== EMBEDDING_DIMS) vec = null;
+      docs.push({ slug: r.slug, subject: r.subjectCode, kind: r.kind as SyllabusKind, title: r.title, vec });
+      const list = bySubject.get(r.subjectCode);
+      if (list) list.push(i);
+      else bySubject.set(r.subjectCode, [i]);
+      const tf = new Map<string, number>();
+      for (const t of terms(r.content)) if (keep(t)) tf.set(t, (tf.get(t) ?? 0) + 1);
+      for (const t of terms(r.title)) if (keep(t)) tf.set(t, (tf.get(t) ?? 0) + TITLE_WEIGHT);
+      let total = 0;
+      for (const [t, f] of tf) {
+        total += f;
+        const arr = tmp.get(t);
+        if (arr) arr.push(i, f);
+        else tmp.set(t, [i, f]);
+      }
+      lens.push(total);
     }
-    len[i] = total;
-  });
+  }
+  const len = Float32Array.from(lens);
   const post = new Map<string, { d: Int32Array; f: Uint16Array }>();
   for (const [t, arr] of tmp) {
     const n = arr.length / 2;
@@ -76,8 +110,9 @@ async function build(): Promise<Index> {
       f[j] = Math.min(65535, arr[2 * j + 1]!);
     }
     post.set(t, { d, f });
+    tmp.delete(t); // giải phóng dần, không giữ hai bản cùng lúc
   }
-  const avg = len.reduce((a, b) => a + b, 0) / Math.max(1, docs.length);
+  const avg = len.reduce((x, y) => x + y, 0) / Math.max(1, docs.length);
   return { docs, bySubject, post, len, avg, codes: [...bySubject.keys()].sort() };
 }
 
@@ -165,7 +200,7 @@ export const probability = (w: RagWeights, f: { cos: number; lex: number; kind: 
 const topIdx = (scores: ArrayLike<number>, pool: number[], k: number) => [...pool].filter((i) => scores[i]! > 0).sort((a, b) => scores[b]! - scores[a]!).slice(0, k);
 
 /** Mọi đoạn ứng viên kèm các tín hiệu và xác suất, xếp theo xác suất giảm dần. `weights` để eval.ts thử hệ số khác. */
-export async function candidates(question: string, qvec: number[] | null, weights?: RagWeights) {
+export async function candidates(question: string, qvec: number[] | null, weights?: RagWeights, opts: { allContent?: boolean } = {}) {
   const idx = await getIndex();
   const a = analyze(question, idx.codes);
   const dense = !!qvec && qvec.length === EMBEDDING_DIMS;
@@ -183,15 +218,19 @@ export async function candidates(question: string, qvec: number[] | null, weight
     const cosAll = q ? Float32Array.from(all, cosOf) : null;
     pool = [...new Set([...topIdx(lex, all, RAG_POOL), ...(cosAll ? topIdx(cosAll, all, RAG_POOL) : [])])];
   }
-  const list = pool
+  const scored = pool
     .map((i) => {
       const d = idx.docs[i]!;
       const cos = cosOf(i);
       const lx = Math.min(1, lex[i]! / denom);
       const kindMatch = a.kinds.has(d.kind);
-      return { slug: d.slug, subject: d.subject, kind: d.kind, title: d.title, content: d.content, p: probability(w, { cos, lex: lx, kind: kindMatch }), cos, lex: lx, kindMatch };
+      return { slug: d.slug, subject: d.subject, kind: d.kind, title: d.title, p: probability(w, { cos, lex: lx, kind: kindMatch }), cos, lex: lx, kindMatch };
     })
     .sort((x, y) => y.p - x.p);
+  // Chữ chỉ tải cho các đoạn tốt nhất (hoặc tất cả khi script đo cần)
+  const keep = opts.allContent ? scored : scored.slice(0, CONTENT_TOP);
+  const text = new Map((await prisma.subjectChunk.findMany({ where: { slug: { in: keep.map((h) => h.slug) } }, select: { slug: true, content: true } })).map((r) => [r.slug, r.content]));
+  const list: RagHit[] = keep.map((h) => ({ ...h, content: text.get(h.slug) ?? "" }));
   return { a, idx, mode, dense, list, w };
 }
 
