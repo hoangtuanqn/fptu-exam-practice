@@ -28,7 +28,11 @@ export const RETRIEVE_MIN_SCORE = 0.45; // dưới mức này coi như không c�
 export const CHAT_MAX_TURNS = 6; // chỉ gửi chừng này tin gần nhất cho Claude
 export const CHAT_OLD_REPLY_CHARS = 400; // câu trả lời cũ của Cóc Pass trong lịch sử được cắt còn chừng này ký tự (chỉ cần đủ ngữ cảnh)
 export const CHAT_MAX_INPUT_CHARS = 800;
-export const CHAT_MAX_OUTPUT_TOKENS = 700;
+// Trần token sinh ra MỖI LƯỢT GỌI, gồm cả token suy nghĩ (Haiku 5.5 mặc định có suy nghĩ thích ứng). Trước đây 700: suy nghĩ chiếm một phần,
+// câu trả lời dài (danh sách đề, các chương của môn) bị cắt giữa chừng mà không báo gì. Chạm trần thì máy chủ cho Claude viết tiếp một lần (xem chat.service).
+export const CHAT_MAX_OUTPUT_TOKENS = 2000;
+export const CHAT_EFFORT = "low" as const; // chatbot hướng dẫn: mức thấp là đủ, đỡ tốn token suy nghĩ và trả lời nhanh hơn
+export const CHAT_CONTINUE_PROMPT = "Your previous reply was cut off by the length limit. Continue exactly where you stopped, without repeating anything, and finish briefly."; // chỉ gửi khi bị cắt
 export const CHAT_MAX_TOOL_TURNS = 4; // tối đa chừng này vòng "Claude gọi công cụ rồi viết tiếp" mỗi câu hỏi
 
 // Prompt hệ thống viết bằng tiếng Anh (cùng nội dung, ít token hơn tiếng Việt chừng một nửa) và dặn trả lời tiếng Việt.

@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "../configs/prisma";
 import { aiReady } from "../constants/ai";
-import { CHAT_CANNED, CHAT_MAX_OUTPUT_TOKENS, CHAT_MAX_TOOL_TURNS, CHAT_MAX_TURNS, CHAT_MONEY_HINT, CHAT_OLD_REPLY_CHARS, CHAT_SYSTEM_PROMPT } from "../constants/chat";
+import { CHAT_CANNED, CHAT_CONTINUE_PROMPT, CHAT_EFFORT, CHAT_MAX_OUTPUT_TOKENS, CHAT_MAX_TOOL_TURNS, CHAT_MAX_TURNS, CHAT_MONEY_HINT, CHAT_OLD_REPLY_CHARS, CHAT_SYSTEM_PROMPT } from "../constants/chat";
 import { HTTP_STATUS } from "../constants/httpStatus";
 import { PE_PRICE } from "../constants/pe";
 import { activePromoEnd, promoExpired } from "../constants/promo";
@@ -104,8 +104,10 @@ export const chatService = {
         params: {
           model: config.claudeModel,
           max_tokens: CHAT_MAX_OUTPUT_TOKENS,
+          output_config: { effort: CHAT_EFFORT },
           system: [
-            { type: "text" as const, text: CHAT_SYSTEM_PROMPT },
+            // Khối tĩnh được cache: các lượt hỏi sau đọc lại prompt hệ thống (và danh sách công cụ đứng trước nó) với giá rẻ. Phần đổi theo lượt nằm ở khối sau.
+            { type: "text" as const, text: CHAT_SYSTEM_PROMPT, cache_control: { type: "ephemeral" as const } },
             { type: "text" as const, text: `<viewer>${"userId" in owner ? "logged_in" : "guest"}</viewer>${facts ? `
 <live_facts>
 ${facts}
@@ -173,6 +175,14 @@ ${facts}
     const tools = chatToolsFor(userId); // thành viên: tra dữ liệu của mình + đề FuOverflow; khách: chỉ đề FuOverflow
     let produced = false;
     let separate = false; // sau một vòng công cụ, đoạn chữ mới cách đoạn trước một dòng trống
+    let continued = false; // đã cho Claude viết tiếp sau khi chạm trần token chưa (chỉ một lần)
+    const usage = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 };
+    let truncated = false;
+    const finish = (stop: string | null) => {
+      // Ghi token để theo dõi chi phí và kiểm tra cache có hoạt động không; không chặn câu trả lời
+      void prisma.chatLog.update({ where: { id: logId }, data: { inputTokens: usage.input, outputTokens: usage.output, cacheReadTokens: usage.cacheRead, truncated } }).catch(() => undefined);
+      console.log(`[chat] #${logId} stop=${stop} in=${usage.input} cache_read=${usage.cacheRead} cache_write=${usage.cacheWrite} out=${usage.output}${usedTools ? " tools" : ""}${truncated ? " TRUNCATED" : ""}`);
+    };
     try {
       for (let turn = 0; turn <= CHAT_MAX_TOOL_TURNS; turn++) {
         const stream = request.client.messages.stream({ ...request.params, messages, tools });
@@ -186,6 +196,26 @@ ${facts}
           h.onDelta(t);
         });
         const final = await stream.finalMessage();
+        usage.input += final.usage.input_tokens ?? 0;
+        usage.output += final.usage.output_tokens ?? 0;
+        usage.cacheRead += final.usage.cache_read_input_tokens ?? 0;
+        usage.cacheWrite += final.usage.cache_creation_input_tokens ?? 0;
+
+        // Chạm trần token giữa chừng: đang gọi công cụ thì dữ liệu công cụ bị cắt, không chạy được; đang viết chữ thì cho viết tiếp đúng một lần
+        if (final.stop_reason === "max_tokens") {
+          const inTool = final.content.some((b) => b.type === "tool_use");
+          if (!inTool && produced && !continued) {
+            continued = true;
+            messages.push({ role: "assistant", content: final.content });
+            messages.push({ role: "user", content: CHAT_CONTINUE_PROMPT });
+            continue;
+          }
+          truncated = true;
+          if (!produced) throw new Error("empty");
+          h.onDelta(" …");
+          finish("max_tokens");
+          return {};
+        }
 
         if (final.stop_reason === "tool_use" && turn < CHAT_MAX_TOOL_TURNS) {
           usedTools = true;
@@ -201,8 +231,9 @@ ${facts}
           continue;
         }
         if (final.stop_reason === "refusal" || !produced) throw new Error("empty");
+        finish(final.stop_reason);
         // Chỉ lưu khi trả lời trọn vẹn, có dựa vào tài liệu và không đụng đến dữ liệu tài khoản
-        if (vec && matched && !usedTools && final.stop_reason === "end_turn") void chatCacheService.save(vec, viewer, question, answer);
+        if (vec && matched && !usedTools && !continued && final.stop_reason === "end_turn") void chatCacheService.save(vec, viewer, question, answer);
         return {};
       }
       throw new Error("quá nhiều vòng tra cứu");
@@ -216,11 +247,16 @@ ${facts}
   // Thống kê cho admin: lượng hỏi và các câu hỏi chưa có tài liệu (để bổ sung vào hướng dẫn)
   async adminStats() {
     const since = startOfVnDay();
-    const [today, total, unmatched] = await Promise.all([
+    const week = new Date(Date.now() - 7 * 24 * 3600 * 1000);
+    const [today, total, unmatched, tokens, truncated] = await Promise.all([
       prisma.chatLog.count({ where: { createdAt: { gte: since } } }),
       prisma.chatLog.count(),
       prisma.chatLog.findMany({ where: { matched: false }, orderBy: { id: "desc" }, take: 15, select: { question: true, createdAt: true } }),
+      prisma.chatLog.aggregate({ where: { createdAt: { gte: week }, outputTokens: { not: null } }, _avg: { inputTokens: true, outputTokens: true, cacheReadTokens: true }, _count: { _all: true } }),
+      prisma.chatLog.count({ where: { createdAt: { gte: week }, truncated: true } }),
     ]);
-    return { today, total, unmatched };
+    // Token trung bình mỗi lượt gọi Claude trong 7 ngày (chỉ các lượt có ghi usage); cacheRead cao = prompt hệ thống được đọc lại từ cache
+    const r = (x: number | null) => Math.round(x ?? 0);
+    return { today, total, unmatched, usage: { calls7d: tokens._count._all, avgInput: r(tokens._avg.inputTokens), avgCacheRead: r(tokens._avg.cacheReadTokens), avgOutput: r(tokens._avg.outputTokens), truncated7d: truncated } };
   },
 };

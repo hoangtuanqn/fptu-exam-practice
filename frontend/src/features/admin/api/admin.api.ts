@@ -91,7 +91,12 @@ export interface ChatbotAdmin {
     openaiKeyPreview: string;
   };
   knowledge: { chunks: number; embedded: number; model: string };
-  stats: { today: number; total: number; unmatched: { question: string; createdAt: string }[] };
+  stats: {
+    today: number;
+    total: number;
+    unmatched: { question: string; createdAt: string }[];
+    usage?: { calls7d: number; avgInput: number; avgCacheRead: number; avgOutput: number; truncated7d: number }; // máy chủ cũ không trả
+  };
   cache: { entries: number; today: number; total: number }; // câu trả lời lưu sẵn; today/total = số lượt hỏi đã trả lời từ cache (không tốn token)
 }
 
