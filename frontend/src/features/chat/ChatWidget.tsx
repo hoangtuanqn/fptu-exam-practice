@@ -160,7 +160,7 @@ export default function ChatWidget() {
           {tip && (
             <div className="mascot-chat-tip relative mb-1 hidden sm:block mr-2 max-w-[11rem] rounded-2xl rounded-br-sm border border-amber-200 bg-surface-container-lowest px-3 py-2 text-xs font-medium text-slate-700 shadow-lg">
               Bạn có thắc mắc gì không? Hỏi Cóc Pass nhé!
-              <button onClick={() => setTip(false)} aria-label="Ẩn lời chào" className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-slate-500 hover:bg-slate-300">
+              <button onClick={() => setTip(false)} aria-label="Ẩn lời chào" title="Ẩn lời chào" className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-slate-500 hover:bg-slate-300">
                 <X size={11} />
               </button>
             </div>
@@ -201,7 +201,7 @@ export default function ChatWidget() {
                 acRef.current?.abort();
                 setOpen(false);
               }}
-              aria-label="Đóng"
+              aria-label="Đóng" title="Đóng"
               className="rounded-full p-2 text-slate-400 transition hover:bg-amber-100 hover:text-slate-700"
             >
               <X size={17} />
@@ -276,7 +276,7 @@ export default function ChatWidget() {
               <button
                 type="submit"
                 disabled={busy || !input.trim()}
-                aria-label="Gửi"
+                aria-label="Gửi" title="Gửi"
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-400 text-brand-900 transition hover:bg-amber-500 disabled:bg-slate-200 disabled:text-slate-400"
               >
                 <ArrowUp size={17} strokeWidth={2.5} />

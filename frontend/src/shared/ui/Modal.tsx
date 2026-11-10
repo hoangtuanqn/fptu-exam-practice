@@ -2,6 +2,7 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import type { LucideIcon } from "lucide-react";
 
+const openModals: object[] = []; // hộp thoại đang mở theo thứ tự: chỉ hộp trên cùng nhận Esc/Tab (hộp xác nhận mở chồng lên hộp khác)
 const FOCUSABLE = 'a[href], button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])';
 
 /**
@@ -16,10 +17,13 @@ export function Modal({ children, onClose, wide = false }: { children: ReactNode
   useEffect(() => {
     const opener = document.activeElement as HTMLElement | null;
     const node = box.current;
+    const token = {};
+    openModals.push(token);
     // Đưa focus vào hộp: ưu tiên phần tử có autoFocus, không thì khung hộp
     (node?.querySelector<HTMLElement>("[autofocus]") ?? node)?.focus({ preventScroll: true });
 
     const onKey = (e: KeyboardEvent) => {
+      if (openModals[openModals.length - 1] !== token) return;
       if (e.key === "Escape" && onClose) return onClose();
       if (e.key !== "Tab" || !node) return;
       const items = Array.from(node.querySelectorAll<HTMLElement>(FOCUSABLE)).filter((el) => el.offsetParent !== null);
@@ -37,6 +41,7 @@ export function Modal({ children, onClose, wide = false }: { children: ReactNode
     document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("keydown", onKey);
+      openModals.splice(openModals.indexOf(token), 1);
       opener?.focus?.({ preventScroll: true });
     };
   }, [onClose]);

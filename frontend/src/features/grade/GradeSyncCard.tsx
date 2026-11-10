@@ -7,6 +7,7 @@ import { Card, CardHeader } from "@/shared/ui/Card";
 import { Switch } from "@/shared/ui/Switch";
 import { gradeApi, type GradeOverview } from "./grade.api";
 import { useGradeBridge } from "./useGradeBridge";
+import { useConfirm } from "@/shared/ui/ConfirmDialog";
 
 const FAP_GRADE_URL = "https://fap.fpt.edu.vn/Report/Grade";
 
@@ -15,8 +16,10 @@ export function GradeSyncCard({ overview, onChange }: { overview: GradeOverview;
   const toast = useToast();
   const [busy, setBusy] = useState(false);
   const { installed, outdated, error } = useGradeBridge(overview.enabled, onChange);
+  const { confirm, confirmDialog } = useConfirm();
 
   const toggle = async (next: boolean) => {
+    if (!next && !(await confirm({ title: "Tắt đồng bộ và xoá điểm đã lưu?", message: "Điểm, lịch thi và các dự đoán điểm đã lưu trên FEPass sẽ bị xoá và không khôi phục được. Bạn có thể bật lại và đồng bộ lại từ FAP bất cứ lúc nào.", confirmLabel: "Tắt và xoá", tone: "danger" }))) return;
     setBusy(true);
     try {
       await gradeApi.setEnabled(next);
@@ -30,6 +33,7 @@ export function GradeSyncCard({ overview, onChange }: { overview: GradeOverview;
   };
 
   const clear = async () => {
+    if (!(await confirm({ title: "Xoá điểm đã lưu?", message: "Toàn bộ điểm và lịch thi đã đồng bộ từ FAP sẽ bị xoá khỏi FEPass và không khôi phục được. Công tắc đồng bộ vẫn giữ nguyên.", confirmLabel: "Xoá", tone: "danger" }))) return;
     setBusy(true);
     try {
       await gradeApi.clear();
@@ -46,6 +50,7 @@ export function GradeSyncCard({ overview, onChange }: { overview: GradeOverview;
   if (overview.enabled && overview.courses.length > 0 && installed && !outdated && !error) {
     return (
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-m3-lg border border-outline-variant bg-surface-container-lowest px-4 py-3">
+        {confirmDialog}
         <div className="flex items-center gap-3">
           <Switch checked onChange={(v) => void toggle(v)} label="Đồng bộ điểm FAP" disabled={busy} />
           <div>
@@ -67,6 +72,7 @@ export function GradeSyncCard({ overview, onChange }: { overview: GradeOverview;
 
   return (
     <Card>
+      {confirmDialog}
       <CardHeader title="Đồng bộ điểm FAP" description="Cá nhân hoá: biết bạn cần bao nhiêu điểm thi cuối kỳ để qua từng môn" />
       <div className="space-y-4 p-5">
         <div className="flex items-center justify-between gap-4">

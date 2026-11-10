@@ -12,6 +12,7 @@ import { Input, PasswordInput } from "@/shared/ui/Input";
 import { Switch } from "@/shared/ui/Switch";
 import { formatDateTime } from "@/shared/utils/formatters";
 import { errorMessage } from "@/shared/api/errors";
+import { useConfirm } from "@/shared/ui/ConfirmDialog";
 
 function Settings({ data, onSaved }: { data: ChatbotAdmin; onSaved: () => void }) {
   const toast = useToast();
@@ -64,8 +65,10 @@ export default function ChatbotPage() {
   const toast = useToast();
   const { data, error, loading, reload } = useApi(() => adminApi.chatbot(), []);
   const [syncing, setSyncing] = useState(false);
+  const { confirm, confirmDialog } = useConfirm();
 
   async function reindex() {
+    if (!(await confirm({ title: "Cập nhật tri thức chatbot?", message: "Đọc lại file hướng dẫn và tạo embedding cho các mục mới hoặc đã đổi. Mỗi mục gọi API embedding nên tốn một ít chi phí và có thể mất vài chục giây.", confirmLabel: "Cập nhật" }))) return;
     setSyncing(true);
     try {
       const r = await adminApi.reindexChatbot();
@@ -79,6 +82,7 @@ export default function ChatbotPage() {
   }
 
   async function clearCache() {
+    if (!(await confirm({ title: "Xoá cache câu trả lời?", message: "Toàn bộ câu trả lời lưu sẵn sẽ bị xoá và không khôi phục được. Các câu hỏi giống vậy về sau phải gọi AI lại nên tốn token.", confirmLabel: "Xoá cache", tone: "danger" }))) return;
     try {
       await adminApi.clearChatbotCache();
       toast.success("Đã xoá cache câu trả lời");
@@ -90,6 +94,7 @@ export default function ChatbotPage() {
 
   return (
     <>
+      {confirmDialog}
       <PageHeader eyebrow="Quản trị" title="Chatbot hỗ trợ" description="Trợ lý chỉ hướng dẫn cách dùng FEPass, không giải bài và không thao tác thay người dùng." />
       {loading && !data ? (
         <Loading />

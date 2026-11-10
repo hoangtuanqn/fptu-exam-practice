@@ -43,14 +43,14 @@ export function Pagination({ meta, onPage }: { meta: PageMeta; onPage: (page: nu
         Trang {meta.page} / {meta.totalPages} · {meta.total} kết quả
       </span>
       <div className="flex gap-1.5">
-        <button className={btn} disabled={meta.page <= 1} onClick={() => onPage(meta.page - 1)} aria-label="Trang trước">
+        <button className={btn} disabled={meta.page <= 1} onClick={() => onPage(meta.page - 1)} aria-label="Trang trước" title="Trang trước">
           <ChevronLeft size={16} />
         </button>
         <button
           className={btn}
           disabled={meta.page >= meta.totalPages}
           onClick={() => onPage(meta.page + 1)}
-          aria-label="Trang sau"
+          aria-label="Trang sau" title="Trang sau"
         >
           <ChevronRight size={16} />
         </button>

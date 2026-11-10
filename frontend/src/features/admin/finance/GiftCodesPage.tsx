@@ -19,6 +19,7 @@ import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
 import { formatCredit, formatDate } from "@/shared/utils/formatters";
 import { useClampPage } from "@/shared/hooks/useClampPage";
 import { errorMessage } from "@/shared/api/errors";
+import { useConfirm } from "@/shared/ui/ConfirmDialog";
 
 type ActiveFilter = "" | "true" | "false";
 
@@ -34,8 +35,15 @@ export default function GiftCodesPage() {
   useClampPage(data?.meta, (p) => setUrl({ page: String(p) }));
   const [creating, setCreating] = useState(false);
   const [viewing, setViewing] = useState<GiftCode | null>(null);
+  const { confirm, confirmDialog } = useConfirm();
 
   const toggle = async (g: GiftCode) => {
+    const ok = await confirm(
+      g.active
+        ? { title: `Tắt mã ${g.code}?`, message: "Mã sẽ không dùng được nữa cho tới khi bạn bật lại.", confirmLabel: "Tắt mã", tone: "danger" }
+        : { title: `Bật lại mã ${g.code}?`, message: "Người dùng sẽ nhập được mã này để nhận credit (theo số lượt còn lại và hạn của mã).", confirmLabel: "Bật mã" },
+    );
+    if (!ok) return;
     try {
       await adminApi.setGiftCodeActive(g.id, !g.active);
       toast.success(g.active ? `Đã tắt mã ${g.code}` : `Đã bật mã ${g.code}`);
@@ -58,6 +66,7 @@ export default function GiftCodesPage() {
 
   return (
     <>
+      {confirmDialog}
       <PageHeader
         title="Giftcode"
         description="Tạo mã tặng credit và theo dõi lượt dùng."

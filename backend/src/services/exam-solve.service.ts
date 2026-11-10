@@ -66,6 +66,12 @@ async function run(examId: number) {
       .catch((err) => console.error(`[ai] gắn chủ đề đề ${exam.threadId} lỗi: ${(err as Error).message}`));
     const gaps = solved.unanswered.length ? `, thiếu ${solved.unanswered.length} câu (${solved.unanswered.join(",")})` : "";
     const skipped = solved.notQuestions.length ? `, ${solved.notQuestions.length} ảnh không phải câu hỏi (${solved.notQuestions.join(",")})` : "";
+    if (solved.unanswered.length) {
+      // Thiếu đáp án thật (đã thử lại một lượt): báo bằng log lỗi và ghi cạnh đề; trang Đề thi của admin hiện cảnh báo "thiếu N câu"
+      console.error(`[ai] đề ${exam.threadId} còn thiếu ${solved.unanswered.length} câu sau khi thử lại: ${solved.unanswered.join(",")}`);
+      await fs.appendFile(path.join(dir, "ai-error.log"), `[${new Date().toISOString()}] Thiếu đáp án ở câu ${solved.unanswered.join(",")} sau khi thử lại
+`, "utf-8").catch(() => undefined);
+    }
     console.log(`[ai] đề ${exam.threadId} đã có đáp án (${solved.answers.length} câu${gaps}${skipped}) sau ${((Date.now() - t0) / 1000).toFixed(1)}s`);
   } catch (err) {
     const message = (err as Error).message;

@@ -157,6 +157,7 @@ export function Header({
               <Button
                 onClick={onShowReferences}
                 title="Tài liệu tham khảo (không tính điểm)"
+                aria-label="Tài liệu tham khảo"
                 className="!px-2.5 sm:!px-4"
               >
                 <BookOpen size={16} />
@@ -166,7 +167,7 @@ export function Header({
 
             {submitted ? (
               <>
-                <Button onClick={onReset} className="!px-2.5 sm:!px-4">
+                <Button onClick={onReset} className="!px-2.5 sm:!px-4" title="Làm lại" aria-label="Làm lại">
                   <RotateCcw size={16} />
                   <span className="hidden sm:inline">Làm lại</span>
                 </Button>
