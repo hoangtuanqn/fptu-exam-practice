@@ -44,7 +44,13 @@ export interface ExamQuality {
   questions: QuestionQuality[];
 }
 
+export interface PromptPerformance {
+  days: number;
+  prompts: { surface: string; shown: number; click: number; dismiss: number; clickRate: number | null }[];
+}
+
 export const insightsApi = {
+  prompts: (days: number) => http.get<PromptPerformance>("/admin/insights/prompts", { days }),
   funnel: (days: number) => http.get<Funnel>("/admin/insights/funnel", { days }),
   exams: () => http.get<ExamToReview[]>("/admin/insights/exams"),
   examQuestions: (id: number) => http.get<ExamQuality>(`/admin/insights/exams/${id}/questions`),
