@@ -26,6 +26,26 @@ async function getPrice() {
 // ---- Kiểm tra bản mới: đọc file version công khai trên website mỗi ngày (chỉ để báo, không tự tải hay cài gì)
 const UPDATE_ALARM = "fepass-update-check";
 
+// Dấu "!" trên biểu tượng: có bản mới, hoặc điểm FAP đã cũ (chỉ khi sinh viên đang bật đồng bộ)
+async function refreshBadge() {
+  const { update, gradeSync, fapGrades } = await chrome.storage.local.get(["update", "gradeSync", "fapGrades"]);
+  const { siteUrl } = await fepassGetSettings();
+  let text = "";
+  let title = "FePass";
+  let color = "#e29400";
+  if (update && fepassIsNewer(update.version, chrome.runtime.getManifest().version)) {
+    text = "!";
+    title = `FePass: có bản mới ${update.version}, bấm để xem`;
+    color = "#f97316";
+  } else if (gradeSync && gradeSync.enabled && gradeSync.origin === siteUrl && fapGrades && Date.now() - fapGrades.at > FEPASS_STALE_MS) {
+    text = "!";
+    title = "FePass: điểm FAP đã cũ, bấm để đồng bộ lại";
+  }
+  await chrome.action.setBadgeText({ text });
+  await chrome.action.setTitle({ title });
+  if (text) await chrome.action.setBadgeBackgroundColor({ color });
+}
+
 async function checkUpdate() {
   try {
     const { siteUrl } = await fepassGetSettings();
@@ -36,12 +56,17 @@ async function checkUpdate() {
     const current = chrome.runtime.getManifest().version;
     const newer = fepassIsNewer(info.version, current);
     await chrome.storage.local.set({ update: newer ? { version: info.version, url: new URL(info.url || "/fepass_extension.zip", siteUrl).href } : null });
-    chrome.action.setBadgeText({ text: newer ? "!" : "" });
-    if (newer) chrome.action.setBadgeBackgroundColor({ color: "#f97316" });
   } catch {
     /* mất mạng: thử lại lần sau */
+  } finally {
+    refreshBadge().catch(() => undefined);
   }
 }
+
+// Dữ liệu liên quan đổi (bản mới, bật/tắt đồng bộ, vừa đọc điểm) thì cập nhật dấu "!"
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "local" && (changes.update || changes.gradeSync || changes.fapGrades)) refreshBadge().catch(() => undefined);
+});
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.alarms.create(UPDATE_ALARM, { periodInMinutes: 24 * 60 });

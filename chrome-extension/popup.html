@@ -9,10 +9,13 @@
   <body>
     <header>
       <img src="icons/icon48.png" width="40" height="40" alt="" />
-      <div>
+      <div class="brand">
         <h1>FePass</h1>
-        <p>Làm đề FE trên fepass.top</p>
+        <p id="ver">Làm đề FE, theo dõi điểm FAP</p>
       </div>
+      <a id="open" class="icon-link" href="https://fepass.top" target="_blank" rel="noopener" title="Mở fepass.top" aria-label="Mở fepass.top">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" /></svg>
+      </a>
     </header>
 
     <a id="update" class="update" href="#" target="_blank" rel="noopener" hidden>Có bản mới <b id="updateVer"></b>: bấm để tải về</a>
@@ -23,17 +26,44 @@
       <a id="login" href="https://fepass.top/login" target="_blank" rel="noopener">Đăng nhập</a>
     </div>
 
-    <label class="row">
-      <span>
-        <b>Hiện nút trên FuOverflow</b>
-        <small>Cạnh bài “Đề Thi FE” và “Đề Thi PE”</small>
-      </span>
-      <input type="checkbox" id="enabled" role="switch" />
-    </label>
+    <section id="welcome" class="card welcome" hidden>
+      <h2>Bắt đầu trong 3 bước</h2>
+      <ol>
+        <li>Đăng nhập <b>fepass.top</b>.</li>
+        <li>Bật <b>Đồng bộ điểm FAP</b> ở trang Điểm FAP (mặc định tắt).</li>
+        <li>Mở <b>Báo cáo điểm</b> trên FAP rồi bấm <b>Đồng bộ ngay</b> ở đây.</li>
+      </ol>
+      <button type="button" id="welcomeOk" class="btn small">Đã hiểu</button>
+    </section>
 
-    <a id="open" class="primary" href="https://fepass.top" target="_blank" rel="noopener">Mở fepass.top</a>
+    <section class="card" id="grades" aria-labelledby="gradesTitle">
+      <div class="card-head">
+        <h2 id="gradesTitle">Điểm FAP</h2>
+        <span id="gpill" class="pill">…</span>
+      </div>
+      <p class="lead">Chia sẻ điểm và lịch thi trên FAP của bạn cho FePass để tính điểm trung bình từng kỳ và điểm cần đạt ở bài thi cuối kỳ. Chỉ bạn xem được. Tắt đồng bộ là dữ liệu bị xoá.</p>
+      <div id="gbody"></div>
+    </section>
 
-    <p class="note">Bấm nút trên FuOverflow sẽ mở fepass.top và hỏi xác nhận. Chỉ khi bạn xác nhận mới bị trừ credit.</p>
+    <section class="card">
+      <label class="toggle">
+        <span>
+          <b>Nút làm đề trên FuOverflow</b>
+          <small>Hiện cạnh bài “Đề Thi FE” và “Đề Thi PE”. Bấm nút chỉ mở fepass.top và hỏi xác nhận, bạn đồng ý mới bị trừ credit.</small>
+        </span>
+        <input type="checkbox" id="enabled" role="switch" />
+      </label>
+    </section>
+
+    <section class="card">
+      <label class="toggle">
+        <span>
+          <b>Thông báo nhỏ trên FAP</b>
+          <small id="noticeText">Hiện ở góc màn hình khi bạn mở FAP.</small>
+        </span>
+        <input type="checkbox" id="notice" role="switch" />
+      </label>
+    </section>
 
     <details>
       <summary>Nâng cao (dùng để chạy thử)</summary>
@@ -46,8 +76,8 @@
         <input type="url" id="apiUrl" placeholder="https://api.fepass.top" />
       </label>
       <div class="actions">
-        <button type="button" id="save">Lưu</button>
-        <button type="button" id="reset" class="ghost">Về mặc định</button>
+        <button type="button" id="save" class="btn small">Lưu</button>
+        <button type="button" id="reset" class="btn small ghost">Về mặc định</button>
       </div>
       <p id="msg" class="msg" role="status"></p>
     </details>

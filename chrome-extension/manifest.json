@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "FePass – Làm đề FE trên fepass.top",
   "short_name": "FePass",
-  "version": "1.4.0",
-  "description": "Thêm nút “Làm đề thi trên fepass.top” cạnh các bài có nhãn Đề Thi FE trên FuOverflow. Bấm là mở thẳng hộp xác nhận lấy đề trên fepass.top. Nếu bạn bật, còn đồng bộ điểm FAP để gợi ý điểm cần đạt cho từng môn.",
+  "version": "1.5.0",
+  "description": "Thêm nút “Làm đề thi trên fepass.top” cạnh các bài có nhãn Đề Thi FE trên FuOverflow, và (nếu bạn bật) đồng bộ điểm, lịch thi trên FAP để gợi ý điểm cần đạt cho từng môn.",
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
@@ -41,6 +41,10 @@
     {
       "resources": ["icons/icon32.png", "fonts/*.woff2"],
       "matches": ["https://fuoverflow.com/*", "https://*.fuoverflow.com/*"]
+    },
+    {
+      "resources": ["icons/icon32.png"],
+      "matches": ["https://fap.fpt.edu.vn/*"]
     }
   ]
 }

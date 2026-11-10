@@ -36,10 +36,27 @@
     if (v === lastSync) return;
     lastSync = v;
     chrome.storage.local.set({ gradeSync: { enabled: v === "on", origin: location.origin, at: Date.now() } });
-    if (v === "off") chrome.storage.local.remove("fapGrades"); // tắt đồng bộ thì xoá luôn điểm đã đọc trong tiện ích
+    if (v === "off") chrome.storage.local.remove(["fapGrades", "fapSync", "fapUploadedAt"]); // tắt đồng bộ thì xoá luôn điểm đã đọc trong tiện ích
   };
   publishSync();
   new MutationObserver(publishSync).observe(root, { attributes: true, attributeFilter: ["data-fepass-grade-sync"] });
+
+  // Website ghi lại thời điểm đã gửi điểm lên tài khoản vào localStorage; chuyển cho tiện ích để popup hiện "Đã gửi lên FePass"
+  // (cùng nguồn gốc nên đọc được; chỉ đọc một con số, không đọc dữ liệu nào khác)
+  let lastUploaded = 0;
+  const publishUploaded = () => {
+    let at = 0;
+    try {
+      at = Number(localStorage.getItem("fepass.grades.uploadedAt")) || 0;
+    } catch {
+      return;
+    }
+    if (!at || at === lastUploaded) return;
+    lastUploaded = at;
+    chrome.storage.local.set({ fapUploadedAt: { at, origin: location.origin } });
+  };
+  publishUploaded();
+  setInterval(publishUploaded, 2000);
 
   // Trang web xin điểm đã đọc: trả lại dưới dạng chuỗi JSON (website tự gửi lên tài khoản của chính sinh viên)
   const sendGrades = async () => {
