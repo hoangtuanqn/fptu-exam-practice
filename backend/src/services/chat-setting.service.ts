@@ -14,27 +14,27 @@ const parse = (name: keyof ChatConfig, raw: string | undefined) => {
   return raw;
 };
 
-export type ChatConfigInput = Partial<Omit<ChatConfig, "geminiApiKey">> & { geminiApiKey?: string; clearGeminiKey?: boolean };
+export type ChatConfigInput = Partial<Omit<ChatConfig, "openaiApiKey">> & { openaiApiKey?: string; clearOpenaiKey?: boolean };
 
 export const chatSettingService = {
   async get(): Promise<ChatConfig> {
     const raw = await settingRepository.getMany(NAMES.map(keyOf));
     const config = Object.fromEntries(NAMES.map((n) => [n, parse(n, raw[keyOf(n)])])) as unknown as ChatConfig;
-    if (!config.geminiApiKey && env.GEMINI_API_KEY) config.geminiApiKey = env.GEMINI_API_KEY; // chưa nhập ở trang quản trị thì dùng .env
+    if (!config.openaiApiKey && env.OPENAI_API_KEY) config.openaiApiKey = env.OPENAI_API_KEY; // chưa nhập ở trang quản trị thì dùng .env
     return config;
   },
 
   // Bản trả cho admin: không lộ khoá
   async getForAdmin() {
-    const { geminiApiKey, ...rest } = await this.get();
-    return { ...rest, hasGeminiKey: geminiApiKey.length > 0, geminiKeyPreview: geminiApiKey ? `••••${geminiApiKey.slice(-4)}` : "" };
+    const { openaiApiKey, ...rest } = await this.get();
+    return { ...rest, hasOpenaiKey: openaiApiKey.length > 0, openaiKeyPreview: openaiApiKey ? `••••${openaiApiKey.slice(-4)}` : "" };
   },
 
-  async update({ geminiApiKey, clearGeminiKey, ...rest }: ChatConfigInput) {
+  async update({ openaiApiKey, clearOpenaiKey, ...rest }: ChatConfigInput) {
     const entries: Record<string, string> = {};
     for (const [name, value] of Object.entries(rest)) if (value !== undefined) entries[keyOf(name as keyof ChatConfig)] = String(value);
-    if (geminiApiKey) entries[keyOf("geminiApiKey")] = geminiApiKey; // để trống = giữ khoá cũ
-    else if (clearGeminiKey) entries[keyOf("geminiApiKey")] = "";
+    if (openaiApiKey) entries[keyOf("openaiApiKey")] = openaiApiKey; // để trống = giữ khoá cũ
+    else if (clearOpenaiKey) entries[keyOf("openaiApiKey")] = "";
     await settingRepository.setMany(entries);
     return this.getForAdmin();
   },

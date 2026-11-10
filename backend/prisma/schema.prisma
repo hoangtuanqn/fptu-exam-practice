@@ -193,7 +193,7 @@ model Exam {
   author         String?   @db.VarChar(100)
   postedAt       DateTime? @map("posted_at")
   totalQuestions Int       @map("total_questions")
-  // Nguá»“n Ä‘Ă¡p Ă¡n: DEFAULT (táº¡m lĂ  A), AI (Gemini giáº£i), MANUAL (chá»‰nh tay). aiReport lĂ  bĂ¡o cĂ¡o cá»§a AI (cĂ¢u nghi ngá»...)
+  // Nguá»“n Ä‘Ă¡p Ă¡n: DEFAULT (táº¡m lĂ  A), AI (Claude giáº£i), MANUAL (chá»‰nh tay). aiReport lĂ  bĂ¡o cĂ¡o cá»§a AI (cĂ¢u nghi ngá»...)
   answerSource   String    @default("DEFAULT") @map("answer_source") @db.VarChar(10)
   aiReport       String?   @map("ai_report") @db.Text
   createdById    Int?      @map("created_by_id")
@@ -566,7 +566,7 @@ model KbChunk {
   title       String   @db.VarChar(200)
   content     String   @db.Text
   contentHash String   @map("content_hash") @db.VarChar(64)
-  embedding   Json? // máº£ng sá»‘; null = chÆ°a táº¡o (chÆ°a cĂ³ khoĂ¡ Gemini), chatbot tĂ¬m báº±ng tá»« khoĂ¡
+  embedding   Json? // máº£ng sá»‘; null = chÆ°a táº¡o (chÆ°a cĂ³ khoĂ¡ OpenAI), chatbot tĂ¬m báº±ng tá»« khoĂ¡
   model       String?  @db.VarChar(60)
   updatedAt   DateTime @updatedAt @map("updated_at")
 
@@ -808,4 +808,21 @@ model SubjectIssue {
 
   @@unique([subjectCode, kind])
   @@map("subject_issues")
+}
+
+// Noi dung Syllabus cua mon (crawl tu FLM) chia thanh cac doan de tim kiem theo nghia. embedding: float32 little-endian (768 so); null = chua tao.
+model SubjectChunk {
+  id          Int      @id @default(autoincrement())
+  subjectCode String   @map("subject_code") @db.VarChar(20)
+  kind        String   @db.VarChar(20) // overview | tasks | materials | clo | chapters | sessions | cq | assessment
+  slug        String   @unique @db.VarChar(80)
+  title       String   @db.VarChar(255)
+  content     String   @db.Text
+  contentHash String   @map("content_hash") @db.Char(64)
+  embedding   Bytes?   @db.MediumBlob
+  model       String?  @db.VarChar(60)
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([subjectCode])
+  @@map("subject_chunks")
 }

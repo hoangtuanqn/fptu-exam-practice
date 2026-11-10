@@ -18,8 +18,8 @@ export const chatBody = z.object({
 
 export const updateChatSettingsBody = z.object({
   enabled: z.boolean().optional(),
-  geminiApiKey: z.string().trim().max(300).optional(),
-  clearGeminiKey: z.boolean().optional(),
+  openaiApiKey: z.string().trim().max(300).optional(),
+  clearOpenaiKey: z.boolean().optional(),
   claudeModel: z.string().trim().min(1).max(80).optional(),
 });
 

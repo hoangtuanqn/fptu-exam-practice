@@ -29,8 +29,8 @@ const schema = z.object({
   PASSWORD_RESET_EXPIRES_MIN: z.coerce.number().default(30),
   // Anthropic (Claude): khóa mặc định khi admin chưa nhập trong trang quản trị
   ANTHROPIC_API_KEY: z.string().optional(),
-  // Google AI Studio (Gemini): chỉ dùng tạo embedding cho chatbot hỗ trợ; admin có thể nhập ở trang quản trị thay cho biến này
-  GEMINI_API_KEY: z.string().optional(),
+  // OpenAI: chỉ dùng tạo embedding (chatbot hỗ trợ và tìm kiếm syllabus); admin có thể nhập ở trang quản trị thay cho biến này
+  OPENAI_API_KEY: z.string().optional(),
   // Đăng nhập Google: OAuth client ID (Google Cloud Console > APIs & Services > Credentials). Bỏ trống thì ẩn nút đăng nhập Google.
   GOOGLE_CLIENT_ID: z.string().optional(),
   // Đăng nhập GitHub: OAuth App (GitHub > Settings > Developer settings > OAuth Apps). Callback URL = <CLIENT_URL>/auth/github/callback.

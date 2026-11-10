@@ -3,13 +3,13 @@ import path from "node:path";
 // Cấu hình chatbot hỗ trợ (admin chỉnh ở Quản trị → Chatbot hỗ trợ, lưu trong bảng settings với tiền tố "chat.")
 export interface ChatConfig {
   enabled: boolean;
-  geminiApiKey: string; // khoá Google AI Studio, chỉ dùng để tạo embedding (tìm đoạn hướng dẫn liên quan)
+  openaiApiKey: string; // khoá OpenAI, chỉ dùng để tạo embedding (tìm đoạn hướng dẫn và nội dung syllabus liên quan)
   claudeModel: string; // model trả lời; khoá Anthropic dùng chung với phần AI giải đề
 }
 
 export const CHAT_DEFAULTS: ChatConfig = {
   enabled: true,
-  geminiApiKey: "",
+  openaiApiKey: "",
   claudeModel: "claude-haiku-5-5",
 };
 
@@ -19,11 +19,11 @@ export const CHAT_KEY_PREFIX = "chat.";
 export const KNOWLEDGE_DIR = path.resolve(__dirname, "../../knowledge");
 export const KNOWLEDGE_FILE = "fepass-guide.md";
 
-export const EMBEDDING_MODEL = "gemini-embedding-001";
-export const EMBEDDING_DIMS = 768; // rút gọn từ 3072 để vector nhỏ, tìm nhanh; chất lượng gần như không đổi
+export const EMBEDDING_MODEL = "text-embedding-3-small";
+export const EMBEDDING_DIMS = 768; // rút gọn từ 1536 (tham số dimensions của OpenAI) để vector nhỏ, tìm nhanh; chất lượng gần như không đổi
 export const RETRIEVE_TOP_K = 3;
 export const RETRIEVE_SCORE_BAND = 0.08; // chỉ giữ các đoạn có điểm không thấp hơn đoạn tốt nhất quá chừng này (bớt đoạn kém liên quan = bớt token)
-export const RETRIEVE_MIN_SCORE = 0.65; // dưới mức này coi như không có đoạn nào liên quan (cosine)
+export const RETRIEVE_MIN_SCORE = 0.45; // dưới mức này coi như không có đoạn nào liên quan (cosine). Đo với text-embedding-3-small: câu liên quan 0,53 đến 0,72, câu lạc đề 0,30 đến 0,34
 
 export const CHAT_MAX_TURNS = 6; // chỉ gửi chừng này tin gần nhất cho Claude
 export const CHAT_OLD_REPLY_CHARS = 400; // câu trả lời cũ của Cóc Pass trong lịch sử được cắt còn chừng này ký tự (chỉ cần đủ ngữ cảnh)

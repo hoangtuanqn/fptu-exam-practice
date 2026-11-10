@@ -14,10 +14,14 @@ Công cụ nội bộ (không nằm trong bản phát hành FEPass). Lấy tên 
 3. Nhập mã môn (cách nhau bằng dấu cách, dấu phẩy hoặc xuống dòng), bấm **Bắt đầu lấy**.
 4. Xong bấm **Tải JSON** (hoặc **Sao chép JSON**).
 
+Tick **Lấy cả nội dung Syllabus Details** để lấy thêm toàn bộ chữ của trang (mô tả môn, nhiệm vụ sinh viên, tài liệu, CLO, từng buổi học, câu hỏi gợi ý, bảng đánh giá) vào trường `details` của mỗi môn, dùng cho việc lập chỉ mục tìm kiếm AI sau này. File JSON lớn hơn nhiều (hàng chục MB cho cả 400 môn), nên tiện ích xin thêm quyền `unlimitedStorage`. Bật tùy chọn này thì các môn đã lấy trước đó mà chưa có nội dung đầy đủ sẽ được lấy lại.
+
+Ô **Số luồng** (1 đến 8, mặc định 4) là số môn lấy song song. Nhiều luồng thì nhanh hơn nhưng dễ bị FLM chặn (Cloudflare hoặc báo quá nhiều yêu cầu); bị chặn thì công cụ tự dừng, hãy giảm số luồng rồi chạy lại.
+
 Kết quả được lưu trong trình duyệt, tải lại trang không mất. Môn đã lấy xong sẽ được bỏ qua ở lần chạy sau, trừ khi tick **Lấy lại**.
 
 ## Cách chọn môn
-Tìm theo mã (`searchOn=Code`) rồi chỉ giữ dòng có Subject Code **trùng hoàn toàn** với mã đã nhập (không phân biệt hoa thường), nên `OSG202` không lấy `OSG202c`. Nếu có nhiều syllabus cùng mã, chọn bản đang dùng và đã duyệt, rồi tới quyết định mới nhất.
+Tìm theo mã (`searchOn=Code`) rồi giữ các dòng có Subject Code **trùng hoàn toàn** hoặc **có thêm 1 đến 2 chữ cái ở cuối** (không phân biệt hoa thường): nhập `ADA201` sẽ lấy `ADA201c` (và `ADA201`, `ADA201cm` nếu có), mỗi mã một môn riêng trong JSON. Mã có thêm chữ số (`ADA2011`) là môn khác nên không lấy. Bỏ tick **Lấy cả mã có thêm…** nếu chỉ muốn mã trùng hẳn (`OSG202` khi đó không lấy `OSG202c`). Nếu có nhiều syllabus cùng mã, chọn bản đang dùng và đã duyệt, rồi tới quyết định mới nhất.
 
 ## Dạng JSON (chỉ phần cần dùng)
 ```
@@ -26,7 +30,7 @@ Tìm theo mã (`searchOn=Code`) rồi chỉ giữ dòng có Subject Code **trùn
   "chapters": [ { "number", "title", "topics": ["1.1. What is an operating system", "..."] } ]
 } ] }
 ```
-`chapters` được suy ra từ cột Topic của lịch học ("Chapter N: Tên" mở chương mới, các dòng "N.M ..." thuộc chương N). Không lấy lịch học từng buổi, CLO, đánh giá hay tài liệu.
+`chapters` được suy ra từ cột Topic của lịch học: "Chapter N: Tên", "Chương I: Tên" hoặc "N. Tên" (khi môn có các mục "N.M ...") mở chương mới và cho tên chương; các dòng "N.M ..." thuộc chương N. Không lấy lịch học từng buổi, CLO, đánh giá hay tài liệu.
 
 ## Lưu ý
 - Giữa hai yêu cầu nghỉ 0,7 giây để không dồn tải lên FLM. Chưa đăng nhập hoặc bị Cloudflare chặn thì dừng ngay và báo rõ.

@@ -20,12 +20,12 @@ function Settings({ data, onSaved }: { data: ChatbotAdmin; onSaved: () => void }
   const s = data.settings;
   const [enabled, setEnabled] = useState(s.enabled);
   const [claudeModel, setClaudeModel] = useState(s.claudeModel);
-  const [geminiApiKey, setKey] = useState("");
+  const [openaiApiKey, setKey] = useState("");
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
     void run(async () => {
-      await adminApi.saveChatbot({ enabled, claudeModel, geminiApiKey: geminiApiKey || undefined });
+      await adminApi.saveChatbot({ enabled, claudeModel, openaiApiKey: openaiApiKey || undefined });
       setKey("");
       toast.success("Đã lưu cấu hình chatbot");
       onSaved();
@@ -34,7 +34,7 @@ function Settings({ data, onSaved }: { data: ChatbotAdmin; onSaved: () => void }
 
   return (
     <Card>
-      <CardHeader title="Cấu hình" description="Chatbot trả lời bằng Claude (dùng khoá Anthropic ở mục “AI giải đáp án”). Khoá Gemini chỉ dùng để tạo embedding." />
+      <CardHeader title="Cấu hình" description="Chatbot trả lời bằng Claude (dùng khoá Anthropic ở mục “AI giải đáp án”). Khoá OpenAI chỉ dùng để tạo embedding (tìm đoạn hướng dẫn và nội dung syllabus)." />
       <form onSubmit={submit} className="space-y-5 p-5" noValidate>
         <FormError message={error} />
         <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 p-4">
@@ -45,12 +45,12 @@ function Settings({ data, onSaved }: { data: ChatbotAdmin; onSaved: () => void }
           <Switch checked={enabled} onChange={setEnabled} label="Bật chatbot" />
         </div>
         <PasswordInput
-          label="Khoá API Google Gemini (embedding)"
+          label="Khoá API OpenAI (embedding)"
           autoComplete="off"
-          value={geminiApiKey}
+          value={openaiApiKey}
           onChange={(e) => setKey(e.target.value)}
-          error={fieldErrors.geminiApiKey}
-          hint={s.hasGeminiKey ? `Đã cấu hình (${s.geminiKeyPreview}). Để trống để giữ khoá hiện tại.` : "Chưa có khoá: chatbot vẫn chạy nhưng tìm bằng từ khoá, kém chính xác hơn. Lấy khoá miễn phí ở Google AI Studio."}
+          error={fieldErrors.openaiApiKey}
+          hint={s.hasOpenaiKey ? `Đã cấu hình (${s.openaiKeyPreview}). Để trống để giữ khoá hiện tại.` : "Chưa có khoá: chatbot vẫn chạy nhưng tìm bằng từ khoá, kém chính xác hơn. Lấy khoá ở platform.openai.com (mục API keys)."}
         />
         <Input label="Model trả lời" value={claudeModel} onChange={(e) => setClaudeModel(e.target.value)} error={fieldErrors.claudeModel} hint="Nên dùng model nhỏ (Haiku) cho rẻ và nhanh." />
         <Button variant="primary" type="submit" disabled={loading}>
@@ -134,7 +134,7 @@ export default function ChatbotPage() {
             </Button>
           </Card>
 
-          <Settings key={data.settings.geminiKeyPreview + String(data.settings.enabled)} data={data} onSaved={reload} />
+          <Settings key={data.settings.openaiKeyPreview + String(data.settings.enabled)} data={data} onSaved={reload} />
 
           <Card>
             <CardHeader title="Câu hỏi chưa có tài liệu" description="Người dùng hỏi nhưng không tìm thấy mục hướng dẫn nào khớp. Bổ sung các nội dung này vào hướng dẫn." />

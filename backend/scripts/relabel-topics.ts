@@ -39,8 +39,10 @@ async function main() {
     for (const q of questions) {
       const old = q.topic!;
       if (labels.has(old)) continue; // đã đúng nhãn mới
-      const part = old.match(/^Phần (\d+):/);
-      const next = (part && byChapter.get(Number(part[1]))) || byNorm.get(norm(old));
+      const part = old.match(/^(?:Phần|Chương) (\d+):/);
+      // Nhãn cũ kiểu "4. Social Comparison (cont)": bỏ số đầu và "(cont)" rồi so theo tên chương mới
+      const bare = old.replace(/^\d+\.\s*/, "").replace(/\s*\(cont\.?\)\s*$/i, "");
+      const next = (part && byChapter.get(Number(part[1]))) || byNorm.get(norm(old)) || byNorm.get(norm(bare));
       if (!next) {
         unmatched++;
         continue;
