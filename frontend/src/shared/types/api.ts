@@ -362,13 +362,3 @@ export interface LinkRewardAdmin {
   stats: { issued24h: number; claimed24h: number; claimedTotal: number; activeTurns: number; usedTotal: number; byProvider: { provider: string; label: string; issued24h: number; claimed24h: number; claimedTotal: number }[] };
 }
 
-/** Cấu hình quảng cáo (Quản trị → Quảng cáo) */
-export interface AdsSettings {
-  enabled: boolean;
-  guests: boolean;
-  vignette: boolean;
-  vignetteZone: string;
-  inpage: boolean;
-  inpageZone: string;
-  directLink: string;
-}

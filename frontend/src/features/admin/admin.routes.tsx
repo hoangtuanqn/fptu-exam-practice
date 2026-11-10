@@ -19,7 +19,6 @@ const WalletHistoryPage = lazy(() => import("./users/WalletHistoryPage"));
 const CrawlJobsPage = lazy(() => import("./users/CrawlJobsPage"));
 const AttemptsPage = lazy(() => import("./users/AttemptsPage"));
 const AccountSettingsPage = lazy(() => import("./users/AccountSettingsPage"));
-const AdsSettingsPage = lazy(() => import("./content/AdsSettingsPage"));
 const LinkRewardSettingsPage = lazy(() => import("./content/LinkRewardSettingsPage"));
 const SubjectIssuesPage = lazy(() => import("./content/SubjectIssuesPage"));
 const PromoSettingsPage = lazy(() => import("./users/PromoSettingsPage"));
@@ -53,7 +52,6 @@ export const ADMIN_NAV: NavItem[] = [
   { to: "/admin/sepay", label: "Cấu hình SePay", icon: Settings, group: "Tài chính" },
   { to: "/admin/exams", label: "Đề thi", icon: FileText, group: "Nội dung & AI" },
   { to: "/admin/reports", label: "Báo cáo đáp án", icon: MessageSquareWarning, group: "Nội dung & AI" },
-  { to: "/admin/ads", label: "Quảng cáo", icon: Megaphone, group: "Nội dung & AI" },
   { to: "/admin/link-rewards", label: "Vượt link", icon: Link2, group: "Nội dung & AI" },
   { to: "/admin/subject-issues", label: "Môn thiếu dữ liệu", icon: TriangleAlert, group: "Nội dung & AI" },
   { to: "/admin/crawler", label: "Cấu hình lấy đề", icon: DatabaseZap, group: "Nội dung & AI" },
@@ -72,7 +70,6 @@ export const adminRoutes = (
     <Route path="purchases" element={<PurchasesPage />} />
     <Route path="referrals" element={<ReferralsPage />} />
     <Route path="account-settings" element={<AccountSettingsPage />} />
-    <Route path="ads" element={<AdsSettingsPage />} />
     <Route path="link-rewards" element={<LinkRewardSettingsPage />} />
     <Route path="subject-issues" element={<SubjectIssuesPage />} />
     <Route path="promotions" element={<PromoSettingsPage />} />
