@@ -30,6 +30,8 @@ const REASONS = {
 let armedClear = false; // nút xoá dữ liệu: bấm lần đầu để xác nhận, lần hai mới xoá
 let armedTimer = null;
 let flash = null; // thông báo ngắn sau một thao tác trong popup
+let confirmingOff = false; // đang hỏi xác nhận tắt đồng bộ (tắt thì điểm đã lưu trên FePass bị xoá)
+let pendingSync = null; // { enabled, until }: vừa gửi lệnh bật/tắt, chờ website xác nhận
 
 async function showUpdate() {
   await chrome.runtime.sendMessage({ type: "checkUpdate" }).catch(() => undefined); // mỗi lần mở popup: kiểm tra bản mới trước khi hiển thị
@@ -80,16 +82,58 @@ function clearData() {
   chrome.storage.local.remove(["fapGrades", "fapSync", "fapUploadedAt"]);
 }
 
+// Gửi lệnh bật/tắt tới tab fepass.top đang mở (website xử lý rồi trả lời). Không có tab nào trả lời thì mở trang Điểm FAP
+// kèm ?sync=on|off: website tự hiện hộp xác nhận. Việc bật/tắt luôn do website thực hiện vì chỉ website có phiên đăng nhập.
+async function changeSync(enabled) {
+  const s = await fepassGetSettings();
+  confirmingOff = false;
+  pendingSync = { enabled, until: Date.now() + 12000 };
+  render();
+  let res = null;
+  try {
+    const tabs = await chrome.tabs.query({ url: `${s.siteUrl}/*` });
+    if (tabs.length) {
+      res = await Promise.any(
+        tabs.map((t) =>
+          chrome.tabs.sendMessage(t.id, { type: "fepass:set-sync", enabled }).then((r) => {
+            if (!r || (!r.ok && r.error === "timeout")) throw new Error("no answer");
+            return r;
+          }),
+        ),
+      );
+    }
+  } catch {
+    res = null;
+  }
+  if (res && res.ok) {
+    setTimeout(() => {
+      pendingSync = null;
+      render();
+    }, 3000);
+    return;
+  }
+  if (res && !res.ok) {
+    pendingSync = null;
+    flash = { tone: "err", text: res.error || "Chưa đổi được cài đặt." };
+    return render();
+  }
+  pendingSync = null;
+  await chrome.tabs.create({ url: `${s.siteUrl}/account/grades?sync=${enabled ? "on" : "off"}` });
+  window.close();
+}
+
 function gradesBody(ctx) {
   const { s, auth, st } = ctx;
   const body = document.createDocumentFragment();
   const sync = !!(st.gradeSync && st.gradeSync.origin === s.siteUrl && st.gradeSync.enabled);
   const grades = st.fapGrades || null;
-  const pill = $("gpill");
+  const toggle = $("syncToggle");
+  const waiting = !!pendingSync && pendingSync.until > Date.now();
+
+  toggle.disabled = !auth.loggedIn || waiting;
+  toggle.checked = waiting ? pendingSync.enabled : sync;
 
   if (!auth.loggedIn) {
-    pill.textContent = "Cần đăng nhập";
-    pill.className = "pill off";
     body.append(
       el("p", { class: "meta", text: "Đăng nhập fepass.top để bật đồng bộ điểm." }),
       el("a", { class: "btn block", href: `${s.siteUrl}/login`, target: "_blank", rel: "noopener", text: "Đăng nhập fepass.top" }),
@@ -97,18 +141,33 @@ function gradesBody(ctx) {
     return body;
   }
 
-  if (!sync) {
-    pill.textContent = "Đang tắt";
-    pill.className = "pill off";
+  if (flash) body.append(el("div", { class: `note ${flash.tone}`, role: "status", text: flash.text }));
+
+  if (confirmingOff) {
     body.append(
-      el("p", { class: "meta", text: "Bạn toàn quyền quyết định: bật công tắc “Đồng bộ điểm FAP” ở trang Điểm FAP (mặc định tắt). Tắt lúc nào cũng được." }),
-      el("a", { class: "btn block", href: `${s.siteUrl}/account/grades`, target: "_blank", rel: "noopener", text: "Bật trên FePass" }),
+      el(
+        "div",
+        { class: "confirm", role: "alertdialog", "aria-label": "Xác nhận tắt đồng bộ" },
+        el("div", { text: "Tắt đồng bộ sẽ xoá điểm và lịch thi đã lưu trên FePass (không khôi phục được). Bạn có thể bật lại bất cứ lúc nào." }),
+        el(
+          "div",
+          { class: "actions" },
+          el("button", { type: "button", class: "btn small danger", text: "Tắt và xoá", onclick: () => void changeSync(false) }),
+          el("button", { type: "button", class: "btn small ghost", text: "Giữ lại", onclick: () => ((confirmingOff = false), render()) }),
+        ),
+      ),
     );
+  }
+
+  if (waiting) {
+    body.append(el("div", { class: "note ok", role: "status", text: pendingSync.enabled ? "Đang bật đồng bộ…" : "Đang tắt đồng bộ…" }));
     return body;
   }
 
-  pill.textContent = "Đang bật";
-  pill.className = "pill on";
+  if (!sync) {
+    body.append(el("p", { class: "meta", text: "Đồng bộ đang tắt. Gạt công tắc ở trên để bật (mặc định tắt, bạn toàn quyền quyết định)." }));
+    return body;
+  }
 
   // Trạng thái đang chạy / lỗi gần nhất
   const run = st.fapSync || null;
@@ -125,8 +184,6 @@ function gradesBody(ctx) {
     ),
   );
 
-  if (flash) body.append(el("div", { class: `note ${flash.tone}`, role: "status", text: flash.text }));
-
   if (running) {
     const frac = typeof run.total === "number" && run.total > 0 ? Math.min(1, (run.done || 0) / run.total) : null;
     const bar = el("div", { class: "bar" + (frac === null ? "" : " det"), "aria-hidden": "true" }, el("i", frac === null ? {} : { style: `width:${Math.round(frac * 100)}%` }));
@@ -136,8 +193,16 @@ function gradesBody(ctx) {
   } else if (grades) {
     const uploaded = st.fapUploadedAt && st.fapUploadedAt.origin === s.siteUrl ? st.fapUploadedAt.at : 0;
     if (Date.now() - grades.at > FEPASS_STALE_MS) body.append(el("div", { class: "note", text: "Điểm đã đọc hơn 14 ngày trước. Nên đồng bộ lại." }));
-    else if (uploaded >= grades.at) body.append(el("div", { class: "note ok", text: `Đã gửi lên FePass lúc ${fepassFormatTime(uploaded)}.` }));
-    else body.append(el("div", { class: "note", text: "Chờ gửi lên FePass: mở trang Điểm FAP trên fepass.top để hoàn tất (trang đang mở thì tự cập nhật)." }));
+    else if (uploaded >= grades.at) body.append(el("p", { class: "meta", text: `Đã gửi lên tài khoản FePass lúc ${fepassFormatTime(uploaded)}.` }));
+    else
+      body.append(
+        el(
+          "p",
+          { class: "meta" },
+          "Chưa gửi lên tài khoản. Tự gửi khi bạn mở fepass.top. ",
+          el("a", { href: `${s.siteUrl}/account/grades`, target: "_blank", rel: "noopener", text: "Gửi ngay" }),
+        ),
+      );
   }
 
   const button = el("button", { type: "button", class: "btn block", text: running ? "Đang đồng bộ…" : "Đồng bộ ngay" });
@@ -161,6 +226,18 @@ function gradesBody(ctx) {
       }),
     );
   }
+  const until = st.fapNoticeUntil || 0;
+  if (until > Date.now()) {
+    links.append(
+      el("button", {
+        type: "button",
+        class: "link",
+        title: "Hiện lại thông báo nhỏ trên trang FAP",
+        text: `Thông báo trên FAP đang ẩn đến ${fepassFormatTime(until)}: bật lại`,
+        onclick: () => chrome.storage.local.remove("fapNoticeUntil"),
+      }),
+    );
+  }
   body.append(button, links);
   return body;
 }
@@ -180,10 +257,6 @@ async function render() {
   $("gbody").replaceChildren(gradesBody({ s, auth, st }));
   flash = null; // chỉ hiện một lần
 
-  const until = st.fapNoticeUntil || 0;
-  const hidden = until > Date.now();
-  $("notice").checked = !hidden;
-  $("noticeText").textContent = hidden ? `Đang ẩn đến ${fepassFormatTime(until)}. Bật lại để hiện ngay.` : "Hiện ở góc màn hình khi bạn mở FAP. Bấm ✕ trên thông báo để ẩn 24 giờ.";
 }
 
 async function load() {
@@ -198,9 +271,11 @@ async function load() {
 
 // Công tắc lưu ngay
 $("enabled").addEventListener("change", () => chrome.storage.sync.set({ enabled: $("enabled").checked }));
-$("notice").addEventListener("change", () => {
-  if ($("notice").checked) chrome.storage.local.remove("fapNoticeUntil");
-  else chrome.storage.local.set({ fapNoticeUntil: Date.now() + FEPASS_SNOOZE_MS });
+$("syncToggle").addEventListener("change", () => {
+  if ($("syncToggle").checked) return void changeSync(true);
+  $("syncToggle").checked = true; // tắt thì xoá dữ liệu: hỏi xác nhận trước
+  confirmingOff = true;
+  render();
 });
 $("welcomeOk").addEventListener("click", () => chrome.storage.local.set({ onboarded: true }));
 

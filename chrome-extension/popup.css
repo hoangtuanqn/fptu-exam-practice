@@ -101,10 +101,10 @@ h1 { font-size: 17px; line-height: 1.2; color: var(--brand); }
 .toggle span { display: flex; flex-direction: column; gap: 1px; }
 .toggle b { font-size: 13.5px; }
 .toggle small { color: var(--muted); font-size: 12px; }
-.toggle input { appearance: none; width: 40px; height: 23px; border-radius: 999px; background: var(--switch-off); position: relative; cursor: pointer; transition: background 0.15s; flex-shrink: 0; }
-.toggle input::after { content: ""; position: absolute; top: 2px; left: 2px; width: 19px; height: 19px; border-radius: 50%; background: #fff; transition: transform 0.15s; box-shadow: 0 1px 2px rgba(0,0,0,.3); }
-.toggle input:checked { background: var(--switch-on); }
-.toggle input:checked::after { transform: translateX(17px); }
+.toggle input, .switch input { appearance: none; width: 40px; height: 23px; border-radius: 999px; background: var(--switch-off); position: relative; cursor: pointer; transition: background 0.15s; flex-shrink: 0; }
+.toggle input::after, .switch input::after { content: ""; position: absolute; top: 2px; left: 2px; width: 19px; height: 19px; border-radius: 50%; background: #fff; transition: transform 0.15s; box-shadow: 0 1px 2px rgba(0,0,0,.3); }
+.toggle input:checked, .switch input:checked { background: var(--switch-on); }
+.toggle input:checked::after, .switch input:checked::after { transform: translateX(17px); }
 
 details { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 10px; }
 summary { cursor: pointer; font-size: 12px; color: var(--muted); }
@@ -113,3 +113,9 @@ summary { cursor: pointer; font-size: 12px; color: var(--muted); }
 .actions { display: flex; gap: 8px; margin-top: 10px; }
 .msg { min-height: 18px; margin: 6px 0 0; font-size: 12px; color: var(--ok-text); }
 .msg.err { color: var(--err); }
+
+.switch { display: inline-flex; cursor: pointer; }
+.switch input:disabled { opacity: 0.5; cursor: default; }
+.confirm { margin-bottom: 8px; padding: 10px; border-radius: 12px; border: 1px solid var(--err); font-size: 12.5px; color: var(--text); }
+.confirm .actions { margin-top: 8px; }
+.btn.danger { background: var(--err); color: #fff; }

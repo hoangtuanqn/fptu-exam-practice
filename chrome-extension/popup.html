@@ -39,7 +39,9 @@
     <section class="card" id="grades" aria-labelledby="gradesTitle">
       <div class="card-head">
         <h2 id="gradesTitle">Điểm FAP</h2>
-        <span id="gpill" class="pill">…</span>
+        <label class="switch" title="Bật hoặc tắt đồng bộ điểm FAP">
+          <input type="checkbox" id="syncToggle" role="switch" aria-label="Đồng bộ điểm FAP" />
+        </label>
       </div>
       <p class="lead">Chia sẻ điểm và lịch thi trên FAP của bạn cho FePass để tính điểm trung bình từng kỳ và điểm cần đạt ở bài thi cuối kỳ. Chỉ bạn xem được. Tắt đồng bộ là dữ liệu bị xoá.</p>
       <div id="gbody"></div>
@@ -52,16 +54,6 @@
           <small>Hiện cạnh bài “Đề Thi FE” và “Đề Thi PE”. Bấm nút chỉ mở fepass.top và hỏi xác nhận, bạn đồng ý mới bị trừ credit.</small>
         </span>
         <input type="checkbox" id="enabled" role="switch" />
-      </label>
-    </section>
-
-    <section class="card">
-      <label class="toggle">
-        <span>
-          <b>Thông báo nhỏ trên FAP</b>
-          <small id="noticeText">Hiện ở góc màn hình khi bạn mở FAP.</small>
-        </span>
-        <input type="checkbox" id="notice" role="switch" />
       </label>
     </section>
 

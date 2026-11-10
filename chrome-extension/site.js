@@ -58,6 +58,30 @@
   publishUploaded();
   setInterval(publishUploaded, 2000);
 
+  // Popup của tiện ích xin bật/tắt đồng bộ: chuyển cho website (chỉ website có phiên đăng nhập để đổi cài đặt trên máy chủ)
+  // rồi trả kết quả cho popup. Website không trả lời kịp (chưa đăng nhập, bản website cũ) thì popup mở trang để hỏi xác nhận.
+  chrome.runtime.onMessage.addListener((m, _sender, sendResponse) => {
+    if (!m || m.type !== "fepass:set-sync") return;
+    let done = false;
+    const finish = (r) => {
+      if (done) return;
+      done = true;
+      document.removeEventListener("fepass:set-sync-result", onResult);
+      sendResponse(r);
+    };
+    const onResult = (e) => {
+      try {
+        finish(JSON.parse(e.detail));
+      } catch {
+        finish({ ok: false, error: "timeout" });
+      }
+    };
+    document.addEventListener("fepass:set-sync-result", onResult);
+    document.dispatchEvent(new CustomEvent("fepass:set-sync", { detail: JSON.stringify({ enabled: !!m.enabled }) }));
+    setTimeout(() => finish({ ok: false, error: "timeout" }), 8000);
+    return true; // trả lời bất đồng bộ
+  });
+
   // Trang web xin điểm đã đọc: trả lại dưới dạng chuỗi JSON (website tự gửi lên tài khoản của chính sinh viên)
   const sendGrades = async () => {
     const { fapGrades } = await chrome.storage.local.get("fapGrades");

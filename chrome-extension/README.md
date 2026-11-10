@@ -49,6 +49,8 @@ Chỉ hoạt động khi sinh viên tự bật **Đồng bộ điểm FAP** ở 
 - `site.js` đọc thời điểm website đã gửi điểm (`localStorage fepass.grades.uploadedAt`) và lưu `fapUploadedAt` để popup hiện “Đã gửi lên FePass”.
 - `background.js`: dấu “!” trên biểu tượng khi có bản mới hoặc điểm đã đọc quá 14 ngày.
 - Đồng bộ điểm không còn phụ thuộc công tắc “Nút làm đề trên FuOverflow”.
+- **Công tắc đồng bộ trong popup:** extension không có token nên không tự đổi cài đặt trên máy chủ. Popup gửi tin `fepass:set-sync` tới tab fepass.top đang mở; `site.js` phát sự kiện `fepass:set-sync` cho website (`GradeBridgeHost`), website gọi API rồi trả `fepass:set-sync-result`. Không có tab nào trả lời thì popup mở `/account/grades?sync=on|off` và website hỏi xác nhận. Tắt luôn có bước xác nhận vì dữ liệu đã lưu bị xoá.
+- Website chạy cầu nối ở mọi trang (không chỉ trang Điểm FAP), nên điểm tự gửi lên khi có bất kỳ tab FePass nào đang mở.
 
 ## Quyền riêng tư
 
