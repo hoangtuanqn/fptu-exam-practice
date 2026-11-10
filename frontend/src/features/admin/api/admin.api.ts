@@ -2,6 +2,7 @@ import type {
   AccountSettings,
   AdsSettings,
   LinkRewardAdmin,
+  SubjectIssue,
   PromoSettings,
   AdminAttempt,
   AdminCrawlJob,
@@ -220,6 +221,8 @@ export const adminApi = {
   saveAccountSettings: (body: AccountSettings) => http.put<AccountSettings>("/admin/settings/account", body),
   adsSettings: () => http.get<AdsSettings>("/admin/settings/ads"),
   saveAdsSettings: (body: AdsSettings) => http.put<AdsSettings>("/admin/settings/ads", body),
+  subjectIssues: () => http.get<SubjectIssue[]>("/admin/subject-issues"),
+  resolveSubjectIssue: (id: number) => http.delete(`/admin/subject-issues/${id}`),
   linkRewardSettings: () => http.get<LinkRewardAdmin>("/admin/settings/link-reward"),
   saveLinkRewardSettings: (body: {
     enabled: boolean;

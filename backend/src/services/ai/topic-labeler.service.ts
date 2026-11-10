@@ -14,11 +14,14 @@ import { loadImageForAi } from "./image";
 const BATCH = 12;
 const limit = createLimiter(2); // gắn nhãn là việc phụ: chỉ chiếm tối đa 2 lượt gọi cùng lúc
 
-// Prompt tĩnh (được cache). Danh sách chủ đề theo từng môn nằm trong phần nội dung của mỗi lượt gọi.
-const SYSTEM = `You classify exam questions by topic for a university course.
-You receive a numbered list of topics for the course, then several images, each one a multiple-choice exam question.
-For every image choose the single topic from the list that the question tests most directly, and answer with that topic's number.
-Use 0 only when the image is not a question (for example a formula sheet or cover page) or when no topic in the list is even loosely related.
+// Prompt tĩnh (được cache). Danh sách chương theo từng môn (lấy từ syllabus) nằm trong phần nội dung của mỗi lượt gọi. AI chỉ trả số thứ tự, tên chương do máy chủ tra lại nên không thể bịa tên.
+const SYSTEM = `You classify exam questions by chapter for a university course.
+You receive a numbered list of chapters taken from the official syllabus, then several images, each one a multiple-choice exam question.
+Each list entry is the chapter name, optionally followed by example sub-topics in brackets. Use the sub-topics to understand what the chapter covers.
+For every image choose the single chapter whose content the question tests most directly, and answer with that chapter's number.
+When two chapters both seem to fit, choose the one whose sub-topics name the specific concept the question is about, not the one with a generic name such as "Introduction" or "Overview".
+Answer only with numbers that appear in the list. Never invent, rename, merge or split chapters, and never answer with a chapter name.
+Use 0 when the image is not a question (for example a formula sheet or cover page), or when no chapter in the list clearly covers it. A wrong chapter is worse than 0.
 Judge by what the question asks, not by wording like "Which of the following". Identify each image only by its question number.`;
 
 const SCHEMA = {

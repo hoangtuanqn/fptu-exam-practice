@@ -16,6 +16,12 @@ subjectRouter.get("/", async (_req, res) => {
   res.set("Cache-Control", "public, max-age=600").json(new ResponseClient({ data: await subjectService.list() }));
 });
 
+// Bước chọn môn của Bộ đề theo chương: môn thiếu tên chương thì báo không làm được (và gửi báo cáo cho admin)
+subjectRouter.post("/:code/chapter-set-check", makeLimiter({ limit: 10 }), validate(subjectCodeParam, "params"), async (_req, res) => {
+  const { code } = getValidated<SubjectCodeParam>(res, "params");
+  res.json(new ResponseClient({ data: await subjectService.chapterSetReady(code) }));
+});
+
 subjectRouter.get("/:code/frequent", limiter, identify, validate(subjectCodeParam, "params"), async (req, res) => {
   const { code } = getValidated<SubjectCodeParam>(res, "params");
   res.json(new ResponseClient({ data: await frequentQuestionsService.forSubject(code, req.user) }));

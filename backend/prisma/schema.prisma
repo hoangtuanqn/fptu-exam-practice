@@ -796,3 +796,16 @@ model FreeExplainTurn {
   @@index([requestId])
   @@map("free_explain_turns")
 }
+
+// Van de voi du lieu syllabus cua mon (vi du khong co ten chuong), admin xem va xu ly. Moi (mon, loai) mot dong, hits dem so lan gap.
+model SubjectIssue {
+  id          Int      @id @default(autoincrement())
+  subjectCode String   @map("subject_code") @db.VarChar(20)
+  kind        String   @db.VarChar(30) // NO_CHAPTER_NAMES
+  hits        Int      @default(1)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@unique([subjectCode, kind])
+  @@map("subject_issues")
+}

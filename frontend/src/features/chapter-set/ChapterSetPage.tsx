@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, Layers, Loader2, Play } from "lucide-react";
+import { Check, Layers, Loader2, Play, TriangleAlert } from "lucide-react";
 import { LinkImport } from "@/features/exam-import/components/LinkImport";
 import { examImportApi } from "@/features/exam-import/exam-import.api";
 import type { ImportedExam } from "@/features/exam-import/types";
@@ -9,10 +9,13 @@ import { PageHeader } from "@/shared/ui/Card";
 import { Segmented } from "@/shared/ui/Segmented";
 import { AllSubjectsPicker } from "@/features/subject/AllSubjectsPicker";
 import { SubjectCard } from "@/features/subject/SubjectCard";
+import { subjectApi } from "@/features/subject/subject.api";
+import { ChapterWaitBanner, type ChapterWaitStage } from "./ChapterWaitBanner";
 import type { SubjectItem } from "@/features/subject/subject.api";
 
 const POLL_MS = 4000;
-const POLL_MAX = 20; // chủ đề của đề mới lấy về đến sau đáp án vài giây; chờ tối đa chừng này lần
+const LABEL_POLL_MAX = 45; // gắn chương xong sau khi có đáp án (thường vài chục giây): chờ tối đa chừng này lần (khoảng 3 phút)
+const SOLVE_MAX_MS = 15 * 60 * 1000; // AI phân tích đáp án có thể mất vài phút: chờ tối đa 15 phút
 
 type Mode = "practice" | "exam";
 
@@ -20,12 +23,44 @@ type Mode = "practice" | "exam";
 export default function ChapterSetPage() {
   const [subject, setSubject] = useState<SubjectItem | null>(null);
   const [exam, setExam] = useState<ImportedExam | null>(null);
+  const [blocked, setBlocked] = useState<{ subject: SubjectItem; message: string } | null>(null); // môn chưa có tên chương trong syllabus
+  const [checking, setChecking] = useState(false);
+
+  // Môn thiếu tên chương thì dừng ngay ở đây (máy chủ đồng thời gửi báo cáo cho admin). Không kiểm tra được thì cứ đi tiếp: máy chủ vẫn chặn trước khi trừ phí.
+  const pick = async (s: SubjectItem) => {
+    setChecking(true);
+    try {
+      const r = await subjectApi.chapterSetCheck(s.code);
+      if (r.ok) setSubject(s);
+      else setBlocked({ subject: s, message: r.message ?? "Môn này chưa làm được bộ đề theo chương." });
+    } catch {
+      setSubject(s);
+    } finally {
+      setChecking(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
       <PageHeader eyebrow="Học tập" title="Bộ đề theo chương" description="Chọn môn và đề FE, rồi chỉ luyện các câu thuộc chương bạn đang muốn ôn." />
-      {!subject ? (
-        <AllSubjectsPicker title="Bước 1: chọn môn" onPick={setSubject} />
+      {blocked ? (
+        <SubjectCard title={`Môn ${blocked.subject.code} chưa làm được bộ đề theo chương`} backLabel="Chọn môn khác" onBack={() => setBlocked(null)}>
+          <div role="alert" className="flex items-start gap-3 p-5">
+            <TriangleAlert size={20} className="mt-0.5 shrink-0 text-error" />
+            <p className="md-body-medium text-on-surface">
+              <b>{blocked.subject.code}</b> · {blocked.subject.name}. {blocked.message}
+            </p>
+          </div>
+        </SubjectCard>
+      ) : !subject ? (
+        <>
+          <AllSubjectsPicker title="Bước 1: chọn môn" onPick={(s) => void pick(s)} />
+          {checking && (
+            <p role="status" className="flex items-center gap-2 text-sm text-on-surface-variant">
+              <Loader2 size={16} className="animate-spin" /> Đang kiểm tra syllabus của môn…
+            </p>
+          )}
+        </>
       ) : !exam ? (
         <SubjectCard title={`Bước 2: lấy đề môn ${subject.code}`} onBack={() => setSubject(null)}>
           <div className="space-y-4 p-5">
@@ -46,16 +81,17 @@ function ChapterStep({ subject, exam, onBack }: { subject: SubjectItem; exam: Im
   const navigate = useNavigate();
   const [topicOf, setTopicOf] = useState<Map<number, string | null>>(() => new Map(exam.questions.filter((q) => !q.isReference).map((q) => [q.number, q.topic ?? null])));
   const [waiting, setWaiting] = useState(![...topicOf.values()].some(Boolean));
+  const [stage, setStage] = useState<ChapterWaitStage>(exam.answerStatus === "PENDING" ? "solving" : "labeling");
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [mode, setMode] = useState<Mode>("practice");
 
-  // Đề mới lấy: chủ đề của từng câu được gắn sau khi AI có đáp án, nên hỏi lại vài lần cho tới khi có
+  // Đề mới lấy: AI phân tích đáp án trước (bước 1), rồi mới gắn chương cho từng câu (bước 2). Hỏi lại định kỳ cho tới khi có chương.
   useEffect(() => {
     if (!waiting) return;
     let alive = true;
-    let tries = 0;
+    let labelTries = 0;
+    const startedAt = Date.now();
     const tick = async () => {
-      tries++;
       try {
         const r = await examImportApi.answers(exam.id);
         if (!alive) return;
@@ -65,10 +101,17 @@ function ChapterStep({ subject, exam, onBack }: { subject: SubjectItem; exam: Im
           return;
         }
         if (r.status === "FAILED") return void setWaiting(false);
+        if (r.status === "PENDING") {
+          setStage("solving"); // chưa có đáp án thì chưa gắn chương được: không tính vào số lần chờ gắn chương
+          if (Date.now() - startedAt > SOLVE_MAX_MS) setWaiting(false);
+          return;
+        }
+        setStage("labeling");
       } catch {
         /* lần sau hỏi lại */
       }
-      if (alive && tries >= POLL_MAX) setWaiting(false);
+      labelTries++;
+      if (alive && labelTries >= LABEL_POLL_MAX) setWaiting(false);
     };
     void tick();
     const id = setInterval(() => void tick(), POLL_MS);
@@ -108,9 +151,7 @@ function ChapterStep({ subject, exam, onBack }: { subject: SubjectItem; exam: Im
         </p>
 
         {waiting ? (
-          <p className="flex items-center gap-2 rounded-m3-md bg-surface-container-low px-4 py-3 text-sm text-on-surface-variant" role="status">
-            <Loader2 size={16} className="animate-spin" /> Đang gắn chương cho từng câu, thường mất vài giây đến một phút…
-          </p>
+          <ChapterWaitBanner stage={stage} />
         ) : chapters.length === 0 ? (
           <div className="space-y-3 rounded-m3-md bg-surface-container-low px-4 py-4 text-sm text-on-surface-variant">
             <p>Đề này chưa có câu nào được gắn chương (có thể môn chưa có syllabus, hoặc AI chưa gắn được). Bạn vẫn làm được cả đề bình thường.</p>

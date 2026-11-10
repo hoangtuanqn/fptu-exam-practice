@@ -13,6 +13,7 @@
     "seed": "tsx src/seeders/admin.seeder.ts",
     "import:fuo-catalog": "tsx scripts/import-fuo-catalog.ts",
     "import:syllabus": "tsx scripts/import-syllabus.ts",
+    "relabel:topics": "tsx scripts/relabel-topics.ts",
     "export:subjects": "tsx scripts/export-subjects-seo.ts",
     "label:topics": "tsx scripts/label-topics.ts",
     "audit:exams": "tsx scripts/audit-exams.ts"
