@@ -582,6 +582,10 @@ model ChatLog {
   question  String   @db.VarChar(500)
   matched   Boolean  @default(true) // cĂ³ tĂ¬m tháº¥y Ä‘oáº¡n hÆ°á»›ng dáº«n liĂªn quan hay khĂ´ng (false = cĂ¢u há»i há»‡ thá»‘ng chÆ°a cĂ³ tĂ i liá»‡u)
   cached    Boolean  @default(false) // tráº£ lá»i tá»« cache, khĂ´ng gá»i Claude
+  inputTokens     Int?    @map("input_tokens") // token cua luot goi Claude (null = tra tu cache hoac loi truoc khi goi)
+  outputTokens    Int?    @map("output_tokens")
+  cacheReadTokens Int?    @map("cache_read_tokens") // phan prompt doc lai tu cache
+  truncated       Boolean @default(false) // cau tra loi cham tran token (da cho viet tiep mot lan ma van chua xong)
   createdAt DateTime @default(now()) @map("created_at")
 
   @@index([userId, createdAt])
