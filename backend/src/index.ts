@@ -10,6 +10,7 @@ import { initRealtime } from "./realtime/socket.server";
 import { startSepayCron } from "./jobs/sepay.cron";
 import { startReminderCron } from "./jobs/reminder.cron";
 import { startSessionCleanup } from "./jobs/session-cleanup.cron";
+import { startCreditExpiry } from "./jobs/credit-expiry.cron";
 
 const server = http.createServer(createApp());
 initRealtime(server); // kênh realtime (socket.io) dùng chung cổng với API
@@ -20,6 +21,7 @@ server.listen(env.PORT, () => {
   // Đề cũ chưa có mã môn (cột thêm sau): điền một lần, các lần khởi động sau không còn gì để làm
   examRepository.backfillSubjectCodes().then((n) => n > 0 && console.log(`[db] đã điền mã môn cho ${n} đề`)).catch((err) => console.error("Không điền được mã môn:", err.message));
   startSessionCleanup();
+  startCreditExpiry();
   startReminderCron();
   // Nạp tài liệu hướng dẫn của chatbot (chỉ tạo embedding cho mục mới/đã sửa nên các lần khởi động sau gần như không tốn gì)
   knowledgeService.reindex().then((r) => console.log(`[chat] tri thức: ${r.total} mục, ${r.embedded} có embedding${r.warning ? ` (${r.warning})` : ""}`)).catch((err) => console.error("[chat] không nạp được tri thức:", err.message));

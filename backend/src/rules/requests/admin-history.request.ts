@@ -25,6 +25,7 @@ export const listWalletQuery = paginationQuery.extend({
       "PE_REFUND",
       "PLAN_CHARGE",
       "CHECKIN_REWARD",
+      "CREDIT_EXPIRED",
     ])
     .optional(),
 });

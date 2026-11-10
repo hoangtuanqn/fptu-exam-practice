@@ -4,7 +4,7 @@ export type Role = "USER" | "ADMIN";
 export type UserStatus = "ACTIVE" | "BANNED";
 export type DepositStatus = "PENDING" | "PAID" | "EXPIRED";
 export type BankTxStatus = "MATCHED" | "UNMATCHED";
-export type TransactionType = "DEPOSIT" | "ADMIN_ADJUST" | "CRAWL_CHARGE" | "CRAWL_REFUND" | "GIFT_CODE" | "REPORT_REWARD" | "EXPLAIN_CHARGE" | "EXPLAIN_REFUND" | "REFERRAL_BONUS" | "REFERRAL_COMMISSION" | "SIGNUP_BONUS" | "DEPOSIT_BONUS" | "PE_CHARGE" | "PE_REFUND" | "PLAN_CHARGE" | "CHECKIN_REWARD";
+export type TransactionType = "DEPOSIT" | "ADMIN_ADJUST" | "CRAWL_CHARGE" | "CRAWL_REFUND" | "GIFT_CODE" | "REPORT_REWARD" | "EXPLAIN_CHARGE" | "EXPLAIN_REFUND" | "REFERRAL_BONUS" | "REFERRAL_COMMISSION" | "SIGNUP_BONUS" | "DEPOSIT_BONUS" | "PE_CHARGE" | "PE_REFUND" | "PLAN_CHARGE" | "CHECKIN_REWARD" | "CREDIT_EXPIRED";
 
 export interface User {
   id: number;
@@ -169,6 +169,7 @@ export interface GiftCode {
   expiresAt: string | null;
   active: boolean;
   note: string | null;
+  creditTtlMinutes?: number | null; // credit nhận từ mã hết hạn sau chừng này phút kể từ lúc nhập; null = vĩnh viễn (máy chủ cũ chưa có: coi như vĩnh viễn)
   createdAt: string;
   status: GiftCodeStatus;
 }
@@ -193,6 +194,16 @@ export interface RedeemResult {
   code: string;
   amount: number;
   balanceAfter: number;
+  creditExpiresAt?: string | null; // có thì credit vừa nhận sẽ mất nếu không dùng trước thời điểm này
+}
+
+// Credit có thời hạn mà người dùng đang còn
+export interface MyCreditLot {
+  id: number;
+  amount: number;
+  remaining: number;
+  expiresAt: string;
+  note: string | null;
 }
 
 // ----- Báo cáo đáp án

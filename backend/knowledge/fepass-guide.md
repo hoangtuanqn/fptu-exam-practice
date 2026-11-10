@@ -100,7 +100,7 @@ Lưu ý: lệnh nạp có thời hạn thanh toán; quá hạn thì tạo lệnh
 - Cần email đã xác minh mới nhận được. Credit điểm danh hiện ở Tài khoản → Lịch sử giao dịch với tên "Thưởng điểm danh".
 
 ## Giftcode
-Có mã quà tặng? Vào Tài khoản → Giftcode, nhập mã để nhận credit. Mỗi mã chỉ dùng được một lần cho mỗi tài khoản, mã có thể hết lượt hoặc hết hạn. Danh sách mã đã nhập hiện ngay bên dưới.
+Có mã quà tặng? Vào Tài khoản → Giftcode, nhập mã để nhận credit. Mỗi mã chỉ dùng được một lần cho mỗi tài khoản, mã có thể hết lượt hoặc hết hạn. Danh sách mã đã nhập hiện ngay bên dưới. Một số mã cho credit có thời hạn tính từ lúc bạn nhập: credit đó được dùng trước credit thường, và nếu chưa dùng hết khi tới hạn thì phần còn lại bị thu hồi (ghi là "Credit hết hạn" ở Lịch sử giao dịch). Các credit có hạn còn lại và giờ hết hạn hiện ngay trên trang Giftcode.
 
 ## Giới thiệu bạn bè
 Vào Tài khoản → Giới thiệu bạn bè để lấy mã và liên kết giới thiệu của bạn (dạng `fepass.top/register?ref=MÃ`). Bạn bè đăng ký qua liên kết đó thì hai bên có thể nhận thưởng credit, và bạn có thể nhận hoa hồng khi người được giới thiệu nạp tiền (mức thưởng do admin cấu hình). Nếu bạn là người được giới thiệu nhưng quên nhập mã lúc đăng ký, có thể nhập mã ở trang này trong thời hạn cho phép; quá hạn thì không nhập được nữa.

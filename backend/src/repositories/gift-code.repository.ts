@@ -13,15 +13,16 @@ const listSelect = {
   expiresAt: true,
   active: true,
   note: true,
+  creditTtlMinutes: true,
   createdAt: true,
 } satisfies Prisma.GiftCodeSelect;
 
 export const giftCodeRepository = {
-  create: (data: { code: string; amount: number; maxUses: number; expiresAt?: Date; note?: string }) =>
+  create: (data: { code: string; amount: number; maxUses: number; expiresAt?: Date; note?: string; creditTtlMinutes?: number }) =>
     prisma.giftCode.create({ data, select: listSelect }),
 
   findByCode: (db: Db, code: string) =>
-    db.giftCode.findUnique({ where: { code }, select: { id: true, code: true, amount: true, expiresAt: true, active: true } }),
+    db.giftCode.findUnique({ where: { code }, select: { id: true, code: true, amount: true, expiresAt: true, active: true, creditTtlMinutes: true } }),
 
   setActive: (id: number, active: boolean) => prisma.giftCode.update({ where: { id }, data: { active }, select: listSelect }),
 

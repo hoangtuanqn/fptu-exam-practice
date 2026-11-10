@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CREDIT_TTL_MAX_MINUTES } from "../../constants/credit-lot";
 import { paginationQuery } from "../../utils/pagination";
 
 // Mã viết hoa, chữ-số và dấu gạch ngang; người dùng gõ thường hay có khoảng trắng vẫn được chuẩn hóa
@@ -24,6 +25,8 @@ export const createGiftCodeBody = z.object({
     .max(100_000, "Tối đa 100.000 lượt"),
   expiresAt: z.iso.datetime({ offset: true, message: "Hạn dùng không hợp lệ" }).optional(), // bỏ trống = không hết hạn
   note: z.string().trim().max(200, "Ghi chú tối đa 200 ký tự").optional(),
+  // Thời hạn của credit tính từ lúc người dùng nhập mã (phút); bỏ trống = credit vĩnh viễn
+  creditTtlMinutes: z.number("Thời hạn không hợp lệ").int("Thời hạn phải là số nguyên").min(1, "Tối thiểu 1 phút").max(CREDIT_TTL_MAX_MINUTES, "Tối đa 1 năm").optional(),
 });
 
 export const updateGiftCodeBody = z.object({ active: z.boolean() });

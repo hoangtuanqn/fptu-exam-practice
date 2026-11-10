@@ -47,6 +47,7 @@ model User {
   refreshTokens      RefreshToken[]
   emailVerifications EmailVerificationToken[]
   giftRedemptions    GiftCodeRedemption[]
+  creditLots         CreditLot[]
   answerReports      AnswerReport[]
   explanationBuys    ExplanationPurchase[]
   explanationUnlocks ExplanationUnlock[]
@@ -150,6 +151,7 @@ enum TransactionType {
   PE_REFUND // hoĂ n phĂ­ khi khĂ´ng táº¡o Ä‘Æ°á»£c file zip
   PLAN_CHARGE // mua gói Pro
   CHECKIN_REWARD // thưởng điểm danh hằng ngày (kể cả thưởng đủ 7 ngày)
+  CREDIT_EXPIRED // credit nhan tu giftcode co han da het han ma chua dung
 }
 
 // Sá»• cĂ¡i vĂ­: má»—i láº§n sá»‘ dÆ° Ä‘á»•i lĂ  má»™t dĂ²ng (amount Ă¢m = trá»« tiá»n)
@@ -393,6 +395,7 @@ model GiftCode {
   expiresAt DateTime? @map("expires_at")
   active    Boolean   @default(true)
   note      String?   @db.VarChar(200)
+  creditTtlMinutes Int? @map("credit_ttl_minutes") // null = credit vinh vien; co so = credit het han sau chung nay phut ke tu luc nhap
   createdAt DateTime  @default(now()) @map("created_at")
 
   redemptions GiftCodeRedemption[]
@@ -414,6 +417,25 @@ model GiftCodeRedemption {
   @@unique([giftCodeId, userId])
   @@index([userId])
   @@map("gift_code_redemptions")
+}
+
+// A lot of expiring credit (from a giftcode with a time limit). users.balance includes sum(remaining).
+// Debits consume lots first (earliest expiry first); unused credit of an expired lot is removed by the expiry job.
+model CreditLot {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @map("user_id")
+  source     String   @db.VarChar(20) // GIFT_CODE
+  amount     Int // credit granted
+  remaining  Int // credit not yet spent or expired
+  expiresAt  DateTime @map("expires_at")
+  note       String?  @db.VarChar(200)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, remaining, expiresAt])
+  @@index([expiresAt, remaining]) // expiry job scan
+  @@map("credit_lots")
 }
 
 enum ReportStatus {

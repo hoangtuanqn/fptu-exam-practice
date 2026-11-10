@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { getValidated } from "../middlewares/validate.middlewares";
 import type { RedeemGiftCodeBody } from "../rules/requests/gift-code.request";
 import { ResponseClient } from "../rules/response";
+import { creditLotService } from "../services/credit-lot.service";
 import { giftCodeService } from "../services/gift-code.service";
 import type { PaginationQuery } from "../utils/pagination";
 
@@ -16,5 +17,10 @@ export const giftCodeController = {
   async mine(req: Request, res: Response) {
     const { items, meta } = await giftCodeService.mine(req.user!.id, getValidated<PaginationQuery>(res, "query"));
     res.json(new ResponseClient({ data: items, meta }));
+  },
+
+  // Credit có thời hạn mà người dùng đang còn
+  async lots(req: Request, res: Response) {
+    res.json(new ResponseClient({ data: await creditLotService.mine(req.user!.id) }));
   },
 };

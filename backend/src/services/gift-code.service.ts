@@ -1,6 +1,7 @@
 import { randomInt } from "node:crypto";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../configs/prisma";
+import { creditLotRepository } from "../repositories/credit-lot.repository";
 import { giftCodeRepository } from "../repositories/gift-code.repository";
 import { AppError } from "../rules/error";
 import type { CreateGiftCodeBody } from "../rules/requests/gift-code.request";
@@ -33,7 +34,7 @@ export const giftCodeService = {
     if (expiresAt && expiresAt <= new Date()) {
       throw new AppError("Hạn dùng phải ở tương lai", 400, { expiresAt: "Hạn dùng phải ở tương lai" });
     }
-    const data = { amount: body.amount, maxUses: body.maxUses, note: body.note, expiresAt };
+    const data = { amount: body.amount, maxUses: body.maxUses, note: body.note, expiresAt, creditTtlMinutes: body.creditTtlMinutes };
 
     // Mã tự sinh trùng thì sinh lại; mã admin tự đặt trùng thì báo lỗi
     for (let attempt = 0; attempt < 5; attempt++) {
@@ -98,7 +99,11 @@ export const giftCodeService = {
         throw err;
       }
       const entry = await walletService.applyChange(tx, { userId, amount: gift.amount, type: "GIFT_CODE", note: `Giftcode ${gift.code}` });
-      return { code: gift.code, amount: gift.amount, balanceAfter: entry.balanceAfter };
+      // Credit có thời hạn: ghi một lô credit hết hạn sau N phút kể từ lúc nhập (lô nằm trong số dư vừa cộng)
+      const lifetimeMs = gift.creditTtlMinutes ? gift.creditTtlMinutes * 60_000 : 0;
+      const creditExpiresAt = lifetimeMs ? new Date(Date.now() + lifetimeMs) : null;
+      if (creditExpiresAt) await creditLotRepository.create(tx, { userId, source: "GIFT_CODE", amount: gift.amount, expiresAt: creditExpiresAt, note: `Giftcode ${gift.code}` });
+      return { code: gift.code, amount: gift.amount, balanceAfter: entry.balanceAfter, creditExpiresAt };
     });
 
     // Gửi thư sau khi transaction đã commit
