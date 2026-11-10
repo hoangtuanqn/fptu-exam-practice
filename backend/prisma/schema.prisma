@@ -809,3 +809,20 @@ model SubjectIssue {
   @@unique([subjectCode, kind])
   @@map("subject_issues")
 }
+
+// Noi dung Syllabus cua mon (crawl tu FLM) chia thanh cac doan de tim kiem theo nghia. embedding: float32 little-endian (768 so); null = chua tao.
+model SubjectChunk {
+  id          Int      @id @default(autoincrement())
+  subjectCode String   @map("subject_code") @db.VarChar(20)
+  kind        String   @db.VarChar(20) // overview | tasks | materials | clo | chapters | sessions | cq | assessment
+  slug        String   @unique @db.VarChar(80)
+  title       String   @db.VarChar(255)
+  content     String   @db.Text
+  contentHash String   @map("content_hash") @db.Char(64)
+  embedding   Bytes?   @db.MediumBlob
+  model       String?  @db.VarChar(60)
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([subjectCode])
+  @@map("subject_chunks")
+}
