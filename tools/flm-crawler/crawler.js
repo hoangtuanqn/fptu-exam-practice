@@ -50,7 +50,9 @@ async function fetchDoc(url) {
   }
 }
 
-async function crawlOne(code) {
+// Lấy một mã môn: trả về MẢNG kết quả (mỗi mã FLM tìm được một phần tử). Bật `variants` thì lấy cả các mã có thêm 1 đến 2 chữ cái cuối
+// (ADA201 -> ADA201c, ADA201cm...); nếu mã đã nhập không có syllabus riêng thì thêm một dòng "alias" để lần sau không tìm lại.
+async function crawlOne(code, variants) {
   let search;
   try {
     search = FlmParser.parseSearch(await fetchDoc(`${BASE}/SyllabusManagement?searchOn=Code&keyword=${encodeURIComponent(code)}`), code);
@@ -58,18 +60,24 @@ async function crawlOne(code) {
     if (e.message === "NOT_SEARCH_PAGE") throw new Error("Chưa đăng nhập FLM hoặc bị chặn: trang trả về không phải trang tìm kiếm");
     throw e;
   }
-  if (!search.best) {
-    return { code, status: "none", note: search.found ? `Có ${search.found} kết quả nhưng không mã nào trùng hẳn (${search.others.join(", ")})` : "FLM không có môn này", crawledAt: Date.now() };
+  const found = variants ? search.matches : search.matches.filter((m) => m.code === code);
+  if (found.length === 0) {
+    return [{ code, status: "none", note: search.found ? `Có ${search.found} kết quả nhưng không mã nào khớp (${search.others.join(", ")})` : "FLM không có môn này", crawledAt: Date.now() }];
   }
-  await sleep(jitter());
-  let detail;
-  try {
-    detail = FlmParser.parseDetail(await fetchDoc(`${BASE}/SyllabusDetails?sylID=${search.best.syllabusId}`));
-  } catch (e) {
-    if (e.message === "NOT_DETAIL_PAGE") throw new Error("Trang chi tiết syllabus không đúng định dạng (có thể FLM đã đổi giao diện)");
-    throw e;
+  const out = [];
+  for (const m of found) {
+    await sleep(jitter());
+    let detail;
+    try {
+      detail = FlmParser.parseDetail(await fetchDoc(`${BASE}/SyllabusDetails?sylID=${m.best.syllabusId}`));
+    } catch (e) {
+      if (e.message === "NOT_DETAIL_PAGE") throw new Error("Trang chi tiết syllabus không đúng định dạng (có thể FLM đã đổi giao diện)");
+      throw e;
+    }
+    out.push({ code: m.code, status: "ok", ...(m.code !== code ? { via: code } : {}), syllabusId: m.best.syllabusId, subjectName: detail.subjectName, chapters: detail.chapters, minAvgMarkToPass: detail.minAvgMarkToPass, assessments: detail.assessments, credits: detail.credits, crawledAt: Date.now() });
   }
-  return { code, status: "ok", syllabusId: search.best.syllabusId, subjectName: detail.subjectName, chapters: detail.chapters, minAvgMarkToPass: detail.minAvgMarkToPass, assessments: detail.assessments, credits: detail.credits, crawledAt: Date.now() };
+  if (!found.some((m) => m.code === code)) out.push({ code, status: "alias", note: `Đã lấy ${found.map((m) => m.code).join(", ")}`, crawledAt: Date.now() });
+  return out;
 }
 
 function render() {
@@ -87,15 +95,15 @@ function render() {
       return td;
     };
     cell(code).style.fontWeight = "600";
-    const label = { wait: "Chờ", run: "Đang lấy…", ok: "Xong", none: "Không có", err: "Lỗi" }[st.state] || st.state;
-    const statusCell = cell(label, { wait: "s-wait", run: "s-run", ok: "s-ok", none: "s-bad", err: "s-bad" }[st.state]);
+    const label = { wait: "Chờ", run: "Đang lấy…", ok: "Xong", alias: "Xong (mã khác)", none: "Không có", err: "Lỗi" }[st.state] || st.state;
+    const statusCell = cell(label, { wait: "s-wait", run: "s-run", ok: "s-ok", alias: "s-ok", none: "s-bad", err: "s-bad" }[st.state]);
     const note = st.note || (r && r.note);
     if (note) {
       const small = document.createElement("small");
       small.textContent = note;
       statusCell.appendChild(small);
     }
-    cell(r && r.status === "ok" ? r.subjectName : "");
+    cell(r && r.status === "ok" ? (r.via ? `${r.subjectName} (từ mã ${r.via})` : r.subjectName) : "");
     cell(r && r.status === "ok" ? String(r.chapters.length) : "", "num");
     cell(r && r.status === "ok" ? String(r.chapters.reduce((n, ch) => n + ch.topics.length, 0)) : "", "num");
     tbody.appendChild(tr);
@@ -121,6 +129,7 @@ async function run() {
   const typed = parseCodes($("codes").value);
   if (typed.length === 0) return setStatus("Hãy nhập ít nhất một mã môn (ví dụ OSG202).", true);
   const redo = $("redo").checked;
+  const variants = $("variants").checked;
   const todo = typed.filter((c) => redo || !results[c] || results[c].status === "err");
   order = [...new Set([...order, ...typed])].sort();
   typed.forEach((c) => {
@@ -149,8 +158,12 @@ async function run() {
       setStatus(`Đang lấy bằng ${threads} luồng: ${finished}/${todo.length} môn xong…`);
       render();
       try {
-        results[code] = await crawlOne(code);
-        live[code] = { state: results[code].status };
+        for (const r of await crawlOne(code, variants)) {
+          results[r.code] = r;
+          live[r.code] = { state: r.status };
+          if (!order.includes(r.code)) order.push(r.code);
+        }
+        order.sort();
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
         results[code] = { code, status: "err", note: msg, crawledAt: Date.now() };
@@ -168,7 +181,7 @@ async function run() {
   running = false;
   $("start").disabled = false;
   $("stop").disabled = true;
-  const ok = todo.filter((c) => results[c] && results[c].status === "ok").length;
+  const ok = todo.filter((c) => results[c] && (results[c].status === "ok" || results[c].status === "alias")).length;
   if (fatal) setStatus(results[todo.find((c) => results[c] && results[c].status === "err")].note, true);
   else setStatus(stopRequested ? `Đã dừng. Xong ${ok}/${todo.length} môn.` : `Hoàn tất: ${ok}/${todo.length} môn lấy được. Bấm “Tải JSON” để lưu.`);
 }

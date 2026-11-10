@@ -24,7 +24,8 @@
     });
   }
 
-  // Kết quả tìm kiếm môn: chỉ giữ dòng có Subject Code TRÙNG HẲN từ khóa (OSG202 không lấy OSG202c, OSG202b).
+  // Kết quả tìm kiếm môn. `exact` / `best`: chỉ dòng có Subject Code TRÙNG HẲN từ khóa (OSG202 không lấy OSG202c).
+  // `matches`: mỗi mã trùng hẳn hoặc có thêm tối đa 2 chữ cái ở cuối (ADA201 -> ADA201, ADA201c, ADA201cm), kèm syllabus tốt nhất của từng mã.
   // Nhiều syllabus cùng mã thì ưu tiên bản đang dùng và đã duyệt, rồi tới quyết định mới nhất.
   function parseSearch(doc, keyword) {
     if (!doc.querySelector("#txtSubCode")) throw new Error("NOT_SEARCH_PAGE");
@@ -46,9 +47,17 @@
         decisionTime: d ? Date.UTC(+d[3], +d[1] - 1, +d[2]) : 0,
       };
     });
+    const newest = (a, b) => Number(b.active && b.approved) - Number(a.active && a.approved) || b.decisionTime - a.decisionTime || Number(b.syllabusId) - Number(a.syllabusId);
     const exact = rows.filter((r) => r.code.toUpperCase() === want && r.syllabusId);
-    exact.sort((a, b) => Number(b.active && b.approved) - Number(a.active && a.approved) || b.decisionTime - a.decisionTime || Number(b.syllabusId) - Number(a.syllabusId));
-    return { found: rows.length, exact, best: exact[0] || null, others: rows.filter((r) => !exact.includes(r)).map((r) => r.code) };
+    exact.sort(newest);
+    // Mã có thêm 0 đến 2 chữ cái ở cuối (không nhận thêm chữ số: ADA2011 là môn khác)
+    const near = rows.filter((r) => r.syllabusId && r.code.toUpperCase().startsWith(want) && /^[A-Z]{0,2}$/.test(r.code.toUpperCase().slice(want.length)));
+    const byCode = new Map();
+    for (const r of near) byCode.set(r.code.toUpperCase(), [...(byCode.get(r.code.toUpperCase()) || []), r]);
+    const matches = [...byCode.entries()]
+      .map(([code, list]) => ({ code, best: list.sort(newest)[0] }))
+      .sort((a, b) => a.code.length - b.code.length || a.code.localeCompare(b.code));
+    return { found: rows.length, exact, best: exact[0] || null, matches, others: rows.filter((r) => !exact.includes(r)).map((r) => r.code) };
   }
 
   // "Chapter 3: Memory management" mở chương mới (bắt buộc có dấu : . - sau số chương)

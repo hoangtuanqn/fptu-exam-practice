@@ -19,7 +19,7 @@ Công cụ nội bộ (không nằm trong bản phát hành FEPass). Lấy tên 
 Kết quả được lưu trong trình duyệt, tải lại trang không mất. Môn đã lấy xong sẽ được bỏ qua ở lần chạy sau, trừ khi tick **Lấy lại**.
 
 ## Cách chọn môn
-Tìm theo mã (`searchOn=Code`) rồi chỉ giữ dòng có Subject Code **trùng hoàn toàn** với mã đã nhập (không phân biệt hoa thường), nên `OSG202` không lấy `OSG202c`. Nếu có nhiều syllabus cùng mã, chọn bản đang dùng và đã duyệt, rồi tới quyết định mới nhất.
+Tìm theo mã (`searchOn=Code`) rồi giữ các dòng có Subject Code **trùng hoàn toàn** hoặc **có thêm 1 đến 2 chữ cái ở cuối** (không phân biệt hoa thường): nhập `ADA201` sẽ lấy `ADA201c` (và `ADA201`, `ADA201cm` nếu có), mỗi mã một môn riêng trong JSON. Mã có thêm chữ số (`ADA2011`) là môn khác nên không lấy. Bỏ tick **Lấy cả mã có thêm…** nếu chỉ muốn mã trùng hẳn (`OSG202` khi đó không lấy `OSG202c`). Nếu có nhiều syllabus cùng mã, chọn bản đang dùng và đã duyệt, rồi tới quyết định mới nhất.
 
 ## Dạng JSON (chỉ phần cần dùng)
 ```
