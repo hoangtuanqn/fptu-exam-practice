@@ -39,7 +39,7 @@ async function main() {
     for (const q of questions) {
       const old = q.topic!;
       if (labels.has(old)) continue; // đã đúng nhãn mới
-      const part = old.match(/^Phần (\d+):/);
+      const part = old.match(/^(?:Phần|Chương) (\d+):/);
       const next = (part && byChapter.get(Number(part[1]))) || byNorm.get(norm(old));
       if (!next) {
         unmatched++;
