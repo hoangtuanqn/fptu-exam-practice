@@ -121,6 +121,26 @@ export default function ChatbotPage() {
             </Card>
           </div>
 
+          {data.stats.usage && (
+            <Card className="p-4">
+              <div className="text-xs text-slate-500">Token trung bình mỗi lượt gọi Claude (7 ngày, {data.stats.usage.calls7d} lượt)</div>
+              <div className="mt-2 grid gap-3 sm:grid-cols-4">
+                {[
+                  ["Đầu vào mới", data.stats.usage.avgInput],
+                  ["Đọc từ cache", data.stats.usage.avgCacheRead],
+                  ["Đầu ra (gồm suy nghĩ)", data.stats.usage.avgOutput],
+                  ["Bị cắt vì quá dài", data.stats.usage.truncated7d],
+                ].map(([label, value]) => (
+                  <div key={label as string}>
+                    <div className="text-xl font-semibold tabular-nums">{(value as number).toLocaleString("vi-VN")}</div>
+                    <div className="text-xs text-slate-400">{label}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-2 text-xs text-slate-400">“Đọc từ cache” cao so với “đầu vào mới” là prompt hệ thống đang được dùng lại với giá rẻ. “Bị cắt” nên bằng 0; nếu không, tăng trần token.</div>
+            </Card>
+          )}
+
           <Card className="flex flex-wrap items-center justify-between gap-4 p-4">
             <div className="min-w-0">
               <div className="text-xs text-slate-500">Câu trả lời lưu sẵn (cache)</div>
