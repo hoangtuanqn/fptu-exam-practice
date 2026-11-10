@@ -6,6 +6,8 @@ import { Button, buttonClass } from "@/shared/ui/Button";
 import { ChargeSummary } from "@/shared/ui/ChargeSummary";
 import { Modal, ModalActions, ModalTitle } from "@/shared/ui/Modal";
 import { formatCredit } from "@/shared/utils/formatters";
+import { EarnTurnBlock } from "@/features/link-reward/EarnTurnBlock";
+import type { FreeTurnStatus } from "@/features/link-reward/link-reward.api";
 import { depositLink } from "./depositLink";
 import type { ExplanationBundle } from "./explanation.api";
 
@@ -14,12 +16,15 @@ interface Props {
   price: number;
   bundle?: ExplanationBundle; // có thì mời mở khóa cả đề (rẻ hơn mua lẻ)
   onBundle?: () => void;
+  freeTurns?: FreeTurnStatus; // lượt miễn phí nhận từ vượt link
+  onUseFreeTurn?: () => void;
+  onFreeTurnsChange?: () => void; // số lượt vừa đổi (vừa nhận thêm): nạp lại
   onCancel: () => void;
   onConfirm: () => void;
 }
 
 // Xác nhận phí trước khi xem lời giải thích AI (chỉ hỏi lần đầu của mỗi câu; mua rồi thì xem lại miễn phí)
-export function ExplainConfirmDialog({ questionNumber, price, bundle, onBundle, onCancel, onConfirm }: Props) {
+export function ExplainConfirmDialog({ questionNumber, price, bundle, onBundle, freeTurns, onUseFreeTurn, onFreeTurnsChange, onCancel, onConfirm }: Props) {
   const { user } = useAuth();
   const location = useLocation();
   const balance = user?.balance ?? 0;
@@ -42,6 +47,7 @@ export function ExplainConfirmDialog({ questionNumber, price, bundle, onBundle, 
           <div className="mt-4">
             <ChargeSummary amount={price} balance={balance} />
           </div>
+          {freeTurns && <EarnTurnBlock status={freeTurns} onUse={onUseFreeTurn} onChange={() => onFreeTurnsChange?.()} />}
           {bundle && onBundle && bundle.price > 0 && bundle.remaining > 1 && (
             <button
               onClick={onBundle}

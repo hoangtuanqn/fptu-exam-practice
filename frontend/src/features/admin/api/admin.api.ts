@@ -1,6 +1,7 @@
 import type {
   AccountSettings,
   AdsSettings,
+  LinkRewardAdmin,
   PromoSettings,
   AdminAttempt,
   AdminCrawlJob,
@@ -219,6 +220,9 @@ export const adminApi = {
   saveAccountSettings: (body: AccountSettings) => http.put<AccountSettings>("/admin/settings/account", body),
   adsSettings: () => http.get<AdsSettings>("/admin/settings/ads"),
   saveAdsSettings: (body: AdsSettings) => http.put<AdsSettings>("/admin/settings/ads", body),
+  linkRewardSettings: () => http.get<LinkRewardAdmin>("/admin/settings/link-reward"),
+  saveLinkRewardSettings: (body: { enabled: boolean; apiToken?: string; dailyLimit: number; validDays: number; minSeconds: number }) =>
+    http.put<LinkRewardAdmin>("/admin/settings/link-reward", body),
 
   giftCodes: (page: number, filter: { q?: string; active?: "true" | "false" | "" }) =>
     http.list<GiftCode>("/admin/gift-codes", { page, limit: PAGE_SIZE, ...filter }),

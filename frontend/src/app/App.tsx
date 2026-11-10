@@ -15,6 +15,7 @@ import { GuestSync } from "@/features/guest-sync/GuestSync";
 import { DailyCheckInPopup } from "@/features/check-in/DailyCheckInPopup";
 import { GradeBridgeHost } from "@/features/grade/GradeBridgeHost";
 import { AdLoader } from "@/features/ads/AdLoader";
+import { FreeTurnNotice } from "@/features/link-reward/FreeTurnNotice";
 import { WhatsNewDialog } from "@/features/changelog/WhatsNewDialog";
 import PracticePage from "@/features/practice/PracticePage";
 
@@ -30,6 +31,7 @@ import { PageMeta } from "@/shared/seo/PageMeta";
 const ChatWidget = lazy(() => import("@/features/chat/ChatWidget"));
 // Thư viện thành phần M3 (chỉ khi chạy npm run dev)
 const M3Gallery = import.meta.env.DEV ? lazy(() => import("@/features/design-system/M3Gallery")) : null;
+const ClaimTurnPage = lazy(() => import("@/features/link-reward/ClaimTurnPage"));
 const PublicDepositPage = lazy(() => import("@/features/account/pages/PublicDepositPage"));
 const OverviewPage = lazy(() => import("@/features/account/pages/OverviewPage"));
 const DepositPage = lazy(() => import("@/features/account/pages/DepositPage"));
@@ -86,6 +88,7 @@ export default function App() {
       <GuestSync />
       <GradeBridgeHost />
       <AdLoader />
+      <FreeTurnNotice />
       <DailyCheckInPopup />
       <WhatsNewDialog />
       <ChatWidget />
@@ -139,6 +142,7 @@ export default function App() {
             <Route path="referral" element={<ReferralPage />} />
             <Route path="giftcode" element={<GiftCodePage />} />
             <Route path="transactions" element={<TransactionsPage />} />
+            <Route path="nhan-luot" element={<ClaimTurnPage />} />
             <Route path="profile" element={<ProfilePage />} />
           </Route>
         </Route>

@@ -1,4 +1,5 @@
 import { http } from "@/shared/api/client";
+import type { FreeTurnStatus } from "@/features/link-reward/link-reward.api";
 
 // Gói "mở khóa cả đề": trả một lần, xem lời giải mọi câu miễn phí (rẻ hơn mua lẻ từng câu)
 export interface ExplanationBundle {
@@ -18,6 +19,7 @@ export interface ExplanationInfo {
   unlocked: boolean;
   bundle: ExplanationBundle;
   freeTrialsLeft: number; // số lượt xem thử miễn phí còn lại của tài khoản
+  freeTurns?: FreeTurnStatus; // lượt giải thích miễn phí nhận từ vượt link (máy chủ cũ không trả trường này)
 }
 
 export interface ExplanationResult {
@@ -25,6 +27,7 @@ export interface ExplanationResult {
   cached: boolean; // lời giải đã lưu sẵn (không phải AI vừa tạo)
   charged: number; // credit vừa bị trừ (0 nếu đã mua trước đó)
   balanceAfter: number;
+  freeTurnUsed?: boolean; // đã dùng 1 lượt miễn phí cho câu này
 }
 
 export interface UnlockResult {
@@ -35,6 +38,6 @@ export interface UnlockResult {
 
 export const explanationApi = {
   info: (examId: number) => http.get<ExplanationInfo>(`/explanations/exams/${examId}`),
-  explain: (examId: number, questionNumber: number) => http.post<ExplanationResult>("/explanations", { examId, questionNumber }),
+  explain: (examId: number, questionNumber: number, useFreeTurn = false) => http.post<ExplanationResult>("/explanations", { examId, questionNumber, ...(useFreeTurn && { useFreeTurn: true }) }),
   unlock: (examId: number, price: number) => http.post<UnlockResult>("/explanations/unlock", { examId, price }),
 };

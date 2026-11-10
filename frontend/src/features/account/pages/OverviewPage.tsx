@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { FreeTurnCard } from "@/features/link-reward/FreeTurnCard";
 import { Link } from "react-router-dom";
 import { ArrowRight, ChevronDown, ClipboardCheck, NotebookPen, PenLine } from "lucide-react";
 import { reviewApi } from "@/features/review/review.api";
@@ -84,6 +85,7 @@ export default function OverviewPage() {
 
       {/* Việc cần làm: lượt đang dở và câu đến hạn ôn. Không có thì không chiếm chỗ */}
       <ResumeList limit={3} />
+      <FreeTurnCard />
       {review.data && review.data.due > 0 && (
         <Link to="/account/review/practice" className="md-state md-motion flex items-center gap-3 rounded-m3-md border border-outline-variant bg-surface-container-low px-4 py-3">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-container text-on-primary-container">
