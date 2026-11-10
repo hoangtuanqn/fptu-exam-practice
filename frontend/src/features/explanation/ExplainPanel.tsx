@@ -11,6 +11,7 @@ import { errorMessage } from "@/shared/api/errors";
 interface Props {
   examId: number;
   questionNumber: number;
+  useFreeTurn?: boolean; // trả bằng 1 lượt miễn phí (nhận từ vượt link) thay vì credit
   firstTime: boolean; // vừa trả phí lần đầu: hiện hiệu ứng "AI đang phân tích". Đã mua rồi thì chỉ hiển thị.
   onClose: () => void;
   onBought: () => void; // báo đã mua (để nút đổi sang "xem giải thích")
@@ -33,7 +34,7 @@ const CACHED_WAIT_JITTER_MS = 2000;
  * Lời giải thích AI của một câu, đặt cạnh đề để người học vừa xem đề vừa đọc lời giải:
  * màn hình rộng là cột bên phải, màn hình hẹp là tấm trượt từ dưới lên (đề vẫn thấy phía trên).
  */
-export function ExplainPanel({ examId, questionNumber, firstTime, onClose, onBought }: Props) {
+export function ExplainPanel({ examId, questionNumber, useFreeTurn, firstTime, onClose, onBought }: Props) {
   const { refresh } = useAuth();
   const [phase, setPhase] = useState<Phase>("loading");
   const [content, setContent] = useState("");
@@ -55,7 +56,7 @@ export function ExplainPanel({ examId, questionNumber, firstTime, onClose, onBou
     setError(null);
     const startedAt = Date.now();
     try {
-      const result = await explanationApi.explain(examId, questionNumber);
+      const result = await explanationApi.explain(examId, questionNumber, useFreeTurn);
       onBought();
       if (result.charged > 0) void refresh(); // cập nhật số dư sau khi trừ phí
       if (firstTime && result.cached) {

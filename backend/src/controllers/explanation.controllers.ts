@@ -13,8 +13,8 @@ export const explanationController = {
   },
 
   async explain(req: Request, res: Response) {
-    const { examId, questionNumber } = getValidated<ExplainBody>(res);
-    res.json(new ResponseClient({ data: await explanationService.explain(actorOf(req), req.user!.id, examId, questionNumber) }));
+    const { examId, questionNumber, useFreeTurn } = getValidated<ExplainBody>(res);
+    res.json(new ResponseClient({ data: await explanationService.explain(actorOf(req), req.user!.id, examId, questionNumber, useFreeTurn === true) }));
   },
 
   async unlock(req: Request, res: Response) {

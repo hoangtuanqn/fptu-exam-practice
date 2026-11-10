@@ -1,6 +1,6 @@
 import { lazy } from "react";
 import { Navigate, Route } from "react-router-dom";
-import { Activity, ShieldCheck as QualityIcon, MessagesSquare, ShoppingBag, Megaphone, Bot, ClipboardList, DatabaseZap, FileText, History, SlidersHorizontal, Wallet, Gift, MessageSquareWarning, UserPlus, Landmark, LayoutDashboard, Receipt, Settings, Users } from "lucide-react";
+import { Link2, Activity, ShieldCheck as QualityIcon, MessagesSquare, ShoppingBag, Megaphone, Bot, ClipboardList, DatabaseZap, FileText, History, SlidersHorizontal, Wallet, Gift, MessageSquareWarning, UserPlus, Landmark, LayoutDashboard, Receipt, Settings, Users } from "lucide-react";
 import type { NavItem } from "@/shared/layout/PanelLayout";
 
 /**
@@ -20,6 +20,7 @@ const CrawlJobsPage = lazy(() => import("./users/CrawlJobsPage"));
 const AttemptsPage = lazy(() => import("./users/AttemptsPage"));
 const AccountSettingsPage = lazy(() => import("./users/AccountSettingsPage"));
 const AdsSettingsPage = lazy(() => import("./content/AdsSettingsPage"));
+const LinkRewardSettingsPage = lazy(() => import("./content/LinkRewardSettingsPage"));
 const PromoSettingsPage = lazy(() => import("./users/PromoSettingsPage"));
 const DepositsPage = lazy(() => import("./finance/DepositsPage"));
 const BankTransactionsPage = lazy(() => import("./finance/BankTransactionsPage"));
@@ -52,6 +53,7 @@ export const ADMIN_NAV: NavItem[] = [
   { to: "/admin/exams", label: "Đề thi", icon: FileText, group: "Nội dung & AI" },
   { to: "/admin/reports", label: "Báo cáo đáp án", icon: MessageSquareWarning, group: "Nội dung & AI" },
   { to: "/admin/ads", label: "Quảng cáo", icon: Megaphone, group: "Nội dung & AI" },
+  { to: "/admin/link-rewards", label: "Vượt link", icon: Link2, group: "Nội dung & AI" },
   { to: "/admin/crawler", label: "Cấu hình lấy đề", icon: DatabaseZap, group: "Nội dung & AI" },
   { to: "/admin/ai", label: "AI giải đáp án", icon: Bot, group: "Nội dung & AI" },
   { to: "/admin/chatbot", label: "Chatbot hỗ trợ", icon: MessagesSquare, group: "Nội dung & AI" },
@@ -69,6 +71,7 @@ export const adminRoutes = (
     <Route path="referrals" element={<ReferralsPage />} />
     <Route path="account-settings" element={<AccountSettingsPage />} />
     <Route path="ads" element={<AdsSettingsPage />} />
+    <Route path="link-rewards" element={<LinkRewardSettingsPage />} />
     <Route path="promotions" element={<PromoSettingsPage />} />
     <Route path="wallet" element={<WalletHistoryPage />} />
     <Route path="crawl-jobs" element={<CrawlJobsPage />} />

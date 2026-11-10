@@ -30,7 +30,7 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit }: Props)
   const { user } = useAuth();
   const [reportOpen, setReportOpen] = useState(false);
   const [confirmExplain, setConfirmExplain] = useState(false); // hộp xác nhận phí (chỉ lần đầu mỗi câu)
-  const [panel, setPanel] = useState<{ number: number; firstTime: boolean } | null>(null); // lời giải đang mở cạnh đề
+  const [panel, setPanel] = useState<{ number: number; firstTime: boolean; useFreeTurn?: boolean } | null>(null); // lời giải đang mở cạnh đề
   const [bought, setBought] = useState<Set<number>>(new Set()); // câu vừa mua lời giải trong phiên này (cộng với danh sách từ server)
   const explainEnabled = !!user && quiz.examId !== null;
   const info = useApi(() => (explainEnabled ? explanationApi.info(quiz.examId!) : Promise.resolve(null)), [explainEnabled, quiz.examId]);
@@ -109,6 +109,7 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit }: Props)
           examId={quiz.examId}
           questionNumber={question.number}
           firstTime={panel!.firstTime}
+          useFreeTurn={panel!.useFreeTurn}
           onClose={() => setPanel(null)}
           onBought={() => {
             setBought((prev) => new Set(prev).add(question.number));
@@ -126,6 +127,12 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit }: Props)
             setConfirmExplain(false);
             setUnlockOpen(true);
           }}
+          freeTurns={info.data.freeTurns}
+          onUseFreeTurn={() => {
+            setConfirmExplain(false);
+            setPanel({ number: question.number, firstTime: true, useFreeTurn: true });
+          }}
+          onFreeTurnsChange={() => info.reload()}
           onCancel={() => setConfirmExplain(false)}
           onConfirm={() => {
             setConfirmExplain(false);

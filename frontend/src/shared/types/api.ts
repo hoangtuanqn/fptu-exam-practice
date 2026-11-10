@@ -335,6 +335,22 @@ export interface AccountSettings {
   signupCredit: number; // credit tặng mọi tài khoản mới khi đăng ký
 }
 
+/** Cấu hình vượt link nhận lượt giải thích miễn phí (Quản trị → Vượt link) */
+export interface LinkRewardAdmin {
+  enabled: boolean;
+  hasToken: boolean; // đã lưu token Link4M chưa (token không bao giờ trả ra)
+  link4mEnabled: boolean;
+  link4mTurns: number;
+  dailyLimit: number; // số lượt tối đa mỗi người mỗi ngày qua Link4M
+  hasShrinkmeToken: boolean;
+  shrinkmeEnabled: boolean;
+  shrinkmeTurns: number;
+  shrinkmeDailyLimit: number;
+  validDays: number;
+  minSeconds: number;
+  stats: { issued24h: number; claimed24h: number; claimedTotal: number; activeTurns: number; usedTotal: number; byProvider: { provider: string; label: string; issued24h: number; claimed24h: number; claimedTotal: number }[] };
+}
+
 /** Cấu hình quảng cáo (Quản trị → Quảng cáo) */
 export interface AdsSettings {
   enabled: boolean;
