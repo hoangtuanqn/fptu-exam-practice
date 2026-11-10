@@ -1,6 +1,5 @@
 import type {
   AccountSettings,
-  AdsSettings,
   LinkRewardAdmin,
   SubjectIssue,
   PromoSettings,
@@ -224,8 +223,6 @@ export const adminApi = {
   savePromoSettings: (body: PromoSettings) => http.put<PromoSettings>("/admin/settings/promo", body),
   accountSettings: () => http.get<AccountSettings>("/admin/settings/account"),
   saveAccountSettings: (body: AccountSettings) => http.put<AccountSettings>("/admin/settings/account", body),
-  adsSettings: () => http.get<AdsSettings>("/admin/settings/ads"),
-  saveAdsSettings: (body: AdsSettings) => http.put<AdsSettings>("/admin/settings/ads", body),
   subjectIssues: () => http.get<SubjectIssue[]>("/admin/subject-issues"),
   resolveSubjectIssue: (id: number) => http.delete(`/admin/subject-issues/${id}`),
   linkRewardSettings: () => http.get<LinkRewardAdmin>("/admin/settings/link-reward"),

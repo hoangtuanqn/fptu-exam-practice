@@ -79,26 +79,6 @@ export const updateAccountBody = z.object({
 
 export type UpdateAccountBody = z.infer<typeof updateAccountBody>;
 
-const zone = z.string().trim().regex(/^\d{0,12}$/, "Mã vùng chỉ gồm chữ số");
-export const updateAdsBody = z
-  .object({
-    enabled: z.boolean(),
-    guests: z.boolean(),
-    vignette: z.boolean(),
-    vignetteZone: zone,
-    inpage: z.boolean(),
-    inpageZone: zone,
-    directLink: z
-      .string()
-      .trim()
-      .max(300)
-      .refine((v) => v === "" || /^https:\/\/[^\s]+$/.test(v), "Liên kết phải bắt đầu bằng https://"),
-  })
-  .refine((b) => !b.vignette || b.vignetteZone !== "", { message: "Bật Vignette thì phải có mã vùng", path: ["vignetteZone"] })
-  .refine((b) => !b.inpage || b.inpageZone !== "", { message: "Bật In-Page Push thì phải có mã vùng", path: ["inpageZone"] });
-
-export type UpdateAdsBody = z.infer<typeof updateAdsBody>;
-
 export const updateLinkRewardBody = z.object({
   enabled: z.boolean(),
   apiToken: z.string().trim().max(200).regex(/^[A-Za-z0-9_-]*$/, "Token chỉ gồm chữ, số, gạch").optional(), // để trống = giữ token cũ
