@@ -39,6 +39,7 @@ import { planApi, type PlanInfo } from "./plan.api";
 import { UpgradeDialog } from "./UpgradeDialog";
 
 const vnd = (n: number) => `${n.toLocaleString("vi-VN")}đ`;
+const DAYS_PER_MONTH = 30;
 const GOLD = "bg-gradient-to-b from-[#ffd75e] to-[#f0a800] text-[#3a2600]";
 
 const FAQ: [string, string][] = [
@@ -186,6 +187,8 @@ export default function PlanPage() {
 // Gói Nước rút: cho người chỉ cần ôn gấp trước kỳ thi, trả ít và không phải cam kết cả học kỳ
 function SprintCard({ plan, onBuy }: { plan: PlanInfo; onBuy: () => void }) {
   const s = plan.sprint;
+  const sprintPerDay = Math.round(s.price / s.days);
+  const proPerDay = Math.round(plan.price / (plan.months * DAYS_PER_MONTH));
   return (
     <section className="mx-auto max-w-3xl px-4 pt-8">
       <div className="flex flex-col gap-4 rounded-2xl border border-outline-variant bg-surface-container-low p-5 sm:flex-row sm:items-center sm:justify-between">
@@ -193,6 +196,9 @@ function SprintCard({ plan, onBuy }: { plan: PlanInfo; onBuy: () => void }) {
           <p className="md-title-medium text-on-surface">Chỉ cần ôn gấp trước kỳ thi?</p>
           <p className="md-body-medium mt-1 text-on-surface-variant">
             Gói <b className="text-on-surface">{s.name} {s.days} ngày</b> chỉ <b className="text-on-surface">{vnd(s.price)}</b>: đủ mọi quyền lợi Pro, không cam kết lâu dài, không tự gia hạn.
+          </p>
+          <p className="md-body-small mt-1 text-on-surface-variant">
+            Tính theo ngày: Nước rút ≈ {vnd(sprintPerDay)}/ngày, Pro ≈ {vnd(proPerDay)}/ngày. Ôn lâu hơn {s.days} ngày thì Pro rẻ hơn mỗi ngày.
           </p>
         </div>
         <button onClick={onBuy} className="md-state md-label-large inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full border border-primary px-6 font-semibold text-primary">
@@ -239,7 +245,9 @@ function Hero({ plan, pro, label, daysLeft, expiresAt, onBuy }: { plan: PlanInfo
               <span className="inline-flex items-center gap-1.5 rounded-full border border-[#ffc61f]/50 bg-[#ffc61f]/15 px-3 py-1.5 text-sm font-bold text-[#ffe58a]">
                 <BadgeCheck size={16} /> Tiết kiệm {vnd(plan.savings)} so với mua trên FuOverflow
               </span>
-              <span className="text-sm text-[#fff6dc]/70">≈ {vnd(plan.pricePerMonth)}/tháng</span>
+              <span className="text-sm text-[#fff6dc]/70">
+                ≈ {vnd(plan.pricePerMonth)}/tháng · ≈ {vnd(Math.round(plan.price / (plan.months * DAYS_PER_MONTH)))}/ngày
+              </span>
             </div>
           </div>
 
