@@ -58,7 +58,7 @@
   // "Chương I: Tên", "Part II - Tên": số La Mã viết hoa, bắt buộc có dấu : . - ngay sau số (để không nhầm với "Unit Cost ...")
   const ROMAN_HEAD = /^(?:chapter|chương|unit|lesson|part)\s+([ivxlc]+)\s*[:.\-–]\s*(.+)$/i;
   // "2. Numbering systems", "3.Data storage": dòng tên chương không có chữ "Chapter" (nhận cả "1.Tên" không dấu cách). Không nhận "2.1 ..." (mục con).
-  // Chỉ coi là tên chương khi môn có mục con "N.x" của đúng chương đó, để không nhầm với danh sách đánh số bình thường.
+  // Chỉ coi là tên chương khi môn có mục con "N.x" của đúng chương đó (hoặc cả môn chỉ gồm các dòng "N. Tên" với từ 3 số chương khác nhau), để không nhầm với danh sách đánh số bình thường.
   const NUM_HEAD = /^(\d+)\s*[.:)]\s*(?!\d)(\S.*)$/;
   const romanToInt = (r) => {
     const v = { I: 1, V: 5, X: 10, L: 50, C: 100 };
@@ -83,6 +83,10 @@
     // Các số chương có mục con "N.M ...": chỉ những chương này mới nhận dòng "N. Tên" làm tên chương
     const withSubItems = new Set();
     for (const s of sessions) for (const line of s.topicLines) if (/^\d+\.\d/.test(line)) withSubItems.add(Number(line.match(/^(\d+)/)[1]));
+    // Môn chỉ liệt kê "1. Tên", "2. Tên", ... (không có mục con "N.M"): mỗi dòng là một chương, miễn là có từ 3 số chương khác nhau trở lên
+    const headNumbers = new Set();
+    for (const s of sessions) for (const line of s.topicLines) if (!/^\d+\.\d/.test(line) && NUM_HEAD.test(line)) headNumbers.add(Number(line.match(NUM_HEAD)[1]));
+    const headsOnly = withSubItems.size === 0 && headNumbers.size >= 3;
     for (const s of sessions) {
       for (const line of s.topicLines) {
         const head = line.match(CHAPTER_HEAD);
@@ -95,7 +99,7 @@
           cur = open(romanToInt(roman[1]), roman[2]);
           continue;
         }
-        if (!head && numHead && withSubItems.has(Number(numHead[1]))) {
+        if (!head && numHead && (headsOnly || withSubItems.has(Number(numHead[1])))) {
           cur = open(Number(numHead[1]), numHead[2]); // dòng tên chương: không giữ làm chủ đề
           continue;
         }
