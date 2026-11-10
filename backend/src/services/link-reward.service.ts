@@ -24,8 +24,15 @@ async function shorten(provider: LinkProvider, apiToken: string, destination: st
   let reply: Reply | null = null;
   try {
     const res = await fetch(def.apiUrl(apiToken, destination), { signal: AbortSignal.timeout(8000), headers: { Accept: "application/json" } });
-    reply = (await res.json()) as Reply;
-  } catch {
+    try {
+      reply = (await res.json()) as Reply;
+    } catch {
+      console.error(`[link-reward] ${def.label} trả về HTTP ${res.status}, nội dung không phải JSON`);
+      throw busy();
+    }
+  } catch (e) {
+    if (e instanceof AppError) throw e;
+    console.error(`[link-reward] không gọi được ${def.label}: ${e instanceof Error ? e.message : "lỗi không rõ"}`);
     throw busy();
   }
   const json = reply as Reply | null;

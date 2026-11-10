@@ -7,13 +7,13 @@ import { useEarnTurn } from "./useEarnTurn";
 const dayMonth = (iso: string) => new Date(iso).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
 
 /**
- * Khối "lượt giải thích miễn phí" dùng trong hộp xác nhận giải thích và thẻ Tổng quan:
- *  - có lượt: nói rõ còn bao nhiêu, khi nào hết hạn, kèm nút dùng (nếu có onUse);
- *  - chưa có và còn nhận được hôm nay: nút vượt link, có hướng dẫn và trạng thái chờ;
- *  - hôm nay đã nhận đủ: nhắc quay lại ngày mai.
+ * Lượt giải thích miễn phí, nằm trong hộp xác nhận giải thích khi làm bài:
+ *  - có lượt: nút dùng 1 lượt;
+ *  - còn nhận được hôm nay: nút vượt link (đang chờ thì chỉ một dòng trạng thái);
+ *  - đã nhận đủ: một dòng nhắc.
  * Không hiện gì nếu tính năng tắt và người dùng không còn lượt nào.
  */
-export function EarnTurnBlock({ status, onUse, onChange, className = "mt-4 rounded-m3-lg" }: { status: FreeTurnStatus; onUse?: () => void; onChange: () => void; className?: string }) {
+export function EarnTurnBlock({ status, onUse, onChange }: { status: FreeTurnStatus; onUse?: () => void; onChange: () => void }) {
   const toast = useToast();
   const { phase, error, fallbackUrl, start, cancel } = useEarnTurn(() => {
     toast.success("Đã nhận 1 lượt giải thích miễn phí");
@@ -21,69 +21,56 @@ export function EarnTurnBlock({ status, onUse, onChange, className = "mt-4 round
   });
 
   if (!status.enabled && status.available === 0) return null;
+  const canEarn = status.enabled && status.remainingToday > 0;
 
   return (
-    <div className={`space-y-3 border border-outline-variant bg-surface-container p-4 ${className}`}>
-      <div className="flex items-start gap-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-container text-on-primary-container">
-          <Gift size={18} />
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="md-title-small text-on-surface">
-            {status.available > 0 ? `Bạn có ${status.available} lượt giải thích miễn phí` : "Nhận lượt giải thích miễn phí"}
+    <div className="mt-4 space-y-2 rounded-m3-lg border border-outline-variant bg-surface-container p-3">
+      {status.available > 0 && (
+        <div className="flex items-center justify-between gap-3">
+          <p className="md-body-medium min-w-0 text-on-surface">
+            <Gift size={16} className="mr-1.5 inline text-primary" />
+            Còn {status.available} lượt miễn phí
+            {status.nextExpiresAt && <span className="text-on-surface-variant"> (hết hạn {dayMonth(status.nextExpiresAt)})</span>}
           </p>
-          <p className="md-body-small text-on-surface-variant">
-            {status.available > 0 && status.nextExpiresAt
-              ? `Lượt sớm nhất hết hạn ngày ${dayMonth(status.nextExpiresAt)}. Mỗi lượt dùng cho 1 câu.`
-              : `Vượt link rồi quay lại để nhận 1 lượt, giữ được ${status.validDays} ngày.`}
-          </p>
-        </div>
-      </div>
-
-      {status.available > 0 && onUse && (
-        <Button variant="primary" className="w-full" onClick={onUse}>
-          Dùng 1 lượt miễn phí
-        </Button>
-      )}
-
-      {status.enabled && status.remainingToday > 0 && (
-        <>
-          {phase === "waiting" ? (
-            <div role="status" className="space-y-2 text-sm text-on-surface-variant">
-              <p className="flex items-center gap-2">
-                <Loader2 size={16} className="shrink-0 animate-spin" /> Đang chờ bạn hoàn thành các bước ở tab vượt link. Xong thì quay lại đây, lượt sẽ tự hiện.
-              </p>
-              {fallbackUrl && (
-                <p>
-                  Trình duyệt chặn mở tab mới.{" "}
-                  <a href={fallbackUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline">
-                    Bấm vào đây để mở trang vượt link
-                  </a>
-                  .
-                </p>
-              )}
-              <button type="button" onClick={cancel} className="text-xs underline">
-                Thôi, không chờ nữa
-              </button>
-            </div>
-          ) : (
-            <>
-              <Button variant={status.available > 0 ? "outlined" : "primary"} className="w-full" disabled={phase === "starting"} onClick={() => void start(status.available)}>
-                {phase === "starting" && <Loader2 size={16} className="animate-spin" />}
-                Vượt link nhận thêm 1 lượt miễn phí
-              </Button>
-              <p className="md-body-small text-on-surface-variant">
-                Bạn sẽ qua trang vượt link, làm vài bước (khoảng 1 đến 2 phút). Hôm nay còn nhận được {status.remainingToday}/{status.dailyLimit} lần.
-              </p>
-            </>
+          {onUse && (
+            <Button variant="primary" onClick={onUse}>
+              Dùng 1 lượt
+            </Button>
           )}
-          {error && <p className="rounded-m3-md bg-error-container px-3 py-2 text-sm text-on-error-container">{error}</p>}
-        </>
+        </div>
       )}
 
-      {status.enabled && status.remainingToday === 0 && (
-        <p className="md-body-small text-on-surface-variant">Hôm nay bạn đã nhận đủ {status.dailyLimit} lượt. Ngày mai quay lại để nhận thêm nhé.</p>
+      {canEarn && phase === "waiting" && (
+        <div role="status" className="space-y-1 text-sm text-on-surface-variant">
+          <p className="flex items-center gap-2">
+            <Loader2 size={16} className="shrink-0 animate-spin" /> Đang chờ bạn vượt link ở tab mới. Xong quay lại đây.
+          </p>
+          {fallbackUrl && (
+            <a href={fallbackUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline">
+              Trình duyệt chặn tab mới, bấm để mở
+            </a>
+          )}{" "}
+          <button type="button" onClick={cancel} className="text-xs underline">
+            Hủy
+          </button>
+        </div>
       )}
+
+      {canEarn && phase !== "waiting" && (
+        <div className="flex items-center justify-between gap-3">
+          <p className="md-body-small text-on-surface-variant">
+            {status.available === 0 && <Gift size={16} className="mr-1.5 inline text-primary" />}
+            Vượt link (1 đến 2 phút) nhận thêm 1 lượt · hôm nay còn {status.remainingToday}/{status.dailyLimit}
+          </p>
+          <Button variant="outlined" disabled={phase === "starting"} onClick={() => void start(status.available)}>
+            {phase === "starting" && <Loader2 size={16} className="animate-spin" />}
+            Nhận lượt
+          </Button>
+        </div>
+      )}
+
+      {status.enabled && status.remainingToday === 0 && <p className="md-body-small text-on-surface-variant">Hôm nay bạn đã nhận đủ {status.dailyLimit} lượt, mai quay lại nhé.</p>}
+      {error && <p className="rounded-m3-md bg-error-container px-3 py-2 text-sm text-on-error-container">{error}</p>}
     </div>
   );
 }
