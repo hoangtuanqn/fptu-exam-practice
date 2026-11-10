@@ -55,6 +55,17 @@
   const CHAPTER_HEAD = /^(?:chapter|chương|unit|lesson|part)\s*(\d+)\s*[:.\-–]\s*(.+)$/i;
   // "Chapter 3 Problems", "Chapter 7, 10 Presentation": chỉ nhắc tới chương, không đặt tên
   const CHAPTER_REF = /^(?:chapter|chương|unit|lesson|part)\s*(\d+)/i;
+  // "Chương I: Tên", "Part II - Tên": số La Mã viết hoa, bắt buộc có dấu : . - ngay sau số (để không nhầm với "Unit Cost ...")
+  const ROMAN_HEAD = /^(?:chapter|chương|unit|lesson|part)\s+([ivxlc]+)\s*[:.\-–]\s*(.+)$/i;
+  // "2. Numbering systems", "3.Data storage": dòng tên chương không có chữ "Chapter" (nhận cả "1.Tên" không dấu cách). Không nhận "2.1 ..." (mục con).
+  // Chỉ coi là tên chương khi môn có mục con "N.x" của đúng chương đó, để không nhầm với danh sách đánh số bình thường.
+  const NUM_HEAD = /^(\d+)\s*[.:)]\s*(?!\d)(\S.*)$/;
+  const romanToInt = (r) => {
+    const v = { I: 1, V: 5, X: 10, L: 50, C: 100 };
+    let n = 0;
+    for (let i = 0; i < r.length; i++) n += v[r[i]] < (v[r[i + 1]] || 0) ? -v[r[i]] : v[r[i]];
+    return n;
+  };
 
   // Gom các buổi học thành chương: dòng "Chapter N: Tên" mở chương; "N.M ..." và "Chapter N ..." thuộc chương N; dòng khác (Review, Progress Test...) thuộc chương đang mở
   function deriveChapters(sessions) {
@@ -66,14 +77,28 @@
       if (!c) {
         c = { number, title: clean(title), topics: [] };
         chapters.push(c);
-      }
+      } else if (!c.title && title) c.title = clean(title); // chương đã mở từ mục con "N.M" nhưng chưa có tên: nhận tên từ dòng tiêu đề
       return c;
     };
+    // Các số chương có mục con "N.M ...": chỉ những chương này mới nhận dòng "N. Tên" làm tên chương
+    const withSubItems = new Set();
+    for (const s of sessions) for (const line of s.topicLines) if (/^\d+\.\d/.test(line)) withSubItems.add(Number(line.match(/^(\d+)/)[1]));
     for (const s of sessions) {
       for (const line of s.topicLines) {
         const head = line.match(CHAPTER_HEAD);
+        const romanMatch = line.match(ROMAN_HEAD);
+        const roman = romanMatch && romanMatch[1] === romanMatch[1].toUpperCase() ? romanMatch : null; // chỉ nhận số La Mã viết hoa
+        const numHead = line.match(NUM_HEAD);
         const ref = line.match(CHAPTER_REF);
         const sub = line.match(/^(\d+)\.(\d+)/);
+        if (roman) {
+          cur = open(romanToInt(roman[1]), roman[2]);
+          continue;
+        }
+        if (!head && numHead && withSubItems.has(Number(numHead[1]))) {
+          cur = open(Number(numHead[1]), numHead[2]); // dòng tên chương: không giữ làm chủ đề
+          continue;
+        }
         if (head) cur = open(Number(head[1]), head[2]);
         else if (ref && byNum(Number(ref[1]))) cur = byNum(Number(ref[1]));
         else if (sub && byNum(Number(sub[1]))) cur = byNum(Number(sub[1]));

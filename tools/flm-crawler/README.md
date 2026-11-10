@@ -26,7 +26,7 @@ Tìm theo mã (`searchOn=Code`) rồi chỉ giữ dòng có Subject Code **trùn
   "chapters": [ { "number", "title", "topics": ["1.1. What is an operating system", "..."] } ]
 } ] }
 ```
-`chapters` được suy ra từ cột Topic của lịch học ("Chapter N: Tên" mở chương mới, các dòng "N.M ..." thuộc chương N). Không lấy lịch học từng buổi, CLO, đánh giá hay tài liệu.
+`chapters` được suy ra từ cột Topic của lịch học: "Chapter N: Tên", "Chương I: Tên" hoặc "N. Tên" (khi môn có các mục "N.M ...") mở chương mới và cho tên chương; các dòng "N.M ..." thuộc chương N. Không lấy lịch học từng buổi, CLO, đánh giá hay tài liệu.
 
 ## Lưu ý
 - Giữa hai yêu cầu nghỉ 0,7 giây để không dồn tải lên FLM. Chưa đăng nhập hoặc bị Cloudflare chặn thì dừng ngay và báo rõ.
