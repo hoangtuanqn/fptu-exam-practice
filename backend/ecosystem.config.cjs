@@ -7,8 +7,8 @@ module.exports = {
       cwd: __dirname,
       instances: 1,
       exec_mode: "fork",
-      node_args: "--max-old-space-size=320",
-      max_memory_restart: "400M", // máy 2 GB: tự khởi động lại nếu rò rỉ bộ nhớ
+      node_args: "--max-old-space-size=600",
+      max_memory_restart: "800M", // máy 2 GB (MySQL ~250 MB, hệ điều hành ~300 MB): tự khởi động lại nếu rò rỉ bộ nhớ
       kill_timeout: 8000, // chờ index.ts đóng kết nối DB êm trước khi buộc tắt
       env: { NODE_ENV: "production" },
       time: true,
