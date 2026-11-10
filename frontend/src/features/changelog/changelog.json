@@ -276,10 +276,14 @@
       "date": "2026-11-10",
       "title": "Popup mới, đồng bộ điểm FAP ngay trong tiện ích",
       "highlights": [
-        "Bấm “Đồng bộ ngay” trong tiện ích để đọc điểm và lịch thi từ FAP",
+        "Bật/tắt đồng bộ điểm FAP và bấm “Đồng bộ ngay” ngay trong tiện ích",
         "Thông báo trên FAP có nút ✕ để ẩn 24 giờ"
       ],
       "changes": [
+        {
+          "type": "new",
+          "text": "Bật hoặc tắt đồng bộ điểm FAP ngay trong tiện ích (cần đăng nhập fepass.top)"
+        },
         {
           "type": "new",
           "text": "Nút “Đồng bộ ngay” trong tiện ích, hiện tiến độ và báo rõ khi cần làm gì (đăng nhập FAP, kiểm tra Cloudflare)"
@@ -290,11 +294,15 @@
         },
         {
           "type": "new",
-          "text": "Thông báo nhỏ trên FAP có nút ✕ để ẩn 24 giờ; bật lại bất cứ lúc nào bằng công tắc trong tiện ích"
+          "text": "Thông báo nhỏ trên FAP có nút ✕ để ẩn 24 giờ; bật lại ngay trong tiện ích khi cần"
         },
         {
           "type": "new",
           "text": "Nút xoá điểm đã đọc trong tiện ích"
+        },
+        {
+          "type": "improved",
+          "text": "Điểm đọc từ FAP tự gửi lên tài khoản khi bạn mở bất kỳ trang nào của FePass, không cần mở trang Điểm FAP"
         },
         {
           "type": "improved",
