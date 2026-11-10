@@ -52,7 +52,7 @@ async function fetchDoc(url) {
 
 // Lấy một mã môn: trả về MẢNG kết quả (mỗi mã FLM tìm được một phần tử). Bật `variants` thì lấy cả các mã có thêm 1 đến 2 chữ cái cuối
 // (ADA201 -> ADA201c, ADA201cm...); nếu mã đã nhập không có syllabus riêng thì thêm một dòng "alias" để lần sau không tìm lại.
-async function crawlOne(code, variants) {
+async function crawlOne(code, variants, full) {
   let search;
   try {
     search = FlmParser.parseSearch(await fetchDoc(`${BASE}/SyllabusManagement?searchOn=Code&keyword=${encodeURIComponent(code)}`), code);
@@ -69,12 +69,12 @@ async function crawlOne(code, variants) {
     await sleep(jitter());
     let detail;
     try {
-      detail = FlmParser.parseDetail(await fetchDoc(`${BASE}/SyllabusDetails?sylID=${m.best.syllabusId}`));
+      detail = FlmParser.parseDetail(await fetchDoc(`${BASE}/SyllabusDetails?sylID=${m.best.syllabusId}`), { full });
     } catch (e) {
       if (e.message === "NOT_DETAIL_PAGE") throw new Error("Trang chi tiết syllabus không đúng định dạng (có thể FLM đã đổi giao diện)");
       throw e;
     }
-    out.push({ code: m.code, status: "ok", ...(m.code !== code ? { via: code } : {}), syllabusId: m.best.syllabusId, subjectName: detail.subjectName, chapters: detail.chapters, minAvgMarkToPass: detail.minAvgMarkToPass, assessments: detail.assessments, credits: detail.credits, crawledAt: Date.now() });
+    out.push({ code: m.code, status: "ok", ...(m.code !== code ? { via: code } : {}), syllabusId: m.best.syllabusId, subjectName: detail.subjectName, chapters: detail.chapters, minAvgMarkToPass: detail.minAvgMarkToPass, assessments: detail.assessments, credits: detail.credits, ...(detail.details ? { details: detail.details } : {}), crawledAt: Date.now() });
   }
   if (!found.some((m) => m.code === code)) out.push({ code, status: "alias", note: `Đã lấy ${found.map((m) => m.code).join(", ")}`, crawledAt: Date.now() });
   return out;
@@ -130,7 +130,9 @@ async function run() {
   if (typed.length === 0) return setStatus("Hãy nhập ít nhất một mã môn (ví dụ OSG202).", true);
   const redo = $("redo").checked;
   const variants = $("variants").checked;
-  const todo = typed.filter((c) => redo || !results[c] || results[c].status === "err");
+  const full = $("fullDetails").checked;
+  // Bật "lấy nội dung đầy đủ" thì môn đã lấy trước đây mà chưa có nội dung đầy đủ cũng được lấy lại
+  const todo = typed.filter((c) => redo || !results[c] || results[c].status === "err" || (full && results[c].status === "ok" && !results[c].details));
   order = [...new Set([...order, ...typed])].sort();
   typed.forEach((c) => {
     if (!live[c] || todo.includes(c)) live[c] = { state: todo.includes(c) ? "wait" : results[c].status };
@@ -158,7 +160,7 @@ async function run() {
       setStatus(`Đang lấy bằng ${threads} luồng: ${finished}/${todo.length} môn xong…`);
       render();
       try {
-        for (const r of await crawlOne(code, variants)) {
+        for (const r of await crawlOne(code, variants, full)) {
           results[r.code] = r;
           live[r.code] = { state: r.status };
           if (!order.includes(r.code)) order.push(r.code);

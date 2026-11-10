@@ -147,8 +147,29 @@
       .filter((a) => a.category);
   }
 
-  // Chỉ lấy phần cần dùng: mã môn, tên môn, và các chương kèm chủ đề (suy ra từ cột Topic của lịch học)
-  function parseDetail(doc) {
+  // Toàn bộ nội dung chữ của trang Syllabus Details (để lập chỉ mục tìm kiếm / hỏi đáp): thông tin chung (mô tả, nhiệm vụ sinh viên...),
+  // tài liệu, CLO, từng buổi học, câu hỏi gợi ý và bảng đánh giá. Bỏ ô trống và liên kết tải file cho gọn.
+  const compact = (o) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== "" && v != null && !(Array.isArray(v) && v.length === 0)));
+  function parseFullDetails(doc, info) {
+    const infoKept = {};
+    for (const [k, v] of Object.entries(info)) if (v && !/^(Syllabus ID|IsActive|IsApproved|Is Scored|ApprovedDate)$/i.test(k)) infoKept[k] = v;
+    return {
+      info: infoKept,
+      materials: tableRows(doc.querySelector("#gvMaterial")).map((r) => compact({ description: r["Material Description"], author: r["Author"], publisher: r["Publisher"], publishedDate: r["Published Date"], edition: r["Edition"], isbn: r["ISBN"], isMain: r["Is Main Material"] === "True", isOnline: r["Is Online"] === "True", note: r["Note"] })),
+      learningOutcomes: tableRows(doc.querySelector("#gvLO")).map((r) => compact({ name: r["CLO Name"], details: r["CLO Details"] })),
+      sessions: tableRows(doc.querySelector("#gvSchedule")).map((r) =>
+        compact({ session: r["Session"], topics: (r["Topic"] || "").split("\n").map(clean).filter(Boolean), type: r["Learning-Teaching Type"], lo: r["LO"], itu: r["ITU"], materials: r["Student Materials"], tasks: r["Student's Tasks"] }),
+      ),
+      constructiveQuestions: tableRows(doc.querySelector("#gvCQ")).map((r) => compact({ session: r["Session No"], name: r["Name"], details: r["Details"] })),
+      assessmentDetails: tableRows(doc.querySelector("#gvAssessment")).map((r) =>
+        compact({ category: r["Category"], type: r["Type"], part: r["Part"], weight: r["Weight"], completionCriteria: r["Completion Criteria"], duration: r["Duration"], clo: r["CLO"], questionType: r["Question Type"], noQuestion: r["No Question"], knowledgeAndSkill: r["Knowledge and Skill"], gradingGuide: r["Grading Guide"], note: r["Note"] }),
+      ),
+    };
+  }
+
+  // Chỉ lấy phần cần dùng: mã môn, tên môn, và các chương kèm chủ đề (suy ra từ cột Topic của lịch học).
+  // `opts.full` bật thì kèm `details`: toàn bộ nội dung chữ của trang (xem parseFullDetails).
+  function parseDetail(doc, opts) {
     const info = {};
     const infoTable = doc.querySelector("#table-detail");
     if (!infoTable) throw new Error("NOT_DETAIL_PAGE");
@@ -173,6 +194,7 @@
         const n = parseInt(info["NoCredit"] || info["No Credit"] || "", 10);
         return Number.isFinite(n) && n >= 0 && n < 30 ? n : null;
       })(),
+      ...(opts && opts.full ? { details: parseFullDetails(doc, info) } : {}),
     };
   }
 

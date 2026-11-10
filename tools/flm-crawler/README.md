@@ -14,6 +14,8 @@ Công cụ nội bộ (không nằm trong bản phát hành FEPass). Lấy tên 
 3. Nhập mã môn (cách nhau bằng dấu cách, dấu phẩy hoặc xuống dòng), bấm **Bắt đầu lấy**.
 4. Xong bấm **Tải JSON** (hoặc **Sao chép JSON**).
 
+Tick **Lấy cả nội dung Syllabus Details** để lấy thêm toàn bộ chữ của trang (mô tả môn, nhiệm vụ sinh viên, tài liệu, CLO, từng buổi học, câu hỏi gợi ý, bảng đánh giá) vào trường `details` của mỗi môn, dùng cho việc lập chỉ mục tìm kiếm AI sau này. File JSON lớn hơn nhiều (hàng chục MB cho cả 400 môn), nên tiện ích xin thêm quyền `unlimitedStorage`. Bật tùy chọn này thì các môn đã lấy trước đó mà chưa có nội dung đầy đủ sẽ được lấy lại.
+
 Ô **Số luồng** (1 đến 8, mặc định 4) là số môn lấy song song. Nhiều luồng thì nhanh hơn nhưng dễ bị FLM chặn (Cloudflare hoặc báo quá nhiều yêu cầu); bị chặn thì công cụ tự dừng, hãy giảm số luồng rồi chạy lại.
 
 Kết quả được lưu trong trình duyệt, tải lại trang không mất. Môn đã lấy xong sẽ được bỏ qua ở lần chạy sau, trừ khi tick **Lấy lại**.
