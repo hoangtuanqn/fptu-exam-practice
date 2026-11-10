@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { prisma } from "../configs/prisma";
-import { CACHE_DEDUPE_SCORE, CACHE_MAX_ENTRIES, CACHE_MIN_SCORE, CACHE_TTL_MS, CHAT_ACCOUNT_HINT, CHAT_MONEY_HINT, CHAT_SYSTEM_PROMPT } from "../constants/chat";
+import { CACHE_DEDUPE_SCORE, CACHE_MAX_ENTRIES, CACHE_MIN_SCORE, CACHE_TTL_MS, CHAT_ACCOUNT_HINT, CHAT_MONEY_HINT, CHAT_SYSTEM_PROMPT, EMBEDDING_MODEL } from "../constants/chat";
 import { startOfVnDay } from "../utils/time";
 import { dot, knowledgeService } from "./knowledge.service";
 
@@ -29,7 +29,8 @@ let entries: Entry[] | null = null;
 const promptHash = createHash("sha256").update(CHAT_SYSTEM_PROMPT).digest("hex");
 
 async function currentVersion() {
-  return createHash("sha256").update(`${await knowledgeService.version()}${promptHash}`).digest("hex").slice(0, 16);
+  // Cả mô hình embedding nằm trong dấu vân tay: vector câu hỏi của mô hình khác không so sánh được, nên cache cũ tự hết hiệu lực khi đổi mô hình
+  return createHash("sha256").update(`${await knowledgeService.version()}${promptHash}${EMBEDDING_MODEL}`).digest("hex").slice(0, 16);
 }
 
 async function load(): Promise<Entry[]> {
