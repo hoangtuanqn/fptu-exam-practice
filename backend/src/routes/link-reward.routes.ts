@@ -25,7 +25,7 @@ linkRewardRouter.post("/start", requireVerifiedMember, makeLimiter({ limit: 10 }
 linkRewardRouter.post("/claim", requireVerifiedMember, makeLimiter({ limit: 20 }), validate(claimBody), async (req: Request, res: Response) => {
   const { token } = getValidated<z.infer<typeof claimBody>>(res);
   const data = await linkRewardService.claim(req.user!.id, token);
-  res.json(new ResponseClient({ message: data.granted ? "Đã nhận 1 lượt giải thích miễn phí" : "Bạn đã nhận lượt từ liên kết này rồi", data }));
+  res.json(new ResponseClient({ message: data.granted ? `Đã nhận ${data.turns} lượt giải thích miễn phí` : "Bạn đã nhận lượt từ liên kết này rồi", data }));
 });
 
 export default linkRewardRouter;

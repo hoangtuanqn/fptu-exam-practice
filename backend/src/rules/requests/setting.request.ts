@@ -103,8 +103,10 @@ export const updateLinkRewardBody = z.object({
   enabled: z.boolean(),
   apiToken: z.string().trim().max(200).regex(/^[A-Za-z0-9_-]*$/, "Token chỉ gồm chữ, số, gạch").optional(), // để trống = giữ token cũ
   link4mEnabled: z.boolean().optional(),
+  link4mTurns: z.number("Số lượt không hợp lệ").int().min(1, "Tối thiểu 1").max(10, "Tối đa 10").optional(),
   dailyLimit: z.number("Số lượt không hợp lệ").int().min(1, "Tối thiểu 1").max(10, "Tối đa 10"),
   shrinkmeEnabled: z.boolean().optional(),
+  shrinkmeTurns: z.number("Số lượt không hợp lệ").int().min(1, "Tối thiểu 1").max(10, "Tối đa 10").optional(),
   shrinkmeToken: z.string().trim().max(200).regex(/^[A-Za-z0-9_-]*$/, "Token chỉ gồm chữ, số, gạch").optional(), // để trống = giữ token cũ
   shrinkmeDailyLimit: z.number("Số lượt không hợp lệ").int().min(1, "Tối thiểu 1").max(10, "Tối đa 10").optional(),
   validDays: z.number("Số ngày không hợp lệ").int().min(1, "Tối thiểu 1 ngày").max(60, "Tối đa 60 ngày"),

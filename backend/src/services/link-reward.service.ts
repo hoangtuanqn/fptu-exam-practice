@@ -81,6 +81,7 @@ export const linkRewardService = {
       expiredRecently,
       claimedToday: today,
       dailyLimit: active.reduce((sum, p) => sum + p.dailyLimit, 0), // tổng giới hạn của các dịch vụ đang bật
+      rewardTurns: active.find((p) => todayBy[p.provider] < p.dailyLimit)?.turns ?? 0, // lần vượt link tới sẽ được bao nhiêu lượt (dịch vụ sẽ được chọn)
       remainingToday: active.reduce((sum, p) => sum + Math.max(0, p.dailyLimit - todayBy[p.provider]), 0),
       validDays: cfg.validDays,
     };
@@ -129,7 +130,7 @@ export const linkRewardService = {
     if (!TOKEN_FORMAT.test(token)) throw AppError.notFound("Liên kết nhận lượt không hợp lệ");
     const request = await prisma.linkRewardRequest.findUnique({ where: { tokenHash: hash(token) } });
     if (!request || request.userId !== userId) throw AppError.notFound("Liên kết nhận lượt không hợp lệ hoặc không thuộc tài khoản này");
-    if (request.status === "CLAIMED") return { granted: false, already: true, ...(await this.status(userId)) };
+    if (request.status === "CLAIMED") return { granted: false, already: true, turns: 0, ...(await this.status(userId)) };
 
     const cfg = await linkRewardSettingService.get();
     const now = Date.now();
@@ -137,16 +138,16 @@ export const linkRewardService = {
     const waitMs = cfg.minSeconds * 1000 - (now - request.createdAt.getTime());
     if (waitMs > 0) throw new AppError(`Bạn hoàn thành quá nhanh. Hãy làm đủ các bước trên trang vượt link, rồi thử lại sau ${Math.ceil(waitMs / 1000)} giây.`, 429);
     const provider = (request.provider in LINK_PROVIDERS ? request.provider : "link4m") as LinkProvider;
-    const limit = providerConfig(cfg, provider).dailyLimit;
+    const { dailyLimit: limit, turns } = providerConfig(cfg, provider);
     if ((await claimedTodayBy(userId))[provider] >= limit) throw new AppError(`Hôm nay bạn đã nhận đủ ${limit} lượt từ ${LINK_PROVIDERS[provider].label}. Ngày mai quay lại nhé.`);
 
     const expiresAt = new Date(now + cfg.validDays * DAY_MS);
     await prisma.$transaction(async (tx) => {
       const claimed = await tx.linkRewardRequest.updateMany({ where: { id: request.id, status: "PENDING" }, data: { status: "CLAIMED", claimedAt: new Date(now) } });
       if (claimed.count !== 1) throw AppError.conflict("Liên kết này đã được dùng"); // hai yêu cầu cùng lúc: chỉ một lượt thành công
-      await tx.freeExplainTurn.create({ data: { userId, requestId: request.id, expiresAt } });
+      await tx.freeExplainTurn.createMany({ data: Array.from({ length: turns }, () => ({ userId, requestId: request.id, expiresAt })) });
     });
-    return { granted: true, already: false, ...(await this.status(userId)) };
+    return { granted: true, already: false, turns, ...(await this.status(userId)) };
   },
 
   /** Dùng 1 lượt (sắp hết hạn trước) cho một câu. Gọi trong transaction của việc mua giải thích. false = không còn lượt hợp lệ. */

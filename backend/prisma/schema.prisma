@@ -772,7 +772,7 @@ model LinkRewardRequest {
   claimedAt DateTime? @map("claimed_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  turn FreeExplainTurn?
+  turns FreeExplainTurn[]
 
   @@index([userId, createdAt])
   @@map("link_reward_requests")
@@ -782,7 +782,7 @@ model LinkRewardRequest {
 model FreeExplainTurn {
   id                 Int       @id @default(autoincrement())
   userId             Int       @map("user_id")
-  requestId          Int?      @unique @map("request_id")
+  requestId          Int?      @map("request_id")
   grantedAt          DateTime  @default(now()) @map("granted_at")
   expiresAt          DateTime  @map("expires_at")
   usedAt             DateTime? @map("used_at")
@@ -793,5 +793,6 @@ model FreeExplainTurn {
   request LinkRewardRequest? @relation(fields: [requestId], references: [id], onDelete: SetNull)
 
   @@index([userId, usedAt, expiresAt])
+  @@index([requestId])
   @@map("free_explain_turns")
 }

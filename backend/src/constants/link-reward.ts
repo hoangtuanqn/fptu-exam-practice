@@ -3,10 +3,12 @@ export interface LinkRewardConfig {
   enabled: boolean; // công tắc tổng (mặc định TẮT)
   link4mEnabled: boolean; // dùng Link4M (khi công tắc tổng bật và có token)
   apiToken: string; // token API Link4M, chỉ nằm ở máy chủ, không bao giờ trả ra giao diện
-  dailyLimit: number; // số lượt nhận tối đa mỗi người mỗi ngày qua Link4M (Link4M chỉ tính 2 lượt xem / IP / 24 giờ)
+  dailyLimit: number; // số lần nhận tối đa mỗi người mỗi ngày qua Link4M (Link4M chỉ tính 2 lượt xem / IP / 24 giờ)
+  link4mTurns: number; // mỗi lần vượt Link4M xong được bao nhiêu lượt giải thích
   shrinkmeEnabled: boolean; // dùng ShrinkMe (mặc định TẮT)
   shrinkmeToken: string; // token API ShrinkMe, chỉ nằm ở máy chủ
-  shrinkmeDailyLimit: number; // số lượt nhận tối đa mỗi người mỗi ngày qua ShrinkMe (chỉ tính 1 lượt xem duy nhất / 24 giờ)
+  shrinkmeDailyLimit: number; // số lần nhận tối đa mỗi người mỗi ngày qua ShrinkMe (chỉ tính 1 lượt xem duy nhất / 24 giờ)
+  shrinkmeTurns: number; // mỗi lần vượt ShrinkMe xong được bao nhiêu lượt giải thích
   validDays: number; // lượt miễn phí giữ được bao nhiêu ngày
   minSeconds: number; // thời gian tối thiểu từ lúc bấm đến lúc nhận (chống công cụ vượt link tự động)
 }
@@ -16,9 +18,11 @@ export const LINK_REWARD_DEFAULTS: LinkRewardConfig = {
   link4mEnabled: true,
   apiToken: "",
   dailyLimit: 2,
+  link4mTurns: 3,
   shrinkmeEnabled: false,
   shrinkmeToken: "",
   shrinkmeDailyLimit: 1,
+  shrinkmeTurns: 1,
   validDays: 7,
   minSeconds: 25,
 };

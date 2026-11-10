@@ -15,8 +15,8 @@ const parse = <K extends keyof LinkRewardConfig>(name: K, raw: string | undefine
 
 /** Cấu hình của từng dịch vụ vượt link: đang dùng được hay không, token, số lượt tối đa mỗi người mỗi ngày */
 export function providerConfig(cfg: LinkRewardConfig, provider: LinkProvider) {
-  if (provider === "link4m") return { active: cfg.enabled && cfg.link4mEnabled && cfg.apiToken !== "", token: cfg.apiToken, dailyLimit: cfg.dailyLimit };
-  return { active: cfg.enabled && cfg.shrinkmeEnabled && cfg.shrinkmeToken !== "", token: cfg.shrinkmeToken, dailyLimit: cfg.shrinkmeDailyLimit };
+  if (provider === "link4m") return { active: cfg.enabled && cfg.link4mEnabled && cfg.apiToken !== "", token: cfg.apiToken, dailyLimit: cfg.dailyLimit, turns: cfg.link4mTurns };
+  return { active: cfg.enabled && cfg.shrinkmeEnabled && cfg.shrinkmeToken !== "", token: cfg.shrinkmeToken, dailyLimit: cfg.shrinkmeDailyLimit, turns: cfg.shrinkmeTurns };
 }
 
 export const linkRewardSettingService = {
