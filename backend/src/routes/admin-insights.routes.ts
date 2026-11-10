@@ -5,6 +5,7 @@ import { getValidated, validate } from "../middlewares/validate.middlewares";
 import { idParam, type IdParam } from "../rules/requests/admin.request";
 import { ResponseClient } from "../rules/response";
 import { adminInsightsService } from "../services/admin.insights.service";
+import { promptEventService } from "../services/prompt-event.service";
 
 const funnelQuery = z.object({ days: z.coerce.number().int().min(1).max(365).default(30) });
 
@@ -13,6 +14,9 @@ const adminInsightsRouter = Router();
 
 adminInsightsRouter.get("/funnel", validate(funnelQuery, "query"), async (_req: Request, res: Response) => {
   res.json(new ResponseClient({ data: await adminInsightsService.funnel(getValidated<z.infer<typeof funnelQuery>>(res, "query").days) }));
+});
+adminInsightsRouter.get("/prompts", validate(funnelQuery, "query"), async (_req: Request, res: Response) => {
+  res.json(new ResponseClient({ data: await promptEventService.summary(getValidated<z.infer<typeof funnelQuery>>(res, "query").days) }));
 });
 adminInsightsRouter.get("/exams", async (_req: Request, res: Response) => {
   res.json(new ResponseClient({ data: await adminInsightsService.examsToReview() }));
