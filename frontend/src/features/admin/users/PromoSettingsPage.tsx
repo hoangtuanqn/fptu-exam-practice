@@ -24,6 +24,7 @@ function PromoForm({ initial, explainPrice, onSaved }: { initial: PromoSettings;
   const [discount, setDiscount] = useState(String(initial.bundleDiscountPercent));
   const [trials, setTrials] = useState(String(initial.freeTrials));
   const [endsAt, setEndsAt] = useState(toLocalInput(initial.promoEndsAt));
+  const [upsell, setUpsell] = useState({ result: initial.upsellResult ?? true, reviewCap: initial.upsellReviewCap ?? true, depositTier: initial.upsellDepositTier ?? true });
   const [tiers, setTiers] = useState<{ min: string; percent: string }[]>(initial.depositBonusTiers.map((t) => ({ min: String(t.min), percent: String(t.percent) })));
 
   const d = Number(discount || 0);
@@ -38,6 +39,9 @@ function PromoForm({ initial, explainPrice, onSaved }: { initial: PromoSettings;
         freeTrials: Number(trials || 0),
         promoEndsAt: endsAt ? new Date(endsAt).toISOString() : "",
         depositBonusTiers,
+        upsellResult: upsell.result,
+        upsellReviewCap: upsell.reviewCap,
+        upsellDepositTier: upsell.depositTier,
       });
       toast.success("Đã lưu cấu hình ưu đãi");
       onSaved();
@@ -130,6 +134,27 @@ function PromoForm({ initial, explainPrice, onSaved }: { initial: PromoSettings;
             </div>
           ))}
           {fieldErrors.depositBonusTiers && <p className="text-xs text-rose-600">{fieldErrors.depositBonusTiers}</p>}
+        </div>
+      </Card>
+
+      <Card>
+        <CardHeader title="Lời mời nâng cấp và nạp thêm" description="Tắt từng mục là biến mất ngay trên trang người dùng (sau lần tải lại kế tiếp). Mỗi lời mời đều có nút bỏ qua và giới hạn số lần hiện." />
+        <div className="space-y-3 p-5">
+          {(
+            [
+              ["result", "Bảng điểm sau khi nộp bài", "Gợi ý gói Pro dựa trên số câu sai, chỉ hiện cho tài khoản chưa có Pro."],
+              ["reviewCap", "Sổ câu sai gần đầy", "Báo khi sổ của gói thường đã dùng từ 80% số chỗ."],
+              ["depositTier", "Bậc thưởng khi nạp", "Báo số tiền còn thiếu để lên bậc thưởng kế tiếp khi gần tới."],
+            ] as const
+          ).map(([k, title, hint]) => (
+            <label key={k} className="flex cursor-pointer items-start gap-3">
+              <input type="checkbox" className="mt-1 h-4 w-4" checked={upsell[k]} onChange={(e) => setUpsell((u) => ({ ...u, [k]: e.target.checked }))} />
+              <span className="text-sm">
+                <b className="text-slate-800">{title}</b>
+                <span className="block text-xs text-slate-500">{hint}</span>
+              </span>
+            </label>
+          ))}
         </div>
       </Card>
 
