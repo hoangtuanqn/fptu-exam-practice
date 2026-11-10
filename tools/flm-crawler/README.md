@@ -14,6 +14,8 @@ Công cụ nội bộ (không nằm trong bản phát hành FEPass). Lấy tên 
 3. Nhập mã môn (cách nhau bằng dấu cách, dấu phẩy hoặc xuống dòng), bấm **Bắt đầu lấy**.
 4. Xong bấm **Tải JSON** (hoặc **Sao chép JSON**).
 
+Ô **Số luồng** (1 đến 8, mặc định 4) là số môn lấy song song. Nhiều luồng thì nhanh hơn nhưng dễ bị FLM chặn (Cloudflare hoặc báo quá nhiều yêu cầu); bị chặn thì công cụ tự dừng, hãy giảm số luồng rồi chạy lại.
+
 Kết quả được lưu trong trình duyệt, tải lại trang không mất. Môn đã lấy xong sẽ được bỏ qua ở lần chạy sau, trừ khi tick **Lấy lại**.
 
 ## Cách chọn môn

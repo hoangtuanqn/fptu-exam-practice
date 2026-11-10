@@ -2,10 +2,14 @@
 // phân tích HTML bằng FlmParser, lưu kết quả vào chrome.storage.local để tải lại trang không mất.
 const BASE = "https://flm.fpt.edu.vn/gui/role/student";
 const STORE_KEY = "flm.results";
-const DELAY_MS = 700; // nghỉ giữa hai yêu cầu để không dồn tải lên FLM
+const DELAY_MS = 250; // mỗi luồng nghỉ chừng này giữa hai yêu cầu (cộng thêm một chút ngẫu nhiên) để không dồn tải lên FLM
+const DEFAULT_THREADS = 4;
+const MAX_THREADS = 8;
+const RATE_LIMIT_RETRIES = 3;
 
 const $ = (id) => document.getElementById(id);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const jitter = () => DELAY_MS + Math.random() * DELAY_MS; // nghỉ ngẫu nhiên để các luồng không bắn cùng lúc
 
 /** @type {Record<string, any>} mã môn -> kết quả đã lưu */
 let results = {};
@@ -27,16 +31,23 @@ async function loadSaved() {
 const save = () => chrome.storage.local.set({ [STORE_KEY]: results });
 
 async function fetchDoc(url) {
-  let res;
-  try {
-    res = await fetch(url, { credentials: "include" });
-  } catch {
-    await sleep(1500); // mạng chập chờn: thử lại một lần
-    res = await fetch(url, { credentials: "include" });
+  for (let attempt = 0; ; attempt++) {
+    let res;
+    try {
+      res = await fetch(url, { credentials: "include" });
+    } catch {
+      await sleep(1500); // mạng chập chờn: thử lại một lần
+      res = await fetch(url, { credentials: "include" });
+    }
+    if (res.status === 429 && attempt < RATE_LIMIT_RETRIES) {
+      await sleep(3000 * (attempt + 1)); // FLM báo quá nhiều yêu cầu: chờ lâu dần rồi thử lại
+      continue;
+    }
+    if (res.status === 429) throw new Error("FLM giới hạn tốc độ (chặn): giảm số luồng rồi chạy lại");
+    if (res.status === 403 || res.status === 503) throw new Error("FLM chặn yêu cầu (Cloudflare). Mở FLM ở một tab, vượt kiểm tra rồi chạy lại");
+    if (!res.ok) throw new Error(`FLM trả mã ${res.status}`);
+    return new DOMParser().parseFromString(await res.text(), "text/html");
   }
-  if (res.status === 403 || res.status === 503) throw new Error("FLM chặn yêu cầu (Cloudflare). Mở FLM ở một tab, vượt kiểm tra rồi chạy lại");
-  if (!res.ok) throw new Error(`FLM trả mã ${res.status}`);
-  return new DOMParser().parseFromString(await res.text(), "text/html");
 }
 
 async function crawlOne(code) {
@@ -50,7 +61,7 @@ async function crawlOne(code) {
   if (!search.best) {
     return { code, status: "none", note: search.found ? `Có ${search.found} kết quả nhưng không mã nào trùng hẳn (${search.others.join(", ")})` : "FLM không có môn này", crawledAt: Date.now() };
   }
-  await sleep(DELAY_MS);
+  await sleep(jitter());
   let detail;
   try {
     detail = FlmParser.parseDetail(await fetchDoc(`${BASE}/SyllabusDetails?sylID=${search.best.syllabusId}`));
@@ -124,29 +135,36 @@ async function run() {
   stopRequested = false;
   $("start").disabled = true;
   $("stop").disabled = false;
+  const threads = Math.min(MAX_THREADS, Math.max(1, Math.floor(Number($("threads").value)) || DEFAULT_THREADS));
   let fatal = false;
-  let i = 0;
-  for (const code of todo) {
-    if (stopRequested) break;
-    i++;
-    live[code] = { state: "run" };
-    setStatus(`Đang lấy ${code} (${i}/${todo.length})…`);
-    render();
-    try {
-      results[code] = await crawlOne(code);
-      live[code] = { state: results[code].status };
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      results[code] = { code, status: "err", note: msg, crawledAt: Date.now() };
-      live[code] = { state: "err", note: msg };
-      // Chưa đăng nhập / bị chặn thì các môn sau cũng hỏng: dừng sớm cho đỡ phí lượt
-      if (/Chưa đăng nhập|chặn/.test(msg)) fatal = true;
+  let next = 0;
+  let finished = 0;
+  let saving = Promise.resolve();
+  // Nhiều luồng cùng lấy từ một hàng đợi: mỗi luồng làm xong một môn thì lấy môn kế tiếp. Chưa đăng nhập hoặc bị chặn thì tất cả dừng.
+  const worker = async () => {
+    while (!stopRequested && !fatal) {
+      const code = todo[next++];
+      if (code === undefined) return;
+      live[code] = { state: "run" };
+      setStatus(`Đang lấy bằng ${threads} luồng: ${finished}/${todo.length} môn xong…`);
+      render();
+      try {
+        results[code] = await crawlOne(code);
+        live[code] = { state: results[code].status };
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        results[code] = { code, status: "err", note: msg, crawledAt: Date.now() };
+        live[code] = { state: "err", note: msg };
+        if (/Chưa đăng nhập|chặn/.test(msg)) fatal = true; // các môn sau cũng hỏng: dừng sớm cho đỡ phí lượt
+      }
+      finished++;
+      saving = saving.then(save); // ghi lần lượt, không để các luồng ghi chồng nhau
+      render();
+      await sleep(jitter());
     }
-    await save();
-    render();
-    if (fatal) break;
-    await sleep(DELAY_MS);
-  }
+  };
+  await Promise.all(Array.from({ length: Math.min(threads, todo.length) }, worker));
+  await saving;
   running = false;
   $("start").disabled = false;
   $("stop").disabled = true;
@@ -158,7 +176,7 @@ async function run() {
 $("start").addEventListener("click", () => void run());
 $("stop").addEventListener("click", () => {
   stopRequested = true;
-  setStatus("Đang dừng sau môn hiện tại…");
+  setStatus("Đang dừng sau các môn đang chạy…");
 });
 $("download").addEventListener("click", () => {
   const url = URL.createObjectURL(new Blob([exportJson()], { type: "application/json" }));
