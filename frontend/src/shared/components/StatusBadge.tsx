@@ -48,6 +48,7 @@ export const TRANSACTION_LABEL: Record<TransactionType, string> = {
   PE_REFUND: "Hoàn phí tải đề PE",
   PLAN_CHARGE: "Mua gói Pro",
   CHECKIN_REWARD: "Thưởng điểm danh",
+  CREDIT_EXPIRED: "Credit hết hạn",
 };
 
 const make =
