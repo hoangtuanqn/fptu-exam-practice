@@ -9,6 +9,9 @@ export interface PromoConfig {
   freeTrials: number; // số lượt giải thích miễn phí mỗi tài khoản (tổng mọi đề)
   promoEndsAt: string; // hạn chót thật của ưu đãi gói (ISO). Rỗng = giảm giá vĩnh viễn, không đếm ngược; hết hạn thì giá gói bằng giá mua lẻ
   depositBonusTiers: BonusTier[]; // thưởng khi nạp nhiều (bậc cao nhất thỏa điều kiện được áp dụng)
+  upsellResult: boolean; // lời mời nâng cấp ở bảng điểm sau khi nộp bài
+  upsellReviewCap: boolean; // nhắc khi sổ câu sai gần đầy (gói thường)
+  upsellDepositTier: boolean; // gợi ý nạp thêm một chút để lên bậc thưởng kế tiếp
 }
 
 export const PROMO_DEFAULTS: PromoConfig = {
@@ -20,6 +23,9 @@ export const PROMO_DEFAULTS: PromoConfig = {
     { min: 200_000, percent: 8 },
     { min: 500_000, percent: 12 },
   ],
+  upsellResult: true,
+  upsellReviewCap: true,
+  upsellDepositTier: true,
 };
 
 export const PROMO_KEY_PREFIX = "promo.";
