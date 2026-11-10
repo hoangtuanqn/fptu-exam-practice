@@ -12,6 +12,7 @@ export const offersService = {
       bundleDiscountPercent: promoExpired(promo) ? 0 : promo.bundleDiscountPercent,
       promoEndsAt: ends ? ends.toISOString() : null,
       depositBonusTiers: promo.depositBonusTiers,
+      upsell: { result: promo.upsellResult, reviewCap: promo.upsellReviewCap, depositTier: promo.upsellDepositTier },
     };
   },
 };

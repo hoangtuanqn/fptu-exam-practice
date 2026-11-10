@@ -11,6 +11,7 @@ import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { Pagination } from "@/shared/ui/Table";
 import { Segmented } from "@/shared/ui/Segmented";
 import { dueText, reviewApi, studyApi, type ReviewRow } from "./review.api";
+import { ReviewCapNotice } from "./ReviewCapNotice";
 import { StudyStreakCard } from "./StudyStreakCard";
 import { TopicReport } from "./TopicReport";
 import { useConfirm } from "@/shared/ui/ConfirmDialog";
@@ -152,6 +153,8 @@ export default function ReviewPage() {
               </Link>
             </div>
           )}
+
+          {!atLimit && <ReviewCapNotice total={s.total} limit={s.limit} />}
 
           <details className="border-t border-outline-variant">
             <summary className="md-label-large flex cursor-pointer list-none items-center gap-2 px-5 py-3 text-on-surface-variant hover:text-on-surface">

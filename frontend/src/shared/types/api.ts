@@ -331,6 +331,9 @@ export interface PromoSettings {
   freeTrials: number;
   promoEndsAt: string; // ISO; rỗng = không đặt hạn
   depositBonusTiers: BonusTier[];
+  upsellResult?: boolean; // công tắc: lời mời nâng cấp ở bảng điểm
+  upsellReviewCap?: boolean; // công tắc: nhắc khi sổ câu sai gần đầy
+  upsellDepositTier?: boolean; // công tắc: gợi ý lên bậc thưởng nạp kế tiếp
 }
 
 // Số liệu ưu đãi hiện hành cho trang chủ (công khai)
@@ -340,6 +343,7 @@ export interface PublicOffers {
   bundleDiscountPercent: number;
   promoEndsAt: string | null;
   depositBonusTiers: BonusTier[];
+  upsell?: { result: boolean; reviewCap: boolean; depositTier: boolean }; // máy chủ cũ chưa có: coi như tắt
 }
 
 export interface AccountSettings {

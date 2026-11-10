@@ -14,6 +14,7 @@ import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
 import { useSubmit } from "@/shared/hooks/useSubmit";
 import { formatCredit, formatDateTime, formatMoney } from "@/shared/utils/formatters";
 import { useClampPage } from "@/shared/hooks/useClampPage";
+import { useUpsell } from "@/shared/hooks/useUpsell";
 
 const PRESETS = [10_000, 50_000, 100_000, 200_000, 500_000, 1_000_000];
 const BACK_KEY = "deposit_back";
@@ -72,6 +73,12 @@ export default function DepositPage() {
   const tooLow = digits !== "" && amount < min;
   const tiers = info.data?.bonusTiers ?? [];
   const bonus = bonusOf(amount, tiers);
+
+  // Bậc thưởng kế tiếp khi chỉ còn thiếu một chút (tối đa 40% mức của bậc). Không gợi ý khi người dùng đang thiếu credit để mua gì đó (need > 0).
+  const { flags: upsell } = useUpsell();
+  const nextTier = [...tiers].sort((x, y) => x.min - y.min).find((t) => t.min > amount);
+  const gap = nextTier ? nextTier.min - amount : 0;
+  const showTierGap = upsell.depositTier && need === 0 && !!nextTier && amount > 0 && !tooLow && gap <= nextTier.min * 0.4;
 
   // Điền sẵn số tiền vừa đủ cho phần còn thiếu (làm tròn lên nghìn, không dưới mức tối thiểu)
   useEffect(() => {
@@ -151,6 +158,17 @@ export default function DepositPage() {
                     <Gift size={15} className="shrink-0 text-emerald-600" />
                     Bạn nhận <b className="tabular-nums">{formatCredit(amount + bonus)}</b>
                     {bonus > 0 && <span className="text-emerald-600">(gồm +{bonus.toLocaleString("vi-VN")} thưởng)</span>}
+                  </p>
+                )}
+                {showTierGap && nextTier && (
+                  <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-700">
+                    <span>
+                      Thêm <b className="tabular-nums">{formatMoney(gap)}</b> nữa là được thưởng +{nextTier.percent}% (nhận thêm {(bonusOf(nextTier.min, tiers) - bonus).toLocaleString("vi-VN")} credit).
+                    </span>
+                    <button type="button" onClick={() => setDigits(String(nextTier.min))} className="font-semibold text-emerald-700 underline">
+                      Nạp {formatMoney(nextTier.min)}
+                    </button>
+                    <span className="text-slate-500">Không bắt buộc.</span>
                   </p>
                 )}
                 <details>

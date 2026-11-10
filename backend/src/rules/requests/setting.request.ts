@@ -70,6 +70,10 @@ export const updatePromoBody = z.object({
     )
     .max(6, "Tối đa 6 bậc")
     .refine((tiers) => new Set(tiers.map((t) => t.min)).size === tiers.length, "Các mức nạp không được trùng nhau"),
+  // Công tắc lời mời nâng cấp/nạp thêm: tùy chọn để bản giao diện cũ vẫn lưu được
+  upsellResult: z.boolean().optional(),
+  upsellReviewCap: z.boolean().optional(),
+  upsellDepositTier: z.boolean().optional(),
 });
 export type UpdatePromoBody = z.infer<typeof updatePromoBody>;
 

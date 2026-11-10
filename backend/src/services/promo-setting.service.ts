@@ -7,6 +7,8 @@ const NAMES = Object.keys(PROMO_DEFAULTS) as (keyof PromoConfig)[];
 
 const num = (raw: string | undefined, fallback: number) => (raw !== undefined && raw !== "" && Number.isFinite(Number(raw)) ? Number(raw) : fallback);
 
+const flag = (raw: string | undefined, fallback: boolean) => (raw === undefined || raw === "" ? fallback : raw === "true");
+
 const parseTiers = (raw: string | undefined): BonusTier[] => {
   if (raw === undefined) return PROMO_DEFAULTS.depositBonusTiers;
   try {
@@ -28,11 +30,20 @@ export const promoSettingService = {
       freeTrials: num(raw[keyOf("freeTrials")], PROMO_DEFAULTS.freeTrials),
       promoEndsAt: raw[keyOf("promoEndsAt")] ?? PROMO_DEFAULTS.promoEndsAt,
       depositBonusTiers: parseTiers(raw[keyOf("depositBonusTiers")]),
+      upsellResult: flag(raw[keyOf("upsellResult")], PROMO_DEFAULTS.upsellResult),
+      upsellReviewCap: flag(raw[keyOf("upsellReviewCap")], PROMO_DEFAULTS.upsellReviewCap),
+      upsellDepositTier: flag(raw[keyOf("upsellDepositTier")], PROMO_DEFAULTS.upsellDepositTier),
     };
   },
 
   async update(body: UpdatePromoBody) {
+    const cur = await this.get();
+    // Công tắc là trường thêm sau: bản giao diện cũ không gửi thì giữ nguyên giá trị đang lưu
+    const sw = (name: "upsellResult" | "upsellReviewCap" | "upsellDepositTier") => String(body[name] ?? cur[name]);
     await settingRepository.setMany({
+      [keyOf("upsellResult")]: sw("upsellResult"),
+      [keyOf("upsellReviewCap")]: sw("upsellReviewCap"),
+      [keyOf("upsellDepositTier")]: sw("upsellDepositTier"),
       [keyOf("bundleDiscountPercent")]: String(body.bundleDiscountPercent),
       [keyOf("freeTrials")]: String(body.freeTrials),
       [keyOf("promoEndsAt")]: body.promoEndsAt,
