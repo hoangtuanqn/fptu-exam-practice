@@ -17,6 +17,7 @@ import { crawlerSettingService } from "./crawler-setting.service";
 import { chatToolsFor, toolStatus, runChatTool } from "./chat-tools.service";
 import { chatCacheService, type Viewer } from "./chat-cache.service";
 import { knowledgeService } from "./knowledge.service";
+import { formatRagContext, mightBeSyllabus, syllabusRagService } from "./syllabus-rag.service";
 import { promoSettingService } from "./promo-setting.service";
 import { settingService } from "./setting.service";
 
@@ -71,17 +72,32 @@ export const chatService = {
     const prevUser = [...history].reverse().find((m, i) => i > 0 && m.role === "user")?.content ?? "";
     const query = question.length < 50 && prevUser ? `${prevUser}\n${question}` : question;
 
-    const [hits, facts] = await Promise.all([knowledgeService.search(query), CHAT_MONEY_HINT.test(query) ? liveFacts() : Promise.resolve("")]);
+    // Câu hỏi về syllabus: vector câu hỏi tạo trước (một lần, có bộ nhớ đệm) rồi dùng chung cho tìm hướng dẫn và tìm syllabus. Lỗi ở đường này thì bỏ qua, chatbot vẫn trả lời phần còn lại.
+    const wantSyllabus = mightBeSyllabus(query);
+    const qvec = wantSyllabus ? await knowledgeService.queryVector(query) : null;
+    const [hits, facts, rag] = await Promise.all([
+      knowledgeService.search(query),
+      CHAT_MONEY_HINT.test(query) ? liveFacts() : Promise.resolve(""),
+      wantSyllabus
+        ? syllabusRagService.retrieve(query, qvec).catch((err) => {
+            console.error(`[chat] tìm syllabus lỗi: ${(err as Error).message}`);
+            return null;
+          })
+        : Promise.resolve(null),
+    ]);
+    // Hỏi về cách dùng FEPass (có chữ "môn" nhưng đã khớp tài liệu hướng dẫn) thì không gắn khối "không có dữ liệu syllabus", tránh Claude trả lời lạc hướng
+    const syllabus = rag && (rag.confident || hits.length === 0 || rag.mode === "subject") ? formatRagContext(rag) : "";
+    const matched = hits.length > 0 || !!rag?.confident;
     const knowledge = hits.length ? hits.map((h) => `<section title="${h.title.replace(/"/g, "'")}">\n${h.content}\n</section>`).join("\n") : "(Không có đoạn hướng dẫn nào khớp với câu hỏi này.)";
 
     const log = await prisma.chatLog.create({
-      data: { userId: "userId" in owner ? owner.userId : null, guestId: "guestId" in owner ? owner.guestId : null, ip: ip?.slice(0, 64) ?? null, question: question.slice(0, 500), matched: hits.length > 0 },
+      data: { userId: "userId" in owner ? owner.userId : null, guestId: "guestId" in owner ? owner.guestId : null, ip: ip?.slice(0, 64) ?? null, question: question.slice(0, 500), matched },
       select: { id: true },
     });
 
     return {
       logId: log.id,
-      matched: hits.length > 0,
+      matched,
       userId: "userId" in owner ? owner.userId : null,
       request: {
         client: new Anthropic({ apiKey: ai.anthropicApiKey, timeout: 45_000, maxRetries: 1 }),
@@ -94,7 +110,7 @@ export const chatService = {
 <live_facts>
 ${facts}
 </live_facts>` : ""}
-<knowledge>\n${knowledge}\n</knowledge>` },
+<knowledge>\n${knowledge}\n</knowledge>${syllabus ? `\n${syllabus}` : ""}` },
           ],
           messages: history.map((m) => ({ role: m.role, content: m.content })),
         },
@@ -126,7 +142,7 @@ ${facts}
     // Cache: câu hỏi hướng dẫn chung đứng riêng mà đã từng được trả lời (cùng ý) thì trả lại luôn, không gọi Claude
     const viewer: Viewer = "userId" in owner ? "member" : "guest";
     const question = body.messages[body.messages.length - 1]!.content;
-    const cacheable = chatCacheService.eligible(body.messages.filter((m, i) => !(i === 0 && m.role !== "user")).length, question);
+    const cacheable = chatCacheService.eligible(body.messages.filter((m, i) => !(i === 0 && m.role !== "user")).length, question) && !mightBeSyllabus(question); // câu hỏi về syllabus phụ thuộc vào môn được hỏi: không dùng lại câu trả lời "gần giống"
     const vec = cacheable ? await knowledgeService.queryVector(question) : null;
     if (vec) {
       const cached = await chatCacheService.find(vec, viewer);
