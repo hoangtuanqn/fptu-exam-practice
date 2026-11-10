@@ -18,6 +18,7 @@ import { aiSettingService } from "./ai-setting.service";
 import { promoSettingService } from "./promo-setting.service";
 import { commentsOfQuestion, compactCommentsText } from "./crawler/comments-file.service";
 import { examService } from "./exam.service";
+import { linkRewardService } from "./link-reward.service";
 import { walletService } from "./wallet.service";
 
 const BAD_GATEWAY = 502;
@@ -62,7 +63,8 @@ export const explanationService = {
     const bundle = await this.bundleQuote(userId, examId, ai.explainPrice, purchased, promo);
     if (PRO_BENEFITS.freeExplain && (await planService.isPro(userId))) bundle.unlocked = true; // Pro: xem mọi câu miễn phí như đã mở khóa
     const trialsUsed = ai.explainPrice > 0 ? await explanationRepository.trialsUsed(userId) : 0;
-    return { price: ai.explainPrice, purchased, unlocked: bundle.unlocked, bundle, freeTrialsLeft: ai.explainPrice > 0 ? Math.max(0, promo.freeTrials - trialsUsed) : 0 };
+    const freeTurns = await linkRewardService.status(userId);
+    return { price: ai.explainPrice, purchased, unlocked: bundle.unlocked, bundle, freeTrialsLeft: ai.explainPrice > 0 ? Math.max(0, promo.freeTrials - trialsUsed) : 0, freeTurns };
   },
 
   /**
@@ -103,7 +105,7 @@ export const explanationService = {
    * dùng chung: người đầu tiên khiến AI chạy, những người sau vẫn trả phí nhưng chỉ đọc lại bản đã lưu.
    * Trừ phí trước khi gọi AI; AI lỗi thì hoàn phí đúng số đã trừ.
    */
-  async explain(actor: Actor, userId: number, examId: number, questionNumber: number) {
+  async explain(actor: Actor, userId: number, examId: number, questionNumber: number, useFreeTurn = false) {
     await examService.assertAccess(actor, examId);
 
     const question = await examRepository.findQuestionForExplain(examId, questionNumber);
@@ -119,19 +121,30 @@ export const explanationService = {
     // Trả phí (nếu chưa mua). Trừ tiền và ghi nhận lượt mua cùng một transaction.
     let charged = 0;
     let trial = false; // lượt xem thử miễn phí (không trừ credit nhưng tính vào số lượt thử)
+    let viaTurn = false; // dùng 1 lượt miễn phí nhận từ vượt link
     const unlockedAll = (await explanationRepository.hasUnlocked(userId, examId)) || (PRO_BENEFITS.freeExplain && (await planService.isPro(userId)));
     if (!unlockedAll && !(await explanationRepository.hasPurchased(userId, examId, questionNumber))) {
       try {
-        trial = ai.explainPrice > 0 && (await explanationRepository.trialsUsed(userId)) < (await promoSettingService.get()).freeTrials;
-        await prisma.$transaction(async (tx) => {
-          if (ai.explainPrice > 0 && !trial) {
-            await walletService.charge(tx, { userId, amount: ai.explainPrice, type: "EXPLAIN_CHARGE", note: `Giải thích AI: ${question.exam.title}, câu ${questionNumber}` });
-          }
-          await explanationRepository.createPurchase(tx, { userId, examId, questionNumber, price: trial ? 0 : ai.explainPrice, isTrial: trial });
-        });
-        charged = trial ? 0 : ai.explainPrice;
+        if (useFreeTurn) {
+          // Người dùng chủ động dùng lượt miễn phí: trừ 1 lượt (sắp hết hạn trước) và ghi nhận lượt xem cùng một transaction
+          await prisma.$transaction(async (tx) => {
+            if (!(await linkRewardService.consume(tx, userId, examId, questionNumber))) throw new AppError("Bạn không còn lượt giải thích miễn phí (có thể đã hết hạn)");
+            await explanationRepository.createPurchase(tx, { userId, examId, questionNumber, price: 0, isTrial: false });
+          });
+          viaTurn = true;
+        } else {
+          trial = ai.explainPrice > 0 && (await explanationRepository.trialsUsed(userId)) < (await promoSettingService.get()).freeTrials;
+          await prisma.$transaction(async (tx) => {
+            if (ai.explainPrice > 0 && !trial) {
+              await walletService.charge(tx, { userId, amount: ai.explainPrice, type: "EXPLAIN_CHARGE", note: `Giải thích AI: ${question.exam.title}, câu ${questionNumber}` });
+            }
+            await explanationRepository.createPurchase(tx, { userId, examId, questionNumber, price: trial ? 0 : ai.explainPrice, isTrial: trial });
+          });
+          charged = trial ? 0 : ai.explainPrice;
+        }
       } catch (err) {
         trial = false;
+        viaTurn = false;
         if (!isDuplicate(err)) throw err; // bấm hai lần cùng lúc: lượt kia đã trả phí, lượt này xem không mất thêm
       }
     }
@@ -143,11 +156,18 @@ export const explanationService = {
       console.error(`[explain] đề ${question.exam.threadId} câu ${questionNumber} lỗi: ${(err as Error).message}`);
       if (charged > 0) await this.refund(userId, examId, questionNumber, charged);
       else if (trial) await prisma.$transaction((tx) => explanationRepository.deletePurchase(tx, userId, examId, questionNumber)); // AI lỗi: trả lại lượt thử
+      else if (viaTurn) {
+        // AI lỗi: trả lại lượt miễn phí đã dùng
+        await prisma.$transaction(async (tx) => {
+          await linkRewardService.restore(tx, userId, examId, questionNumber);
+          await explanationRepository.deletePurchase(tx, userId, examId, questionNumber);
+        });
+      }
       throw new AppError("AI đang bận, chưa tạo được lời giải thích. Bạn không bị trừ credit, vui lòng thử lại sau.", BAD_GATEWAY);
     }
 
     const user = await userRepository.findById(userId);
-    return { content, cached: Boolean(saved), charged, balanceAfter: user?.balance ?? 0 };
+    return { content, cached: Boolean(saved), charged, balanceAfter: user?.balance ?? 0, freeTurnUsed: viaTurn };
   },
 
   // Gọi AI một lần cho mỗi câu (gộp các yêu cầu cùng lúc) và lưu lại để người sau dùng

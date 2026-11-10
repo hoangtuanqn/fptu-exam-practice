@@ -58,6 +58,8 @@ model User {
   gradeSetting       UserGradeSetting?
   grades             UserGrade[]
   examSlots          UserExamSlot[]
+  linkRewardRequests LinkRewardRequest[]
+  freeExplainTurns   FreeExplainTurn[]
   referredBy         User?                @relation("Referral", fields: [referredById], references: [id], onDelete: SetNull)
   referrals          User[]               @relation("Referral")
   rewardsAsReferrer  ReferralReward[]     @relation("RewardReferrer")
@@ -755,4 +757,40 @@ model UserExamSlot {
 
   @@index([userId, examDate])
   @@map("user_exam_slots")
+}
+
+// Vuot link (Link4M) de nhan luot giai thich AI mien phi. Moi yeu cau co ma dung mot lan gan voi tai khoan.
+model LinkRewardRequest {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  tokenHash String    @unique @map("token_hash") @db.Char(64) // SHA-256 cua ma trong link dich; ma goc khong luu
+  shortUrl  String    @map("short_url") @db.VarChar(255)
+  status    String    @default("PENDING") @db.VarChar(10) // PENDING | CLAIMED
+  createdAt DateTime  @default(now()) @map("created_at")
+  expiresAt DateTime  @map("expires_at")
+  claimedAt DateTime? @map("claimed_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  turn FreeExplainTurn?
+
+  @@index([userId, createdAt])
+  @@map("link_reward_requests")
+}
+
+// Mot luot giai thich mien phi (het han sau so ngay admin dat). Dung theo thu tu sap het han truoc.
+model FreeExplainTurn {
+  id                 Int       @id @default(autoincrement())
+  userId             Int       @map("user_id")
+  requestId          Int?      @unique @map("request_id")
+  grantedAt          DateTime  @default(now()) @map("granted_at")
+  expiresAt          DateTime  @map("expires_at")
+  usedAt             DateTime? @map("used_at")
+  usedExamId         Int?      @map("used_exam_id")
+  usedQuestionNumber Int?      @map("used_question_number")
+
+  user    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  request LinkRewardRequest? @relation(fields: [requestId], references: [id], onDelete: SetNull)
+
+  @@index([userId, usedAt, expiresAt])
+  @@map("free_explain_turns")
 }
