@@ -1,4 +1,4 @@
-import { Loader2 } from "lucide-react";
+import { Gift, Loader2 } from "lucide-react";
 import { useToast } from "@/shared/context/ToastContext";
 import { Button } from "@/shared/ui/Button";
 import type { FreeTurnStatus } from "./link-reward.api";
@@ -9,7 +9,7 @@ const dayMonth = (iso: string) => new Date(iso).toLocaleDateString("vi-VN", { da
 /**
  * Lượt giải thích miễn phí, nằm trong hộp xác nhận giải thích khi làm bài.
  *  - Có lượt: dải tô màu nhẹ kèm nút dùng ngay.
- *  - Chưa có mà còn nhận được hôm nay: chỉ một dòng chữ liên kết, không khung để khỏi lấn át phần trả credit.
+ *  - Còn nhận được hôm nay: thẻ nổi bật có nút vượt link.
  * Tắt và không còn lượt thì không hiện gì.
  */
 export function EarnTurnBlock({ status, onUse, onChange }: { status: FreeTurnStatus; onUse?: () => void; onChange: () => void }) {
@@ -54,13 +54,19 @@ export function EarnTurnBlock({ status, onUse, onChange }: { status: FreeTurnSta
       )}
 
       {canEarn && phase !== "waiting" && (
-        <p className="text-center text-sm text-on-surface-variant">
-          {status.available > 0 ? "Cần thêm?" : "Không muốn trả credit?"}{" "}
-          <button type="button" disabled={phase === "starting"} onClick={() => void start(status.available)} className="inline-flex items-center gap-1 font-medium text-primary hover:underline disabled:opacity-60">
-            {phase === "starting" && <Loader2 size={14} className="animate-spin" />}
-            Vượt link nhận lượt miễn phí
-          </button>
-        </p>
+        <div className="flex items-center gap-3 rounded-xl border border-primary/30 bg-gradient-to-r from-primary-container to-surface-container-lowest px-3.5 py-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-on-primary">
+            <Gift size={20} />
+          </span>
+          <span className="min-w-0 flex-1 text-sm text-on-surface">
+            <span className="block font-semibold">{status.available > 0 ? "Nhận thêm lượt miễn phí" : "Giải thích miễn phí"}</span>
+            <span className="block text-xs text-on-surface-variant">Vượt link mất 1 đến 2 phút</span>
+          </span>
+          <Button variant="primary" disabled={phase === "starting"} onClick={() => void start(status.available)}>
+            {phase === "starting" && <Loader2 size={16} className="animate-spin" />}
+            Nhận lượt
+          </Button>
+        </div>
       )}
 
       {status.enabled && status.remainingToday === 0 && <p className="text-center text-xs text-on-surface-variant">Hôm nay bạn đã nhận đủ lượt miễn phí.</p>}
