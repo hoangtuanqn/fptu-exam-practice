@@ -87,8 +87,8 @@ export interface ChatbotAdmin {
   settings: {
     enabled: boolean;
     claudeModel: string;
-    hasGeminiKey: boolean;
-    geminiKeyPreview: string;
+    hasOpenaiKey: boolean;
+    openaiKeyPreview: string;
   };
   knowledge: { chunks: number; embedded: number; model: string };
   stats: { today: number; total: number; unmatched: { question: string; createdAt: string }[] };
@@ -98,7 +98,7 @@ export interface ChatbotAdmin {
 export interface ChatbotForm {
   enabled: boolean;
   claudeModel: string;
-  geminiApiKey?: string;
+  openaiApiKey?: string;
 }
 
 export interface UserSummary {
