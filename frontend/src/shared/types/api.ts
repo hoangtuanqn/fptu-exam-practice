@@ -340,9 +340,11 @@ export interface LinkRewardAdmin {
   enabled: boolean;
   hasToken: boolean; // đã lưu token Link4M chưa (token không bao giờ trả ra)
   link4mEnabled: boolean;
+  link4mTurns: number;
   dailyLimit: number; // số lượt tối đa mỗi người mỗi ngày qua Link4M
   hasShrinkmeToken: boolean;
   shrinkmeEnabled: boolean;
+  shrinkmeTurns: number;
   shrinkmeDailyLimit: number;
   validDays: number;
   minSeconds: number;

@@ -224,9 +224,11 @@ export const adminApi = {
   saveLinkRewardSettings: (body: {
     enabled: boolean;
     link4mEnabled: boolean;
+    link4mTurns: number;
     apiToken?: string;
     dailyLimit: number;
     shrinkmeEnabled: boolean;
+    shrinkmeTurns: number;
     shrinkmeToken?: string;
     shrinkmeDailyLimit: number;
     validDays: number;

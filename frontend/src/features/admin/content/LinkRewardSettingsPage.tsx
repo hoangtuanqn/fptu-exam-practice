@@ -20,9 +20,11 @@ function Form({ initial, onSaved }: { initial: LinkRewardAdmin; onSaved: () => v
   const [link4mEnabled, setLink4mEnabled] = useState(initial.link4mEnabled);
   const [apiToken, setApiToken] = useState("");
   const [dailyLimit, setDailyLimit] = useState(String(initial.dailyLimit));
+  const [link4mTurns, setLink4mTurns] = useState(String(initial.link4mTurns));
   const [shrinkmeEnabled, setShrinkmeEnabled] = useState(initial.shrinkmeEnabled);
   const [shrinkmeToken, setShrinkmeToken] = useState("");
   const [shrinkmeDailyLimit, setShrinkmeDailyLimit] = useState(String(initial.shrinkmeDailyLimit));
+  const [shrinkmeTurns, setShrinkmeTurns] = useState(String(initial.shrinkmeTurns));
   const [validDays, setValidDays] = useState(String(initial.validDays));
   const [minSeconds, setMinSeconds] = useState(String(initial.minSeconds));
   const s = initial.stats;
@@ -35,9 +37,11 @@ function Form({ initial, onSaved }: { initial: LinkRewardAdmin; onSaved: () => v
         link4mEnabled,
         ...(apiToken.trim() && { apiToken: apiToken.trim() }),
         dailyLimit: Number(dailyLimit),
+        link4mTurns: Number(link4mTurns),
         shrinkmeEnabled,
         ...(shrinkmeToken.trim() && { shrinkmeToken: shrinkmeToken.trim() }),
         shrinkmeDailyLimit: Number(shrinkmeDailyLimit),
+        shrinkmeTurns: Number(shrinkmeTurns),
         validDays: Number(validDays),
         minSeconds: Number(minSeconds),
       });
@@ -119,7 +123,8 @@ function Form({ initial, onSaved }: { initial: LinkRewardAdmin; onSaved: () => v
                 placeholder={initial.hasToken ? "Đã lưu token (để trống nếu giữ nguyên)" : "Dán token vào đây"}
                 hint="Chỉ lưu ở máy chủ, không bao giờ hiện lại. Chỉ gồm chữ, số và gạch."
               />
-              <Input label="Số lần nhận tối đa mỗi người mỗi ngày (Link4M)" inputMode="numeric" value={dailyLimit} onChange={(e) => setDailyLimit(digits(e.target.value, 2))} error={fieldErrors.dailyLimit} hint="Link4M chỉ tính 2 lượt xem mỗi IP trong 24 giờ, nên nên để 2." />
+              <Input label="Số lần vượt Link4M tối đa mỗi người mỗi ngày" inputMode="numeric" value={dailyLimit} onChange={(e) => setDailyLimit(digits(e.target.value, 2))} error={fieldErrors.dailyLimit} hint="Link4M chỉ tính 2 lượt xem mỗi IP trong 24 giờ, nên nên để 2." />
+              <Input label="Số lượt giải thích nhận được sau mỗi lần vượt Link4M" inputMode="numeric" value={link4mTurns} onChange={(e) => setLink4mTurns(digits(e.target.value, 2))} error={fieldErrors.link4mTurns} hint="Nên cho nhiều hơn ShrinkMe để người dùng chọn Link4M (có thể xin phép được)." />
             </div>
             <div className="space-y-4 rounded-m3-lg border border-outline-variant p-4">
               <div className="flex items-center justify-between gap-4">
@@ -137,13 +142,14 @@ function Form({ initial, onSaved }: { initial: LinkRewardAdmin; onSaved: () => v
                 hint="Chỉ lưu ở máy chủ, không bao giờ hiện lại. Chỉ gồm chữ, số và gạch."
               />
               <Input
-                label="Số lần nhận tối đa mỗi người mỗi ngày (ShrinkMe)"
+                label="Số lần vượt ShrinkMe tối đa mỗi người mỗi ngày"
                 inputMode="numeric"
                 value={shrinkmeDailyLimit}
                 onChange={(e) => setShrinkmeDailyLimit(digits(e.target.value, 2))}
                 error={fieldErrors.shrinkmeDailyLimit}
                 hint="ShrinkMe chỉ tính 1 lượt xem duy nhất trong 24 giờ, nên nên để 1."
               />
+              <Input label="Số lượt giải thích nhận được sau mỗi lần vượt ShrinkMe" inputMode="numeric" value={shrinkmeTurns} onChange={(e) => setShrinkmeTurns(digits(e.target.value, 2))} error={fieldErrors.shrinkmeTurns} />
             </div>
             <Input label="Lượt miễn phí giữ được (ngày)" inputMode="numeric" value={validDays} onChange={(e) => setValidDays(digits(e.target.value, 2))} error={fieldErrors.validDays} hint="Sau số ngày này lượt chưa dùng sẽ hết hạn." />
             <Input

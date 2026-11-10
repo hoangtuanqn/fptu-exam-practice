@@ -11,7 +11,7 @@ type State = { kind: "loading" } | { kind: "done"; result: ClaimResult } | { kin
 
 const dayMonth = (iso: string) => new Date(iso).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
 
-// Trang đích sau khi vượt link xong (địa chỉ có ?t=<mã>): nhận 1 lượt giải thích miễn phí
+// Trang đích sau khi vượt link xong (địa chỉ có ?t=<mã>): nhận lượt giải thích miễn phí
 export default function ClaimTurnPage() {
   const [params] = useSearchParams();
   const token = params.get("t") ?? "";
@@ -48,7 +48,7 @@ export default function ClaimTurnPage() {
       {state.kind === "done" && (
         <div className="flex flex-col items-center gap-3 py-2">
           <CheckCircle2 size={44} className="text-success" />
-          <h1 className="md-headline-small text-on-surface">{state.result.granted ? "Đã nhận 1 lượt giải thích miễn phí" : "Bạn đã nhận lượt từ liên kết này rồi"}</h1>
+          <h1 className="md-headline-small text-on-surface">{state.result.granted ? `Đã nhận ${state.result.turns} lượt giải thích miễn phí` : "Bạn đã nhận lượt từ liên kết này rồi"}</h1>
           <p className="md-body-large text-on-surface-variant">
             Bạn đang có <b>{state.result.available}</b> lượt
             {state.result.nextExpiresAt ? `, sớm nhất hết hạn ngày ${dayMonth(state.result.nextExpiresAt)}` : ""}.

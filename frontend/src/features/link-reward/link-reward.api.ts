@@ -10,11 +10,13 @@ export interface FreeTurnStatus {
   claimedToday: number;
   dailyLimit: number;
   remainingToday: number; // hôm nay còn nhận thêm được mấy lần
+  rewardTurns: number; // lần vượt link tới được bao nhiêu lượt
   validDays: number;
 }
 
 export interface ClaimResult extends FreeTurnStatus {
-  granted: boolean; // vừa cộng 1 lượt
+  granted: boolean; // vừa cộng lượt
+  turns: number; // số lượt vừa cộng
   already: boolean; // liên kết này đã nhận trước đó
 }
 
