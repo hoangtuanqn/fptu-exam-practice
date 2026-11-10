@@ -334,3 +334,14 @@ export interface PublicOffers {
 export interface AccountSettings {
   signupCredit: number; // credit tặng mọi tài khoản mới khi đăng ký
 }
+
+/** Cấu hình quảng cáo (Quản trị → Quảng cáo) */
+export interface AdsSettings {
+  enabled: boolean;
+  guests: boolean;
+  vignette: boolean;
+  vignetteZone: string;
+  inpage: boolean;
+  inpageZone: string;
+  directLink: string;
+}

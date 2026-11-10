@@ -84,6 +84,7 @@ export const PRIVATE_PAGES: Record<string, PageSeo> = {
   "/admin/sepay": { title: "Quản trị: cấu hình SePay", description: "Thiết lập kết nối cổng thanh toán SePay." },
   "/admin/exams": { title: "Quản trị: đề thi", description: "Quản lý kho đề thi và chỉnh sửa câu hỏi." },
   "/admin/reports": { title: "Quản trị: báo cáo đáp án", description: "Xử lý báo cáo đáp án sai từ người dùng." },
+  "/admin/ads": { title: "Quản trị: quảng cáo", description: "Bật tắt và cấu hình quảng cáo." },
   "/admin/crawler": { title: "Quản trị: cấu hình lấy đề", description: "Thiết lập bộ lấy đề từ FuOverflow." },
   "/admin/ai": { title: "Quản trị: AI giải đáp án", description: "Thiết lập mô hình AI giải đáp án và giải thích." },
   "/admin/funnel": { title: "Quản trị: phễu người dùng", description: "Người đăng ký đi được tới đâu: lấy đề, nộp bài, nạp tiền, mua Pro." },

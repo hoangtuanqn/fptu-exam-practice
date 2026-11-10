@@ -1,5 +1,6 @@
 import type {
   AccountSettings,
+  AdsSettings,
   PromoSettings,
   AdminAttempt,
   AdminCrawlJob,
@@ -216,6 +217,8 @@ export const adminApi = {
   savePromoSettings: (body: PromoSettings) => http.put<PromoSettings>("/admin/settings/promo", body),
   accountSettings: () => http.get<AccountSettings>("/admin/settings/account"),
   saveAccountSettings: (body: AccountSettings) => http.put<AccountSettings>("/admin/settings/account", body),
+  adsSettings: () => http.get<AdsSettings>("/admin/settings/ads"),
+  saveAdsSettings: (body: AdsSettings) => http.put<AdsSettings>("/admin/settings/ads", body),
 
   giftCodes: (page: number, filter: { q?: string; active?: "true" | "false" | "" }) =>
     http.list<GiftCode>("/admin/gift-codes", { page, limit: PAGE_SIZE, ...filter }),
