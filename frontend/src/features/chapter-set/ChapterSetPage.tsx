@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, Layers, Play } from "lucide-react";
+import { Check, Layers, Loader2, Play, TriangleAlert } from "lucide-react";
 import { LinkImport } from "@/features/exam-import/components/LinkImport";
 import { examImportApi } from "@/features/exam-import/exam-import.api";
 import type { ImportedExam } from "@/features/exam-import/types";
@@ -9,6 +9,7 @@ import { PageHeader } from "@/shared/ui/Card";
 import { Segmented } from "@/shared/ui/Segmented";
 import { AllSubjectsPicker } from "@/features/subject/AllSubjectsPicker";
 import { SubjectCard } from "@/features/subject/SubjectCard";
+import { subjectApi } from "@/features/subject/subject.api";
 import { ChapterWaitBanner, type ChapterWaitStage } from "./ChapterWaitBanner";
 import type { SubjectItem } from "@/features/subject/subject.api";
 
@@ -22,12 +23,44 @@ type Mode = "practice" | "exam";
 export default function ChapterSetPage() {
   const [subject, setSubject] = useState<SubjectItem | null>(null);
   const [exam, setExam] = useState<ImportedExam | null>(null);
+  const [blocked, setBlocked] = useState<{ subject: SubjectItem; message: string } | null>(null); // môn chưa có tên chương trong syllabus
+  const [checking, setChecking] = useState(false);
+
+  // Môn thiếu tên chương thì dừng ngay ở đây (máy chủ đồng thời gửi báo cáo cho admin). Không kiểm tra được thì cứ đi tiếp: máy chủ vẫn chặn trước khi trừ phí.
+  const pick = async (s: SubjectItem) => {
+    setChecking(true);
+    try {
+      const r = await subjectApi.chapterSetCheck(s.code);
+      if (r.ok) setSubject(s);
+      else setBlocked({ subject: s, message: r.message ?? "Môn này chưa làm được bộ đề theo chương." });
+    } catch {
+      setSubject(s);
+    } finally {
+      setChecking(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
       <PageHeader eyebrow="Học tập" title="Bộ đề theo chương" description="Chọn môn và đề FE, rồi chỉ luyện các câu thuộc chương bạn đang muốn ôn." />
-      {!subject ? (
-        <AllSubjectsPicker title="Bước 1: chọn môn" onPick={setSubject} />
+      {blocked ? (
+        <SubjectCard title={`Môn ${blocked.subject.code} chưa làm được bộ đề theo chương`} backLabel="Chọn môn khác" onBack={() => setBlocked(null)}>
+          <div role="alert" className="flex items-start gap-3 p-5">
+            <TriangleAlert size={20} className="mt-0.5 shrink-0 text-error" />
+            <p className="md-body-medium text-on-surface">
+              <b>{blocked.subject.code}</b> · {blocked.subject.name}. {blocked.message}
+            </p>
+          </div>
+        </SubjectCard>
+      ) : !subject ? (
+        <>
+          <AllSubjectsPicker title="Bước 1: chọn môn" onPick={(s) => void pick(s)} />
+          {checking && (
+            <p role="status" className="flex items-center gap-2 text-sm text-on-surface-variant">
+              <Loader2 size={16} className="animate-spin" /> Đang kiểm tra syllabus của môn…
+            </p>
+          )}
+        </>
       ) : !exam ? (
         <SubjectCard title={`Bước 2: lấy đề môn ${subject.code}`} onBack={() => setSubject(null)}>
           <div className="space-y-4 p-5">
