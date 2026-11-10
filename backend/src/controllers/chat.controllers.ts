@@ -18,12 +18,15 @@ export const chatController = {
     const ac = new AbortController();
     res.on("close", () => ac.abort()); // người dùng đóng khung chat/tab
     const send = (o: unknown) => !res.writableEnded && res.write(`data: ${JSON.stringify(o)}\n\n`);
+    // Nhịp giữ kết nối: dòng chú thích SSE (giao diện bỏ qua) mỗi 15 giây, để proxy, Cloudflare hay mạng di động không cắt kết nối khi Claude đang suy nghĩ hoặc công cụ đang chạy
+    let heartbeat: NodeJS.Timeout | null = null;
     try {
       const out = await chatService.stream(actorOf(req).owner, req.ip, getValidated<ChatBody>(res), {
         signal: ac.signal,
         onStart: () => {
           res.status(200).set({ "Content-Type": "text/event-stream; charset=utf-8", "Cache-Control": "no-cache, no-transform", Connection: "keep-alive", "X-Accel-Buffering": "no" });
           res.flushHeaders();
+          heartbeat = setInterval(() => !res.writableEnded && res.write(": ping\n\n"), 15_000);
         },
         onDelta: (text) => send({ t: "delta", text }),
         onStatus: (text) => send({ t: "status", text }),
@@ -33,6 +36,8 @@ export const chatController = {
       // Chưa gửi header (hết lượt, chatbot tắt...): để error middleware trả mã lỗi JSON như mọi API khác
       if (!res.headersSent) throw err;
       send({ t: "error", message: err instanceof AppError ? err.message : "Mình đang bận chút, bạn thử lại sau ít phút nhé" });
+    } finally {
+      if (heartbeat) clearInterval(heartbeat);
     }
     res.end();
   },
