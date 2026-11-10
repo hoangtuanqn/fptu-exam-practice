@@ -17,7 +17,7 @@ export const KIND_LABEL: Record<SyllabusKind, string> = {
 
 // Ý định của câu hỏi (đã bỏ dấu, viết thường) -> phần của syllabus nhiều khả năng chứa câu trả lời. Chỉ là ưu tiên cộng thêm, không loại đoạn nào.
 export const KIND_INTENT: [SyllabusKind, RegExp][] = [
-  ["assessment", /(cham diem|danh gia|trong so|qua mon|dau mon|rot mon|thi cuoi|assessment|bai kiem tra|hinh thuc thi|cach tinh diem|diem so|diem thanh phan|thi cu|kiem tra|bai thi|progress test|final exam|bai nao)/],
+  ["assessment", /(cham diem|tinh diem|danh gia|trong so|qua mon|dau mon|rot mon|thi cuoi|assessment|bai kiem tra|hinh thuc thi|cach tinh diem|diem so|diem thanh phan|thi cu|kiem tra|bai thi|progress test|final exam|bai nao)/],
   ["materials", /(giao trinh|sach|cuon nao|quyen|tai lieu|textbook|material|isbn|tac gia|nha xuat ban|doc gi)/],
   ["clo", /(chuan dau ra|\bclo\b|\bclo\d|muc tieu hoc tap|learning outcome|hoc xong|dat duoc|lam duoc|ket qua hoc tap|ky nang)/],
   ["chapters", /(chuong|noi dung|hoc gi|bai hoc|chu de|muc luc|hoc ve|phan nao|bai thu|hoc tiep|gom nhung|chuong dau)/],
@@ -32,6 +32,7 @@ export const SYLLABUS_WORDS = /(\bmon\b|syllabus|de cuong|hoc phan|tin chi|\bclo
 
 export const RAG_POOL = 30; // mỗi đường tìm (embedding, BM25) lấy chừng này đoạn đầu
 export const RAG_RRF_K = 60;
+export const RAG_MIN_CHUNKS = 3; // khi đã nêu môn: luôn đưa ít nhất chừng này đoạn tốt nhất, kể cả xác suất thấp
 export const RAG_MAX_CHUNKS = 5; // số đoạn tối đa đưa vào ngữ cảnh khi biết môn
 export const RAG_MAX_CONTEXT_CHARS = 9000; // ~2,5 nghìn token
 export const RAG_CROSS_SUBJECTS = 5; // câu hỏi không nêu môn: liệt kê tối đa chừng này môn

@@ -1,6 +1,6 @@
 import { prisma } from "../configs/prisma";
 import { EMBEDDING_DIMS, EMBEDDING_MODEL } from "../constants/chat";
-import { KIND_INTENT, KIND_LABEL, RAG_CROSS_SUBJECTS, RAG_MAX_CHUNKS, RAG_MAX_CONTEXT_CHARS, RAG_POOL, RAG_SNIPPET_CHARS, RAG_WEIGHTS, SYLLABUS_WORDS, type RagWeights, type SyllabusKind } from "../constants/rag";
+import { RAG_MIN_CHUNKS, KIND_INTENT, KIND_LABEL, RAG_CROSS_SUBJECTS, RAG_MAX_CHUNKS, RAG_MAX_CONTEXT_CHARS, RAG_POOL, RAG_SNIPPET_CHARS, RAG_WEIGHTS, SYLLABUS_WORDS, type RagWeights, type SyllabusKind } from "../constants/rag";
 import { dotF32, fromBytes } from "../utils/vector";
 import { fold, terms } from "./knowledge.service";
 
@@ -161,6 +161,7 @@ export interface RagHit {
   kindMatch: boolean;
 }
 export interface RagResult {
+  suggestions: string[]; // mã môn gần giống mã người dùng gõ mà không có trong dữ liệu (gõ nhầm một ký tự)
   mode: "none" | "subject" | "cross";
   subjects: string[];
   unknownCodes: string[];
@@ -234,6 +235,9 @@ export async function candidates(question: string, qvec: number[] | null, weight
   return { a, idx, mode, dense, list, w };
 }
 
+/** Mã có cùng độ dài và khác đúng một ký tự (CSI196 -> CSI106) */
+const oneOff = (a: string, b: string) => a.length === b.length && [...a].filter((c, i) => c !== b[i]).length === 1;
+
 export const syllabusRagService = {
   invalidate() {
     index = null;
@@ -241,16 +245,19 @@ export const syllabusRagService = {
   },
 
   async retrieve(question: string, qvec: number[] | null): Promise<RagResult> {
-    const { a, mode, dense, list, w } = await candidates(question, qvec);
-    if (mode === "none") return { mode, subjects: [], unknownCodes: [], hits: [], confident: false, dense };
-    const confident = (list[0]?.p ?? 0) >= w.answer;
+    const { a, idx, mode, dense, list, w } = await candidates(question, qvec);
+    if (mode === "none") return { mode, subjects: [], unknownCodes: [], suggestions: [], hits: [], confident: false, dense };
+    const suggestions = [...new Set(a.unknownCodes.flatMap((c) => idx.codes.filter((k) => oneOff(c, k.replace(/[A-Z]{1,2}$/, (m) => (c.endsWith(m) ? m : "")) || k) || oneOff(c, k))))].slice(0, 3);
+    // Đã nêu môn có thật: chủ đề của câu hỏi đã rõ, nên luôn đưa các đoạn tốt nhất của môn đó cho Claude (độ khớp từ thấp thường chỉ do cách hỏi, ví dụ viết tắt hoặc lời thường ngày). Claude được dặn nói thẳng nếu nguồn không có thông tin.
+    const known = mode === "subject" && list.length > 0;
+    const confident = known || (list[0]?.p ?? 0) >= w.answer;
     let hits: RagHit[];
     if (!confident) hits = [];
     else if (mode === "subject") {
       hits = [];
       let chars = 0;
       for (const h of list) {
-        if (h.p < w.include || hits.length >= RAG_MAX_CHUNKS || chars + h.content.length > RAG_MAX_CONTEXT_CHARS) continue;
+        if ((h.p < w.include && hits.length >= RAG_MIN_CHUNKS) || hits.length >= RAG_MAX_CHUNKS || chars + h.content.length > RAG_MAX_CONTEXT_CHARS) continue;
         hits.push(h);
         chars += h.content.length;
       }
@@ -259,7 +266,7 @@ export const syllabusRagService = {
       const seen = new Set<string>();
       hits = list.filter((h) => h.p >= w.include && !seen.has(h.subject) && (seen.add(h.subject), true)).slice(0, RAG_CROSS_SUBJECTS);
     }
-    return { mode, subjects: a.subjects, unknownCodes: a.unknownCodes, hits, confident, dense };
+    return { mode, subjects: a.subjects, unknownCodes: a.unknownCodes, suggestions, hits, confident, dense };
   },
 };
 
@@ -268,7 +275,7 @@ const esc = (s: string) => s.replace(/"/g, "'");
 /** Khối <syllabus> đưa vào prompt. Rỗng nếu câu hỏi không liên quan tới syllabus. */
 export function formatRagContext(r: RagResult): string {
   if (r.mode === "none") return "";
-  if (r.hits.length === 0) return `<syllabus status="no_match"${r.unknownCodes.length ? ` unknown_codes="${r.unknownCodes.join(",")}"` : ""}>No syllabus data matched this question.</syllabus>`;
+  if (r.hits.length === 0) return `<syllabus status="no_match"${r.unknownCodes.length ? ` unknown_codes="${r.unknownCodes.join(",")}"` : ""}${r.suggestions.length ? ` did_you_mean="${r.suggestions.join(",")}"` : ""}>No syllabus data matched this question.${r.suggestions.length ? " The code the user typed does not exist; ask whether they meant one of did_you_mean." : ""}</syllabus>`;
   if (r.mode === "subject") {
     const body = r.hits.map((h, i) => `<source subject="${h.subject}" part="${esc(KIND_LABEL[h.kind])}" rank="${i + 1}">\n${h.content}\n</source>`).join("\n");
     return `<syllabus mode="subject" subjects="${r.subjects.join(",")}">\n${body}\n</syllabus>`;
