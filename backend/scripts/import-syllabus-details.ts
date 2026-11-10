@@ -1,9 +1,9 @@
 /**
  * Nhập nội dung Syllabus Details (file JSON của tiện ích FLM, bật tùy chọn "Lấy cả nội dung Syllabus Details") vào bảng subject_chunks
- * và tạo embedding để tìm kiếm theo nghĩa.
+ * và tạo embedding (OpenAI) để tìm kiếm theo nghĩa.
  *
- *   npm run import:syllabus-details -- <file.json> --dry-run     chỉ chia đoạn và báo số lượng, không ghi DB, không gọi Gemini
- *   npm run import:syllabus-details -- <file.json>               ghi DB và tạo embedding (cần khoá Gemini trong trang quản trị)
+ *   npm run import:syllabus-details -- <file.json> --dry-run     chỉ chia đoạn và báo số lượng, không ghi DB, không gọi OpenAI
+ *   npm run import:syllabus-details -- <file.json>               ghi DB và tạo embedding (cần khoá OpenAI: nhập ở trang quản trị, hoặc đặt biến môi trường OPENAI_API_KEY khi chạy)
  *   npm run import:syllabus-details -- <file.json> --no-embed    chỉ ghi chữ, chưa tạo embedding
  *   npm run import:syllabus-details -- <file.json> --only=CSI106,PRO192   chỉ các môn này
  *

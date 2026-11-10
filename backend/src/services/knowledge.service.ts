@@ -129,24 +129,25 @@ export const dot = (a: number[], b: number[]) => {
 
 // ---- Bộ nhớ đệm: vài chục đoạn, nạp từ DB một lần
 let cache: Chunk[] | null = null;
-const queryCache = new Map<string, number[]>(); // câu hỏi giống hệt không gọi Gemini lại
+const queryCache = new Map<string, number[]>(); // câu hỏi giống hệt không gọi OpenAI lại
 const QUERY_CACHE_MAX = 300;
 
 async function chunks(): Promise<Chunk[]> {
   if (cache) return cache;
   const rows = await prisma.kbChunk.findMany({ orderBy: { id: "asc" } });
-  cache = rows.map((r) => ({ slug: r.slug, title: r.title, content: r.content, hash: r.contentHash, embedding: Array.isArray(r.embedding) ? (r.embedding as number[]) : null }));
+  // Chỉ dùng vector do mô hình hiện tại tạo: vector của mô hình khác không so sánh được nên bỏ qua (đoạn đó tìm bằng từ khoá cho tới khi được tạo lại)
+  cache = rows.map((r) => ({ slug: r.slug, title: r.title, content: r.content, hash: r.contentHash, embedding: r.model === EMBEDDING_MODEL && Array.isArray(r.embedding) ? (r.embedding as number[]) : null }));
   return cache;
 }
 
-/** Vector (đã chuẩn hoá) của câu hỏi; dùng chung bộ nhớ đệm với tìm kiếm nên không gọi Gemini hai lần. null nếu chưa có khoá hoặc Gemini lỗi. */
+/** Vector (đã chuẩn hoá) của câu hỏi; dùng chung bộ nhớ đệm với tìm kiếm nên không gọi OpenAI hai lần. null nếu chưa có khoá hoặc OpenAI lỗi. */
 async function queryVector(query: string): Promise<number[] | null> {
-  const { geminiApiKey } = await chatSettingService.get();
-  if (!geminiApiKey) return null;
+  const { openaiApiKey } = await chatSettingService.get();
+  if (!openaiApiKey) return null;
   let q = queryCache.get(query);
   if (!q) {
     try {
-      q = await embedQuery(geminiApiKey, query);
+      q = await embedQuery(openaiApiKey, query);
     } catch {
       return null;
     }
@@ -171,7 +172,7 @@ export const knowledgeService = {
   },
 
   /**
-   * Đọc tài liệu, tạo embedding cho đoạn mới hoặc đã đổi nội dung, xoá đoạn không còn. Chưa có khoá Gemini thì vẫn lưu đoạn
+   * Đọc tài liệu, tạo embedding cho đoạn mới hoặc đã đổi nội dung, xoá đoạn không còn. Chưa có khoá OpenAI thì vẫn lưu đoạn
    * (không có vector) để chatbot tìm bằng từ khoá.
    */
   async reindex(): Promise<{ total: number; updated: number; embedded: number; warning?: string }> {
@@ -179,22 +180,22 @@ export const knowledgeService = {
     const sections = splitSections(markdown).map((s) => ({ ...s, slug: sha(s.title).slice(0, 16), hash: sha(`${s.title}\n${s.content}`) }));
     const existing = new Map((await prisma.kbChunk.findMany({ select: { slug: true, contentHash: true, embedding: true, model: true } })).map((r) => [r.slug, r]));
 
-    const { geminiApiKey } = await chatSettingService.get();
+    const { openaiApiKey } = await chatSettingService.get();
     // Cần (tạo lại) vector khi: đoạn mới, nội dung đổi, hoặc chưa có vector/đổi model và hiện đã có khoá
     const todo = sections.filter((s) => {
       const old = existing.get(s.slug);
-      return !old || old.contentHash !== s.hash || (geminiApiKey && (old.embedding == null || old.model !== EMBEDDING_MODEL));
+      return !old || old.contentHash !== s.hash || (openaiApiKey && (old.embedding == null || old.model !== EMBEDDING_MODEL));
     });
 
     let vectors: number[][] | null = null;
     let warning: string | undefined;
-    if (todo.length > 0 && geminiApiKey) {
+    if (todo.length > 0 && openaiApiKey) {
       try {
-        vectors = await embedDocuments(geminiApiKey, todo.map((s) => `${s.title}\n${s.content}`));
+        vectors = await embedDocuments(openaiApiKey, todo.map((s) => `${s.title}\n${s.content}`));
       } catch (err) {
         warning = `Không tạo được embedding: ${(err as Error).message}. Chatbot sẽ tìm bằng từ khoá.`;
       }
-    } else if (todo.length > 0) warning = "Chưa có khoá Gemini nên chưa tạo embedding; chatbot tìm bằng từ khoá.";
+    } else if (todo.length > 0) warning = "Chưa có khoá OpenAI nên chưa tạo embedding; chatbot tìm bằng từ khoá.";
 
     for (const [i, s] of todo.entries()) {
       const vec = vectors?.[i] ?? null;
@@ -215,15 +216,15 @@ export const knowledgeService = {
 
   /**
    * Các đoạn hướng dẫn liên quan nhất, kết hợp hai cách: embedding (gần nghĩa) và BM25 (đúng từ), trộn bằng RRF.
-   * Không có khoá Gemini hoặc Gemini lỗi thì chỉ dùng đúng từ.
+   * Không có khoá OpenAI hoặc OpenAI lỗi thì chỉ dùng đúng từ.
    */
   async search(query: string): Promise<Hit[]> {
     const all = await chunks();
     if (all.length === 0) return [];
     const exact = keywordHits(query, all);
     let semantic: Hit[] = [];
-    const { geminiApiKey } = await chatSettingService.get();
-    if (geminiApiKey && all.some((c) => c.embedding)) {
+    const { openaiApiKey } = await chatSettingService.get();
+    if (openaiApiKey && all.some((c) => c.embedding)) {
       try {
         const q = await queryVector(query);
         if (!q) throw new Error("không tạo được embedding");

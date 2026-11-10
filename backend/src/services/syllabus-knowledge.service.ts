@@ -4,7 +4,7 @@ import { buildSyllabusChunks, type SyllabusSubject } from "../utils/syllabus-chu
 import { embedDocuments, embedQuery } from "./ai/embedding.client";
 import { chatSettingService } from "./chat-setting.service";
 
-const BATCH = 50; // số đoạn mỗi lần gọi Gemini
+const BATCH = 100; // số đoạn mỗi lần gọi OpenAI
 const MAX_RETRIES = 6;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -23,7 +23,7 @@ async function embedWithRetry(key: string, texts: string[]) {
       return await embedDocuments(key, texts);
     } catch (err) {
       const msg = (err as Error).message;
-      if (!/429|giới hạn|quá nhanh/i.test(msg) || attempt >= MAX_RETRIES) throw err;
+      if (!/giới hạn tốc độ/i.test(msg) || attempt >= MAX_RETRIES) throw err; // chỉ thử lại khi bị giới hạn tốc độ (hết tiền thì thử lại vô ích)
       await sleep(Math.min(60_000, 5_000 * 2 ** attempt)); // bị giới hạn tốc độ: chờ lâu dần rồi thử lại
     }
   }
@@ -68,13 +68,13 @@ export const syllabusKnowledgeService = {
     }
     if (stale.length) await prisma.subjectChunk.deleteMany({ where: { slug: { in: stale } } });
 
-    const { geminiApiKey } = await chatSettingService.get();
+    const { openaiApiKey } = await chatSettingService.get();
     const todo = (await prisma.subjectChunk.findMany({ where: { subjectCode: { in: codes }, OR: [{ embedding: null }, { model: { not: EMBEDDING_MODEL } }] }, select: { id: true, title: true, content: true } })).sort((a, b) => a.id - b.id);
     result.pending = todo.length;
-    if (opts.embed && geminiApiKey) {
+    if (opts.embed && openaiApiKey) {
       for (let i = 0; i < todo.length; i += BATCH) {
         const batch = todo.slice(i, i + BATCH);
-        const vectors = await embedWithRetry(geminiApiKey, batch.map((c) => c.content));
+        const vectors = await embedWithRetry(openaiApiKey, batch.map((c) => c.content));
         for (const [j, c] of batch.entries()) await prisma.subjectChunk.update({ where: { id: c.id }, data: { embedding: toBytes(vectors[j]!), model: EMBEDDING_MODEL } });
         result.embedded += batch.length;
         result.pending -= batch.length;
@@ -85,15 +85,15 @@ export const syllabusKnowledgeService = {
     return result;
   },
 
-  /** Các đoạn Syllabus gần nghĩa nhất với câu hỏi (có thể giới hạn trong một môn). Cần khoá Gemini; chưa có thì trả mảng rỗng. */
+  /** Các đoạn Syllabus gần nghĩa nhất với câu hỏi (có thể giới hạn trong một môn). Cần khoá OpenAI; chưa có thì trả mảng rỗng. */
   async search(query: string, opts: { subject?: string; limit?: number } = {}) {
-    const { geminiApiKey } = await chatSettingService.get();
-    if (!geminiApiKey) return [];
+    const { openaiApiKey } = await chatSettingService.get();
+    if (!openaiApiKey) return [];
     if (!cache) {
       const rows = await prisma.subjectChunk.findMany({ where: { embedding: { not: null }, model: EMBEDDING_MODEL }, select: { slug: true, subjectCode: true, title: true, content: true, embedding: true } });
       cache = rows.map((r) => ({ slug: r.slug, code: r.subjectCode, title: r.title, content: r.content, vec: fromBytes(r.embedding!) })).filter((r) => r.vec.length === EMBEDDING_DIMS);
     }
-    const q = Float32Array.from(await embedQuery(geminiApiKey, query));
+    const q = Float32Array.from(await embedQuery(openaiApiKey, query));
     const code = opts.subject?.toUpperCase();
     return cache
       .filter((c) => !code || c.code === code)

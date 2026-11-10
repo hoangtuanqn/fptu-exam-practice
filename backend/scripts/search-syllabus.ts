@@ -12,7 +12,7 @@ async function main() {
   const subject = args.find((a) => a.startsWith("--subject="))?.slice(10);
   const limit = Number(args.find((a) => a.startsWith("--limit="))?.slice(8)) || 5;
   const hits = await syllabusKnowledgeService.search(query, { subject, limit });
-  if (hits.length === 0) console.log("Không có kết quả (chưa có embedding hoặc chưa có khoá Gemini).");
+  if (hits.length === 0) console.log("Không có kết quả (chưa có embedding hoặc chưa có khoá OpenAI).");
   for (const h of hits) console.log(`\n${h.score.toFixed(3)}  ${h.slug}\n  ${h.content.split("\n").slice(1, 5).join(" | ").slice(0, 300)}`);
   await prisma.$disconnect();
 }
