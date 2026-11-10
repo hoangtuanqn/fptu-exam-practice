@@ -24,7 +24,7 @@ Search for an existing helper before writing a new one (`codegraph_explore`, the
 - Data loading: `useApi` + `QueryBoundary` (not hand-written loading/error branches). URL state: `useUrlState`. Search inputs: `useDebounce`. Fuo links: `fuoThreadUrl` / `checkFuoLink`.
 - Subject choice: `features/subject` (`SubjectPicker`, `AllSubjectsPicker`, `SubjectCard`). Do not build another picker.
 - Styling: Material 3 tokens/classes (`md-*`, `text-on-surface`, `bg-surface-container-*`), shared `Card`, `CardHeader`, `PageHeader`, `Button`/`buttonClass`, `Badge`, `Segmented`, `Empty`. Avoid ad-hoc colours.
-- Every new route needs: an entry in `ACCOUNT_NAV`/`ADMIN_NAV` if it is a menu page, and a title + description in `frontend/seo.config.ts` (otherwise the tab shows "Khong tim thay trang").
+- Every new route needs: an entry in `ACCOUNT_NAV`/`ADMIN_NAV` if it is a menu page, and a title + description in `frontend/seo.config.ts` (otherwise the tab shows "Khong tim thay trang"). `npm run build` runs `frontend/scripts/check-seo.mjs` and fails when a route has no entry.
 
 ## UI principles
 

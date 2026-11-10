@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build && node scripts/pack-extension.mjs",
+    "build": "node scripts/check-seo.mjs && tsc && vite build && node scripts/pack-extension.mjs",
+    "check:seo": "node scripts/check-seo.mjs",
     "preview": "vite preview",
     "release": "node scripts/release.mjs"
   },
