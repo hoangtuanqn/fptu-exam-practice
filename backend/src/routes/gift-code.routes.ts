@@ -13,5 +13,6 @@ giftCodeRouter.use(authenticate);
 // Nhập sai quá nhiều lần thì bị chặn tạm thời (chống dò mã)
 giftCodeRouter.post("/redeem", giftCodeLimiter, validate(redeemGiftCodeBody), giftCodeController.redeem);
 giftCodeRouter.get("/mine", validate(paginationQuery, "query"), giftCodeController.mine);
+giftCodeRouter.get("/lots", giftCodeController.lots);
 
 export default giftCodeRouter;
