@@ -117,7 +117,9 @@
       const numbered = c.topics.filter((t) => /^\d+\.\d+/.test(t));
       c.topics = numbered.length ? numbered : c.topics.filter((t) => !CHAPTER_HEAD.test(t) && !CHAPTER_REF.test(t));
     }
-    return chapters;
+    // Mục "Khác" (không có số chương) chỉ chứa các dòng nằm trước chương đầu tiên, ví dụ "Introduction to the Course": không phải một chương.
+    // Môn đã có chương đánh số thì bỏ nó đi; môn không chia được chương thì vẫn giữ để không mất các chủ đề.
+    return chapters.some((c) => c.number != null && c.number > 0) ? chapters.filter((c) => c.number != null) : chapters;
   }
 
   // Số đầu tiên trong cột Completion Criteria (">=4" -> 4, ">0" -> 0); không có số thì null
