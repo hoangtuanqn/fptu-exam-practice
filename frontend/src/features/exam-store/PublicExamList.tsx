@@ -35,7 +35,8 @@ export function PublicExamList({ code, pageSize }: { code: string; pageSize?: nu
             <>
               <ul className="divide-y divide-outline-variant">
                 {data.items.map((e) => (
-                  <li key={e.threadId} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 py-3.5">
+                  <li key={e.threadId} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 py-3.5 transition hover:bg-surface-container-low/70">
+                    {e.term && <span className="md-label-medium w-14 shrink-0 rounded-full bg-primary-container/70 px-2.5 py-1 text-center text-on-primary-container">{e.term}</span>}
                     <div className="min-w-0 flex-1">
                       <p className="md-title-small truncate text-on-surface">{e.title}</p>
                       <p className="md-body-small flex flex-wrap items-center gap-x-3 text-on-surface-variant">
