@@ -443,11 +443,6 @@ function SubjectsTable({ initial }: { initial: SubjectRow[] }) {
                       <span className="md-title-small text-primary">
                         {s.code}
                       </span>
-                      {s.hasIssue && (
-                        <span className="ml-2 align-middle">
-                          <Badge tone="danger">Bị báo thiếu</Badge>
-                        </span>
-                      )}
                       <span className="md-body-small block truncate text-on-surface-variant">
                         {s.name}
                       </span>

@@ -8,7 +8,6 @@ import { adminDepositController } from "../controllers/admin.deposit.controllers
 import { adminSettingController } from "../controllers/admin.setting.controllers";
 import { adminAiController } from "../controllers/admin.ai.controllers";
 import { adminAnswerReportController } from "../controllers/admin.answer-report.controllers";
-import { adminSubjectIssueController } from "../controllers/admin.subject-issue.controllers";
 import { adminReferralController } from "../controllers/admin.referral.controllers";
 import { adminGiftCodeController } from "../controllers/admin.gift-code.controllers";
 import { adminCrawlerController } from "../controllers/admin.crawler.controllers";
@@ -114,8 +113,6 @@ adminRouter.get("/answer-reports", validate(listReportsQuery, "query"), adminAns
 adminRouter.post("/answer-reports/:id/approve", validate(idParam, "params"), validate(reviewReportBody), adminAnswerReportController.approve);
 adminRouter.post("/answer-reports/:id/reject", validate(idParam, "params"), validate(reviewReportBody), adminAnswerReportController.reject);
 
-adminRouter.get("/subject-issues", adminSubjectIssueController.list);
-adminRouter.delete("/subject-issues/:id", validate(idParam, "params"), adminSubjectIssueController.resolve);
 
 adminRouter.get("/settings/referral", adminReferralController.getSettings);
 adminRouter.put("/settings/referral", validate(updateReferralBody), adminReferralController.updateSettings);

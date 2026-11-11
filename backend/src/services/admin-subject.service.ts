@@ -30,13 +30,12 @@ export interface SubjectPatch {
 export const adminSubjectService = {
   /** Một dòng cho mỗi môn, kèm số liệu tổng hợp từ các bảng liên quan. */
   async list() {
-    const [subjects, chapters, inferred, exams, threads, issues] = await Promise.all([
+    const [subjects, chapters, inferred, exams, threads] = await Promise.all([
       prisma.subject.findMany({ orderBy: { code: "asc" }, select: { id: true, code: true, name: true, semester: true, credits: true, minPassMark: true, syllabusId: true } }),
       prisma.subjectChapter.findMany({ select: { subjectId: true, number: true, title: true } }),
       prisma.subjectInferredTopic.findMany({ select: { subjectCode: true, topics: true } }),
       prisma.exam.groupBy({ by: ["subjectCode"], _count: { _all: true }, where: { subjectCode: { not: null } } }),
       prisma.fuoThread.groupBy({ by: ["subjectCode"], _count: { _all: true } }),
-      prisma.subjectIssue.findMany({ select: { subjectCode: true } }),
     ]);
 
     const chaptersOf = new Map<number, { number: number; title: string }[]>();
@@ -44,7 +43,6 @@ export const adminSubjectService = {
     const examCount = countBy(exams, (r) => r.subjectCode);
     const threadCount = countBy(threads, (r) => r.subjectCode);
     const inferredCount = new Map(inferred.map((r) => [r.subjectCode, Array.isArray(r.topics) ? r.topics.length : 0]));
-    const issueCodes = new Set(issues.map((i) => i.subjectCode));
 
     return {
       subjects: subjects.map((s) => {
@@ -60,7 +58,6 @@ export const adminSubjectService = {
           inferredChapters: inferredCount.get(s.code) ?? 0,
           exams: examCount.get(s.code) ?? 0,
           fuoThreads: threadCount.get(s.code) ?? 0,
-          hasIssue: issueCodes.has(s.code),
         };
       }),
     };

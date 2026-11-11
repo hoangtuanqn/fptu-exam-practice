@@ -352,17 +352,6 @@ export interface AccountSettings {
   signupCredit: number; // credit tặng mọi tài khoản mới khi đăng ký
 }
 
-/** Môn có vấn đề về dữ liệu syllabus (Quản trị → Môn thiếu dữ liệu) */
-export interface SubjectIssue {
-  id: number;
-  subjectCode: string;
-  subjectName: string | null;
-  kind: string;
-  hits: number;
-  firstAt: string;
-  lastAt: string;
-}
-
 /** Cấu hình vượt link nhận lượt giải thích miễn phí (Quản trị → Vượt link) */
 export interface LinkRewardAdmin {
   enabled: boolean;

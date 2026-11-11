@@ -1,7 +1,6 @@
 import type {
   AccountSettings,
   LinkRewardAdmin,
-  SubjectIssue,
   PromoSettings,
   AdminAttempt,
   AdminCrawlJob,
@@ -44,7 +43,6 @@ export interface SubjectRow {
   inferredChapters: number; // số chương AI đã suy và lưu (0 = chưa suy)
   exams: number; // đề đang có trong hệ thống
   fuoThreads: number; // đề biết trên FuOverflow (kho đề)
-  hasIssue: boolean; // đang có báo cáo thiếu dữ liệu
 }
 
 export interface SubjectDetail {
@@ -260,8 +258,6 @@ export const adminApi = {
   savePromoSettings: (body: PromoSettings) => http.put<PromoSettings>("/admin/settings/promo", body),
   accountSettings: () => http.get<AccountSettings>("/admin/settings/account"),
   saveAccountSettings: (body: AccountSettings) => http.put<AccountSettings>("/admin/settings/account", body),
-  subjectIssues: () => http.get<SubjectIssue[]>("/admin/subject-issues"),
-  resolveSubjectIssue: (id: number) => http.delete(`/admin/subject-issues/${id}`),
   linkRewardSettings: () => http.get<LinkRewardAdmin>("/admin/settings/link-reward"),
   saveLinkRewardSettings: (body: {
     enabled: boolean;
