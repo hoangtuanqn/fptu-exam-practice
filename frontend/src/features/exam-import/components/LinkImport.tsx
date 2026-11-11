@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
-import { AlertCircle, CheckCircle2, ClipboardPaste, Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, ClipboardPaste, Link2, Loader2 } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { ApiError } from "@/shared/api/client";
 import { isPro } from "@/shared/utils/pro";
@@ -241,25 +241,50 @@ export function LinkImport({ onImported, subject, compact = false }: Props) {
       <div
         className={
           compact
-            ? `mt-3 flex items-center gap-2 rounded-full border-2 bg-surface-container-lowest p-1.5 pl-5 shadow-[0_0_0_4px_rgba(255,198,31,0.16),0_10px_28px_-10px_rgba(240,168,0,0.6)] transition focus-within:border-[#e0a100] focus-within:shadow-[0_0_0_5px_rgba(255,198,31,0.32),0_12px_34px_-10px_rgba(240,168,0,0.75)] ${linkError || job.error ? "border-red-500" : "border-[#e0a100]/60"}`
+            ? "mt-3 flex flex-col gap-2 sm:flex-row"
             : "mt-5 flex flex-col gap-2 sm:flex-row"
         }
       >
-        <input
-          type="url"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          disabled={running || done}
-          placeholder={PLACEHOLDER}
-          aria-label="Link đề FuOverflow"
-          aria-invalid={linkInvalid || undefined}
-          className={compact ? "h-10 min-w-0 flex-1 bg-transparent text-base text-on-surface outline-none placeholder:text-on-surface-variant disabled:opacity-60" : `${inputClass(linkError ?? job.error ?? undefined)} sm:flex-1`}
-        />
+        {compact ? (
+          <div className="relative min-w-0 flex-1">
+            <Link2 size={18} aria-hidden className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#b87d00]" />
+            <input
+              type="url"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              disabled={running || done}
+              placeholder={PLACEHOLDER}
+              aria-label="Link đề FuOverflow"
+              aria-invalid={linkInvalid || undefined}
+              className={`h-12 w-full rounded-2xl border bg-surface-container-lowest pl-11 pr-20 text-base text-on-surface outline-none transition placeholder:text-on-surface-variant focus:border-[#e0a100] focus:shadow-[0_0_0_4px_rgba(255,198,31,0.25)] disabled:opacity-60 ${linkError || job.error ? "border-red-500" : "border-outline-variant hover:border-[#e0a100]/60"}`}
+            />
+            {!url && !running && !done && (
+              <button
+                type="button"
+                onClick={() => void navigator.clipboard?.readText().then((t) => t && setUrl(t.trim())).catch(() => undefined)}
+                className="md-label-large absolute right-2 top-1/2 inline-flex h-8 -translate-y-1/2 items-center rounded-xl bg-[#ffc61f]/20 px-3 text-[#6b4a00] transition hover:bg-[#ffc61f]/35"
+              >
+                Dán
+              </button>
+            )}
+          </div>
+        ) : (
+          <input
+            type="url"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            disabled={running || done}
+            placeholder={PLACEHOLDER}
+            aria-label="Link đề FuOverflow"
+            aria-invalid={linkInvalid || undefined}
+            className={`${inputClass(linkError ?? job.error ?? undefined)} sm:flex-1`}
+          />
+        )}
         {compact ? (
           <button
             type="submit"
             disabled={submitDisabled}
-            className={`md-label-large inline-flex h-11 shrink-0 select-none items-center justify-center gap-2 rounded-full px-5 transition hover:brightness-105 active:brightness-95 disabled:pointer-events-none disabled:opacity-50 disabled:saturate-50 sm:px-6 ${GOLD_BUTTON}`}
+            className={`md-label-large inline-flex h-12 shrink-0 select-none items-center justify-center gap-2 rounded-2xl px-6 transition hover:brightness-105 active:brightness-95 disabled:pointer-events-none disabled:opacity-50 disabled:saturate-50 ${GOLD_BUTTON}`}
           >
             {(running || quoting) && <Loader2 size={16} className="animate-spin" />}
             {running ? "Đang lấy đề…" : "Lấy đề"}
