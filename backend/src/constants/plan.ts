@@ -27,3 +27,12 @@ export const PRO_BENEFITS = {
   frequentQuestions: true, // xem toàn bộ "Câu hay ra" của môn (gói thường chỉ xem FREQUENT_FREE_LIMIT câu đầu)
   unlimitedReview: true, // Sổ câu sai không giới hạn số câu (gói thường tối đa REVIEW_FREE_LIMIT)
 } as const;
+
+// Vé Pro: mua trước, người dùng tự kích hoạt sau. Hết hạn mà chưa kích hoạt thì không dùng được nữa (hạn được hiện rõ lúc mua).
+export const TICKET_VALID_DAYS = 180;
+export const TICKET_MAX_OPEN = 5; // số vé chưa kích hoạt tối đa mỗi tài khoản (chặn mua tích trữ quá nhiều một lúc)
+
+// Lời mời Pro dựa trên dữ liệu thật của người dùng
+export const NUDGE_EXAM_WINDOW_DAYS = 45; // chỉ nhắc khi kỳ thi còn trong chừng này ngày
+export const NUDGE_SPEND_WINDOW_DAYS = 30; // tổng chi lẻ tính trong chừng này ngày gần nhất
+export const NUDGE_MIN_SPEND = 20_000; // chi lẻ từ mức này (credit) trở lên mới so sánh với Pro
