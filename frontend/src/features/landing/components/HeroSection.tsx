@@ -7,6 +7,7 @@ import { PromoCard } from "./PromoCard";
 import { SignupGiftBanner } from "./SignupGiftBanner";
 import { ValueTrio } from "./ValueTrio";
 import { ProTeaser } from "@/features/plan/ProTeaser";
+import { FirstRunChecklist } from "@/features/account/FirstRunChecklist";
 
 interface Props {
   onPick: PickFolder;
@@ -84,6 +85,8 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
             <ExamSourcePicker onPick={onPick} onImported={onImported} />
           </div>
         </div>
+
+        {!isGuest && <FirstRunChecklist />}
 
         <ProTeaser />
 
