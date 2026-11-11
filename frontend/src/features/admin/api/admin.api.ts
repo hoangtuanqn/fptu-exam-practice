@@ -31,6 +31,12 @@ import type {
   User,
   UserStatus,
 } from "@/shared/types/api";
+export interface LibrarySettings {
+  enabled: boolean;
+  freeRuleEnabled: boolean;
+  newestTermsPaid: number;
+}
+
 import { http } from "@/shared/api/client";
 import { PAGE_SIZE } from "@/shared/api/pagination";
 
@@ -220,6 +226,10 @@ export const adminApi = {
     http.list<AdminCrawlJob>("/admin/crawl-jobs", { ...f, limit: PAGE_SIZE }),
   attempts: (f: { page: number; userId?: string; search?: string; mode?: "PRACTICE" | "EXAM" | "" }) =>
     http.list<AdminAttempt>("/admin/attempts", { ...f, limit: PAGE_SIZE }),
+  librarySettings: () => http.get<LibrarySettings>("/admin/settings/library"),
+  saveLibrarySettings: (body: LibrarySettings) => http.put<LibrarySettings>("/admin/settings/library", body),
+  setSubjectSemester: (code: string, semester: number | null) => http.put<{ code: string; semester: number | null }>(`/admin/library/subjects/${encodeURIComponent(code)}/semester`, { semester }),
+  setSubjectFree: (code: string, free: boolean | null) => http.put<{ code: string; free: boolean | null; updated: number }>(`/admin/library/subjects/${encodeURIComponent(code)}/free`, { free }),
   promoSettings: () => http.get<PromoSettings>("/admin/settings/promo"),
   savePromoSettings: (body: PromoSettings) => http.put<PromoSettings>("/admin/settings/promo", body),
   accountSettings: () => http.get<AccountSettings>("/admin/settings/account"),
