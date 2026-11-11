@@ -2,13 +2,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { errorMessage } from "@/shared/api/errors";
 import { ApiError } from "@/shared/api/client";
 import { useLeaveWarning } from "@/shared/hooks/useLeaveWarning";
-import { examImportApi } from "./exam-import.api";
-import { waitForJob } from "./jobLive";
-import type { CrawlJob, ImportedExam } from "./types";
+import { importExam } from "./importExam";
+import type { ImportedExam } from "./types";
 
 export type ImportPhase = "idle" | "running" | "done" | "failed";
-
-const GIVE_UP_MS = 10 * 60 * 1000;
 
 // Gửi link đề lên server rồi nhận tiến trình realtime (socket) cho tới khi job xong.
 // Server xử lý ở worker nền nên request gửi link trả về ngay, không treo giao diện.
@@ -52,28 +49,7 @@ export function useExamImport() {
     };
 
     try {
-      const result = await examImportApi.submit(url, subject);
-      let examId: number;
-
-      if (result.existed) {
-        examId = result.examId;
-      } else {
-        const stageText = (j: CrawlJob) =>
-          j.status === "QUEUED"
-            ? j.ahead > 0
-              ? `Đang xếp hàng, còn ${j.ahead} lượt phía trước`
-              : "Sắp tới lượt"
-            : (j.stage ?? "Đang xử lý");
-        setStage(stageText(result.job));
-        // Tiến độ về qua socket, không cần hỏi liên tục
-        const job = await waitForJob(result.job, (j) => !stale() && setStage(stageText(j)), abort.current.signal, GIVE_UP_MS);
-        if (stale()) return;
-        if (job.status === "FAILED" || job.examId === null) return fail(job.error ?? "Không nhập được đề này");
-        examId = job.examId;
-      }
-
-      setStage("Đang mở đề");
-      const loaded = await examImportApi.exam(examId);
+      const loaded = await importExam(url, subject, (s) => !stale() && setStage(s), abort.current.signal);
       if (stale()) return;
       setExam(loaded);
       setPhase("done");
