@@ -66,7 +66,7 @@ export function ActivateTicketDialog({ ticket, onClose, onDone }: { ticket: ProT
           Từ bây giờ bạn được thêm <b className="text-on-surface">{ticket.duration}</b> Pro{renewing ? ", cộng dồn vào hạn hiện tại" : ""}.
         </li>
         <li>
-          Kích hoạt rồi thì <b className="text-on-surface">không đổi lại được</b>. Vé này dùng được đến {formatDate(ticket.expiresAt)}; nếu chưa cần, bạn cứ để vé đó và kích hoạt sau.
+          Kích hoạt rồi thì <b className="text-on-surface">không đổi lại được</b>. Vé phải được kích hoạt trước ngày {formatDate(ticket.expiresAt)}; nếu chưa cần, bạn cứ giữ vé và kích hoạt sau.
         </li>
       </ul>
       {error && (

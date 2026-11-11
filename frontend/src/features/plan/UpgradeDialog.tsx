@@ -82,7 +82,7 @@ export function UpgradeDialog({ plan, kind = "pro", defaultLater = false, onClos
           </div>
           <h2 className="md-headline-small mt-4 text-on-surface">Đã giữ vé {planName}!</h2>
           <p className="md-body-medium mt-1.5 text-on-surface-variant">
-            Thời hạn Pro chưa chạy. Vé dùng được đến <b className="text-on-surface">{formatDate(ticketDone.ticket.expiresAt)}</b>. Còn lại <b className="tabular-nums text-on-surface">{formatCredit(ticketDone.balanceAfter)}</b> trong ví.
+            Thời hạn Pro chưa chạy. Bạn cần kích hoạt vé trước ngày <b className="text-on-surface">{formatDate(ticketDone.ticket.expiresAt)}</b>, quá hạn là mất vé. Còn lại <b className="tabular-nums text-on-surface">{formatCredit(ticketDone.balanceAfter)}</b> trong ví.
           </p>
           {error && (
             <div className="mt-3 text-left">
@@ -146,7 +146,7 @@ export function UpgradeDialog({ plan, kind = "pro", defaultLater = false, onClos
         <div role="radiogroup" aria-label="Cách dùng" className="mt-3 grid grid-cols-2 gap-2">
           {[
             { later: false, title: "Dùng ngay", hint: "Tính thời hạn từ hôm nay" },
-            { later: true, title: "Giữ vé, dùng sau", hint: `Bật khi cần, vé dùng được ${plan.ticket?.validDays ?? 0} ngày` },
+            { later: true, title: "Giữ vé, dùng sau", hint: `Bật khi cần, trong vòng ${plan.ticket?.validDays ?? 0} ngày kể từ lúc mua` },
           ].map((o) => (
             <button
               key={o.title}
@@ -169,7 +169,7 @@ export function UpgradeDialog({ plan, kind = "pro", defaultLater = false, onClos
             Bạn nhận <b className="text-on-surface">1 vé {planName}</b> ({sprint ? `${plan.sprint.days} ngày` : `${plan.months} tháng`} Pro). Thời hạn Pro <b className="text-on-surface">chưa chạy</b> cho tới khi bạn bấm Kích hoạt.
           </li>
           <li>
-            Vé dùng được đến <b className="text-on-surface">{formatDate(new Date(Date.now() + (plan.ticket?.validDays ?? 0) * 86_400_000).toISOString())}</b>. Quá hạn mà chưa kích hoạt thì <b className="text-on-surface">không dùng được và không hoàn tiền</b>.
+            Bạn phải kích hoạt vé <b className="text-on-surface">trong vòng {plan.ticket?.validDays ?? 0} ngày kể từ lúc mua</b> (trước ngày {formatDate(new Date(Date.now() + (plan.ticket?.validDays ?? 0) * 86_400_000).toISOString())}). Quá hạn mà chưa kích hoạt thì <b className="text-on-surface">vé mất hiệu lực và không hoàn tiền</b>.
           </li>
         </ul>
       ) : (
