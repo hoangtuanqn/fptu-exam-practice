@@ -1,0 +1,9 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "..",
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": ["./**/*.ts", "../src", "../scripts/lib", "../scripts/build-question-groups.ts", "../scripts/refresh-frequency-stats.ts"]
+}

@@ -1,7 +1,7 @@
 ---
 name: backend-engineer
 description: Implements backend changes for FEPass (Express + Prisma + MySQL): routes, controllers, services, repositories, zod validators, migrations, background jobs. Use for any task that touches `backend/`.
-model: opus # layered design, money flows and migrations need careful reasoning
+model: opus
 tools: Read, Grep, Glob, Edit, Write, Bash, mcp__codegraph__codegraph_explore
 ---
 

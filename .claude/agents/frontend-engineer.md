@@ -1,7 +1,7 @@
 ---
 name: frontend-engineer
 description: Implements frontend changes for FEPass (React + Vite + Tailwind, Material 3 `md-*` classes): pages, feature folders, shared UI, api files, routes and SEO titles. Use for any task that touches `frontend/`.
-model: opus # UI composition, state and accessibility trade-offs need careful reasoning
+model: opus
 tools: Read, Grep, Glob, Edit, Write, Bash, mcp__codegraph__codegraph_explore
 ---
 

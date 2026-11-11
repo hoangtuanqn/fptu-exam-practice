@@ -63,6 +63,8 @@ model User {
   examSlots          UserExamSlot[]
   linkRewardRequests LinkRewardRequest[]
   freeExplainTurns   FreeExplainTurn[]
+  questionCards      UserQuestionCard[]
+  reviewLogs         UserReviewLog[]
   referredBy         User?                @relation("Referral", fields: [referredById], references: [id], onDelete: SetNull)
   referrals          User[]               @relation("Referral")
   rewardsAsReferrer  ReferralReward[]     @relation("RewardReferrer")
@@ -236,6 +238,11 @@ model ExamQuestion {
   imageHash   Bytes?  @map("image_hash") @db.VarBinary(192) // dau van tay vung chu cua anh (de nhan ra cau lap lai giua cac de); null = chua tinh
 
   exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  embeddings       QuestionEmbedding[]
+  groupMemberships QuestionGroupMember[]
+  fsrsCards        UserQuestionCard[]
+  fsrsLogs         UserReviewLog[]
 
   @@unique([examId, number])
   @@map("exam_questions")
@@ -703,6 +710,10 @@ model Subject {
   updatedAt  DateTime @updatedAt @map("updated_at")
 
   chapters SubjectChapter[]
+  questionGroups     QuestionGroup[]
+  groupMembers       QuestionGroupMember[]
+  chapterStats       ChapterStat[]
+  questionGroupStats QuestionGroupStat[]
 
   @@index([semester])
   @@map("subjects")
@@ -919,4 +930,146 @@ model ProTicket {
 
   @@index([userId, activatedAt])
   @@map("pro_tickets")
+}
+
+// Vector of a question per embedding model (float32 little-endian bytes). Model image-fingerprint-v1 is derived from imageHash.
+model QuestionEmbedding {
+  id         Int      @id @default(autoincrement())
+  questionId Int      @map("question_id")
+  modelName  String   @map("model_name") @db.VarChar(64)
+  dimensions Int
+  embedding  Bytes    @db.MediumBlob
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  question ExamQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, modelName])
+  @@index([modelName])
+  @@map("question_embeddings")
+}
+
+// Near-identical questions across exams of one subject. Rebuilt as a whole per subject by npm run groups:build
+model QuestionGroup {
+  id          Int      @id @default(autoincrement())
+  subjectId   Int      @map("subject_id")
+  modelName   String   @map("model_name") @db.VarChar(64)
+  threshold   Float
+  memberCount Int      @map("member_count")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  subject Subject               @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  members QuestionGroupMember[]
+  stats   QuestionGroupStat?
+
+  @@index([subjectId])
+  @@map("question_groups")
+}
+
+// subjectId is copied from the group so a question belongs to at most one group per subject
+model QuestionGroupMember {
+  id         Int @id @default(autoincrement())
+  groupId    Int @map("group_id")
+  subjectId  Int @map("subject_id")
+  questionId Int @map("question_id")
+
+  group    QuestionGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  subject  Subject       @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  question ExamQuestion  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([subjectId, questionId])
+  @@index([groupId])
+  @@index([questionId])
+  @@map("question_group_members")
+}
+
+// Past exam frequency of a chapter (ExamQuestion.topic) in a subject. Statistics only, refreshed by npm run stats:refresh
+model ChapterStat {
+  id                  Int       @id @default(autoincrement())
+  subjectId           Int       @map("subject_id")
+  chapter             String    @db.VarChar(255)
+  questionCount       Int       @map("question_count")
+  examsWithChapter    Int       @map("exams_with_chapter")
+  totalExams          Int       @map("total_exams")
+  avgQuestionsPerExam Float     @map("avg_questions_per_exam") // question_count / total_exams
+  recencyScore        Float     @map("recency_score") // 0..1, exams weighted by 0.5^(age/half-life)
+  confidence          String    @db.VarChar(10) // low | medium | high, from total_exams
+  lastSeenAt          DateTime? @map("last_seen_at")
+  computedAt          DateTime  @map("computed_at")
+
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([subjectId, chapter])
+  @@map("chapter_stats")
+}
+
+// Past exam frequency of a question group. last_seen_exam_id and representative_question_id have no FK (derived, rebuilt on refresh)
+model QuestionGroupStat {
+  groupId                  Int       @id @map("group_id")
+  subjectId                Int       @map("subject_id")
+  chapter                  String?   @db.VarChar(255)
+  examsWithGroup           Int       @map("exams_with_group")
+  totalExams               Int       @map("total_exams")
+  lastSeenExamId           Int?      @map("last_seen_exam_id")
+  lastSeenAt               DateTime? @map("last_seen_at")
+  representativeQuestionId Int?      @map("representative_question_id") // member in the newest exam
+  recencyScore             Float     @map("recency_score")
+  confidence               String    @db.VarChar(10)
+  computedAt               DateTime  @map("computed_at")
+
+  group   QuestionGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  subject Subject       @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@index([subjectId, examsWithGroup, recencyScore], map: "question_group_stats_subject_rank_idx")
+  @@map("question_group_stats")
+}
+
+// FSRS card (ts-fsrs) of a user for one question. Separate from the Leitner ReviewItem. state: 0 New, 1 Learning, 2 Review, 3 Relearning
+model UserQuestionCard {
+  id            Int       @id @default(autoincrement())
+  userId        Int       @map("user_id")
+  questionId    Int       @map("question_id")
+  due           DateTime
+  stability     Float
+  difficulty    Float
+  elapsedDays   Int       @map("elapsed_days")
+  scheduledDays Int       @map("scheduled_days")
+  learningSteps Int       @map("learning_steps")
+  reps          Int
+  lapses        Int
+  state         Int       @db.TinyInt
+  lastReview    DateTime? @map("last_review")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  user     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question ExamQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId])
+  @@index([userId, due])
+  @@index([questionId])
+  @@map("user_question_cards")
+}
+
+// One FSRS review (the log returned by ts-fsrs). rating: 1 Again, 2 Hard, 3 Good, 4 Easy
+model UserReviewLog {
+  id              Int      @id @default(autoincrement())
+  userId          Int      @map("user_id")
+  questionId      Int      @map("question_id")
+  rating          Int      @db.TinyInt
+  state           Int      @db.TinyInt
+  due             DateTime
+  stability       Float
+  difficulty      Float
+  elapsedDays     Int      @map("elapsed_days")
+  lastElapsedDays Int      @map("last_elapsed_days")
+  scheduledDays   Int      @map("scheduled_days")
+  learningSteps   Int      @map("learning_steps")
+  reviewedAt      DateTime @map("reviewed_at")
+
+  user     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question ExamQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([userId, reviewedAt])
+  @@index([questionId])
+  @@map("user_review_logs")
 }
