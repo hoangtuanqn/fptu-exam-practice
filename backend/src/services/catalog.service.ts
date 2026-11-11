@@ -81,6 +81,16 @@ export interface LatestItem {
 }
 
 export const catalogService = {
+  /** Các kỳ thi mới nhất (SU26, FA25...) có đề sẵn trong hệ thống; đề của các kỳ này vẫn tính phí, kỳ cũ hơn được miễn phí. */
+  async newestTerms(count: number): Promise<Set<string>> {
+    const terms = new Set<string>();
+    for (const e of await usableExams()) {
+      const t = termOf(e.title);
+      if (t) terms.add(t);
+    }
+    return new Set([...terms].sort((a, b) => termRank(b) - termRank(a)).slice(0, count));
+  },
+
   /** Các đề mới đăng gần đây nhất trên FuOverflow (mọi môn), để trang chủ cho thấy kho đề luôn được cập nhật. Chỉ có mô tả, không có ảnh. */
   async latest(): Promise<LatestItem[]> {
     if (latestCache && Date.now() - latestCache.at < CACHE_MS) return latestCache.items;

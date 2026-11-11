@@ -18,6 +18,8 @@ import { adminLinkRewardController } from "../controllers/admin.link-reward.cont
 import { adminChatController } from "../controllers/admin.chat.controllers";
 import { updateChatSettingsBody } from "../rules/requests/chat.request";
 import { adminPromoController } from "../controllers/admin.promo.controllers";
+import { adminLibraryController } from "../controllers/admin.library.controllers";
+import { examFreeBody, subjectCodeOnlyParam, subjectSemesterBody, updateLibraryBody } from "../rules/requests/library.request";
 import { listAttemptsQuery, listCrawlJobsQuery, listPurchasesQuery, listWalletQuery } from "../rules/requests/admin-history.request";
 import { authenticate, requireAdmin } from "../middlewares/auth.middlewares";
 import { updateAccountBody, updateAiBody, updateLinkRewardBody, updateCrawlerBody, updatePromoBody, updateReferralBody, updateSepayBody } from "../rules/requests/setting.request";
@@ -58,6 +60,11 @@ adminRouter.delete("/settings/chat/cache", adminChatController.clearCache);
 
 adminRouter.get("/settings/promo", adminPromoController.get);
 adminRouter.put("/settings/promo", validate(updatePromoBody), adminPromoController.update);
+adminRouter.get("/settings/library", adminLibraryController.get);
+adminRouter.put("/settings/library", validate(updateLibraryBody), adminLibraryController.update);
+adminRouter.put("/library/subjects/:code/semester", validate(subjectCodeOnlyParam, "params"), validate(subjectSemesterBody), adminLibraryController.setSemester);
+adminRouter.put("/library/subjects/:code/free", validate(subjectCodeOnlyParam, "params"), validate(examFreeBody), adminLibraryController.setSubjectFree);
+adminRouter.put("/library/exams/:id/free", validate(idParam, "params"), validate(examFreeBody), adminLibraryController.setExamFree);
 adminRouter.get("/settings/account", adminAccountController.get);
 adminRouter.put("/settings/account", validate(updateAccountBody), adminAccountController.update);
 adminRouter.get("/settings/link-reward", adminLinkRewardController.get);
