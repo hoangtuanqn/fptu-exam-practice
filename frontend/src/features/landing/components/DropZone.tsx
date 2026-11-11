@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FolderOpen } from "lucide-react";
+import { FolderHeart } from "lucide-react";
 import { FolderInput, type PickFolder } from "@/features/practice/components/FolderInput";
 import { readDroppedFolder } from "@/features/practice/utils/readDroppedFolder";
 import { GOLD_GLOSS } from "@/shared/ui/gold";
@@ -30,7 +30,7 @@ export function DropZone({ onPick }: { onPick: PickFolder }) {
         }`}
       >
         <span className={`flex h-12 w-12 items-center justify-center rounded-2xl ${GOLD_GLOSS}`}>
-          <FolderOpen size={22} />
+          <FolderHeart size={22} />
         </span>
         <div className="md-title-large mt-4 text-on-surface">Mở thư mục đề</div>
         <div className="md-body-medium mt-0.5 text-on-surface-variant">Kéo thả thư mục vào đây, hoặc bấm để chọn</div>

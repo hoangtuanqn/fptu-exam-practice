@@ -1,5 +1,5 @@
 import { useRef, useState, type KeyboardEvent } from "react";
-import { FolderOpen, Link2 } from "lucide-react";
+import { ClipboardPaste, FolderHeart } from "lucide-react";
 import { MyExams } from "@/features/exam-store/MyExams";
 import type { PickFolder } from "@/features/practice/components/FolderInput";
 import { LinkImport } from "@/features/exam-import/components/LinkImport";
@@ -8,9 +8,9 @@ import { DropZone } from "./DropZone";
 
 type Source = "link" | "folder";
 
-const TABS: { id: Source; label: string; short: string; icon: typeof Link2 }[] = [
-  { id: "link", label: "Dán link", short: "Dán link", icon: Link2 },
-  { id: "folder", label: "Mở thư mục đề", short: "Mở thư mục", icon: FolderOpen },
+const TABS: { id: Source; label: string; short: string; icon: typeof ClipboardPaste }[] = [
+  { id: "link", label: "Dán link", short: "Dán link", icon: ClipboardPaste },
+  { id: "folder", label: "Mở thư mục đề", short: "Mở thư mục", icon: FolderHeart },
 ];
 
 interface Props {

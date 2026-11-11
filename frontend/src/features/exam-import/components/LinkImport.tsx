@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
-import { AlertCircle, BadgeCheck, CheckCircle2, Link2, Loader2 } from "lucide-react";
+import { AlertCircle, BadgeCheck, CheckCircle2, ClipboardPaste, Loader2 } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { ApiError } from "@/shared/api/client";
 import { isPro } from "@/shared/utils/pro";
@@ -203,7 +203,7 @@ export function LinkImport({ onImported, subject }: Props) {
     >
       <div className="flex flex-col items-center text-center">
         <span className={`flex h-12 w-12 items-center justify-center rounded-2xl ${GOLD_GLOSS}`}>
-          <Link2 size={22} />
+          <ClipboardPaste size={22} />
         </span>
         <div className="md-title-large mt-4 text-on-surface">Nhập đề từ link FuOverflow</div>
         <div className="md-body-medium mt-0.5 text-on-surface-variant">Dán link thread đề thi, hệ thống tự lấy ảnh và lưu lại</div>
