@@ -15,14 +15,15 @@ import { ProTeaser } from "./ProTeaser";
 
 const DAY_MS = 86_400_000;
 const EXPIRY_WARN_DAYS = 14; // vé còn ngần này ngày hạn thì báo "sắp hết hạn"
+const NEWCOMER_MS = DAY_MS; // tài khoản mới tạo trong ngần này thời gian thì chưa mời mua (đang ở danh sách "Bắt đầu", chưa thử gì)
 
 type Choice = { surface: Extract<PromptSurface, "ticket-ready" | "exam-countdown" | "spend-vs-pro">; tickets?: ProTicket[]; exam?: NonNullable<PlanSignals["exam"]>; spent?: PlanSignals["spent"] };
 
 // Chọn đúng MỘT lời mời, ưu tiên cái gần với việc người dùng sắp làm nhất: vé đã mua chưa dùng > kỳ thi sắp tới > tiền đã chi lẻ.
 // Mỗi lời mời chỉ dựa trên dữ kiện thật của chính người dùng; không có dữ kiện thì không chọn gì.
-function choose({ pro, daysLeft, tickets, signals }: { pro: boolean; daysLeft: number; tickets: ProTicket[]; signals: PlanSignals | null }): Choice | null {
+function choose({ pro, daysLeft, newcomer, tickets, signals }: { pro: boolean; daysLeft: number; newcomer: boolean; tickets: ProTicket[]; signals: PlanSignals | null }): Choice | null {
   if (tickets.length > 0 && (!pro || daysLeft <= 7)) return { surface: "ticket-ready", tickets };
-  if (pro || !signals) return null;
+  if (pro || newcomer || !signals) return null; // người mới chưa thử gì thì chưa chào bán
   if (signals.exam) return { surface: "exam-countdown", exam: signals.exam };
   if (signals.spent.total >= signals.spent.minToShow) return { surface: "spend-vs-pro", spent: signals.spent };
   return null;
@@ -38,7 +39,7 @@ function content(choice: Choice, plan: PlanInfo): { icon: LucideIcon; title: Rea
     return {
       icon: Ticket,
       title: list.length === 1 ? `Bạn có 1 vé ${first.name} chưa kích hoạt` : `Bạn có ${list.length} vé Pro chưa kích hoạt`,
-      text: left <= EXPIRY_WARN_DAYS ? `Vé sắp hết hạn: còn ${Math.max(left, 0)} ngày (đến ${formatDate(first.expiresAt)}). Kích hoạt để không mất vé.` : `Vé dùng được đến ${formatDate(first.expiresAt)}. Bấm kích hoạt khi bạn bắt đầu ôn.`,
+      text: left <= EXPIRY_WARN_DAYS ? `Còn ${Math.max(left, 0)} ngày để kích hoạt vé (trước ngày ${formatDate(first.expiresAt)}), quá hạn là mất vé.` : `Hãy kích hoạt vé trước ngày ${formatDate(first.expiresAt)}. Bấm kích hoạt khi bạn bắt đầu ôn.`,
       cta: "Kích hoạt",
     };
   }
@@ -70,6 +71,7 @@ export function ProNudge() {
   const { flags } = useUpsell();
   const pro = isPro(user);
   const daysLeft = proDaysLeft(user);
+  const newcomer = !!user && Date.now() - new Date(user.createdAt).getTime() < NEWCOMER_MS;
   const eligible = !!user && flags.proNudge;
   const plan = useApi(() => (eligible ? planApi.info() : Promise.resolve(null)), [eligible]);
   const tickets = useApi(() => (eligible ? planApi.tickets() : Promise.resolve([] as ProTicket[])), [eligible, user?.id]);
@@ -77,7 +79,7 @@ export function ProNudge() {
   const [closed, setClosed] = useState<string | null>(null);
   const [activating, setActivating] = useState<ProTicket | null>(null);
 
-  const choice = useMemo(() => (eligible && !tickets.loading && !signals.loading ? choose({ pro, daysLeft, tickets: tickets.data ?? [], signals: signals.data ?? null }) : null), [eligible, pro, daysLeft, tickets.loading, tickets.data, signals.loading, signals.data]);
+  const choice = useMemo(() => (eligible && !tickets.loading && !signals.loading ? choose({ pro, daysLeft, newcomer, tickets: tickets.data ?? [], signals: signals.data ?? null }) : null), [eligible, pro, daysLeft, newcomer, tickets.loading, tickets.data, signals.loading, signals.data]);
   const visible = !!choice && !!plan.data && closed !== choice.surface && !isSnoozed(choice.surface);
 
   useEffect(() => {
