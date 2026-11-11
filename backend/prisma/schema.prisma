@@ -65,6 +65,8 @@ model User {
   freeExplainTurns   FreeExplainTurn[]
   questionCards      UserQuestionCard[]
   reviewLogs         UserReviewLog[]
+  aiTokenUsages      AiTokenUsage[]
+  materialUploads    MaterialUpload[]
   referredBy         User?                @relation("Referral", fields: [referredById], references: [id], onDelete: SetNull)
   referrals          User[]               @relation("Referral")
   rewardsAsReferrer  ReferralReward[]     @relation("RewardReferrer")
@@ -1086,4 +1088,88 @@ model SimilarityJobRun {
   subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
 
   @@map("similarity_job_runs")
+}
+
+// Tokens used by one AI call made for a user (input + output + cache creation as reported by the provider).
+// Generic ledger: feature = which feature spent them (only "material" for now). Used for rolling-window limits.
+// input_tokens includes cache creation tokens; total_tokens = input_tokens + output_tokens.
+model AiTokenUsage {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @map("user_id")
+  feature      String   @db.VarChar(30)
+  inputTokens  Int      @map("input_tokens")
+  outputTokens Int      @map("output_tokens")
+  totalTokens  Int      @map("total_tokens")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, feature, createdAt])
+  @@map("ai_token_usage")
+}
+
+enum MaterialStatus {
+  QUEUED
+  RUNNING
+  DONE
+  FAILED
+}
+
+// A slide PDF uploaded by a user for analysis. Private to the uploader. The PDF itself is deleted when processing ends;
+// the row and its pages/chapters are deleted by the daily cleanup after expires_at. subject_id has no FK on purpose
+// (subjects are never deleted in practice; a missing subject just hides the stats).
+model MaterialUpload {
+  id            Int            @id @default(autoincrement())
+  userId        Int            @map("user_id")
+  subjectId     Int            @map("subject_id")
+  title         String         @db.VarChar(200)
+  fileHash      String         @map("file_hash") @db.Char(64) // sha256 hex of the PDF, dedupe within the same user only
+  pageCount     Int            @map("page_count")
+  status        MaterialStatus @default(QUEUED)
+  error         String?        @db.VarChar(500) // short Vietnamese message shown to the user
+  progressDone  Int            @default(0) @map("progress_done")
+  progressTotal Int            @default(0) @map("progress_total")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  finishedAt    DateTime?      @map("finished_at")
+  expiresAt     DateTime       @map("expires_at")
+
+  user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pages    MaterialPage[]
+  chapters MaterialChapter[]
+
+  @@index([userId, createdAt])
+  @@index([userId, fileHash])
+  @@index([status])
+  @@index([expiresAt])
+  @@map("material_uploads")
+}
+
+// One page of an uploaded PDF. kind = text | figure | scanned. figure = vision result (null until described).
+// assigned = chapter assignment done (chapter_number null + assigned = page matched no chapter).
+model MaterialPage {
+  uploadId      Int     @map("upload_id")
+  pageNo        Int     @map("page_no")
+  kind          String  @db.VarChar(10)
+  text          String  @db.Text
+  figure        Json?
+  assigned      Boolean @default(false)
+  chapterNumber Int?    @map("chapter_number")
+
+  upload MaterialUpload @relation(fields: [uploadId], references: [id], onDelete: Cascade)
+
+  @@id([uploadId, pageNo])
+  @@map("material_pages")
+}
+
+// Summary of one chapter built only from the pages assigned to it. key_points = [{text, pages[]}]
+model MaterialChapter {
+  uploadId      Int    @map("upload_id")
+  chapterNumber Int    @map("chapter_number")
+  summary       String @db.Text
+  keyPoints     Json   @map("key_points")
+
+  upload MaterialUpload @relation(fields: [uploadId], references: [id], onDelete: Cascade)
+
+  @@id([uploadId, chapterNumber])
+  @@map("material_chapters")
 }
