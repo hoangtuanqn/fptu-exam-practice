@@ -13,10 +13,16 @@ function SubjectRow({ subject, onPick, tile = false }: { subject: PickableSubjec
   if (tile)
     // Ô trong lưới: mã môn, tên môn (một dòng) và số đề xếp dọc
     return (
-      <button type="button" onClick={onPick} title={name} className="md-state flex h-full w-full flex-col rounded-m3-md border border-outline-variant bg-surface px-3.5 py-3 text-left transition hover:border-primary/60">
+      <button
+        type="button"
+        onClick={onPick}
+        title={name}
+        className="md-state group relative flex h-full w-full flex-col overflow-hidden rounded-m3-md border border-outline-variant/70 bg-gradient-to-b from-surface-container-lowest to-surface-container-low px-3.5 py-3 text-left shadow-[0_1px_2px_rgba(0,0,0,0.04),0_10px_22px_-14px_rgba(70,45,0,0.35)] transition duration-200 hover:-translate-y-0.5 hover:border-[#e0a100]/70 hover:shadow-[0_1px_2px_rgba(0,0,0,0.05),0_16px_28px_-14px_rgba(160,100,0,0.5)]"
+      >
+        <span aria-hidden className="pointer-events-none absolute inset-x-3 top-0 h-px bg-gradient-to-r from-transparent via-[#ffc61f]/60 to-transparent" />
         <span className="md-title-small text-primary">{subject.code}</span>
         <span className="md-body-small mt-0.5 block w-full truncate text-on-surface-variant">{name}</span>
-        {subject.badge && <span className="md-label-medium mt-1.5 text-on-surface">{subject.badge}</span>}
+        {subject.badge && <span className="md-label-medium mt-2 inline-flex w-fit rounded-full bg-primary-container/70 px-2.5 py-0.5 text-on-primary-container">{subject.badge}</span>}
       </button>
     );
   return (
@@ -53,13 +59,15 @@ export function CompactSubjectPicker({ subjects, loading, error, onRetry, onPick
   return (
     <div className="space-y-5">
       <label className="relative block">
-        <Search size={20} className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-on-surface-variant" />
+        <span aria-hidden className="pointer-events-none absolute left-2.5 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-gradient-to-b from-[#ffe58a] via-[#ffc61f] to-[#e89a00] text-[#3a2600] shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_6px_14px_-6px_rgba(240,168,0,0.7)]">
+          <Search size={18} strokeWidth={2.4} />
+        </span>
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Gõ mã môn hoặc tên môn, ví dụ PRO192"
           aria-label="Tìm môn"
-          className="h-14 w-full rounded-full border border-outline-variant bg-surface-container-lowest pl-12 pr-5 text-base shadow-m3-1 outline-none transition focus:border-primary"
+          className="h-14 w-full rounded-full border border-outline-variant/80 bg-gradient-to-b from-surface-container-lowest to-surface-container-low pl-16 pr-5 text-base shadow-[0_1px_2px_rgba(0,0,0,0.05),0_14px_30px_-16px_rgba(70,45,0,0.45)] outline-none transition placeholder:text-on-surface-variant focus:border-[#e0a100] focus:shadow-[0_0_0_4px_rgba(255,198,31,0.22),0_14px_30px_-16px_rgba(70,45,0,0.45)]"
         />
       </label>
 
