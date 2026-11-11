@@ -114,7 +114,7 @@ export function ExamPickStep({ subject, picked, onChange, onNext, onBack }: Prop
           </div>
         </section>
 
-        <div className="sticky bottom-0 -mx-5 -mb-5 flex flex-col gap-3 border-t border-outline-variant bg-surface-container-lowest px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="sticky bottom-0 -mx-5 -mb-5 flex flex-col gap-3 rounded-b-m3-md border-t border-outline-variant bg-surface-container-lowest px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
             <p className="md-label-large text-on-surface">Đã chọn {picked.length} đề{full ? ` (tối đa ${MAX_PICK})` : ""}</p>
             {picked.length > 0 && (
