@@ -4,7 +4,7 @@ import type { Request, Response } from "express";
 import { authenticate, requireVerifiedMember } from "../middlewares/auth.middlewares";
 import { idempotent } from "../middlewares/idempotency.middlewares";
 import { z } from "zod";
-import { PLAN_CODES } from "../constants/plan";
+import { PLAN_CODES, TICKET_VALID_DAYS } from "../constants/plan";
 import { getValidated, validate } from "../middlewares/validate.middlewares";
 import { idParam } from "../rules/requests/admin.request";
 import { ResponseClient } from "../rules/response";
@@ -40,7 +40,7 @@ planRouter.get("/tickets", authenticate, limiter, async (req: Request, res: Resp
 
 planRouter.post("/tickets", authenticate, requireVerifiedMember, idempotent, limiter, validate(purchaseBody), async (req: Request, res: Response) => {
   const data = await planService.purchaseTicket(req.user!.id, getValidated<z.infer<typeof purchaseBody>>(res).plan);
-  res.json(new ResponseClient({ message: "Đã mua vé, bạn có thể kích hoạt bất cứ lúc nào", data }));
+  res.json(new ResponseClient({ message: `Đã mua vé. Hãy kích hoạt trong vòng ${TICKET_VALID_DAYS} ngày kể từ hôm nay`, data }));
 });
 
 planRouter.post("/tickets/:id/activate", authenticate, idempotent, limiter, validate(idParam, "params"), async (req: Request, res: Response) => {
