@@ -15,6 +15,14 @@
           "text": "Danh sách “Bắt đầu” cho người mới: xác minh email, lấy đề đầu tiên, nộp bài đầu tiên"
         },
         {
+          "type": "new",
+          "text": "Kho đề: lọc môn theo Kỳ 0 đến Kỳ 9, xem số đề của từng môn và đề nào miễn phí, đề nào tính phí ngay trên danh sách"
+        },
+        {
+          "type": "new",
+          "text": "Đề của các kỳ thi cũ đã có sẵn đáp án được mở miễn phí cho thành viên"
+        },
+        {
           "type": "improved",
           "text": "Trang Pro mới: so sánh gói Pro và Nước rút, giá tính theo ngày và mức tiết kiệm so với FuOverflow VIP"
         },

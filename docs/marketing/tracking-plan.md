@@ -21,6 +21,9 @@ Event names are `<surface>.<event>`.
 | `review-cap` | Wrong-answer notebook nearly full, within frequency cap | Link to /pro | X button |
 | `first-run` | Home page, logged-in member who has not submitted a first attempt, once per session | Any step link in the checklist | X button (stays hidden afterwards) |
 | `deposit-tier` | Deposit amount is close to the next bonus tier, once per visit | "Nạp {amount}" button | none (inline hint) |
+| `library-page` | Public exam library (/kho-de) opened | none | none |
+| `library-free` | none | Member or guest clicks open on a free ready exam | none |
+| `library-paid` | none | Click open on a paid or not-yet-fetched exam | none |
 
 Definitions: click rate = click / shown, dismiss rate = dismiss / shown. A "shown" row is written when the prompt appears, not on each re-render.
 
