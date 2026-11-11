@@ -204,6 +204,7 @@ model Exam {
   createdAt      DateTime  @default(now()) @map("created_at")
   subjectCode    String?   @map("subject_code") @db.VarChar(20) // subject code taken from the title (PRO192...); null = no code found. Set on import/rename, filled at boot for old rows
   refreshedAt    DateTime? @map("refreshed_at") // láº§n lĂ m má»›i gáº§n nháº¥t (láº¥y láº¡i áº£nh, bĂ¬nh luáº­n, giáº£i láº¡i Ä‘Ă¡p Ă¡n); null = chÆ°a tá»«ng
+  freeOverride   Boolean?  @map("free_override") // null = follow the library rule, true = always free, false = always paid
 
   questions ExamQuestion[]
   crawlJobs CrawlJob[]
@@ -698,11 +699,13 @@ model Subject {
   minPassMark Decimal? @map("min_pass_mark") @db.Decimal(3, 1) // MinAvgMarkToPass of the syllabus (null = unknown, assume 5)
   assessments Json?    // syllabus assessment list: [{category, type, weight, minScore}]
   credits     Int?     @db.UnsignedTinyInt // NoCredit of the syllabus (null = unknown)
+  semester    Int?     @db.UnsignedTinyInt // curriculum semester 0-9 (null = unclassified), set by admin or import script
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 
   chapters SubjectChapter[]
 
+  @@index([semester])
   @@map("subjects")
 }
 
