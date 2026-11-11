@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Check, Download, Loader2, Play, Search } from "lucide-react";
+import { BookOpen, Download, Loader2, Play } from "lucide-react";
 import { ConfirmFetchDialog } from "@/features/exam-import/components/ConfirmFetchDialog";
 import { examImportApi } from "@/features/exam-import/exam-import.api";
 import { useExamImport } from "@/features/exam-import/useExamImport";
@@ -8,9 +8,7 @@ import { useAuth } from "@/features/auth/AuthContext";
 import { errorMessage } from "@/shared/api/errors";
 import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
-import { useDebounce } from "@/shared/hooks/useDebounce";
-import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
-import { Badge } from "@/shared/ui/Badge";
+import { useUrlState } from "@/shared/hooks/useUrlState";
 import { Button } from "@/shared/ui/Button";
 import { Empty } from "@/shared/ui/Feedback";
 import { QueryBoundary } from "@/shared/ui/QueryBoundary";
@@ -21,6 +19,8 @@ import { isPro } from "@/shared/utils/pro";
 import { SubjectCard } from "@/features/subject/SubjectCard";
 import { SubjectPicker } from "@/features/subject/SubjectPicker";
 import { catalogApi, type CatalogItem } from "./catalog.api";
+import { ExamFilterBar, useExamListQuery } from "./ExamFilterBar";
+import { ExamStatusBadge } from "./ExamStatusBadge";
 
 // Kho đề > Theo môn: toàn bộ đề FE của một môn (danh mục FuOverflow + đề hệ thống đã có). Chỉ lấy ảnh khi người dùng bấm và đồng ý trừ phí.
 export function SubjectBrowser() {
@@ -51,14 +51,8 @@ function ExamList({ code, onBack }: { code: string; onBack: () => void }) {
   const navigate = useNavigate();
   const toast = useToast();
   const { user, refresh } = useAuth();
-  const [url, setUrl] = useUrlState({ term: "", q: "", page: "1" });
-  const page = toPage(url.page);
-  const [typed, setTyped] = useState(url.q);
-  const debounced = useDebounce(typed); // gõ xong mới tìm (đỡ gọi máy chủ mỗi phím)
-  useEffect(() => {
-    if (debounced !== url.q) setUrl({ q: debounced, page: "1" });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debounced]);
+  const query = useExamListQuery();
+  const { url, setUrl, page } = query;
 
   const list = useApi(() => catalogApi.exams(code, { q: url.q, term: url.term, page }), [code, url.q, url.term, page, user?.id]);
   const d = list.data;
@@ -97,22 +91,7 @@ function ExamList({ code, onBack }: { code: string; onBack: () => void }) {
     <>
       <SubjectCard title={`Môn ${code}`} onBack={onBack}>
         <div className="space-y-3 border-b border-outline-variant px-5 py-4">
-          <label className="relative block">
-            <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
-            <input value={typed} onChange={(e) => setTyped(e.target.value)} placeholder="Tìm trong các đề của môn" aria-label="Tìm đề" className="h-10 w-full rounded-m3-md border border-outline-variant bg-surface-container-lowest pl-9 pr-3 text-sm outline-none focus:border-primary" />
-          </label>
-          {d && d.terms.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Lọc theo kỳ">
-              <button type="button" onClick={() => setUrl({ term: "", page: "1" })} className={`h-8 rounded-full border px-3 text-sm ${!url.term ? "border-transparent bg-secondary-container text-on-secondary-container" : "border-outline-variant text-on-surface"}`}>
-                Tất cả
-              </button>
-              {d.terms.map((t) => (
-                <button key={t.term} type="button" onClick={() => setUrl({ term: t.term, page: "1" })} className={`h-8 rounded-full border px-3 text-sm ${url.term === t.term ? "border-transparent bg-secondary-container text-on-secondary-container" : "border-outline-variant text-on-surface"}`}>
-                  {t.term} <span className="text-xs text-on-surface-variant">{t.count}</span>
-                </button>
-              ))}
-            </div>
-          )}
+          <ExamFilterBar query={query} terms={d?.terms} />
           {running && (
             <p className="flex items-center gap-2 rounded-m3-md bg-surface-container-low px-4 py-3 text-sm text-on-surface-variant" role="status">
               <Loader2 size={16} className="animate-spin" /> {job.stage ?? "Đang lấy đề…"} Đề mới có thể mất vài phút, đừng đóng trang.
@@ -146,7 +125,7 @@ function ExamList({ code, onBack }: { code: string; onBack: () => void }) {
                           {e.questions !== null ? <span>{e.questions} câu</span> : null}
                         </p>
                       </div>
-                      <StatusBadge status={e.status} />
+                      <ExamStatusBadge status={e.status} />
                       <Button size="sm" variant={e.status === "fetch" ? "tonal" : e.status === "owned" ? "text" : "primary"} onClick={() => void pick(e)} disabled={busy}>
                         {quoting === e.threadId ? <Loader2 size={15} className="animate-spin" /> : e.status === "fetch" ? <Download size={15} /> : <Play size={15} />}
                         {e.status === "owned" ? "Mở đề" : e.status === "ready" ? "Lấy đề" : "Lấy từ FuOverflow"}
@@ -177,15 +156,4 @@ function ExamList({ code, onBack }: { code: string; onBack: () => void }) {
       )}
     </>
   );
-}
-
-function StatusBadge({ status }: { status: CatalogItem["status"] }) {
-  if (status === "owned")
-    return (
-      <Badge tone="success">
-        <Check size={13} /> Trong kho
-      </Badge>
-    );
-  if (status === "ready") return <Badge tone="info">Sẵn sàng · có đáp án</Badge>;
-  return <Badge tone="neutral">Chưa lấy</Badge>;
 }

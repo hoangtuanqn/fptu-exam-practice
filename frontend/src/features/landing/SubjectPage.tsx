@@ -5,7 +5,9 @@ import { Footer } from "@/shared/layout/Footer";
 import { SiteHeader } from "@/shared/layout/SiteHeader";
 import { useApi } from "@/shared/hooks/useApi";
 import { buttonClass } from "@/shared/ui/Button";
+import { Card } from "@/shared/ui/Card";
 import { Loading } from "@/shared/ui/Feedback";
+import { PublicExamList } from "@/features/exam-store/PublicExamList";
 import { subjectApi } from "@/features/subject/subject.api";
 import NotFoundPage from "@/app/NotFoundPage";
 
@@ -48,6 +50,13 @@ export default function SubjectPage() {
               <p className="md-body-small mt-1 text-on-surface-variant">{f.text}</p>
             </div>
           ))}
+        </section>
+
+        <section className="mt-10" aria-label={`Danh sách đề môn ${subject.code}`}>
+          <h2 className="md-title-large mb-3 text-on-surface">Các đề thi FE môn {subject.code}</h2>
+          <Card>
+            <PublicExamList code={subject.code} />
+          </Card>
         </section>
 
         <section className="mt-10" aria-label="Các chương của môn">

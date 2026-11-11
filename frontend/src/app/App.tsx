@@ -38,6 +38,7 @@ const TransactionsPage = lazy(() => import("@/features/account/pages/Transaction
 const ExamStorePage = lazy(() => import("@/features/exam-store/ExamStorePage"));
 const ReviewPage = lazy(() => import("@/features/review/ReviewPage"));
 const SubjectPage = lazy(() => import("@/features/landing/SubjectPage"));
+const PublicCatalogPage = lazy(() => import("@/features/exam-store/PublicCatalogPage"));
 const FrequentPage = lazy(() => import("@/features/frequent/FrequentPage"));
 const ChapterSetPage = lazy(() => import("@/features/chapter-set/ChapterSetPage"));
 const ReviewPracticePage = lazy(() => import("@/features/review/ReviewPracticePage"));
@@ -97,6 +98,8 @@ export default function App() {
 
         {/* Bảng tính năng của hệ thống (để giới thiệu/chụp màn hình): công khai */}
         <Route path="/features" element={<FeaturesPage />} />
+        {/* Kho đề công khai: khách xem môn và đề trước khi đăng ký */}
+        <Route path="/kho-de" element={<PublicCatalogPage />} />
         {/* Trang giới thiệu từng môn (SEO): /mon/pro192 */}
         <Route path="/mon/:code" element={<SubjectPage />} />
         {/* Lịch sử thay đổi (Có gì mới) của web và tiện ích Chrome: công khai */}
