@@ -69,7 +69,32 @@ export const termOf = (title: string) => {
 // Kỳ mới hơn xếp trước: năm lớn hơn, cùng năm thì FA (cuối năm) > SU > SP
 const termRank = (t: string) => Number(t.slice(2)) * 10 + ({ FA: 3, SU: 2, SP: 1 }[t.slice(0, 2)] ?? 0);
 
+const LATEST_COUNT = 6;
+let latestCache: { at: number; items: LatestItem[] } | null = null;
+
+export interface LatestItem {
+  threadId: string;
+  subjectCode: string;
+  title: string;
+  postedAt: Date;
+  term: string | null;
+}
+
 export const catalogService = {
+  /** Các đề mới đăng gần đây nhất trên FuOverflow (mọi môn), để trang chủ cho thấy kho đề luôn được cập nhật. Chỉ có mô tả, không có ảnh. */
+  async latest(): Promise<LatestItem[]> {
+    if (latestCache && Date.now() - latestCache.at < CACHE_MS) return latestCache.items;
+    const rows = await prisma.fuoThread.findMany({
+      where: { postedAt: { not: null } },
+      orderBy: { postedAt: "desc" },
+      take: LATEST_COUNT,
+      select: { threadId: true, subjectCode: true, title: true, postedAt: true },
+    });
+    const items = rows.map((r) => ({ threadId: r.threadId, subjectCode: r.subjectCode, title: r.title, postedAt: r.postedAt!, term: termOf(r.title) }));
+    latestCache = { at: Date.now(), items };
+    return items;
+  },
+
   /** Các môn có đề: tổng số đề (FuOverflow + hệ thống) và số đề hệ thống đã có sẵn. */
   async subjects() {
     const [exams, fuo, subjects] = await Promise.all([usableExams(), fuoThreads(), prisma.subject.findMany({ select: { code: true, name: true } })]);
