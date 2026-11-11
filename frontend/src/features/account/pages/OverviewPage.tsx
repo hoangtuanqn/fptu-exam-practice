@@ -107,6 +107,11 @@ export default function OverviewPage() {
             recent.length === 0 ? (
               <Empty icon={ClipboardCheck} title="Chưa có bài làm nào">
                 Lấy một đề ở trang chủ hoặc trong Kho đề rồi nộp bài, kết quả sẽ hiện ở đây.
+                <div className="mt-4">
+                  <Link to="/" className={buttonClass({ variant: "primary" })}>
+                    <PenLine size={16} /> Lấy đề đầu tiên
+                  </Link>
+                </div>
               </Empty>
             ) : (
               <ul className="divide-y divide-outline-variant">

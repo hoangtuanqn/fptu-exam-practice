@@ -12,6 +12,7 @@ export interface PromoConfig {
   upsellResult: boolean; // lời mời nâng cấp ở bảng điểm sau khi nộp bài
   upsellReviewCap: boolean; // nhắc khi sổ câu sai gần đầy (gói thường)
   upsellDepositTier: boolean; // gợi ý nạp thêm một chút để lên bậc thưởng kế tiếp
+  upsellFirstRun: boolean; // danh sách "Bắt đầu" cho người mới ở trang chủ
 }
 
 export const PROMO_DEFAULTS: PromoConfig = {
@@ -26,6 +27,7 @@ export const PROMO_DEFAULTS: PromoConfig = {
   upsellResult: true,
   upsellReviewCap: true,
   upsellDepositTier: true,
+  upsellFirstRun: true,
 };
 
 export const PROMO_KEY_PREFIX = "promo.";

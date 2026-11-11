@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { http } from "@/shared/api/client";
 import type { PublicOffers } from "@/shared/types/api";
 
-type Flags = NonNullable<PublicOffers["upsell"]>;
-const OFF: Flags = { result: false, reviewCap: false, depositTier: false };
+type Flags = Required<NonNullable<PublicOffers["upsell"]>>;
+const OFF: Flags = { result: false, reviewCap: false, depositTier: false, firstRun: false };
 
 let cached: Promise<PublicOffers> | null = null;
 const load = () =>
@@ -24,5 +24,5 @@ export function useUpsell() {
       alive = false;
     };
   }, []);
-  return { flags: offers?.upsell ?? OFF, explainPrice: offers?.explainPrice ?? 0, bonusTiers: offers?.depositBonusTiers ?? [] };
+  return { flags: offers?.upsell ? { ...OFF, ...offers.upsell } : OFF, explainPrice: offers?.explainPrice ?? 0, bonusTiers: offers?.depositBonusTiers ?? [] };
 }

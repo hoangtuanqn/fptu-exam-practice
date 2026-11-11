@@ -19,6 +19,7 @@ Event names are `<surface>.<event>`.
 |---|---|---|---|
 | `result-upgrade` | Result dialog, free logged-in user with 3 or more wrong answers, within frequency cap | Link to /pro | X button |
 | `review-cap` | Wrong-answer notebook nearly full, within frequency cap | Link to /pro | X button |
+| `first-run` | Home page, logged-in member who has not submitted a first attempt, once per session | Any step link in the checklist | X button (stays hidden afterwards) |
 | `deposit-tier` | Deposit amount is close to the next bonus tier, once per visit | "Nạp {amount}" button | none (inline hint) |
 
 Definitions: click rate = click / shown, dismiss rate = dismiss / shown. A "shown" row is written when the prompt appears, not on each re-render.

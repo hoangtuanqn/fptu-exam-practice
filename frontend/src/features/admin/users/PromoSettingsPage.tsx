@@ -24,7 +24,7 @@ function PromoForm({ initial, explainPrice, onSaved }: { initial: PromoSettings;
   const [discount, setDiscount] = useState(String(initial.bundleDiscountPercent));
   const [trials, setTrials] = useState(String(initial.freeTrials));
   const [endsAt, setEndsAt] = useState(toLocalInput(initial.promoEndsAt));
-  const [upsell, setUpsell] = useState({ result: initial.upsellResult ?? true, reviewCap: initial.upsellReviewCap ?? true, depositTier: initial.upsellDepositTier ?? true });
+  const [upsell, setUpsell] = useState({ result: initial.upsellResult ?? true, reviewCap: initial.upsellReviewCap ?? true, depositTier: initial.upsellDepositTier ?? true, firstRun: initial.upsellFirstRun ?? true });
   const [tiers, setTiers] = useState<{ min: string; percent: string }[]>(initial.depositBonusTiers.map((t) => ({ min: String(t.min), percent: String(t.percent) })));
 
   const d = Number(discount || 0);
@@ -42,6 +42,7 @@ function PromoForm({ initial, explainPrice, onSaved }: { initial: PromoSettings;
         upsellResult: upsell.result,
         upsellReviewCap: upsell.reviewCap,
         upsellDepositTier: upsell.depositTier,
+        upsellFirstRun: upsell.firstRun,
       });
       toast.success("Đã lưu cấu hình ưu đãi");
       onSaved();
@@ -145,6 +146,7 @@ function PromoForm({ initial, explainPrice, onSaved }: { initial: PromoSettings;
               ["result", "Bảng điểm sau khi nộp bài", "Gợi ý gói Pro dựa trên số câu sai, chỉ hiện cho tài khoản chưa có Pro."],
               ["reviewCap", "Sổ câu sai gần đầy", "Báo khi sổ của gói thường đã dùng từ 80% số chỗ."],
               ["depositTier", "Bậc thưởng khi nạp", "Báo số tiền còn thiếu để lên bậc thưởng kế tiếp khi gần tới."],
+              ["firstRun", "Danh sách Bắt đầu cho người mới", "Trang chủ hiện 4 bước đầu tiên (xác minh email, lấy đề, nộp bài) cho tới khi người dùng nộp bài đầu tiên."],
             ] as const
           ).map(([k, title, hint]) => (
             <label key={k} className="flex cursor-pointer items-start gap-3">

@@ -74,6 +74,7 @@ export const updatePromoBody = z.object({
   upsellResult: z.boolean().optional(),
   upsellReviewCap: z.boolean().optional(),
   upsellDepositTier: z.boolean().optional(),
+  upsellFirstRun: z.boolean().optional(),
 });
 export type UpdatePromoBody = z.infer<typeof updatePromoBody>;
 
