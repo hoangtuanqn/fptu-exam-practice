@@ -1,6 +1,5 @@
 import { createHash } from "node:crypto";
 import { prisma } from "../../configs/prisma";
-import { baseSubjectCode } from "../../utils/subject-code";
 import type { TopicItem } from "../../utils/topic-items";
 import { askClaude } from "./claude.client";
 
@@ -35,18 +34,10 @@ const MAX_CHARS = 14_000;
 
 type Stored = { label: string; hint: string };
 
-// Văn bản syllabus của môn (có thể nằm ở mã biến thể: PRO192C và PRO192), ghép theo thứ tự quan trọng và cắt cho vừa
+// Văn bản syllabus của đúng môn đó, ghép theo thứ tự quan trọng và cắt cho vừa
 async function syllabusText(code: string) {
-  const base = baseSubjectCode(code);
-  const chunks = await prisma.subjectChunk.findMany({
-    where: { subjectCode: { startsWith: base } },
-    orderBy: { id: "asc" },
-    select: { subjectCode: true, kind: true, title: true, content: true },
-  });
-  const related = chunks.filter((c) => baseSubjectCode(c.subjectCode) === base && KIND_ORDER.includes(c.kind));
-  const own = related.filter((c) => c.subjectCode === code);
-  const use = own.length ? own : related;
-  use.sort((a, b) => KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind));
+  const chunks = await prisma.subjectChunk.findMany({ where: { subjectCode: code, kind: { in: KIND_ORDER } }, orderBy: { id: "asc" }, select: { kind: true, title: true, content: true } });
+  const use = [...chunks].sort((a, b) => KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind));
   return use
     .map((c) => `## ${c.title}\n${c.content}`)
     .join("\n\n")

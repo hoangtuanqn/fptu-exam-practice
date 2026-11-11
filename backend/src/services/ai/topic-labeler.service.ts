@@ -5,7 +5,7 @@ import { aiReady } from "../../constants/ai";
 import { realtimeHub } from "../../realtime/hub";
 import { subjectCodeFromTitle } from "../../utils/subject-code";
 import { createLimiter } from "../../utils/limiter";
-import { buildTopicItems, type TopicItem } from "../../utils/topic-items";
+import { buildTopicItems, hasNamedChapters, type TopicItem } from "../../utils/topic-items";
 import { aiSettingService } from "../ai-setting.service";
 import { subjectService } from "../subject.service";
 import { askClaude, type ClaudeContent } from "./claude.client";
@@ -85,7 +85,6 @@ const RETRY_SKIPPED_MS = 30 * 60_000;
 async function findSubject(title: string) {
   const code = subjectCodeFromTitle(title);
   if (!code) return { code, subject: null };
-  // Mã trong tiêu đề có thể thiếu/thừa chữ cuối (SWE201 và SWE201c): subjectService chọn bản có đủ tên chương
   return { code, subject: await subjectService.findWithChapters(code) };
 }
 
@@ -147,9 +146,12 @@ export const topicLabelerService = {
     const ai = await aiSettingService.get();
     if (!aiReady(ai)) return { ...base, skipped: "AI chưa bật" };
 
-    let items = buildTopicItems(subject.chapters.map((c) => ({ number: c.number, title: c.title, topics: (c.topics as string[]) ?? [] })));
-    // Syllabus không chia được chương: AI suy ra chương từ mô tả/mục tiêu/lịch học của chính syllabus (lưu lại để các đề của môn dùng chung)
-    if (items.length < 2) items = await topicInferenceService.items(subject.code, subject.name, { apiKey: ai.anthropicApiKey, model: ai.claudeModel });
+    const chapters = subject.chapters.map((c) => ({ number: c.number, title: c.title, topics: (c.topics as string[]) ?? [] }));
+    let items = hasNamedChapters(chapters) ? buildTopicItems(chapters) : [];
+    // Syllabus không có tên chương: AI suy chương từ mô tả/mục tiêu/lịch học của chính môn, lưu lại để mọi đề của môn dùng chung (lần sau không gọi AI)
+    // Không suy được thì dùng cách cũ: gom các mục trong syllabus thành chủ đề
+    if (items.length < 2) items = await topicInferenceService.items(subject.code, subject.name, { apiKey: ai.anthropicApiKey, model: ai.claudeModel }).catch(() => []);
+    if (items.length < 2) items = buildTopicItems(chapters);
     if (items.length < 2) return { ...base, skipped: "môn chưa đủ dữ liệu chủ đề" };
 
     let todo = exam.questions.filter((q) => opts.force || !q.topic);
