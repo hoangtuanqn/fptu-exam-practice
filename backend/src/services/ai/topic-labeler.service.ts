@@ -5,9 +5,11 @@ import { aiReady } from "../../constants/ai";
 import { realtimeHub } from "../../realtime/hub";
 import { subjectCodeFromTitle } from "../../utils/subject-code";
 import { createLimiter } from "../../utils/limiter";
-import { buildTopicItems, type TopicItem } from "../../utils/topic-items";
+import { buildTopicItems, hasNamedChapters, type TopicItem } from "../../utils/topic-items";
 import { aiSettingService } from "../ai-setting.service";
+import { subjectService } from "../subject.service";
 import { askClaude, type ClaudeContent } from "./claude.client";
+import { topicInferenceService } from "./topic-inference.service";
 import { loadImageForAi } from "./image";
 
 // Mỗi lần gửi chừng này ảnh: đủ nhỏ để nhanh và rẻ, đủ lớn để không tốn nhiều lượt gọi
@@ -83,10 +85,7 @@ const RETRY_SKIPPED_MS = 30 * 60_000;
 async function findSubject(title: string) {
   const code = subjectCodeFromTitle(title);
   if (!code) return { code, subject: null };
-  // Mã trong tiêu đề có thể thiếu/thừa chữ cuối (SWE201 và SWE201c): thử khớp đúng, rồi khớp theo phần số
-  const include = { chapters: { orderBy: { number: "asc" as const } } };
-  const subject = (await prisma.subject.findUnique({ where: { code }, include })) ?? (await prisma.subject.findFirst({ where: { code: { startsWith: code.replace(/[A-Z]$/, "") } }, include }));
-  return { code, subject };
+  return { code, subject: await subjectService.findWithChapters(code) };
 }
 
 export const topicLabelerService = {
@@ -144,11 +143,16 @@ export const topicLabelerService = {
     if (!subject) return { ...base, skipped: code ? `môn ${code} chưa có trong bảng subjects` : "không nhận ra mã môn trong tiêu đề" };
     base.subject = subject.code;
 
-    const items = buildTopicItems(subject.chapters.map((c) => ({ number: c.number, title: c.title, topics: (c.topics as string[]) ?? [] })));
-    if (items.length < 2) return { ...base, skipped: "môn chưa đủ dữ liệu chủ đề" };
-
     const ai = await aiSettingService.get();
     if (!aiReady(ai)) return { ...base, skipped: "AI chưa bật" };
+
+    const chapters = subject.chapters.map((c) => ({ number: c.number, title: c.title, topics: (c.topics as string[]) ?? [] }));
+    let items = hasNamedChapters(chapters) ? buildTopicItems(chapters) : [];
+    // Syllabus không có tên chương: AI suy chương từ mô tả/mục tiêu/lịch học của chính môn, lưu lại để mọi đề của môn dùng chung (lần sau không gọi AI)
+    // Không suy được thì dùng cách cũ: gom các mục trong syllabus thành chủ đề
+    if (items.length < 2) items = await topicInferenceService.items(subject.code, subject.name, { apiKey: ai.anthropicApiKey, model: ai.claudeModel }).catch(() => []);
+    if (items.length < 2) items = buildTopicItems(chapters);
+    if (items.length < 2) return { ...base, skipped: "môn chưa đủ dữ liệu chủ đề" };
 
     let todo = exam.questions.filter((q) => opts.force || !q.topic);
     if (opts.max) todo = todo.slice(0, opts.max);
