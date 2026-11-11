@@ -20,6 +20,9 @@ export interface NavItem {
   group?: string; // nhãn nhóm hiện phía trên mục đầu tiên của nhóm
 }
 
+// Nhóm có nhiều hơn chừng này mục mới xổ xuống/thu lại được; nhóm ít mục luôn hiện đủ cho gọn mắt
+const FOLD_OVER = 5;
+
 // Mục menu khớp với đường dẫn hiện tại (dài nhất thắng), dùng cho tiêu đề thanh trên
 function currentItem(items: NavItem[], pathname: string) {
   return items
@@ -75,7 +78,7 @@ function DrawerContent({ title, items, onNavigate, collapsible }: { title: strin
 
       <nav aria-label={title} className="flex-1 overflow-y-auto px-3 pb-4">
         {sections.map((sec, si) => {
-          const fold = collapsible && !!sec.group && sec.items.length > 1; // nhóm có nhãn thì xổ xuống/thu lại được
+          const fold = collapsible && !!sec.group && sec.items.length > FOLD_OVER; // nhóm có nhãn thì xổ xuống/thu lại được
           const isOpen = !fold || open.has(sec.group!);
           return (
             <div key={sec.group ?? `s${si}`}>
