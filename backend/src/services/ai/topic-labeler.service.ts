@@ -9,6 +9,7 @@ import { buildTopicItems, type TopicItem } from "../../utils/topic-items";
 import { aiSettingService } from "../ai-setting.service";
 import { subjectService } from "../subject.service";
 import { askClaude, type ClaudeContent } from "./claude.client";
+import { topicInferenceService } from "./topic-inference.service";
 import { loadImageForAi } from "./image";
 
 // Mỗi lần gửi chừng này ảnh: đủ nhỏ để nhanh và rẻ, đủ lớn để không tốn nhiều lượt gọi
@@ -143,11 +144,13 @@ export const topicLabelerService = {
     if (!subject) return { ...base, skipped: code ? `môn ${code} chưa có trong bảng subjects` : "không nhận ra mã môn trong tiêu đề" };
     base.subject = subject.code;
 
-    const items = buildTopicItems(subject.chapters.map((c) => ({ number: c.number, title: c.title, topics: (c.topics as string[]) ?? [] })));
-    if (items.length < 2) return { ...base, skipped: "môn chưa đủ dữ liệu chủ đề" };
-
     const ai = await aiSettingService.get();
     if (!aiReady(ai)) return { ...base, skipped: "AI chưa bật" };
+
+    let items = buildTopicItems(subject.chapters.map((c) => ({ number: c.number, title: c.title, topics: (c.topics as string[]) ?? [] })));
+    // Syllabus không chia được chương: AI suy ra chương từ mô tả/mục tiêu/lịch học của chính syllabus (lưu lại để các đề của môn dùng chung)
+    if (items.length < 2) items = await topicInferenceService.items(subject.code, subject.name, { apiKey: ai.anthropicApiKey, model: ai.claudeModel });
+    if (items.length < 2) return { ...base, skipped: "môn chưa đủ dữ liệu chủ đề" };
 
     let todo = exam.questions.filter((q) => opts.force || !q.topic);
     if (opts.max) todo = todo.slice(0, opts.max);

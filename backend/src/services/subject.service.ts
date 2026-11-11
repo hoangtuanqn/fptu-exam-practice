@@ -4,8 +4,6 @@ import { baseSubjectCode } from "../utils/subject-code";
 import { hasNamedChapters } from "../utils/topic-items";
 import { subjectIssueService } from "./subject-issue.service";
 
-export const NO_CHAPTER_NAMES_MESSAGE = "Môn này chưa có tên chương trong syllabus nên chưa thể làm bộ đề theo chương. Hệ thống đã gửi báo cáo lỗi đến quản trị viên để bổ sung.";
-
 const withChapters = { chapters: { orderBy: { number: "asc" as const } } };
 
 export const subjectService = {
@@ -26,13 +24,17 @@ export const subjectService = {
   // Mã + tên mọi môn (cho ô chọn môn)
   list: () => prisma.subject.findMany({ orderBy: { code: "asc" }, select: { code: true, name: true } }),
 
-  // Môn có đủ tên chương trong syllabus để làm bộ đề theo chương không. Chưa đủ thì ghi báo cáo cho admin (mỗi lần có người thử là tăng số lần gặp).
+  // Không bao giờ chặn người dùng làm bộ đề theo chương: môn thiếu tên chương thì AI tự suy chương từ nội dung syllabus (xem topic-inference).
+  // Chỉ khi môn không có chữ nào trong syllabus (không có chương, không có đoạn nội dung) mới ghi báo cáo cho admin bổ sung.
   async chapterSetReady(code: string) {
     const subject = await this.findWithChapters(code);
     if (!subject) throw AppError.notFound("Không tìm thấy môn học");
-    const ok = hasNamedChapters(subject.chapters);
-    if (!ok) await subjectIssueService.report(code.toUpperCase(), "NO_CHAPTER_NAMES");
-    return { ok, message: ok ? null : NO_CHAPTER_NAMES_MESSAGE };
+    if (!hasNamedChapters(subject.chapters)) {
+      const chunks = await prisma.subjectChunk.count({ where: { subjectCode: { startsWith: baseSubjectCode(code) } } });
+      const hasText = chunks > 0 || subject.chapters.some((c) => Array.isArray(c.topics) && c.topics.length > 0);
+      if (!hasText) await subjectIssueService.report(code.toUpperCase(), "NO_CHAPTER_NAMES");
+    }
+    return { ok: true, message: null as string | null };
   },
 
   // Thông tin công khai của một môn cho trang /mon/<mã>: tên, các chương theo syllabus và số đề hệ thống đang có
