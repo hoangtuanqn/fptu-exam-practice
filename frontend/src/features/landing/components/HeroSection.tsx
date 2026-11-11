@@ -4,9 +4,10 @@ import { brand, logos } from "@/shared/brand/brand";
 import { FEATURES } from "../content";
 import { ExamSourcePicker } from "./ExamSourcePicker";
 import { PromoCard } from "./PromoCard";
+import { PromoDeadlineBanner } from "./PromoDeadlineBanner";
 import { SignupGiftBanner } from "./SignupGiftBanner";
 import { ValueTrio } from "./ValueTrio";
-import { ProTeaser } from "@/features/plan/ProTeaser";
+import { ProNudge } from "@/features/plan/ProNudge";
 import { FirstRunChecklist } from "@/features/account/FirstRunChecklist";
 
 interface Props {
@@ -73,6 +74,8 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
 
         {/* Bố cục: ô chọn môn (việc chính, thấy ngay không cần cuộn) → thanh dán link FuOverflow → dải quà → dải Pro → thẻ ưu đãi.
             Không còn chồng/che nhau khi cuộn. */}
+        <PromoDeadlineBanner />
+
         <div className="relative animate-fade-up [animation-delay:60ms]">
           <div className={isGuest ? "mt-3" : ""}>
             <ExamSourcePicker onPick={onPick} onImported={onImported} />
@@ -83,7 +86,8 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
 
         {!isGuest && <FirstRunChecklist />}
 
-        <ProTeaser />
+        {/* Khách chưa thử gì thì chưa mời trả tiền: chỉ có dải quà đăng ký. Thành viên thấy lời mời Pro dựa trên dữ kiện thật của họ (hoặc dải Pro thường nếu chưa có). */}
+        {!isGuest && <ProNudge />}
 
         {isGuest && (
           <div className="mt-8 animate-fade-up [animation-delay:120ms]">

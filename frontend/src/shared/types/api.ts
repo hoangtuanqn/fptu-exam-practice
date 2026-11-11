@@ -335,6 +335,7 @@ export interface PromoSettings {
   upsellReviewCap?: boolean; // công tắc: nhắc khi sổ câu sai gần đầy
   upsellDepositTier?: boolean; // công tắc: gợi ý lên bậc thưởng nạp kế tiếp
   upsellFirstRun?: boolean; // công tắc: danh sách Bắt đầu cho người mới
+  upsellProNudge?: boolean; // công tắc: lời mời Pro ở trang chủ (kỳ thi sắp tới, tiền đã chi lẻ, vé chưa kích hoạt)
 }
 
 // Số liệu ưu đãi hiện hành cho trang chủ (công khai)
@@ -344,7 +345,7 @@ export interface PublicOffers {
   bundleDiscountPercent: number;
   promoEndsAt: string | null;
   depositBonusTiers: BonusTier[];
-  upsell?: { result: boolean; reviewCap: boolean; depositTier: boolean; firstRun?: boolean }; // máy chủ cũ chưa có: coi như tắt
+  upsell?: { result: boolean; reviewCap: boolean; depositTier: boolean; firstRun?: boolean; proNudge?: boolean }; // máy chủ cũ chưa có: coi như tắt
 }
 
 export interface AccountSettings {

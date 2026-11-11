@@ -24,7 +24,7 @@ function PromoForm({ initial, explainPrice, onSaved }: { initial: PromoSettings;
   const [discount, setDiscount] = useState(String(initial.bundleDiscountPercent));
   const [trials, setTrials] = useState(String(initial.freeTrials));
   const [endsAt, setEndsAt] = useState(toLocalInput(initial.promoEndsAt));
-  const [upsell, setUpsell] = useState({ result: initial.upsellResult ?? true, reviewCap: initial.upsellReviewCap ?? true, depositTier: initial.upsellDepositTier ?? true, firstRun: initial.upsellFirstRun ?? true });
+  const [upsell, setUpsell] = useState({ result: initial.upsellResult ?? true, reviewCap: initial.upsellReviewCap ?? true, depositTier: initial.upsellDepositTier ?? true, firstRun: initial.upsellFirstRun ?? true, proNudge: initial.upsellProNudge ?? true });
   const [tiers, setTiers] = useState<{ min: string; percent: string }[]>(initial.depositBonusTiers.map((t) => ({ min: String(t.min), percent: String(t.percent) })));
 
   const d = Number(discount || 0);
@@ -43,6 +43,7 @@ function PromoForm({ initial, explainPrice, onSaved }: { initial: PromoSettings;
         upsellReviewCap: upsell.reviewCap,
         upsellDepositTier: upsell.depositTier,
         upsellFirstRun: upsell.firstRun,
+        upsellProNudge: upsell.proNudge,
       });
       toast.success("Đã lưu cấu hình ưu đãi");
       onSaved();
@@ -147,6 +148,7 @@ function PromoForm({ initial, explainPrice, onSaved }: { initial: PromoSettings;
               ["reviewCap", "Sổ câu sai gần đầy", "Báo khi sổ của gói thường đã dùng từ 80% số chỗ."],
               ["depositTier", "Bậc thưởng khi nạp", "Báo số tiền còn thiếu để lên bậc thưởng kế tiếp khi gần tới."],
               ["firstRun", "Danh sách Bắt đầu cho người mới", "Trang chủ hiện 4 bước đầu tiên (xác minh email, lấy đề, nộp bài) cho tới khi người dùng nộp bài đầu tiên."],
+              ["proNudge", "Lời mời Pro ở trang chủ", "Dựa trên dữ liệu thật: kỳ thi sắp tới (lịch FAP hoặc ngày tự đặt), tiền đã chi lẻ 30 ngày qua, vé Pro chưa kích hoạt. Chỉ cho tài khoản chưa có Pro."],
             ] as const
           ).map(([k, title, hint]) => (
             <label key={k} className="flex cursor-pointer items-start gap-3">

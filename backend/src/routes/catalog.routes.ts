@@ -17,6 +17,11 @@ catalogRouter.get("/subjects", async (_req, res) => {
   res.json(new ResponseClient({ data: await catalogService.subjects() }));
 });
 
+// Đề mới đăng gần đây (mọi môn), cho khối "Mới đăng" ở trang chủ; khách cũng xem được
+catalogRouter.get("/latest", async (_req, res) => {
+  res.json(new ResponseClient({ data: await catalogService.latest() }));
+});
+
 // Các môn người dùng đã lấy đề (để bấm nhanh); khách chưa có kho nên trả rỗng
 catalogRouter.get("/my-subjects", async (req, res) => {
   res.json(new ResponseClient({ data: req.user ? await catalogService.mySubjects(req.user.id) : [] }));

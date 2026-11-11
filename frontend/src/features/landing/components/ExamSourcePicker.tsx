@@ -4,6 +4,7 @@ import { MyExams } from "@/features/exam-store/MyExams";
 import type { PickFolder } from "@/features/practice/components/FolderInput";
 import { LinkImport } from "@/features/exam-import/components/LinkImport";
 import type { ImportedExam } from "@/features/exam-import/types";
+import { LatestExamsStrip } from "./LatestExamsStrip";
 import { PickExamTab } from "./PickExamTab";
 
 interface Props {
@@ -29,6 +30,8 @@ export function ExamSourcePicker({ onImported }: Props) {
       <section aria-label="Chọn môn và đề">
         <PickExamTab />
       </section>
+
+      <LatestExamsStrip />
 
       <section ref={linkSection} aria-label="Dán link đề FuOverflow" className="mt-8">
         <LinkImport

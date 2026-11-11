@@ -28,7 +28,17 @@ export interface CatalogPage {
   total: number; // tổng số đề của môn (trước khi lọc)
 }
 
+// Đề mới đăng gần đây trên danh mục (chỉ mô tả)
+export interface LatestExam {
+  threadId: string;
+  subjectCode: string;
+  title: string;
+  postedAt: string;
+  term: string | null;
+}
+
 export const catalogApi = {
+  latest: () => http.get<LatestExam[]>("/catalog/latest"),
   subjects: () => http.get<CatalogSubject[]>("/catalog/subjects"),
   mySubjects: () => http.get<string[]>("/catalog/my-subjects"),
   exams: (subject: string, opts: { q?: string; term?: string; page?: number; limit?: number }) =>

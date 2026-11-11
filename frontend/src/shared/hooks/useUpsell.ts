@@ -3,7 +3,7 @@ import { http } from "@/shared/api/client";
 import type { PublicOffers } from "@/shared/types/api";
 
 type Flags = Required<NonNullable<PublicOffers["upsell"]>>;
-const OFF: Flags = { result: false, reviewCap: false, depositTier: false, firstRun: false };
+const OFF: Flags = { result: false, reviewCap: false, depositTier: false, firstRun: false, proNudge: false };
 
 let cached: Promise<PublicOffers> | null = null;
 const load = () =>

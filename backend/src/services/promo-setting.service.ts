@@ -34,18 +34,20 @@ export const promoSettingService = {
       upsellReviewCap: flag(raw[keyOf("upsellReviewCap")], PROMO_DEFAULTS.upsellReviewCap),
       upsellDepositTier: flag(raw[keyOf("upsellDepositTier")], PROMO_DEFAULTS.upsellDepositTier),
       upsellFirstRun: flag(raw[keyOf("upsellFirstRun")], PROMO_DEFAULTS.upsellFirstRun),
+      upsellProNudge: flag(raw[keyOf("upsellProNudge")], PROMO_DEFAULTS.upsellProNudge),
     };
   },
 
   async update(body: UpdatePromoBody) {
     const cur = await this.get();
     // Công tắc là trường thêm sau: bản giao diện cũ không gửi thì giữ nguyên giá trị đang lưu
-    const sw = (name: "upsellResult" | "upsellReviewCap" | "upsellDepositTier" | "upsellFirstRun") => String(body[name] ?? cur[name]);
+    const sw = (name: "upsellResult" | "upsellReviewCap" | "upsellDepositTier" | "upsellFirstRun" | "upsellProNudge") => String(body[name] ?? cur[name]);
     await settingRepository.setMany({
       [keyOf("upsellResult")]: sw("upsellResult"),
       [keyOf("upsellReviewCap")]: sw("upsellReviewCap"),
       [keyOf("upsellDepositTier")]: sw("upsellDepositTier"),
       [keyOf("upsellFirstRun")]: sw("upsellFirstRun"),
+      [keyOf("upsellProNudge")]: sw("upsellProNudge"),
       [keyOf("bundleDiscountPercent")]: String(body.bundleDiscountPercent),
       [keyOf("freeTrials")]: String(body.freeTrials),
       [keyOf("promoEndsAt")]: body.promoEndsAt,

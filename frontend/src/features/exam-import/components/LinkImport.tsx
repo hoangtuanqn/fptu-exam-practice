@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
-import { AlertCircle, BadgeCheck, CheckCircle2, ClipboardPaste, Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, ClipboardPaste, Loader2 } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { ApiError } from "@/shared/api/client";
 import { isPro } from "@/shared/utils/pro";
@@ -237,9 +237,6 @@ export function LinkImport({ onImported, subject, compact = false }: Props) {
             </span>
             <span className="text-sm font-medium text-slate-500">/ đề</span>
           </div>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-surface-container-lowest px-3 py-1 text-xs font-semibold text-slate-600">
-            <BadgeCheck size={14} className="text-brand-700" /> Đáp án chính xác đến 99.9%
-          </span>
           <span className="md-body-small text-on-surface-variant">{hint}</span>
         </div>
       </div>
