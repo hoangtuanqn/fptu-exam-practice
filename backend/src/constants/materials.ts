@@ -14,6 +14,8 @@ export const MATERIAL_PDF_MAGIC_WINDOW = 1024; // "%PDF-" phải nằm trong ch�
 export const MATERIAL_TITLE_MAX = 200;
 export const MATERIAL_UPLOADS_PER_HOUR = 5; // mỗi tài khoản (chỉ đếm lần tải thành công)
 export const MATERIAL_MAX_ACTIVE_PER_USER = 2; // số tài liệu đang chờ/đang chạy cùng lúc của một người
+// Trả lời sớm một yêu cầu tải lên bị từ chối: đọc bỏ thân tối đa chừng này rồi trả lời (proxy gửi từ máy cục bộ nên rất nhanh)
+export const REQUEST_DRAIN_TIMEOUT_MS = 30_000;
 export const MATERIAL_LIST_MAX = 100; // danh sách "tài liệu của tôi" (tài liệu tự xoá sau MATERIAL_RETENTION_DAYS nên ít khi chạm)
 
 // Tách trang
