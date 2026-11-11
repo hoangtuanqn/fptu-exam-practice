@@ -1,4 +1,6 @@
 import { Router } from "express";
+import { frequencyStatsController } from "../controllers/frequency-stats.controllers";
+import { hotQuestionsQuery, subjectIdParam } from "../rules/requests/frequency-stats.request";
 import { identify } from "../middlewares/auth.middlewares";
 import { makeLimiter } from "../middlewares/rateLimit.middlewares";
 import { getValidated, validate } from "../middlewares/validate.middlewares";
@@ -26,6 +28,10 @@ subjectRouter.get("/:code/frequent", limiter, identify, validate(subjectCodePara
   const { code } = getValidated<SubjectCodeParam>(res, "params");
   res.json(new ResponseClient({ data: await frequentQuestionsService.forSubject(code, req.user) }));
 });
+
+// Thống kê tần suất ra đề theo id số của môn (npm run stats:refresh tính sẵn): theo chương (công khai) và nhóm câu hay ra (gói thường xem phần đầu)
+subjectRouter.get("/:id/chapter-stats", limiter, validate(subjectIdParam, "params"), frequencyStatsController.chapterStats);
+subjectRouter.get("/:id/hot-questions", limiter, identify, validate(subjectIdParam, "params"), validate(hotQuestionsQuery, "query"), frequencyStatsController.hotQuestions);
 
 subjectRouter.get("/:code", limiter, validate(subjectCodeParam, "params"), async (_req, res) => {
   const { code } = getValidated<SubjectCodeParam>(res, "params");
