@@ -7,6 +7,32 @@ import type { PickableSubject } from "./SubjectPicker";
 
 const MAX_RESULTS = 6;
 
+// Một môn: mã, tên và số đề. Dùng cho cả lưới chọn nhanh lẫn kết quả tìm kiếm.
+function SubjectRow({ subject, onPick, tile = false }: { subject: PickableSubject; onPick: () => void; tile?: boolean }) {
+  const name = subject.name ?? "Môn học";
+  return (
+    <button type="button" onClick={onPick} className={`md-state flex w-full items-center gap-3 px-4 py-3 text-left ${tile ? "rounded-m3-md border border-outline-variant bg-surface" : ""}`}>
+      {tile ? (
+        // Ô trong lưới hẹp: mã môn nằm trên tên môn để tên có đủ chỗ
+        <span className="min-w-0 flex-1">
+          <span className="md-title-small block text-primary">{subject.code}</span>
+          <span className="md-body-small block truncate text-on-surface-variant" title={name}>
+            {name}
+          </span>
+        </span>
+      ) : (
+        <>
+          <span className="md-title-small w-16 shrink-0 text-primary sm:w-20">{subject.code}</span>
+          <span className="md-body-medium min-w-0 flex-1 truncate text-on-surface" title={name}>
+            {name}
+          </span>
+        </>
+      )}
+      {subject.badge && <Badge tone="info">{subject.badge}</Badge>}
+    </button>
+  );
+}
+
 interface Props {
   subjects: PickableSubject[] | undefined;
   loading?: boolean;
@@ -47,20 +73,14 @@ export function CompactSubjectPicker({ subjects, loading, error, onRetry, onPick
       ) : term ? (
         matches.length === 0 ? (
           <Empty icon={Search} title="Chưa có môn nào khớp">
-            Thử mã môn khác, hoặc dán link FuOverflow ở tab bên cạnh để lấy đề mới.
+            Thử mã môn khác, hoặc dán link FuOverflow ở khung bên dưới để lấy đề mới.
           </Empty>
         ) : (
           <div>
             <ul className="divide-y divide-outline-variant overflow-hidden rounded-m3-md border border-outline-variant bg-surface" aria-live="polite">
               {matches.slice(0, MAX_RESULTS).map((s) => (
                 <li key={s.code}>
-                  <button type="button" onClick={() => onPick(s.code, s)} className="md-state flex w-full items-center gap-3 px-4 py-3 text-left">
-                    <span className="md-title-small w-20 shrink-0 text-primary">{s.code}</span>
-                    <span className="md-body-medium min-w-0 flex-1 truncate text-on-surface" title={s.name ?? undefined}>
-                      {s.name ?? "Môn học"}
-                    </span>
-                    {s.badge && <Badge tone="info">{s.badge}</Badge>}
-                  </button>
+                  <SubjectRow subject={s} onPick={() => onPick(s.code, s)} />
                 </li>
               ))}
             </ul>
@@ -70,14 +90,14 @@ export function CompactSubjectPicker({ subjects, loading, error, onRetry, onPick
       ) : (
         chips.length > 0 && (
           <div>
-            <p className="md-label-large mb-2 text-on-surface-variant">Chọn nhanh</p>
-            <div className="flex flex-wrap gap-2">
+            <p className="md-label-large mb-2 text-on-surface-variant">Môn có đề sẵn</p>
+            <ul className="grid gap-2 sm:grid-cols-2">
               {chips.map((s) => (
-                <button key={s.code} type="button" onClick={() => onPick(s.code, s)} title={s.name ?? undefined} className="md-state inline-flex h-9 items-center rounded-full border border-outline-variant px-4 text-sm font-medium text-on-surface">
-                  {s.code}
-                </button>
+                <li key={s.code}>
+                  <SubjectRow subject={s} tile onPick={() => onPick(s.code, s)} />
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
         )
       )}
