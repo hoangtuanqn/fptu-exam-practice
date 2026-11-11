@@ -68,7 +68,7 @@ export function CatalogOverview({ subjects, overview, onPick }: { subjects: Subj
         <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {shown.map((s) => (
             <li key={s.code}>
-              <SubjectTile subject={{ code: s.code, name: s.name, badge: `${s.total} đề${s.free > 0 ? ` · ${s.free} miễn phí` : ""}` }} onPick={() => onPick(s.code)} />
+              <SubjectTile subject={{ code: s.code, name: s.name, badge: `${s.total} đề` }} onPick={() => onPick(s.code)} />
             </li>
           ))}
         </ul>

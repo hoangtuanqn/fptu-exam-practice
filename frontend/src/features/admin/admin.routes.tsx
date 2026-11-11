@@ -55,7 +55,7 @@ export const ADMIN_NAV: NavItem[] = [
   { to: "/admin/reports", label: "Báo cáo đáp án", icon: MessageSquareWarning, group: "Nội dung & AI" },
   { to: "/admin/link-rewards", label: "Vượt link", icon: Link2, group: "Nội dung & AI" },
   { to: "/admin/subject-issues", label: "Môn thiếu dữ liệu", icon: TriangleAlert, group: "Nội dung & AI" },
-  { to: "/admin/library", label: "Thư viện đề thi", icon: Library, group: "Nội dung & AI" },
+  { to: "/admin/library", label: "Kỳ học của môn", icon: Library, group: "Nội dung & AI" },
   { to: "/admin/crawler", label: "Cấu hình lấy đề", icon: DatabaseZap, group: "Nội dung & AI" },
   { to: "/admin/ai", label: "AI giải đáp án", icon: Bot, group: "Nội dung & AI" },
   { to: "/admin/chatbot", label: "Chatbot hỗ trợ", icon: MessagesSquare, group: "Nội dung & AI" },

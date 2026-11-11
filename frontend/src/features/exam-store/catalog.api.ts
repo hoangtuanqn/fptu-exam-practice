@@ -6,7 +6,6 @@ export interface CatalogSubject {
   name: string | null;
   total: number; // tổng số đề FE đã biết (FuOverflow + hệ thống)
   ready: number; // số đề hệ thống đã có sẵn ảnh và đáp án
-  free: number; // số đề miễn phí (thành viên mở không mất credit)
   semester: number | null; // kỳ học 0-9, null = chưa phân loại
 }
 
@@ -21,7 +20,6 @@ export interface CatalogItem {
   term: string | null; // kỳ học, ví dụ SU26
   status: CatalogStatus;
   questions: number | null;
-  free: boolean; // đề sẵn sàng và miễn phí
 }
 
 export interface CatalogPage {
@@ -29,17 +27,14 @@ export interface CatalogPage {
   meta: PageMeta;
   terms: { term: string; count: number }[];
   total: number; // tổng số đề của môn (trước khi lọc)
-  price: number; // phí lấy một đề trả phí (credit)
-  freeCount: number;
+  price: number; // phí lấy một đề chưa có trong kho của bạn (credit)
   subject: { code: string; name: string | null; semester: number | null };
 }
 
 export interface LibraryOverview {
-  enabled: boolean;
   subjects: number;
   examsKnown: number; // đề biết (danh mục FuOverflow + hệ thống)
   examsReady: number; // đề đã có ảnh + đáp án, mở ngay
-  examsFree: number;
   bySemester: { semester: number | null; subjects: number; examsKnown: number; examsReady: number }[];
 }
 

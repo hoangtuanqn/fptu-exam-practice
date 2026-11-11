@@ -16,11 +16,7 @@
         },
         {
           "type": "new",
-          "text": "Kho đề: lọc môn theo Kỳ 0 đến Kỳ 9, xem số đề của từng môn và đề nào miễn phí, đề nào tính phí ngay trên danh sách"
-        },
-        {
-          "type": "new",
-          "text": "Đề của các kỳ thi cũ đã có sẵn đáp án được mở miễn phí cho thành viên"
+          "text": "Kho đề: lọc môn theo Kỳ 0 đến Kỳ 9, xem số đề của từng môn; nút mở đề ghi rõ số credit trước khi bấm"
         },
         {
           "type": "improved",

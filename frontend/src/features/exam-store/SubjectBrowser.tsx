@@ -13,7 +13,7 @@ import { Button } from "@/shared/ui/Button";
 import { Empty } from "@/shared/ui/Feedback";
 import { QueryBoundary } from "@/shared/ui/QueryBoundary";
 import { Pagination } from "@/shared/ui/Table";
-import { formatDate } from "@/shared/utils/formatters";
+import { formatCredit, formatDate } from "@/shared/utils/formatters";
 import { fuoThreadUrl } from "@/shared/utils/fuo-link";
 import { isPro } from "@/shared/utils/pro";
 import { CompactSubjectPicker } from "@/features/subject/CompactSubjectPicker";
@@ -21,7 +21,6 @@ import { SubjectCard } from "@/features/subject/SubjectCard";
 import { SubjectPicker } from "@/features/subject/SubjectPicker";
 import { catalogApi, type CatalogItem } from "./catalog.api";
 import { ExamFilterBar, useExamListQuery } from "./ExamFilterBar";
-import { ExamPriceTag } from "./ExamPriceTag";
 import { featuredSubjects } from "./featuredSubjects";
 
 const COMPACT_PAGE_SIZE = 6; // trang chủ: chỉ vài đề mỗi trang để không đẩy các phần bên dưới đi quá xa
@@ -134,10 +133,9 @@ function ExamList({ code, onBack, compact }: { code: string; onBack: () => void;
                           {e.questions !== null ? <span>{e.questions} câu</span> : null}
                         </p>
                       </div>
-                      <ExamPriceTag item={e} price={data.price} />
                       <Button size="sm" variant="tonal" onClick={() => void pick(e)} disabled={busy}>
                         {quoting === e.threadId ? <Loader2 size={15} className="animate-spin" /> : <Play size={15} />}
-                        Mở đề
+                        {e.status !== "owned" && data.price > 0 && !isPro(user) ? formatCredit(data.price) : "Mở đề"}
                       </Button>
                     </li>
                   ))}

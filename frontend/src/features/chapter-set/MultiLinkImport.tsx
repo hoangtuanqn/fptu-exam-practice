@@ -273,7 +273,7 @@ function RowNote({ entry, quote, slots }: { entry: Entry; quote?: Quote; slots: 
   if (q.fee > 0) return <p className={`${base} text-on-surface`}>Phí lấy đề: {formatCredit(q.fee)}</p>;
   return (
     <p className={`${base} text-success`}>
-      {q.reason === "owned" ? `Đã có trong kho của bạn${q.title ? `: ${q.title}` : ""}, mở lại miễn phí` : q.reason === "in-progress" ? "Đang lấy dở, không trừ thêm" : q.reason === "free" ? "Đề miễn phí của thư viện" : "Miễn phí"}
+      {q.reason === "owned" ? `Đã có trong kho của bạn${q.title ? `: ${q.title}` : ""}, mở lại miễn phí` : q.reason === "in-progress" ? "Đang lấy dở, không trừ thêm" : "Miễn phí"}
     </p>
   );
 }

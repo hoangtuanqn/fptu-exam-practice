@@ -8,9 +8,9 @@ import { QueryBoundary } from "@/shared/ui/QueryBoundary";
 import { Pagination } from "@/shared/ui/Table";
 import { formatCredit, formatDate } from "@/shared/utils/formatters";
 import { catalogApi, type CatalogItem } from "./catalog.api";
+import { isPro } from "@/shared/utils/pro";
 import { trackPrompt } from "@/shared/utils/trackPrompt";
 import { ExamFilterBar, useExamListQuery } from "./ExamFilterBar";
-import { ExamPriceTag } from "./ExamPriceTag";
 
 // Danh sách đề của một môn cho khách xem (trang Kho đề công khai và trang từng môn), không có khung ngoài: nơi dùng tự bọc Card.
 // Chỉ có thông tin mô tả: tên, kỳ, ngày, số câu.
@@ -26,7 +26,6 @@ export function PublicExamList({ code, pageSize }: { code: string; pageSize?: nu
     <div>
       <div className="space-y-3 border-b border-outline-variant px-5 py-4">
         <ExamFilterBar query={query} terms={list.data?.terms} />
-        {list.data && list.data.freeCount > 0 && <p className="md-body-small text-on-surface-variant">{list.data.freeCount} đề của môn này miễn phí cho thành viên. Đề còn lại tính {formatCredit(list.data.price)}/đề (Pro lấy đề miễn phí).</p>}
       </div>
       <QueryBoundary query={list}>
         {(data) =>
@@ -47,8 +46,7 @@ export function PublicExamList({ code, pageSize }: { code: string; pageSize?: nu
                         {e.questions !== null ? <span>{e.questions} câu</span> : null}
                       </p>
                     </div>
-                    <ExamPriceTag item={e} price={data.price} />
-                    <ExamAction item={e} loggedIn={!!user} target={target} />
+                    <ExamAction item={e} loggedIn={!!user} target={target} price={isPro(user) ? 0 : data.price} />
                   </li>
                 ))}
               </ul>
@@ -61,9 +59,10 @@ export function PublicExamList({ code, pageSize }: { code: string; pageSize?: nu
   );
 }
 
-function ExamAction({ item, loggedIn, target }: { item: CatalogItem; loggedIn: boolean; target: string }) {
+// Đề đã có trong kho: "Mở đề". Chưa có thì nút ghi luôn số credit sẽ trừ (Pro thì price = 0 nên vẫn là "Mở đề")
+function ExamAction({ item, loggedIn, target, price }: { item: CatalogItem; loggedIn: boolean; target: string; price: number }) {
   const cls = buttonClass({ size: "sm", variant: "tonal" });
-  const track = () => item.status !== "owned" && trackPrompt(item.free ? "library-free" : "library-paid", "click");
+  const track = () => trackPrompt("library-open", "click");
   if (item.status === "owned")
     return (
       <Link to={`/exam/${item.threadId}`} className={cls}>
@@ -73,7 +72,7 @@ function ExamAction({ item, loggedIn, target }: { item: CatalogItem; loggedIn: b
   // Chưa có trong kho: thành viên vào Kho đề của môn (có xác nhận phí trước khi trừ), khách đi đăng ký rồi quay lại đó
   return (
     <Link to={loggedIn ? target : "/register"} state={loggedIn ? undefined : { from: target }} className={cls} onClick={track}>
-      <Play size={15} /> Mở đề
+      <Play size={15} /> {price > 0 ? formatCredit(price) : "Mở đề"}
     </Link>
   );
 }

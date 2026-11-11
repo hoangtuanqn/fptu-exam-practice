@@ -11,8 +11,7 @@ const PROMPT_LABEL: Record<string, string> = {
   "deposit-tier": "Gợi ý bậc thưởng khi nạp",
   "first-run": "Danh sách Bắt đầu cho người mới",
   "library-page": "Xem Thư viện đề thi",
-  "library-free": "Mở đề miễn phí ở thư viện",
-  "library-paid": "Bấm đề trả phí ở thư viện",
+  "library-open": "Bấm mở đề ở thư viện",
 };
 
 const pct = (n: number, of: number) => (of > 0 ? `${Math.round((n / of) * 100)}%` : "—");
