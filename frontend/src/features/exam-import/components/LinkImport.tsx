@@ -205,24 +205,18 @@ export function LinkImport({ onImported, subject, compact = false }: Props) {
     <>
     <form
       onSubmit={onSubmit}
-      className={compact ? "relative isolate overflow-hidden rounded-m3-xl border border-[#e0a100]/35 bg-gradient-to-br from-surface-container-lowest via-surface-container-low to-[#ffc61f]/15 px-4 py-4 text-left shadow-[0_1px_2px_rgba(0,0,0,0.05),0_24px_50px_-24px_rgba(70,45,0,0.35)] sm:px-5 sm:py-5" : "rounded-2xl border-2 border-dashed border-outline-variant bg-surface-container-low/60 px-4 py-7 text-left sm:px-6 sm:py-9"}
+      className={compact ? "text-left" : "rounded-2xl border-2 border-dashed border-outline-variant bg-surface-container-low/60 px-4 py-7 text-left sm:px-6 sm:py-9"}
     >
       {compact ? (
         <>
-          <span aria-hidden className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-[#ffc61f] to-transparent" />
-          <span aria-hidden className="pointer-events-none absolute -right-10 -top-16 -z-10 h-44 w-44 rounded-full bg-[#ffc61f]/30 blur-3xl" />
-          <span aria-hidden className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-1/2 bg-gradient-to-b from-white/50 to-transparent" />
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3">
-              <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${GOLD_GLOSS}`}>
-                <ClipboardPaste size={20} />
+          <div className="flex items-center justify-between gap-3 px-1">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${GOLD_GLOSS}`}>
+                <ClipboardPaste size={14} />
               </span>
-              <div className="min-w-0">
-                <div className="md-title-medium text-on-surface">Có link đề FuOverflow?</div>
-                <div className="md-body-small text-on-surface-variant">Dán link vào đây, hệ thống tự lấy đề về cho bạn</div>
-              </div>
+              <span className="md-title-medium truncate text-on-surface">Có link đề FuOverflow?</span>
             </div>
-            <span className="md-label-large hidden shrink-0 rounded-full bg-gradient-to-b from-[#fff3c4] to-[#ffd75e] px-3.5 py-1 text-[#3a2600] ring-1 ring-[#b87d00]/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_4px_10px_-4px_rgba(240,168,0,0.6)] sm:inline-flex">{priceText}</span>
+            <span className="md-label-large shrink-0 rounded-full bg-gradient-to-b from-[#fff3c4] to-[#ffd75e] px-3 py-0.5 text-[#3a2600] ring-1 ring-[#b87d00]/30">{priceText}</span>
           </div>
         </>
       ) : (
@@ -247,7 +241,7 @@ export function LinkImport({ onImported, subject, compact = false }: Props) {
       <div
         className={
           compact
-            ? `mt-4 flex items-center gap-2 rounded-full border bg-surface-container-lowest p-1.5 pl-5 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)] transition focus-within:border-[#e0a100] focus-within:shadow-[0_0_0_4px_rgba(255,198,31,0.22)] ${linkError || job.error ? "border-red-500" : "border-outline-variant"}`
+            ? `mt-3 flex items-center gap-2 rounded-full border-2 bg-surface-container-lowest p-1.5 pl-5 shadow-[0_0_0_4px_rgba(255,198,31,0.16),0_10px_28px_-10px_rgba(240,168,0,0.6)] transition focus-within:border-[#e0a100] focus-within:shadow-[0_0_0_5px_rgba(255,198,31,0.32),0_12px_34px_-10px_rgba(240,168,0,0.75)] ${linkError || job.error ? "border-red-500" : "border-[#e0a100]/60"}`
             : "mt-5 flex flex-col gap-2 sm:flex-row"
         }
       >
