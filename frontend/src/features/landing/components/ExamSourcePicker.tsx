@@ -35,7 +35,8 @@ export function ExamSourcePicker({ onPick, onImported }: Props) {
 
   return (
     <div className="mt-8">
-      <div className="rounded-m3-xl bg-surface-container-low p-3 text-left shadow-m3-1 sm:p-4">
+      <div className="relative rounded-m3-xl border border-outline-variant/70 bg-gradient-to-b from-surface-container-lowest to-surface-container-low p-3 text-left shadow-[0_1px_2px_rgba(0,0,0,0.05),0_24px_50px_-24px_rgba(70,45,0,0.35)] sm:p-4">
+        <span aria-hidden className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-[#ffc61f]/70 to-transparent" />
         <div role="tablist" aria-label="Cách nhập đề" onKeyDown={onKey} className="grid grid-cols-2 border-b border-outline-variant">
           {TABS.map(({ id, label, short, icon: Icon }) => {
             const on = source === id;

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { FolderOpen } from "lucide-react";
 import { FolderInput, type PickFolder } from "@/features/practice/components/FolderInput";
 import { readDroppedFolder } from "@/features/practice/utils/readDroppedFolder";
+import { GOLD_GLOSS } from "@/shared/ui/gold";
 import { FOLDER_EXAMPLE } from "../content";
 
 // Vùng kéo thả / chọn thư mục đề + ví dụ cấu trúc thư mục
@@ -25,10 +26,10 @@ export function DropZone({ onPick }: { onPick: PickFolder }) {
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
         className={`flex cursor-pointer flex-col items-center rounded-2xl border-2 border-dashed px-4 py-7 transition sm:px-6 sm:py-9 ${
-          dragging ? "border-brand-500 bg-brand-50" : "border-slate-200 bg-slate-50/60 hover:border-brand-400 hover:bg-brand-50/50"
+          dragging ? "border-primary bg-primary-container/50" : "border-outline-variant bg-surface-container-low/60 hover:border-primary/60 hover:bg-primary-container/30"
         }`}
       >
-        <span className="flex h-12 w-12 items-center justify-center rounded-md bg-primary text-on-primary">
+        <span className={`flex h-12 w-12 items-center justify-center rounded-2xl ${GOLD_GLOSS}`}>
           <FolderOpen size={22} />
         </span>
         <div className="md-title-large mt-4 text-on-surface">Mở thư mục đề</div>
@@ -37,10 +38,10 @@ export function DropZone({ onPick }: { onPick: PickFolder }) {
       </label>
 
       <details open className="mt-3 pb-1 text-left text-sm">
-        <summary className="cursor-pointer select-none text-center text-xs text-slate-500 hover:text-slate-800">
+        <summary className="cursor-pointer select-none text-center text-xs text-on-surface-variant hover:text-on-surface">
           Thư mục đề cần có cấu trúc thế nào?
         </summary>
-        <pre className="mt-2 overflow-x-auto rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 font-mono text-xs leading-relaxed text-slate-600">
+        <pre className="mt-2 overflow-x-auto rounded-xl border border-outline-variant bg-surface-container px-4 py-3 font-mono text-xs leading-relaxed text-on-surface-variant">
           {FOLDER_EXAMPLE}
         </pre>
       </details>

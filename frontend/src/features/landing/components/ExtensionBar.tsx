@@ -105,7 +105,7 @@ export function ExtensionBar() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="md-state md-motion md-body-medium group flex min-h-12 w-full shrink-0 items-center justify-center gap-2 border-b border-outline-variant bg-surface-container-high px-4 py-2 text-on-surface"
+        className="md-state md-motion md-body-medium group flex min-h-12 w-full shrink-0 items-center justify-center gap-2 border-b border-outline-variant bg-gradient-to-r from-surface-container-high via-primary-container/50 to-surface-container-high px-4 py-2 text-on-surface"
       >
         {outdated ? <RefreshCw size={16} className="shrink-0 text-primary" /> : <Puzzle size={16} className="shrink-0 text-primary" />}
         <span className="min-w-0 truncate">
@@ -119,7 +119,7 @@ export function ExtensionBar() {
             </>
           )}
         </span>
-        <span className="hidden shrink-0 items-center gap-0.5 font-semibold text-brand-700 sm:inline-flex">
+        <span className="hidden shrink-0 items-center gap-0.5 font-semibold text-primary sm:inline-flex">
           {outdated ? "Cập nhật ngay" : "Xem hướng dẫn"} <ChevronRight size={15} className="transition group-hover:translate-x-0.5" />
         </span>
       </button>
