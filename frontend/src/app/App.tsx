@@ -149,7 +149,7 @@ export default function App() {
         </Route>
 
         <Route element={<RequireAuth role="ADMIN" />}>
-          <Route path="/admin" element={<PanelLayout title="Quản trị" items={ADMIN_NAV} />}>
+          <Route path="/admin" element={<PanelLayout title="Quản trị" items={ADMIN_NAV} collapsible />}>
             {adminRoutes}
           </Route>
         </Route>
