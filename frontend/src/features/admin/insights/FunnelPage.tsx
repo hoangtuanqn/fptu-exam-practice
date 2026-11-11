@@ -5,6 +5,12 @@ import { ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { Segmented } from "@/shared/ui/Segmented";
 import { insightsApi } from "./insights.api";
 
+const PROMPT_LABEL: Record<string, string> = {
+  "result-upgrade": "Gợi ý Pro ở bảng điểm",
+  "review-cap": "Sổ câu sai gần đầy",
+  "deposit-tier": "Gợi ý bậc thưởng khi nạp",
+};
+
 const pct = (n: number, of: number) => (of > 0 ? `${Math.round((n / of) * 100)}%` : "—");
 
 // Phễu người dùng: người đăng ký trong kỳ đã đi được tới đâu, và chỗ nào hay hỏng (lấy đề lỗi, nạp dở, làm bài bỏ dở)
@@ -12,6 +18,7 @@ export default function FunnelPage() {
   const [url, setUrl] = useUrlState({ days: "30" });
   const days = [7, 30, 90].includes(Number(url.days)) ? Number(url.days) : 30;
   const { data, error, loading, reload } = useApi(() => insightsApi.funnel(days), [days]);
+  const prompts = useApi(() => insightsApi.prompts(days), [days]).data;
 
   if (loading && !data) return <Loading />;
   if (error || !data) return <ErrorBox message={error ?? "Không có dữ liệu"} onRetry={reload} />;
@@ -65,6 +72,23 @@ export default function FunnelPage() {
         <StatCard tone="amber" label="Lệnh nạp không thành" value={pct(deposits.pending + deposits.expired, depTotal)} note={`${deposits.paid} đã trả · ${deposits.pending} chờ · ${deposits.expired} hết hạn`} />
         <StatCard tone="slate" label="Làm bài bỏ dở" value={pct(practice.abandoned, practice.started)} note={`${practice.abandoned} bỏ dở quá 1 ngày / ${practice.started} lượt bắt đầu`} />
       </StatGrid>
+
+      {prompts && (
+        <Card>
+          <CardHeader title="Hiệu quả các lời mời" description={`Số lần hiện, bấm và bỏ qua trong ${days} ngày gần đây`} />
+          <ul className="divide-y divide-outline-variant">
+            {prompts.prompts.map((p) => (
+              <li key={p.surface} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-5 py-3">
+                <span className="md-title-small text-on-surface">{PROMPT_LABEL[p.surface] ?? p.surface}</span>
+                <span className="md-body-medium tabular-nums text-on-surface-variant">
+                  hiện <b className="text-on-surface">{p.shown}</b> · bấm <b className="text-on-surface">{p.click}</b>
+                  {p.clickRate !== null && ` (${Math.round(p.clickRate * 100)}%)`} · bỏ qua {p.dismiss}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
 
       <Card>
         <CardHeader title="Lỗi lấy đề hay gặp" description="Gom từ các lượt thất bại gần đây trong kỳ" />

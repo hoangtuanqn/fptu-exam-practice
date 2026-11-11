@@ -7,6 +7,7 @@ import { useUpsell } from "@/shared/hooks/useUpsell";
 import { formatMoney } from "@/shared/utils/formatters";
 import { isPro } from "@/shared/utils/pro";
 import { canShowPrompt, markPromptShown } from "@/shared/utils/promptCap";
+import { trackPrompt } from "@/shared/utils/trackPrompt";
 import { planApi } from "./plan.api";
 
 const SURFACE = "result-upgrade";
@@ -25,7 +26,10 @@ export function ResultUpgradeCard({ wrong }: { wrong: number }) {
     if (!eligible || !plan || open !== null) return;
     const ok = canShowPrompt(SURFACE);
     setOpen(ok);
-    if (ok) markPromptShown(SURFACE);
+    if (ok) {
+      markPromptShown(SURFACE);
+      trackPrompt(SURFACE, "shown");
+    }
   }, [eligible, plan, open]);
 
   if (!eligible || !plan || !open) return null;
@@ -34,7 +38,10 @@ export function ResultUpgradeCard({ wrong }: { wrong: number }) {
 
   return (
     <section aria-label="Gợi ý gói Pro" className="relative mt-5 rounded-xl border border-amber-300 bg-amber-50 p-4 text-left">
-      <button type="button" onClick={() => setOpen(false)} aria-label="Để sau" className="absolute right-2 top-2 rounded-full p-1.5 text-amber-900/60 hover:bg-amber-100">
+      <button type="button" onClick={() => {
+          trackPrompt(SURFACE, "dismiss");
+          setOpen(false);
+        }} aria-label="Để sau" className="absolute right-2 top-2 rounded-full p-1.5 text-amber-900/60 hover:bg-amber-100">
         <X size={16} />
       </button>
       <h3 className="pr-8 text-sm font-semibold text-amber-950">Sai {wrong} câu, hiểu vì sao mới nhớ lâu</h3>
@@ -43,10 +50,10 @@ export function ResultUpgradeCard({ wrong }: { wrong: number }) {
         Pro {plan.months} tháng chỉ <b>{formatMoney(plan.price)}</b> (khoảng {formatMoney(perDay)}/ngày), xem giải thích không giới hạn. FuOverflow VIP cùng thời hạn là {formatMoney(plan.fuoPrice)}.
       </p>
       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-        <Link to="/pro" className="inline-flex h-10 items-center gap-2 rounded-full bg-primary px-5 text-sm font-medium text-on-primary">
+        <Link to="/pro" onClick={() => trackPrompt(SURFACE, "click")} className="inline-flex h-10 items-center gap-2 rounded-full bg-primary px-5 text-sm font-medium text-on-primary">
           <Crown size={15} className="text-[#ffc61f]" /> Xem gói Pro
         </Link>
-        <Link to="/pro" className="text-xs font-medium text-amber-950 underline">
+        <Link to="/pro" onClick={() => trackPrompt(SURFACE, "click")} className="text-xs font-medium text-amber-950 underline">
           Chỉ ôn gấp? Nước rút {plan.sprint.days} ngày {formatMoney(plan.sprint.price)}
         </Link>
       </div>

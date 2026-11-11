@@ -54,6 +54,7 @@ model User {
   peDownloads        PeDownload[]
   dailyCheckIns      DailyCheckIn[]
   planPurchases      PlanPurchase[]
+  promptEvents       PromptEvent[]
   reviewItems        ReviewItem[]
   studyDays          StudyDay[]
   gradeSetting       UserGradeSetting?
@@ -851,4 +852,19 @@ model SubjectChunk {
 
   @@index([subjectCode])
   @@map("subject_chunks")
+}
+
+// Upgrade/top-up prompt events (shown, click, dismiss) to measure prompts and A/B tests. First-party, no third party.
+model PromptEvent {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  surface   String   @db.VarChar(40)
+  event     String   @db.VarChar(12)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([surface, event, createdAt])
+  @@index([userId])
+  @@map("prompt_events")
 }
