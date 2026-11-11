@@ -13,7 +13,7 @@ export interface LibraryExam {
 }
 
 export const examLibraryApi = {
-  list: (page = 1, limit = PAGE_SIZE) => http.list<LibraryExam>("/exams", { page, limit }),
+  list: (page = 1, limit = PAGE_SIZE, subject?: string) => http.list<LibraryExam>("/exams", { page, limit, ...(subject && { subject }) }),
   // Sau khi đăng ký/đăng nhập: đề khách đã lấy trên trình duyệt này chuyển về tài khoản
   claim: () => http.post<{ claimed: number; jobs: number }>("/exams/claim"),
 };

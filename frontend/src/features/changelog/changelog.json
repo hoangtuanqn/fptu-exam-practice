@@ -31,6 +31,10 @@
           "text": "Trang chủ làm lại: thẻ, nút và các khối nội dung đẹp và rõ hơn"
         },
         {
+          "type": "new",
+          "text": "Bộ đề theo chương: chọn nhiều đề cùng lúc từ kho của bạn và thêm nhiều link FuOverflow; đề đã có trong kho thì không trừ credit"
+        },
+        {
           "type": "improved",
           "text": "Sổ câu sai nhắc trước khi sắp đầy; trang nạp tiền cho biết cần thêm bao nhiêu để lên bậc thưởng kế tiếp"
         }
