@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Bell, CheckCheck } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { adminApi, type AdminNotice } from "@/features/admin/api/admin.api";
@@ -6,7 +6,7 @@ import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
 import { IconButton } from "@/shared/ui/Button";
 import { formatDateTime } from "@/shared/utils/formatters";
-import { LEVEL } from "./notices.shared";
+import { LEVEL, timeAgo } from "./notices.shared";
 import {
   onNewNotice,
   refreshNoticeCounts,
@@ -25,16 +25,20 @@ function PreviewRow({
   onOpen: (n: AdminNotice) => void;
 }) {
   const unread = n.readAt === null;
-  const { icon: Icon, color } = LEVEL[n.level];
+  const { icon: Icon, color, label } = LEVEL[n.level];
   return (
     <li>
       <button
         type="button"
         onClick={() => onOpen(n)}
-        className={`md-state md-motion flex w-full gap-3 px-4 py-2.5 text-left ${unread ? "bg-primary-container/20" : ""}`}
+        className={`md-state md-motion flex w-full gap-3 px-4 py-3 text-left ${unread ? "bg-primary-container/20" : ""}`}
       >
-        <Icon size={18} className={`mt-0.5 shrink-0 ${color}`} />
+        <Icon size={18} aria-hidden className={`mt-0.5 shrink-0 ${color}`} />
         <span className="min-w-0 flex-1">
+          <span className="sr-only">
+            {unread ? "Chưa đọc. " : ""}
+            {label}.{" "}
+          </span>
           <span
             className={`md-body-medium block truncate ${unread ? "font-semibold text-on-surface" : "text-on-surface-variant"}`}
           >
@@ -45,13 +49,17 @@ function PreviewRow({
               {n.body.replace(/\n/g, " · ")}
             </span>
           )}
-          <span className="md-label-small block text-on-surface-variant">
-            {formatDateTime(n.createdAt)}
-          </span>
+          <time
+            dateTime={n.createdAt}
+            title={formatDateTime(n.createdAt)}
+            className="md-label-medium block text-on-surface-variant"
+          >
+            {timeAgo(n.createdAt)}
+          </time>
         </span>
         {unread && (
           <span
-            aria-label="Chưa đọc"
+            aria-hidden
             className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary"
           />
         )}
@@ -60,11 +68,12 @@ function PreviewRow({
   );
 }
 
-// Chuông thông báo trên thanh đầu trang quản trị. Rê chuột thì xổ ra các thông báo mới nhất; bấm vào chuông (hoặc "Xem tất cả")
-// là sang trang Thông báo. Có thông báo quan trọng mới thì hiện toast.
+// Chuông thông báo trên thanh đầu trang quản trị. Rê chuột hoặc Tab vào chuông thì xổ ra các thông báo mới nhất;
+// bấm vào chuông (hoặc "Xem tất cả") là sang trang Thông báo. Có thông báo quan trọng mới thì hiện toast.
 export function NoticeBell() {
   const navigate = useNavigate();
   const toast = useToast();
+  const panelId = useId();
   const { unread, importantUnread } = useNoticeCounts();
   const arrived = useNoticeVersion();
   const [open, setOpen] = useState(false);
@@ -81,7 +90,7 @@ export function NoticeBell() {
     [toast],
   );
 
-  // Chỉ tải danh sách khi mở; mở sẵn mà có thông báo mới đến thì tải lại
+  // Tải lại mỗi lần mở (và khi có thông báo mới đến lúc đang mở), nhưng giữ danh sách lần trước để hiện ngay, không nháy "Đang tải"
   const preview = useApi(
     () =>
       open
@@ -89,6 +98,9 @@ export function NoticeBell() {
         : Promise.resolve(null),
     [open, arrived],
   );
+  const last = useRef<typeof preview.data>(null);
+  if (preview.data) last.current = preview.data;
+  const items = (preview.data ?? last.current)?.items;
 
   // Bấm ra ngoài hoặc Esc thì đóng
   useEffect(() => {
@@ -128,28 +140,36 @@ export function NoticeBell() {
     preview.reload();
   };
 
-  const items = preview.data?.items ?? [];
-
   return (
     <div
       ref={box}
       className="relative"
       onMouseEnter={enter}
       onMouseLeave={leave}
+      // Người dùng bàn phím: Tab vào chuông cũng mở danh sách, Tab ra khỏi cả khối thì đóng
+      onFocus={enter}
+      onBlur={(e) =>
+        !e.currentTarget.contains(e.relatedTarget as Node | null) && leave()
+      }
     >
       <IconButton
-        label={unread ? `Thông báo, ${unread} chưa đọc` : "Thông báo"}
+        label={
+          unread
+            ? `Thông báo, ${unread} chưa đọc${importantUnread ? `, ${importantUnread} quan trọng` : ""}`
+            : "Thông báo"
+        }
         onClick={() => {
           setOpen(false);
           navigate("/admin/notifications");
         }}
         aria-expanded={open}
-        aria-haspopup="true"
+        aria-controls={open ? panelId : undefined}
       >
-        <Bell size={22} />
+        <Bell size={22} aria-hidden />
         {unread > 0 && (
           <span
-            className={`md-label-small absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 tabular-nums ${importantUnread > 0 ? "bg-error text-on-error" : "bg-primary text-on-primary"}`}
+            aria-hidden
+            className={`md-label-medium absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full px-1 tabular-nums ${importantUnread > 0 ? "bg-error text-on-error" : "bg-primary text-on-primary"}`}
           >
             {unread > 99 ? "99+" : unread}
           </span>
@@ -157,8 +177,13 @@ export function NoticeBell() {
       </IconButton>
 
       {open && (
-        <div className="md-enter absolute right-0 top-full z-40 w-[min(24rem,calc(100vw-1.5rem))] overflow-hidden rounded-m3-lg bg-surface-container-high text-on-surface shadow-m3-3">
-          <div className="flex items-center justify-between gap-2 border-b border-outline-variant px-4 py-3">
+        <div
+          id={panelId}
+          role="region"
+          aria-label="Thông báo mới nhất"
+          className="md-enter absolute right-0 top-full z-40 w-[min(24rem,calc(100vw-1.5rem))] overflow-hidden rounded-m3-lg bg-surface-container-high text-on-surface shadow-m3-3"
+        >
+          <div className="flex items-center justify-between gap-2 border-b border-outline-variant px-4 py-2">
             <span className="md-title-small">
               Thông báo{unread ? ` (${unread} chưa đọc)` : ""}
             </span>
@@ -166,15 +191,15 @@ export function NoticeBell() {
               <button
                 type="button"
                 onClick={() => void readAll()}
-                className="md-label-large md-state md-motion inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 text-primary"
+                className="md-label-large md-state md-motion inline-flex h-10 items-center gap-1.5 rounded-full px-3 text-primary"
               >
-                <CheckCheck size={14} /> Đọc hết
+                <CheckCheck size={14} aria-hidden /> Đọc hết
               </button>
             )}
           </div>
 
           <div className="max-h-[60vh] overflow-y-auto">
-            {preview.loading && !preview.data ? (
+            {!items ? (
               <p className="md-body-medium px-4 py-6 text-center text-on-surface-variant">
                 Đang tải…
               </p>
@@ -198,7 +223,7 @@ export function NoticeBell() {
           <Link
             to="/admin/notifications"
             onClick={() => setOpen(false)}
-            className="md-label-large md-state md-motion block border-t border-outline-variant px-4 py-3 text-center text-primary"
+            className="md-label-large md-state md-motion block border-t border-outline-variant px-4 py-3.5 text-center text-primary"
           >
             Xem tất cả
           </Link>

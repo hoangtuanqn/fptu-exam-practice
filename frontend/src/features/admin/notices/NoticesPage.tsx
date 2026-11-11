@@ -19,7 +19,7 @@ import { inputClass } from "@/shared/ui/Input";
 import { Segmented } from "@/shared/ui/Segmented";
 import { Pagination } from "@/shared/ui/Table";
 import { formatDateTime } from "@/shared/utils/formatters";
-import { CATEGORY_LABEL, LEVEL } from "./notices.shared";
+import { CATEGORY_LABEL, LEVEL, timeAgo } from "./notices.shared";
 import {
   refreshNoticeCounts,
   useNoticeCounts,
@@ -38,16 +38,21 @@ function NoticeRow({
   onToggle: () => void;
 }) {
   const unread = n.readAt === null;
-  const { icon: Icon, color } = LEVEL[n.level];
+  const { icon: Icon, color, label } = LEVEL[n.level];
+  const action = unread ? "Đánh dấu đã đọc" : "Đánh dấu chưa đọc";
   return (
     <li
       className={`flex gap-3 px-4 py-3 sm:px-5 ${unread ? "bg-primary-container/20" : ""}`}
     >
-      <Icon size={20} className={`mt-0.5 shrink-0 ${color}`} />
+      <Icon size={20} aria-hidden className={`mt-0.5 shrink-0 ${color}`} />
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span className="sr-only">
+            {unread ? "Chưa đọc. " : ""}
+            {label}.{" "}
+          </span>
           <span
-            className={`md-body-large ${unread ? "font-semibold text-on-surface" : "text-on-surface-variant"}`}
+            className={`md-body-large break-words ${unread ? "font-semibold text-on-surface" : "text-on-surface-variant"}`}
           >
             {n.title}
           </span>
@@ -59,7 +64,10 @@ function NoticeRow({
           </p>
         )}
         <p className="md-body-small mt-1 text-on-surface-variant">
-          {CATEGORY_LABEL[n.category]} · {formatDateTime(n.createdAt)}
+          {CATEGORY_LABEL[n.category]} ·{" "}
+          <time dateTime={n.createdAt} title={formatDateTime(n.createdAt)}>
+            {timeAgo(n.createdAt)}
+          </time>
         </p>
       </div>
       <div className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center">
@@ -67,27 +75,24 @@ function NoticeRow({
           <Link
             to={n.link}
             onClick={() => unread && onToggle()}
-            className="md-label-large md-state md-motion inline-flex h-8 items-center rounded-full px-3 text-primary"
+            className="md-label-large md-state md-motion inline-flex h-10 items-center rounded-full px-4 text-primary"
           >
             Xem
           </Link>
         )}
         <Button
-          size="sm"
           variant="text"
           disabled={busy}
           onClick={onToggle}
-          aria-label={unread ? "Đánh dấu đã đọc" : "Đánh dấu chưa đọc"}
-          title={unread ? "Đánh dấu đã đọc" : "Đánh dấu chưa đọc"}
+          aria-label={action}
+          title={action}
         >
           {unread ? (
-            <Circle size={14} className="fill-primary text-primary" />
+            <CheckCircle2 size={18} aria-hidden />
           ) : (
-            <CheckCircle2 size={16} />
+            <Circle size={18} aria-hidden />
           )}
-          <span className="hidden sm:inline">
-            {unread ? "Đã đọc" : "Chưa đọc"}
-          </span>
+          <span className="hidden lg:inline">{action}</span>
         </Button>
       </div>
     </li>
@@ -259,9 +264,20 @@ export default function NoticesPage() {
             title={
               tab === "unread"
                 ? "Không còn thông báo chưa đọc"
-                : "Chưa có thông báo nào"
+                : tab === "important"
+                  ? "Không có thông báo quan trọng"
+                  : "Chưa có thông báo nào"
             }
-          />
+          >
+            {tab !== "all" && (
+              <Button
+                variant="text"
+                onClick={() => filterChange({ tab: "all", cat: "all" })}
+              >
+                Xem tất cả thông báo
+              </Button>
+            )}
+          </Empty>
         )}
       </Card>
     </>
