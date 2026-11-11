@@ -2,26 +2,20 @@ import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useSignupGift } from "@/features/landing/useSignupGift";
-import { SubjectCard } from "@/features/subject/SubjectCard";
-import { SubjectPicker } from "@/features/subject/SubjectPicker";
 import { Footer } from "@/shared/layout/Footer";
 import { SiteHeader } from "@/shared/layout/SiteHeader";
 import { useApi } from "@/shared/hooks/useApi";
-import { useUrlState } from "@/shared/hooks/useUrlState";
 import { buttonClass } from "@/shared/ui/Button";
 import { formatCredit } from "@/shared/utils/formatters";
 import { catalogApi } from "./catalog.api";
-import { PublicExamList } from "./PublicExamList";
+import { PublicSubjectBrowser } from "./PublicSubjectBrowser";
 
 // Kho đề công khai (/kho-de): khách xem toàn bộ môn và đề trước khi đăng ký. Con số là số thật đếm từ danh mục, không phóng đại.
 export default function PublicCatalogPage() {
   const { user } = useAuth();
-  const [url, setUrl] = useUrlState({ subject: "" });
-  const code = url.subject.toUpperCase();
   const subjects = useApi(() => catalogApi.subjects(), []);
   const gift = useSignupGift();
 
-  const list = useMemo(() => subjects.data?.map((s) => ({ code: s.code, name: s.name, badge: `${s.total} đề` })), [subjects.data]);
   const totals = useMemo(() => {
     const data = subjects.data ?? [];
     return { exams: data.reduce((n, s) => n + s.total, 0), subjects: data.length };
@@ -48,20 +42,7 @@ export default function PublicCatalogPage() {
         )}
 
         <div className="mt-8">
-          {code ? (
-            <SubjectCard title={`Môn ${code}`} onBack={() => setUrl({ subject: "" })}>
-              <PublicExamList code={code} />
-            </SubjectCard>
-          ) : (
-            <SubjectPicker
-              subjects={list}
-              loading={subjects.loading}
-              error={subjects.error}
-              onRetry={subjects.reload}
-              onPick={(c) => setUrl({ subject: c })}
-              emptyHint="Thử mã môn khác, hoặc dán link FuOverflow ở trang chủ để lấy đề mới."
-            />
-          )}
+          <PublicSubjectBrowser subjects={subjects} />
         </div>
       </main>
       <Footer />
