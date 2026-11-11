@@ -5,6 +5,7 @@ import { depositRepository } from "../repositories/deposit.repository";
 import { settingRepository } from "../repositories/setting.repository";
 import { AppError } from "../rules/error";
 import { sepayClient, type SepayTransaction } from "./sepay.client";
+import { adminNoticeService } from "./admin-notice.service";
 import { notificationService } from "./notification.service";
 import { settingService } from "./setting.service";
 import { depositBonusOf } from "../constants/promo";
@@ -112,6 +113,7 @@ const runSync = async (): Promise<SyncResult> => {
       if (result.matched) {
         matched++;
         notificationService.depositSuccess(result.notice); // sau khi transaction cộng tiền đã commit
+        adminNoticeService.push("deposit.success", { title: `Nạp ${result.notice.amount.toLocaleString("vi-VN")}đ thành công`, body: `Lệnh ${result.notice.code}`, userId: result.notice.userId, link: "/admin/deposits" });
         referralService.notify([result.commission]);
       }
       created++;

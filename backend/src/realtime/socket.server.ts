@@ -7,7 +7,7 @@ import { topicLabelerService } from "../services/ai/topic-labeler.service";
 import { examService } from "../services/exam.service";
 import type { Actor } from "../utils/actor";
 import { verifyToken } from "../utils/jwt";
-import { EVENTS, SOCKET_PATH, roomOf, type RoomKind } from "./events";
+import { ADMIN_ROOM, EVENTS, SOCKET_PATH, roomOf, type RoomKind } from "./events";
 import { examPayload, jobPayload, questionsPayload, realtimeHub } from "./hub";
 
 const GUEST_ID = /^[A-Za-z0-9-]{16,64}$/;
@@ -61,6 +61,7 @@ export function initRealtime(server: HttpServer) {
 
   io.on("connection", (socket) => {
     const actor = socket.data.actor as Actor;
+    if (actor.isAdmin) void socket.join(ADMIN_ROOM); // admin tự nhận thông báo mới, không cần đăng ký
 
     socket.on(EVENTS.subscribe, async (msg: { room?: string; id?: unknown }, ack?: (ok: boolean) => void) => {
       const kind = KINDS.find((k) => k === msg?.room);

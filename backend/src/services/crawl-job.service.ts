@@ -18,6 +18,7 @@ import { crawlerSettingService } from "./crawler-setting.service";
 import { threadPreflight } from "./crawler/thread-preflight.service";
 import { toJobDto } from "./crawl-job.dto";
 import { examService } from "./exam.service";
+import { adminNoticeService } from "./admin-notice.service";
 import { notificationService } from "./notification.service";
 import { walletService } from "./wallet.service";
 
@@ -183,6 +184,7 @@ export const crawlJobService = {
     });
     // Báo qua email sau khi transaction hoàn phí đã commit
     if (refunded && !notificationService.cancelPendingCharge(job.id)) notificationService.fetchRefunded(refunded);
+    adminNoticeService.push("fetch.failed", { title: `Lấy đề lỗi: thread ${job.threadId}`, body: `${message}${refunded ? ` (đã hoàn ${refunded.amount} credit)` : ""}`, userId: job.userId, link: "/admin/crawl-jobs" });
   },
 
   // Chỉ chủ job (thành viên hoặc đúng khách đó, hoặc admin) được xem tiến độ

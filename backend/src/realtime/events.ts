@@ -9,7 +9,10 @@ export const EVENTS = {
   examTopics: "exam:topics", // server -> client: việc gắn chủ đề chạy nền (đang chạy / xong kèm các chủ đề mới)
   examFailed: "exam:failed", // server -> client: lấy đề thất bại giữa chừng, đề bị gỡ
   jobUpdate: "job:update", // server -> client: tiến độ lấy đề
+  adminNotice: "admin:notice", // server -> client (chỉ admin): có thông báo mới về hành vi người dùng
 } as const;
 
 export type RoomKind = "exam" | "job";
+// Phòng của mọi admin đang online: nhận thông báo mới ngay
+export const ADMIN_ROOM = "admins";
 export const roomOf = (kind: RoomKind, id: number) => `${kind}:${id}`;

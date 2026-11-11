@@ -6,6 +6,7 @@ import { giftCodeRepository } from "../repositories/gift-code.repository";
 import { AppError } from "../rules/error";
 import type { CreateGiftCodeBody } from "../rules/requests/gift-code.request";
 import { toMeta, type PaginationQuery } from "../utils/pagination";
+import { adminNoticeService } from "./admin-notice.service";
 import { notificationService } from "./notification.service";
 import { walletService } from "./wallet.service";
 
@@ -108,6 +109,7 @@ export const giftCodeService = {
 
     // Gửi thư sau khi transaction đã commit
     notificationService.giftCodeRedeemed({ userId, ...result });
+    adminNoticeService.push("gift.redeemed", { title: `Nhập giftcode ${result.code}`, body: `+${result.amount.toLocaleString("vi-VN")} credit`, userId, link: "/admin/gift-codes" });
     return result;
   },
 };
