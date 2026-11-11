@@ -1,6 +1,6 @@
 /**
  * Lấy kỳ học (0-9) của từng môn từ mục "TÀI LIỆU CÁC MÔN HỌC" của FuOverflow rồi ghi vào subjects.semester.
- * Máy chủ cũng tự chạy việc này mỗi đêm; script này để chạy tay lần đầu hoặc kiểm tra.
+ * Chạy tay khi cần (môn ít thay đổi nên không có lịch tự động).
  *
  *   npm run sync:subject-semesters -- --dry-run     chỉ in kết quả, không ghi DB
  *   npm run sync:subject-semesters                  ghi kỳ cho môn chưa có kỳ
