@@ -34,6 +34,12 @@ import type {
 import { http } from "@/shared/api/client";
 import { PAGE_SIZE } from "@/shared/api/pagination";
 
+export interface BoardSubject {
+  code: string;
+  name: string;
+  semester: number | null;
+}
+
 export interface GiftCodeForm {
   code?: string; // bỏ trống = hệ thống tự sinh
   amount: number;
@@ -220,6 +226,7 @@ export const adminApi = {
     http.list<AdminCrawlJob>("/admin/crawl-jobs", { ...f, limit: PAGE_SIZE }),
   attempts: (f: { page: number; userId?: string; search?: string; mode?: "PRACTICE" | "EXAM" | "" }) =>
     http.list<AdminAttempt>("/admin/attempts", { ...f, limit: PAGE_SIZE }),
+  librarySubjects: () => http.get<{ subjects: BoardSubject[] }>("/admin/library/subjects"),
   setSubjectSemester: (code: string, semester: number | null) => http.put<{ code: string; semester: number | null }>(`/admin/library/subjects/${encodeURIComponent(code)}/semester`, { semester }),
   promoSettings: () => http.get<PromoSettings>("/admin/settings/promo"),
   savePromoSettings: (body: PromoSettings) => http.put<PromoSettings>("/admin/settings/promo", body),
