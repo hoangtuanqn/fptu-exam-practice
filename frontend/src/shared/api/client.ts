@@ -142,6 +142,7 @@ async function send<T>(method: string, path: string, body?: unknown, query?: Que
     throw new ApiError("Không kết nối được máy chủ", 0);
   }
 
+  if (res.status === 204) return { status: true, message: "" }; // thành công, không có nội dung (vd DELETE)
   const json = (await res.json().catch(() => null)) as Envelope<T> | null;
   if (!res.ok || !json?.status) {
     // Chỉ xử lý khi đã gửi token; sai mật khẩu lúc đăng nhập cũng trả 401 nhưng không có token
