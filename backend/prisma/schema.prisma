@@ -840,6 +840,19 @@ model SubjectIssue {
   @@map("subject_issues")
 }
 
+// Chu de do AI suy ra tu noi dung syllabus cho mon khong co ten chuong. Luu lai de moi de cua mon dung cung mot bo chu de. source_hash doi thi suy lai.
+model SubjectInferredTopic {
+  id         Int      @id @default(autoincrement())
+  subjectCode String  @unique @map("subject_code") @db.VarChar(20)
+  topics     Json // [{label, hint}]
+  sourceHash String   @map("source_hash") @db.Char(64)
+  model      String?  @db.VarChar(60)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("subject_inferred_topics")
+}
+
 // Noi dung Syllabus cua mon (crawl tu FLM) chia thanh cac doan de tim kiem theo nghia. embedding: float32 little-endian (768 so); null = chua tao.
 model SubjectChunk {
   id          Int      @id @default(autoincrement())
