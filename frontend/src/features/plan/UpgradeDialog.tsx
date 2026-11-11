@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Check, Crown, PartyPopper, Sparkles } from "lucide-react";
+import { Check, Crown, PartyPopper, Sparkles, Ticket } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { depositLink } from "@/features/explanation/depositLink";
 import { errorMessage } from "@/shared/api/errors";
@@ -10,17 +10,22 @@ import { FormError } from "@/shared/ui/Feedback";
 import { Modal, ModalActions, ModalTitle } from "@/shared/ui/Modal";
 import { formatCredit, formatDate } from "@/shared/utils/formatters";
 import { addMonths, isPro } from "@/shared/utils/pro";
-import { planApi, type PlanInfo, type PurchaseResult } from "./plan.api";
+import { planApi, type PlanInfo, type PurchaseResult, type TicketPurchaseResult } from "./plan.api";
 
 const CONFETTI = ["#ffc61f", "#fff1c2", "#f0a800", "#ffffff", "#e7c26c", "#ff8a3d"];
 
 // Hộp thoại xác nhận mua / gia hạn Pro: nói rõ trừ bao nhiêu, còn lại bao nhiêu, hạn mới là ngày nào. Thành công thì chúc mừng.
-export function UpgradeDialog({ plan, kind = "pro", onClose }: { plan: PlanInfo; kind?: "pro" | "sprint"; onClose: () => void }) {
+export function UpgradeDialog({ plan, kind = "pro", defaultLater = false, onClose }: { plan: PlanInfo; kind?: "pro" | "sprint"; defaultLater?: boolean; onClose: () => void }) {
   const { user, setUser } = useAuth();
   const location = useLocation();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<PurchaseResult | null>(null);
+  const [laterChoice, setLaterChoice] = useState(defaultLater); // true = mua vé, kích hoạt sau
+  const [ticketDone, setTicketDone] = useState<TicketPurchaseResult | null>(null);
+  const canTicket = !!plan.ticket; // máy chủ cũ chưa có vé thì chỉ có "dùng ngay"
+  const later = canTicket && laterChoice;
+  const planName = kind === "sprint" ? plan.sprint.name : plan.name;
 
   const balance = user?.balance ?? 0;
   const sprint = kind === "sprint";
@@ -35,15 +40,67 @@ export function UpgradeDialog({ plan, kind = "pro", onClose }: { plan: PlanInfo;
     setBusy(true);
     setError(null);
     try {
-      const result = await planApi.purchase(sprint ? "SPRINT" : "PRO");
-      setUser(result.user);
-      setDone(result);
+      if (later) {
+        const result = await planApi.buyTicket(sprint ? "SPRINT" : "PRO");
+        setUser(result.user);
+        setTicketDone(result);
+      } else {
+        const result = await planApi.purchase(sprint ? "SPRINT" : "PRO");
+        setUser(result.user);
+        setDone(result);
+      }
     } catch (err) {
-      setError(errorMessage(err, "Chưa nâng cấp được, bạn thử lại nhé"));
+      setError(errorMessage(err, later ? "Chưa mua được vé, bạn thử lại nhé" : "Chưa nâng cấp được, bạn thử lại nhé"));
     } finally {
       setBusy(false);
     }
   };
+
+  // Vừa mua vé xong mà muốn dùng luôn: kích hoạt ngay trong hộp thoại này
+  const activateNow = async () => {
+    if (busy || !ticketDone) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const result = await planApi.activateTicket(ticketDone.ticket.id);
+      setUser(result.user);
+      setDone({ proExpiresAt: result.proExpiresAt, renewed: result.renewed, balanceAfter: result.user.balance, user: result.user });
+      setTicketDone(null);
+    } catch (err) {
+      setError(errorMessage(err, "Chưa kích hoạt được vé, bạn thử lại nhé"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (ticketDone) {
+    return (
+      <Modal onClose={busy ? undefined : onClose}>
+        <div className="py-2 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-b from-[#ffd75e] to-[#f0a800] text-[#3a2600] shadow-m3-2">
+            <Ticket size={30} strokeWidth={2.2} />
+          </div>
+          <h2 className="md-headline-small mt-4 text-on-surface">Đã giữ vé {planName}!</h2>
+          <p className="md-body-medium mt-1.5 text-on-surface-variant">
+            Thời hạn Pro chưa chạy. Vé dùng được đến <b className="text-on-surface">{formatDate(ticketDone.ticket.expiresAt)}</b>. Còn lại <b className="tabular-nums text-on-surface">{formatCredit(ticketDone.balanceAfter)}</b> trong ví.
+          </p>
+          {error && (
+            <div className="mt-3 text-left">
+              <FormError message={error} />
+            </div>
+          )}
+          <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+            <Button variant="filled" grow onClick={() => void activateNow()} disabled={busy} className="!bg-gradient-to-b !from-[#ffd75e] !to-[#f0a800] !text-[#3a2600] font-bold">
+              {busy ? "Đang kích hoạt…" : "Kích hoạt ngay"}
+            </Button>
+            <Button variant="tonal" grow onClick={onClose} disabled={busy}>
+              Để dành dùng sau
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    );
+  }
 
   if (done) {
     return (
@@ -84,14 +141,46 @@ export function UpgradeDialog({ plan, kind = "pro", onClose }: { plan: PlanInfo;
 
   return (
     <Modal onClose={busy ? undefined : onClose}>
-      <ModalTitle icon={Crown}>{sprint ? "Gói Nước rút" : renewing ? "Gia hạn gói Pro" : "Nâng cấp lên Pro"}</ModalTitle>
-      <ul className="md-body-medium mt-3 space-y-1.5 text-on-surface-variant">
-        <li>
-          Thêm <b className="text-on-surface">{sprint ? `${plan.sprint.days} ngày` : `${plan.months} tháng`}</b> Pro, hạn mới đến <b className="text-on-surface">{formatDate(newExpiry.toISOString())}</b>
-          {renewing && " (cộng dồn vào hạn hiện tại)"}.
-        </li>
-        <li>Trả một lần, <b className="text-on-surface">không tự động gia hạn</b>, không bị trừ thêm.</li>
-      </ul>
+      <ModalTitle icon={later ? Ticket : Crown}>{later ? `Giữ vé ${planName}` : sprint ? "Gói Nước rút" : renewing ? "Gia hạn gói Pro" : "Nâng cấp lên Pro"}</ModalTitle>
+      {canTicket && (
+        <div role="radiogroup" aria-label="Cách dùng" className="mt-3 grid grid-cols-2 gap-2">
+          {[
+            { later: false, title: "Dùng ngay", hint: "Tính thời hạn từ hôm nay" },
+            { later: true, title: "Giữ vé, dùng sau", hint: `Bật khi cần, vé dùng được ${plan.ticket?.validDays ?? 0} ngày` },
+          ].map((o) => (
+            <button
+              key={o.title}
+              type="button"
+              role="radio"
+              aria-checked={later === o.later}
+              onClick={() => setLaterChoice(o.later)}
+              disabled={busy}
+              className={`rounded-m3-md border px-3 py-2.5 text-left transition ${later === o.later ? "border-[#e0a100] bg-[#ffc61f]/15" : "border-outline-variant"}`}
+            >
+              <span className="md-title-small block text-on-surface">{o.title}</span>
+              <span className="md-body-small block text-on-surface-variant">{o.hint}</span>
+            </button>
+          ))}
+        </div>
+      )}
+      {later ? (
+        <ul className="md-body-medium mt-3 space-y-1.5 text-on-surface-variant">
+          <li>
+            Bạn nhận <b className="text-on-surface">1 vé {planName}</b> ({sprint ? `${plan.sprint.days} ngày` : `${plan.months} tháng`} Pro). Thời hạn Pro <b className="text-on-surface">chưa chạy</b> cho tới khi bạn bấm Kích hoạt.
+          </li>
+          <li>
+            Vé dùng được đến <b className="text-on-surface">{formatDate(new Date(Date.now() + (plan.ticket?.validDays ?? 0) * 86_400_000).toISOString())}</b>. Quá hạn mà chưa kích hoạt thì <b className="text-on-surface">không dùng được và không hoàn tiền</b>.
+          </li>
+        </ul>
+      ) : (
+        <ul className="md-body-medium mt-3 space-y-1.5 text-on-surface-variant">
+          <li>
+            Thêm <b className="text-on-surface">{sprint ? `${plan.sprint.days} ngày` : `${plan.months} tháng`}</b> Pro, hạn mới đến <b className="text-on-surface">{formatDate(newExpiry.toISOString())}</b>
+            {renewing && " (cộng dồn vào hạn hiện tại)"}.
+          </li>
+          <li>Trả một lần, <b className="text-on-surface">không tự động gia hạn</b>, không bị trừ thêm.</li>
+        </ul>
+      )}
       <ul className="md-body-small mt-2 flex flex-wrap gap-x-3 gap-y-1 text-on-surface-variant">
         {plan.benefits.freeFetch && <li className="inline-flex items-center gap-1"><Check size={14} className="text-primary" /> Lấy đề miễn phí</li>}
         {plan.benefits.freeExplain && <li className="inline-flex items-center gap-1"><Check size={14} className="text-primary" /> Giải thích AI mọi câu</li>}
@@ -117,7 +206,7 @@ export function UpgradeDialog({ plan, kind = "pro", onClose }: { plan: PlanInfo;
           </Link>
         ) : (
           <Button variant="filled" grow onClick={() => void buy()} disabled={busy} className="!bg-gradient-to-b !from-[#ffd75e] !to-[#f0a800] !text-[#3a2600] font-bold">
-            <PartyPopper size={16} /> {busy ? "Đang nâng cấp…" : `Trả ${formatCredit(price)}`}
+            {later ? <Ticket size={16} /> : <PartyPopper size={16} />} {busy ? (later ? "Đang xử lý…" : "Đang nâng cấp…") : later ? `Mua vé · ${formatCredit(price)}` : `Trả ${formatCredit(price)}`}
           </Button>
         )}
       </ModalActions>
