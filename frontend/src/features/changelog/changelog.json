@@ -41,6 +41,10 @@
         {
           "type": "improved",
           "text": "Sổ câu sai nhắc trước khi sắp đầy; trang nạp tiền cho biết cần thêm bao nhiêu để lên bậc thưởng kế tiếp"
+        },
+        {
+          "type": "new",
+          "text": "Câu hay ra có thêm mục “Chương hay ra”: biết chương nào xuất hiện ở nhiều đề nhất để ôn trước"
         }
       ]
     },
