@@ -21,6 +21,7 @@ import { SubjectCard } from "@/features/subject/SubjectCard";
 import { SubjectPicker } from "@/features/subject/SubjectPicker";
 import { catalogApi, type CatalogItem } from "./catalog.api";
 import { ExamFilterBar, useExamListQuery } from "./ExamFilterBar";
+import { ExamPriceTag } from "./ExamPriceTag";
 import { featuredSubjects } from "./featuredSubjects";
 
 const COMPACT_PAGE_SIZE = 6; // trang chủ: chỉ vài đề mỗi trang để không đẩy các phần bên dưới đi quá xa
@@ -133,6 +134,7 @@ function ExamList({ code, onBack, compact }: { code: string; onBack: () => void;
                           {e.questions !== null ? <span>{e.questions} câu</span> : null}
                         </p>
                       </div>
+                      <ExamPriceTag item={e} price={data.price} />
                       <Button size="sm" variant="tonal" onClick={() => void pick(e)} disabled={busy}>
                         {quoting === e.threadId ? <Loader2 size={15} className="animate-spin" /> : <Play size={15} />}
                         Mở đề
