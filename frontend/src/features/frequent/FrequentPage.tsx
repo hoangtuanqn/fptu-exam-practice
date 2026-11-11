@@ -8,25 +8,45 @@ import { buttonClass } from "@/shared/ui/Button";
 import { PageHeader } from "@/shared/ui/Card";
 import { Empty } from "@/shared/ui/Feedback";
 import { QueryBoundary } from "@/shared/ui/QueryBoundary";
+import { Segmented } from "@/shared/ui/Segmented";
 import { AllSubjectsPicker } from "@/features/subject/AllSubjectsPicker";
 import { SubjectCard } from "@/features/subject/SubjectCard";
+import { ChapterStats } from "./ChapterStats";
 import { frequentApi, type FrequentItem } from "./frequent.api";
 
 const RECHECK_MS = 6000;
 
+type View = "questions" | "chapters";
+const VIEWS: { value: View; label: string }[] = [
+  { value: "questions", label: "Câu hay ra" },
+  { value: "chapters", label: "Chương hay ra" },
+];
+
 // Câu hay ra: những câu lặp lại ở nhiều đề của một môn, xếp từ lặp nhiều nhất. Gói thường xem vài câu đầu, Pro xem đủ.
 export default function FrequentPage() {
-  const [url, setUrl] = useUrlState({ subject: "" });
+  const [url, setUrl] = useUrlState({ subject: "", view: "questions" });
+  const view: View = url.view === "chapters" ? "chapters" : "questions";
   const code = url.subject.toUpperCase();
   return (
     <div className="space-y-6">
       <PageHeader eyebrow="Học tập" title="Câu hay ra" description="Những câu xuất hiện lặp lại ở nhiều đề của cùng một môn. Ôn trước những câu này là hiệu quả nhất." />
-      {code ? <Result code={code} onBack={() => setUrl({ subject: "" })} /> : <AllSubjectsPicker title="Chọn môn" onPick={(s) => setUrl({ subject: s.code })} />}
+      {code ? <Result code={code} view={view} onView={(v) => setUrl({ view: v })} onBack={() => setUrl({ subject: "" })} /> : <AllSubjectsPicker title="Chọn môn" onPick={(s) => setUrl({ subject: s.code })} />}
     </div>
   );
 }
 
-function Result({ code, onBack }: { code: string; onBack: () => void }) {
+function Result({ code, view, onView, onBack }: { code: string; view: View; onView: (v: View) => void; onBack: () => void }) {
+  return (
+    <SubjectCard title={`Môn ${code}`} onBack={onBack}>
+      <div className="px-5 pt-4">
+        <Segmented label="Xem theo" value={view} options={VIEWS} onChange={onView} />
+      </div>
+      {view === "chapters" ? <ChapterStats code={code} /> : <FrequentList code={code} />}
+    </SubjectCard>
+  );
+}
+
+function FrequentList({ code }: { code: string }) {
   const q = useApi(() => frequentApi.forSubject(code), [code]);
   const d = q.data;
 
@@ -38,47 +58,45 @@ function Result({ code, onBack }: { code: string; onBack: () => void }) {
   }, [d, q]);
 
   return (
-    <SubjectCard title={`Môn ${code}`} onBack={onBack}>
-      <QueryBoundary query={q} loadingLabel="Đang phân tích các đề của môn…">
-        {(d) =>
-          d.totalExams === 0 ? (
-            <Empty icon={Flame} title="Chưa có đề nào của môn này">
-              Hệ thống chưa có đề môn {code}. Lấy đề về để bắt đầu.
-            </Empty>
-          ) : (
-            <div className="space-y-4 p-5">
-              <p className="md-body-medium text-on-surface-variant">
-                Dựa trên <b className="text-on-surface">{d.totalExams}</b> đề của môn {code}: tìm thấy <b className="text-on-surface">{d.repeated}</b> câu xuất hiện từ 2 đề trở lên.
+    <QueryBoundary query={q} loadingLabel="Đang phân tích các đề của môn…">
+      {(d) =>
+        d.totalExams === 0 ? (
+          <Empty icon={Flame} title="Chưa có đề nào của môn này">
+            Hệ thống chưa có đề môn {code}. Lấy đề về để bắt đầu.
+          </Empty>
+        ) : (
+          <div className="space-y-4 p-5">
+            <p className="md-body-medium text-on-surface-variant">
+              Dựa trên <b className="text-on-surface">{d.totalExams}</b> đề của môn {code}: tìm thấy <b className="text-on-surface">{d.repeated}</b> câu xuất hiện từ 2 đề trở lên.
+            </p>
+            {d.pending > 0 && (
+              <p className="flex items-center gap-2 rounded-m3-md bg-surface-container-low px-4 py-3 text-sm text-on-surface-variant" role="status">
+                <Loader2 size={16} className="animate-spin" /> Đang phân tích thêm {d.pending} câu, danh sách sẽ đầy đủ dần.
               </p>
-              {d.pending > 0 && (
-                <p className="flex items-center gap-2 rounded-m3-md bg-surface-container-low px-4 py-3 text-sm text-on-surface-variant" role="status">
-                  <Loader2 size={16} className="animate-spin" /> Đang phân tích thêm {d.pending} câu, danh sách sẽ đầy đủ dần.
+            )}
+            {d.totalExams < 2 && <p className="md-body-small text-on-surface-variant">Cần ít nhất 2 đề của cùng một môn mới so sánh được.</p>}
+            {d.items.length === 0 && d.pending === 0 && d.totalExams >= 2 && <p className="md-body-medium text-on-surface-variant">Chưa thấy câu nào lặp lại giữa các đề hiện có.</p>}
+
+            <ol className="space-y-4">
+              {d.items.map((it, i) => (
+                <Item key={`${it.examId}-${it.number}`} rank={i + 1} item={it} totalExams={d.totalExams} />
+              ))}
+            </ol>
+
+            {d.locked && (
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-m3-md border border-outline-variant bg-surface-container-low px-5 py-4">
+                <p className="md-body-medium text-on-surface">
+                  Còn <b>{d.hidden}</b> câu lặp khác chỉ có ở gói Pro.
                 </p>
-              )}
-              {d.totalExams < 2 && <p className="md-body-small text-on-surface-variant">Cần ít nhất 2 đề của cùng một môn mới so sánh được.</p>}
-              {d.items.length === 0 && d.pending === 0 && d.totalExams >= 2 && <p className="md-body-medium text-on-surface-variant">Chưa thấy câu nào lặp lại giữa các đề hiện có.</p>}
-
-              <ol className="space-y-4">
-                {d.items.map((it, i) => (
-                  <Item key={`${it.examId}-${it.number}`} rank={i + 1} item={it} totalExams={d.totalExams} />
-                ))}
-              </ol>
-
-              {d.locked && (
-                <div className="flex flex-wrap items-center justify-between gap-3 rounded-m3-md border border-outline-variant bg-surface-container-low px-5 py-4">
-                  <p className="md-body-medium text-on-surface">
-                    Còn <b>{d.hidden}</b> câu lặp khác chỉ có ở gói Pro.
-                  </p>
-                  <Link to="/pro" className={buttonClass({ variant: "primary" })}>
-                    <Crown size={16} className="text-[#f0a800]" /> Xem gói Pro
-                  </Link>
-                </div>
-              )}
-            </div>
-          )
-        }
-      </QueryBoundary>
-    </SubjectCard>
+                <Link to="/pro" className={buttonClass({ variant: "primary" })}>
+                  <Crown size={16} className="text-[#f0a800]" /> Xem gói Pro
+                </Link>
+              </div>
+            )}
+          </div>
+        )
+      }
+    </QueryBoundary>
   );
 }
 

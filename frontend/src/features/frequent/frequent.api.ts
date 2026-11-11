@@ -22,6 +22,29 @@ export interface FrequentResult {
   items: FrequentItem[];
 }
 
+export type StatsConfidence = "low" | "medium" | "high";
+
+// Thống kê theo chương của một môn (máy chủ tính sẵn, có thể chậm hơn đề mới một chút).
+export interface ChapterStatItem {
+  chapter: string;
+  questionCount: number;
+  examsWithChapter: number; // số đề có ít nhất một câu của chương
+  totalExams: number;
+  avgQuestionsPerExam: number;
+  recencyScore: number; // 0..1, chỉ để máy chủ xếp hạng, không hiện ra giao diện
+  confidence: StatsConfidence; // theo số đề đã dùng để tính
+  lastSeenAt: string | null;
+}
+
+export interface ChapterStatsResult {
+  subjectId: number;
+  subject: string;
+  totalExams: number;
+  computedAt: string | null;
+  items: ChapterStatItem[];
+}
+
 export const frequentApi = {
   forSubject: (code: string) => http.get<FrequentResult>(`/subjects/${encodeURIComponent(code)}/frequent`),
+  chapterStats: (subjectId: number) => http.get<ChapterStatsResult>(`/subjects/${subjectId}/chapter-stats`),
 };
