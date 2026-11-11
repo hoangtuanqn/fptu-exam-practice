@@ -90,6 +90,7 @@ export const PRIVATE_PAGES: Record<string, PageSeo> = {
   "/admin/sepay": { title: "Quản trị: cấu hình SePay", description: "Thiết lập kết nối cổng thanh toán SePay." },
   "/admin/exams": { title: "Quản trị: đề thi", description: "Quản lý kho đề thi và chỉnh sửa câu hỏi." },
   "/admin/reports": { title: "Quản trị: báo cáo đáp án", description: "Xử lý báo cáo đáp án sai từ người dùng." },
+  "/admin/subjects": { title: "Quản trị: quản lý môn học", description: "Xem và chỉnh kỳ, chương, syllabus của từng môn." },
   "/admin/subject-issues": { title: "Quản trị: môn thiếu dữ liệu", description: "Các môn syllabus chưa có tên chương." },
   "/admin/link-rewards": { title: "Quản trị: vượt link", description: "Cấu hình và số liệu vượt link nhận lượt giải thích miễn phí." },
   "/admin/library": { title: "Quản trị: kỳ học của môn", description: "Gán môn vào Kỳ 0 đến Kỳ 9." },

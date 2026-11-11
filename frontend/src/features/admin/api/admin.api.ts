@@ -40,6 +40,40 @@ export interface BoardSubject {
   semester: number | null;
 }
 
+export interface SubjectRow {
+  code: string;
+  name: string;
+  semester: number | null;
+  credits: number | null;
+  minPassMark: number | null;
+  chapters: { total: number; named: number; hasNames: boolean };
+  inferredChapters: number; // số chương AI đã suy và lưu (0 = chưa suy)
+  syllabusChunks: number; // số đoạn nội dung syllabus đã crawl
+  exams: number; // đề đang có trong hệ thống
+  fuoThreads: number; // đề biết trên FuOverflow (kho đề)
+  hasIssue: boolean; // đang có báo cáo thiếu dữ liệu
+}
+
+export interface SubjectDetail {
+  code: string;
+  name: string;
+  semester: number | null;
+  credits: number | null;
+  minPassMark: number | null;
+  syllabusId: string | null;
+  exams: number;
+  fuoThreads: number;
+  chapters: { number: number; title: string; topics: string[] }[];
+  inferred: { topics: { label: string; hint: string }[]; model: string | null; at: string } | null;
+  chunks: { kind: string; title: string; length: number }[];
+}
+
+export interface SubjectPatch {
+  name?: string;
+  credits?: number | null;
+  semester?: number | null;
+}
+
 export interface GiftCodeForm {
   code?: string; // bỏ trống = hệ thống tự sinh
   amount: number;
@@ -226,6 +260,10 @@ export const adminApi = {
     http.list<AdminCrawlJob>("/admin/crawl-jobs", { ...f, limit: PAGE_SIZE }),
   attempts: (f: { page: number; userId?: string; search?: string; mode?: "PRACTICE" | "EXAM" | "" }) =>
     http.list<AdminAttempt>("/admin/attempts", { ...f, limit: PAGE_SIZE }),
+  subjects: () => http.get<{ subjects: SubjectRow[] }>("/admin/subjects"),
+  subject: (code: string) => http.get<SubjectDetail>(`/admin/subjects/${encodeURIComponent(code)}`),
+  updateSubject: (code: string, patch: SubjectPatch) => http.patch<SubjectDetail>(`/admin/subjects/${encodeURIComponent(code)}`, patch),
+  clearInferredChapters: (code: string) => http.delete(`/admin/subjects/${encodeURIComponent(code)}/inferred-chapters`),
   librarySubjects: () => http.get<{ subjects: BoardSubject[] }>("/admin/library/subjects"),
   setSubjectSemester: (code: string, semester: number | null) => http.put<{ code: string; semester: number | null }>(`/admin/library/subjects/${encodeURIComponent(code)}/semester`, { semester }),
   promoSettings: () => http.get<PromoSettings>("/admin/settings/promo"),
