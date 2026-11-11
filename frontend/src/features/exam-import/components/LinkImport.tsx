@@ -11,6 +11,7 @@ import { examImportApi, type QuoteResult } from "../exam-import.api";
 import { checkFuoLink } from "@/shared/utils/fuo-link";
 import { useFakeProgress, type ProgressHint } from "@/shared/hooks/useFakeProgress";
 import { Button } from "@/shared/ui/Button";
+import { GOLD_GLOSS } from "@/shared/ui/gold";
 import { FormError, LinearProgress } from "@/shared/ui/Feedback";
 import { inputClass } from "@/shared/ui/Input";
 import { ConfirmFetchDialog } from "./ConfirmFetchDialog";
@@ -198,18 +199,14 @@ export function LinkImport({ onImported, subject }: Props) {
     <>
     <form
       onSubmit={onSubmit}
-      className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/60 px-4 py-6 text-left sm:px-6 sm:py-9"
+      className="rounded-2xl border-2 border-dashed border-outline-variant bg-surface-container-low/60 px-4 py-7 text-left sm:px-6 sm:py-9"
     >
       <div className="flex flex-col items-center text-center">
-        <span className="flex h-12 w-12 items-center justify-center rounded-md bg-primary text-on-primary">
+        <span className={`flex h-12 w-12 items-center justify-center rounded-2xl ${GOLD_GLOSS}`}>
           <Link2 size={22} />
         </span>
-        <div className="mt-4 font-display text-xl font-semibold text-brand-900">
-          Nhập đề từ link FuOverflow
-        </div>
-        <div className="mt-0.5 text-sm text-slate-500">
-          Dán link thread đề thi, hệ thống tự lấy ảnh và lưu lại
-        </div>
+        <div className="md-title-large mt-4 text-on-surface">Nhập đề từ link FuOverflow</div>
+        <div className="md-body-medium mt-0.5 text-on-surface-variant">Dán link thread đề thi, hệ thống tự lấy ảnh và lưu lại</div>
         <div className="mt-3 flex flex-col items-center gap-1.5">
           <div className="flex items-baseline gap-1">
             <span className="font-display text-3xl font-semibold leading-none tracking-tight text-brand-900">
