@@ -15,7 +15,7 @@ interface Props {
 const nf = new Intl.NumberFormat("vi-VN");
 
 // Đồng hồ đếm ngược tới hạn chót THẬT của ưu đãi (chỉ có khi máy chủ báo promoEndsAt)
-function Countdown({ endsAt }: { endsAt: string }) {
+export function Countdown({ endsAt }: { endsAt: string }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
