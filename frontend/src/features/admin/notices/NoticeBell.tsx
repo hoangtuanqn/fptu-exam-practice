@@ -60,8 +60,8 @@ function PreviewRow({
   );
 }
 
-// Chuông thông báo trên thanh đầu trang quản trị. Rê chuột (hoặc bấm trên điện thoại) thì xổ ra các thông báo mới nhất;
-// "Xem tất cả" mới vào trang Thông báo. Có thông báo quan trọng mới thì hiện toast.
+// Chuông thông báo trên thanh đầu trang quản trị. Rê chuột thì xổ ra các thông báo mới nhất; bấm vào chuông (hoặc "Xem tất cả")
+// là sang trang Thông báo. Có thông báo quan trọng mới thì hiện toast.
 export function NoticeBell() {
   const navigate = useNavigate();
   const toast = useToast();
@@ -90,7 +90,7 @@ export function NoticeBell() {
     [open, arrived],
   );
 
-  // Bấm ra ngoài hoặc Esc thì đóng (dành cho cách mở bằng bấm)
+  // Bấm ra ngoài hoặc Esc thì đóng
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) =>
@@ -139,7 +139,10 @@ export function NoticeBell() {
     >
       <IconButton
         label={unread ? `Thông báo, ${unread} chưa đọc` : "Thông báo"}
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => {
+          setOpen(false);
+          navigate("/admin/notifications");
+        }}
         aria-expanded={open}
         aria-haspopup="true"
       >
