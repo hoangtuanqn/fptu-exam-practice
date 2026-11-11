@@ -5,13 +5,13 @@ import { authenticate, identify } from "../middlewares/auth.middlewares";
 import { validate } from "../middlewares/validate.middlewares";
 import { idParam } from "../rules/requests/admin.request";
 import { submitAttemptBody, threadParam } from "../rules/requests/attempt.request";
+import { listExamsQuery } from "../rules/requests/exam.request";
 import { createSessionBody } from "../rules/requests/session.request";
-import { paginationQuery } from "../utils/pagination";
 
 const examRouter = Router();
 
 // Khách xem được kho đề của chính mình (theo X-Guest-Id); nộp bài lưu lịch sử và nhận đề về tài khoản thì cần đăng nhập
-examRouter.get("/", identify, validate(paginationQuery, "query"), examController.listMine);
+examRouter.get("/", identify, validate(listExamsQuery, "query"), examController.listMine);
 examRouter.post("/claim", authenticate, examController.claim);
 examRouter.get("/thread/:threadId", identify, validate(threadParam, "params"), examController.getByThread);
 examRouter.get("/:id/answers", identify, validate(idParam, "params"), examController.answers);

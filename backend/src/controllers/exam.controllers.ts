@@ -2,17 +2,17 @@ import type { Request, Response } from "express";
 import { HTTP_STATUS } from "../constants/httpStatus";
 import { getValidated } from "../middlewares/validate.middlewares";
 import type { IdParam } from "../rules/requests/admin.request";
+import type { ListExamsQuery } from "../rules/requests/exam.request";
 import type { SubmitAttemptBody, ThreadParam } from "../rules/requests/attempt.request";
 import { hasTopicReport, hasUnlimitedReview } from "../utils/pro";
 import { ResponseClient } from "../rules/response";
 import { attemptService } from "../services/attempt.service";
 import { examService } from "../services/exam.service";
 import { actorOf } from "../utils/actor";
-import type { PaginationQuery } from "../utils/pagination";
 
 export const examController = {
   async listMine(req: Request, res: Response) {
-    const { items, meta } = await examService.listMine(actorOf(req).owner, getValidated<PaginationQuery>(res, "query"));
+    const { items, meta } = await examService.listMine(actorOf(req).owner, getValidated<ListExamsQuery>(res, "query"));
     res.json(new ResponseClient({ data: items, meta }));
   },
 

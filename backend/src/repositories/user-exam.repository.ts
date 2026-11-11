@@ -12,8 +12,8 @@ export const userExamRepository = {
 
   has: async (owner: Owner, examId: number) => (await prisma.userExam.count({ where: { ...whereOf(owner), examId } })) > 0,
 
-  async list(owner: Owner, query: PaginationQuery) {
-    const where = whereOf(owner);
+  async list(owner: Owner, query: PaginationQuery & { subject?: string }) {
+    const where = { ...whereOf(owner), ...(query.subject && { exam: { subjectCode: query.subject.toUpperCase() } }) };
     const [items, total] = await Promise.all([
       prisma.userExam.findMany({
         where,

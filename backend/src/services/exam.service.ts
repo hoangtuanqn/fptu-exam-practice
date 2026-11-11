@@ -29,7 +29,7 @@ export const examService = {
     if (!(await userExamRepository.has(actor.owner, examId))) throw AppError.notFound("Không tìm thấy đề");
   },
 
-  async listMine(owner: Owner, query: PaginationQuery) {
+  async listMine(owner: Owner, query: PaginationQuery & { subject?: string }) {
     const { items, total } = await userExamRepository.list(owner, query);
     // Khách chưa có lịch sử làm bài nên không cần thống kê
     const stats = isMember(owner)
