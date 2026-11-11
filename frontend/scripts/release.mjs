@@ -46,8 +46,9 @@ try {
   fail("build thất bại, xem lỗi ở trên.");
 }
 
-// (Tiện ích Chrome đã được nén vào dist/fepass_extension.zip ngay trong `npm run build`.)
-if (!fs.existsSync(path.join(dist, "fepass_extension.zip"))) fail("thiếu dist/fepass_extension.zip sau khi build");
+// Website không được chứa file zip/exe công khai (Google sẽ gắn cảnh báo "tệp tải xuống không phổ biến"). Tiện ích chỉ tải qua API sau khi đăng nhập.
+const risky = fs.readdirSync(dist, { recursive: true }).map(String).filter((f) => /\.(zip|exe|msi|apk|crx|dmg)$/i.test(f));
+if (risky.length) fail(`dist có file tải xuống công khai: ${risky.join(", ")}`);
 
 // --- 3. Nén cả dist thành một file để upload một lần
 step("Nén toàn bộ web thành một file");
@@ -60,7 +61,7 @@ console.log(`   ${Object.keys(webFiles).length} file → ${path.relative(root, w
 
 // --- Kiểm tra các file bắt buộc đã nằm trong gói (đặc biệt .htaccess và file xác minh Google do bạn thêm tay)
 step("Kiểm tra nội dung gói");
-const required = ["index.html", ".htaccess", "robots.txt", "sitemap.xml", "fepass_extension.zip", "extension-version.json", "og-cover.jpg"];
+const required = ["index.html", ".htaccess", "robots.txt", "sitemap.xml", "extension-version.json", "og-cover.jpg"];
 const google = Object.keys(webFiles).filter((f) => /^google[\w-]+\.html$/.test(f));
 let ok = true;
 for (const f of required) {

@@ -1,5 +1,7 @@
 import { Link, useSearchParams } from "react-router-dom";
 import { Bug, Download, Rocket, Sparkles, Zap, type LucideIcon } from "lucide-react";
+import { useAuth } from "@/features/auth/AuthContext";
+import { ExtensionDownloadButton } from "@/features/landing/components/ExtensionDownloadButton";
 import { brand } from "@/shared/brand/brand";
 import { Logo } from "@/shared/brand/Logo";
 import { Footer } from "@/shared/layout/Footer";
@@ -63,6 +65,7 @@ function ReleaseCard({ release, latest }: { release: Release; latest: boolean })
 
 // /changelog (công khai): lịch sử thay đổi của web và tiện ích Chrome, bản mới nhất ở trên cùng
 export default function ChangelogPage() {
+  const { user } = useAuth();
   const [params, setParams] = useSearchParams();
   const tab: Product = params.get("tab") === "extension" ? "extension" : "web";
   const releases = CHANGELOG[tab];
@@ -94,11 +97,14 @@ export default function ChangelogPage() {
               onChange={(v) => setParams(v === "web" ? {} : { tab: v }, { replace: true })}
             />
           </div>
-          {tab === "extension" && (
-            <a href={brand.extensionUrl} className="md-label-large md-state md-motion mt-4 inline-flex h-10 items-center gap-2 rounded-full bg-primary px-5 text-on-primary">
-              <Download size={16} /> Tải tiện ích v{EXTENSION_VERSION}
-            </a>
-          )}
+          {tab === "extension" &&
+            (user ? (
+              <ExtensionDownloadButton className="md-label-large md-state md-motion mt-4 inline-flex h-10 items-center gap-2 rounded-full bg-primary px-5 text-on-primary disabled:opacity-60">Tải tiện ích v{EXTENSION_VERSION}</ExtensionDownloadButton>
+            ) : (
+              <Link to="/login" className="md-label-large md-state md-motion mt-4 inline-flex h-10 items-center gap-2 rounded-full bg-primary px-5 text-on-primary">
+                <Download size={16} /> Đăng nhập để tải tiện ích v{EXTENSION_VERSION}
+              </Link>
+            ))}
         </div>
 
         <div className="relative mt-8">

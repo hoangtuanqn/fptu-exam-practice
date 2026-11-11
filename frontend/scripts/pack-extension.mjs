@@ -1,24 +1,11 @@
-// Nén chrome-extension/ thành dist/fepass_extension.zip (web phục vụ ở /fepass_extension.zip).
-// Chạy tự động sau mỗi `npm run build`; cũng chạy tay được: node scripts/pack-extension.mjs
+// Kiểm tra phiên bản tiện ích sau mỗi `npm run build` (cũng chạy tay được: node scripts/pack-extension.mjs).
+// Không còn nén zip vào dist: tiện ích chỉ tải qua API sau khi đăng nhập (backend nén từ chrome-extension/).
 import fs from "node:fs";
 import path from "node:path";
-import { zipSync } from "fflate";
 
 const frontend = path.resolve(import.meta.dirname, "..");
 const root = path.resolve(frontend, "..");
-const dist = path.join(frontend, "dist");
 const extDir = path.join(root, "chrome-extension");
-
-// Đọc đệ quy thư mục thành { "đường/dẫn/posix": [dữ liệu, {mtime}] }, bỏ qua file ẩn, node_modules và chính file zip cũ
-function collect(dir, base = dir, out = {}) {
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (entry.name.startsWith(".") || entry.name === "node_modules" || entry.name === "fepass_extension.zip") continue;
-    const abs = path.join(dir, entry.name);
-    if (entry.isDirectory()) collect(abs, base, out);
-    else out[path.relative(base, abs).split(path.sep).join("/")] = [new Uint8Array(fs.readFileSync(abs)), { mtime: fs.statSync(abs).mtime }];
-  }
-  return out;
-}
 
 export function packExtension() {
   const manifest = JSON.parse(fs.readFileSync(path.join(extDir, "manifest.json"), "utf8"));
@@ -31,13 +18,8 @@ export function packExtension() {
   if (logged !== manifest.version) {
     console.warn(`\x1b[33m!!  Lịch sử thay đổi của tiện ích đang ghi v${logged}, nhưng manifest là v${manifest.version}. Thêm mục v${manifest.version} vào đầu "extension" trong src/features/changelog/changelog.json.\x1b[0m`);
   }
-  if (!fs.existsSync(dist)) throw new Error("chưa có frontend/dist: build trước rồi mới nén tiện ích");
-  const files = collect(extDir);
-  if (!files["manifest.json"]) throw new Error("không thấy chrome-extension/manifest.json");
-  const zip = zipSync(files, { level: 9 });
-  fs.writeFileSync(path.join(dist, "fepass_extension.zip"), zip);
-  console.log(`\x1b[36m==> Tiện ích Chrome v${manifest.version}: ${Object.keys(files).length} file → dist/fepass_extension.zip (${Math.round(zip.length / 1024)} KB)\x1b[0m`);
-  return { version: manifest.version, files: Object.keys(files).length, bytes: zip.length };
+  console.log(`[36m==> Tiện ích Chrome v${manifest.version} (không đóng gói vào web)[0m`);
+  return { version: manifest.version };
 }
 
 if (import.meta.filename === path.resolve(process.argv[1] ?? "")) packExtension();
