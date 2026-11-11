@@ -8,7 +8,7 @@ export function ValueTrio() {
 
   const items = [
     { icon: BookMarked, text: <>Đồng bộ <b>FLM Syllabus</b></> },
-    { icon: MousePointerClick, text: <>Lấy đề FuOverflow <b>1 click</b> · <b className="text-primary">{priceText}</b></> },
+    { icon: MousePointerClick, text: <>Mở đề <b>1 click</b> · <b className="text-primary">{priceText}</b></> },
     { icon: Sparkles, text: <>AI giải thích đáp án</> },
   ];
 
