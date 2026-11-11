@@ -55,6 +55,7 @@ model User {
   dailyCheckIns      DailyCheckIn[]
   planPurchases      PlanPurchase[]
   promptEvents       PromptEvent[]
+  proTickets         ProTicket[]
   reviewItems        ReviewItem[]
   studyDays          StudyDay[]
   gradeSetting       UserGradeSetting?
@@ -867,4 +868,21 @@ model PromptEvent {
   @@index([surface, event, createdAt])
   @@index([userId])
   @@map("prompt_events")
+}
+
+// Pro ticket: paid now, activated later by the user. activatedAt null = still unused.
+// An unused ticket can no longer be activated after expiresAt (the buyer is told the date when buying).
+model ProTicket {
+  id          Int       @id @default(autoincrement())
+  userId      Int       @map("user_id")
+  plan        String    @db.VarChar(20) // PRO | SPRINT
+  price       Int
+  expiresAt   DateTime  @map("expires_at") // last moment the ticket can be activated
+  activatedAt DateTime? @map("activated_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, activatedAt])
+  @@map("pro_tickets")
 }
