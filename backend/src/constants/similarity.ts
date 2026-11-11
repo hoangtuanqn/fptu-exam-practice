@@ -35,3 +35,12 @@ export const GROUP_BORDERLINE_MAX_PRINT = 200;
 
 // Ghi lại nhóm của một môn trong một giao dịch: môn lớn có vài nghìn câu nên cho thời gian dài hơn mặc định 5 giây
 export const GROUP_TX_TIMEOUT_MS = 120_000;
+
+// Việc chạy ban đêm (jobs/similarity.cron.ts): tính dấu vân tay còn thiếu, tạo vector, dựng lại nhóm, tính lại thống kê
+// cho các môn có đề dùng được thay đổi. 04:00 giờ Việt Nam, sau lượt sao lưu DB 03:30.
+export const SIMILARITY_JOB_CRON = "0 4 * * *";
+export const SIMILARITY_JOB_TIMEZONE = "Asia/Ho_Chi_Minh";
+// Mỗi đêm tính tối đa chừng này ảnh mới (chia đều cho các môn); môn chưa xong thì đêm sau làm tiếp
+export const SIMILARITY_JOB_MAX_HASHES = 2000;
+// Thông báo admin khi có môn lỗi: liệt kê tối đa chừng này mã môn
+export const SIMILARITY_JOB_NOTICE_MAX_CODES = 10;

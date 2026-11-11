@@ -25,7 +25,8 @@
     "audit:exams": "tsx scripts/audit-exams.ts",
     "test": "node --import tsx --test --test-reporter=spec test/*.test.ts",
     "groups:build": "tsx scripts/build-question-groups.ts",
-    "stats:refresh": "tsx scripts/refresh-frequency-stats.ts"
+    "stats:refresh": "tsx scripts/refresh-frequency-stats.ts",
+    "job:similarity": "tsx scripts/run-similarity-job.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.4.0",

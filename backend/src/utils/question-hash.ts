@@ -1,4 +1,6 @@
+import path from "node:path";
 import sharp from "sharp";
+import { IMAGE_HASH_CONCURRENCY } from "../constants/frequent";
 
 // Dấu vân tay của ảnh câu hỏi, để nhận ra cùng một câu xuất hiện ở nhiều đề. Ảnh đề gần như toàn nền trắng với vài dòng chữ, nên băm cả ảnh sẽ nhầm
 // những câu khác nhau có cùng bố cục. Vì vậy chỉ băm riêng vùng chữ: nửa phải phía trên (bỏ logo, hình mờ), cắt sát chữ, chia lưới GW x GH ô rồi ghi ô nào có mực.
@@ -61,6 +63,32 @@ export async function hashQuestionImage(file: string): Promise<Uint8Array<ArrayB
   } catch {
     return null;
   }
+}
+
+/**
+ * Tính dấu vân tay cho từng ảnh (đường dẫn tương đối trong `root`), mỗi lần `concurrency` ảnh song song.
+ * Ảnh tính được thì gọi `onHash` (người gọi tự lưu). Trả về số ảnh tính được; ảnh không đọc được bị bỏ qua.
+ */
+export async function hashImagesInBatches<T extends { imagePath: string }>(
+  rows: readonly T[],
+  root: string,
+  onHash: (row: T, hash: Uint8Array<ArrayBuffer>) => Promise<void>,
+  concurrency = IMAGE_HASH_CONCURRENCY,
+): Promise<number> {
+  const step = Math.max(1, Math.floor(concurrency));
+  let hashed = 0;
+  for (let i = 0; i < rows.length; i += step) {
+    await Promise.all(
+      rows.slice(i, i + step).map(async (r) => {
+        const hash = await hashQuestionImage(path.join(root, r.imagePath));
+        if (hash) {
+          await onHash(r, hash);
+          hashed++;
+        }
+      }),
+    );
+  }
+  return hashed;
 }
 
 /** Đổi dấu vân tay sang mảng 32-bit để so sánh nhanh. */
