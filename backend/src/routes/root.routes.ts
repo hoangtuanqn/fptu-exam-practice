@@ -24,6 +24,7 @@ import peRouter from "./pe.routes";
 import { referralPublicRouter, referralRouter } from "./referral.routes";
 import reminderPublicRouter from "./reminder-public.routes";
 import gradeRouter from "./grade.routes";
+import materialRouter from "./material.routes";
 import subjectRouter from "./subject.routes";
 import userRouter from "./user.routes";
 
@@ -55,6 +56,7 @@ rootRouter.use("/catalog", catalogRouter);
 rootRouter.use("/public/reminder", reminderPublicRouter);
 rootRouter.use("/subjects", subjectRouter);
 rootRouter.use("/grades", gradeRouter);
+rootRouter.use("/materials", materialRouter); // phân tích slide (Pro)
 rootRouter.use("/attempts", attemptRouter);
 rootRouter.use("/review", reviewRouter);
 rootRouter.use("/reviews", fsrsReviewRouter); // lịch ôn FSRS (khác /review là Sổ câu sai Leitner)

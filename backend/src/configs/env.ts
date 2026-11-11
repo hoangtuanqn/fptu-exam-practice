@@ -38,6 +38,8 @@ const schema = z.object({
   GITHUB_CLIENT_ID: z.string().optional(),
   GITHUB_CLIENT_SECRET: z.string().optional(),
   STORAGE_DIR: z.string().default("storage"), // nơi lưu ảnh đề đã crawl
+  // Tệp PDF tạm của Phân tích slide (riêng tư, không phục vụ công khai). Bỏ trống = private/materials trong thư mục chạy server
+  MATERIAL_TEMP_DIR: z.string().optional(),
   ADMIN_EMAIL: z.string().default("admin@example.com"),
   ADMIN_PASSWORD: z.string().default("Admin@123456"),
 });
@@ -54,3 +56,12 @@ export const isProd = env.NODE_ENV === "production";
 
 // Thư mục lưu ảnh, tính từ nơi chạy server
 export const storageDir = path.resolve(env.STORAGE_DIR);
+
+// Thư mục tệp PDF tạm của Phân tích slide: không bao giờ nằm trong storageDir (thư mục đó được phục vụ công khai ở /api/v1/files)
+export const materialTempDir = path.resolve(env.MATERIAL_TEMP_DIR || path.join("private", "materials"));
+const rel = path.relative(storageDir, materialTempDir);
+if (rel === "" || (!rel.startsWith("..") && !path.isAbsolute(rel))) {
+  console.error("Biến môi trường không hợp lệ:");
+  console.error(" - MATERIAL_TEMP_DIR không được nằm trong STORAGE_DIR (thư mục công khai)");
+  process.exit(1);
+}
