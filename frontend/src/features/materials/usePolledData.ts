@@ -6,13 +6,14 @@ const POLL_MS = 4000;
 // tạm dừng khi tab bị ẩn và hỏi lại ngay khi người dùng quay lại tab. `base` là dữ liệu của useApi:
 // tải lại tay thì bỏ kết quả hỏi ngầm cũ.
 export function usePolledData<T>(base: T | null, load: () => Promise<T>, shouldPoll: (data: T) => boolean): T | null {
-  const [fresh, setFresh] = useState<T | null>(null);
+  // Bọc kết quả hỏi ngầm: kết quả null (vd file đã bị xoá/hết hạn) vẫn phải thay cho dữ liệu cũ, không rơi về `base`
+  const [fresh, setFresh] = useState<{ value: T | null } | null>(null);
   const loadRef = useRef(load);
   loadRef.current = load;
 
   useEffect(() => setFresh(null), [base]);
 
-  const data = fresh ?? base;
+  const data = fresh ? fresh.value : base;
   const active = data !== null && shouldPoll(data);
 
   useEffect(() => {
@@ -22,7 +23,7 @@ export function usePolledData<T>(base: T | null, load: () => Promise<T>, shouldP
     const poll = () => {
       loadRef
         .current()
-        .then((next) => alive && setFresh(next)) // đổi state làm effect chạy lại và hẹn lần hỏi tiếp theo
+        .then((next) => alive && setFresh({ value: next })) // đổi state làm effect chạy lại và hẹn lần hỏi tiếp theo
         .catch(() => alive && schedule()); // lỗi tạm thời: thử lại ở lần sau
     };
     const schedule = () => {

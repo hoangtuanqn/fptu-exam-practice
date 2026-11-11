@@ -116,7 +116,8 @@ export function SubjectCombobox({ label, subjects, value, onChange, error, place
           id={id}
           role="combobox"
           aria-expanded={showList}
-          aria-controls={listId}
+          aria-controls={showList && matches.length > 0 ? listId : undefined}
+          aria-describedby={error ? `${id}-error` : undefined}
           aria-autocomplete="list"
           aria-activedescendant={showList && matches[active] ? `${id}-opt-${active}` : undefined}
           aria-invalid={error ? true : undefined}
@@ -145,7 +146,7 @@ export function SubjectCombobox({ label, subjects, value, onChange, error, place
             aria-label="Bỏ chọn môn"
             onMouseDown={(e) => e.preventDefault()}
             onClick={clear}
-            className="md-state flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-on-surface-variant"
+            className="md-state flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-on-surface-variant"
           >
             <X size={18} />
           </button>
@@ -188,7 +189,7 @@ export function SubjectCombobox({ label, subjects, value, onChange, error, place
       )}
 
       {error && (
-        <p role="alert" className="md-body-small mt-1 px-4 text-error">
+        <p id={`${id}-error`} role="alert" className="md-body-small mt-1 px-4 text-error">
           {error}
         </p>
       )}
