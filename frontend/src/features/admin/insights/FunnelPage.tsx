@@ -9,6 +9,7 @@ const PROMPT_LABEL: Record<string, string> = {
   "result-upgrade": "Gợi ý Pro ở bảng điểm",
   "review-cap": "Sổ câu sai gần đầy",
   "deposit-tier": "Gợi ý bậc thưởng khi nạp",
+  "first-run": "Danh sách Bắt đầu cho người mới",
 };
 
 const pct = (n: number, of: number) => (of > 0 ? `${Math.round((n / of) * 100)}%` : "—");
