@@ -13,10 +13,11 @@ interface Props {
   dialog: SubmitDialog;
   onDialogChange: (dialog: SubmitDialog) => void;
   onCloseZoom: () => void;
+  nextExam?: { remaining: number; onOpen: () => void }; // bộ đề theo chương nhiều đề: còn đề kế tiếp
 }
 
 // Quyết định hộp thoại nào đang hiện: bắt đầu / lỗi thư mục / xác nhận nộp / bảng điểm
-export function QuizDialogs({ quiz, topicSummary, dialog, onDialogChange, onCloseZoom }: Props) {
+export function QuizDialogs({ quiz, topicSummary, dialog, onDialogChange, onCloseZoom, nextExam }: Props) {
   const { pending } = quiz;
 
   return (
@@ -67,6 +68,7 @@ export function QuizDialogs({ quiz, topicSummary, dialog, onDialogChange, onClos
           answersPending={quiz.answersPending}
           answerSource={quiz.answerSource}
           savable={quiz.examId !== null}
+          nextExam={nextExam}
           elapsed={quiz.elapsed}
           onReview={() => onDialogChange(null)}
           onRetry={() => {

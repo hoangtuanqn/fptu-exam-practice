@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Crown, Eye, Loader2, RotateCcw, Target } from "lucide-react";
+import { ArrowRight, Crown, Eye, Loader2, RotateCcw, Target } from "lucide-react";
 import type { TopicSummary } from "@/features/history/types";
 import { useAuth } from "@/features/auth/AuthContext";
 import type { AnswerSource } from "@/features/practice/types";
@@ -22,12 +22,13 @@ interface Props {
   answersPending: boolean; // AI chưa phân tích xong: điểm sẽ cập nhật khi có đáp án
   answerSource: AnswerSource | null; // nguồn đáp án, để ghi chú độ tin cậy của điểm
   savable: boolean; // đề của hệ thống: bài vừa làm lưu được vào lịch sử khi đăng ký
+  nextExam?: { remaining: number; onOpen: () => void }; // bộ đề theo chương nhiều đề: còn đề kế tiếp
   onReview: () => void;
   onRetry: () => void;
 }
 
 // Bảng điểm sau khi nộp
-export function ResultDialog({ result, topicSummary = null, elapsed, savable, answersPending, answerSource, onReview, onRetry }: Props) {
+export function ResultDialog({ result, topicSummary = null, elapsed, savable, answersPending, answerSource, nextExam, onReview, onRetry }: Props) {
   const { user } = useAuth();
   const passed = result.score >= PASS_SCORE;
   const tone = result.total === 0 ? "neutral" : passed ? "success" : "danger";
@@ -99,6 +100,12 @@ export function ResultDialog({ result, topicSummary = null, elapsed, savable, an
           </p>
           <SignUpCta />
         </div>
+      )}
+
+      {nextExam && !answersPending && (
+        <Button variant="primary" className="mt-5 w-full" onClick={nextExam.onOpen}>
+          <ArrowRight size={16} /> Đề tiếp theo · còn {nextExam.remaining} đề
+        </Button>
       )}
 
       <ModalActions>
