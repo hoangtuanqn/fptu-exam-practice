@@ -91,15 +91,11 @@ export const adminNoticeService = {
     if (++pushed % 100 === 0) void prune().catch(() => undefined);
   },
 
-  /** Danh sách có phân trang, kèm số chưa đọc (tổng và quan trọng) để hiện trên tab. */
+  /** Danh sách có phân trang (mới nhất trước). Số chưa đọc lấy ở counts(). */
   async list(query: PaginationQuery, filter: NoticeListFilter) {
     const where = whereOf(filter);
-    const [items, total, counts] = await Promise.all([
-      prisma.adminNotice.findMany({ where, orderBy: { id: "desc" }, ...toSkipTake(query) }),
-      prisma.adminNotice.count({ where }),
-      this.counts(),
-    ]);
-    return { items: items.map(toDto), meta: toMeta(query, total), counts };
+    const [items, total] = await Promise.all([prisma.adminNotice.findMany({ where, orderBy: { id: "desc" }, ...toSkipTake(query) }), prisma.adminNotice.count({ where })]);
+    return { items: items.map(toDto), meta: toMeta(query, total) };
   },
 
   async counts() {

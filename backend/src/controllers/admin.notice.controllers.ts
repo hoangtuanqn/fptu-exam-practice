@@ -8,8 +8,8 @@ import { adminNoticeService } from "../services/admin-notice.service";
 export const adminNoticeController = {
   async list(_req: Request, res: Response) {
     const { status, important, category, ...page } = getValidated<ListNoticesQuery>(res, "query");
-    const { items, meta, counts } = await adminNoticeService.list(page, { status, important: important === undefined ? undefined : important === "true", category });
-    res.json(new ResponseClient({ data: { items, counts }, meta }));
+    const { items, meta } = await adminNoticeService.list(page, { status, important: important === undefined ? undefined : important === "true", category });
+    res.json(new ResponseClient({ data: items, meta }));
   },
 
   // Chỉ các con số (cho chuông trên thanh đầu trang), nhẹ hơn nhiều so với tải cả danh sách
