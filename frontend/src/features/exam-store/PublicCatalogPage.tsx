@@ -24,7 +24,7 @@ export default function PublicCatalogPage() {
   const list = useMemo(() => subjects.data?.map((s) => ({ code: s.code, name: s.name, badge: `${s.total} đề` })), [subjects.data]);
   const totals = useMemo(() => {
     const data = subjects.data ?? [];
-    return { exams: data.reduce((n, s) => n + s.total, 0), ready: data.reduce((n, s) => n + s.ready, 0), subjects: data.length };
+    return { exams: data.reduce((n, s) => n + s.total, 0), subjects: data.length };
   }, [subjects.data]);
 
   return (
@@ -35,8 +35,8 @@ export default function PublicCatalogPage() {
         <h1 className="md-headline-large mt-1 text-on-surface">Kho đề thi FE của mọi môn</h1>
         <p className="md-body-large mt-3 text-on-surface-variant">
           {totals.exams > 0
-            ? `Xem ${totals.exams.toLocaleString("vi-VN")} đề thuộc ${totals.subjects} môn, ${totals.ready.toLocaleString("vi-VN")} đề đã có sẵn đáp án AI. Chọn môn để xem danh sách, đăng ký rồi lấy đề về luyện.`
-            : "Chọn môn để xem danh sách đề FE, đăng ký rồi lấy đề về luyện."}
+            ? `Xem ${totals.exams.toLocaleString("vi-VN")} đề thuộc ${totals.subjects} môn. Chọn môn để xem danh sách đề, đăng ký rồi mở đề ra luyện.`
+            : "Chọn môn để xem danh sách đề FE, đăng ký rồi mở đề ra luyện."}
         </p>
         {!user && (
           <div className="mt-4 flex flex-wrap items-center gap-3">

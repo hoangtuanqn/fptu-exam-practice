@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Download, Loader2, Play } from "lucide-react";
+import { BookOpen, Loader2, Play } from "lucide-react";
 import { ConfirmFetchDialog } from "@/features/exam-import/components/ConfirmFetchDialog";
 import { examImportApi } from "@/features/exam-import/exam-import.api";
 import { useExamImport } from "@/features/exam-import/useExamImport";
@@ -20,7 +20,6 @@ import { SubjectCard } from "@/features/subject/SubjectCard";
 import { SubjectPicker } from "@/features/subject/SubjectPicker";
 import { catalogApi, type CatalogItem } from "./catalog.api";
 import { ExamFilterBar, useExamListQuery } from "./ExamFilterBar";
-import { ExamStatusBadge } from "./ExamStatusBadge";
 
 // Kho đề > Theo môn: toàn bộ đề FE của một môn (danh mục FuOverflow + đề hệ thống đã có). Chỉ lấy ảnh khi người dùng bấm và đồng ý trừ phí.
 export function SubjectBrowser() {
@@ -125,10 +124,9 @@ function ExamList({ code, onBack }: { code: string; onBack: () => void }) {
                           {e.questions !== null ? <span>{e.questions} câu</span> : null}
                         </p>
                       </div>
-                      <ExamStatusBadge status={e.status} />
-                      <Button size="sm" variant={e.status === "fetch" ? "tonal" : e.status === "owned" ? "text" : "primary"} onClick={() => void pick(e)} disabled={busy}>
-                        {quoting === e.threadId ? <Loader2 size={15} className="animate-spin" /> : e.status === "fetch" ? <Download size={15} /> : <Play size={15} />}
-                        {e.status === "owned" ? "Mở đề" : e.status === "ready" ? "Lấy đề" : "Lấy từ FuOverflow"}
+                      <Button size="sm" variant="tonal" onClick={() => void pick(e)} disabled={busy}>
+                        {quoting === e.threadId ? <Loader2 size={15} className="animate-spin" /> : <Play size={15} />}
+                        Mở đề
                       </Button>
                     </li>
                   ))}
