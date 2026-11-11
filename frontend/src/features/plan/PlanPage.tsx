@@ -8,13 +8,14 @@ import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
 import { Footer } from "@/shared/layout/Footer";
 import { SiteHeader } from "@/shared/layout/SiteHeader";
-import { buttonClass } from "@/shared/ui/Button";
 import { ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { addMonths, isPro, proDaysLeft } from "@/shared/utils/pro";
 import { planApi } from "./plan.api";
 import { ProBenefits } from "./pro/ProBenefits";
 import { ProCompare } from "./pro/ProCompare";
 import { ProFaq } from "./pro/ProFaq";
+import { ProFinalCta } from "./pro/ProFinalCta";
+import { GOLD } from "./pro/style";
 import { ProHero } from "./pro/ProHero";
 import { ProPlans } from "./pro/ProPlans";
 import { ProSteps } from "./pro/ProSteps";
@@ -71,9 +72,9 @@ export default function PlanPage() {
           </div>
         ) : (
           <>
-            <ProHero pro={pro} daysLeft={proDaysLeft(user)} expiresAt={user?.proExpiresAt ?? null} />
+            <ProHero plan={plan} pro={pro} daysLeft={proDaysLeft(user)} expiresAt={user?.proExpiresAt ?? null} />
             {unverified && (
-              <div id="pro-verify" className="mx-auto max-w-3xl px-4 pt-6">
+              <div id="pro-verify" className="relative z-10 mx-auto -mt-16 max-w-3xl px-4 pb-4">
                 <VerifyEmailNotice variant="inline" message="Bạn cần xác minh email trước khi nâng cấp Pro." />
               </div>
             )}
@@ -84,17 +85,7 @@ export default function PlanPage() {
             <ProCompare plan={plan} />
             <ProSteps plan={plan} />
             <ProFaq />
-            <section className="mx-auto max-w-3xl px-4 pt-14">
-              <div className="rounded-m3-xl border border-outline-variant bg-primary-container/40 px-6 py-8 text-center">
-                <h2 className="md-headline-small text-on-surface">Sẵn sàng học không giới hạn?</h2>
-                <p className="md-body-medium mt-1.5 text-on-surface-variant">
-                  {vnd(plan.price)} cho {plan.months} tháng, tiết kiệm {vnd(plan.savings)} so với FuOverflow VIP.
-                </p>
-                <button onClick={() => cta()} className={buttonClass({ variant: "filled", className: "relative mt-5 !h-12 !px-8 text-base" })}>
-                  <Crown size={18} /> {label}
-                </button>
-              </div>
-            </section>
+            <ProFinalCta plan={plan} label={label} onBuy={() => cta()} />
           </>
         )}
       </main>
@@ -106,16 +97,16 @@ export default function PlanPage() {
 
       {plan && !plansVisible && (
         <div className="fixed inset-x-0 bottom-0 z-30 px-3 pb-3 expanded:bottom-5 expanded:left-1/2 expanded:right-auto expanded:w-[32rem] expanded:-translate-x-1/2 expanded:px-0 expanded:pb-0">
-          <div className="flex items-center gap-3 rounded-full border border-outline-variant bg-surface-container-high py-2 pl-5 pr-2 shadow-m3-3">
+          <div className="pro-rise flex items-center gap-3 rounded-full border border-[#ffc61f]/40 bg-[#1d1500]/95 py-2 pl-5 pr-2 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.6)] backdrop-blur">
             <div className="min-w-0 flex-1 leading-tight">
-              <div className="md-body-small truncate text-on-surface-variant">
-                <s>{vnd(plan.fuoPrice)}</s> · tiết kiệm {vnd(plan.savings)}
+              <div className="truncate text-xs text-[#fff6dc]/70">
+                <span className="line-through">{vnd(plan.fuoPrice)}</span> · tiết kiệm {vnd(plan.savings)}
               </div>
-              <div className="md-title-medium tabular-nums text-on-surface">
-                {vnd(plan.price)} <span className="md-body-small text-on-surface-variant">/ {plan.months} tháng</span>
+              <div className="text-lg font-extrabold tabular-nums text-[#ffc61f]">
+                {vnd(plan.price)} <span className="text-xs font-semibold text-[#fff6dc]/70">/ {plan.months} tháng</span>
               </div>
             </div>
-            <button onClick={() => cta()} className={buttonClass({ variant: "filled", className: "relative !h-11 shrink-0" })}>
+            <button onClick={() => cta()} className={`pro-cta md-label-large inline-flex h-11 shrink-0 items-center gap-2 rounded-full px-5 font-extrabold ${GOLD}`}>
               <Crown size={17} /> {pro ? "Gia hạn" : user ? "Nâng cấp" : "Đăng nhập"}
             </button>
           </div>
