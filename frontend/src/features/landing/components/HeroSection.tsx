@@ -7,7 +7,7 @@ import { PromoCard } from "./PromoCard";
 import { PromoDeadlineBanner } from "./PromoDeadlineBanner";
 import { SignupGiftBanner } from "./SignupGiftBanner";
 import { ValueTrio } from "./ValueTrio";
-import { ProTeaser } from "@/features/plan/ProTeaser";
+import { ProNudge } from "@/features/plan/ProNudge";
 import { FirstRunChecklist } from "@/features/account/FirstRunChecklist";
 
 interface Props {
@@ -86,8 +86,8 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
 
         {!isGuest && <FirstRunChecklist />}
 
-        {/* Khách chưa thử gì thì chưa mời trả tiền: chỉ có dải quà đăng ký. Dải Pro dành cho thành viên. */}
-        {!isGuest && <ProTeaser />}
+        {/* Khách chưa thử gì thì chưa mời trả tiền: chỉ có dải quà đăng ký. Thành viên thấy lời mời Pro dựa trên dữ kiện thật của họ (hoặc dải Pro thường nếu chưa có). */}
+        {!isGuest && <ProNudge />}
 
         {isGuest && (
           <div className="mt-8 animate-fade-up [animation-delay:120ms]">
