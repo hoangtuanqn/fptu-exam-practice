@@ -17,9 +17,12 @@ export function RequireAuth({ role }: { role?: Role }) {
 // Trang chỉ dành cho khách (đăng nhập/đăng ký): đã đăng nhập thì chuyển đi chỗ khác
 export function GuestOnly() {
   const { user, loading } = useAuth();
-  const from = (useLocation().state as { from?: string } | null)?.from;
+  const location = useLocation();
+  const from = (location.state as { from?: string } | null)?.from;
 
   if (loading) return <Loading />;
-  if (user) return <Navigate to={from ?? (user.role === "ADMIN" ? "/admin" : "/account")} replace />;
+  // Vừa đăng ký: vào thẳng trang chủ (ô dán link đề) để tới bài đầu tiên nhanh nhất; đăng nhập thường vẫn về Tài khoản
+  const home = user?.role === "ADMIN" ? "/admin" : location.pathname === "/register" ? "/" : "/account";
+  if (user) return <Navigate to={from ?? home} replace />;
   return <Outlet />;
 }
