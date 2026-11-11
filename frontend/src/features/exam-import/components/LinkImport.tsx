@@ -11,7 +11,7 @@ import { examImportApi, type QuoteResult } from "../exam-import.api";
 import { checkFuoLink } from "@/shared/utils/fuo-link";
 import { useFakeProgress, type ProgressHint } from "@/shared/hooks/useFakeProgress";
 import { Button } from "@/shared/ui/Button";
-import { GOLD_BUTTON } from "@/shared/ui/gold";
+import { GOLD_BUTTON, GOLD_GLOSS } from "@/shared/ui/gold";
 import { FormError, LinearProgress } from "@/shared/ui/Feedback";
 import { inputClass } from "@/shared/ui/Input";
 import { ConfirmFetchDialog } from "./ConfirmFetchDialog";
@@ -205,14 +205,16 @@ export function LinkImport({ onImported, subject, compact = false }: Props) {
     <>
     <form
       onSubmit={onSubmit}
-      className={compact ? "relative rounded-m3-xl border border-outline-variant/70 bg-gradient-to-b from-surface-container-lowest to-surface-container-low px-4 py-4 text-left shadow-[0_1px_2px_rgba(0,0,0,0.05),0_24px_50px_-24px_rgba(70,45,0,0.35)] sm:px-5 sm:py-5" : "rounded-2xl border-2 border-dashed border-outline-variant bg-surface-container-low/60 px-4 py-7 text-left sm:px-6 sm:py-9"}
+      className={compact ? "relative isolate overflow-hidden rounded-m3-xl border border-[#e0a100]/35 bg-gradient-to-br from-surface-container-lowest via-surface-container-low to-[#ffc61f]/15 px-4 py-4 text-left shadow-[0_1px_2px_rgba(0,0,0,0.05),0_24px_50px_-24px_rgba(70,45,0,0.35)] sm:px-5 sm:py-5" : "rounded-2xl border-2 border-dashed border-outline-variant bg-surface-container-low/60 px-4 py-7 text-left sm:px-6 sm:py-9"}
     >
       {compact ? (
         <>
-          <span aria-hidden className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-[#ffc61f]/70 to-transparent" />
+          <span aria-hidden className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-[#ffc61f] to-transparent" />
+          <span aria-hidden className="pointer-events-none absolute -right-10 -top-16 -z-10 h-44 w-44 rounded-full bg-[#ffc61f]/30 blur-3xl" />
+          <span aria-hidden className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-1/2 bg-gradient-to-b from-white/50 to-transparent" />
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-container text-on-primary-container ring-1 ring-[#b87d00]/20">
+              <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${GOLD_GLOSS}`}>
                 <ClipboardPaste size={20} />
               </span>
               <div className="min-w-0">
@@ -220,7 +222,7 @@ export function LinkImport({ onImported, subject, compact = false }: Props) {
                 <div className="md-body-small text-on-surface-variant">Dán link vào đây, hệ thống tự lấy đề về cho bạn</div>
               </div>
             </div>
-            <span className="md-label-large hidden shrink-0 rounded-full border border-[#e0a100]/40 bg-[#ffc61f]/15 px-3.5 py-1 text-on-surface sm:inline-flex">{priceText}</span>
+            <span className="md-label-large hidden shrink-0 rounded-full bg-gradient-to-b from-[#fff3c4] to-[#ffd75e] px-3.5 py-1 text-[#3a2600] ring-1 ring-[#b87d00]/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_4px_10px_-4px_rgba(240,168,0,0.6)] sm:inline-flex">{priceText}</span>
           </div>
         </>
       ) : (
