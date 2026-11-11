@@ -9,10 +9,10 @@ import { useApi } from "@/shared/hooks/useApi";
 export function PickExamTab() {
   const { user, loading } = useAuth();
   if (loading) return null; // chờ biết đã đăng nhập hay chưa, tránh nháy từ bản khách sang bản thành viên
-  return user ? <SubjectBrowser /> : <GuestPick />;
+  return user ? <SubjectBrowser compact /> : <GuestPick />;
 }
 
 function GuestPick() {
   const subjects = useApi(() => catalogApi.subjects(), []);
-  return <PublicSubjectBrowser subjects={subjects} />;
+  return <PublicSubjectBrowser subjects={subjects} compact />;
 }

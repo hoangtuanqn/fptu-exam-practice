@@ -13,11 +13,11 @@ import { ExamFilterBar, useExamListQuery } from "./ExamFilterBar";
 // Danh sách đề của một môn cho khách xem (trang Kho đề công khai và trang từng môn), không có khung ngoài: nơi dùng tự bọc Card.
 // Chỉ có thông tin mô tả: tên, kỳ, ngày, số câu.
 // Bấm lấy đề: khách đi đăng ký rồi quay lại Kho đề của môn này; thành viên vào thẳng Kho đề trong tài khoản (có xác nhận phí như cũ).
-export function PublicExamList({ code }: { code: string }) {
+export function PublicExamList({ code, pageSize }: { code: string; pageSize?: number }) {
   const { user } = useAuth();
   const query = useExamListQuery();
   const { url, setUrl, page } = query;
-  const list = useApi(() => catalogApi.exams(code, { q: url.q, term: url.term, page }), [code, url.q, url.term, page, user?.id]);
+  const list = useApi(() => catalogApi.exams(code, { q: url.q, term: url.term, page, limit: pageSize }), [code, url.q, url.term, page, pageSize, user?.id]);
   const target = `/account/exams?tab=subject&subject=${encodeURIComponent(code)}`;
 
   return (

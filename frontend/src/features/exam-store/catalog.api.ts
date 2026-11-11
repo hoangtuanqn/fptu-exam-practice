@@ -31,6 +31,6 @@ export interface CatalogPage {
 export const catalogApi = {
   subjects: () => http.get<CatalogSubject[]>("/catalog/subjects"),
   mySubjects: () => http.get<string[]>("/catalog/my-subjects"),
-  exams: (subject: string, opts: { q?: string; term?: string; page?: number }) =>
-    http.get<CatalogPage>("/catalog/exams", { subject, ...(opts.q && { q: opts.q }), ...(opts.term && { term: opts.term }), page: opts.page ?? 1 }),
+  exams: (subject: string, opts: { q?: string; term?: string; page?: number; limit?: number }) =>
+    http.get<CatalogPage>("/catalog/exams", { subject, ...(opts.q && { q: opts.q }), ...(opts.term && { term: opts.term }), page: opts.page ?? 1, ...(opts.limit && { limit: opts.limit }) }),
 };
