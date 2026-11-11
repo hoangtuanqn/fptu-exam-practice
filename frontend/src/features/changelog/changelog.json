@@ -45,6 +45,10 @@
         {
           "type": "new",
           "text": "Câu hay ra có thêm mục “Chương hay ra”: biết chương nào xuất hiện ở nhiều đề nhất để ôn trước"
+        },
+        {
+          "type": "new",
+          "text": "Phân tích slide (gói Pro): tải slide PDF của môn, xem tóm tắt theo từng chương kèm số đề có chương đó"
         }
       ]
     },
