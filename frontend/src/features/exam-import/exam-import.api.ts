@@ -1,12 +1,12 @@
 import { http } from "@/shared/api/client";
 import type { CrawlJob, ExamAnswersPayload, ImportedExam, SubmitResult } from "./types";
 
-// reason/title: vì sao miễn phí ("owned" = đã có trong kho của bạn, kèm tên đề; "in-progress" = đang lấy dở)
+// reason/title: vì sao miễn phí ("owned" = đã có trong kho của bạn, kèm tên đề; "in-progress" = đang lấy dở, "free" = đề miễn phí của thư viện)
 export interface QuoteResult {
   price: number;
   fee: number;
   free: boolean;
-  reason?: "owned" | "in-progress" | null;
+  reason?: "owned" | "in-progress" | "pro" | "free" | null;
   title?: string | null;
 }
 
