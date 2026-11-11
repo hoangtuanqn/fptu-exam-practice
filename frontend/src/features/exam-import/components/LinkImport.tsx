@@ -11,7 +11,6 @@ import { examImportApi, type QuoteResult } from "../exam-import.api";
 import { checkFuoLink } from "@/shared/utils/fuo-link";
 import { useFakeProgress, type ProgressHint } from "@/shared/hooks/useFakeProgress";
 import { Button } from "@/shared/ui/Button";
-import { GOLD_GLOSS } from "@/shared/ui/gold";
 import { FormError, LinearProgress } from "@/shared/ui/Feedback";
 import { inputClass } from "@/shared/ui/Input";
 import { ConfirmFetchDialog } from "./ConfirmFetchDialog";
@@ -202,7 +201,7 @@ export function LinkImport({ onImported, subject }: Props) {
       className="rounded-2xl border-2 border-dashed border-outline-variant bg-surface-container-low/60 px-4 py-7 text-left sm:px-6 sm:py-9"
     >
       <div className="flex flex-col items-center text-center">
-        <span className={`flex h-12 w-12 items-center justify-center rounded-2xl ${GOLD_GLOSS}`}>
+        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-container text-on-primary-container">
           <ClipboardPaste size={22} />
         </span>
         <div className="md-title-large mt-4 text-on-surface">Nhập đề từ link FuOverflow</div>
