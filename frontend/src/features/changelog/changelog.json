@@ -1,6 +1,42 @@
 {
   "web": [
     {
+      "version": "1.8.0",
+      "date": "2026-11-11",
+      "title": "Trang Pro mới, đăng ký gọn và bắt đầu dễ hơn",
+      "highlights": [
+        "Trang Pro làm lại: hai gói cạnh nhau, thấy ngay mức tiết kiệm",
+        "Đăng ký chỉ còn 3 ô, có danh sách Bắt đầu để tới bài đầu tiên nhanh",
+        "Trang chủ được làm lại đẹp và dễ nhìn hơn"
+      ],
+      "changes": [
+        {
+          "type": "new",
+          "text": "Danh sách “Bắt đầu” cho người mới: xác minh email, lấy đề đầu tiên, nộp bài đầu tiên"
+        },
+        {
+          "type": "improved",
+          "text": "Trang Pro mới: so sánh gói Pro và Nước rút, giá tính theo ngày và mức tiết kiệm so với FuOverflow VIP"
+        },
+        {
+          "type": "improved",
+          "text": "Đăng ký gọn hơn: bỏ ô nhập lại mật khẩu, hiện quà đăng ký và điều kiện mật khẩu ngay khi gõ"
+        },
+        {
+          "type": "improved",
+          "text": "Đăng ký xong vào thẳng trang chủ để lấy đề đầu tiên"
+        },
+        {
+          "type": "improved",
+          "text": "Trang chủ làm lại: thẻ, nút và các khối nội dung đẹp và rõ hơn"
+        },
+        {
+          "type": "improved",
+          "text": "Sổ câu sai nhắc trước khi sắp đầy; trang nạp tiền cho biết cần thêm bao nhiêu để lên bậc thưởng kế tiếp"
+        }
+      ]
+    },
+    {
       "version": "1.7.0",
       "date": "2026-11-09",
       "title": "Gợi ý điểm cần đạt theo bảng điểm FAP",
