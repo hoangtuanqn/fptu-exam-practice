@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Check, ChevronRight, Copy, Download, Puzzle, RefreshCw } from "lucide-react";
-import { brand } from "@/shared/brand/brand";
+import { Check, ChevronRight, Copy, Puzzle, RefreshCw } from "lucide-react";
+import { useAuth } from "@/features/auth/AuthContext";
 import { Modal, ModalTitle } from "@/shared/ui/Modal";
+import { ExtensionDownloadButton } from "./ExtensionDownloadButton";
 
 const EXT_PAGE = "chrome://extensions";
 
@@ -27,9 +28,9 @@ const STEPS: { title: string; body: React.ReactNode }[] = [
   {
     title: "Tải tiện ích về máy",
     body: (
-      <a href={brand.extensionUrl} download className="mt-1.5 inline-flex items-center gap-2 rounded-md bg-primary-container px-4 py-2 text-sm font-semibold text-on-primary-container hover:bg-primary-container/80">
-        <Download size={15} /> Tải file fepass_extension.zip
-      </a>
+      <ExtensionDownloadButton className="mt-1.5 inline-flex items-center gap-2 rounded-md bg-primary-container px-4 py-2 text-sm font-semibold text-on-primary-container hover:bg-primary-container/80 disabled:opacity-60">
+        Tải file fepass_extension.zip
+      </ExtensionDownloadButton>
     ),
   },
   { title: "Giải nén file zip", body: <p className="text-sm text-slate-600">Chuột phải vào file vừa tải, chọn “Giải nén” (Extract). Giữ thư mục này, đừng xóa.</p> },
@@ -95,10 +96,12 @@ const UPDATE_STEPS: { title: string; body: React.ReactNode }[] = [
 ];
 
 export function ExtensionBar() {
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const version = useExtensionVersion();
-  const latest = useLatestVersion(!!version);
+  const latest = useLatestVersion(!!version && !!user);
   const outdated = !!version && !!latest && newer(latest, version);
+  if (!user) return null; // tiện ích chỉ dành cho người đã đăng nhập, khách không thấy thanh này
   if (version && !outdated) return null; // đã cài và là bản mới nhất: bỏ dòng nhắc
 
   return (

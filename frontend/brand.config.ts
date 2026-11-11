@@ -15,7 +15,6 @@ export interface Brand {
   coFounders: string[]; // đồng sáng lập (VITE_CO_FOUNDERS, cách nhau bằng dấu phẩy)
   partnerName: string; // đối tác cung cấp kho đề
   partnerUrl: string;
-  extensionUrl: string; // link tải file zip tiện ích Chrome (đặt file fepass_extension.zip vào frontend/public)
   themeColor: string; // màu thanh trình duyệt trên điện thoại
   title: string; // tiêu đề tab, ghép từ product + company
 }
@@ -35,7 +34,6 @@ const DEFAULTS = {
   coFounders: "Vũ Việt Quang, Mai Trung Hậu",
   partnerName: "FuOverflow",
   partnerUrl: "https://fuoverflow.com",
-  extensionUrl: "/fepass_extension.zip",
   themeColor: "#3f2606",
 };
 
@@ -60,7 +58,6 @@ export function loadBrand(env: Env): Brand {
       .filter(Boolean),
     partnerName: pick("VITE_PARTNER_NAME", DEFAULTS.partnerName),
     partnerUrl: pick("VITE_PARTNER_URL", DEFAULTS.partnerUrl),
-    extensionUrl: pick("VITE_EXTENSION_URL", DEFAULTS.extensionUrl),
     themeColor: pick("VITE_THEME_COLOR", DEFAULTS.themeColor),
     title: `${product} | ${company}`,
   };
