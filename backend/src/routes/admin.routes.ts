@@ -8,7 +8,6 @@ import { adminDepositController } from "../controllers/admin.deposit.controllers
 import { adminSettingController } from "../controllers/admin.setting.controllers";
 import { adminAiController } from "../controllers/admin.ai.controllers";
 import { adminAnswerReportController } from "../controllers/admin.answer-report.controllers";
-import { adminSubjectIssueController } from "../controllers/admin.subject-issue.controllers";
 import { adminReferralController } from "../controllers/admin.referral.controllers";
 import { adminGiftCodeController } from "../controllers/admin.gift-code.controllers";
 import { adminCrawlerController } from "../controllers/admin.crawler.controllers";
@@ -19,7 +18,8 @@ import { adminChatController } from "../controllers/admin.chat.controllers";
 import { updateChatSettingsBody } from "../rules/requests/chat.request";
 import { adminPromoController } from "../controllers/admin.promo.controllers";
 import { adminLibraryController } from "../controllers/admin.library.controllers";
-import { subjectCodeOnlyParam, subjectSemesterBody } from "../rules/requests/library.request";
+import { adminSubjectController } from "../controllers/admin.subject.controllers";
+import { subjectCodeOnlyParam, subjectSemesterBody, updateSubjectBody } from "../rules/requests/library.request";
 import { listAttemptsQuery, listCrawlJobsQuery, listPurchasesQuery, listWalletQuery } from "../rules/requests/admin-history.request";
 import { authenticate, requireAdmin } from "../middlewares/auth.middlewares";
 import { updateAccountBody, updateAiBody, updateLinkRewardBody, updateCrawlerBody, updatePromoBody, updateReferralBody, updateSepayBody } from "../rules/requests/setting.request";
@@ -60,6 +60,10 @@ adminRouter.delete("/settings/chat/cache", adminChatController.clearCache);
 
 adminRouter.get("/settings/promo", adminPromoController.get);
 adminRouter.put("/settings/promo", validate(updatePromoBody), adminPromoController.update);
+adminRouter.get("/subjects", adminSubjectController.list);
+adminRouter.get("/subjects/:code", validate(subjectCodeOnlyParam, "params"), adminSubjectController.detail);
+adminRouter.patch("/subjects/:code", validate(subjectCodeOnlyParam, "params"), validate(updateSubjectBody), adminSubjectController.update);
+adminRouter.delete("/subjects/:code/inferred-chapters", validate(subjectCodeOnlyParam, "params"), adminSubjectController.clearInferred);
 adminRouter.get("/library/subjects", adminLibraryController.board);
 adminRouter.put("/library/subjects/:code/semester", validate(subjectCodeOnlyParam, "params"), validate(subjectSemesterBody), adminLibraryController.setSemester);
 adminRouter.get("/settings/account", adminAccountController.get);
@@ -109,8 +113,6 @@ adminRouter.get("/answer-reports", validate(listReportsQuery, "query"), adminAns
 adminRouter.post("/answer-reports/:id/approve", validate(idParam, "params"), validate(reviewReportBody), adminAnswerReportController.approve);
 adminRouter.post("/answer-reports/:id/reject", validate(idParam, "params"), validate(reviewReportBody), adminAnswerReportController.reject);
 
-adminRouter.get("/subject-issues", adminSubjectIssueController.list);
-adminRouter.delete("/subject-issues/:id", validate(idParam, "params"), adminSubjectIssueController.resolve);
 
 adminRouter.get("/settings/referral", adminReferralController.getSettings);
 adminRouter.put("/settings/referral", validate(updateReferralBody), adminReferralController.updateSettings);

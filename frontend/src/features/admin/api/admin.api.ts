@@ -1,7 +1,6 @@
 import type {
   AccountSettings,
   LinkRewardAdmin,
-  SubjectIssue,
   PromoSettings,
   AdminAttempt,
   AdminCrawlJob,
@@ -34,10 +33,35 @@ import type {
 import { http } from "@/shared/api/client";
 import { PAGE_SIZE } from "@/shared/api/pagination";
 
-export interface BoardSubject {
+export interface SubjectRow {
   code: string;
   name: string;
   semester: number | null;
+  credits: number | null;
+  minPassMark: number | null;
+  chapters: { total: number; named: number; hasNames: boolean };
+  inferredChapters: number; // số chương AI đã suy và lưu (0 = chưa suy)
+  exams: number; // đề đang có trong hệ thống
+  fuoThreads: number; // đề biết trên FuOverflow (kho đề)
+}
+
+export interface SubjectDetail {
+  code: string;
+  name: string;
+  semester: number | null;
+  credits: number | null;
+  minPassMark: number | null;
+  syllabusId: string | null;
+  exams: number;
+  fuoThreads: number;
+  chapters: { number: number; title: string; topics: string[] }[];
+  inferred: { topics: { label: string; hint: string }[]; model: string | null; at: string } | null;
+}
+
+export interface SubjectPatch {
+  name?: string;
+  credits?: number | null;
+  semester?: number | null;
 }
 
 export interface GiftCodeForm {
@@ -226,14 +250,14 @@ export const adminApi = {
     http.list<AdminCrawlJob>("/admin/crawl-jobs", { ...f, limit: PAGE_SIZE }),
   attempts: (f: { page: number; userId?: string; search?: string; mode?: "PRACTICE" | "EXAM" | "" }) =>
     http.list<AdminAttempt>("/admin/attempts", { ...f, limit: PAGE_SIZE }),
-  librarySubjects: () => http.get<{ subjects: BoardSubject[] }>("/admin/library/subjects"),
-  setSubjectSemester: (code: string, semester: number | null) => http.put<{ code: string; semester: number | null }>(`/admin/library/subjects/${encodeURIComponent(code)}/semester`, { semester }),
+  subjects: () => http.get<{ subjects: SubjectRow[] }>("/admin/subjects"),
+  subject: (code: string) => http.get<SubjectDetail>(`/admin/subjects/${encodeURIComponent(code)}`),
+  updateSubject: (code: string, patch: SubjectPatch) => http.patch<SubjectDetail>(`/admin/subjects/${encodeURIComponent(code)}`, patch),
+  clearInferredChapters: (code: string) => http.delete(`/admin/subjects/${encodeURIComponent(code)}/inferred-chapters`),
   promoSettings: () => http.get<PromoSettings>("/admin/settings/promo"),
   savePromoSettings: (body: PromoSettings) => http.put<PromoSettings>("/admin/settings/promo", body),
   accountSettings: () => http.get<AccountSettings>("/admin/settings/account"),
   saveAccountSettings: (body: AccountSettings) => http.put<AccountSettings>("/admin/settings/account", body),
-  subjectIssues: () => http.get<SubjectIssue[]>("/admin/subject-issues"),
-  resolveSubjectIssue: (id: number) => http.delete(`/admin/subject-issues/${id}`),
   linkRewardSettings: () => http.get<LinkRewardAdmin>("/admin/settings/link-reward"),
   saveLinkRewardSettings: (body: {
     enabled: boolean;
