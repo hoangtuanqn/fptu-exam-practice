@@ -43,12 +43,13 @@ const FINISH_DELAY_MS = 600; // cho người dùng thấy thanh chạm 100% trư
 interface Props {
   onImported: (exam: ImportedExam) => void;
   subject?: string; // bộ đề theo chương: đề phải đúng môn này (mã như PRO192), máy chủ kiểm trước khi trừ phí
+  compact?: boolean; // thanh mỏng cho trang chủ (khối phụ): một dòng tiêu đề, bỏ giá lớn và nhãn quảng cáo
 }
 
 const DEFAULT_PRICE = 500; // phí niêm yết hiện khi chưa lấy được từ máy chủ
 
 // Nhập link đề FuOverflow: server crawl ở nền, ở đây hiện thanh tiến độ và mở đề khi xong
-export function LinkImport({ onImported, subject }: Props) {
+export function LinkImport({ onImported, subject, compact = false }: Props) {
   const { user, refresh, loading: authLoading } = useAuth();
   // /?url=<link FuOverflow> điền sẵn ô nhập; không tự lấy đề vì mỗi lần lấy có thể bị tính phí.
   // Thêm &confirm=1 (nút trên FuOverflow của tiện ích Chrome) thì mở luôn hộp xác nhận: vẫn phải bấm xác nhận mới bị trừ phí.
@@ -194,12 +195,27 @@ export function LinkImport({ onImported, subject }: Props) {
     void job.start(url.trim(), subject);
   };
 
+  // Hạn mức nhìn thấy TRƯỚC khi bấm (không phải đợi hết lượt mới biết)
+  const hint = user ? (pro ? "Bạn đang dùng Pro: lấy đề không bị trừ credit." : fee > 0 ? `Số dư của bạn: ${user.balance.toLocaleString("vi-VN")} credit. Đề đã từng lấy được mở lại miễn phí.` : "Đề đã từng lấy được mở lại miễn phí.") : price.data?.guestRemaining !== undefined ? `Hôm nay bạn còn ${price.data.guestRemaining}/${price.data.guestLimit} lượt lấy đề miễn phí.` : "Khách được lấy miễn phí 1 đề mỗi ngày.";
+  const priceText = shownPrice > 0 ? `${shownPrice.toLocaleString("vi-VN")}đ / đề` : "Miễn phí";
+
   return (
     <>
     <form
       onSubmit={onSubmit}
-      className="rounded-2xl border-2 border-dashed border-outline-variant bg-surface-container-low/60 px-4 py-7 text-left sm:px-6 sm:py-9"
+      className={compact ? "rounded-m3-xl border border-outline-variant bg-surface-container-low/60 px-4 py-4 text-left sm:px-5" : "rounded-2xl border-2 border-dashed border-outline-variant bg-surface-container-low/60 px-4 py-7 text-left sm:px-6 sm:py-9"}
     >
+      {compact ? (
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-container text-on-primary-container">
+            <ClipboardPaste size={16} />
+          </span>
+          <span className="md-title-small text-on-surface">Có link đề FuOverflow?</span>
+          <span className="md-body-small text-on-surface-variant">
+            {priceText} · {hint}
+          </span>
+        </div>
+      ) : (
       <div className="flex flex-col items-center text-center">
         <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-container text-on-primary-container">
           <ClipboardPaste size={22} />
@@ -216,14 +232,12 @@ export function LinkImport({ onImported, subject }: Props) {
           <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-surface-container-lowest px-3 py-1 text-xs font-semibold text-slate-600">
             <BadgeCheck size={14} className="text-brand-700" /> Đáp án chính xác đến 99.9%
           </span>
-          {/* Hạn mức nhìn thấy TRƯỚC khi bấm (không phải đợi hết lượt mới biết) */}
-          <span className="md-body-small text-on-surface-variant">
-            {user ? (pro ? "Bạn đang dùng Pro: lấy đề không bị trừ credit." : fee > 0 ? `Số dư của bạn: ${user.balance.toLocaleString("vi-VN")} credit. Đề đã từng lấy được mở lại miễn phí.` : "Đề đã từng lấy được mở lại miễn phí.") : price.data?.guestRemaining !== undefined ? `Hôm nay bạn còn ${price.data.guestRemaining}/${price.data.guestLimit} lượt lấy đề miễn phí.` : "Khách được lấy miễn phí 1 đề mỗi ngày."}
-          </span>
+          <span className="md-body-small text-on-surface-variant">{hint}</span>
         </div>
       </div>
+      )}
 
-      <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+      <div className={`${compact ? "mt-3" : "mt-5"} flex flex-col gap-2 sm:flex-row`}>
         <input
           type="url"
           value={url}
