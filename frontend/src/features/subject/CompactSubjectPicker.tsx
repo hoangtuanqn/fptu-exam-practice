@@ -10,24 +10,21 @@ const MAX_RESULTS = 6;
 // Một môn: mã, tên và số đề. Dùng cho cả lưới chọn nhanh lẫn kết quả tìm kiếm.
 function SubjectRow({ subject, onPick, tile = false }: { subject: PickableSubject; onPick: () => void; tile?: boolean }) {
   const name = subject.name ?? "Môn học";
+  if (tile)
+    // Ô trong lưới: mã môn, tên môn (một dòng) và số đề xếp dọc
+    return (
+      <button type="button" onClick={onPick} title={name} className="md-state flex h-full w-full flex-col rounded-m3-md border border-outline-variant bg-surface px-3.5 py-3 text-left transition hover:border-primary/60">
+        <span className="md-title-small text-primary">{subject.code}</span>
+        <span className="md-body-small mt-0.5 block w-full truncate text-on-surface-variant">{name}</span>
+        {subject.badge && <span className="md-label-medium mt-1.5 text-on-surface">{subject.badge}</span>}
+      </button>
+    );
   return (
-    <button type="button" onClick={onPick} className={`md-state flex w-full items-center gap-3 px-4 py-3 text-left ${tile ? "rounded-m3-md border border-outline-variant bg-surface" : ""}`}>
-      {tile ? (
-        // Ô trong lưới hẹp: mã môn nằm trên tên môn để tên có đủ chỗ
-        <span className="min-w-0 flex-1">
-          <span className="md-title-small block text-primary">{subject.code}</span>
-          <span className="md-body-small block truncate text-on-surface-variant" title={name}>
-            {name}
-          </span>
-        </span>
-      ) : (
-        <>
-          <span className="md-title-small w-16 shrink-0 text-primary sm:w-20">{subject.code}</span>
-          <span className="md-body-medium min-w-0 flex-1 truncate text-on-surface" title={name}>
-            {name}
-          </span>
-        </>
-      )}
+    <button type="button" onClick={onPick} className="md-state flex w-full items-center gap-3 px-4 py-3 text-left">
+      <span className="md-title-small w-16 shrink-0 text-primary sm:w-20">{subject.code}</span>
+      <span className="md-body-medium min-w-0 flex-1 truncate text-on-surface" title={name}>
+        {name}
+      </span>
       {subject.badge && <Badge tone="info">{subject.badge}</Badge>}
     </button>
   );
@@ -54,15 +51,15 @@ export function CompactSubjectPicker({ subjects, loading, error, onRetry, onPick
   const chips = quick.map((c) => byCode.get(c)).filter((s): s is PickableSubject => !!s);
 
   return (
-    <div className="space-y-4 px-1 py-2 sm:px-2">
+    <div className="space-y-5">
       <label className="relative block">
-        <Search size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant" />
+        <Search size={20} className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-on-surface-variant" />
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Gõ mã môn hoặc tên môn, ví dụ PRO192"
           aria-label="Tìm môn"
-          className="h-12 w-full rounded-full border border-outline-variant bg-surface-container-lowest pl-11 pr-4 text-base outline-none transition focus:border-primary"
+          className="h-14 w-full rounded-full border border-outline-variant bg-surface-container-lowest pl-12 pr-5 text-base shadow-m3-1 outline-none transition focus:border-primary"
         />
       </label>
 
@@ -90,8 +87,8 @@ export function CompactSubjectPicker({ subjects, loading, error, onRetry, onPick
       ) : (
         chips.length > 0 && (
           <div>
-            <p className="md-label-large mb-2 text-on-surface-variant">Môn có đề sẵn</p>
-            <ul className="grid gap-2 sm:grid-cols-2">
+            <p className="md-label-large mb-2.5 text-center text-on-surface-variant">Môn có đề sẵn</p>
+            <ul className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4">
               {chips.map((s) => (
                 <li key={s.code}>
                   <SubjectRow subject={s} tile onPick={() => onPick(s.code, s)} />
@@ -103,7 +100,7 @@ export function CompactSubjectPicker({ subjects, loading, error, onRetry, onPick
       )}
 
       {allHref && all.length > 0 && (
-        <Link to={allHref} className="md-label-large inline-flex items-center gap-1 text-primary hover:underline">
+        <Link to={allHref} className="md-label-large mx-auto flex w-fit items-center gap-1 text-primary hover:underline">
           Xem tất cả {all.length} môn <ArrowRight size={15} />
         </Link>
       )}
