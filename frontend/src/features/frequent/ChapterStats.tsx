@@ -1,19 +1,12 @@
 import { BarChart3 } from "lucide-react";
 import { useApi } from "@/shared/hooks/useApi";
-import { Badge, type Tone } from "@/shared/ui/Badge";
+import { Badge } from "@/shared/ui/Badge";
 import { Empty, LinearProgress } from "@/shared/ui/Feedback";
 import { QueryBoundary } from "@/shared/ui/QueryBoundary";
 import { formatDate } from "@/shared/utils/formatters";
 import { subjectApi } from "@/features/subject/subject.api";
-import { frequentApi, type ChapterStatItem, type StatsConfidence } from "./frequent.api";
-
-const CONFIDENCE: Record<StatsConfidence, { label: string; tone: Tone }> = {
-  low: { label: "Ít dữ liệu", tone: "warning" },
-  medium: { label: "Tạm tin được", tone: "neutral" },
-  high: { label: "Đủ dữ liệu", tone: "success" },
-};
-
-const confidenceOf = (value: unknown) => (typeof value === "string" && value in CONFIDENCE ? CONFIDENCE[value as StatsConfidence] : null);
+import { confidenceOf } from "./confidence";
+import { frequentApi, type ChapterStatItem } from "./frequent.api";
 
 // Ngày ngắn, bỏ qua khi thiếu hoặc không đọc được
 const shortDate = (iso: string | null | undefined) => (iso && !Number.isNaN(Date.parse(iso)) ? formatDate(iso) : null);

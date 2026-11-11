@@ -39,7 +39,7 @@ ssh root@<IP>
 PUBKEY="ssh-ed25519 AAAA... fepass-vps" bash /root/deploy/setup-server.sh
 ```
 
-Script cài: swap 2 GB, Node 22, PM2, MySQL (đã giảm RAM), Nginx, tường lửa (22/80/443), backup hằng đêm, tạo user `fepass`, rồi **tắt đăng nhập mật khẩu và đăng nhập root**.
+Script cài: swap 2 GB, Node 22 (>= 22.13), PM2, MySQL (đã giảm RAM), Nginx, tường lửa (22/80/443), backup hằng đêm, tạo user `fepass`, rồi **tắt đăng nhập mật khẩu và đăng nhập root**.
 
 **Trước khi đóng phiên root**, mở cửa sổ mới thử `ssh fepass@<IP>`. Vào được mới đóng phiên cũ.
 
@@ -108,6 +108,8 @@ Lưu ý:
 | Khởi động lại | `pm2 restart fepass-api` |
 | Backup thủ công | `bash ~/app/deploy/backup-db.sh` (file ở `~/backups`, giữ 7 ngày) |
 | Khôi phục | `gunzip < file.sql.gz \| mysql exam_practice` |
+
+Trước khi deploy bản có Phân tích slide: `node -v` phải >= 22.13; sau `npm ci`, chạy `node -e "require('@napi-rs/canvas')"` trong `~/app/backend` (không báo lỗi là gói vẽ trang chạy được trên máy này). File `deploy/nginx-api.conf` không tự cập nhật: đổi nó thì copy tay lên `/etc/nginx/sites-available/fepass-api` rồi `sudo nginx -t && sudo systemctl reload nginx`.
 
 Nên định kỳ tải thư mục `~/backups` về máy khác. Ảnh đề ở `~/storage` có thể lấy lại bằng cách crawl, nhưng backup cùng lúc cho chắc.
 

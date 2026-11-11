@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
-import { Crown, Flame, Layers, NotebookPen, Download, BookOpen, Gift, History, MessageSquareWarning, UserPlus, ListChecks, GraduationCap, LayoutDashboard, UserRound, Wallet } from "lucide-react";
+import { Crown, FileText, Flame, Layers, NotebookPen, Download, BookOpen, Gift, History, MessageSquareWarning, UserPlus, ListChecks, GraduationCap, LayoutDashboard, UserRound, Wallet } from "lucide-react";
 import { PanelLayout, type NavItem } from "@/shared/layout/PanelLayout";
 import { Loading } from "@/shared/ui/Feedback";
 import LoginPage from "@/features/auth/pages/LoginPage";
@@ -41,6 +41,8 @@ const ReviewPage = lazy(() => import("@/features/review/ReviewPage"));
 const SubjectPage = lazy(() => import("@/features/landing/SubjectPage"));
 const PublicCatalogPage = lazy(() => import("@/features/exam-store/PublicCatalogPage"));
 const FrequentPage = lazy(() => import("@/features/frequent/FrequentPage"));
+const MaterialsPage = lazy(() => import("@/features/materials/MaterialsPage"));
+const MaterialResultPage = lazy(() => import("@/features/materials/MaterialResultPage"));
 const ChapterSetPage = lazy(() => import("@/features/chapter-set/ChapterSetPage"));
 const ReviewPracticePage = lazy(() => import("@/features/review/ReviewPracticePage"));
 const MyReportsPage = lazy(() => import("@/features/account/pages/MyReportsPage"));
@@ -64,6 +66,7 @@ const ACCOUNT_NAV: NavItem[] = [
   { to: "/account/pe", label: "Tải đề thi PE", icon: Download, group: "Luyện đề" },
   { to: "/account/review", label: "Sổ câu sai", icon: NotebookPen, group: "Ôn tập" },
   { to: "/account/frequent", label: "Câu hay ra", icon: Flame, group: "Ôn tập" },
+  { to: "/account/materials", label: "Phân tích slide", icon: FileText, group: "Ôn tập" },
   { to: "/account/attempts", label: "Lịch sử làm bài", icon: ListChecks, group: "Kết quả" },
   { to: "/account/reports", label: "Báo cáo đáp án", icon: MessageSquareWarning, group: "Kết quả" },
   { to: "/account/grades", label: "Điểm FAP", icon: GraduationCap, group: "Kết quả" },
@@ -135,6 +138,8 @@ export default function App() {
             <Route path="exams" element={<ExamStorePage />} />
             <Route path="catalog" element={<CatalogRedirect />} />
             <Route path="frequent" element={<FrequentPage />} />
+            <Route path="materials" element={<MaterialsPage />} />
+            <Route path="materials/:id" element={<MaterialResultPage />} />
             <Route path="chapters" element={<ChapterSetPage />} />
             <Route path="review" element={<ReviewPage />} />
             <Route path="review/practice" element={<ReviewPracticePage />} />

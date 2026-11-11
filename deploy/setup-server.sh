@@ -37,8 +37,11 @@ step "Cập nhật hệ thống và cài gói nền"
 apt-get -o DPkg::Lock::Timeout=900 update -y
 apt-get -o DPkg::Lock::Timeout=900 install -y curl ca-certificates gnupg git nginx ufw mysql-server certbot python3-certbot-nginx
 
-step "Cài Node.js 22 (kho NodeSource)"
-if ! command -v node >/dev/null || [ "$(node -v | cut -d. -f1 | tr -d v)" -lt 22 ]; then
+step "Cài Node.js 22 (kho NodeSource, cần >= 22.13 cho pdf.js)"
+NODE_VER="$(command -v node >/dev/null && node -v | tr -d v || echo 0.0.0)"
+NODE_MAJOR="$(echo "$NODE_VER" | cut -d. -f1)"
+NODE_MINOR="$(echo "$NODE_VER" | cut -d. -f2)"
+if [ "$NODE_MAJOR" -lt 22 ] || { [ "$NODE_MAJOR" -eq 22 ] && [ "$NODE_MINOR" -lt 13 ]; }; then
   install -d -m 0755 /etc/apt/keyrings
   curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor --batch --yes -o /etc/apt/keyrings/nodesource.gpg
   echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" > /etc/apt/sources.list.d/nodesource.list
