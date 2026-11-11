@@ -34,3 +34,14 @@ Web app for FPT University students to practise FE exams: import exams from FuOv
 ## Index
 
 CodeGraph is indexed in `.codegraph/` (local, git-ignored). Prefer `codegraph_explore` over grep for "how does X work" questions; run `codegraph sync` after big changes.
+
+## Harness: feature delivery
+
+**Goal:** build tasks that span backend and frontend with separate implementer and reviewer agents.
+
+**Invoke:** when a request touches both `backend/` and `frontend/` (or is large enough to review separately), use the `fepass-feature` skill. Agents live in `.claude/agents` (`backend-engineer`, `frontend-engineer`, `qa-reviewer`). Small single-file fixes and questions are answered directly.
+
+**Change history:**
+| Date | Change | Target | Reason |
+| --- | --- | --- | --- |
+| 2026-11-11 | Initial harness (Harness v2) | all | - |
