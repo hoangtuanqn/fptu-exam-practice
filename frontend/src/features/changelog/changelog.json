@@ -15,6 +15,10 @@
           "text": "Danh sách “Bắt đầu” cho người mới: xác minh email, lấy đề đầu tiên, nộp bài đầu tiên"
         },
         {
+          "type": "new",
+          "text": "Kho đề: lọc môn theo Kỳ 0 đến Kỳ 9, xem số đề của từng môn; nút mở đề ghi rõ số credit trước khi bấm"
+        },
+        {
           "type": "improved",
           "text": "Trang Pro mới: so sánh gói Pro và Nước rút, giá tính theo ngày và mức tiết kiệm so với FuOverflow VIP"
         },

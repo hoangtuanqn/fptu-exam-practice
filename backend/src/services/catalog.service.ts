@@ -1,6 +1,7 @@
 import { prisma } from "../configs/prisma";
 import { toMeta, type PaginationQuery } from "../utils/pagination";
 import { subjectCodeFromTitle } from "../utils/subject-code";
+import { crawlerSettingService } from "./crawler-setting.service";
 
 // Kho đề theo môn: gộp danh mục đề FE trên FuOverflow (bảng fuo_threads, nhập từ tools/fuo-crawler) với các đề hệ thống đã có sẵn.
 // Mỗi đề có một trạng thái: "owned" (đã trong kho của bạn), "ready" (hệ thống đã có ảnh + đáp án, mở ngay), "fetch" (chưa lấy: lấy từ FuOverflow, có thể mất phí).
@@ -80,6 +81,15 @@ export interface LatestItem {
   term: string | null;
 }
 
+let overviewCache: { at: number; data: LibraryOverview } | null = null;
+
+export interface LibraryOverview {
+  subjects: number; // số môn có đề (biết hoặc sẵn sàng)
+  examsKnown: number; // tổng đề biết (danh mục FuOverflow + hệ thống)
+  examsReady: number; // đề hệ thống đã có ảnh + đáp án, mở ngay
+  bySemester: { semester: number | null; subjects: number; examsKnown: number; examsReady: number }[]; // kỳ 0-9 rồi "chưa phân loại" (null)
+}
+
 export const catalogService = {
   /** Các đề mới đăng gần đây nhất trên FuOverflow (mọi môn), để trang chủ cho thấy kho đề luôn được cập nhật. Chỉ có mô tả, không có ảnh. */
   async latest(): Promise<LatestItem[]> {
@@ -97,8 +107,9 @@ export const catalogService = {
 
   /** Các môn có đề: tổng số đề (FuOverflow + hệ thống) và số đề hệ thống đã có sẵn. */
   async subjects() {
-    const [exams, fuo, subjects] = await Promise.all([usableExams(), fuoThreads(), prisma.subject.findMany({ select: { code: true, name: true } })]);
+    const [exams, fuo, subjects] = await Promise.all([usableExams(), fuoThreads(), prisma.subject.findMany({ select: { code: true, name: true, semester: true } })]);
     const names = new Map(subjects.map((s) => [s.code, s.name]));
+    const semesters = new Map(subjects.map((s) => [s.code, s.semester]));
     const ids = new Map<string, Set<string>>(); // môn -> các thread (hợp của FuOverflow và hệ thống)
     const ready = new Map<string, number>();
     for (const t of fuo) (ids.get(t.subjectCode) ?? ids.set(t.subjectCode, new Set()).get(t.subjectCode)!).add(t.threadId);
@@ -108,8 +119,31 @@ export const catalogService = {
       ready.set(e.code, (ready.get(e.code) ?? 0) + 1);
     }
     return [...ids.entries()]
-      .map(([code, set]) => ({ code, name: names.get(code) ?? null, total: set.size, ready: ready.get(code) ?? 0 }))
+      .map(([code, set]) => ({ code, name: names.get(code) ?? null, total: set.size, ready: ready.get(code) ?? 0, semester: semesters.get(code) ?? null }))
       .sort((a, b) => b.total - a.total || a.code.localeCompare(b.code));
+  },
+
+  /** Số liệu thật cho trang Thư viện đề thi: tổng môn/đề và phân theo kỳ học (0-9, rồi chưa phân loại). Đệm vài phút. */
+  async overview(): Promise<LibraryOverview> {
+    if (overviewCache && Date.now() - overviewCache.at < CACHE_MS) return overviewCache.data;
+    const rows = await this.subjects();
+    const bucket = new Map<number | null, { semester: number | null; subjects: number; examsKnown: number; examsReady: number }>();
+    for (let i = 0; i <= 9; i++) bucket.set(i, { semester: i, subjects: 0, examsKnown: 0, examsReady: 0 });
+    bucket.set(null, { semester: null, subjects: 0, examsKnown: 0, examsReady: 0 });
+    for (const r of rows) {
+      const b = bucket.get(r.semester)!;
+      b.subjects++;
+      b.examsKnown += r.total;
+      b.examsReady += r.ready;
+    }
+    const data: LibraryOverview = {
+      subjects: rows.length,
+      examsKnown: rows.reduce((n, r) => n + r.total, 0),
+      examsReady: rows.reduce((n, r) => n + r.ready, 0),
+      bySemester: [...bucket.values()],
+    };
+    overviewCache = { at: Date.now(), data };
+    return data;
   },
 
   /** Các môn người dùng đã lấy đề (mới nhất trước), để bấm nhanh. */
@@ -160,6 +194,14 @@ export const catalogService = {
       .sort((a, b) => (b.term ? termRank(b.term) : 0) - (a.term ? termRank(a.term) : 0) || (BigInt(b.threadId) > BigInt(a.threadId) ? 1 : -1));
 
     const start = (query.page - 1) * query.limit;
-    return { items: filtered.slice(start, start + query.limit), meta: toMeta(query, filtered.length), terms: termList, total: all.length };
+    const [info, cfg] = await Promise.all([prisma.subject.findUnique({ where: { code: subject }, select: { name: true, semester: true } }), crawlerSettingService.get()]);
+    return {
+      items: filtered.slice(start, start + query.limit),
+      meta: toMeta(query, filtered.length),
+      terms: termList,
+      total: all.length,
+      price: cfg.fetchPrice, // phí lấy một đề chưa có trong kho của bạn, để hiện trên nút mở đề
+      subject: { code: subject, name: info?.name ?? null, semester: info?.semester ?? null },
+    };
   },
 };

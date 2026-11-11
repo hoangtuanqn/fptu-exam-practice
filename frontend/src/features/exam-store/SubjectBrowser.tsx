@@ -13,7 +13,7 @@ import { Button } from "@/shared/ui/Button";
 import { Empty } from "@/shared/ui/Feedback";
 import { QueryBoundary } from "@/shared/ui/QueryBoundary";
 import { Pagination } from "@/shared/ui/Table";
-import { formatDate } from "@/shared/utils/formatters";
+import { formatCredit, formatDate } from "@/shared/utils/formatters";
 import { fuoThreadUrl } from "@/shared/utils/fuo-link";
 import { isPro } from "@/shared/utils/pro";
 import { CompactSubjectPicker } from "@/features/subject/CompactSubjectPicker";
@@ -135,7 +135,7 @@ function ExamList({ code, onBack, compact }: { code: string; onBack: () => void;
                       </div>
                       <Button size="sm" variant="tonal" onClick={() => void pick(e)} disabled={busy}>
                         {quoting === e.threadId ? <Loader2 size={15} className="animate-spin" /> : <Play size={15} />}
-                        Mở đề
+                        {e.status !== "owned" && data.price > 0 && !isPro(user) ? formatCredit(data.price) : "Mở đề"}
                       </Button>
                     </li>
                   ))}

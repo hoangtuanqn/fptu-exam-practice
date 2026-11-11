@@ -12,6 +12,8 @@
     "prisma:migrate": "prisma migrate deploy",
     "seed": "tsx src/seeders/admin.seeder.ts",
     "import:fuo-catalog": "tsx scripts/import-fuo-catalog.ts",
+    "import:subject-semesters": "tsx scripts/import-subject-semesters.ts",
+    "sync:subject-semesters": "tsx scripts/sync-subject-semesters.ts",
     "import:syllabus": "tsx scripts/import-syllabus.ts",
     "relabel:topics": "tsx scripts/relabel-topics.ts",
     "import:syllabus-details": "tsx scripts/import-syllabus-details.ts",

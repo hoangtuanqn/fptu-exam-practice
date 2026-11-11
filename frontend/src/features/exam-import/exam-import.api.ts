@@ -6,7 +6,7 @@ export interface QuoteResult {
   price: number;
   fee: number;
   free: boolean;
-  reason?: "owned" | "in-progress" | null;
+  reason?: "owned" | "in-progress" | "pro" | null;
   title?: string | null;
 }
 
