@@ -12,6 +12,7 @@ import { useApi } from "@/shared/hooks/useApi";
 import { useSubmit } from "@/shared/hooks/useSubmit";
 import { SocialLogin } from "@/features/auth/social/SocialLogin";
 import { GiftCard } from "@/features/auth/components/GiftCard";
+import { PasswordRules, passwordValid } from "@/features/auth/components/PasswordRules";
 import { AuthLayout } from "./AuthLayout";
 
 export default function RegisterPage() {
@@ -86,12 +87,12 @@ export default function RegisterPage() {
           value={form.password}
           onChange={set("password")}
           error={fieldErrors.password}
-          hint="Tối thiểu 8 ký tự, gồm chữ và số. Bấm biểu tượng con mắt để kiểm tra lại."
         />
+        <PasswordRules password={form.password} />
         <Button
           variant="primary"
           type="submit"
-          disabled={loading || !form.fullName || !form.email || !form.password}
+          disabled={loading || !form.fullName || !form.email || !passwordValid(form.password)}
           className="w-full !py-2.5"
         >
           {loading && <Loader2 size={16} className="animate-spin" />}
