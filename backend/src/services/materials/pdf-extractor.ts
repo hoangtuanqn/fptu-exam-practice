@@ -58,13 +58,20 @@ const loadCanvas = (): CanvasModule => {
   }
 };
 
-// Thư mục dữ liệu của pdf.js (phông chuẩn, wasm giải mã ảnh JPX, ICC), dạng đường dẫn có "/" cuối như pdf.js yêu cầu
-const pdfjsDir = path.dirname(localRequire.resolve("pdfjs-dist/package.json"));
-const dataDir = (name: string) => `${path.join(pdfjsDir, name).split(path.sep).join("/")}/`; // pdf.js đòi "/" ở cuối (cả trên Windows)
+// Thư mục dữ liệu của pdf.js (phông chuẩn, CMap, wasm giải mã ảnh JPX, ICC), dạng đường dẫn có "/" cuối như pdf.js yêu cầu.
+// Tìm lúc mở tài liệu đầu tiên (không tìm khi nạp module) để API vẫn khởi động được dù thiếu gói pdfjs-dist.
+let pdfjsDir: string | null = null;
+const dataDir = (name: string) => {
+  pdfjsDir ??= path.dirname(localRequire.resolve("pdfjs-dist/package.json"));
+  return `${path.join(pdfjsDir, name).split(path.sep).join("/")}/`; // pdf.js đòi "/" ở cuối (cả trên Windows)
+};
 
 // ---------- Diện tích ảnh từ danh sách lệnh vẽ (hàm thuần, test được) ----------
 
 type Matrix = [number, number, number, number, number, number];
+/** Ma trận 6 số từ danh sách lệnh: pdf.js có thể đưa mảng thường hoặc mảng có kiểu (vd Float32Array của form XObject). */
+const asMatrix = (m: unknown): number[] | null =>
+  (Array.isArray(m) || (ArrayBuffer.isView(m) && !(m instanceof DataView))) && (m as ArrayLike<number>).length === 6 ? Array.from(m as ArrayLike<number>) : null;
 const IDENTITY: Matrix = [1, 0, 0, 1, 0, 0];
 const multiply = (m: Matrix, n: readonly number[]): Matrix => [
   m[0] * n[0]! + m[2] * n[1]!,
@@ -109,19 +116,25 @@ export function imageAreaRatio(fnArray: readonly number[], argsArray: readonly u
     const args = (argsArray[i] ?? []) as unknown[];
     if (fn === ops.save) stack.push(ctm);
     else if (fn === ops.restore) ctm = stack.pop() ?? IDENTITY;
-    else if (fn === ops.transform) ctm = multiply(ctm, args as number[]);
-    else if (fn === ops.paintFormXObjectBegin) {
+    else if (fn === ops.transform) {
+      const m = asMatrix(args);
+      if (m) ctm = multiply(ctm, m);
+    } else if (fn === ops.paintFormXObjectBegin) {
       stack.push(ctm);
-      const m = args[0] as number[] | null | undefined;
-      if (Array.isArray(m) && m.length === 6) ctm = multiply(ctm, m);
+      const m = asMatrix(args[0]);
+      if (m) ctm = multiply(ctm, m);
     } else if (fn === ops.paintFormXObjectEnd) ctm = stack.pop() ?? IDENTITY;
     else if (fn === ops.paintImageXObject || fn === ops.paintInlineImageXObject || fn === ops.paintImageMaskXObject) area += unitSquareArea(ctm, view);
     else if (fn === ops.paintInlineImageXObjectGroup || fn === ops.paintImageMaskXObjectGroup) {
-      const list = (fn === ops.paintInlineImageXObjectGroup ? args[1] : args[0]) as { transform?: number[] }[] | undefined;
-      for (const item of list ?? []) if (item?.transform?.length === 6) area += unitSquareArea(multiply(ctm, item.transform), view);
+      const list = (fn === ops.paintInlineImageXObjectGroup ? args[1] : args[0]) as { transform?: unknown }[] | undefined;
+      for (const item of Array.isArray(list) ? list : []) {
+        const m = asMatrix(item?.transform);
+        if (m) area += unitSquareArea(multiply(ctm, m), view);
+      }
     } else if (fn === ops.paintImageXObjectRepeat) {
-      const [, scaleX, scaleY, positions] = args as [unknown, number, number, number[]];
-      for (let p = 0; p + 1 < (positions?.length ?? 0); p += 2) area += unitSquareArea(multiply(ctm, [scaleX, 0, 0, scaleY, positions[p]!, positions[p + 1]!]), view);
+      const [, scaleX, scaleY, rawPositions] = args as [unknown, number, number, ArrayLike<number> | undefined];
+      const positions = rawPositions ? Array.from(rawPositions) : [];
+      for (let p = 0; p + 1 < positions.length; p += 2) area += unitSquareArea(multiply(ctm, [scaleX, 0, 0, scaleY, positions[p]!, positions[p + 1]!]), view);
     }
   }
   return Math.min(1, area / pageArea);
@@ -160,6 +173,8 @@ export const pdfjsEngine: PdfEngine = {
       standardFontDataUrl: dataDir("standard_fonts"),
       wasmUrl: dataDir("wasm"),
       iccUrl: dataDir("iccs"),
+      cMapUrl: dataDir("cmaps"), // CMap cho phông CJK / mã hoá riêng (gói kèm sẵn, dạng nén)
+      cMapPacked: true,
       verbosity: pdfjs.VerbosityLevel.ERRORS,
       stopAtErrors: false,
     });

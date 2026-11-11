@@ -84,13 +84,15 @@ describe("PDF extraction with pdf.js", () => {
       { image: { x: 0, y: 0, w: 720, h: 540 } }, // chỉ có ảnh: trang scan
       { text: LONG, image: { x: 10, y: 10, w: 50, h: 50 } }, // ảnh nhỏ: vẫn là trang chữ
       { text: LONG, image: { x: 0, y: 0, w: 360, h: 540, xobject: true } }, // ảnh XObject nửa trang
+      { text: LONG, image: { x: 0, y: 0, w: 200, h: 150, formScale: 2 } }, // ảnh 200x150 trong form /Matrix x2 = 400x300 (~31%)
     ]);
     const doc = await pdfjsEngine.open(pdf);
     try {
-      assert.equal(doc.pageCount, 5);
+      assert.equal(doc.pageCount, 6);
       const pages = [];
-      for (const n of [1, 2, 3, 4, 5]) pages.push(await doc.extractPage(n));
-      assert.deepEqual(pages.map((p) => p.kind), ["text", "figure", "scanned", "text", "figure"]);
+      for (const n of [1, 2, 3, 4, 5, 6]) pages.push(await doc.extractPage(n));
+      assert.deepEqual(pages.map((p) => p.kind), ["text", "figure", "scanned", "text", "figure", "figure"]);
+      assert.ok(Math.abs(pages[5]!.imageAreaRatio - 120_000 / 388_800) < 0.01, `form XObject matrix applied (got ${pages[5]!.imageAreaRatio})`);
       assert.ok(Math.abs(pages[4]!.imageAreaRatio - 0.5) < 0.01);
       assert.ok(pages[2]!.imageAreaRatio > 0.99);
       assert.match(pages[0]!.text, /Round Robin/);
@@ -117,6 +119,11 @@ describe("PDF extraction with pdf.js", () => {
     // form XObject dịch sang phải 75: ảnh 50x100 chỉ còn 25x100 trong trang
     assert.equal(imageAreaRatio([4, 3, 7, 5], [[[1, 0, 0, 1, 75, 0], null], [50, 0, 0, 100, 0, 0], [{}], []], ops, view), 0.25);
     assert.equal(imageAreaRatio([3, 6], [[300, 0, 0, 300, 0, 0], ["img"]], ops, view), 1); // tối đa 1
+    // pdf.js 6 đưa ma trận của form dạng Float32Array: vẫn phải áp dụng (lỗi cũ: bỏ qua ma trận, ảnh bị tính nhỏ đi)
+    assert.equal(imageAreaRatio([4, 3, 6, 5], [[new Float32Array([2, 0, 0, 2, 0, 0]), null], [20, 0, 0, 25, 0, 0], ["img"], []], ops, view), 0.2);
+    // ma trận của nhóm ảnh và vị trí lặp cũng có thể là mảng có kiểu
+    assert.equal(imageAreaRatio([9], [[{}, [{ transform: new Float32Array([10, 0, 0, 10, 0, 0]) }]]], ops, view), 0.01);
+    assert.equal(imageAreaRatio([11], [["img", 10, 10, new Float32Array([0, 0, 20, 20])]], ops, view), 0.02);
     assert.equal(imageAreaRatio([11], [["img", 10, 10, [0, 0, 20, 20]]], ops, view), 0.02);
   });
 

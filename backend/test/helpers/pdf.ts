@@ -2,7 +2,9 @@
 
 export interface FakePage {
   text?: string;
-  image?: { x: number; y: number; w: number; h: number; xobject?: boolean }; // điểm PDF, trang 720x540; xobject = ảnh /XObject thay vì inline
+  // điểm PDF, trang 720x540; xobject = ảnh /XObject thay vì inline;
+  // formScale = ảnh /XObject vẽ BÊN TRONG một form XObject có /Matrix [s 0 0 s 0 0] (kích thước thật = w*s x h*s)
+  image?: { x: number; y: number; w: number; h: number; xobject?: boolean; formScale?: number };
 }
 
 export interface BuildOptions {
@@ -28,12 +30,21 @@ export function buildPdf(pages: readonly FakePage[], { encrypted = false }: Buil
     }
     let xobjects = "";
     if (p.image) {
-      const { x, y, w, h, xobject } = p.image;
-      if (xobject) {
+      const { x, y, w, h, xobject, formScale } = p.image;
+      if (xobject || formScale) {
         const hex = "FF000000FF000000FFFFFFFF>";
         const img = add(`<< /Type /XObject /Subtype /Image /Width 2 /Height 2 /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /ASCIIHexDecode /Length ${hex.length} >>\nstream\n${hex}\nendstream`);
-        xobjects = ` /XObject << /Im1 ${img} 0 R >>`;
-        content += `q ${w} 0 0 ${h} ${x} ${y} cm /Im1 Do Q\n`;
+        if (formScale) {
+          const inner = `q ${w} 0 0 ${h} ${x} ${y} cm /Im1 Do Q\n`;
+          const form = add(
+            `<< /Type /XObject /Subtype /Form /BBox [0 0 720 540] /Matrix [${formScale} 0 0 ${formScale} 0 0] /Resources << /XObject << /Im1 ${img} 0 R >> >> /Length ${Buffer.byteLength(inner, "latin1")} >>\nstream\n${inner}endstream`,
+          );
+          xobjects = ` /XObject << /Fm1 ${form} 0 R >>`;
+          content += "/Fm1 Do\n";
+        } else {
+          xobjects = ` /XObject << /Im1 ${img} 0 R >>`;
+          content += `q ${w} 0 0 ${h} ${x} ${y} cm /Im1 Do Q\n`;
+        }
       } else {
         content += `q ${w} 0 0 ${h} ${x} ${y} cm\nBI /W 2 /H 2 /CS /RGB /BPC 8 /F /AHx ID\nFF000000FF000000FFFFFFFF>\nEI\nQ\n`;
       }
