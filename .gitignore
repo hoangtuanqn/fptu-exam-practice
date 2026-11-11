@@ -18,3 +18,5 @@ flm-syllabus-*.json
 
 # Ghi chú cá nhân (IP, lệnh SSH...): không commit
 /workspace/
+
+_workspace/
