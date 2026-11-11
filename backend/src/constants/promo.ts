@@ -13,6 +13,7 @@ export interface PromoConfig {
   upsellReviewCap: boolean; // nhắc khi sổ câu sai gần đầy (gói thường)
   upsellDepositTier: boolean; // gợi ý nạp thêm một chút để lên bậc thưởng kế tiếp
   upsellFirstRun: boolean; // danh sách "Bắt đầu" cho người mới ở trang chủ
+  upsellProNudge: boolean; // lời mời Pro ở trang chủ dựa trên dữ liệu thật: kỳ thi sắp tới, tiền đã chi lẻ, vé Pro chưa kích hoạt
 }
 
 export const PROMO_DEFAULTS: PromoConfig = {
@@ -28,6 +29,7 @@ export const PROMO_DEFAULTS: PromoConfig = {
   upsellReviewCap: true,
   upsellDepositTier: true,
   upsellFirstRun: true,
+  upsellProNudge: true,
 };
 
 export const PROMO_KEY_PREFIX = "promo.";
