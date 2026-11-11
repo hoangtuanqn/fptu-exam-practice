@@ -7,7 +7,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p test/tsconfig.json",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate deploy",
     "seed": "tsx src/seeders/admin.seeder.ts",
@@ -22,7 +22,10 @@
     "eval:rag": "tsx scripts/eval-rag.ts",
     "export:subjects": "tsx scripts/export-subjects-seo.ts",
     "label:topics": "tsx scripts/label-topics.ts",
-    "audit:exams": "tsx scripts/audit-exams.ts"
+    "audit:exams": "tsx scripts/audit-exams.ts",
+    "test": "node --import tsx --test --test-reporter=spec test/*.test.ts",
+    "groups:build": "tsx scripts/build-question-groups.ts",
+    "stats:refresh": "tsx scripts/refresh-frequency-stats.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.4.0",
@@ -41,6 +44,7 @@
     "nodemailer": "^10.3.1",
     "sharp": "^0.35.5",
     "socket.io": "^4.8.4",
+    "ts-fsrs": "^5.4.2",
     "zod": "^4.6.7"
   },
   "devDependencies": {
