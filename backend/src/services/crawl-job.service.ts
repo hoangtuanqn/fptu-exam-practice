@@ -11,7 +11,7 @@ import { AppError } from "../rules/error";
 import type { ImportExamBody } from "../rules/requests/crawl.request";
 import { isMember, type Actor } from "../utils/actor";
 import { parseThreadId } from "../utils/fuo-url";
-import { subjectCodeFromTitle } from "../utils/subject-code";
+import { sameSubject, subjectCodeFromTitle } from "../utils/subject-code";
 import { startOfVnDay } from "../utils/time";
 import { EXAM_REFRESH_RETRY_HOURS, EXAM_STALE_AFTER_DAYS } from "../constants/crawler";
 import { crawlerSettingService } from "./crawler-setting.service";
@@ -52,7 +52,7 @@ async function assertSubject(subject: string | undefined, threadId: string, exam
   }
   const code = subjectCodeFromTitle(title);
   if (!code) throw new AppError("Không xác định được môn học của bài này từ tiêu đề, nên không thể tạo bộ đề theo chương", HTTP_STATUS.UNPROCESSABLE_ENTITY);
-  if (code !== subject) throw new AppError(`Bài này là đề môn ${code}, không phải môn ${subject} bạn đã chọn`, HTTP_STATUS.UNPROCESSABLE_ENTITY);
+  if (!sameSubject(code, subject)) throw new AppError(`Bài này là đề môn ${code}, không phải môn ${subject} bạn đã chọn`, HTTP_STATUS.UNPROCESSABLE_ENTITY);
 }
 
 const isStale = (exam: { createdAt: Date; refreshedAt: Date | null }) =>

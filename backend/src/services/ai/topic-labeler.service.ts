@@ -7,6 +7,7 @@ import { subjectCodeFromTitle } from "../../utils/subject-code";
 import { createLimiter } from "../../utils/limiter";
 import { buildTopicItems, type TopicItem } from "../../utils/topic-items";
 import { aiSettingService } from "../ai-setting.service";
+import { subjectService } from "../subject.service";
 import { askClaude, type ClaudeContent } from "./claude.client";
 import { loadImageForAi } from "./image";
 
@@ -83,10 +84,8 @@ const RETRY_SKIPPED_MS = 30 * 60_000;
 async function findSubject(title: string) {
   const code = subjectCodeFromTitle(title);
   if (!code) return { code, subject: null };
-  // Mã trong tiêu đề có thể thiếu/thừa chữ cuối (SWE201 và SWE201c): thử khớp đúng, rồi khớp theo phần số
-  const include = { chapters: { orderBy: { number: "asc" as const } } };
-  const subject = (await prisma.subject.findUnique({ where: { code }, include })) ?? (await prisma.subject.findFirst({ where: { code: { startsWith: code.replace(/[A-Z]$/, "") } }, include }));
-  return { code, subject };
+  // Mã trong tiêu đề có thể thiếu/thừa chữ cuối (SWE201 và SWE201c): subjectService chọn bản có đủ tên chương
+  return { code, subject: await subjectService.findWithChapters(code) };
 }
 
 export const topicLabelerService = {
