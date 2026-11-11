@@ -714,6 +714,7 @@ model Subject {
   groupMembers       QuestionGroupMember[]
   chapterStats       ChapterStat[]
   questionGroupStats QuestionGroupStat[]
+  similarityJobRun   SimilarityJobRun?
 
   @@index([semester])
   @@map("subjects")
@@ -1072,4 +1073,17 @@ model UserReviewLog {
   @@index([userId, reviewedAt])
   @@index([questionId])
   @@map("user_review_logs")
+}
+
+// Last successful nightly similarity run of a subject (jobs/similarity.cron.ts). exam_signature = count, id sum and newest
+// created/refreshed time of the usable exams it saw; hash_cursor = last question id it tried to fingerprint (failures behind it are not retried until the exams change)
+model SimilarityJobRun {
+  subjectId     Int      @id @map("subject_id")
+  examSignature String   @map("exam_signature") @db.VarChar(100)
+  hashCursor    Int      @default(0) @map("hash_cursor")
+  finishedAt    DateTime @map("finished_at")
+
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@map("similarity_job_runs")
 }
