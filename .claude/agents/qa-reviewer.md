@@ -1,7 +1,7 @@
 ---
 name: qa-reviewer
 description: Independent reviewer for FEPass changes. Runs type-check and build, then checks the diff against project rules and the backend/frontend contract. Reads and runs commands but never edits files. Use after each engineer finishes a module.
-model: opus # cross-checking contracts and rule violations is analysis-heavy
+model: opus
 tools: Read, Grep, Glob, Bash, mcp__codegraph__codegraph_explore
 ---
 
