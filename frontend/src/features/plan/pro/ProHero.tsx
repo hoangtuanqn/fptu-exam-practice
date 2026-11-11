@@ -3,7 +3,7 @@ import { logos } from "@/shared/brand/brand";
 import { formatDate } from "@/shared/utils/formatters";
 import type { PlanInfo } from "../plan.api";
 import { vnd } from "./money";
-import { DARK_GOLD, GOLD } from "./style";
+import { DARK_GOLD, GOLD_GLOSS } from "./style";
 
 interface Props {
   plan: PlanInfo;
@@ -22,7 +22,7 @@ export function ProHero({ plan, pro, daysLeft, expiresAt }: Props) {
 
       <div className="mx-auto grid max-w-5xl items-center gap-6 px-5 pb-28 pt-10 expanded:grid-cols-[1.2fr_0.8fr] expanded:pb-32 expanded:pt-16">
         <div className="pro-rise text-center expanded:text-left">
-          <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] ${GOLD}`}>
+          <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] ${GOLD_GLOSS}`}>
             <Crown size={13} strokeWidth={2.6} /> Gói Pro
           </span>
           <h1 className="mt-4 text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-5xl">
@@ -35,7 +35,7 @@ export function ProHero({ plan, pro, daysLeft, expiresAt }: Props) {
           </p>
 
           <div className="mt-5 flex flex-wrap items-center justify-center gap-2 expanded:justify-start">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#ffc61f]/50 bg-[#ffc61f]/15 px-3 py-1.5 text-sm font-bold text-[#ffe58a]">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#ffc61f]/50 bg-gradient-to-b from-[#ffc61f]/25 to-[#ffc61f]/10 px-3 py-1.5 text-sm font-bold text-[#ffe58a] shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] backdrop-blur">
               <BadgeCheck size={16} /> Rẻ hơn {vnd(plan.savings)} so với FuOverflow VIP
             </span>
           </div>
@@ -47,7 +47,7 @@ export function ProHero({ plan, pro, daysLeft, expiresAt }: Props) {
           </p>
 
           {pro && (
-            <p className="mx-auto mt-5 inline-flex max-w-md items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-3.5 py-2.5 text-sm expanded:mx-0">
+            <p className="mx-auto mt-5 inline-flex max-w-md items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-3.5 py-2.5 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] backdrop-blur expanded:mx-0">
               <CalendarClock size={18} className="shrink-0 text-[#ffc61f]" />
               <span>
                 Bạn đang là Pro, còn <b className="text-[#ffc61f]">{daysLeft} ngày</b>

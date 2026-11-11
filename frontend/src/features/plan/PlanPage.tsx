@@ -15,7 +15,7 @@ import { ProBenefits } from "./pro/ProBenefits";
 import { ProCompare } from "./pro/ProCompare";
 import { ProFaq } from "./pro/ProFaq";
 import { ProFinalCta } from "./pro/ProFinalCta";
-import { GOLD } from "./pro/style";
+import { GOLD_BUTTON } from "./pro/style";
 import { ProHero } from "./pro/ProHero";
 import { ProPlans } from "./pro/ProPlans";
 import { ProSteps } from "./pro/ProSteps";
@@ -106,7 +106,7 @@ export default function PlanPage() {
                 {vnd(plan.price)} <span className="text-xs font-semibold text-[#fff6dc]/70">/ {plan.months} tháng</span>
               </div>
             </div>
-            <button onClick={() => cta()} className={`pro-cta md-label-large inline-flex h-11 shrink-0 items-center gap-2 rounded-full px-5 font-extrabold ${GOLD}`}>
+            <button onClick={() => cta()} className={`pro-cta md-label-large inline-flex h-11 shrink-0 items-center gap-2 rounded-full px-5 font-extrabold ${GOLD_BUTTON}`}>
               <Crown size={17} /> {pro ? "Gia hạn" : user ? "Nâng cấp" : "Đăng nhập"}
             </button>
           </div>
