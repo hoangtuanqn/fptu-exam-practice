@@ -18,6 +18,7 @@ const loadModules = async () => ({
   subjects: (await import("../src/repositories/subject.repository")).subjectRepository,
   stats: (await import("../src/services/frequency-stats.service")).frequencyStatsService,
   fsrs: (await import("../src/services/fsrs-review.service")).fsrsReviewService,
+  job: (await import("../src/services/similarity-job.service")).similarityJobService,
 });
 type Mods = Awaited<ReturnType<typeof loadModules>>;
 
@@ -240,5 +241,40 @@ describe("database (throwaway MySQL)", { skip: DB_TESTS_ENABLED ? false : DB_SKI
     assert.equal(cards.length, 1);
     assert.equal(cards[0]!.reps, 2);
     assert.equal(await m.prisma.userReviewLog.count({ where: { userId, questionId: q } }), 2);
+  });
+  it("nightly similarity job: processes changed subjects end to end, a second run does no work, an exam change re-triggers it", async () => {
+    const first = (await m.job.run())!;
+    // TST101 và OTH202 chưa từng chạy. Câu 4:3 chưa có dấu vân tay và không có file ảnh: thử một lần rồi để sau con trỏ
+    assert.deepEqual(
+      { ...first },
+      { subjects: 2, eligible: 2, processed: 2, failed: 0, imagesHashed: 0, imagesUnreadable: 1, hashLimited: 0, embedded: 1, groups: 3 },
+    );
+    assert.deepEqual(await m.groupRepo.membersOf(subjectId), expectedGroups());
+    assert.equal(await m.prisma.questionGroupStat.count({ where: { subjectId } }), 3);
+    const runs = await m.prisma.similarityJobRun.findMany({ orderBy: { subjectId: "asc" } });
+    assert.equal(runs.length, 2);
+    assert.equal(runs.find((r) => r.subjectId === subjectId)!.hashCursor, id("4:3"));
+
+    const groupIds = (await m.prisma.questionGroup.findMany({ select: { id: true }, orderBy: { id: "asc" } })).map((g) => g.id);
+    const second = (await m.job.run())!;
+    assert.equal(second.eligible, 0);
+    assert.equal(second.processed + second.imagesHashed + second.imagesUnreadable + second.embedded, 0);
+    assert.deepEqual((await m.prisma.questionGroup.findMany({ select: { id: true }, orderBy: { id: "asc" } })).map((g) => g.id), groupIds); // không ghi lại nhóm
+
+    // Đề DEFAULT được giải xong: chữ ký đổi, môn được làm lại (con trỏ về 0 nên thử lại cả ảnh hỏng)
+    await m.prisma.exam.update({ where: { id: examIdOf(5) }, data: { answerSource: "AI" } });
+    try {
+      const third = (await m.job.run())!;
+      assert.equal(third.eligible, 1);
+      assert.equal(third.processed, 1);
+      assert.equal(third.imagesUnreadable, 1);
+      assert.equal(third.embedded, 1); // câu 5:1
+    } finally {
+      await m.prisma.exam.update({ where: { id: examIdOf(5) }, data: { answerSource: "DEFAULT" } });
+    }
+    const restored = (await m.job.run())!;
+    assert.equal(restored.eligible, 1);
+    assert.deepEqual(await m.groupRepo.membersOf(subjectId), expectedGroups());
+    assert.equal((await m.job.run())!.eligible, 0);
   });
 });

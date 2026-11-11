@@ -5,5 +5,5 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "include": ["./**/*.ts", "../src", "../scripts/lib", "../scripts/build-question-groups.ts", "../scripts/refresh-frequency-stats.ts"]
+  "include": ["./**/*.ts", "../src", "../scripts/lib", "../scripts/build-question-groups.ts", "../scripts/refresh-frequency-stats.ts", "../scripts/run-similarity-job.ts"]
 }
