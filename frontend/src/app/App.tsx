@@ -11,6 +11,7 @@ import VerifyEmailPage from "@/features/auth/pages/VerifyEmailPage";
 import GithubCallbackPage from "@/features/auth/github/GithubCallbackPage";
 import NotFoundPage from "./NotFoundPage";
 import { ADMIN_NAV, adminRoutes } from "@/features/admin/admin.routes";
+import { NoticeBell } from "@/features/admin/notices/NoticeBell";
 import { GuestSync } from "@/features/guest-sync/GuestSync";
 import { DailyCheckInPopup } from "@/features/check-in/DailyCheckInPopup";
 import { GradeBridgeHost } from "@/features/grade/GradeBridgeHost";
@@ -149,7 +150,7 @@ export default function App() {
         </Route>
 
         <Route element={<RequireAuth role="ADMIN" />}>
-          <Route path="/admin" element={<PanelLayout title="Quản trị" items={ADMIN_NAV} collapsible />}>
+          <Route path="/admin" element={<PanelLayout title="Quản trị" items={ADMIN_NAV} collapsible actions={<NoticeBell />} />}>
             {adminRoutes}
           </Route>
         </Route>

@@ -1,6 +1,6 @@
 import { lazy } from "react";
 import { Navigate, Route } from "react-router-dom";
-import { BookMarked, Link2, Activity, ShieldCheck as QualityIcon, MessagesSquare, ShoppingBag, Megaphone, Bot, ClipboardList, DatabaseZap, FileText, History, SlidersHorizontal, Wallet, Gift, MessageSquareWarning, UserPlus, Landmark, LayoutDashboard, Receipt, Settings, Users } from "lucide-react";
+import { Bell, BookMarked, Link2, Activity, ShieldCheck as QualityIcon, MessagesSquare, ShoppingBag, Megaphone, Bot, ClipboardList, DatabaseZap, FileText, History, SlidersHorizontal, Wallet, Gift, MessageSquareWarning, UserPlus, Landmark, LayoutDashboard, Receipt, Settings, Users } from "lucide-react";
 import type { NavItem } from "@/shared/layout/PanelLayout";
 
 /**
@@ -33,11 +33,13 @@ const ReportsPage = lazy(() => import("./content/ReportsPage"));
 const ChatbotPage = lazy(() => import("./content/ChatbotPage"));
 const AiPage = lazy(() => import("./content/AiPage"));
 const SubjectsManagerPage = lazy(() => import("./content/SubjectsManagerPage"));
+const NoticesPage = lazy(() => import("./notices/NoticesPage"));
 const FunnelPage = lazy(() => import("./insights/FunnelPage"));
 const QualityPage = lazy(() => import("./insights/QualityPage"));
 
 export const ADMIN_NAV: NavItem[] = [
   { to: "/admin", label: "Tổng quan", icon: LayoutDashboard, end: true, group: "Chung" },
+  { to: "/admin/notifications", label: "Thông báo", icon: Bell, group: "Chung" },
   { to: "/admin/users", label: "Thành viên", icon: Users, group: "Người dùng" },
   { to: "/admin/referrals", label: "Giới thiệu", icon: UserPlus, group: "Người dùng" },
   { to: "/admin/account-settings", label: "Cấu hình đăng ký", icon: SlidersHorizontal, group: "Người dùng" },
@@ -71,6 +73,7 @@ export const adminRoutes = (
     <Route path="referrals" element={<ReferralsPage />} />
     <Route path="account-settings" element={<AccountSettingsPage />} />
     <Route path="link-rewards" element={<LinkRewardSettingsPage />} />
+    <Route path="notifications" element={<NoticesPage />} />
     <Route path="subjects" element={<SubjectsManagerPage />} />
     <Route path="promotions" element={<PromoSettingsPage />} />
     <Route path="wallet" element={<WalletHistoryPage />} />

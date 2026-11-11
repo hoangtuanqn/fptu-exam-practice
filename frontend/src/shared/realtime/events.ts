@@ -9,6 +9,7 @@ export const EVENTS = {
   examTopics: "exam:topics", // gắn chủ đề chạy nền: đang chạy / xong
   examFailed: "exam:failed", // lấy đề thất bại giữa chừng
   jobUpdate: "job:update", // tiến độ lấy đề
+  adminNotice: "admin:notice", // (chỉ admin) thông báo mới về hành vi người dùng
 } as const;
 
 export type RoomKind = "exam" | "job";
