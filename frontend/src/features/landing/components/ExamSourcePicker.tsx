@@ -1,34 +1,37 @@
 import { useRef, useState, type KeyboardEvent } from "react";
-import { ClipboardPaste, FolderHeart } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
+import { BookOpen, ClipboardPaste } from "lucide-react";
 import { MyExams } from "@/features/exam-store/MyExams";
 import type { PickFolder } from "@/features/practice/components/FolderInput";
 import { LinkImport } from "@/features/exam-import/components/LinkImport";
 import type { ImportedExam } from "@/features/exam-import/types";
-import { DropZone } from "./DropZone";
+import { PickExamTab } from "./PickExamTab";
 
-type Source = "link" | "folder";
+type Source = "pick" | "link";
 
-const TABS: { id: Source; label: string; short: string; icon: typeof ClipboardPaste }[] = [
-  { id: "link", label: "Dán link", short: "Dán link", icon: ClipboardPaste },
-  { id: "folder", label: "Mở thư mục đề", short: "Mở thư mục", icon: FolderHeart },
+const TABS: { id: Source; no: string; label: string; short: string; icon: typeof BookOpen }[] = [
+  { id: "pick", no: "01", label: "Chọn môn và đề", short: "Chọn đề", icon: BookOpen },
+  { id: "link", no: "02", label: "Dán link FuOverflow", short: "Dán link", icon: ClipboardPaste },
 ];
 
 interface Props {
-  onPick: PickFolder;
+  onPick?: PickFolder; // mở thư mục đề từ máy: đang tạm ẩn (DropZone vẫn còn trong mã), nên chưa dùng
   onImported: (exam: ImportedExam) => void;
 }
 
-// Hai cách vào đề: dán link FuOverflow (server crawl) hoặc mở thư mục có sẵn trên máy.
+// Hai cách vào đề: chọn môn rồi mở đề có sẵn (dành cho người chưa biết FuOverflow), hoặc dán link FuOverflow (server lấy đề).
 // Thẻ elevated của M3 + tab chính (primary tabs): vạch chỉ báo 3dp màu primary dưới tab đang chọn, ← → chuyển tab (mẫu ARIA tabs).
-export function ExamSourcePicker({ onPick, onImported }: Props) {
-  const [source, setSource] = useState<Source>("link");
+export function ExamSourcePicker({ onImported }: Props) {
+  const [params] = useSearchParams();
+  // Vào từ tiện ích hoặc từ liên kết có sẵn link đề (?link=...) thì mở thẳng tab dán link
+  const [source, setSource] = useState<Source>(params.get("link") || params.get("url") ? "link" : "pick");
   const [libraryKey, setLibraryKey] = useState(0); // đổi key để "Đề của tôi" tải lại sau khi nhập đề mới
-  const tabs = useRef<Record<Source, HTMLButtonElement | null>>({ link: null, folder: null });
+  const tabs = useRef<Record<Source, HTMLButtonElement | null>>({ pick: null, link: null });
 
   const onKey = (e: KeyboardEvent) => {
     if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
     e.preventDefault();
-    const next: Source = source === "link" ? "folder" : "link";
+    const next: Source = source === "pick" ? "link" : "pick";
     setSource(next);
     tabs.current[next]?.focus();
   };
@@ -37,8 +40,8 @@ export function ExamSourcePicker({ onPick, onImported }: Props) {
     <div className="mt-8">
       <div className="relative rounded-m3-xl border border-outline-variant/70 bg-gradient-to-b from-surface-container-lowest to-surface-container-low p-3 text-left shadow-[0_1px_2px_rgba(0,0,0,0.05),0_24px_50px_-24px_rgba(70,45,0,0.35)] sm:p-4">
         <span aria-hidden className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-[#ffc61f]/70 to-transparent" />
-        <div role="tablist" aria-label="Cách nhập đề" onKeyDown={onKey} className="grid grid-cols-2 border-b border-outline-variant">
-          {TABS.map(({ id, label, short, icon: Icon }) => {
+        <div role="tablist" aria-label="Cách vào đề" onKeyDown={onKey} className="grid grid-cols-2 border-b border-outline-variant">
+          {TABS.map(({ id, no, label, short, icon: Icon }) => {
             const on = source === id;
             return (
               <button
@@ -55,6 +58,9 @@ export function ExamSourcePicker({ onPick, onImported }: Props) {
                 onClick={() => setSource(id)}
                 className={`md-state md-motion md-title-small relative flex h-12 items-center justify-center gap-2 px-3 ${on ? "text-primary" : "text-on-surface-variant"}`}
               >
+                <span aria-hidden className="text-xs tabular-nums opacity-60">
+                  {no}
+                </span>
                 <Icon size={18} />
                 <span className="truncate">
                   <span className="sm:hidden">{short}</span>
@@ -66,20 +72,19 @@ export function ExamSourcePicker({ onPick, onImported }: Props) {
           })}
         </div>
 
-        {/* Giữ cả hai trong DOM (đang lấy đề mà đổi tab thì tiến trình không bị mất) và xếp chồng vào cùng một ô lưới:
-            khung luôn cao bằng tab cao nhất nên đổi tab không làm các phần bên dưới nhảy lên xuống.
-            Tab ẩn chỉ invisible (vẫn giữ chỗ, không focus được) chứ không dùng hidden. */}
-        <div className="mt-3 grid">
-          <div role="tabpanel" id="source-panel-link" aria-labelledby="source-tab-link" className={`[grid-area:1/1] ${source === "link" ? "" : "invisible"}`} aria-hidden={source !== "link"}>
+        {/* Giữ cả hai trong DOM (đang lấy đề mà đổi tab thì tiến trình không bị mất), tab không chọn thì ẩn hẳn:
+            hai tab cao thấp rất khác nhau nên không xếp chồng giữ chỗ như trước. */}
+        <div className="mt-3">
+          <div role="tabpanel" id="source-panel-pick" aria-labelledby="source-tab-pick" hidden={source !== "pick"}>
+            <PickExamTab />
+          </div>
+          <div role="tabpanel" id="source-panel-link" aria-labelledby="source-tab-link" hidden={source !== "link"}>
             <LinkImport
               onImported={(exam) => {
                 setLibraryKey((k) => k + 1);
                 onImported(exam);
               }}
             />
-          </div>
-          <div role="tabpanel" id="source-panel-folder" aria-labelledby="source-tab-folder" className={`[grid-area:1/1] ${source === "folder" ? "" : "invisible"}`} aria-hidden={source !== "folder"}>
-            <DropZone onPick={onPick} />
           </div>
         </div>
       </div>
