@@ -1,10 +1,10 @@
 import { Download, Flame, Link2, NotebookPen, Sparkles, Target } from "lucide-react";
 import type { PlanInfo } from "../plan.api";
-import { GlossCard } from "./GlossCard";
+import { GlossCard } from "@/shared/ui/GlossCard";
 import { vnd } from "./money";
 import { Reveal } from "./Reveal";
-import { SectionTitle } from "./SectionTitle";
-import { GOLD_GLOSS } from "./style";
+import { SectionTitle } from "@/shared/ui/SectionTitle";
+import { GOLD_GLOSS } from "@/shared/ui/gold";
 
 // Những gì mở khóa khi lên Pro. Nói rõ gói thường bị giới hạn ở đâu, không nêu con số nội bộ.
 export function ProBenefits({ plan, fetchPrice }: { plan: PlanInfo; fetchPrice: number }) {

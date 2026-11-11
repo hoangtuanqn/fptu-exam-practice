@@ -4,9 +4,9 @@ import { buttonClass } from "@/shared/ui/Button";
 import { formatDate } from "@/shared/utils/formatters";
 import type { PlanInfo } from "../plan.api";
 import { DAYS_PER_MONTH, vnd } from "./money";
-import { GlossCard } from "./GlossCard";
+import { GlossCard } from "@/shared/ui/GlossCard";
 import { Reveal } from "./Reveal";
-import { GOLD_BUTTON, GOLD_GLOSS } from "./style";
+import { GOLD_BUTTON, GOLD_GLOSS } from "@/shared/ui/gold";
 
 interface Props {
   plan: PlanInfo;

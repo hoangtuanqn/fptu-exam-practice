@@ -1,7 +1,7 @@
 import { ChevronDown } from "lucide-react";
-import { GlossCard } from "./GlossCard";
+import { GlossCard } from "@/shared/ui/GlossCard";
 import { Reveal } from "./Reveal";
-import { SectionTitle } from "./SectionTitle";
+import { SectionTitle } from "@/shared/ui/SectionTitle";
 
 const FAQ: [string, string][] = [
   ["Mình trả bằng gì?", "Bằng credit trong ví (1 credit = 1đ). Chưa đủ thì nạp thêm bằng chuyển khoản, xong là quay lại nâng cấp được ngay."],

@@ -1,9 +1,9 @@
 import type { PlanInfo } from "../plan.api";
-import { GlossCard } from "./GlossCard";
+import { GlossCard } from "@/shared/ui/GlossCard";
 import { vnd } from "./money";
 import { Reveal } from "./Reveal";
-import { SectionTitle } from "./SectionTitle";
-import { GOLD_GLOSS } from "./style";
+import { SectionTitle } from "@/shared/ui/SectionTitle";
+import { GOLD_GLOSS } from "@/shared/ui/gold";
 
 // Ba bước từ "chưa có gì" tới "dán link lấy đề": giảm cảm giác phức tạp trước khi mua
 export function ProSteps({ plan }: { plan: PlanInfo }) {

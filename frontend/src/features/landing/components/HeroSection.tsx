@@ -28,6 +28,11 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
 
   return (
     <section className="relative isolate shrink-0 border-b border-outline-variant">
+      {/* Nền: quầng sáng vàng ở đỉnh và lưới chấm mờ dần xuống dưới, tạo chiều sâu mà không làm rối chữ */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute left-1/2 top-[-7rem] h-72 w-[44rem] max-w-full -translate-x-1/2 rounded-full bg-[#ffc61f]/20 blur-3xl" />
+        <div className="absolute inset-0 opacity-50 [background-image:radial-gradient(var(--md-sys-color-outline-variant)_1px,transparent_1px)] [background-size:22px_22px] [mask-image:radial-gradient(ellipse_70%_60%_at_50%_0%,#000_25%,transparent_100%)]" />
+      </div>
       <div className={`mx-auto w-full max-w-3xl px-5 pb-10 text-center ${isGuest ? "pt-5 sm:pt-7" : "pt-12 sm:pt-16"}`}>
         <div className="animate-fade-up">
           {isGuest && <p className="md-label-large uppercase tracking-[0.2em] text-primary">Ôn thi FE cho mọi ngành FPTU</p>}
@@ -67,10 +72,10 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
                 href={brand.partnerUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-surface-container-lowest py-1 pl-1 pr-3.5 text-xs text-slate-600 transition hover:border-brand-300"
+                className="mt-4 inline-flex items-center gap-2 rounded-full border border-outline-variant bg-surface-container-lowest py-1 pl-1 pr-3.5 text-xs text-on-surface-variant shadow-m3-1 transition hover:border-primary/50"
               >
                 <img src={logos.partner} alt={brand.partnerName} className="h-6 w-6 rounded-full" />
-                Kho đề từ <b className="font-semibold text-slate-800">{brand.partnerName}</b>
+                Kho đề từ <b className="font-semibold text-on-surface">{brand.partnerName}</b>
               </a>
             </>
           )}
@@ -99,8 +104,8 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
         {!isGuest && (
         <ul className="mt-8 hidden flex-wrap items-center justify-center gap-2.5 sm:flex">
           {FEATURES.map(({ icon: Icon, text }) => (
-            <li key={text} className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-surface-container-lowest/70 px-3.5 py-1.5 text-sm text-slate-600">
-              <Icon size={15} className="text-brand-700" />
+            <li key={text} className="inline-flex items-center gap-2 rounded-full border border-outline-variant bg-surface-container-lowest/80 px-3.5 py-1.5 text-sm text-on-surface-variant shadow-m3-1">
+              <Icon size={15} className="text-primary" />
               {text}
             </li>
           ))}
