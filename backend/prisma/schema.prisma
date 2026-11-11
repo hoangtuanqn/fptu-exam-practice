@@ -840,6 +840,25 @@ model SubjectIssue {
   @@map("subject_issues")
 }
 
+// Thong bao cho admin ve hanh vi cua nguoi dung (dang ky, lay de, nap tien, loi...). read_at null = chua doc. important = hien o muc Quan trong.
+model AdminNotice {
+  id        Int       @id @default(autoincrement())
+  kind      String    @db.VarChar(40) // user.registered, deposit.success, fetch.failed...
+  level     String    @db.VarChar(10) // info | success | warning | error
+  important Boolean   @default(false)
+  title     String    @db.VarChar(200)
+  body      String?   @db.VarChar(500)
+  userId    Int?      @map("user_id") // nguoi gay ra su kien (khong rang buoc khoa ngoai de giu thong bao khi xoa user)
+  link      String?   @db.VarChar(200) // trang admin lien quan
+  createdAt DateTime  @default(now()) @map("created_at")
+  readAt    DateTime? @map("read_at")
+
+  @@index([readAt, createdAt])
+  @@index([important, createdAt])
+  @@index([createdAt])
+  @@map("admin_notices")
+}
+
 // Chu de do AI suy ra tu noi dung syllabus cho mon khong co ten chuong. Luu lai de moi de cua mon dung cung mot bo chu de. source_hash doi thi suy lai.
 model SubjectInferredTopic {
   id         Int      @id @default(autoincrement())
