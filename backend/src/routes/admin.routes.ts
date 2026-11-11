@@ -60,6 +60,7 @@ adminRouter.delete("/settings/chat/cache", adminChatController.clearCache);
 
 adminRouter.get("/settings/promo", adminPromoController.get);
 adminRouter.put("/settings/promo", validate(updatePromoBody), adminPromoController.update);
+adminRouter.get("/library/subjects", adminLibraryController.board);
 adminRouter.put("/library/subjects/:code/semester", validate(subjectCodeOnlyParam, "params"), validate(subjectSemesterBody), adminLibraryController.setSemester);
 adminRouter.get("/settings/account", adminAccountController.get);
 adminRouter.put("/settings/account", validate(updateAccountBody), adminAccountController.update);

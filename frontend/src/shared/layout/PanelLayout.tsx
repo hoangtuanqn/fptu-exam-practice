@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { LogOut, Menu, PenLine, Wallet, X, type LucideIcon } from "lucide-react";
+import { ChevronDown, LogOut, Menu, PenLine, Wallet, X, type LucideIcon } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { brand } from "@/shared/brand/brand";
 import { Logo } from "@/shared/brand/Logo";
@@ -20,6 +20,9 @@ export interface NavItem {
   group?: string; // nhãn nhóm hiện phía trên mục đầu tiên của nhóm
 }
 
+// Nhóm có nhiều hơn chừng này mục mới xổ xuống/thu lại được; nhóm ít mục luôn hiện đủ cho gọn mắt
+const FOLD_OVER = 5;
+
 // Mục menu khớp với đường dẫn hiện tại (dài nhất thắng), dùng cho tiêu đề thanh trên
 function currentItem(items: NavItem[], pathname: string) {
   return items
@@ -29,9 +32,31 @@ function currentItem(items: NavItem[], pathname: string) {
 
 // Ngăn điều hướng (navigation drawer) của M3: mục dạng viên thuốc cao 48dp, mục đang chọn nền secondary-container, tiêu đề nhóm title-small.
 // Dùng làm ngăn cố định ở cỡ expanded và ngăn mở ra (modal) ở cỡ compact.
-function DrawerContent({ title, items, onNavigate }: { title: string; items: NavItem[]; onNavigate: () => void }) {
+function DrawerContent({ title, items, onNavigate, collapsible }: { title: string; items: NavItem[]; onNavigate: () => void; collapsible: boolean }) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const activeGroup = currentItem(items, pathname)?.group;
+  // Chỉ nhóm chứa trang đang xem được mở sẵn; các nhóm khác thu lại cho menu gọn
+  const [open, setOpen] = useState<Set<string>>(() => new Set(activeGroup ? [activeGroup] : []));
+  useEffect(() => {
+    if (activeGroup) setOpen((o) => (o.has(activeGroup) ? o : new Set(o).add(activeGroup)));
+  }, [activeGroup]);
+  const toggle = (g: string) =>
+    setOpen((o) => {
+      const next = new Set(o);
+      if (!next.delete(g)) next.add(g);
+      return next;
+    });
+  const sections = useMemo(() => {
+    const out: { group?: string; items: NavItem[] }[] = [];
+    for (const it of items) {
+      const last = out[out.length - 1];
+      if (last && last.group === it.group) last.items.push(it);
+      else out.push({ group: it.group, items: [it] });
+    }
+    return out;
+  }, [items]);
 
   return (
     <div className="flex h-full flex-col">
@@ -52,24 +77,48 @@ function DrawerContent({ title, items, onNavigate }: { title: string; items: Nav
       </div>
 
       <nav aria-label={title} className="flex-1 overflow-y-auto px-3 pb-4">
-        {items.map(({ to, label, icon: Icon, end, group }, i) => (
-          <div key={to}>
-            {group && group !== items[i - 1]?.group && <div className={`md-title-small px-4 pb-1 text-on-surface-variant ${i === 0 ? "pt-2" : "pt-5"}`}>{group}</div>}
-            <NavLink
-              to={to}
-              end={end}
-              onClick={onNavigate}
-              className={({ isActive }) =>
-                `md-state md-motion md-label-large flex h-12 items-center gap-3 rounded-full px-4 ${
-                  isActive ? "bg-secondary-container text-on-secondary-container" : "text-on-surface-variant"
-                }`
-              }
-            >
-              <Icon size={20} className="shrink-0" />
-              <span className="truncate">{label}</span>
-            </NavLink>
-          </div>
-        ))}
+        {sections.map((sec, si) => {
+          const fold = collapsible && !!sec.group && sec.items.length > FOLD_OVER; // nhóm có nhãn thì xổ xuống/thu lại được
+          const isOpen = !fold || open.has(sec.group!);
+          return (
+            <div key={sec.group ?? `s${si}`}>
+              {sec.group &&
+                (fold ? (
+                  <button
+                    type="button"
+                    aria-expanded={isOpen}
+                    onClick={() => toggle(sec.group!)}
+                    className={`md-state md-motion md-title-small flex h-10 w-full items-center justify-between rounded-full px-4 text-on-surface-variant ${si === 0 ? "mt-1" : "mt-1.5"}`}
+                  >
+                    <span>{sec.group}</span>
+                    <span className="flex items-center gap-2">
+                      {!isOpen && <span className="md-label-medium text-on-surface-variant/70">{sec.items.length}</span>}
+                      <ChevronDown size={18} className={`md-motion transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                    </span>
+                  </button>
+                ) : (
+                  <div className={`md-title-small px-4 pb-1 text-on-surface-variant ${si === 0 ? "pt-2" : "pt-5"}`}>{sec.group}</div>
+                ))}
+              {isOpen &&
+                sec.items.map(({ to, label, icon: Icon, end }) => (
+                  <NavLink
+                    key={to}
+                    to={to}
+                    end={end}
+                    onClick={onNavigate}
+                    className={({ isActive }) =>
+                      `md-state md-motion md-label-large flex h-12 items-center gap-3 rounded-full px-4 ${fold ? "ml-2" : ""} ${
+                        isActive ? "bg-secondary-container text-on-secondary-container" : "text-on-surface-variant"
+                      }`
+                    }
+                  >
+                    <Icon size={20} className="shrink-0" />
+                    <span className="truncate">{label}</span>
+                  </NavLink>
+                ))}
+            </div>
+          );
+        })}
       </nav>
 
       {user && (
@@ -129,7 +178,7 @@ function Rail({ title, items }: { title: string; items: NavItem[] }) {
 //  - compact (<600px): thanh ứng dụng trên cùng + ngăn điều hướng mở ra (modal) vì có tới 10 đích đến, nhiều hơn mức tối đa 5 của thanh điều hướng dưới
 //  - medium (600-839px): thanh điều hướng dọc (rail)
 //  - expanded (>=840px): ngăn điều hướng cố định bên trái
-export function PanelLayout({ title, items }: { title: string; items: NavItem[] }) {
+export function PanelLayout({ title, items, collapsible = false }: { title: string; items: NavItem[]; collapsible?: boolean }) {
   const { user } = useAuth();
   const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
@@ -172,7 +221,7 @@ export function PanelLayout({ title, items }: { title: string; items: NavItem[] 
         <IconButton label="Đóng menu" onClick={() => setOpen(false)} className="absolute right-3 top-3 z-10 expanded:hidden">
           <X size={22} />
         </IconButton>
-        <DrawerContent title={title} items={items} onNavigate={() => setOpen(false)} />
+        <DrawerContent title={title} items={items} collapsible={collapsible} onNavigate={() => setOpen(false)} />
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">

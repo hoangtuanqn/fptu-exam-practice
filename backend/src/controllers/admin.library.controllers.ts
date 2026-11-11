@@ -6,6 +6,9 @@ import { libraryService } from "../services/library.service";
 import type { z } from "zod";
 
 export const adminLibraryController = {
+  async board(_req: Request, res: Response) {
+    res.json(new ResponseClient({ data: await libraryService.semesterBoard() }));
+  },
   async setSemester(_req: Request, res: Response) {
     const { code } = getValidated<z.infer<typeof subjectCodeOnlyParam>>(res, "params");
     const { semester } = getValidated<z.infer<typeof subjectSemesterBody>>(res);
