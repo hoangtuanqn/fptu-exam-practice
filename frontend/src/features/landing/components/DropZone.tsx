@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { FolderOpen } from "lucide-react";
+import { FolderHeart } from "lucide-react";
 import { FolderInput, type PickFolder } from "@/features/practice/components/FolderInput";
 import { readDroppedFolder } from "@/features/practice/utils/readDroppedFolder";
-import { GOLD_GLOSS } from "@/shared/ui/gold";
 import { FOLDER_EXAMPLE } from "../content";
 
 // Vùng kéo thả / chọn thư mục đề + ví dụ cấu trúc thư mục
@@ -29,8 +28,8 @@ export function DropZone({ onPick }: { onPick: PickFolder }) {
           dragging ? "border-primary bg-primary-container/50" : "border-outline-variant bg-surface-container-low/60 hover:border-primary/60 hover:bg-primary-container/30"
         }`}
       >
-        <span className={`flex h-12 w-12 items-center justify-center rounded-2xl ${GOLD_GLOSS}`}>
-          <FolderOpen size={22} />
+        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-container text-on-primary-container">
+          <FolderHeart size={22} />
         </span>
         <div className="md-title-large mt-4 text-on-surface">Mở thư mục đề</div>
         <div className="md-body-medium mt-0.5 text-on-surface-variant">Kéo thả thư mục vào đây, hoặc bấm để chọn</div>
