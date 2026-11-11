@@ -25,7 +25,7 @@ export const PUBLIC_PAGES: Record<string, PageSeo> = {
   },
   "/kho-de": {
     title: "Kho đề thi FE của mọi môn, có đáp án AI",
-    description: "Xem danh sách đề thi FE của từng môn FPTU theo kỳ, đề nào đã có sẵn đáp án AI. Đăng ký miễn phí rồi lấy đề về luyện, chấm điểm thang 10.",
+    description: "Xem danh sách đề thi FE của từng môn FPTU theo kỳ. Đăng ký miễn phí rồi mở đề ra luyện, có đáp án AI và chấm điểm thang 10.",
     index: true,
   },
   "/pro": {
