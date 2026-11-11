@@ -83,7 +83,8 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
 
         {!isGuest && <FirstRunChecklist />}
 
-        <ProTeaser />
+        {/* Khách chưa thử gì thì chưa mời trả tiền: chỉ có dải quà đăng ký. Dải Pro dành cho thành viên. */}
+        {!isGuest && <ProTeaser />}
 
         {isGuest && (
           <div className="mt-8 animate-fade-up [animation-delay:120ms]">
