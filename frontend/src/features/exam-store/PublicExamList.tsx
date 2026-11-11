@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { BookOpen, Download, Play } from "lucide-react";
+import { BookOpen, Play } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useApi } from "@/shared/hooks/useApi";
 import { buttonClass } from "@/shared/ui/Button";
@@ -9,7 +9,6 @@ import { Pagination } from "@/shared/ui/Table";
 import { formatDate } from "@/shared/utils/formatters";
 import { catalogApi, type CatalogItem } from "./catalog.api";
 import { ExamFilterBar, useExamListQuery } from "./ExamFilterBar";
-import { ExamStatusBadge } from "./ExamStatusBadge";
 
 // Danh sách đề của một môn cho khách xem (trang Kho đề công khai và trang từng môn), không có khung ngoài: nơi dùng tự bọc Card.
 // Chỉ có thông tin mô tả: tên, kỳ, ngày, số câu.
@@ -44,7 +43,6 @@ export function PublicExamList({ code }: { code: string }) {
                         {e.questions !== null ? <span>{e.questions} câu</span> : null}
                       </p>
                     </div>
-                    <ExamStatusBadge status={e.status} />
                     <ExamAction item={e} loggedIn={!!user} target={target} />
                   </li>
                 ))}
@@ -59,23 +57,17 @@ export function PublicExamList({ code }: { code: string }) {
 }
 
 function ExamAction({ item, loggedIn, target }: { item: CatalogItem; loggedIn: boolean; target: string }) {
+  const cls = buttonClass({ size: "sm", variant: "tonal" });
   if (item.status === "owned")
     return (
-      <Link to={`/exam/${item.threadId}`} className={buttonClass({ size: "sm", variant: "text" })}>
+      <Link to={`/exam/${item.threadId}`} className={cls}>
         <Play size={15} /> Mở đề
       </Link>
     );
-  const variant = item.status === "fetch" ? "tonal" : "primary";
-  const icon = item.status === "fetch" ? <Download size={15} /> : <Play size={15} />;
-  if (loggedIn)
-    return (
-      <Link to={target} className={buttonClass({ size: "sm", variant })}>
-        {icon} Lấy đề
-      </Link>
-    );
+  // Chưa có trong kho: thành viên vào Kho đề của môn (có xác nhận phí trước khi trừ), khách đi đăng ký rồi quay lại đó
   return (
-    <Link to="/register" state={{ from: target }} className={buttonClass({ size: "sm", variant })}>
-      {icon} Đăng ký để lấy
+    <Link to={loggedIn ? target : "/register"} state={loggedIn ? undefined : { from: target }} className={cls}>
+      <Play size={15} /> Mở đề
     </Link>
   );
 }
