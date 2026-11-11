@@ -16,23 +16,32 @@ import { Pagination } from "@/shared/ui/Table";
 import { formatDate } from "@/shared/utils/formatters";
 import { fuoThreadUrl } from "@/shared/utils/fuo-link";
 import { isPro } from "@/shared/utils/pro";
+import { CompactSubjectPicker } from "@/features/subject/CompactSubjectPicker";
 import { SubjectCard } from "@/features/subject/SubjectCard";
 import { SubjectPicker } from "@/features/subject/SubjectPicker";
 import { catalogApi, type CatalogItem } from "./catalog.api";
 import { ExamFilterBar, useExamListQuery } from "./ExamFilterBar";
+import { featuredSubjects } from "./featuredSubjects";
+
+const COMPACT_PAGE_SIZE = 6; // trang chủ: chỉ vài đề mỗi trang để không đẩy các phần bên dưới đi quá xa
 
 // Kho đề > Theo môn: toàn bộ đề FE của một môn (danh mục FuOverflow + đề hệ thống đã có). Chỉ lấy ảnh khi người dùng bấm và đồng ý trừ phí.
-export function SubjectBrowser() {
+export function SubjectBrowser({ compact = false }: { compact?: boolean }) {
   const [url, setUrl] = useUrlState({ subject: "" });
   const code = url.subject.toUpperCase();
-  return code ? <ExamList code={code} onBack={() => setUrl({ subject: "" })} /> : <SubjectChooser onPick={(c) => setUrl({ subject: c })} />;
+  return code ? <ExamList code={code} compact={compact} onBack={() => setUrl({ subject: "" })} /> : <SubjectChooser compact={compact} onPick={(c) => setUrl({ subject: c })} />;
 }
 
-function SubjectChooser({ onPick }: { onPick: (code: string) => void }) {
+function SubjectChooser({ onPick, compact }: { onPick: (code: string) => void; compact: boolean }) {
   const { user } = useAuth();
   const subjects = useApi(() => catalogApi.subjects(), []);
   const mine = useApi(() => (user ? catalogApi.mySubjects() : Promise.resolve([] as string[])), [user?.id]);
   const list = useMemo(() => subjects.data?.map((s) => ({ code: s.code, name: s.name, badge: `${s.total} đề` })), [subjects.data]);
+  if (compact) {
+    // Trang chủ: môn của tôi trước, rồi các môn có sẵn đề; còn lại tìm bằng ô tìm kiếm
+    const quick = [...new Set([...(mine.data ?? []), ...featuredSubjects(subjects.data)])].slice(0, 8);
+    return <CompactSubjectPicker subjects={list} loading={subjects.loading} error={subjects.error} onRetry={subjects.reload} onPick={onPick} quick={quick} allHref="/account/exams?tab=subject" />;
+  }
   return (
     <SubjectPicker
       subjects={list}
@@ -46,14 +55,14 @@ function SubjectChooser({ onPick }: { onPick: (code: string) => void }) {
   );
 }
 
-function ExamList({ code, onBack }: { code: string; onBack: () => void }) {
+function ExamList({ code, onBack, compact }: { code: string; onBack: () => void; compact: boolean }) {
   const navigate = useNavigate();
   const toast = useToast();
   const { user, refresh } = useAuth();
   const query = useExamListQuery();
   const { url, setUrl, page } = query;
 
-  const list = useApi(() => catalogApi.exams(code, { q: url.q, term: url.term, page }), [code, url.q, url.term, page, user?.id]);
+  const list = useApi(() => catalogApi.exams(code, { q: url.q, term: url.term, page, limit: compact ? COMPACT_PAGE_SIZE : undefined }), [code, url.q, url.term, page, compact, user?.id]);
   const d = list.data;
   const job = useExamImport();
   const [quoting, setQuoting] = useState<string | null>(null); // threadId đang hỏi phí

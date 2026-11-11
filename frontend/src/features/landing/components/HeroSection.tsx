@@ -1,7 +1,7 @@
 import type { ImportedExam } from "@/features/exam-import/types";
 import type { PickFolder } from "@/features/practice/components/FolderInput";
 import { brand, logos } from "@/shared/brand/brand";
-import { FEATURES, splitSlogan } from "../content";
+import { FEATURES } from "../content";
 import { ExamSourcePicker } from "./ExamSourcePicker";
 import { PromoCard } from "./PromoCard";
 import { SignupGiftBanner } from "./SignupGiftBanner";
@@ -15,16 +15,10 @@ interface Props {
   userName?: string; // đã đăng nhập thì chào tên thay cho slogan
 }
 
-// Phần đầu trang: tên hệ thống (chữ có chân), khẩu hiệu, thẻ ưu đãi (khách), khối chọn nguồn đề, ba ý ngắn.
+// Phần đầu trang: câu hỏi "Bạn đang ôn môn nào?" làm tiêu đề, ba ý ngắn, ô chọn môn (việc chính), thanh dán link FuOverflow (việc phụ), dải quà (khách).
 // Phong cách học thuật: nền giấy ấm, màu navy, một điểm nhấn vàng đồng, không chữ chuyển sắc hay hiệu ứng phát sáng.
 export function HeroSection({ onPick, onImported, userName }: Props) {
   const isGuest = !userName;
-  const [sloganLead, sloganAccent] = splitSlogan(brand.slogan);
-  // Tên sản phẩm: phần đầu thường, hai từ cuối ("FE FPTU") in nghiêng
-  const words = brand.product.split(" ");
-  const accentCount = words.length >= 3 ? 2 : 1;
-  const titleLead = words.slice(0, -accentCount).join(" ");
-  const titleAccent = words.slice(-accentCount).join(" ");
 
   return (
     <section className="relative isolate shrink-0 border-b border-outline-variant">
@@ -35,7 +29,7 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
       </div>
       <div className={`mx-auto w-full max-w-3xl px-5 pb-10 text-center ${isGuest ? "pt-5 sm:pt-7" : "pt-12 sm:pt-16"}`}>
         <div className="animate-fade-up">
-          {isGuest && <p className="md-label-large uppercase tracking-[0.2em] text-primary">Ôn thi FE cho mọi ngành FPTU</p>}
+          {isGuest && <p className="md-label-large uppercase tracking-[0.2em] text-primary">{brand.product}</p>}
 
           <h1 className={`md-hero-title text-on-surface ${isGuest ? "mt-2" : "mt-5"}`}>
             {userName ? (
@@ -44,8 +38,7 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
               </>
             ) : (
               <>
-                {titleLead && <span>{titleLead} </span>}
-                <span className="italic text-primary">{titleAccent}</span>
+                Bạn đang ôn <span className="italic text-primary">môn nào?</span>
               </>
             )}
           </h1>
@@ -53,10 +46,7 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
           {isGuest && (
             <>
               <div aria-hidden className="mx-auto mt-4 h-px w-24 bg-primary/40" />
-              <p className="md-title-large mt-3 font-normal italic text-on-surface-variant">
-                {sloganLead}
-                {sloganAccent && <span className="font-semibold not-italic text-on-surface">{sloganAccent}</span>}
-              </p>
+              <p className="md-body-large mx-auto mt-3 max-w-xl text-on-surface-variant">Chọn môn, mở đề là làm ngay. Có đáp án, giải thích từng câu và chấm điểm thang 10.</p>
               <ValueTrio />
             </>
           )}
@@ -81,15 +71,15 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
           )}
         </div>
 
-        {/* Bố cục: dải quà mỏng → ô nhập link (hành động chính, thấy ngay không cần cuộn) → dải Pro → thẻ ưu đãi.
+        {/* Bố cục: ô chọn môn (việc chính, thấy ngay không cần cuộn) → thanh dán link FuOverflow → dải quà → dải Pro → thẻ ưu đãi.
             Không còn chồng/che nhau khi cuộn. */}
-        {isGuest && <SignupGiftBanner />}
-
         <div className="relative animate-fade-up [animation-delay:60ms]">
           <div className={isGuest ? "mt-3" : ""}>
             <ExamSourcePicker onPick={onPick} onImported={onImported} />
           </div>
         </div>
+
+        {isGuest && <div className="mt-6"><SignupGiftBanner /></div>}
 
         {!isGuest && <FirstRunChecklist />}
 

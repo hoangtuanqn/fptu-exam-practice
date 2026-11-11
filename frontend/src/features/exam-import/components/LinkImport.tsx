@@ -11,6 +11,7 @@ import { examImportApi, type QuoteResult } from "../exam-import.api";
 import { checkFuoLink } from "@/shared/utils/fuo-link";
 import { useFakeProgress, type ProgressHint } from "@/shared/hooks/useFakeProgress";
 import { Button } from "@/shared/ui/Button";
+import { GOLD_BUTTON } from "@/shared/ui/gold";
 import { FormError, LinearProgress } from "@/shared/ui/Feedback";
 import { inputClass } from "@/shared/ui/Input";
 import { ConfirmFetchDialog } from "./ConfirmFetchDialog";
@@ -43,12 +44,13 @@ const FINISH_DELAY_MS = 600; // cho người dùng thấy thanh chạm 100% trư
 interface Props {
   onImported: (exam: ImportedExam) => void;
   subject?: string; // bộ đề theo chương: đề phải đúng môn này (mã như PRO192), máy chủ kiểm trước khi trừ phí
+  compact?: boolean; // thanh mỏng cho trang chủ (khối phụ): một dòng tiêu đề, bỏ giá lớn và nhãn quảng cáo
 }
 
 const DEFAULT_PRICE = 500; // phí niêm yết hiện khi chưa lấy được từ máy chủ
 
 // Nhập link đề FuOverflow: server crawl ở nền, ở đây hiện thanh tiến độ và mở đề khi xong
-export function LinkImport({ onImported, subject }: Props) {
+export function LinkImport({ onImported, subject, compact = false }: Props) {
   const { user, refresh, loading: authLoading } = useAuth();
   // /?url=<link FuOverflow> điền sẵn ô nhập; không tự lấy đề vì mỗi lần lấy có thể bị tính phí.
   // Thêm &confirm=1 (nút trên FuOverflow của tiện ích Chrome) thì mở luôn hộp xác nhận: vẫn phải bấm xác nhận mới bị trừ phí.
@@ -194,12 +196,34 @@ export function LinkImport({ onImported, subject }: Props) {
     void job.start(url.trim(), subject);
   };
 
+  // Hạn mức nhìn thấy TRƯỚC khi bấm (không phải đợi hết lượt mới biết)
+  const hint = user ? (pro ? "Bạn đang dùng Pro: lấy đề không bị trừ credit." : fee > 0 ? `Số dư của bạn: ${user.balance.toLocaleString("vi-VN")} credit. Đề đã từng lấy được mở lại miễn phí.` : "Đề đã từng lấy được mở lại miễn phí.") : price.data?.guestRemaining !== undefined ? `Hôm nay bạn còn ${price.data.guestRemaining}/${price.data.guestLimit} lượt lấy đề miễn phí.` : "Khách được lấy miễn phí 1 đề mỗi ngày.";
+  const submitDisabled = !url.trim() || linkInvalid || checking || running || done || quoting || (!!user && price.loading);
+  const priceText = shownPrice > 0 ? `${shownPrice.toLocaleString("vi-VN")}đ / đề` : "Miễn phí";
+
   return (
     <>
     <form
       onSubmit={onSubmit}
-      className="rounded-2xl border-2 border-dashed border-outline-variant bg-surface-container-low/60 px-4 py-7 text-left sm:px-6 sm:py-9"
+      className={compact ? "relative rounded-m3-xl border border-outline-variant/70 bg-gradient-to-b from-surface-container-lowest to-surface-container-low px-4 py-4 text-left shadow-[0_1px_2px_rgba(0,0,0,0.05),0_24px_50px_-24px_rgba(70,45,0,0.35)] sm:px-5 sm:py-5" : "rounded-2xl border-2 border-dashed border-outline-variant bg-surface-container-low/60 px-4 py-7 text-left sm:px-6 sm:py-9"}
     >
+      {compact ? (
+        <>
+          <span aria-hidden className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-[#ffc61f]/70 to-transparent" />
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-container text-on-primary-container ring-1 ring-[#b87d00]/20">
+                <ClipboardPaste size={20} />
+              </span>
+              <div className="min-w-0">
+                <div className="md-title-medium text-on-surface">Có link đề FuOverflow?</div>
+                <div className="md-body-small text-on-surface-variant">Dán link vào đây, hệ thống tự lấy đề về cho bạn</div>
+              </div>
+            </div>
+            <span className="md-label-large hidden shrink-0 rounded-full border border-[#e0a100]/40 bg-[#ffc61f]/15 px-3.5 py-1 text-on-surface sm:inline-flex">{priceText}</span>
+          </div>
+        </>
+      ) : (
       <div className="flex flex-col items-center text-center">
         <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-container text-on-primary-container">
           <ClipboardPaste size={22} />
@@ -216,14 +240,18 @@ export function LinkImport({ onImported, subject }: Props) {
           <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-surface-container-lowest px-3 py-1 text-xs font-semibold text-slate-600">
             <BadgeCheck size={14} className="text-brand-700" /> Đáp án chính xác đến 99.9%
           </span>
-          {/* Hạn mức nhìn thấy TRƯỚC khi bấm (không phải đợi hết lượt mới biết) */}
-          <span className="md-body-small text-on-surface-variant">
-            {user ? (pro ? "Bạn đang dùng Pro: lấy đề không bị trừ credit." : fee > 0 ? `Số dư của bạn: ${user.balance.toLocaleString("vi-VN")} credit. Đề đã từng lấy được mở lại miễn phí.` : "Đề đã từng lấy được mở lại miễn phí.") : price.data?.guestRemaining !== undefined ? `Hôm nay bạn còn ${price.data.guestRemaining}/${price.data.guestLimit} lượt lấy đề miễn phí.` : "Khách được lấy miễn phí 1 đề mỗi ngày."}
-          </span>
+          <span className="md-body-small text-on-surface-variant">{hint}</span>
         </div>
       </div>
+      )}
 
-      <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+      <div
+        className={
+          compact
+            ? `mt-4 flex items-center gap-2 rounded-full border bg-surface-container-lowest p-1.5 pl-5 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)] transition focus-within:border-[#e0a100] focus-within:shadow-[0_0_0_4px_rgba(255,198,31,0.22)] ${linkError || job.error ? "border-red-500" : "border-outline-variant"}`
+            : "mt-5 flex flex-col gap-2 sm:flex-row"
+        }
+      >
         <input
           type="url"
           value={url}
@@ -232,17 +260,25 @@ export function LinkImport({ onImported, subject }: Props) {
           placeholder={PLACEHOLDER}
           aria-label="Link đề FuOverflow"
           aria-invalid={linkInvalid || undefined}
-          className={`${inputClass(linkError ?? job.error ?? undefined)} sm:flex-1`}
+          className={compact ? "h-10 min-w-0 flex-1 bg-transparent text-base text-on-surface outline-none placeholder:text-on-surface-variant disabled:opacity-60" : `${inputClass(linkError ?? job.error ?? undefined)} sm:flex-1`}
         />
-        <Button
-          variant="primary"
-          type="submit"
-          disabled={!url.trim() || linkInvalid || checking || running || done || quoting || (!!user && price.loading)}
-        >
-          {(running || quoting) && <Loader2 size={16} className="animate-spin" />}
-          {running ? "Đang lấy đề…" : "Lấy đề"}
-        </Button>
+        {compact ? (
+          <button
+            type="submit"
+            disabled={submitDisabled}
+            className={`md-label-large inline-flex h-11 shrink-0 select-none items-center justify-center gap-2 rounded-full px-5 transition hover:brightness-105 active:brightness-95 disabled:pointer-events-none disabled:opacity-50 disabled:saturate-50 sm:px-6 ${GOLD_BUTTON}`}
+          >
+            {(running || quoting) && <Loader2 size={16} className="animate-spin" />}
+            {running ? "Đang lấy đề…" : "Lấy đề"}
+          </button>
+        ) : (
+          <Button variant="primary" type="submit" disabled={submitDisabled}>
+            {(running || quoting) && <Loader2 size={16} className="animate-spin" />}
+            {running ? "Đang lấy đề…" : "Lấy đề"}
+          </Button>
+        )}
       </div>
+      {compact && <p className="md-body-small mt-2.5 px-1 text-on-surface-variant">{hint}</p>}
 
       {link && !running && !done && (
         <div className="mt-2 min-h-5 text-left text-xs" role="status" aria-live="polite">

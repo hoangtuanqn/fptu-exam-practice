@@ -1,88 +1,44 @@
-import { useRef, useState, type KeyboardEvent } from "react";
-import { ClipboardPaste, FolderHeart } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { MyExams } from "@/features/exam-store/MyExams";
 import type { PickFolder } from "@/features/practice/components/FolderInput";
 import { LinkImport } from "@/features/exam-import/components/LinkImport";
 import type { ImportedExam } from "@/features/exam-import/types";
-import { DropZone } from "./DropZone";
-
-type Source = "link" | "folder";
-
-const TABS: { id: Source; label: string; short: string; icon: typeof ClipboardPaste }[] = [
-  { id: "link", label: "Dán link", short: "Dán link", icon: ClipboardPaste },
-  { id: "folder", label: "Mở thư mục đề", short: "Mở thư mục", icon: FolderHeart },
-];
+import { PickExamTab } from "./PickExamTab";
 
 interface Props {
-  onPick: PickFolder;
+  onPick?: PickFolder; // mở thư mục đề từ máy: đang tạm ẩn (DropZone vẫn còn trong mã), nên chưa dùng
   onImported: (exam: ImportedExam) => void;
 }
 
-// Hai cách vào đề: dán link FuOverflow (server crawl) hoặc mở thư mục có sẵn trên máy.
-// Thẻ elevated của M3 + tab chính (primary tabs): vạch chỉ báo 3dp màu primary dưới tab đang chọn, ← → chuyển tab (mẫu ARIA tabs).
-export function ExamSourcePicker({ onPick, onImported }: Props) {
-  const [source, setSource] = useState<Source>("link");
+// Hai cách vào đề, xếp dọc theo mức quan trọng: (1) chọn môn rồi mở đề có sẵn, là thứ người dùng thấy đầu tiên và không cần biết FuOverflow là gì;
+// (2) thanh dán link FuOverflow ngay bên dưới, cho đề chưa có trong danh sách.
+export function ExamSourcePicker({ onImported }: Props) {
+  const [params] = useSearchParams();
   const [libraryKey, setLibraryKey] = useState(0); // đổi key để "Đề của tôi" tải lại sau khi nhập đề mới
-  const tabs = useRef<Record<Source, HTMLButtonElement | null>>({ link: null, folder: null });
+  const linkSection = useRef<HTMLElement>(null);
 
-  const onKey = (e: KeyboardEvent) => {
-    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
-    e.preventDefault();
-    const next: Source = source === "link" ? "folder" : "link";
-    setSource(next);
-    tabs.current[next]?.focus();
-  };
+  // Vào từ tiện ích hoặc từ liên kết có sẵn link đề (?link=...): đưa thanh dán link vào tầm mắt
+  const hasLink = !!(params.get("link") || params.get("url"));
+  useEffect(() => {
+    if (hasLink) linkSection.current?.scrollIntoView({ block: "center" });
+  }, [hasLink]);
 
   return (
-    <div className="mt-8">
-      <div className="relative rounded-m3-xl border border-outline-variant/70 bg-gradient-to-b from-surface-container-lowest to-surface-container-low p-3 text-left shadow-[0_1px_2px_rgba(0,0,0,0.05),0_24px_50px_-24px_rgba(70,45,0,0.35)] sm:p-4">
-        <span aria-hidden className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-[#ffc61f]/70 to-transparent" />
-        <div role="tablist" aria-label="Cách nhập đề" onKeyDown={onKey} className="grid grid-cols-2 border-b border-outline-variant">
-          {TABS.map(({ id, label, short, icon: Icon }) => {
-            const on = source === id;
-            return (
-              <button
-                key={id}
-                ref={(el) => {
-                  tabs.current[id] = el;
-                }}
-                role="tab"
-                type="button"
-                id={`source-tab-${id}`}
-                aria-selected={on}
-                aria-controls={`source-panel-${id}`}
-                tabIndex={on ? 0 : -1}
-                onClick={() => setSource(id)}
-                className={`md-state md-motion md-title-small relative flex h-12 items-center justify-center gap-2 px-3 ${on ? "text-primary" : "text-on-surface-variant"}`}
-              >
-                <Icon size={18} />
-                <span className="truncate">
-                  <span className="sm:hidden">{short}</span>
-                  <span className="hidden sm:inline">{label}</span>
-                </span>
-                <span aria-hidden className={`md-motion absolute inset-x-4 bottom-0 h-[3px] rounded-t-full bg-primary ${on ? "opacity-100" : "opacity-0"}`} />
-              </button>
-            );
-          })}
-        </div>
+    <div className="mt-7 text-left">
+      <section aria-label="Chọn môn và đề">
+        <PickExamTab />
+      </section>
 
-        {/* Giữ cả hai trong DOM (đang lấy đề mà đổi tab thì tiến trình không bị mất) và xếp chồng vào cùng một ô lưới:
-            khung luôn cao bằng tab cao nhất nên đổi tab không làm các phần bên dưới nhảy lên xuống.
-            Tab ẩn chỉ invisible (vẫn giữ chỗ, không focus được) chứ không dùng hidden. */}
-        <div className="mt-3 grid">
-          <div role="tabpanel" id="source-panel-link" aria-labelledby="source-tab-link" className={`[grid-area:1/1] ${source === "link" ? "" : "invisible"}`} aria-hidden={source !== "link"}>
-            <LinkImport
-              onImported={(exam) => {
-                setLibraryKey((k) => k + 1);
-                onImported(exam);
-              }}
-            />
-          </div>
-          <div role="tabpanel" id="source-panel-folder" aria-labelledby="source-tab-folder" className={`[grid-area:1/1] ${source === "folder" ? "" : "invisible"}`} aria-hidden={source !== "folder"}>
-            <DropZone onPick={onPick} />
-          </div>
-        </div>
-      </div>
+      <section ref={linkSection} aria-label="Dán link đề FuOverflow" className="mt-8">
+        <LinkImport
+          compact
+          onImported={(exam) => {
+            setLibraryKey((k) => k + 1);
+            onImported(exam);
+          }}
+        />
+      </section>
 
       <MyExams key={libraryKey} onOpen={onImported} />
     </div>
