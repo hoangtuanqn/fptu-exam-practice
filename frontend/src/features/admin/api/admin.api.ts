@@ -42,7 +42,6 @@ export interface SubjectRow {
   minPassMark: number | null;
   chapters: { total: number; named: number; hasNames: boolean };
   inferredChapters: number; // số chương AI đã suy và lưu (0 = chưa suy)
-  syllabusChunks: number; // số đoạn nội dung syllabus đã crawl
   exams: number; // đề đang có trong hệ thống
   fuoThreads: number; // đề biết trên FuOverflow (kho đề)
   hasIssue: boolean; // đang có báo cáo thiếu dữ liệu
@@ -59,7 +58,6 @@ export interface SubjectDetail {
   fuoThreads: number;
   chapters: { number: number; title: string; topics: string[] }[];
   inferred: { topics: { label: string; hint: string }[]; model: string | null; at: string } | null;
-  chunks: { kind: string; title: string; length: number }[];
 }
 
 export interface SubjectPatch {

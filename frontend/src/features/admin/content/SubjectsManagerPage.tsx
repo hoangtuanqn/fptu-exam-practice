@@ -22,21 +22,10 @@ import { useConfirm } from "@/shared/ui/ConfirmDialog";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { Input, Select, inputClass } from "@/shared/ui/Input";
 import { Modal, ModalActions, ModalTitle } from "@/shared/ui/Modal";
-import { Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
+import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
 
 const PAGE_SIZE = 40;
 const SEMESTERS = Array.from({ length: 10 }, (_, i) => i);
-
-const KIND_LABEL: Record<string, string> = {
-  overview: "Mô tả",
-  tasks: "Nhiệm vụ",
-  materials: "Tài liệu",
-  clo: "Chuẩn đầu ra",
-  chapters: "Chương và mục",
-  sessions: "Lịch học",
-  cq: "Câu hỏi ôn",
-  assessment: "Đánh giá",
-};
 
 function Facts({ items }: { items: [string, React.ReactNode][] }) {
   return (
@@ -168,7 +157,6 @@ function DialogBody({
   const [semester, setSemester] = useState(
     d.semester === null ? "" : String(d.semester),
   );
-  const [openKind, setOpenKind] = useState(false);
   const dirty =
     name !== d.name ||
     credits !== (d.credits === null ? "" : String(d.credits)) ||
@@ -311,35 +299,6 @@ function DialogBody({
             : "Chưa suy. Sẽ tự suy khi có người mở đề của môn này."}
         </p>
       )}
-
-      <SectionTitle
-        aside={
-          <button
-            type="button"
-            className="md-label-large text-primary"
-            onClick={() => setOpenKind((o) => !o)}
-          >
-            {openKind ? "Thu gọn" : "Xem danh sách"}
-          </button>
-        }
-      >
-        Nội dung syllabus đã crawl ({d.chunks.length} đoạn)
-      </SectionTitle>
-      {openKind && (
-        <ul className="divide-y divide-outline-variant overflow-hidden rounded-m3-md border border-outline-variant">
-          {d.chunks.map((c, i) => (
-            <li key={i} className="flex items-center gap-3 px-4 py-2">
-              <Badge>{KIND_LABEL[c.kind] ?? c.kind}</Badge>
-              <span className="md-body-medium min-w-0 flex-1 truncate text-on-surface">
-                {c.title}
-              </span>
-              <span className="md-body-small shrink-0 tabular-nums text-on-surface-variant">
-                {c.length.toLocaleString("vi-VN")} ký tự
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
     </div>
   );
 }
@@ -473,7 +432,6 @@ function SubjectsTable({ initial }: { initial: SubjectRow[] }) {
               <Th>Kỳ</Th>
               <Th>Tín chỉ</Th>
               <Th>Chương</Th>
-              <Th>Syllabus</Th>
               <Th>Đề trong hệ thống</Th>
               <Th>Đề trên kho</Th>
             </Thead>
@@ -518,9 +476,6 @@ function SubjectsTable({ initial }: { initial: SubjectRow[] }) {
                         ? s.inferredChapters
                         : s.chapters.total}
                     </Td>
-                    <Td className="tabular-nums">
-                      {s.syllabusChunks > 0 ? `${s.syllabusChunks} đoạn` : "—"}
-                    </Td>
                     <Td className="tabular-nums">{s.exams}</Td>
                     <Td className="tabular-nums">{s.fuoThreads}</Td>
                   </Tr>
@@ -530,29 +485,15 @@ function SubjectsTable({ initial }: { initial: SubjectRow[] }) {
           </Table>
         )}
 
-        <div className="flex items-center justify-between border-t border-outline-variant px-5 py-3 text-xs text-on-surface-variant">
-          <span>
-            {filtered.length} môn · trang {page}/{pages}
-          </span>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outlined"
-              disabled={page <= 1}
-              onClick={() => setUrl({ page: String(page - 1) })}
-            >
-              Trước
-            </Button>
-            <Button
-              size="sm"
-              variant="outlined"
-              disabled={page >= pages}
-              onClick={() => setUrl({ page: String(page + 1) })}
-            >
-              Sau
-            </Button>
-          </div>
-        </div>
+        <Pagination
+          meta={{
+            page,
+            limit: PAGE_SIZE,
+            total: filtered.length,
+            totalPages: pages,
+          }}
+          onPage={(p) => setUrl({ page: String(p) })}
+        />
       </Card>
 
       {url.mon && (

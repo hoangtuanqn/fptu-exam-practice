@@ -30,10 +30,9 @@ export interface SubjectPatch {
 export const adminSubjectService = {
   /** Một dòng cho mỗi môn, kèm số liệu tổng hợp từ các bảng liên quan. */
   async list() {
-    const [subjects, chapters, chunks, inferred, exams, threads, issues] = await Promise.all([
+    const [subjects, chapters, inferred, exams, threads, issues] = await Promise.all([
       prisma.subject.findMany({ orderBy: { code: "asc" }, select: { id: true, code: true, name: true, semester: true, credits: true, minPassMark: true, syllabusId: true } }),
       prisma.subjectChapter.findMany({ select: { subjectId: true, number: true, title: true } }),
-      prisma.subjectChunk.groupBy({ by: ["subjectCode"], _count: { _all: true } }),
       prisma.subjectInferredTopic.findMany({ select: { subjectCode: true, topics: true } }),
       prisma.exam.groupBy({ by: ["subjectCode"], _count: { _all: true }, where: { subjectCode: { not: null } } }),
       prisma.fuoThread.groupBy({ by: ["subjectCode"], _count: { _all: true } }),
@@ -42,7 +41,6 @@ export const adminSubjectService = {
 
     const chaptersOf = new Map<number, { number: number; title: string }[]>();
     for (const c of chapters) (chaptersOf.get(c.subjectId) ?? chaptersOf.set(c.subjectId, []).get(c.subjectId)!).push(c);
-    const chunkCount = countBy(chunks, (r) => r.subjectCode);
     const examCount = countBy(exams, (r) => r.subjectCode);
     const threadCount = countBy(threads, (r) => r.subjectCode);
     const inferredCount = new Map(inferred.map((r) => [r.subjectCode, Array.isArray(r.topics) ? r.topics.length : 0]));
@@ -60,7 +58,6 @@ export const adminSubjectService = {
           minPassMark: s.minPassMark === null ? null : Number(s.minPassMark),
           chapters: { total: real.length, named: real.filter((c) => c.title.trim()).length, hasNames: hasNamedChapters(ch) },
           inferredChapters: inferredCount.get(s.code) ?? 0,
-          syllabusChunks: chunkCount.get(s.code) ?? 0,
           exams: examCount.get(s.code) ?? 0,
           fuoThreads: threadCount.get(s.code) ?? 0,
           hasIssue: issueCodes.has(s.code),
@@ -69,13 +66,12 @@ export const adminSubjectService = {
     };
   },
 
-  /** Chi tiết một môn: các chương, chương do AI suy ra, các đoạn syllabus. */
+  /** Chi tiết một môn: các chương và chương do AI suy ra. */
   async detail(code: string) {
     const subject = await findSubject(code);
-    const [chapters, inferred, chunks, exams, threads] = await Promise.all([
+    const [chapters, inferred, exams, threads] = await Promise.all([
       prisma.subjectChapter.findMany({ where: { subjectId: subject.id }, orderBy: { number: "asc" } }),
       prisma.subjectInferredTopic.findUnique({ where: { subjectCode: subject.code } }),
-      prisma.subjectChunk.findMany({ where: { subjectCode: subject.code }, orderBy: { id: "asc" }, select: { kind: true, title: true, content: true } }),
       prisma.exam.count({ where: { subjectCode: subject.code } }),
       prisma.fuoThread.count({ where: { subjectCode: subject.code } }),
     ]);
@@ -90,7 +86,6 @@ export const adminSubjectService = {
       fuoThreads: threads,
       chapters: chapters.map((c) => ({ number: c.number, title: c.title, topics: stringsOf(c.topics) })),
       inferred: inferred ? { topics: inferred.topics as { label: string; hint: string }[], model: inferred.model, at: inferred.updatedAt.toISOString() } : null,
-      chunks: chunks.map((c) => ({ kind: c.kind, title: c.title, length: c.content.length })),
     };
   },
 
