@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Crown } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { examImportApi } from "@/features/exam-import/exam-import.api";
@@ -10,7 +10,8 @@ import { Footer } from "@/shared/layout/Footer";
 import { SiteHeader } from "@/shared/layout/SiteHeader";
 import { ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { addMonths, isPro, proDaysLeft } from "@/shared/utils/pro";
-import { planApi } from "./plan.api";
+import { ActivateTicketDialog } from "./ActivateTicketDialog";
+import { planApi, type ProTicket } from "./plan.api";
 import { ProBenefits } from "./pro/ProBenefits";
 import { ProCompare } from "./pro/ProCompare";
 import { ProFaq } from "./pro/ProFaq";
@@ -19,6 +20,7 @@ import { GOLD_BUTTON } from "@/shared/ui/gold";
 import { ProHero } from "./pro/ProHero";
 import { ProPlans } from "./pro/ProPlans";
 import { ProSteps } from "./pro/ProSteps";
+import { ProTickets } from "./pro/ProTickets";
 import { vnd } from "./pro/money";
 import { UpgradeDialog } from "./UpgradeDialog";
 
@@ -31,6 +33,10 @@ export default function PlanPage() {
   const info = useApi(() => planApi.info(), []);
   const fetchPrice = useApi(() => examImportApi.price(), []).data?.price ?? 0;
   const [open, setOpen] = useState<false | "pro" | "sprint">(false);
+  const [openLater, setOpenLater] = useState(false); // mở hộp mua ở chế độ "giữ vé, dùng sau"
+  const tickets = useApi(() => (user ? planApi.tickets() : Promise.resolve([] as ProTicket[])), [user?.id]);
+  const [activating, setActivating] = useState<ProTicket | null>(null);
+  const [params, setParams] = useSearchParams();
   const [plansVisible, setPlansVisible] = useState(true);
   const plansRef = useRef<HTMLDivElement>(null);
 
@@ -57,6 +63,16 @@ export default function PlanPage() {
     setOpen(kind);
   };
 
+  // Liên kết từ lời mời ở trang chủ (/pro?buy=sprint&later=1): mở thẳng hộp mua một lần rồi bỏ tham số để tải lại không mở lại
+  const buy = params.get("buy");
+  useEffect(() => {
+    if (!plan || !user || (buy !== "pro" && buy !== "sprint")) return;
+    setParams({}, { replace: true });
+    setOpenLater(params.get("later") === "1");
+    cta(buy);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plan, user, buy]);
+
   const startsAt = pro && user?.proExpiresAt ? new Date(user.proExpiresAt) : new Date();
 
   return (
@@ -78,6 +94,7 @@ export default function PlanPage() {
                 <VerifyEmailNotice variant="inline" message="Bạn cần xác minh email trước khi nâng cấp Pro." />
               </div>
             )}
+            <ProTickets tickets={tickets.data ?? []} onActivate={setActivating} />
             <div ref={plansRef}>
               <ProPlans plan={plan} label={label} newExpiry={addMonths(startsAt, plan.months)} onBuy={cta} />
             </div>
@@ -113,7 +130,27 @@ export default function PlanPage() {
         </div>
       )}
 
-      {open && plan && <UpgradeDialog plan={plan} kind={open} onClose={() => setOpen(false)} />}
+      {open && plan && (
+        <UpgradeDialog
+          plan={plan}
+          kind={open}
+          defaultLater={openLater}
+          onClose={() => {
+            setOpen(false);
+            setOpenLater(false);
+            tickets.reload();
+          }}
+        />
+      )}
+      {activating && (
+        <ActivateTicketDialog
+          ticket={activating}
+          onClose={() => {
+            setActivating(null);
+            tickets.reload();
+          }}
+        />
+      )}
     </div>
   );
 }
