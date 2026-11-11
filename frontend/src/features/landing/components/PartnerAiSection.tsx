@@ -1,4 +1,5 @@
-import { ExternalLink } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ArrowRight, ExternalLink } from "lucide-react";
 import { brand, logos } from "@/shared/brand/brand";
 import { buttonClass } from "@/shared/ui/Button";
 import { GlossCard } from "@/shared/ui/GlossCard";
@@ -27,11 +28,14 @@ export function PartnerAiSection() {
           </GlossCard>
 
           <GlossCard lift className="p-5 sm:p-6">
-            <span className="md-label-medium inline-flex h-6 items-center rounded-m3-sm bg-tertiary-container px-2.5 uppercase tracking-wider text-on-tertiary-container">VIP</span>
+            <span className="md-label-medium inline-flex h-6 items-center rounded-m3-sm bg-tertiary-container px-2.5 uppercase tracking-wider text-on-tertiary-container">Giải thích AI</span>
             <h3 className="md-title-large mt-5 text-on-surface">AI giải thích đáp án chi tiết</h3>
             <p className="md-body-medium mt-2 text-on-surface-variant">
-              Làm sai một câu? AI chỉ ra vì sao đáp án đúng là đúng và các phương án còn lại sai ở đâu, để bạn hiểu chứ không chỉ nhớ. Bấm giải thích ngay ở câu hỏi lúc làm bài
+              Làm sai một câu? AI chỉ ra vì sao đáp án đúng là đúng và các phương án còn lại sai ở đâu, để bạn hiểu chứ không chỉ nhớ. Bấm giải thích ngay ở câu hỏi lúc làm bài.
             </p>
+            <Link to="/pro" className={buttonClass({ variant: "text", className: "mt-4 -ml-3" })}>
+              Xem gói Pro <ArrowRight size={16} />
+            </Link>
           </GlossCard>
         </div>
       </div>
