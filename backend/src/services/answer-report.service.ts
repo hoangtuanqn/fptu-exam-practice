@@ -12,6 +12,7 @@ import { fileUrlOf } from "../utils/file-url";
 import { startOfVnDay } from "../utils/time";
 import { toMeta, type PaginationQuery } from "../utils/pagination";
 import { examService } from "./exam.service";
+import { adminNoticeService } from "./admin-notice.service";
 import { notificationService } from "./notification.service";
 import { walletService } from "./wallet.service";
 
@@ -53,6 +54,7 @@ export const answerReportService = {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") throw AppError.conflict("Bạn đã báo cáo câu này rồi");
       throw err;
     }
+    adminNoticeService.push("report.created", { title: `Báo cáo đáp án sai: câu ${body.questionNumber}`, body: `Đề xuất ${proposed} (hiện là ${normalize(question.answer)})${body.reason ? `. ${body.reason}` : ""}`, userId, link: "/admin/reports" });
     return { reward: ANSWER_REPORT_REWARD };
   },
 

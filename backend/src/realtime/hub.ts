@@ -4,7 +4,7 @@ import { examRepository } from "../repositories/exam.repository";
 import { toJobDto } from "../services/crawl-job.dto";
 import { toAnswersPayload } from "../utils/exam-answers";
 import { fileUrlOf } from "../utils/file-url";
-import { EVENTS, roomOf, type RoomKind } from "./events";
+import { ADMIN_ROOM, EVENTS, roomOf, type RoomKind } from "./events";
 
 /**
  * Điểm phát sự kiện realtime cho phần còn lại của server. Dịch vụ nghiệp vụ chỉ gọi `publishExam` / `publishJob`,
@@ -65,6 +65,11 @@ export const realtimeHub = {
   publishExamFailed(examId: number, message: string) {
     if (!io) return;
     io.to(roomOf("exam", examId)).emit(EVENTS.examFailed, { examId, message });
+  },
+
+  // Thông báo mới cho admin (đã ghi DB): đẩy cho các admin đang mở trang quản trị
+  publishAdminNotice(notice: unknown) {
+    io?.to(ADMIN_ROOM).emit(EVENTS.adminNotice, notice);
   },
 
   // Tiến độ lấy đề vừa đổi (sang bước mới, xong, hoặc lỗi)

@@ -33,6 +33,28 @@ import type {
 import { http } from "@/shared/api/client";
 import { PAGE_SIZE } from "@/shared/api/pagination";
 
+export type NoticeCategory = "account" | "fetch" | "money" | "exam" | "system";
+
+export interface AdminNotice {
+  id: number;
+  kind: string;
+  category: NoticeCategory;
+  level: "info" | "success" | "warning" | "error";
+  important: boolean;
+  title: string;
+  body: string | null;
+  userId: number | null;
+  link: string | null; // trang admin liên quan
+  createdAt: string;
+  readAt: string | null;
+}
+
+export interface NoticeCounts {
+  unread: number;
+  importantUnread: number;
+  categories: Record<NoticeCategory, number>; // số chưa đọc theo nhóm
+}
+
 export interface SubjectRow {
   code: string;
   name: string;
@@ -55,7 +77,11 @@ export interface SubjectDetail {
   exams: number;
   fuoThreads: number;
   chapters: { number: number; title: string; topics: string[] }[];
-  inferred: { topics: { label: string; hint: string }[]; model: string | null; at: string } | null;
+  inferred: {
+    topics: { label: string; hint: string }[];
+    model: string | null;
+    at: string;
+  } | null;
 }
 
 export interface SubjectPatch {
@@ -125,7 +151,13 @@ export interface ChatbotAdmin {
     today: number;
     total: number;
     unmatched: { question: string; createdAt: string }[];
-    usage?: { calls7d: number; avgInput: number; avgCacheRead: number; avgOutput: number; truncated7d: number }; // máy chủ cũ không trả
+    usage?: {
+      calls7d: number;
+      avgInput: number;
+      avgCacheRead: number;
+      avgOutput: number;
+      truncated7d: number;
+    }; // máy chủ cũ không trả
   };
   cache: { entries: number; today: number; total: number }; // câu trả lời lưu sẵn; today/total = số lượt hỏi đã trả lời từ cache (không tốn token)
 }
@@ -176,7 +208,12 @@ export interface ExamAdminDetail {
   aiReport: string | null;
   createdAt: string;
   solving: boolean;
-  usage: { userExams: number; attempts: number; unlocks: number; purchases: number };
+  usage: {
+    userExams: number;
+    attempts: number;
+    unlocks: number;
+    purchases: number;
+  };
   questions: ExamQuestionAdmin[];
 }
 
@@ -227,38 +264,110 @@ export interface QuestionChange {
 export const adminApi = {
   dashboard: () => http.get<DashboardOverview>("/admin/dashboard"),
 
-  users: (f: UserFilter) => http.list<User>("/admin/users", { ...f, limit: PAGE_SIZE }),
-  updateUser: (id: number, body: Partial<Pick<User, "fullName" | "role" | "status">> & { emailVerified?: boolean }) =>
-    http.patch<User>(`/admin/users/${id}`, body),
+  users: (f: UserFilter) =>
+    http.list<User>("/admin/users", { ...f, limit: PAGE_SIZE }),
+  updateUser: (
+    id: number,
+    body: Partial<Pick<User, "fullName" | "role" | "status">> & {
+      emailVerified?: boolean;
+    },
+  ) => http.patch<User>(`/admin/users/${id}`, body),
   adjustBalance: (id: number, body: { amount: number; note: string }) =>
     http.post<User>(`/admin/users/${id}/balance`, body),
 
   user: (id: number) => http.get<User>(`/admin/users/${id}`),
   chatbot: () => http.get<ChatbotAdmin>("/admin/settings/chat"),
-  saveChatbot: (body: ChatbotForm) => http.put<ChatbotAdmin["settings"]>("/admin/settings/chat", body),
+  saveChatbot: (body: ChatbotForm) =>
+    http.put<ChatbotAdmin["settings"]>("/admin/settings/chat", body),
   clearChatbotCache: () => http.delete("/admin/settings/chat/cache"),
-  reindexChatbot: () => http.post<{ total: number; updated: number; embedded: number; warning?: string }>("/admin/settings/chat/reindex"),
-  userSummary: (id: number) => http.get<UserSummary>(`/admin/users/${id}/summary`),
-  resetUserPassword: (id: number, password?: string) => http.post<{ password: string }>(`/admin/users/${id}/reset-password`, password ? { password } : {}),
-  sendResetLink: (id: number) => http.post<null>(`/admin/users/${id}/send-reset-link`),
-  revokeUserSessions: (id: number) => http.post<null>(`/admin/users/${id}/revoke-sessions`),
-  impersonateUser: (id: number) => http.post<{ token: string; user: User }>(`/admin/users/${id}/impersonate`),
+  reindexChatbot: () =>
+    http.post<{
+      total: number;
+      updated: number;
+      embedded: number;
+      warning?: string;
+    }>("/admin/settings/chat/reindex"),
+  userSummary: (id: number) =>
+    http.get<UserSummary>(`/admin/users/${id}/summary`),
+  resetUserPassword: (id: number, password?: string) =>
+    http.post<{ password: string }>(
+      `/admin/users/${id}/reset-password`,
+      password ? { password } : {},
+    ),
+  sendResetLink: (id: number) =>
+    http.post<null>(`/admin/users/${id}/send-reset-link`),
+  revokeUserSessions: (id: number) =>
+    http.post<null>(`/admin/users/${id}/revoke-sessions`),
+  impersonateUser: (id: number) =>
+    http.post<{ token: string; user: User }>(`/admin/users/${id}/impersonate`),
 
-  walletTransactions: (f: { page: number; userId?: string; search?: string; type?: TransactionType | "" }) =>
-    http.list<AdminWalletTx>("/admin/wallet-transactions", { ...f, limit: PAGE_SIZE }),
-  crawlJobs: (f: { page: number; userId?: string; search?: string; status?: CrawlJobStatus | "" }) =>
+  walletTransactions: (f: {
+    page: number;
+    userId?: string;
+    search?: string;
+    type?: TransactionType | "";
+  }) =>
+    http.list<AdminWalletTx>("/admin/wallet-transactions", {
+      ...f,
+      limit: PAGE_SIZE,
+    }),
+  crawlJobs: (f: {
+    page: number;
+    userId?: string;
+    search?: string;
+    status?: CrawlJobStatus | "";
+  }) =>
     http.list<AdminCrawlJob>("/admin/crawl-jobs", { ...f, limit: PAGE_SIZE }),
-  attempts: (f: { page: number; userId?: string; search?: string; mode?: "PRACTICE" | "EXAM" | "" }) =>
-    http.list<AdminAttempt>("/admin/attempts", { ...f, limit: PAGE_SIZE }),
+  attempts: (f: {
+    page: number;
+    userId?: string;
+    search?: string;
+    mode?: "PRACTICE" | "EXAM" | "";
+  }) => http.list<AdminAttempt>("/admin/attempts", { ...f, limit: PAGE_SIZE }),
+  notices: (
+    page: number,
+    filter: {
+      status: "unread" | "all";
+      important?: boolean;
+      category?: NoticeCategory;
+    },
+    limit = PAGE_SIZE,
+  ) =>
+    http.list<AdminNotice>("/admin/notices", {
+      page,
+      limit,
+      status: filter.status,
+      important: filter.important === undefined ? "" : String(filter.important),
+      category: filter.category ?? "",
+    }),
+  noticeCounts: () => http.get<NoticeCounts>("/admin/notices/counts"),
+  setNoticeRead: (id: number, read: boolean) =>
+    http.patch<AdminNotice>(`/admin/notices/${id}`, { read }),
+  readAllNotices: (filter: {
+    important?: boolean;
+    category?: NoticeCategory;
+  }) => http.post<{ updated: number }>("/admin/notices/read-all", filter),
+  deleteReadNotices: () => http.delete("/admin/notices/read"),
   subjects: () => http.get<{ subjects: SubjectRow[] }>("/admin/subjects"),
-  subject: (code: string) => http.get<SubjectDetail>(`/admin/subjects/${encodeURIComponent(code)}`),
-  updateSubject: (code: string, patch: SubjectPatch) => http.patch<SubjectDetail>(`/admin/subjects/${encodeURIComponent(code)}`, patch),
-  clearInferredChapters: (code: string) => http.delete(`/admin/subjects/${encodeURIComponent(code)}/inferred-chapters`),
+  subject: (code: string) =>
+    http.get<SubjectDetail>(`/admin/subjects/${encodeURIComponent(code)}`),
+  updateSubject: (code: string, patch: SubjectPatch) =>
+    http.patch<SubjectDetail>(
+      `/admin/subjects/${encodeURIComponent(code)}`,
+      patch,
+    ),
+  clearInferredChapters: (code: string) =>
+    http.delete(
+      `/admin/subjects/${encodeURIComponent(code)}/inferred-chapters`,
+    ),
   promoSettings: () => http.get<PromoSettings>("/admin/settings/promo"),
-  savePromoSettings: (body: PromoSettings) => http.put<PromoSettings>("/admin/settings/promo", body),
+  savePromoSettings: (body: PromoSettings) =>
+    http.put<PromoSettings>("/admin/settings/promo", body),
   accountSettings: () => http.get<AccountSettings>("/admin/settings/account"),
-  saveAccountSettings: (body: AccountSettings) => http.put<AccountSettings>("/admin/settings/account", body),
-  linkRewardSettings: () => http.get<LinkRewardAdmin>("/admin/settings/link-reward"),
+  saveAccountSettings: (body: AccountSettings) =>
+    http.put<AccountSettings>("/admin/settings/account", body),
+  linkRewardSettings: () =>
+    http.get<LinkRewardAdmin>("/admin/settings/link-reward"),
   saveLinkRewardSettings: (body: {
     enabled: boolean;
     link4mEnabled: boolean;
@@ -271,50 +380,108 @@ export const adminApi = {
     shrinkmeDailyLimit: number;
     validDays: number;
     minSeconds: number;
-  }) =>
-    http.put<LinkRewardAdmin>("/admin/settings/link-reward", body),
+  }) => http.put<LinkRewardAdmin>("/admin/settings/link-reward", body),
 
-  giftCodes: (page: number, filter: { q?: string; active?: "true" | "false" | "" }) =>
-    http.list<GiftCode>("/admin/gift-codes", { page, limit: PAGE_SIZE, ...filter }),
-  createGiftCode: (body: GiftCodeForm) => http.post<GiftCode>("/admin/gift-codes", body),
-  setGiftCodeActive: (id: number, active: boolean) => http.patch<GiftCode>(`/admin/gift-codes/${id}`, { active }),
+  giftCodes: (
+    page: number,
+    filter: { q?: string; active?: "true" | "false" | "" },
+  ) =>
+    http.list<GiftCode>("/admin/gift-codes", {
+      page,
+      limit: PAGE_SIZE,
+      ...filter,
+    }),
+  createGiftCode: (body: GiftCodeForm) =>
+    http.post<GiftCode>("/admin/gift-codes", body),
+  setGiftCodeActive: (id: number, active: boolean) =>
+    http.patch<GiftCode>(`/admin/gift-codes/${id}`, { active }),
   giftCodeRedemptions: (id: number, page: number) =>
-    http.list<GiftCodeRedemption>(`/admin/gift-codes/${id}/redemptions`, { page, limit: PAGE_SIZE }),
+    http.list<GiftCodeRedemption>(`/admin/gift-codes/${id}/redemptions`, {
+      page,
+      limit: PAGE_SIZE,
+    }),
 
   answerReports: (page: number, status: ReportStatus | "") =>
-    http.list<AnswerReportAdmin>("/admin/answer-reports", { page, limit: PAGE_SIZE, status }),
-  approveReport: (id: number, body: { note?: string }) => http.post<unknown>(`/admin/answer-reports/${id}/approve`, body),
-  rejectReport: (id: number, body: { note?: string }) => http.post<unknown>(`/admin/answer-reports/${id}/reject`, body),
+    http.list<AnswerReportAdmin>("/admin/answer-reports", {
+      page,
+      limit: PAGE_SIZE,
+      status,
+    }),
+  approveReport: (id: number, body: { note?: string }) =>
+    http.post<unknown>(`/admin/answer-reports/${id}/approve`, body),
+  rejectReport: (id: number, body: { note?: string }) =>
+    http.post<unknown>(`/admin/answer-reports/${id}/reject`, body),
 
-  referralSettings: () => http.get<ReferralSettings>("/admin/settings/referral"),
-  saveReferralSettings: (body: ReferralSettings) => http.put<ReferralSettings>("/admin/settings/referral", body),
+  referralSettings: () =>
+    http.get<ReferralSettings>("/admin/settings/referral"),
+  saveReferralSettings: (body: ReferralSettings) =>
+    http.put<ReferralSettings>("/admin/settings/referral", body),
   referralSummary: () => http.get<ReferralSummary>("/admin/referrals/summary"),
-  referrals: (page: number) => http.list<AdminReferral>("/admin/referrals", { page, limit: PAGE_SIZE }),
+  referrals: (page: number) =>
+    http.list<AdminReferral>("/admin/referrals", { page, limit: PAGE_SIZE }),
 
   deposits: (page: number, status?: DepositStatus | "", userId?: string) =>
-    http.list<DepositOrder>("/admin/deposits", { page, limit: PAGE_SIZE, status, userId }),
+    http.list<DepositOrder>("/admin/deposits", {
+      page,
+      limit: PAGE_SIZE,
+      status,
+      userId,
+    }),
   bankTransactions: (page: number, status?: BankTxStatus | "") =>
-    http.list<BankTransaction>("/admin/bank-transactions", { page, limit: PAGE_SIZE, status }),
+    http.list<BankTransaction>("/admin/bank-transactions", {
+      page,
+      limit: PAGE_SIZE,
+      status,
+    }),
 
   sepayConfig: () => http.get<SepayAdminConfig>("/admin/settings/sepay"),
-  saveSepayConfig: (body: SepayForm) => http.put<SepayAdminConfig>("/admin/settings/sepay", body),
+  saveSepayConfig: (body: SepayForm) =>
+    http.put<SepayAdminConfig>("/admin/settings/sepay", body),
   crawlerConfig: () => http.get<CrawlerAdminConfig>("/admin/settings/crawler"),
-  saveCrawlerConfig: (body: CrawlerForm) => http.put<CrawlerAdminConfig>("/admin/settings/crawler", body),
+  saveCrawlerConfig: (body: CrawlerForm) =>
+    http.put<CrawlerAdminConfig>("/admin/settings/crawler", body),
   // Đăng nhập FuOverflow bằng tài khoản đã lưu để lấy cookie mới
-  crawlerLogin: () => http.post<CrawlerAdminConfig>("/admin/settings/crawler/login"),
+  crawlerLogin: () =>
+    http.post<CrawlerAdminConfig>("/admin/settings/crawler/login"),
   aiConfig: () => http.get<AiAdminConfig>("/admin/settings/ai"),
-  saveAiConfig: (body: AiForm) => http.put<AiAdminConfig>("/admin/settings/ai", body),
-  exams: (page: number) => http.list<AdminExam>("/admin/exams", { page, limit: PAGE_SIZE }),
-  renameExam: (id: number, title: string) => http.patch<ExamAdminDetail>(`/admin/exams/${id}`, { title }),
+  saveAiConfig: (body: AiForm) =>
+    http.put<AiAdminConfig>("/admin/settings/ai", body),
+  exams: (page: number) =>
+    http.list<AdminExam>("/admin/exams", { page, limit: PAGE_SIZE }),
+  renameExam: (id: number, title: string) =>
+    http.patch<ExamAdminDetail>(`/admin/exams/${id}`, { title }),
   deleteExam: (id: number) => http.delete(`/admin/exams/${id}`),
-  peDownloads: (f: { page: number; userId?: string; search?: string }) => http.list<AdminPeDownload>("/admin/pe-downloads", { ...f, limit: PAGE_SIZE }),
-  explanationUnlocks: (f: { page: number; userId?: string; search?: string }) => http.list<AdminExplanationUnlock>("/admin/explanation-unlocks", { ...f, limit: PAGE_SIZE }),
-  explanationPurchases: (f: { page: number; userId?: string; search?: string }) => http.list<AdminExplanationPurchase>("/admin/explanation-purchases", { ...f, limit: PAGE_SIZE }),
+  peDownloads: (f: { page: number; userId?: string; search?: string }) =>
+    http.list<AdminPeDownload>("/admin/pe-downloads", {
+      ...f,
+      limit: PAGE_SIZE,
+    }),
+  explanationUnlocks: (f: { page: number; userId?: string; search?: string }) =>
+    http.list<AdminExplanationUnlock>("/admin/explanation-unlocks", {
+      ...f,
+      limit: PAGE_SIZE,
+    }),
+  explanationPurchases: (f: {
+    page: number;
+    userId?: string;
+    search?: string;
+  }) =>
+    http.list<AdminExplanationPurchase>("/admin/explanation-purchases", {
+      ...f,
+      limit: PAGE_SIZE,
+    }),
   examDetail: (id: number) => http.get<ExamAdminDetail>(`/admin/exams/${id}`),
-  resolveQuestion: (id: number, number: number) => http.post<QuestionResolve>(`/admin/exams/${id}/questions/${number}/resolve`),
-  saveExamQuestions: (id: number, changes: QuestionChange[]) => http.patch<ExamAdminDetail>(`/admin/exams/${id}/questions`, { changes }),
+  resolveQuestion: (id: number, number: number) =>
+    http.post<QuestionResolve>(
+      `/admin/exams/${id}/questions/${number}/resolve`,
+    ),
+  saveExamQuestions: (id: number, changes: QuestionChange[]) =>
+    http.patch<ExamAdminDetail>(`/admin/exams/${id}/questions`, { changes }),
   solveExam: (id: number) => http.post<null>(`/admin/exams/${id}/solve`),
-  examReport: (id: number) => http.get<{ id: number; title: string; aiReport: string | null }>(`/admin/exams/${id}/report`),
+  examReport: (id: number) =>
+    http.get<{ id: number; title: string; aiReport: string | null }>(
+      `/admin/exams/${id}/report`,
+    ),
   sepayStatus: () => http.get<SyncResult | null>("/admin/sepay/status"),
   syncNow: () => http.post<SyncResult>("/admin/sepay/sync"),
 };

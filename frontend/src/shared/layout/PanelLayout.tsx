@@ -1,6 +1,20 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { ChevronDown, LogOut, Menu, PenLine, Wallet, X, type LucideIcon } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  Link,
+  NavLink,
+  Outlet,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
+import {
+  ChevronDown,
+  LogOut,
+  Menu,
+  PenLine,
+  Wallet,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { brand } from "@/shared/brand/brand";
 import { Logo } from "@/shared/brand/Logo";
@@ -26,21 +40,38 @@ const FOLD_OVER = 5;
 // Mục menu khớp với đường dẫn hiện tại (dài nhất thắng), dùng cho tiêu đề thanh trên
 function currentItem(items: NavItem[], pathname: string) {
   return items
-    .filter((i) => (i.end ? pathname === i.to : pathname === i.to || pathname.startsWith(`${i.to}/`)))
+    .filter((i) =>
+      i.end
+        ? pathname === i.to
+        : pathname === i.to || pathname.startsWith(`${i.to}/`),
+    )
     .sort((a, b) => b.to.length - a.to.length)[0];
 }
 
 // Ngăn điều hướng (navigation drawer) của M3: mục dạng viên thuốc cao 48dp, mục đang chọn nền secondary-container, tiêu đề nhóm title-small.
 // Dùng làm ngăn cố định ở cỡ expanded và ngăn mở ra (modal) ở cỡ compact.
-function DrawerContent({ title, items, onNavigate, collapsible }: { title: string; items: NavItem[]; onNavigate: () => void; collapsible: boolean }) {
+function DrawerContent({
+  title,
+  items,
+  onNavigate,
+  collapsible,
+}: {
+  title: string;
+  items: NavItem[];
+  onNavigate: () => void;
+  collapsible: boolean;
+}) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const activeGroup = currentItem(items, pathname)?.group;
   // Chỉ nhóm chứa trang đang xem được mở sẵn; các nhóm khác thu lại cho menu gọn
-  const [open, setOpen] = useState<Set<string>>(() => new Set(activeGroup ? [activeGroup] : []));
+  const [open, setOpen] = useState<Set<string>>(
+    () => new Set(activeGroup ? [activeGroup] : []),
+  );
   useEffect(() => {
-    if (activeGroup) setOpen((o) => (o.has(activeGroup) ? o : new Set(o).add(activeGroup)));
+    if (activeGroup)
+      setOpen((o) => (o.has(activeGroup) ? o : new Set(o).add(activeGroup)));
   }, [activeGroup]);
   const toggle = (g: string) =>
     setOpen((o) => {
@@ -78,7 +109,8 @@ function DrawerContent({ title, items, onNavigate, collapsible }: { title: strin
 
       <nav aria-label={title} className="flex-1 overflow-y-auto px-3 pb-4">
         {sections.map((sec, si) => {
-          const fold = collapsible && !!sec.group && sec.items.length > FOLD_OVER; // nhóm có nhãn thì xổ xuống/thu lại được
+          const fold =
+            collapsible && !!sec.group && sec.items.length > FOLD_OVER; // nhóm có nhãn thì xổ xuống/thu lại được
           const isOpen = !fold || open.has(sec.group!);
           return (
             <div key={sec.group ?? `s${si}`}>
@@ -92,12 +124,23 @@ function DrawerContent({ title, items, onNavigate, collapsible }: { title: strin
                   >
                     <span>{sec.group}</span>
                     <span className="flex items-center gap-2">
-                      {!isOpen && <span className="md-label-medium text-on-surface-variant/70">{sec.items.length}</span>}
-                      <ChevronDown size={18} className={`md-motion transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                      {!isOpen && (
+                        <span className="md-label-medium text-on-surface-variant/70">
+                          {sec.items.length}
+                        </span>
+                      )}
+                      <ChevronDown
+                        size={18}
+                        className={`md-motion transition-transform ${isOpen ? "rotate-180" : ""}`}
+                      />
                     </span>
                   </button>
                 ) : (
-                  <div className={`md-title-small px-4 pb-1 text-on-surface-variant ${si === 0 ? "pt-2" : "pt-5"}`}>{sec.group}</div>
+                  <div
+                    className={`md-title-small px-4 pb-1 text-on-surface-variant ${si === 0 ? "pt-2" : "pt-5"}`}
+                  >
+                    {sec.group}
+                  </div>
                 ))}
               {isOpen &&
                 sec.items.map(({ to, label, icon: Icon, end }) => (
@@ -108,7 +151,9 @@ function DrawerContent({ title, items, onNavigate, collapsible }: { title: strin
                     onClick={onNavigate}
                     className={({ isActive }) =>
                       `md-state md-motion md-label-large flex h-12 items-center gap-3 rounded-full px-4 ${fold ? "ml-2" : ""} ${
-                        isActive ? "bg-secondary-container text-on-secondary-container" : "text-on-surface-variant"
+                        isActive
+                          ? "bg-secondary-container text-on-secondary-container"
+                          : "text-on-surface-variant"
                       }`
                     }
                   >
@@ -123,10 +168,18 @@ function DrawerContent({ title, items, onNavigate, collapsible }: { title: strin
 
       {user && (
         <div className="flex shrink-0 items-center gap-3 border-t border-outline-variant p-4">
-          <UserAvatar avatarPath={user.avatarPath} alt={user.fullName} className="h-10 w-10" />
+          <UserAvatar
+            avatarPath={user.avatarPath}
+            alt={user.fullName}
+            className="h-10 w-10"
+          />
           <div className="min-w-0 flex-1">
-            <div className="md-title-small truncate text-on-surface">{user.fullName}</div>
-            <div className="md-body-small truncate text-on-surface-variant">{user.email}</div>
+            <div className="md-title-small truncate text-on-surface">
+              {user.fullName}
+            </div>
+            <div className="md-body-small truncate text-on-surface-variant">
+              {user.email}
+            </div>
           </div>
           <IconButton
             label="Đăng xuất"
@@ -151,20 +204,40 @@ function Rail({ title, items }: { title: string; items: NavItem[] }) {
       <Link to="/" title={`Về trang ${brand.product}`} className="mt-3 block">
         <Logo className="h-9" />
       </Link>
-      <Link to="/" aria-label="Vào luyện đề" title="Vào luyện đề" className="mt-4">
+      <Link
+        to="/"
+        aria-label="Vào luyện đề"
+        title="Vào luyện đề"
+        className="mt-4"
+      >
         <Fab label="Vào luyện đề" tabIndex={-1} className="!h-14">
           <PenLine size={24} />
         </Fab>
       </Link>
-      <nav aria-label={title} className="mt-3 flex w-full flex-1 flex-col items-center gap-1 overflow-y-auto pb-4">
+      <nav
+        aria-label={title}
+        className="mt-3 flex w-full flex-1 flex-col items-center gap-1 overflow-y-auto pb-4"
+      >
         {items.map(({ to, label, icon: Icon, end }) => (
-          <NavLink key={to} to={to} end={end} title={label} className="group flex w-full flex-col items-center gap-1 px-1 py-1.5">
+          <NavLink
+            key={to}
+            to={to}
+            end={end}
+            title={label}
+            className="group flex w-full flex-col items-center gap-1 px-1 py-1.5"
+          >
             {({ isActive }) => (
               <>
-                <span className={`md-state md-motion flex h-8 w-14 items-center justify-center rounded-full ${isActive ? "bg-secondary-container text-on-secondary-container" : "text-on-surface-variant"}`}>
+                <span
+                  className={`md-state md-motion flex h-8 w-14 items-center justify-center rounded-full ${isActive ? "bg-secondary-container text-on-secondary-container" : "text-on-surface-variant"}`}
+                >
                   <Icon size={22} />
                 </span>
-                <span className={`md-label-medium w-full break-words text-center leading-tight ${isActive ? "text-on-surface" : "text-on-surface-variant"}`}>{label}</span>
+                <span
+                  className={`md-label-medium w-full break-words text-center leading-tight ${isActive ? "text-on-surface" : "text-on-surface-variant"}`}
+                >
+                  {label}
+                </span>
               </>
             )}
           </NavLink>
@@ -178,7 +251,17 @@ function Rail({ title, items }: { title: string; items: NavItem[] }) {
 //  - compact (<600px): thanh ứng dụng trên cùng + ngăn điều hướng mở ra (modal) vì có tới 10 đích đến, nhiều hơn mức tối đa 5 của thanh điều hướng dưới
 //  - medium (600-839px): thanh điều hướng dọc (rail)
 //  - expanded (>=840px): ngăn điều hướng cố định bên trái
-export function PanelLayout({ title, items, collapsible = false }: { title: string; items: NavItem[]; collapsible?: boolean }) {
+export function PanelLayout({
+  title,
+  items,
+  collapsible = false,
+  actions,
+}: {
+  title: string;
+  items: NavItem[];
+  collapsible?: boolean;
+  actions?: ReactNode;
+}) {
   const { user } = useAuth();
   const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
@@ -202,7 +285,13 @@ export function PanelLayout({ title, items, collapsible = false }: { title: stri
 
   return (
     <div className="flex min-h-screen bg-surface">
-      {open && <div className="md-scrim-in fixed inset-0 z-40 bg-scrim/32 medium:hidden expanded:hidden" onClick={() => setOpen(false)} aria-hidden />}
+      {open && (
+        <div
+          className="md-scrim-in fixed inset-0 z-40 bg-scrim/32 medium:hidden expanded:hidden"
+          onClick={() => setOpen(false)}
+          aria-hidden
+        />
+      )}
 
       {/* medium: rail */}
       <aside className="sticky top-0 hidden h-screen shrink-0 border-r border-outline-variant bg-surface medium:block expanded:hidden">
@@ -218,20 +307,35 @@ export function PanelLayout({ title, items, collapsible = false }: { title: stri
           open ? "translate-x-0 shadow-m3-3" : "-translate-x-full"
         }`}
       >
-        <IconButton label="Đóng menu" onClick={() => setOpen(false)} className="absolute right-3 top-3 z-10 expanded:hidden">
+        <IconButton
+          label="Đóng menu"
+          onClick={() => setOpen(false)}
+          className="absolute right-3 top-3 z-10 expanded:hidden"
+        >
           <X size={22} />
         </IconButton>
-        <DrawerContent title={title} items={items} collapsible={collapsible} onNavigate={() => setOpen(false)} />
+        <DrawerContent
+          title={title}
+          items={items}
+          collapsible={collapsible}
+          onNavigate={() => setOpen(false)}
+        />
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Thanh ứng dụng trên cùng (small top app bar, cao 64dp) */}
         <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between gap-2 bg-surface px-2 sm:px-4 expanded:px-6">
           <div className="flex min-w-0 items-center gap-1">
-            <IconButton label="Mở menu" onClick={() => setOpen(true)} className="medium:hidden expanded:hidden">
+            <IconButton
+              label="Mở menu"
+              onClick={() => setOpen(true)}
+              className="medium:hidden expanded:hidden"
+            >
               <Menu size={24} />
             </IconButton>
-            <h1 className="md-title-large truncate pl-2 text-on-surface">{current?.label ?? title}</h1>
+            <h1 className="md-title-large truncate pl-2 text-on-surface">
+              {current?.label ?? title}
+            </h1>
           </div>
 
           <div className="flex shrink-0 items-center gap-1">
@@ -242,9 +346,12 @@ export function PanelLayout({ title, items, collapsible = false }: { title: stri
                 className="md-state md-motion md-label-large mr-1 hidden h-8 items-center gap-2 rounded-m3-sm border border-outline px-3 text-on-surface-variant sm:flex"
               >
                 <Wallet size={16} />
-                <span className="tabular-nums text-on-surface">{formatCredit(user.balance)}</span>
+                <span className="tabular-nums text-on-surface">
+                  {formatCredit(user.balance)}
+                </span>
               </Link>
             )}
+            {actions}
             <ThemeToggle />
             <UserMenu />
           </div>
@@ -253,7 +360,10 @@ export function PanelLayout({ title, items, collapsible = false }: { title: stri
         <VerifyEmailNotice />
 
         <main className="flex-1 px-4 pb-6 pt-2 sm:px-6 expanded:px-8 expanded:pb-8">
-          <div key={pathname} className="animate-fade-up mx-auto w-full max-w-7xl">
+          <div
+            key={pathname}
+            className="animate-fade-up mx-auto w-full max-w-7xl"
+          >
             <Outlet />
           </div>
         </main>

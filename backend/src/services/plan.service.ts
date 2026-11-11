@@ -8,6 +8,7 @@ import { userCache } from "../utils/user-cache";
 import { AppError } from "../rules/error";
 import { isProUntil } from "../utils/pro";
 import { DAY_MS, vnDate } from "../utils/time";
+import { adminNoticeService } from "./admin-notice.service";
 import { notificationService } from "./notification.service";
 import { walletService } from "./wallet.service";
 
@@ -84,6 +85,7 @@ export const planService = {
     });
     notificationService.proPurchased({ userId, planName: plan.name, duration, price: plan.price, renewed: result.renewed, expiresAt: result.proExpiresAt, balanceAfter: result.balanceAfter });
     userCache.invalidate(userId); // đã commit: lần xác thực sau thấy ngay gói Pro mới
+    adminNoticeService.push("plan.purchased", { title: `${result.renewed ? "Gia hạn" : "Mua"} gói ${plan.name} ${duration}`, body: `${plan.price.toLocaleString("vi-VN")} credit`, userId, link: "/admin/purchases" });
     return { ...result, user: await userRepository.findById(userId) };
   },
 

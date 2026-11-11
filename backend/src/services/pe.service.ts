@@ -1,4 +1,5 @@
 import { PRO_BENEFITS } from "../constants/plan";
+import { adminNoticeService } from "./admin-notice.service";
 import { planService } from "./plan.service";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -150,10 +151,12 @@ export const peService = {
     try {
       const built = await buildZip(threadId);
       await prisma.peDownload.update({ where: { id: row.id }, data: { status: "DONE", title: built.title.slice(0, 255), files: built.files, sizeBytes: built.size } });
+      adminNoticeService.push("pe.done", { title: `Tải đề PE: ${built.title.slice(0, 120)}`, body: fee > 0 ? `${fee.toLocaleString("vi-VN")} credit` : "Miễn phí", userId, link: "/admin/purchases" });
       return { file: built.file, filename: `${sanitizeName(built.title, threadId)}.zip` };
     } catch (err) {
       const message = err instanceof Error ? err.message : "Lỗi không xác định";
       console.error(`[pe] thread ${threadId} lỗi: ${message}`);
+      adminNoticeService.push("pe.failed", { title: `Tải đề PE lỗi: thread ${threadId}`, body: `${message}${fee > 0 ? ` (đã hoàn ${fee} credit)` : ""}`, userId, link: "/admin/purchases" });
       await prisma.$transaction(async (tx) => {
         await tx.peDownload.update({ where: { id: row.id }, data: { status: "FAILED", error: message.slice(0, 500) } });
         if (fee > 0) await walletService.applyChange(tx, { userId, amount: fee, type: "PE_REFUND", note: `Hoàn phí tải đề PE thread ${threadId} (lỗi)` });

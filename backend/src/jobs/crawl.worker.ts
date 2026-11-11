@@ -1,3 +1,4 @@
+import { adminNoticeService } from "../services/admin-notice.service";
 import { realtimeHub } from "../realtime/hub";
 import { crawlJobRepository } from "../repositories/crawl-job.repository";
 import { crawlJobService } from "../services/crawl-job.service";
@@ -49,6 +50,7 @@ const drain = async () => {
         if (JSON.stringify(after) !== JSON.stringify(before)) await examService.addToLibrary(after, examId);
         void realtimeHub.publishJob(job.id);
         console.log(`[crawl-worker] job ${job.id} (thread ${job.threadId}) xong -> đề ${examId}`);
+        adminNoticeService.push("fetch.done", { title: `Lấy đề thành công: thread ${job.threadId}`, userId: job.userId, link: `/admin/exams/${examId}` });
       } catch (err) {
         const message = (err as Error).message;
         await crawlJobService.fail(job, message); // đánh dấu lỗi + hoàn phí

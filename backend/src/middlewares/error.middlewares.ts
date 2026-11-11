@@ -4,13 +4,14 @@ import { ZodError } from "zod";
 import { isProd } from "../configs/env";
 import { HTTP_STATUS } from "../constants/httpStatus";
 import { AppError } from "../rules/error";
+import { adminNoticeService } from "../services/admin-notice.service";
 
 export const notFoundHandler: RequestHandler = (req, _res, next) => {
   next(AppError.notFound(`Không tìm thấy ${req.method} ${req.originalUrl}`));
 };
 
 // Điểm xử lý lỗi duy nhất: mọi lỗi từ controller/service đều đi qua đây
-export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
   if (err instanceof ZodError) {
     const errors: Record<string, string> = {};
     for (const issue of err.issues) errors[issue.path.join(".") || "_"] ??= issue.message;
@@ -43,6 +44,7 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   }
 
   console.error(err);
+  adminNoticeService.push("system.error", { title: `Lỗi máy chủ: ${req.method} ${req.path}`, body: String(err?.message ?? err).slice(0, 300), userId: req.user?.id });
   res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
     status: false,
     message: isProd ? "Đã có lỗi xảy ra" : String(err?.message ?? err),

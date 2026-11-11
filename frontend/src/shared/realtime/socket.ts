@@ -67,6 +67,15 @@ export function subscribeRoom<T>(kind: RoomKind, id: number, event: string, hand
   };
 }
 
+/** Lắng nghe một sự kiện server đẩy xuống không cần vào phòng (ví dụ thông báo cho admin). Trả về hàm hủy. */
+export function onServerEvent<T>(event: string, handler: (payload: T) => void): () => void {
+  const s = getSocket();
+  s.on(event, handler);
+  return () => {
+    s.off(event, handler);
+  };
+}
+
 /** Báo cho các màn hình biết kết nối còn sống hay không (để dự phòng bằng hỏi định kỳ khi mất kết nối). */
 export function onConnectionChange(fn: (connected: boolean) => void): () => void {
   const s = getSocket();

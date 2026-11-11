@@ -12,6 +12,7 @@ import { accountSettingService } from "./account-setting.service";
 import { referralService } from "./referral.service";
 import { mailService } from "./mail.service";
 import { emailVerificationService } from "./email-verification.service";
+import { adminNoticeService } from "./admin-notice.service";
 import { notificationService } from "./notification.service";
 
 const INVALID_LOGIN = "Email hoặc mật khẩu không đúng";
@@ -43,6 +44,7 @@ export const authService = {
     });
     await emailVerificationService.send(user.id, user.email).catch((err: Error) => console.error(`[verify-email] không gửi được thư xác minh: ${err.message}`));
     referralService.notify(notices);
+    adminNoticeService.push("user.registered", { title: "Tài khoản mới đăng ký", body: "Đăng ký bằng email", userId: user.id, link: `/admin/users/${user.id}` });
     return { token: signToken(user.id), user };
   },
 
