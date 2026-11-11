@@ -18,7 +18,6 @@ import { crawlerSettingService } from "./crawler-setting.service";
 import { threadPreflight } from "./crawler/thread-preflight.service";
 import { toJobDto } from "./crawl-job.dto";
 import { examService } from "./exam.service";
-import { libraryService } from "./library.service";
 import { notificationService } from "./notification.service";
 import { walletService } from "./wallet.service";
 
@@ -83,11 +82,8 @@ export const crawlJobService = {
     if (!exam && !active) await assertThreadAccepted(threadId); // đề phải lấy mới: bài sai thì không cho tới bước xác nhận phí
     await assertSubject(subject, threadId, exam?.title ?? null);
     const pro = isMember(owner) && PRO_BENEFITS.freeFetch && (await planService.isPro(owner.userId));
-    // Đề miễn phí của thư viện: đề hệ thống đã sẵn sàng và thuộc diện miễn phí (xem library.service)
-    const library = isMember(owner) && !!exam && !pro && !owned && !active && (await libraryService.isFree(exam));
-    const free = isMember(owner) && price > 0 && (pro || owned || !!active || library);
-    const reason = pro ? ("pro" as const) : owned ? ("owned" as const) : active ? ("in-progress" as const) : ("free" as const);
-    return { price, fee: free ? 0 : price, free, reason: free ? reason : null, title: owned || library ? exam.title : null };
+    const free = isMember(owner) && price > 0 && (pro || owned || !!active);
+    return { price, fee: free ? 0 : price, free, reason: free ? (pro ? ("pro" as const) : owned ? ("owned" as const) : ("in-progress" as const)) : null, title: owned ? exam.title : null };
   },
 
   /**
@@ -122,9 +118,7 @@ export const crawlJobService = {
     const alreadyOwned = isMember(owner) && !!exam && (await userExamRepository.has(owner, exam.id));
     // Pro: lấy đề không bị trừ phí (vẫn tính là thành viên, vẫn lưu vào kho)
     const isPro = isMember(owner) && PRO_BENEFITS.freeFetch && (await planService.isPro(owner.userId));
-    // Đề miễn phí của thư viện: thành viên mở không bị trừ phí, đề vẫn vào kho
-    const libraryFree = isMember(owner) && !!exam && !alreadyOwned && !isPro && (await libraryService.isFree(exam));
-    const fetchPrice = isMember(owner) && !alreadyOwned && !isPro && !libraryFree ? (await crawlerSettingService.get()).fetchPrice : 0;
+    const fetchPrice = isMember(owner) && !alreadyOwned && !isPro ? (await crawlerSettingService.get()).fetchPrice : 0;
 
     // Đề đã cũ quá hạn: người này vẫn mở được ngay bản hiện có, đồng thời xếp một lượt làm mới chạy nền
     // (lấy lại ảnh + bình luận, giải lại đáp án). Chưa tạo thêm nếu đang làm mới hoặc vừa thất bại gần đây.
@@ -154,7 +148,7 @@ export const crawlJobService = {
             tx,
           );
         }
-        return { existed: true as const, examId: exam.id, title: exam.title, charged: fetchPrice, free: alreadyOwned || libraryFree };
+        return { existed: true as const, examId: exam.id, title: exam.title, charged: fetchPrice, free: alreadyOwned };
       }
       const job = await crawlJobRepository.create({ threadId, ...owner, chargedAmount: fetchPrice }, tx);
       return { existed: false as const, job: toJobDto(job), charged: fetchPrice };

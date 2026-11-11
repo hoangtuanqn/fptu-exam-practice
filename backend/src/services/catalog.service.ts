@@ -1,9 +1,7 @@
 import { prisma } from "../configs/prisma";
 import { toMeta, type PaginationQuery } from "../utils/pagination";
-import { isExamFree, type FreeRule } from "../utils/exam-free";
 import { subjectCodeFromTitle } from "../utils/subject-code";
 import { crawlerSettingService } from "./crawler-setting.service";
-import { librarySettingService } from "./library-setting.service";
 
 // Kho đề theo môn: gộp danh mục đề FE trên FuOverflow (bảng fuo_threads, nhập từ tools/fuo-crawler) với các đề hệ thống đã có sẵn.
 // Mỗi đề có một trạng thái: "owned" (đã trong kho của bạn), "ready" (hệ thống đã có ảnh + đáp án, mở ngay), "fetch" (chưa lấy: lấy từ FuOverflow, có thể mất phí).
@@ -19,7 +17,6 @@ interface UsableExam {
   questions: number;
   createdAt: Date;
   code: string | null;
-  freeOverride: boolean | null;
 }
 
 export type CatalogStatus = "owned" | "ready" | "fetch";
@@ -32,7 +29,6 @@ export interface CatalogItem {
   term: string | null; // kỳ học suy ra từ tên đề, ví dụ SU26
   status: CatalogStatus;
   questions: number | null; // chỉ biết với đề hệ thống đã có
-  free: boolean; // đề hệ thống sẵn sàng và thuộc diện miễn phí của thư viện (thành viên mở không mất credit)
 }
 
 let examCache: { at: number; exams: UsableExam[] } | null = null;
@@ -42,7 +38,7 @@ let fuoCache: { at: number; threads: { threadId: string; subjectCode: string }[]
 async function usableExams(): Promise<UsableExam[]> {
   if (examCache && Date.now() - examCache.at < CACHE_MS) return examCache.exams;
   const [exams, counts] = await Promise.all([
-    prisma.exam.findMany({ where: { answerSource: { in: ["AI", "MANUAL"] } }, select: { id: true, threadId: true, title: true, subjectCode: true, totalQuestions: true, createdAt: true, freeOverride: true } }),
+    prisma.exam.findMany({ where: { answerSource: { in: ["AI", "MANUAL"] } }, select: { id: true, threadId: true, title: true, subjectCode: true, totalQuestions: true, createdAt: true } }),
     prisma.examQuestion.groupBy({ by: ["examId", "isReference"], _count: { _all: true } }),
   ]);
   const all = new Map<number, number>(); // tất cả ảnh đã lưu (gồm tài liệu tham khảo): so với totalQuestions để biết đã lấy đủ chưa
@@ -53,7 +49,7 @@ async function usableExams(): Promise<UsableExam[]> {
   }
   const list = exams
     .filter((e) => (real.get(e.id) ?? 0) > 0 && (all.get(e.id) ?? 0) >= e.totalQuestions)
-    .map((e) => ({ id: e.id, threadId: e.threadId, title: e.title, questions: real.get(e.id) ?? 0, createdAt: e.createdAt, code: e.subjectCode ?? subjectCodeFromTitle(e.title), freeOverride: e.freeOverride }));
+    .map((e) => ({ id: e.id, threadId: e.threadId, title: e.title, questions: real.get(e.id) ?? 0, createdAt: e.createdAt, code: e.subjectCode ?? subjectCodeFromTitle(e.title) }));
   examCache = { at: Date.now(), exams: list };
   return list;
 }
@@ -85,36 +81,16 @@ export interface LatestItem {
   term: string | null;
 }
 
-// Quy tắc miễn phí hiện hành (công tắc + các kỳ thi mới nhất vẫn tính phí)
-async function freeRule(): Promise<FreeRule> {
-  const cfg = await librarySettingService.get();
-  const newestTerms = cfg.enabled && cfg.freeRuleEnabled ? await catalogService.newestTerms(cfg.newestTermsPaid) : new Set<string>();
-  return { enabled: cfg.enabled, ruleEnabled: cfg.freeRuleEnabled, newestTerms };
-}
-const freeOf = (e: UsableExam, rule: FreeRule) => isExamFree({ freeOverride: e.freeOverride, term: termOf(e.title) }, rule);
-
 let overviewCache: { at: number; data: LibraryOverview } | null = null;
 
 export interface LibraryOverview {
-  enabled: boolean;
   subjects: number; // số môn có đề (biết hoặc sẵn sàng)
   examsKnown: number; // tổng đề biết (danh mục FuOverflow + hệ thống)
   examsReady: number; // đề hệ thống đã có ảnh + đáp án, mở ngay
-  examsFree: number;
   bySemester: { semester: number | null; subjects: number; examsKnown: number; examsReady: number }[]; // kỳ 0-9 rồi "chưa phân loại" (null)
 }
 
 export const catalogService = {
-  /** Các kỳ thi mới nhất (SU26, FA25...) có đề sẵn trong hệ thống; đề của các kỳ này vẫn tính phí, kỳ cũ hơn được miễn phí. */
-  async newestTerms(count: number): Promise<Set<string>> {
-    const terms = new Set<string>();
-    for (const e of await usableExams()) {
-      const t = termOf(e.title);
-      if (t) terms.add(t);
-    }
-    return new Set([...terms].sort((a, b) => termRank(b) - termRank(a)).slice(0, count));
-  },
-
   /** Các đề mới đăng gần đây nhất trên FuOverflow (mọi môn), để trang chủ cho thấy kho đề luôn được cập nhật. Chỉ có mô tả, không có ảnh. */
   async latest(): Promise<LatestItem[]> {
     if (latestCache && Date.now() - latestCache.at < CACHE_MS) return latestCache.items;
@@ -131,10 +107,9 @@ export const catalogService = {
 
   /** Các môn có đề: tổng số đề (FuOverflow + hệ thống) và số đề hệ thống đã có sẵn. */
   async subjects() {
-    const [exams, fuo, subjects, rule] = await Promise.all([usableExams(), fuoThreads(), prisma.subject.findMany({ select: { code: true, name: true, semester: true } }), freeRule()]);
+    const [exams, fuo, subjects] = await Promise.all([usableExams(), fuoThreads(), prisma.subject.findMany({ select: { code: true, name: true, semester: true } })]);
     const names = new Map(subjects.map((s) => [s.code, s.name]));
     const semesters = new Map(subjects.map((s) => [s.code, s.semester]));
-    const free = new Map<string, number>(); // môn -> số đề miễn phí
     const ids = new Map<string, Set<string>>(); // môn -> các thread (hợp của FuOverflow và hệ thống)
     const ready = new Map<string, number>();
     for (const t of fuo) (ids.get(t.subjectCode) ?? ids.set(t.subjectCode, new Set()).get(t.subjectCode)!).add(t.threadId);
@@ -142,17 +117,15 @@ export const catalogService = {
       if (!e.code) continue;
       (ids.get(e.code) ?? ids.set(e.code, new Set()).get(e.code)!).add(e.threadId);
       ready.set(e.code, (ready.get(e.code) ?? 0) + 1);
-      if (freeOf(e, rule)) free.set(e.code, (free.get(e.code) ?? 0) + 1);
     }
     return [...ids.entries()]
-      .map(([code, set]) => ({ code, name: names.get(code) ?? null, total: set.size, ready: ready.get(code) ?? 0, free: free.get(code) ?? 0, semester: semesters.get(code) ?? null }))
+      .map(([code, set]) => ({ code, name: names.get(code) ?? null, total: set.size, ready: ready.get(code) ?? 0, semester: semesters.get(code) ?? null }))
       .sort((a, b) => b.total - a.total || a.code.localeCompare(b.code));
   },
 
   /** Số liệu thật cho trang Thư viện đề thi: tổng môn/đề và phân theo kỳ học (0-9, rồi chưa phân loại). Đệm vài phút. */
   async overview(): Promise<LibraryOverview> {
     if (overviewCache && Date.now() - overviewCache.at < CACHE_MS) return overviewCache.data;
-    const cfg = await librarySettingService.get();
     const rows = await this.subjects();
     const bucket = new Map<number | null, { semester: number | null; subjects: number; examsKnown: number; examsReady: number }>();
     for (let i = 0; i <= 9; i++) bucket.set(i, { semester: i, subjects: 0, examsKnown: 0, examsReady: 0 });
@@ -164,11 +137,9 @@ export const catalogService = {
       b.examsReady += r.ready;
     }
     const data: LibraryOverview = {
-      enabled: cfg.enabled,
       subjects: rows.length,
       examsKnown: rows.reduce((n, r) => n + r.total, 0),
       examsReady: rows.reduce((n, r) => n + r.ready, 0),
-      examsFree: rows.reduce((n, r) => n + r.free, 0),
       bySemester: [...bucket.values()],
     };
     overviewCache = { at: Date.now(), data };
@@ -190,7 +161,6 @@ export const catalogService = {
   /** Đề của một môn: gộp danh mục FuOverflow với đề hệ thống, lọc theo từ khoá và kỳ, mới nhất trước, phân trang. */
   async exams(code: string, query: PaginationQuery & { q?: string; term?: string }, userId: number | null) {
     const subject = code.toUpperCase();
-    const rule = await freeRule();
     const [fuo, ours] = await Promise.all([
       prisma.fuoThread.findMany({ where: { subjectCode: subject }, select: { threadId: true, title: true, postedAt: true, replies: true } }),
       usableExams().then((list) => list.filter((e) => e.code === subject)),
@@ -199,9 +169,9 @@ export const catalogService = {
     const have = new Map(ours.map((e) => [e.threadId, e]));
 
     const merged = new Map<string, CatalogItem>();
-    for (const t of fuo) merged.set(t.threadId, { threadId: t.threadId, title: t.title, postedAt: t.postedAt, replies: t.replies, term: termOf(t.title), status: "fetch", questions: null, free: false });
+    for (const t of fuo) merged.set(t.threadId, { threadId: t.threadId, title: t.title, postedAt: t.postedAt, replies: t.replies, term: termOf(t.title), status: "fetch", questions: null });
     for (const e of ours) {
-      const base = merged.get(e.threadId) ?? { threadId: e.threadId, title: e.title, postedAt: null, replies: 0, term: termOf(e.title), status: "fetch" as CatalogStatus, questions: null, free: false };
+      const base = merged.get(e.threadId) ?? { threadId: e.threadId, title: e.title, postedAt: null, replies: 0, term: termOf(e.title), status: "fetch" as CatalogStatus, questions: null };
       merged.set(e.threadId, base);
     }
     for (const item of merged.values()) {
@@ -209,7 +179,6 @@ export const catalogService = {
       if (e) {
         item.status = mine.has(e.id) ? "owned" : "ready";
         item.questions = e.questions;
-        item.free = freeOf(e, rule);
       }
     }
 
@@ -226,14 +195,12 @@ export const catalogService = {
 
     const start = (query.page - 1) * query.limit;
     const [info, cfg] = await Promise.all([prisma.subject.findUnique({ where: { code: subject }, select: { name: true, semester: true } }), crawlerSettingService.get()]);
-    const freeCount = all.filter((i) => i.free).length;
     return {
       items: filtered.slice(start, start + query.limit),
       meta: toMeta(query, filtered.length),
       terms: termList,
       total: all.length,
-      price: cfg.fetchPrice, // phí lấy một đề trả phí, để hiện trước khi bấm
-      freeCount,
+      price: cfg.fetchPrice, // phí lấy một đề chưa có trong kho của bạn, để hiện trên nút mở đề
       subject: { code: subject, name: info?.name ?? null, semester: info?.semester ?? null },
     };
   },

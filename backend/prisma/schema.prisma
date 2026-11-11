@@ -204,7 +204,6 @@ model Exam {
   createdAt      DateTime  @default(now()) @map("created_at")
   subjectCode    String?   @map("subject_code") @db.VarChar(20) // subject code taken from the title (PRO192...); null = no code found. Set on import/rename, filled at boot for old rows
   refreshedAt    DateTime? @map("refreshed_at") // láº§n lĂ m má»›i gáº§n nháº¥t (láº¥y láº¡i áº£nh, bĂ¬nh luáº­n, giáº£i láº¡i Ä‘Ă¡p Ă¡n); null = chÆ°a tá»«ng
-  freeOverride   Boolean?  @map("free_override") // null = follow the library rule, true = always free, false = always paid
 
   questions ExamQuestion[]
   crawlJobs CrawlJob[]
