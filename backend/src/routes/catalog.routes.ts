@@ -17,6 +17,11 @@ catalogRouter.get("/subjects", async (_req, res) => {
   res.json(new ResponseClient({ data: await catalogService.subjects() }));
 });
 
+// Số liệu tổng quan của Thư viện đề thi (công khai): tổng môn/đề, phân theo kỳ học
+catalogRouter.get("/overview", async (_req, res) => {
+  res.json(new ResponseClient({ data: await catalogService.overview() }));
+});
+
 // Đề mới đăng gần đây (mọi môn), cho khối "Mới đăng" ở trang chủ; khách cũng xem được
 catalogRouter.get("/latest", async (_req, res) => {
   res.json(new ResponseClient({ data: await catalogService.latest() }));
