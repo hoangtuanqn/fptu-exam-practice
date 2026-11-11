@@ -1,6 +1,6 @@
 import { lazy } from "react";
 import { Navigate, Route } from "react-router-dom";
-import { BookMarked, TriangleAlert, Link2, Activity, ShieldCheck as QualityIcon, MessagesSquare, ShoppingBag, Megaphone, Bot, ClipboardList, DatabaseZap, FileText, History, SlidersHorizontal, Wallet, Gift, MessageSquareWarning, UserPlus, Landmark, Library, LayoutDashboard, Receipt, Settings, Users } from "lucide-react";
+import { BookMarked, TriangleAlert, Link2, Activity, ShieldCheck as QualityIcon, MessagesSquare, ShoppingBag, Megaphone, Bot, ClipboardList, DatabaseZap, FileText, History, SlidersHorizontal, Wallet, Gift, MessageSquareWarning, UserPlus, Landmark, LayoutDashboard, Receipt, Settings, Users } from "lucide-react";
 import type { NavItem } from "@/shared/layout/PanelLayout";
 
 /**
@@ -33,7 +33,6 @@ const CrawlerPage = lazy(() => import("./content/CrawlerPage"));
 const ReportsPage = lazy(() => import("./content/ReportsPage"));
 const ChatbotPage = lazy(() => import("./content/ChatbotPage"));
 const AiPage = lazy(() => import("./content/AiPage"));
-const LibrarySettingsPage = lazy(() => import("./content/LibrarySettingsPage"));
 const SubjectsManagerPage = lazy(() => import("./content/SubjectsManagerPage"));
 const FunnelPage = lazy(() => import("./insights/FunnelPage"));
 const QualityPage = lazy(() => import("./insights/QualityPage"));
@@ -57,7 +56,6 @@ export const ADMIN_NAV: NavItem[] = [
   { to: "/admin/link-rewards", label: "Vượt link", icon: Link2, group: "Nội dung & AI" },
   { to: "/admin/subjects", label: "Quản lý môn học", icon: BookMarked, group: "Nội dung & AI" },
   { to: "/admin/subject-issues", label: "Môn thiếu dữ liệu", icon: TriangleAlert, group: "Nội dung & AI" },
-  { to: "/admin/library", label: "Kỳ học của môn", icon: Library, group: "Nội dung & AI" },
   { to: "/admin/crawler", label: "Cấu hình lấy đề", icon: DatabaseZap, group: "Nội dung & AI" },
   { to: "/admin/ai", label: "AI giải đáp án", icon: Bot, group: "Nội dung & AI" },
   { to: "/admin/chatbot", label: "Chatbot hỗ trợ", icon: MessagesSquare, group: "Nội dung & AI" },
@@ -88,7 +86,6 @@ export const adminRoutes = (
     <Route path="exams" element={<ExamsPage />} />
     <Route path="exams/:id" element={<ExamEditPage />} />
     <Route path="reports" element={<ReportsPage />} />
-    <Route path="library" element={<LibrarySettingsPage />} />
     <Route path="crawler" element={<CrawlerPage />} />
     <Route path="ai" element={<AiPage />} />
     <Route path="chatbot" element={<ChatbotPage />} />

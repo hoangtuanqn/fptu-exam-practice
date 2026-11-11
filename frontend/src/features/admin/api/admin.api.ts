@@ -34,12 +34,6 @@ import type {
 import { http } from "@/shared/api/client";
 import { PAGE_SIZE } from "@/shared/api/pagination";
 
-export interface BoardSubject {
-  code: string;
-  name: string;
-  semester: number | null;
-}
-
 export interface SubjectRow {
   code: string;
   name: string;
@@ -264,8 +258,6 @@ export const adminApi = {
   subject: (code: string) => http.get<SubjectDetail>(`/admin/subjects/${encodeURIComponent(code)}`),
   updateSubject: (code: string, patch: SubjectPatch) => http.patch<SubjectDetail>(`/admin/subjects/${encodeURIComponent(code)}`, patch),
   clearInferredChapters: (code: string) => http.delete(`/admin/subjects/${encodeURIComponent(code)}/inferred-chapters`),
-  librarySubjects: () => http.get<{ subjects: BoardSubject[] }>("/admin/library/subjects"),
-  setSubjectSemester: (code: string, semester: number | null) => http.put<{ code: string; semester: number | null }>(`/admin/library/subjects/${encodeURIComponent(code)}/semester`, { semester }),
   promoSettings: () => http.get<PromoSettings>("/admin/settings/promo"),
   savePromoSettings: (body: PromoSettings) => http.put<PromoSettings>("/admin/settings/promo", body),
   accountSettings: () => http.get<AccountSettings>("/admin/settings/account"),

@@ -9,7 +9,7 @@ import { errorMessage } from "@/shared/api/errors";
 import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
 import { useUrlState } from "@/shared/hooks/useUrlState";
-import { Badge, type Tone } from "@/shared/ui/Badge";
+import { Badge } from "@/shared/ui/Badge";
 import { Button } from "@/shared/ui/Button";
 import {
   Card,
@@ -26,28 +26,6 @@ import { Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
 
 const PAGE_SIZE = 40;
 const SEMESTERS = Array.from({ length: 10 }, (_, i) => i);
-
-// Tình trạng dữ liệu chương của một môn, để lọc và để nhìn nhanh
-type Health = "named" | "ai" | "numbers" | "nosyllabus";
-const HEALTH_LABEL: Record<Health, string> = {
-  named: "Có tên chương",
-  ai: "AI đã suy chương",
-  numbers: "Chỉ có số chương (chờ AI suy)",
-  nosyllabus: "Không có syllabus",
-};
-const HEALTH_TONE: Record<Health, Tone> = {
-  named: "success",
-  ai: "info",
-  numbers: "warning",
-  nosyllabus: "danger",
-};
-
-function healthOf(s: SubjectRow): Health {
-  if (s.chapters.hasNames) return "named";
-  if (s.inferredChapters > 0) return "ai";
-  if (s.syllabusChunks > 0 || s.chapters.total > 0) return "numbers";
-  return "nosyllabus";
-}
 
 const KIND_LABEL: Record<string, string> = {
   overview: "Mô tả",
@@ -256,15 +234,7 @@ function DialogBody({
         </Button>
       </form>
 
-      <SectionTitle
-        aside={
-          <Badge
-            tone={real.some((c) => c.title.trim()) ? "success" : "warning"}
-          >
-            {real.length} chương
-          </Badge>
-        }
-      >
+      <SectionTitle aside={<Badge>{real.length} chương</Badge>}>
         Chương trong syllabus
       </SectionTitle>
       {real.length === 0 ? (
@@ -379,7 +349,6 @@ function SubjectsTable({ initial }: { initial: SubjectRow[] }) {
   const [url, setUrl] = useUrlState({
     q: "",
     ky: "all",
-    dl: "all",
     page: "1",
     mon: "",
   });
@@ -387,13 +356,12 @@ function SubjectsTable({ initial }: { initial: SubjectRow[] }) {
   const [busy, setBusy] = useState<string | null>(null);
 
   const stats = useMemo(() => {
-    const h = { named: 0, ai: 0, numbers: 0, nosyllabus: 0 };
-    let classified = 0;
-    for (const s of rows) {
-      h[healthOf(s)]++;
-      if (s.semester !== null) classified++;
-    }
-    return { ...h, classified };
+    const classified = rows.filter((s) => s.semester !== null).length;
+    return {
+      classified,
+      unclassified: rows.length - classified,
+      withExams: rows.filter((s) => s.exams > 0).length,
+    };
   }, [rows]);
 
   const needle = url.q.trim().toLowerCase();
@@ -412,10 +380,9 @@ function SubjectsTable({ initial }: { initial: SubjectRow[] }) {
             : url.ky !== "all" && s.semester !== Number(url.ky)
         )
           return false;
-        if (url.dl !== "all" && healthOf(s) !== url.dl) return false;
         return true;
       }),
-    [rows, needle, url.ky, url.dl],
+    [rows, needle, url.ky],
   );
   const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const page = Math.min(Math.max(1, Number(url.page) || 1), pages);
@@ -442,39 +409,23 @@ function SubjectsTable({ initial }: { initial: SubjectRow[] }) {
     }
   };
 
-  const filterChange = (patch: Partial<Record<"q" | "ky" | "dl", string>>) =>
+  const filterChange = (patch: Partial<Record<"q" | "ky", string>>) =>
     setUrl({ ...patch, page: "1" });
 
   return (
     <div className="space-y-4">
-      <StatGrid className="grid-cols-2 lg:grid-cols-5">
+      <StatGrid className="grid-cols-2 lg:grid-cols-4">
+        <StatCard label="Tổng số môn" value={rows.length} />
+        <StatCard label="Đã xếp kỳ" value={stats.classified} tone="emerald" />
         <StatCard
-          label="Tổng số môn"
-          value={rows.length}
-          note={`${stats.classified} môn đã xếp kỳ`}
-        />
-        <StatCard
-          label="Có tên chương"
-          value={stats.named}
-          tone="emerald"
-          note="Dùng thẳng syllabus"
-        />
-        <StatCard
-          label="AI đã suy chương"
-          value={stats.ai}
-          note="Đã lưu, dùng lại cho mọi đề"
-        />
-        <StatCard
-          label="Chờ AI suy"
-          value={stats.numbers}
+          label="Chưa phân loại"
+          value={stats.unclassified}
           tone="amber"
-          note="Suy khi có người mở đề"
         />
         <StatCard
-          label="Không có syllabus"
-          value={stats.nosyllabus}
-          tone="rose"
-          note="Cần bổ sung dữ liệu"
+          label="Môn đã có đề"
+          value={stats.withExams}
+          note="Có đề trong hệ thống"
         />
       </StatGrid>
 
@@ -483,7 +434,7 @@ function SubjectsTable({ initial }: { initial: SubjectRow[] }) {
           title="Danh sách môn học"
           description="Bấm vào một dòng để xem chi tiết chương, syllabus và chỉnh thông tin môn. Đổi kỳ ngay trên bảng."
         />
-        <div className="grid gap-3 border-b border-outline-variant p-4 sm:grid-cols-[1fr_11rem_15rem]">
+        <div className="grid gap-3 border-b border-outline-variant p-4 sm:grid-cols-[1fr_12rem]">
           <div className="relative">
             <Search
               size={16}
@@ -511,19 +462,6 @@ function SubjectsTable({ initial }: { initial: SubjectRow[] }) {
             ))}
             <option value="none">Chưa phân loại</option>
           </select>
-          <select
-            value={url.dl}
-            onChange={(e) => filterChange({ dl: e.target.value })}
-            aria-label="Lọc theo dữ liệu chương"
-            className={`${inputClass()} !h-10`}
-          >
-            <option value="all">Mọi tình trạng chương</option>
-            {(Object.keys(HEALTH_LABEL) as Health[]).map((h) => (
-              <option key={h} value={h}>
-                {HEALTH_LABEL[h]}
-              </option>
-            ))}
-          </select>
         </div>
 
         {shown.length === 0 ? (
@@ -541,7 +479,6 @@ function SubjectsTable({ initial }: { initial: SubjectRow[] }) {
             </Thead>
             <tbody>
               {shown.map((s) => {
-                const h = healthOf(s);
                 return (
                   <Tr key={s.code} onClick={() => setUrl({ mon: s.code })}>
                     <Td className="max-w-[18rem]">
@@ -576,13 +513,10 @@ function SubjectsTable({ initial }: { initial: SubjectRow[] }) {
                       </select>
                     </Td>
                     <Td className="tabular-nums">{s.credits ?? "—"}</Td>
-                    <Td>
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <span className="tabular-nums text-on-surface">
-                          {h === "ai" ? s.inferredChapters : s.chapters.total}
-                        </span>
-                        <Badge tone={HEALTH_TONE[h]}>{HEALTH_LABEL[h]}</Badge>
-                      </div>
+                    <Td className="tabular-nums">
+                      {s.inferredChapters > 0 && !s.chapters.hasNames
+                        ? s.inferredChapters
+                        : s.chapters.total}
                     </Td>
                     <Td className="tabular-nums">
                       {s.syllabusChunks > 0 ? `${s.syllabusChunks} đoạn` : "—"}
