@@ -23,6 +23,11 @@ export const PUBLIC_PAGES: Record<string, PageSeo> = {
     description: "Lấy đề bằng link, AI giải đáp án cả đề, giải thích từng câu, tải đề PE, tiện ích Chrome, nạp credit tự động. Xem toàn bộ tính năng tại đây.",
     index: true,
   },
+  "/kho-de": {
+    title: "Kho đề thi FE của mọi môn, có đáp án AI",
+    description: "Xem danh sách đề thi FE của từng môn FPTU theo kỳ, đề nào đã có sẵn đáp án AI. Đăng ký miễn phí rồi lấy đề về luyện, chấm điểm thang 10.",
+    index: true,
+  },
   "/pro": {
     title: "Gói Pro 4 tháng chỉ 99.000đ, không giới hạn lượt",
     description: "Một lần 99.000đ dùng 4 tháng, rẻ hơn 93.000đ so với mua lẻ trên FuOverflow. Không giới hạn lượt lấy đề, giải thích AI và tải đề PE.",
