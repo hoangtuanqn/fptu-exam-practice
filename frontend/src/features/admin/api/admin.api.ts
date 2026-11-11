@@ -331,10 +331,11 @@ export const adminApi = {
       important?: boolean;
       category?: NoticeCategory;
     },
+    limit = PAGE_SIZE,
   ) =>
     http.list<AdminNotice>("/admin/notices", {
       page,
-      limit: PAGE_SIZE,
+      limit,
       status: filter.status,
       important: filter.important === undefined ? "" : String(filter.important),
       category: filter.category ?? "",

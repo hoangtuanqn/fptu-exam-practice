@@ -1,15 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  AlertTriangle,
-  Bell,
-  CheckCheck,
-  CheckCircle2,
-  Circle,
-  CircleAlert,
-  Info,
-  Trash2,
-  type LucideIcon,
-} from "lucide-react";
+import { Bell, CheckCheck, CheckCircle2, Circle, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   adminApi,
@@ -29,27 +19,12 @@ import { inputClass } from "@/shared/ui/Input";
 import { Segmented } from "@/shared/ui/Segmented";
 import { Pagination } from "@/shared/ui/Table";
 import { formatDateTime } from "@/shared/utils/formatters";
+import { CATEGORY_LABEL, LEVEL } from "./notices.shared";
 import {
   refreshNoticeCounts,
   useNoticeCounts,
   useNoticeVersion,
 } from "./notices.store";
-
-const CATEGORY_LABEL: Record<NoticeCategory, string> = {
-  account: "Tài khoản",
-  fetch: "Lấy đề",
-  money: "Nạp tiền & gói",
-  exam: "Đề & AI",
-  system: "Hệ thống",
-};
-
-const LEVEL: Record<AdminNotice["level"], { icon: LucideIcon; color: string }> =
-  {
-    info: { icon: Info, color: "text-primary" },
-    success: { icon: CheckCircle2, color: "text-success" },
-    warning: { icon: AlertTriangle, color: "text-warning" },
-    error: { icon: CircleAlert, color: "text-error" },
-  };
 
 type Tab = "unread" | "important" | "all";
 
