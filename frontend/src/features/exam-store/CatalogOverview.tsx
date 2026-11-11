@@ -85,9 +85,9 @@ export function CatalogOverview({ subjects, overview, onPick }: { subjects: Subj
   );
 }
 
-// Lọc môn theo kỳ học: Tất cả, Kỳ 0 đến Kỳ 9, Chưa phân loại (số trong ngoặc là số môn). Chỉ hiện khi đã có môn được xếp kỳ, để khỏi bày ra hàng nút trống.
+// Lọc môn theo kỳ học: Tất cả, Kỳ 0 đến Kỳ 9, Chưa phân loại (số trong ngoặc là số môn). Kỳ chưa có môn thì mờ đi.
 function SemesterTabs({ overview, value, onChange }: { overview?: LibraryOverview | null; value: string; onChange: (ky: string) => void }) {
-  if (!overview || overview.bySemester.every((b) => b.semester === null || b.subjects === 0)) return null;
+  if (!overview) return null;
   const items = [
     { key: "", label: "Tất cả", count: overview.subjects },
     ...overview.bySemester.map((b) => ({ key: b.semester === null ? "none" : String(b.semester), label: b.semester === null ? "Chưa phân loại" : `Kỳ ${b.semester}`, count: b.subjects })),
