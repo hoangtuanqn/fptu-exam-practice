@@ -1,6 +1,5 @@
-import { useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import { ArrowRight, Check, Loader2, X } from "lucide-react";
-import { LinkImport } from "@/features/exam-import/components/LinkImport";
 import type { ImportedExam } from "@/features/exam-import/types";
 import { examLibraryApi } from "@/features/exam-store/exam-library.api";
 import { SubjectCard } from "@/features/subject/SubjectCard";
@@ -8,6 +7,7 @@ import type { SubjectItem } from "@/features/subject/subject.api";
 import { useApi } from "@/shared/hooks/useApi";
 import { Button } from "@/shared/ui/Button";
 import { ErrorBox } from "@/shared/ui/Feedback";
+import { MultiLinkImport } from "./MultiLinkImport";
 import type { PickedExam } from "./types";
 
 const MAX_PICK = 10; // chọn tối đa chừng này đề một lần để bước gom chương không quá nặng
@@ -16,7 +16,7 @@ const LIBRARY_LIMIT = 50; // số đề tối đa lấy về một lần từ kh
 interface Props {
   subject: SubjectItem;
   picked: PickedExam[];
-  onChange: (picked: PickedExam[]) => void;
+  onChange: Dispatch<SetStateAction<PickedExam[]>>;
   onNext: () => void;
   onBack: () => void;
 }
@@ -25,20 +25,17 @@ interface Props {
 // Đề đã có trong kho thì mở lại miễn phí, không trừ credit (máy chủ báo giá trước khi lấy).
 export function ExamPickStep({ subject, picked, onChange, onNext, onBack }: Props) {
   const library = useApi(() => examLibraryApi.list(1, LIBRARY_LIMIT, subject.code), [subject.code]);
-  const [linkKey, setLinkKey] = useState(0); // đổi key để ô nhập link trống lại sau mỗi đề thêm xong
-  const [justAdded, setJustAdded] = useState<string | null>(null);
   const ids = new Set(picked.map((p) => p.id));
   const full = picked.length >= MAX_PICK;
 
   const toggle = (e: PickedExam) => {
-    if (ids.has(e.id)) return onChange(picked.filter((p) => p.id !== e.id));
-    if (!full) onChange([...picked, e]);
+    if (ids.has(e.id)) return onChange((cur) => cur.filter((p) => p.id !== e.id));
+    if (!full) onChange((cur) => (cur.length >= MAX_PICK ? cur : [...cur, e]));
   };
 
+  // Nhiều đề lần lượt về từ các link: cập nhật theo giá trị mới nhất (dạng hàm) để không đề nào bị mất
   const added = (exam: ImportedExam) => {
-    if (!ids.has(exam.id) && !full) onChange([...picked, { id: exam.id, threadId: exam.threadId, title: exam.title, totalQuestions: exam.totalQuestions }]);
-    setJustAdded(exam.title);
-    setLinkKey((k) => k + 1);
+    onChange((cur) => (cur.some((p) => p.id === exam.id) || cur.length >= MAX_PICK ? cur : [...cur, { id: exam.id, threadId: exam.threadId, title: exam.title, totalQuestions: exam.totalQuestions }]));
     library.reload();
   };
 
@@ -48,7 +45,7 @@ export function ExamPickStep({ subject, picked, onChange, onNext, onBack }: Prop
   // Chọn thêm các đề trong kho chưa được chọn, tối đa MAX_PICK đề
   const selectAll = () => {
     const extra = items.filter((i) => !ids.has(i.id)).map(({ id, threadId, title, totalQuestions }) => ({ id, threadId, title, totalQuestions }));
-    onChange([...picked, ...extra].slice(0, MAX_PICK));
+    onChange((cur) => [...cur, ...extra.filter((x) => !cur.some((p) => p.id === x.id))].slice(0, MAX_PICK));
   };
 
   return (
@@ -110,16 +107,11 @@ export function ExamPickStep({ subject, picked, onChange, onNext, onBack }: Prop
         <section className="border-t border-outline-variant pt-5">
           <h3 className="md-title-small text-on-surface">Thêm đề từ link FuOverflow</h3>
           <p className="md-body-medium mt-1 text-on-surface-variant">
-            Dán link bài có nhãn “Đề Thi FE” của môn <b className="text-on-surface">{subject.code}</b>, thêm được nhiều đề, mỗi lần một link. Đề đã có trong kho của bạn thì mở lại miễn phí, không trừ credit.
+            Dán một hoặc nhiều link bài có nhãn “Đề Thi FE” của môn <b className="text-on-surface">{subject.code}</b>. Link nào đã có trong kho của bạn thì mở lại miễn phí, không trừ credit.
           </p>
           <div className="mt-3">
-            <LinkImport key={linkKey} subject={subject.code} onImported={added} />
+            <MultiLinkImport subject={subject.code} slots={Math.max(0, MAX_PICK - picked.length)} pickedThreads={new Set(picked.map((p) => p.threadId))} onImported={added} />
           </div>
-          {justAdded && (
-            <p role="status" className="md-body-small mt-2 flex items-center gap-1.5 text-success">
-              <Check size={14} strokeWidth={3} /> Đã thêm “{justAdded}” vào danh sách chọn. Dán link tiếp theo nếu muốn thêm đề khác.
-            </p>
-          )}
         </section>
 
         <div className="sticky bottom-0 -mx-5 -mb-5 flex flex-col gap-3 border-t border-outline-variant bg-surface-container-lowest px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
