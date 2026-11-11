@@ -11,7 +11,8 @@ import { examImportApi, type QuoteResult } from "../exam-import.api";
 import { checkFuoLink } from "@/shared/utils/fuo-link";
 import { useFakeProgress, type ProgressHint } from "@/shared/hooks/useFakeProgress";
 import { Button } from "@/shared/ui/Button";
-import { GOLD_BUTTON, GOLD_GLOSS } from "@/shared/ui/gold";
+import { GOLD_BUTTON } from "@/shared/ui/gold";
+import { LinkImportArt } from "./LinkImportArt";
 import { FormError, LinearProgress } from "@/shared/ui/Feedback";
 import { inputClass } from "@/shared/ui/Input";
 import { ConfirmFetchDialog } from "./ConfirmFetchDialog";
@@ -205,19 +206,17 @@ export function LinkImport({ onImported, subject, compact = false }: Props) {
     <>
     <form
       onSubmit={onSubmit}
-      className={compact ? "text-left" : "rounded-2xl border-2 border-dashed border-outline-variant bg-surface-container-low/60 px-4 py-7 text-left sm:px-6 sm:py-9"}
+      className={compact ? "relative overflow-hidden rounded-m3-xl border border-outline-variant/70 bg-gradient-to-br from-surface-container-lowest via-surface-container-low to-primary-container/40 px-4 py-5 text-left sm:px-6 sm:py-6 sm:pr-56" : "rounded-2xl border-2 border-dashed border-outline-variant bg-surface-container-low/60 px-4 py-7 text-left sm:px-6 sm:py-9"}
     >
       {compact ? (
         <>
-          <div className="flex items-center justify-between gap-3 px-1">
-            <div className="flex min-w-0 items-center gap-2.5">
-              <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${GOLD_GLOSS}`}>
-                <ClipboardPaste size={14} />
-              </span>
-              <span className="md-title-medium truncate text-on-surface">Có link đề FuOverflow?</span>
-            </div>
-            <span className="md-label-large shrink-0 rounded-full bg-gradient-to-b from-[#fff3c4] to-[#ffd75e] px-3 py-0.5 text-[#3a2600] ring-1 ring-[#b87d00]/30">{priceText}</span>
+          <LinkImportArt className="pointer-events-none absolute -right-2 top-1/2 hidden w-56 -translate-y-1/2 sm:block" />
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="md-label-medium uppercase tracking-[0.14em] text-primary">Lấy đề nhanh</span>
+            <span className="md-label-medium rounded-full bg-primary-container px-2.5 py-0.5 text-on-primary-container">{priceText}</span>
           </div>
+          <h2 className="md-title-large mt-1.5 text-on-surface">Có link đề FuOverflow?</h2>
+          <p className="md-body-medium mt-0.5 text-on-surface-variant">Dán link vào đây, hệ thống tự lấy đề, đáp án về kho cho bạn.</p>
         </>
       ) : (
       <div className="flex flex-col items-center text-center">
@@ -241,7 +240,7 @@ export function LinkImport({ onImported, subject, compact = false }: Props) {
       <div
         className={
           compact
-            ? "mt-3 flex flex-col gap-2 sm:flex-row"
+            ? "mt-4 flex flex-col gap-2 sm:flex-row"
             : "mt-5 flex flex-col gap-2 sm:flex-row"
         }
       >
