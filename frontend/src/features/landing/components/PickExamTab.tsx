@@ -4,7 +4,7 @@ import { PublicSubjectBrowser } from "@/features/exam-store/PublicSubjectBrowser
 import { SubjectBrowser } from "@/features/exam-store/SubjectBrowser";
 import { useApi } from "@/shared/hooks/useApi";
 
-// Tab "Chọn đề" ở trang chủ: chọn môn rồi mở đề, cho người chưa biết FuOverflow là gì.
+// Khối chính của trang chủ: chọn môn rồi mở đề, cho người chưa biết FuOverflow là gì.
 // Thành viên dùng đúng Kho đề trong tài khoản (có báo phí trước khi lấy); khách xem danh sách và được dẫn đi đăng ký khi mở đề.
 export function PickExamTab() {
   const { user, loading } = useAuth();
