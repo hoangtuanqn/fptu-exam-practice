@@ -1,8 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Gift, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { referralApi, referralCodeStore } from "@/features/referral/referral.api";
-import { formatCredit } from "@/shared/utils/formatters";
 import { authApi } from "@/features/auth/auth.api";
 import { Button } from "@/shared/ui/Button";
 import { FormError } from "@/shared/ui/Feedback";
@@ -12,6 +11,8 @@ import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
 import { useSubmit } from "@/shared/hooks/useSubmit";
 import { SocialLogin } from "@/features/auth/social/SocialLogin";
+import { GiftCard } from "@/features/auth/components/GiftCard";
+import { PasswordRules, passwordValid } from "@/features/auth/components/PasswordRules";
 import { AuthLayout } from "./AuthLayout";
 
 export default function RegisterPage() {
@@ -58,21 +59,10 @@ export default function RegisterPage() {
       <SocialLogin verb="Đăng ký" />
       <form onSubmit={onSubmit} className="space-y-4" noValidate>
         <FormError message={error} />
-        {!(invite && invite.bonus > 0) && signupCredit > 0 && (
-          <div role="status" className="flex items-start gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 text-sm text-emerald-900">
-            <Gift size={16} className="mt-0.5 shrink-0 text-emerald-600" />
-            <span>
-              Đăng ký lần đầu nhận ngay <b>{formatCredit(signupCredit)}</b> để lấy đề.
-            </span>
-          </div>
-        )}
-        {invite && invite.bonus > 0 && (
-          <div role="status" className="flex items-start gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 text-sm text-emerald-900">
-            <Gift size={16} className="mt-0.5 shrink-0 text-emerald-600" />
-            <span>
-              Bạn được bạn bè giới thiệu. Đăng ký xong nhận ngay <b>{formatCredit(invite.bonus)}</b>.
-            </span>
-          </div>
+        {invite && invite.bonus > 0 ? (
+          <GiftCard eyebrow="Bạn bè mời bạn" amount={invite.bonus} caption="Đăng ký xong là nhận ngay, dùng để lấy đề đầu tiên." />
+        ) : (
+          signupCredit > 0 && <GiftCard eyebrow="Quà đăng ký lần đầu" amount={signupCredit} caption="Nhận ngay khi tạo tài khoản, dùng để lấy đề đầu tiên." />
         )}
         <Input
           label="Họ và tên"
@@ -97,12 +87,12 @@ export default function RegisterPage() {
           value={form.password}
           onChange={set("password")}
           error={fieldErrors.password}
-          hint="Tối thiểu 8 ký tự, gồm chữ và số. Bấm biểu tượng con mắt để kiểm tra lại."
         />
+        <PasswordRules password={form.password} />
         <Button
           variant="primary"
           type="submit"
-          disabled={loading || !form.fullName || !form.email || !form.password}
+          disabled={loading || !form.fullName || !form.email || !passwordValid(form.password)}
           className="w-full !py-2.5"
         >
           {loading && <Loader2 size={16} className="animate-spin" />}
