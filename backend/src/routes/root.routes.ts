@@ -8,6 +8,7 @@ import planRouter from "./plan.routes";
 import promptEventRouter from "./prompt-event.routes";
 import linkRewardRouter from "./link-reward.routes";
 import reviewRouter, { studyRouter } from "./review.routes";
+import fsrsReviewRouter from "./fsrs-review.routes";
 import sessionRouter from "./session.routes";
 import authRouter from "./auth.routes";
 import chatRouter from "./chat.routes";
@@ -56,6 +57,7 @@ rootRouter.use("/subjects", subjectRouter);
 rootRouter.use("/grades", gradeRouter);
 rootRouter.use("/attempts", attemptRouter);
 rootRouter.use("/review", reviewRouter);
+rootRouter.use("/reviews", fsrsReviewRouter); // lịch ôn FSRS (khác /review là Sổ câu sai Leitner)
 rootRouter.use("/study", studyRouter);
 rootRouter.use("/sessions", sessionRouter);
 rootRouter.use("/answer-reports", answerReportRouter);
