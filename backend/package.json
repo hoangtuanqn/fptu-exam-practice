@@ -2,6 +2,9 @@
   "name": "exam-practice-backend",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=22.13"
+  },
   "description": "API cho web luyện đề: đăng nhập, phân quyền, ví và nạp tiền SePay",
   "scripts": {
     "dev": "tsx watch src/index.ts",
