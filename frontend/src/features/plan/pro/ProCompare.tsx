@@ -1,10 +1,10 @@
 import { Bot, Check, Crown, FileDown, History, Infinity as InfinityIcon, Link2, MessageCircleQuestion, Minus, Sparkles, Timer } from "lucide-react";
 import type { PlanInfo } from "../plan.api";
-import { GlossCard } from "./GlossCard";
+import { GlossCard } from "@/shared/ui/GlossCard";
 import { vnd } from "./money";
 import { Reveal } from "./Reveal";
-import { SectionTitle } from "./SectionTitle";
-import { GOLD_GLOSS } from "./style";
+import { SectionTitle } from "@/shared/ui/SectionTitle";
+import { GOLD_GLOSS } from "@/shared/ui/gold";
 
 // Cột FuOverflow VIP: chỉ dòng đầu có (xem đề); các dòng còn lại là tính năng FEPass tự xây thêm
 const FEATURES: { icon: typeof Bot; text: string; fuo: boolean }[] = [

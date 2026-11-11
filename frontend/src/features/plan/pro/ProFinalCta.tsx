@@ -3,7 +3,7 @@ import { logos } from "@/shared/brand/brand";
 import type { PlanInfo } from "../plan.api";
 import { vnd } from "./money";
 import { Reveal } from "./Reveal";
-import { DARK_GOLD, GOLD_BUTTON } from "./style";
+import { DARK_GOLD, GOLD_BUTTON } from "@/shared/ui/gold";
 
 // Khối kêu gọi cuối trang: cùng nền vàng sẫm với phần đầu để trang có điểm đầu và điểm cuối cân nhau
 export function ProFinalCta({ plan, label, onBuy }: { plan: PlanInfo; label: string; onBuy: () => void }) {

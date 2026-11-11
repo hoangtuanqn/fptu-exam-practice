@@ -15,7 +15,7 @@ import { ProBenefits } from "./pro/ProBenefits";
 import { ProCompare } from "./pro/ProCompare";
 import { ProFaq } from "./pro/ProFaq";
 import { ProFinalCta } from "./pro/ProFinalCta";
-import { GOLD_BUTTON } from "./pro/style";
+import { GOLD_BUTTON } from "@/shared/ui/gold";
 import { ProHero } from "./pro/ProHero";
 import { ProPlans } from "./pro/ProPlans";
 import { ProSteps } from "./pro/ProSteps";

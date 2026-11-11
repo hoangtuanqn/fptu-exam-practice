@@ -3,7 +3,7 @@ import { logos } from "@/shared/brand/brand";
 import { formatDate } from "@/shared/utils/formatters";
 import type { PlanInfo } from "../plan.api";
 import { vnd } from "./money";
-import { DARK_GOLD, GOLD_GLOSS } from "./style";
+import { DARK_GOLD, GOLD_GLOSS } from "@/shared/ui/gold";
 
 interface Props {
   plan: PlanInfo;
