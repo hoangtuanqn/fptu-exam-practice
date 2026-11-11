@@ -2,7 +2,7 @@ import { prisma } from "../configs/prisma";
 import { USABLE_ANSWER_SOURCES } from "../constants/exam";
 
 // Câu hỏi thuộc một môn = câu không phải tài liệu tham khảo của đề dùng được có subjectCode = mã môn
-const subjectQuestions = (subjectCode: string) => ({ isReference: false, exam: { subjectCode, answerSource: { in: [...USABLE_ANSWER_SOURCES] } } });
+export const subjectQuestions = (subjectCode: string) => ({ isReference: false, exam: { subjectCode, answerSource: { in: [...USABLE_ANSWER_SOURCES] } } });
 
 export const questionEmbeddingRepository = {
   /** Một lô câu của môn chưa có vector của model, id tăng dần sau `afterId` (con trỏ để đi tiếp, không lặp lại câu bị bỏ qua). */

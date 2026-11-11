@@ -1,11 +1,10 @@
-import path from "node:path";
 import { prisma } from "../configs/prisma";
 import { storageDir } from "../configs/env";
 import { FREQUENT_CACHE_MS, FREQUENT_FREE_LIMIT, FREQUENT_MATCH_BITS, FREQUENT_MAX_ITEMS, FREQUENT_MAX_NEW_HASHES } from "../constants/frequent";
 import { PRO_BENEFITS } from "../constants/plan";
 import { fileUrlOf } from "../utils/file-url";
 import { isProUser } from "../utils/pro";
-import { hammingWithin, hashQuestionImage, toWords } from "../utils/question-hash";
+import { hammingWithin, hashImagesInBatches, toWords } from "../utils/question-hash";
 
 // "Câu hay ra": những câu xuất hiện lặp lại ở nhiều đề của cùng một môn. Ảnh được so bằng dấu vân tay vùng chữ (xem utils/question-hash),
 // dấu vân tay tính một lần cho mỗi câu rồi lưu vào DB (tính dần, mỗi lượt tối đa FREQUENT_MAX_NEW_HASHES ảnh nên lượt đầu của một môn lớn có thể báo "đang phân tích").
@@ -48,17 +47,10 @@ async function compute(code: string): Promise<Computed> {
 
   // Tính dấu vân tay còn thiếu (một lượt tính tối đa một số ảnh, các lượt sau tính tiếp)
   const missing = rows.filter((r) => !r.imageHash).slice(0, FREQUENT_MAX_NEW_HASHES);
-  for (let i = 0; i < missing.length; i += 8) {
-    await Promise.all(
-      missing.slice(i, i + 8).map(async (r) => {
-        const hash = await hashQuestionImage(path.join(storageDir, r.imagePath));
-        if (hash) {
-          r.imageHash = hash;
-          await prisma.examQuestion.update({ where: { id: r.id }, data: { imageHash: hash } });
-        }
-      }),
-    );
-  }
+  await hashImagesInBatches(missing, storageDir, async (r, hash) => {
+    r.imageHash = hash;
+    await prisma.examQuestion.update({ where: { id: r.id }, data: { imageHash: hash } });
+  });
 
   const hashed = rows.filter((r) => r.imageHash);
   const words = hashed.map((r) => toWords(r.imageHash!));
