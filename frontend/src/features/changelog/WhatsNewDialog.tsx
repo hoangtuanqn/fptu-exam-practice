@@ -20,7 +20,11 @@ export function WhatsNewDialog() {
     try {
       const seen = localStorage.getItem(KEY);
       if (seen === null || pathname === "/changelog") localStorage.setItem(KEY, APP_VERSION);
-      else if (seen !== APP_VERSION && !skip) timer = setTimeout(() => setOpen(true), 1500);
+      else if (seen !== APP_VERSION && !skip) {
+        // Mỗi lần chỉ một hộp thoại: đang có hộp khác (vd điểm danh) thì chờ nó đóng rồi mới hiện
+        const tryOpen = () => (document.querySelector('[role="dialog"]') ? (timer = setTimeout(tryOpen, 2000)) : setOpen(true));
+        timer = setTimeout(tryOpen, 1500);
+      }
     } catch {
       /* trình duyệt chặn lưu trữ: không hiện hộp thoại để khỏi lặp lại mỗi lần tải trang */
     }
