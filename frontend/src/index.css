@@ -418,3 +418,17 @@ h3 {
   border-bottom: 0;
   border-top: 1px solid var(--md-sys-color-outline-variant);
 }
+
+/* iOS Safari tự phóng to trang khi chạm vào ô nhập có chữ nhỏ hơn 16px: ép 16px riêng trên iOS, không chặn người dùng tự thu phóng */
+@supports (-webkit-touch-callout: none) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* Bỏ phóng to do chạm đúp liên tiếp vào nút/liên kết trên điện thoại (vẫn thu phóng bằng hai ngón) */
+html {
+  touch-action: manipulation;
+}
