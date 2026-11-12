@@ -1,14 +1,14 @@
 import { Router } from "express";
 import { authController } from "../controllers/auth.controllers";
 import { authenticate } from "../middlewares/auth.middlewares";
-import { authLimiter, forgotPasswordLimiter, refreshLimiter } from "../middlewares/rateLimit.middlewares";
+import { authLimiter, forgotPasswordLimiter, loginLimiter, refreshLimiter } from "../middlewares/rateLimit.middlewares";
 import { validate } from "../middlewares/validate.middlewares";
 import { forgotPasswordBody, githubLoginBody, googleLoginBody, loginBody, registerBody, resetPasswordBody, verifyEmailBody } from "../rules/requests/auth.request";
 
 const authRouter = Router();
 
 authRouter.post("/register", authLimiter, validate(registerBody), authController.register);
-authRouter.post("/login", authLimiter, validate(loginBody), authController.login);
+authRouter.post("/login", loginLimiter, validate(loginBody), authController.login);
 authRouter.post("/forgot-password", forgotPasswordLimiter, validate(forgotPasswordBody), authController.forgotPassword);
 authRouter.post("/reset-password", authLimiter, validate(resetPasswordBody), authController.resetPassword);
 // Phiên đăng nhập dài hạn (cookie httpOnly): đổi lấy access token mới, và đăng xuất để thu hồi

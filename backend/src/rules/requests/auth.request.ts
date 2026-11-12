@@ -20,6 +20,7 @@ export const registerBody = z.object({
 export const loginBody = z.object({
   email: emailField,
   password: z.string().min(1, "Vui lòng nhập mật khẩu"),
+  captchaToken: z.string().max(2048).optional(), // bắt buộc khi đăng nhập sai nhiều lần (xem login-guard)
 });
 
 export const forgotPasswordBody = z.object({ email: emailField });

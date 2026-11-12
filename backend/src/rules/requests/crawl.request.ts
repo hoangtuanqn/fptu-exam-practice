@@ -12,6 +12,7 @@ export const importExamBody = z.object({
     .refine(isFuoThreadUrl, "Link không đúng dạng https://fuoverflow.com/threads/ten-de.1234/"),
   // Tạo bộ đề theo chương: đề phải thuộc đúng môn này (mã môn như PRO192), kiểm trước khi trừ phí
   subject: subjectCodeSchema.transform((s) => s.toUpperCase()).optional(),
+  captchaToken: z.string().max(2048).optional(), // khách phải qua captcha khi gửi lấy đề
 });
 
 export { idParam };

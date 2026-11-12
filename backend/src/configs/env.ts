@@ -37,6 +37,8 @@ const schema = z.object({
   // Thiếu một trong hai thì ẩn nút đăng nhập GitHub.
   GITHUB_CLIENT_ID: z.string().optional(),
   GITHUB_CLIENT_SECRET: z.string().optional(),
+  // Cloudflare Turnstile (captcha): khoá bí mật. Bỏ trống thì tắt captcha (dev)
+  TURNSTILE_SECRET_KEY: z.string().optional(),
   STORAGE_DIR: z.string().default("storage"), // nơi lưu ảnh đề đã crawl
   // Tệp PDF tạm của Phân tích slide (riêng tư, không phục vụ công khai). Bỏ trống = private/materials trong thư mục chạy server
   MATERIAL_TEMP_DIR: z.string().optional(),

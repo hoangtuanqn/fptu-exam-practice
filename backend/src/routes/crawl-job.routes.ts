@@ -1,4 +1,5 @@
-import { Router } from "express";
+import { Router, type RequestHandler } from "express";
+import { captchaService } from "../services/captcha.service";
 import { makeLimiter } from "../middlewares/rateLimit.middlewares";
 import { crawlJobController } from "../controllers/crawl-job.controllers";
 import { identify, requireVerifiedMember } from "../middlewares/auth.middlewares";
@@ -19,11 +20,17 @@ const guestLimiter = limiter(24 * 60 * 60 * 1000, 5, (user) => !!user, "Khách")
 // Giao diện gọi /quote để kiểm tra link ngay khi người dùng gõ/dán (đã gộp bằng debounce), nên cho nhiều hơn lượt nhập đề
 const quoteLimiter = makeLimiter({ limit: 240, message: "Bạn kiểm tra link quá nhanh, vui lòng thử lại sau ít giây" });
 
+// Khách (chưa đăng nhập) phải qua captcha trước khi lấy đề; thành viên không cần
+const guestCaptcha: RequestHandler = (req, _res, next) => {
+  if (req.user) return next();
+  captchaService.assert(req.body?.captchaToken, req.ip).then(() => next(), next);
+};
+
 const crawlJobRouter = Router();
 
 crawlJobRouter.use(identify); // thành viên hoặc khách đều được lấy đề
 
-crawlJobRouter.post("/", requireVerifiedMember, idempotent, memberLimiter, guestLimiter, validate(importExamBody), crawlJobController.submit);
+crawlJobRouter.post("/", requireVerifiedMember, idempotent, memberLimiter, guestLimiter, guestCaptcha, validate(importExamBody), crawlJobController.submit);
 crawlJobRouter.get("/price", crawlJobController.price);
 crawlJobRouter.get("/quote", quoteLimiter, validate(importExamBody, "query"), crawlJobController.quote);
 crawlJobRouter.get("/:id", validate(idParam, "params"), crawlJobController.get);

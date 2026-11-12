@@ -14,6 +14,8 @@ import { mailService } from "./mail.service";
 import { emailVerificationService } from "./email-verification.service";
 import { adminNoticeService } from "./admin-notice.service";
 import { notificationService } from "./notification.service";
+import { captchaService } from "./captcha.service";
+import { CAPTCHA_AFTER, LOCK_AFTER, loginGuard } from "../utils/login-guard";
 
 const INVALID_LOGIN = "Email hoặc mật khẩu không đúng";
 const INVALID_RESET = "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn";
@@ -48,10 +50,20 @@ export const authService = {
     return { token: signToken(user.id), user };
   },
 
-  async login({ email, password }: LoginBody) {
+  async login({ email, password, captchaToken }: LoginBody, ip: string) {
+    const key = `${ip}|${email}`;
+    const failed = loginGuard.count(key);
+    if (failed >= LOCK_AFTER) throw new AppError("Bạn đã nhập sai quá nhiều lần, vui lòng thử lại sau 15 phút", 429);
+    if (failed >= CAPTCHA_AFTER) await captchaService.assert(captchaToken, ip);
+
     const found = await userRepository.findByEmailWithPassword(email);
     // Cùng một thông báo cho "sai email" và "sai mật khẩu" để không lộ email nào tồn tại
-    if (!found || !(await comparePassword(password, found.password))) throw new AppError(INVALID_LOGIN, 401);
+    if (!found || !(await comparePassword(password, found.password))) {
+      loginGuard.fail(key);
+      const needCaptcha = failed + 1 >= CAPTCHA_AFTER;
+      throw new AppError(INVALID_LOGIN, 401, needCaptcha ? { captcha: `${INVALID_LOGIN}. Hãy xác thực captcha để thử lại` } : undefined);
+    }
+    loginGuard.clear(key);
     if (found.status === "BANNED") throw AppError.forbidden("Tài khoản đã bị khoá");
 
     const user = await userRepository.findById(found.id);

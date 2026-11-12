@@ -20,6 +20,10 @@ export const refreshLimiter = makeLimiter({ limit: 300, message: "Làm mới phi
 // Chống dò mật khẩu: 30 lần / 15 phút / IP (nới hơn một chút vì nhiều sinh viên dùng chung IP wifi trường/ký túc xá)
 export const authLimiter = makeLimiter({ windowMs: 15 * 60 * 1000, limit: 30, message: "Thử quá nhiều lần, vui lòng quay lại sau" });
 
+// Đăng nhập: dò mật khẩu từng tài khoản đã có login-guard (captcha sau 3 lần sai, khoá sau 7 lần),
+// nên lớp theo IP này chỉ chặn bắn phá và được nới rộng (nhiều sinh viên dùng chung IP wifi trường)
+export const loginLimiter = makeLimiter({ windowMs: 15 * 60 * 1000, limit: 100, message: "Thử quá nhiều lần, vui lòng quay lại sau" });
+
 // Chống dò giftcode: chỉ đếm các lần nhập SAI, 10 lần / 15 phút / tài khoản
 export const giftCodeLimiter = makeLimiter({
   windowMs: 15 * 60 * 1000,
