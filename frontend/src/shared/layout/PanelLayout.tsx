@@ -32,6 +32,7 @@ export interface NavItem {
   icon: LucideIcon;
   end?: boolean;
   group?: string; // nhãn nhóm hiện phía trên mục đầu tiên của nhóm
+  also?: string[]; // các trang con (hiện thành tab) cũng tô sáng mục này
 }
 
 // Nhóm có nhiều hơn chừng này mục mới xổ xuống/thu lại được; nhóm ít mục luôn hiện đủ cho gọn mắt
@@ -39,12 +40,9 @@ const FOLD_OVER = 5;
 
 // Mục menu khớp với đường dẫn hiện tại (dài nhất thắng), dùng cho tiêu đề thanh trên
 function currentItem(items: NavItem[], pathname: string) {
+  const under = (p: string) => pathname === p || pathname.startsWith(`${p}/`);
   return items
-    .filter((i) =>
-      i.end
-        ? pathname === i.to
-        : pathname === i.to || pathname.startsWith(`${i.to}/`),
-    )
+    .filter((i) => (i.end ? pathname === i.to : under(i.to) || !!i.also?.some(under)))
     .sort((a, b) => b.to.length - a.to.length)[0];
 }
 
@@ -64,7 +62,8 @@ function DrawerContent({
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const activeGroup = currentItem(items, pathname)?.group;
+  const cur = currentItem(items, pathname);
+  const activeGroup = cur?.group;
   // Chỉ nhóm chứa trang đang xem được mở sẵn; các nhóm khác thu lại cho menu gọn
   const [open, setOpen] = useState<Set<string>>(
     () => new Set(activeGroup ? [activeGroup] : []),
@@ -143,7 +142,9 @@ function DrawerContent({
                   </div>
                 ))}
               {isOpen &&
-                sec.items.map(({ to, label, icon: Icon, end }) => (
+                sec.items.map((it) => {
+                  const { to, label, icon: Icon, end } = it;
+                  return (
                   <NavLink
                     key={to}
                     to={to}
@@ -151,7 +152,7 @@ function DrawerContent({
                     onClick={onNavigate}
                     className={({ isActive }) =>
                       `md-state md-motion md-label-large flex h-12 items-center gap-3 rounded-full px-4 ${fold ? "ml-2" : ""} ${
-                        isActive
+                        isActive || cur === it
                           ? "bg-secondary-container text-on-secondary-container"
                           : "text-on-surface-variant"
                       }`
@@ -160,7 +161,8 @@ function DrawerContent({
                     <Icon size={20} className="shrink-0" />
                     <span className="truncate">{label}</span>
                   </NavLink>
-                ))}
+                  );
+                })}
             </div>
           );
         })}
@@ -199,6 +201,7 @@ function DrawerContent({
 // Thanh điều hướng dọc (navigation rail) của M3 cho cỡ medium: biểu tượng 56x32 trong viên thuốc (đang chọn: secondary-container) + nhãn nhỏ bên dưới.
 // Nút luyện đề là FAB (hành động chính duy nhất của khung này).
 function Rail({ title, items }: { title: string; items: NavItem[] }) {
+  const cur = currentItem(items, useLocation().pathname);
   return (
     <div className="flex h-full w-20 flex-col items-center">
       <Link to="/" title={`Về trang ${brand.product}`} className="mt-3 block">
@@ -218,7 +221,9 @@ function Rail({ title, items }: { title: string; items: NavItem[] }) {
         aria-label={title}
         className="mt-3 flex w-full flex-1 flex-col items-center gap-1 overflow-y-auto pb-4"
       >
-        {items.map(({ to, label, icon: Icon, end }) => (
+        {items.map((it) => {
+          const { to, label, icon: Icon, end } = it;
+          return (
           <NavLink
             key={to}
             to={to}
@@ -226,7 +231,9 @@ function Rail({ title, items }: { title: string; items: NavItem[] }) {
             title={label}
             className="group flex w-full flex-col items-center gap-1 px-1 py-1.5"
           >
-            {({ isActive }) => (
+            {({ isActive: active }) => {
+              const isActive = active || cur === it;
+              return (
               <>
                 <span
                   className={`md-state md-motion flex h-8 w-14 items-center justify-center rounded-full ${isActive ? "bg-secondary-container text-on-secondary-container" : "text-on-surface-variant"}`}
@@ -239,9 +246,11 @@ function Rail({ title, items }: { title: string; items: NavItem[] }) {
                   {label}
                 </span>
               </>
-            )}
+              );
+            }}
           </NavLink>
-        ))}
+          );
+        })}
       </nav>
     </div>
   );
@@ -333,9 +342,9 @@ export function PanelLayout({
             >
               <Menu size={24} />
             </IconButton>
-            <h1 className="md-title-large truncate pl-2 text-on-surface">
+            <div className="md-title-large truncate pl-2 text-on-surface">
               {current?.label ?? title}
-            </h1>
+            </div>
           </div>
 
           <div className="flex shrink-0 items-center gap-1">

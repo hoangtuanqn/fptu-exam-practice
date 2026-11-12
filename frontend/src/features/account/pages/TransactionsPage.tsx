@@ -1,5 +1,6 @@
 import { userApi } from "@/features/account/api/user.api";
 import { Card, PageHeader } from "@/shared/ui/Card";
+import { RouteTabs, WALLET_TABS } from "@/shared/ui/RouteTabs";
 import { ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { Pagination } from "@/shared/ui/Table";
 import { TransactionTable } from "@/features/account/components/TransactionTable";
@@ -16,6 +17,9 @@ export default function TransactionsPage() {
 
   return (
     <>
+      <div className="mb-4">
+        <RouteTabs label="Ví" tabs={WALLET_TABS} />
+      </div>
       <PageHeader title="Lịch sử giao dịch" description="Mọi biến động số dư trong ví của bạn." />
       <Card>
         {loading && !data ? (

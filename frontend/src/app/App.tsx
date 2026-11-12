@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
-import { Crown, FileText, Flame, Layers, NotebookPen, Download, BookOpen, Gift, History, MessageSquareWarning, UserPlus, ListChecks, GraduationCap, LayoutDashboard, UserRound, Wallet } from "lucide-react";
+import { Crown, FileText, Flame, NotebookPen, Download, BookOpen, ListChecks, GraduationCap, LayoutDashboard, UserRound, Wallet } from "lucide-react";
 import { PanelLayout, type NavItem } from "@/shared/layout/PanelLayout";
 import { Loading } from "@/shared/ui/Feedback";
 import LoginPage from "@/features/auth/pages/LoginPage";
@@ -43,7 +43,6 @@ const PublicCatalogPage = lazy(() => import("@/features/exam-store/PublicCatalog
 const FrequentPage = lazy(() => import("@/features/frequent/FrequentPage"));
 const MaterialsPage = lazy(() => import("@/features/materials/MaterialsPage"));
 const MaterialResultPage = lazy(() => import("@/features/materials/MaterialResultPage"));
-const ChapterSetPage = lazy(() => import("@/features/chapter-set/ChapterSetPage"));
 const ReviewPracticePage = lazy(() => import("@/features/review/ReviewPracticePage"));
 const MyReportsPage = lazy(() => import("@/features/account/pages/MyReportsPage"));
 const ReferralPage = lazy(() => import("@/features/account/pages/ReferralPage"));
@@ -62,19 +61,14 @@ const AttemptDetailPage = lazy(() => import("@/features/history/pages/AttemptDet
 const ACCOUNT_NAV: NavItem[] = [
   { to: "/account", label: "Tổng quan", icon: LayoutDashboard, end: true },
   { to: "/account/exams", label: "Kho đề", icon: BookOpen, group: "Luyện đề" },
-  { to: "/account/chapters", label: "Bộ đề theo chương", icon: Layers, group: "Luyện đề" },
   { to: "/account/pe", label: "Tải đề thi PE", icon: Download, group: "Luyện đề" },
   { to: "/account/review", label: "Sổ câu sai", icon: NotebookPen, group: "Ôn tập" },
   { to: "/account/frequent", label: "Câu hay ra", icon: Flame, group: "Ôn tập" },
   { to: "/account/materials", label: "Phân tích slide", icon: FileText, group: "Ôn tập" },
-  { to: "/account/attempts", label: "Lịch sử làm bài", icon: ListChecks, group: "Kết quả" },
-  { to: "/account/reports", label: "Báo cáo đáp án", icon: MessageSquareWarning, group: "Kết quả" },
+  { to: "/account/attempts", label: "Lịch sử làm bài", icon: ListChecks, group: "Kết quả", also: ["/account/reports"] },
   { to: "/account/grades", label: "Điểm FAP", icon: GraduationCap, group: "Kết quả" },
   { to: "/pro", label: "Gói Pro", icon: Crown, group: "Ví và Pro" },
-  { to: "/account/deposit", label: "Nạp credit", icon: Wallet, group: "Ví và Pro" },
-  { to: "/account/transactions", label: "Lịch sử giao dịch", icon: History, group: "Ví và Pro" },
-  { to: "/account/giftcode", label: "Giftcode", icon: Gift, group: "Ví và Pro" },
-  { to: "/account/referral", label: "Giới thiệu bạn bè", icon: UserPlus, group: "Ví và Pro" },
+  { to: "/account/deposit", label: "Ví", icon: Wallet, group: "Ví và Pro", also: ["/account/transactions", "/account/giftcode", "/account/referral"] },
   { to: "/account/profile", label: "Hồ sơ", icon: UserRound, group: "Tài khoản" },
 ];
 
@@ -140,7 +134,7 @@ export default function App() {
             <Route path="frequent" element={<FrequentPage />} />
             <Route path="materials" element={<MaterialsPage />} />
             <Route path="materials/:id" element={<MaterialResultPage />} />
-            <Route path="chapters" element={<ChapterSetPage />} />
+            <Route path="chapters" element={<Navigate to="/account/exams?tab=chapters" replace />} />
             <Route path="review" element={<ReviewPage />} />
             <Route path="review/practice" element={<ReviewPracticePage />} />
             <Route path="pe" element={<PeDownloadPage />} />

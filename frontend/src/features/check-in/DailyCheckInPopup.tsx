@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useToast } from "@/shared/context/ToastContext";
 import { checkInApi, type CheckInResult, type CheckInStatus } from "./check-in.api";
@@ -18,6 +19,8 @@ const vnToday = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_
 export function DailyCheckInPopup() {
   const { user, loading, refresh } = useAuth();
   const toast = useToast();
+  const { pathname } = useLocation();
+  const inExam = pathname.startsWith("/exam/"); // đang làm đề thì không tự bật hộp thoại; vẫn điểm danh được từ menu tài khoản
   const [status, setStatus] = useState<CheckInStatus | null>(null);
   const [result, setResult] = useState<CheckInResult | null>(null);
   const [open, setOpen] = useState(false);
@@ -34,7 +37,7 @@ export function DailyCheckInPopup() {
       setOpen(false);
       return;
     }
-    if (!verified) return;
+    if (!verified || inExam) return;
     const key = `${user.id}:${vnToday()}`;
     if (checkedFor.current === key) return;
     checkedFor.current = key;
@@ -48,7 +51,7 @@ export function DailyCheckInPopup() {
       .catch(() => {
         checkedFor.current = ""; // lỗi mạng: lần sau thử lại
       });
-  }, [user, loading, verified, tick]);
+  }, [user, loading, verified, inExam, tick]);
 
   useEffect(() => {
     const onVisible = () => document.visibilityState === "visible" && setTick((t) => t + 1);

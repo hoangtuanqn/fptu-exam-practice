@@ -6,6 +6,7 @@ import { useApi } from "@/shared/hooks/useApi";
 import { useClampPage } from "@/shared/hooks/useClampPage";
 import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
 import { Card, PageHeader } from "@/shared/ui/Card";
+import { RouteTabs, HISTORY_TABS } from "@/shared/ui/RouteTabs";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
 import { formatCredit, formatDate } from "@/shared/utils/formatters";
@@ -20,6 +21,9 @@ export default function MyReportsPage() {
 
   return (
     <>
+      <div className="mb-4">
+        <RouteTabs label="Lịch sử" tabs={HISTORY_TABS} />
+      </div>
       <PageHeader title="Báo cáo đáp án" description={`Mỗi báo cáo được xác nhận chính xác nhận ${formatCredit(REPORT_REWARD)}. Gửi báo cáo ngay trong lúc xem kết quả từng câu.`} />
       <Card>
         {loading && !data ? (

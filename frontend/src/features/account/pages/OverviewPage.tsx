@@ -77,7 +77,7 @@ export default function OverviewPage() {
           </h1>
           {facts.length > 0 && <p className="md-body-medium mt-1.5 text-on-surface-variant">{facts.join(" · ")}</p>}
         </div>
-        <Link to="/" className={buttonClass({ variant: "primary" })}>
+        <Link to="/" className={buttonClass({ variant: "primary", className: "medium:hidden" })}>
           <PenLine size={16} /> Vào luyện đề
         </Link>
       </header>
