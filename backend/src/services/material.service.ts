@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import type { Role } from "@prisma/client";
 import { aiReady } from "../constants/ai";
 import { HTTP_STATUS } from "../constants/httpStatus";
-import { MATERIAL_LIST_MAX, MATERIAL_MAX_ACTIVE_PER_USER, MATERIAL_MAX_PAGES, MATERIAL_RETENTION_DAYS } from "../constants/materials";
+import { MATERIAL_ADMIN_ONLY, MATERIAL_LIST_MAX, MATERIAL_MAX_ACTIVE_PER_USER, MATERIAL_MAX_PAGES, MATERIAL_RETENTION_DAYS } from "../constants/materials";
 import { frequencyStatsRepository } from "../repositories/frequency-stats.repository";
 import { materialRepository, type MaterialUploadRow, type NewUpload, type PageRow } from "../repositories/material.repository";
 import { subjectRepository, type SubjectRef } from "../repositories/subject.repository";
@@ -58,6 +58,7 @@ export interface MaterialServiceDeps {
   };
   chapterStats(subjectId: number): Promise<ChapterStatRow[]>;
   isPro(userId: number): Promise<boolean>;
+  adminOnly: boolean; // true: chỉ admin dùng được (Pro thấy thông báo đang hoàn thiện)
   aiReady(): Promise<boolean>;
   ledger: TokenLedger;
   pdf: PdfEngine;
@@ -67,7 +68,8 @@ export interface MaterialServiceDeps {
 }
 
 const MSG = {
-  proOnly: "Phân tích slide chỉ dành cho tài khoản Pro. Nâng cấp Pro để dùng tính năng này.",
+  proOnly: "Tính năng chỉ dành cho PRO.",
+  comingSoon: "Chức năng đang trong quá trình hoàn thiện.",
   noFile: "Vui lòng chọn tệp PDF",
   notPdf: "Tệp tải lên phải là PDF",
   emptyPdf: "Tệp PDF không có trang nào",
@@ -80,7 +82,9 @@ const MSG = {
 const iso = (d: Date | null) => (d ? d.toISOString() : null);
 
 export function createMaterialService(deps: MaterialServiceDeps) {
-  const canUse = async (actor: MaterialActor) => actor.role === "ADMIN" || (await deps.isPro(actor.id));
+  const canUse = async (actor: MaterialActor) => actor.role === "ADMIN" || (!deps.adminOnly && (await deps.isPro(actor.id)));
+  // Tài khoản không dùng được: Pro thì "đang hoàn thiện", chưa Pro thì "chỉ dành cho PRO"
+  const accessOf = async (actor: MaterialActor) => ((await canUse(actor)) ? ("ALLOWED" as const) : (await deps.isPro(actor.id)) ? ("COMING_SOON" as const) : ("PRO_ONLY" as const));
 
   const subjectMap = async (ids: number[]) => new Map((await deps.subjects.findManyByIds([...new Set(ids)])).map((s) => [s.id, s]));
 
@@ -100,13 +104,14 @@ export function createMaterialService(deps: MaterialServiceDeps) {
   return {
     /** Phần trăm đã dùng trong cửa sổ hiện tại (không lộ số token). */
     async quota(actor: MaterialActor) {
-      const [allowed, status] = await Promise.all([canUse(actor), deps.ledger.status(actor.id, deps.now())]);
-      return { isPro: allowed, percentUsed: status.percentUsed, resetsAt: iso(status.resetsAt) };
+      const [access, status] = await Promise.all([accessOf(actor), deps.ledger.status(actor.id, deps.now())]);
+      return { isPro: access === "ALLOWED", access, percentUsed: status.percentUsed, resetsAt: iso(status.resetsAt) };
     },
 
     /** Kiểm tra rẻ chạy TRƯỚC khi nhận tệp (không để tài khoản thường bắt máy chủ đọc tệp lớn). create() kiểm tra lại. */
     async assertCanUpload(actor: MaterialActor) {
-      if (!(await canUse(actor))) throw AppError.forbidden(MSG.proOnly);
+      const access = await accessOf(actor);
+      if (access !== "ALLOWED") throw AppError.forbidden(access === "COMING_SOON" ? MSG.comingSoon : MSG.proOnly);
       if (!(await deps.aiReady())) throw new AppError(MATERIAL_MESSAGES.aiOff, HTTP_STATUS.SERVICE_UNAVAILABLE);
     },
 
@@ -232,6 +237,7 @@ export const materialService = createMaterialService({
   subjects: subjectRepository,
   chapterStats: (subjectId) => frequencyStatsRepository.chapterStats(subjectId),
   isPro: (userId) => planService.isPro(userId),
+  adminOnly: MATERIAL_ADMIN_ONLY,
   aiReady: async () => aiReady(await aiSettingService.get()),
   ledger: materialTokenLedger,
   pdf: pdfjsEngine,

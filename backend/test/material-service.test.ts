@@ -20,7 +20,7 @@ const CHAPTERS = [
   { number: 2, title: "Memory", topics: ["2.1 Paging"] },
 ];
 
-function setup({ pages = 3, aiOn = true, usedTokens = 0, chapters = CHAPTERS }: { pages?: number; aiOn?: boolean; usedTokens?: number; chapters?: typeof CHAPTERS } = {}) {
+function setup({ pages = 3, aiOn = true, usedTokens = 0, chapters = CHAPTERS, adminOnly = false }: { pages?: number; aiOn?: boolean; usedTokens?: number; chapters?: typeof CHAPTERS; adminOnly?: boolean } = {}) {
   const rows: MaterialUploadRow[] = [];
   const written = new Map<number, number>();
   let notified = 0;
@@ -59,6 +59,7 @@ function setup({ pages = 3, aiOn = true, usedTokens = 0, chapters = CHAPTERS }: 
     },
     chapterStats: async () => [],
     isPro: async (userId) => userId === PRO.id,
+    adminOnly,
     aiReady: async () => aiOn,
     ledger: createTokenLedger({ feature: "material", limit: 1_000_000, windowMs: 5 * 3600_000, store: ledgerStore }),
     pdf,
@@ -85,7 +86,7 @@ const rejectsWith = async (p: Promise<unknown>, status: number, message?: RegExp
 describe("material service", () => {
   it("Pro gate: free users get 403, Pro users and admins are accepted", async () => {
     const t = setup();
-    await rejectsWith(t.service.create(FREE, file(), SUBJECT.code), 403, /Pro/);
+    await rejectsWith(t.service.create(FREE, file(), SUBJECT.code), 403, /PRO/);
     assert.equal(t.rows.length, 0);
     const a = await t.service.create(PRO, file(), SUBJECT.code);
     assert.deepEqual(a, { id: 1, status: "QUEUED", duplicate: false });
@@ -98,16 +99,28 @@ describe("material service", () => {
   });
 
   it("upload gate (runs before the file is read): 403 for free accounts, 503 when AI is off", async () => {
-    await rejectsWith(setup().service.assertCanUpload(FREE), 403, /Pro/);
+    await rejectsWith(setup().service.assertCanUpload(FREE), 403, /PRO/);
     await rejectsWith(setup({ aiOn: false }).service.assertCanUpload(PRO), 503);
     await setup().service.assertCanUpload(PRO);
     await setup().service.assertCanUpload(ADMIN);
   });
 
+  it("admin-only mode: admin works, Pro gets the coming-soon message, free gets the Pro-only message", async () => {
+    const t = setup({ adminOnly: true });
+    await t.service.assertCanUpload(ADMIN);
+    await rejectsWith(t.service.assertCanUpload(PRO), 403, /hoàn thiện/);
+    await rejectsWith(t.service.create(PRO, file(), SUBJECT.code), 403, /hoàn thiện/);
+    await rejectsWith(t.service.assertCanUpload(FREE), 403, /PRO/);
+    assert.equal(t.rows.length, 0);
+    assert.equal((await t.service.quota(ADMIN)).access, "ALLOWED");
+    assert.equal((await t.service.quota(PRO)).access, "COMING_SOON");
+    assert.equal((await t.service.quota(FREE)).access, "PRO_ONLY");
+  });
+
   it("quota endpoint reports the gate and percent, never raw token numbers", async () => {
     const t = setup({ usedTokens: 250_000 });
     const q = await t.service.quota(PRO);
-    assert.deepEqual(Object.keys(q).sort(), ["isPro", "percentUsed", "resetsAt"]);
+    assert.deepEqual(Object.keys(q).sort(), ["access", "isPro", "percentUsed", "resetsAt"]);
     assert.equal(q.isPro, true);
     assert.equal(q.percentUsed, 25);
     assert.equal(q.resetsAt, new Date(NOW.getTime() - 3600_000 + 5 * 3600_000).toISOString());
