@@ -26,6 +26,7 @@ Web app for FPT University students to practise FE exams: import exams from FuOv
 | `verify-changes` | before reporting done: type-check, build, how to test backend/frontend |
 | `prisma-migration` | schema or migration changes |
 | `fepass-conventions` | writing backend/frontend code, folders, shared components, UI copy |
+| `sql-performance` | writing or reviewing a repository query, list endpoint or batch job; anything slow (indexes, EXPLAIN, N+1, pagination) |
 | `architecture-rules` | new module/endpoint/feature folder, changes across layers, API shape changes, AI/external calls, money flows |
 | `marketing-psychology` | designing upsell, pricing, deposit or onboarding prompts. Project rules win over it: only real scarcity, no fake counters, always dismissible, never on exam screens while the timer runs |
 | `changelog-entry` | a user-visible feature ships |
