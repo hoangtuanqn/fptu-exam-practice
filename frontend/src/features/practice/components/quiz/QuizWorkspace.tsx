@@ -110,6 +110,7 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit }: Props)
           questionNumber={question.number}
           firstTime={panel!.firstTime}
           useFreeTurn={panel!.useFreeTurn}
+          chat={!(quiz.timing && (quiz.mode === "exam" || quiz.timeLimitSec !== null))} // đồng hồ thi còn chạy thì không mở hỏi AI
           onClose={() => setPanel(null)}
           onBought={() => {
             setBought((prev) => new Set(prev).add(question.number));

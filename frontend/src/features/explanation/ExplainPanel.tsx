@@ -6,6 +6,7 @@ import { useResizableWidth } from "@/shared/hooks/useResizableWidth";
 import { Button } from "@/shared/ui/Button";
 import { Markdown } from "@/shared/ui/Markdown";
 import { explanationApi } from "./explanation.api";
+import { ExplainChat } from "./ExplainChat";
 import { errorMessage } from "@/shared/api/errors";
 
 interface Props {
@@ -15,6 +16,7 @@ interface Props {
   firstTime: boolean; // vừa trả phí lần đầu: hiện hiệu ứng "AI đang phân tích". Đã mua rồi thì chỉ hiển thị.
   onClose: () => void;
   onBought: () => void; // báo đã mua (để nút đổi sang "xem giải thích")
+  chat?: boolean; // cho hỏi AI tiếp về câu này (tắt khi đồng hồ thi còn chạy)
 }
 
 type Phase = "loading" | "done" | "error";
@@ -34,7 +36,7 @@ const CACHED_WAIT_JITTER_MS = 2000;
  * Lời giải thích AI của một câu, đặt cạnh đề để người học vừa xem đề vừa đọc lời giải:
  * màn hình rộng là cột bên phải, màn hình hẹp là tấm trượt từ dưới lên (đề vẫn thấy phía trên).
  */
-export function ExplainPanel({ examId, questionNumber, useFreeTurn, firstTime, onClose, onBought }: Props) {
+export function ExplainPanel({ examId, questionNumber, useFreeTurn, firstTime, onClose, onBought, chat = false }: Props) {
   const { refresh } = useAuth();
   const [phase, setPhase] = useState<Phase>("loading");
   const [content, setContent] = useState("");
@@ -142,7 +144,12 @@ export function ExplainPanel({ examId, questionNumber, useFreeTurn, firstTime, o
           </div>
         )}
 
-        {phase === "done" && <Markdown>{content}</Markdown>}
+        {phase === "done" && (
+          <>
+            <Markdown>{content}</Markdown>
+            {chat && <ExplainChat examId={examId} questionNumber={questionNumber} />}
+          </>
+        )}
       </div>
 
       {phase === "done" && (

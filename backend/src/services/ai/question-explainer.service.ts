@@ -5,22 +5,35 @@ import { loadImageForAi } from "./image";
 
 export interface ExplainInput {
   examTitle: string;
+  subjectCode: string | null; // mã môn của đề (PFP191...), null nếu không xác định được
+  subjectName: string | null; // tên môn trong bảng subjects, null nếu chưa có
   questionNumber: number;
   imageFile: string; // đường dẫn tuyệt đối tới ảnh câu hỏi
   correctAnswer: string; // ví dụ "C" hoặc "A C"
   commentsText: string | null; // bình luận của câu này (đã rút gọn), nếu có
 }
 
-/** Nhờ Claude giải thích một câu hỏi (ảnh + đáp án chính thức + bình luận nếu có). Trả về văn bản tiếng Việt. */
-export async function explainQuestion(config: AiConfig, input: ExplainInput): Promise<string> {
-  if (!config.anthropicApiKey) throw new Error("Chưa cấu hình khóa Anthropic");
-  const image = await loadImageForAi(input.imageFile);
+type QuestionContext = Pick<ExplainInput, "examTitle" | "subjectCode" | "subjectName" | "questionNumber" | "imageFile" | "correctAnswer">;
 
-  const content: ClaudeContent[] = [
-    { type: "text", text: `<exam>\nTitle: ${input.examTitle || "(unknown)"}\nQuestion number: ${input.questionNumber}\n</exam>` },
+/**
+ * Khối ngữ cảnh của một câu: <exam> (có môn học, để AI không đoán sai ngôn ngữ/môn), ảnh câu hỏi, <correct_answer>.
+ * Dùng chung cho lời giải thích và hỏi đáp; dựng xác định (cùng đầu vào -> cùng byte) để prompt cache khớp giữa các lượt.
+ */
+export async function questionContextBlocks(input: QuestionContext): Promise<ClaudeContent[]> {
+  const image = await loadImageForAi(input.imageFile);
+  const subject = input.subjectCode ? `${input.subjectCode}${input.subjectName ? ` - ${input.subjectName}` : ""}` : "(unknown)";
+  return [
+    { type: "text", text: `<exam>\nTitle: ${input.examTitle || "(unknown)"}\nSubject: ${subject}\nQuestion number: ${input.questionNumber}\n</exam>` },
     { type: "image", source: { type: "base64", media_type: image.mediaType, data: image.data } },
     { type: "text", text: `<correct_answer>${input.correctAnswer}</correct_answer>` },
   ];
+}
+
+/** Nhờ Claude giải thích một câu hỏi (ảnh + đáp án chính thức + bình luận nếu có). Trả về văn bản tiếng Việt. */
+export async function explainQuestion(config: AiConfig, input: ExplainInput): Promise<string> {
+  if (!config.anthropicApiKey) throw new Error("Chưa cấu hình khóa Anthropic");
+
+  const content = await questionContextBlocks(input);
   if (input.commentsText) content.push({ type: "text", text: `<comments>\n${input.commentsText}\n</comments>` });
   content.push({ type: "text", text: "Explain this question following your instructions." });
 
@@ -28,8 +41,8 @@ export async function explainQuestion(config: AiConfig, input: ExplainInput): Pr
     apiKey: config.anthropicApiKey,
     model: config.claudeModel,
     effort: EXPLAIN_EFFORT,
-    // Bộ prompt riêng của việc giải thích một câu (prompts/explain), chọn module theo mã môn ở đầu tiêu đề đề thi
-    system: buildSystem("explain", resolveModuleKey("explain", { title: input.examTitle })),
+    // Bộ prompt riêng của việc giải thích một câu (prompts/explain), chọn module theo mã môn của đề (hoặc đầu tiêu đề)
+    system: buildSystem("explain", resolveModuleKey("explain", { explicit: input.subjectCode, title: input.examTitle })),
     content,
     maxTokens: EXPLAIN_MAX_OUTPUT_TOKENS,
   });

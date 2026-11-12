@@ -6,6 +6,8 @@ export class AppError extends Error {
     message: string,
     public status: number = HTTP_STATUS.BAD_REQUEST,
     public errors?: Record<string, string>,
+    public code?: string, // mã máy đọc được để frontend nhận diện lỗi (ví dụ CHAT_QUOTA_EXCEEDED)
+    public data?: unknown, // dữ liệu kèm theo lỗi (ví dụ hạn mức còn lại)
   ) {
     super(message);
   }

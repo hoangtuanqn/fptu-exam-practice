@@ -5,6 +5,7 @@ import path from "node:path";
  * Loader prompt hệ thống theo module. Có HAI bộ prompt độc lập, mỗi bộ cho một việc, nằm ở backend/prompts/:
  *   solve/     AI tìm đáp án cho CẢ ĐỀ (nhiều ảnh, trả JSON theo schema)
  *   explain/   AI giải thích MỘT câu (một ảnh, trả Markdown tiếng Việt)
+ *   chat-explain/  AI trả lời câu hỏi tiếp theo của người học về MỘT câu đã có lời giải (hội thoại ngắn)
  * Mỗi bộ gồm:
  *   base.md              vai trò + nguyên tắc chung, đúng với MỌI môn (ngắn)
  *   modules/<KEY>.md     đặc thù từng môn; modules/_default.md dùng khi không xác định được môn (thân rỗng = không thêm gì)
@@ -21,8 +22,8 @@ import path from "node:path";
 const PROMPTS_DIR = path.resolve(__dirname, "../../prompts");
 export const DEFAULT_MODULE = "_default";
 
-export type PromptTask = "solve" | "explain";
-const TASKS: PromptTask[] = ["solve", "explain"];
+export type PromptTask = "solve" | "explain" | "chat-explain";
+const TASKS: PromptTask[] = ["solve", "explain", "chat-explain"];
 
 export interface PromptMeta {
   key: string;

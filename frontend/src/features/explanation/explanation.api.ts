@@ -36,7 +36,25 @@ export interface UnlockResult {
   balanceAfter: number;
 }
 
+// Lượt hỏi AI về một câu trong ngày. Pro: unlimited = true, limit/remaining = null
+export interface ChatQuota {
+  limit: number | null;
+  used: number;
+  remaining: number | null;
+  resetsAt: string; // 0h hôm sau (giờ Việt Nam)
+  unlimited: boolean;
+}
+
+export interface ExplainChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export const CHAT_QUOTA_EXCEEDED = "CHAT_QUOTA_EXCEEDED";
+
 export const explanationApi = {
+  chatQuota: async () => (await http.get<{ quota: ChatQuota }>("/explanations/chat/quota")).quota,
+  chat: (examId: number, questionNumber: number, messages: ExplainChatMessage[]) => http.post<{ reply: string; quota?: ChatQuota }>("/explanations/chat", { examId, questionNumber, messages }),
   info: (examId: number) => http.get<ExplanationInfo>(`/explanations/exams/${examId}`),
   explain: (examId: number, questionNumber: number, useFreeTurn = false) => http.post<ExplanationResult>("/explanations", { examId, questionNumber, ...(useFreeTurn && { useFreeTurn: true }) }),
   unlock: (examId: number, price: number) => http.post<UnlockResult>("/explanations/unlock", { examId, price }),

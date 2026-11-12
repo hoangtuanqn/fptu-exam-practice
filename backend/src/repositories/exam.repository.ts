@@ -45,7 +45,7 @@ export const examRepository = {
   findQuestionForExplain: (examId: number, number: number) =>
     prisma.examQuestion.findUnique({
       where: { examId_number: { examId, number } },
-      select: { number: true, name: true, answer: true, imagePath: true, exam: { select: { title: true, threadId: true, answerSource: true } } },
+      select: { number: true, name: true, answer: true, imagePath: true, exam: { select: { title: true, threadId: true, answerSource: true, subjectCode: true } } },
     }),
 
   findDetail: (id: number) =>
