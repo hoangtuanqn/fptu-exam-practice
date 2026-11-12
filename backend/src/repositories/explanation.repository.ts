@@ -11,7 +11,7 @@ export const explanationRepository = {
     prisma.questionExplanation.createMany({ data: [data], skipDuplicates: true }),
 
   hasPurchased: async (userId: number, examId: number, questionNumber: number) =>
-    (await prisma.explanationPurchase.count({ where: { userId, examId, questionNumber } })) > 0,
+    !!(await prisma.explanationPurchase.findFirst({ where: { userId, examId, questionNumber }, select: { id: true } })),
 
   // Các câu của một đề mà người dùng đã mua (để giao diện hiện "xem lại miễn phí")
   purchasedNumbers: async (userId: number, examId: number) =>
@@ -20,7 +20,7 @@ export const explanationRepository = {
   // Số câu thật sự (không tính ảnh tài liệu tham khảo) của một đề
   countQuestions: (examId: number) => prisma.examQuestion.count({ where: { examId, isReference: false } }),
 
-  hasUnlocked: async (userId: number, examId: number) => (await prisma.explanationUnlock.count({ where: { userId, examId } })) > 0,
+  hasUnlocked: async (userId: number, examId: number) => !!(await prisma.explanationUnlock.findFirst({ where: { userId, examId }, select: { id: true } })),
 
   createUnlock: (db: Db, data: { userId: number; examId: number; price: number; questions: number }) =>
     db.explanationUnlock.create({ data, select: { id: true } }),

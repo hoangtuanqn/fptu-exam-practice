@@ -10,7 +10,7 @@ export const userExamRepository = {
   add: (owner: Owner, examId: number, db: Db = prisma) =>
     db.userExam.createMany({ data: [{ ...whereOf(owner), examId }], skipDuplicates: true }),
 
-  has: async (owner: Owner, examId: number) => (await prisma.userExam.count({ where: { ...whereOf(owner), examId } })) > 0,
+  has: async (owner: Owner, examId: number) => !!(await prisma.userExam.findFirst({ where: { ...whereOf(owner), examId }, select: { id: true } })),
 
   async list(owner: Owner, query: PaginationQuery & { subject?: string }) {
     const where = { ...whereOf(owner), ...(query.subject && { exam: { subjectCode: query.subject.toUpperCase() } }) };

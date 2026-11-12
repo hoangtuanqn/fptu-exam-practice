@@ -7,7 +7,7 @@ export const referralRepository = {
   // Người sở hữu mã giới thiệu (mã đã được chuẩn hóa chữ hoa)
   findOwnerByCode: (db: Db, code: string) => db.user.findUnique({ where: { referralCode: code }, select: { id: true, status: true } }),
 
-  codeExists: async (code: string) => (await prisma.user.count({ where: { referralCode: code } })) > 0,
+  codeExists: async (code: string) => !!(await prisma.user.findUnique({ where: { referralCode: code }, select: { id: true } })),
 
   findCodeOf: (userId: number) => prisma.user.findUnique({ where: { id: userId }, select: { referralCode: true } }),
 
