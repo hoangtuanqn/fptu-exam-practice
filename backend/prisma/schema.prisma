@@ -356,6 +356,7 @@ model PracticeSession {
   @@index([userId, status, updatedAt])
   @@index([guestId, status, updatedAt])
   @@index([examId])
+  @@index([createdAt]) // admin insights count sessions by created_at
   @@map("practice_sessions")
 }
 
