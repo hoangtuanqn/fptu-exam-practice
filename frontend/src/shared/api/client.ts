@@ -65,6 +65,7 @@ export class ApiError extends Error {
     public status: number,
     public errors?: Record<string, string>, // lỗi theo từng trường, để hiện dưới ô nhập
     public retryAfter?: number, // giây phải chờ trước khi thử lại (header Retry-After của lỗi 429)
+    public code?: string, // mã lỗi máy đọc được (vd CHAT_QUOTA_EXCEEDED); máy chủ cũ không gửi
   ) {
     super(message);
   }
@@ -118,6 +119,7 @@ interface Envelope<T> {
   data?: T;
   meta?: Paged<T>["meta"];
   errors?: Record<string, string>;
+  code?: string;
 }
 
 async function send<T>(method: string, path: string, body?: unknown, query?: Query, keepalive = false, retried = false): Promise<Envelope<T>> {
@@ -155,7 +157,7 @@ async function send<T>(method: string, path: string, body?: unknown, query?: Que
       }
     }
     const wait = Number(res.headers.get("Retry-After"));
-    throw new ApiError(json?.message ?? `Lỗi ${res.status}`, res.status, json?.errors, Number.isFinite(wait) && wait > 0 ? Math.ceil(wait) : undefined);
+    throw new ApiError(json?.message ?? `Lỗi ${res.status}`, res.status, json?.errors, Number.isFinite(wait) && wait > 0 ? Math.ceil(wait) : undefined, json?.code);
   }
   return json;
 }
