@@ -63,7 +63,7 @@ export function UserMenu() {
         <Link to="/login" className={buttonClass({ variant: "text" })}>
           Đăng nhập
         </Link>
-        <Link to="/register" className={buttonClass({ variant: "filled", className: "hidden sm:inline-flex" })}>
+        <Link to="/register" className={buttonClass({ variant: "filled", })}>
           Đăng ký
         </Link>
       </div>
