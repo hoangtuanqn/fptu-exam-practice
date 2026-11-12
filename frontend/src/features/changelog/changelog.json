@@ -1,6 +1,25 @@
 {
   "web": [
     {
+      "version": "1.9.0",
+      "date": "2026-11-13",
+      "title": "Hỏi AI ngay dưới lời giải thích",
+      "highlights": [
+        "Chưa hiểu câu nào, hỏi AI ngay dưới lời giải thích",
+        "Lời giải thích bám đúng môn học, không còn lẫn sang ngôn ngữ khác"
+      ],
+      "changes": [
+        {
+          "type": "new",
+          "text": "Hỏi AI về câu đang xem: hỏi tiếp bằng lời của bạn, có sẵn vài câu hỏi gợi ý; mỗi ngày có lượt hỏi miễn phí, gói Pro hỏi không giới hạn"
+        },
+        {
+          "type": "fixed",
+          "text": "Lời giải thích AI giờ biết đúng môn học (ví dụ PFP191 là Python) nên không còn giải thích nhầm sang Java hay C++"
+        }
+      ]
+    },
+    {
       "version": "1.8.0",
       "date": "2026-11-11",
       "title": "Trang Pro mới, đăng ký gọn và bắt đầu dễ hơn",
