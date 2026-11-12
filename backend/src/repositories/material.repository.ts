@@ -65,7 +65,7 @@ export const materialRepository = {
   /** Xoá của đúng chủ (trang và chương xoá theo khoá ngoại). Trả số dòng đã xoá. */
   deleteOwned: async (id: number, userId: number) => (await prisma.materialUpload.deleteMany({ where: { id, userId } })).count,
 
-  exists: async (id: number) => (await prisma.materialUpload.count({ where: { id } })) > 0,
+  exists: async (id: number) => !!(await prisma.materialUpload.findUnique({ where: { id }, select: { id: true } })),
 
   /** Nhận job QUEUED cũ nhất (đổi sang RUNNING có điều kiện để không ai nhận trùng). */
   async claimNext(): Promise<MaterialUploadRow | null> {

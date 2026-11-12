@@ -123,7 +123,7 @@ export const peService = {
 
   // Đã trả phí tải đề này thành công một lần thì các lần sau miễn phí
   async hasPaid(userId: number, threadId: string) {
-    return (await prisma.peDownload.count({ where: { userId, threadId, status: "DONE", price: { gt: 0 } } })) > 0;
+    return !!(await prisma.peDownload.findFirst({ where: { userId, threadId, status: "DONE", price: { gt: 0 } }, select: { id: true } }));
   },
 
   async quote(userId: number, url: string) {

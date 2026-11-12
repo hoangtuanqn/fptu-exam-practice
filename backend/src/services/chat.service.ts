@@ -49,6 +49,16 @@ async function liveFacts() {
   return factsCache.text;
 }
 
+// Thống kê trang quản trị đếm cả bảng nhật ký chat: giữ kết quả vài chục giây để mở lại trang liên tục không quét lại
+const ADMIN_STATS_CACHE_MS = 60_000;
+interface AdminStats {
+  today: number;
+  total: number;
+  unmatched: { question: string; createdAt: Date }[];
+  usage: { calls7d: number; avgInput: number; avgCacheRead: number; avgOutput: number; truncated7d: number };
+}
+let adminStatsCache: { at: number; data: AdminStats } | null = null;
+
 export const chatService = {
   async status() {
     const c = await chatSettingService.get();
@@ -245,7 +255,8 @@ ${facts}
   },
 
   // Thống kê cho admin: lượng hỏi và các câu hỏi chưa có tài liệu (để bổ sung vào hướng dẫn)
-  async adminStats() {
+  async adminStats(): Promise<AdminStats> {
+    if (adminStatsCache && Date.now() - adminStatsCache.at < ADMIN_STATS_CACHE_MS) return adminStatsCache.data;
     const since = startOfVnDay();
     const week = new Date(Date.now() - 7 * 24 * 3600 * 1000);
     const [today, total, unmatched, tokens, truncated] = await Promise.all([
@@ -257,6 +268,8 @@ ${facts}
     ]);
     // Token trung bình mỗi lượt gọi Claude trong 7 ngày (chỉ các lượt có ghi usage); cacheRead cao = prompt hệ thống được đọc lại từ cache
     const r = (x: number | null) => Math.round(x ?? 0);
-    return { today, total, unmatched, usage: { calls7d: tokens._count._all, avgInput: r(tokens._avg.inputTokens), avgCacheRead: r(tokens._avg.cacheReadTokens), avgOutput: r(tokens._avg.outputTokens), truncated7d: truncated } };
+    const data = { today, total, unmatched, usage: { calls7d: tokens._count._all, avgInput: r(tokens._avg.inputTokens), avgCacheRead: r(tokens._avg.cacheReadTokens), avgOutput: r(tokens._avg.outputTokens), truncated7d: truncated } };
+    adminStatsCache = { at: Date.now(), data };
+    return data;
   },
 };
