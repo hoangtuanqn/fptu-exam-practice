@@ -183,7 +183,7 @@ export default function ChatWidget() {
         <div
           role="dialog"
           aria-label="Chat với Cóc Pass"
-          className="fixed inset-0 z-[70] flex flex-col overflow-hidden bg-[#fffdf7] sm:inset-x-auto sm:bottom-5 sm:left-auto sm:right-5 sm:top-auto sm:h-[min(34rem,calc(100dvh-2.5rem))] sm:w-[23rem] sm:rounded-3xl sm:border sm:border-amber-200/70 sm:shadow-[0_20px_60px_-15px_rgba(120,80,0,0.35)]"
+          className="fixed inset-0 z-[70] flex flex-col overflow-hidden bg-surface sm:inset-x-auto sm:bottom-5 sm:left-auto sm:right-5 sm:top-auto sm:h-[min(34rem,calc(100dvh-2.5rem))] sm:w-[23rem] sm:rounded-3xl sm:border sm:border-amber-200/70 sm:shadow-[0_20px_60px_-15px_rgba(120,80,0,0.35)]"
         >
           <div className="flex items-center gap-3 border-b border-amber-100 bg-amber-50/70 px-4 py-3">
             <Avatar size={40} />
@@ -277,7 +277,7 @@ export default function ChatWidget() {
                 type="submit"
                 disabled={busy || !input.trim()}
                 aria-label="Gửi" title="Gửi"
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-400 text-brand-900 transition hover:bg-amber-500 disabled:bg-slate-200 disabled:text-slate-400"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-400 text-[#3a2600] transition hover:bg-amber-500 disabled:bg-slate-200 disabled:text-slate-400"
               >
                 <ArrowUp size={17} strokeWidth={2.5} />
               </button>

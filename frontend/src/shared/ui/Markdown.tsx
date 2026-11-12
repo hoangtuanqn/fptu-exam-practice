@@ -43,7 +43,7 @@ const components: Components = {
     const dot = dotSourceOf(children);
     if (dot !== null) return <DotGraph source={dot} />;
     return (
-    <pre className="mb-3 overflow-x-auto whitespace-pre rounded-lg bg-slate-900 p-3 text-[13px] leading-relaxed text-slate-100 last:mb-0 [&_code]:bg-transparent [&_code]:p-0 [&_code]:text-slate-100">
+    <pre className="mb-3 overflow-x-auto whitespace-pre rounded-lg bg-surface-container-highest p-3 text-[13px] leading-relaxed text-on-surface last:mb-0 [&_code]:bg-transparent [&_code]:p-0 [&_code]:text-on-surface">
       {children}
     </pre>
     );

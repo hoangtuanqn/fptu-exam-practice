@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTheme } from "@/shared/theme/ThemeContext";
 import { engineOf, isSafeDot } from "./dot";
 
 type Phase = "loading" | "ready" | "failed";
@@ -18,6 +19,9 @@ const withTimeout = <T,>(p: Promise<T>) =>
 
 const FONT = "Inter, sans-serif";
 
+// Màu nét/chữ lấy từ chủ đề đang dùng (đọc lúc vẽ): màu cố định sẽ chìm mất khi nền tối
+const cssColor = (name: string, fallback: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+
 /**
  * Vẽ một đồ thị viết bằng ngôn ngữ DOT thành SVG, đặt trong lời giải thích. Thiết kế để không ảnh hưởng trải nghiệm:
  * - Lời giải hiện ngay; đồ thị chiếm sẵn một khung có chiều cao cố định rồi mới thay bằng hình (không làm trang nhảy).
@@ -27,6 +31,7 @@ const FONT = "Inter, sans-serif";
 export function DotGraph({ source }: { source: string }) {
   const host = useRef<HTMLDivElement>(null);
   const [phase, setPhase] = useState<Phase>("loading");
+  const { resolved } = useTheme(); // đổi sáng/tối thì vẽ lại với màu mới
 
   useEffect(() => {
     let cancelled = false;
@@ -38,11 +43,13 @@ export function DotGraph({ source }: { source: string }) {
     void (async () => {
       try {
         const viz = await withTimeout(loadViz());
+        const text = cssColor("--md-sys-color-on-surface", "#0f172a");
+        const line = cssColor("--md-sys-color-on-surface-variant", "#475569");
         const svg = viz.renderSVGElement(source, {
           engine: engineOf(source), // neato + pos="x,y!" giữ đúng vị trí các đỉnh như trong ảnh đề
           graphAttributes: { bgcolor: "transparent", fontname: FONT },
-          nodeAttributes: { shape: "circle", fontname: FONT, fontsize: "13", color: "#334155", fontcolor: "#0f172a" },
-          edgeAttributes: { fontname: FONT, fontsize: "12", color: "#475569", fontcolor: "#0f172a" },
+          nodeAttributes: { shape: "circle", fontname: FONT, fontsize: "13", color: line, fontcolor: text },
+          edgeAttributes: { fontname: FONT, fontsize: "12", color: line, fontcolor: text },
         });
         if (cancelled || !host.current) return;
         // Co theo bề ngang khung thay vì kích thước cố định của Graphviz
@@ -61,7 +68,7 @@ export function DotGraph({ source }: { source: string }) {
     return () => {
       cancelled = true;
     };
-  }, [source]);
+  }, [source, resolved]);
 
   return (
     <figure className="mb-3 last:mb-0" aria-label="Đồ thị minh hoạ">
@@ -74,7 +81,7 @@ export function DotGraph({ source }: { source: string }) {
       )}
       <details open={phase === "failed"} className="mt-1.5 text-xs text-slate-500">
         <summary className="cursor-pointer select-none hover:text-slate-700">{phase === "failed" ? "Không vẽ được đồ thị. Xem mô tả (DOT)" : "Xem mã DOT"}</summary>
-        <pre className="mt-1.5 overflow-x-auto whitespace-pre rounded-lg bg-slate-900 p-3 text-[12px] leading-relaxed text-slate-100">{source}</pre>
+        <pre className="mt-1.5 overflow-x-auto whitespace-pre rounded-lg bg-surface-container-highest p-3 text-[12px] leading-relaxed text-on-surface">{source}</pre>
       </details>
     </figure>
   );
