@@ -10,6 +10,7 @@ export function CaptchaDialog({ onVerified, onClose }: { onVerified: (token: str
       <div className="mt-5 flex min-h-[65px] justify-center">
         <Turnstile onToken={(t) => t && onVerified(t)} />
       </div>
+      <p className="md-body-small mt-3 text-center text-on-surface-variant">Hộp này sẽ tự đóng khi xác minh xong. Không thấy gì? Hãy kiểm tra mạng rồi thử lại.</p>
     </Modal>
   );
 }
