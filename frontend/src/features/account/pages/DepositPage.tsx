@@ -5,6 +5,7 @@ import { depositApi } from "@/features/account/api/deposit.api";
 import { DepositStatusBadge } from "@/shared/components/StatusBadge";
 import { Button } from "@/shared/ui/Button";
 import { Card, CardHeader, PageHeader } from "@/shared/ui/Card";
+import { RouteTabs, WALLET_TABS } from "@/shared/ui/RouteTabs";
 import { Empty, ErrorBox, FormError, Loading } from "@/shared/ui/Feedback";
 import { Input } from "@/shared/ui/Input";
 import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
@@ -106,6 +107,9 @@ export default function DepositPage() {
 
   return (
     <>
+      <div className="mb-4">
+        <RouteTabs label="Ví" tabs={WALLET_TABS} />
+      </div>
       <PageHeader title="Nạp credit" description="Chuyển khoản ngân hàng (1 ₫ = 1 credit), credit được cộng tự động sau ít phút." />
 
       {need > 0 && !activeCode && (

@@ -11,6 +11,7 @@ import { useApi } from "@/shared/hooks/useApi";
 import { useClampPage } from "@/shared/hooks/useClampPage";
 import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
 import { Card, CardHeader, PageHeader, StatCard, StatGrid } from "@/shared/ui/Card";
+import { RouteTabs, WALLET_TABS } from "@/shared/ui/RouteTabs";
 import { CopyButton } from "@/shared/ui/CopyButton";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
@@ -76,6 +77,9 @@ export default function ReferralPage() {
 
   return (
     <>
+      <div className="mb-4">
+        <RouteTabs label="Ví" tabs={WALLET_TABS} />
+      </div>
       <PageHeader
         title="Giới thiệu bạn bè"
         description={

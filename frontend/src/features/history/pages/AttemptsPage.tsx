@@ -8,6 +8,7 @@ import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
 import { useApi } from "@/shared/hooks/useApi";
 import { Badge } from "@/shared/ui/Badge";
 import { Card, PageHeader } from "@/shared/ui/Card";
+import { RouteTabs, HISTORY_TABS } from "@/shared/ui/RouteTabs";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
 import { formatDateTime } from "@/shared/utils/formatters";
@@ -24,6 +25,9 @@ export default function AttemptsPage() {
 
   return (
     <>
+      <div className="mb-4">
+        <RouteTabs label="Lịch sử" tabs={HISTORY_TABS} />
+      </div>
       <PageHeader title="Lịch sử làm bài" description="Mỗi lần nộp bài được lưu lại điểm và chi tiết từng câu." />
       {examId && (
         <div className="mb-3 flex items-center justify-between gap-3 rounded-xl border border-brand-200 bg-brand-50 px-4 py-2.5 text-sm text-brand-900">
