@@ -10,7 +10,9 @@ import { activePromoEnd, promoExpired, type PromoConfig } from "../constants/pro
 import { EXAM_STORAGE_DIR } from "../constants/crawler";
 import { explanationRepository } from "../repositories/explanation.repository";
 import { examRepository } from "../repositories/exam.repository";
+import { subjectRepository } from "../repositories/subject.repository";
 import { userRepository } from "../repositories/user.repository";
+import { subjectCodeFromTitle } from "../utils/subject-code";
 import { AppError } from "../rules/error";
 import type { Actor } from "../utils/actor";
 import { explainQuestion } from "./ai/question-explainer.service";
@@ -25,6 +27,15 @@ const BAD_GATEWAY = 502;
 
 // Nhiều người cùng bấm một câu chưa có lời giải: chỉ gọi AI một lần, những người còn lại chờ cùng kết quả
 const inflight = new Map<string, Promise<string>>();
+
+type ExplainQuestion = NonNullable<Awaited<ReturnType<typeof examRepository.findQuestionForExplain>>>;
+
+/** Mã và tên môn của đề (mã lưu ở đề, không có thì đọc từ tiêu đề), để AI không đoán sai môn/ngôn ngữ. */
+export async function subjectOfExam(exam: ExplainQuestion["exam"]) {
+  const subjectCode = exam.subjectCode ?? subjectCodeFromTitle(exam.title);
+  const subjectName = subjectCode ? ((await subjectRepository.findByCode(subjectCode))?.name ?? null) : null;
+  return { subjectCode, subjectName };
+}
 
 const isDuplicate = (err: unknown) => err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002";
 
@@ -171,7 +182,7 @@ export const explanationService = {
   },
 
   // Gọi AI một lần cho mỗi câu (gộp các yêu cầu cùng lúc) và lưu lại để người sau dùng
-  generate(ai: Awaited<ReturnType<typeof aiSettingService.get>>, examId: number, questionNumber: number, question: NonNullable<Awaited<ReturnType<typeof examRepository.findQuestionForExplain>>>) {
+  generate(ai: Awaited<ReturnType<typeof aiSettingService.get>>, examId: number, questionNumber: number, question: ExplainQuestion) {
     const key = `${examId}:${questionNumber}`;
     const running = inflight.get(key);
     if (running) return running;
@@ -180,6 +191,7 @@ export const explanationService = {
       const raw = await fs.readFile(path.join(storageDir, EXAM_STORAGE_DIR, question.exam.threadId, "comments.txt"), "utf-8").catch(() => null);
       const content = await explainQuestion(ai, {
         examTitle: question.exam.title,
+        ...(await subjectOfExam(question.exam)),
         questionNumber,
         imageFile: path.join(storageDir, question.imagePath),
         correctAnswer: question.answer,
