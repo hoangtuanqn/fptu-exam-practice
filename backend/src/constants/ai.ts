@@ -29,6 +29,18 @@ export const AI_KEY_PREFIX = "ai.";
 export const EXPLAIN_MAX_OUTPUT_TOKENS = 4_000; // gồm cả token suy luận
 export const EXPLAIN_EFFORT: AiEffort = "medium"; // giải thích một câu không cần suy luận sâu như giải cả đề
 
+// Hỏi AI về một câu đã có lời giải (prompts/chat-explain): cùng model với lời giải thích, không tính thêm credit
+export const CHAT_FREE_DAILY = 5; // tin nhắn mỗi ngày (giờ Việt Nam) cho tài khoản thường, không cộng dồn sang ngày sau
+export const CHAT_PRO_DAILY_SAFETY = 200; // trần chống lạm dụng của Pro (Pro không thấy hạn mức)
+export const CHAT_MAX_MESSAGES = 20; // số tin nhắn tối đa client được gửi lên mỗi lượt
+export const CHAT_MESSAGE_MAX_CHARS = 1_000; // tin của người học
+export const CHAT_ASSISTANT_MAX_CHARS = 8_000; // lời AI được gửi lại trong lịch sử: dài hơn tin người học nhiều (tối đa ~1500 token)
+export const CHAT_HISTORY_SENT = 10; // chỉ gửi cho AI chừng này tin gần nhất (ngữ cảnh câu hỏi luôn được gửi và được cache)
+// Gồm cả token suy luận: đủ cho câu trả lời ngắn (prompt yêu cầu ngắn gọn) mà không bị cắt giữa chừng
+export const CHAT_MAX_OUTPUT_TOKENS = 1_500;
+export const CHAT_EFFORT: AiEffort = EXPLAIN_EFFORT; // không thấp hơn lời giải thích: chất lượng không giảm
+export const CHAT_PER_MINUTE = 6; // giới hạn tốc độ theo tài khoản (chống bấm liên tục)
+
 // Prompt giải đề (base + module theo môn + khối tính năng) nằm ở backend/prompts/, nạp bởi src/prompts/index.ts
 
 // Một lượt giải (nhiều ảnh, suy luận sâu, có thể tra web) có thể kéo dài vài phút

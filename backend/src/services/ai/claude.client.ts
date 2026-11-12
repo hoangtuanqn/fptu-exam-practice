@@ -1,6 +1,13 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { AI_MAX_OUTPUT_TOKENS, AI_MAX_PAUSES, AI_MAX_SEARCHES, AI_TIMEOUT_MS, type AiEffort } from "../../constants/ai";
 
+/** Câu trả lời bị cắt ở giới hạn token (đã tốn token): nơi gọi dùng để không hoàn lượt như lỗi thường. */
+export class ClaudeTruncatedError extends Error {
+  constructor() {
+    super("Câu trả lời của Claude bị cắt vì quá dài");
+  }
+}
+
 // Haiku chưa có bản tra web mới (lọc động), dùng bản cơ bản
 const SEARCH_TOOL = (model: string) => (/haiku/i.test(model) ? "web_search_20250305" : "web_search_20260209");
 
@@ -23,6 +30,8 @@ interface BaseRequest {
   system: ClaudeSystem;
   onUsage?: (usage: UsageInfo) => void; // nhận token của lượt gọi để ghi log / theo dõi cache hit
   content: ClaudeContent[];
+  // Hội thoại nhiều lượt (hỏi đáp về một câu): có thì gửi đúng mảng này thay cho một tin nhắn `content`
+  messages?: Anthropic.MessageParam[];
   maxTokens?: number; // gồm cả token suy luận
 }
 
@@ -41,7 +50,7 @@ export interface ClaudeJsonRequest extends BaseRequest {
  */
 async function callClaude(req: BaseRequest, options: { schema?: Record<string, unknown>; useSearch?: boolean } = {}): Promise<string> {
   const client = new Anthropic({ apiKey: req.apiKey, timeout: AI_TIMEOUT_MS, maxRetries: 2 });
-  const messages: Anthropic.MessageParam[] = [{ role: "user", content: req.content }];
+  const messages: Anthropic.MessageParam[] = req.messages ? [...req.messages] : [{ role: "user", content: req.content }];
   const usage: UsageInfo = { input: 0, output: 0, cacheRead: 0, cacheCreation: 0 };
   const system = typeof req.system === "string" ? [{ type: "text" as const, text: req.system, cache_control: { type: "ephemeral" as const } }] : req.system;
 
@@ -71,7 +80,7 @@ async function callClaude(req: BaseRequest, options: { schema?: Record<string, u
         continue;
       }
       if (message.stop_reason === "refusal") throw new Error("Claude từ chối trả lời (bộ lọc an toàn)");
-      if (message.stop_reason === "max_tokens") throw new Error("Câu trả lời của Claude bị cắt vì quá dài");
+      if (message.stop_reason === "max_tokens") throw new ClaudeTruncatedError();
 
       const text = message.content
         .filter((b): b is Anthropic.TextBlock => b.type === "text")

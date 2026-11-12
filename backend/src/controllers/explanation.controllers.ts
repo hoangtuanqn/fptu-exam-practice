@@ -1,7 +1,8 @@
 import type { Request, Response } from "express";
 import { getValidated } from "../middlewares/validate.middlewares";
-import type { ExamIdParam, ExplainBody, UnlockBody } from "../rules/requests/explanation.request";
+import type { ExamIdParam, ExplainBody, ExplainChatBody, UnlockBody } from "../rules/requests/explanation.request";
 import { ResponseClient } from "../rules/response";
+import { explainChatService } from "../services/explain-chat.service";
 import { explanationService } from "../services/explanation.service";
 import { actorOf } from "../utils/actor";
 
@@ -15,6 +16,15 @@ export const explanationController = {
   async explain(req: Request, res: Response) {
     const { examId, questionNumber, useFreeTurn } = getValidated<ExplainBody>(res);
     res.json(new ResponseClient({ data: await explanationService.explain(actorOf(req), req.user!.id, examId, questionNumber, useFreeTurn === true) }));
+  },
+
+  async chat(req: Request, res: Response) {
+    const { examId, questionNumber, messages } = getValidated<ExplainChatBody>(res);
+    res.json(new ResponseClient({ data: await explainChatService.chat(actorOf(req), req.user!.id, examId, questionNumber, messages) }));
+  },
+
+  async chatQuota(req: Request, res: Response) {
+    res.json(new ResponseClient({ data: { quota: await explainChatService.quota(req.user!.id) } }));
   },
 
   async unlock(req: Request, res: Response) {
