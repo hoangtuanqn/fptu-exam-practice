@@ -11,7 +11,8 @@ export interface QuoteResult {
 }
 
 export const examImportApi = {
-  submit: (url: string, subject?: string) => http.post<SubmitResult>("/crawl-jobs", { url, ...(subject && { subject }) }),
+  submit: (url: string, subject?: string, captchaToken?: string) =>
+    http.post<SubmitResult>("/crawl-jobs", { url, ...(subject && { subject }), ...(captchaToken && { captchaToken }) }),
   price: () => http.get<{ price: number; guestLimit?: number; guestRemaining?: number }>("/crawl-jobs/price"),
   // Phí thực tế của lần lấy này (0 nếu người dùng đã lấy đề này trước đó)
   quote: (url: string, subject?: string) => http.get<QuoteResult>("/crawl-jobs/quote", { url, ...(subject && { subject }) }),

@@ -16,8 +16,8 @@ const stageText = (j: CrawlJob) =>
  * Đề đã có sẵn thì trả ngay. Ném lỗi khi gửi thất bại, job lỗi, quá thời gian hoặc bị hủy bằng `signal`.
  * `onStage` nhận dòng trạng thái để hiện cho người dùng.
  */
-export async function importExam(url: string, subject: string | undefined, onStage: (stage: string) => void, signal: AbortSignal): Promise<ImportedExam> {
-  const result = await examImportApi.submit(url, subject);
+export async function importExam(url: string, subject: string | undefined, onStage: (stage: string) => void, signal: AbortSignal, captchaToken?: string): Promise<ImportedExam> {
+  const result = await examImportApi.submit(url, subject, captchaToken);
   let examId: number;
 
   if (result.existed) {

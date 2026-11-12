@@ -30,7 +30,7 @@ export const authController = {
   },
 
   async login(req: Request, res: Response) {
-    const data = await authService.login(getValidated<LoginBody>(res));
+    const data = await authService.login(getValidated<LoginBody>(res), req.ip ?? "");
     await startSession(req, res, data.user);
     res.json(new ResponseClient({ message: "Đăng nhập thành công", data }));
   },
