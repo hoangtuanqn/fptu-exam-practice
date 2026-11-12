@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Crown, Link2 } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { VerifyEmailNotice } from "@/features/verify-email/VerifyEmailNotice";
 import { Button, buttonClass } from "@/shared/ui/Button";
 import { ChargeSummary } from "@/shared/ui/ChargeSummary";
+import { Turnstile } from "@/shared/ui/Turnstile";
 import { Modal, ModalActions, ModalTitle } from "@/shared/ui/Modal";
 import { formatCredit, formatDate } from "@/shared/utils/formatters";
 import { proDaysLeft } from "@/shared/utils/pro";
@@ -14,11 +16,13 @@ interface Props {
   pro?: boolean; // đang dùng gói Pro: thay hộp thoại trừ tiền bằng thông báo được miễn phí
   balance: number | null; // số dư của thành viên; null = khách
   onCancel: () => void;
-  onConfirm: () => void;
+  captcha?: boolean; // khách: phải qua captcha ngay trong hộp này trước khi lấy
+  onConfirm: (captchaToken?: string) => void;
 }
 
 // Xác nhận trước khi lấy đề: thành viên thấy khoản bị trừ thật to và màu đỏ; khách thấy giới hạn lượt miễn phí.
-export function ConfirmFetchDialog({ url, fee, pro = false, balance, onCancel, onConfirm }: Props) {
+export function ConfirmFetchDialog({ url, fee, pro = false, balance, captcha = false, onCancel, onConfirm }: Props) {
+  const [token, setToken] = useState<string | null>(null);
   const { user } = useAuth();
   const unverified = !!user && !user.emailVerifiedAt; // thành viên chưa xác minh email: chưa lấy đề được
   const isGuest = balance === null;
@@ -44,7 +48,7 @@ export function ConfirmFetchDialog({ url, fee, pro = false, balance, onCancel, o
             <Button grow onClick={onCancel}>
               Hủy
             </Button>
-            <Button grow variant="filled" onClick={onConfirm} className="!bg-gradient-to-b !from-[#ffd75e] !to-[#f0a800] !text-[#3a2600] font-bold">
+            <Button grow variant="filled" onClick={() => onConfirm()} className="!bg-gradient-to-b !from-[#ffd75e] !to-[#f0a800] !text-[#3a2600] font-bold">
               <Link2 size={16} /> Lấy đề miễn phí
             </Button>
           </ModalActions>
@@ -80,6 +84,12 @@ export function ConfirmFetchDialog({ url, fee, pro = false, balance, onCancel, o
             !short && <p className="mt-3 text-xs leading-relaxed text-slate-500">Lấy đề lỗi sẽ được hoàn phí tự động. Đề bạn đã lấy trước đó mở lại miễn phí.</p>
           )}
 
+          {captcha && (
+            <div className="mt-4 flex min-h-[65px] justify-center">
+              <Turnstile onToken={setToken} />
+            </div>
+          )}
+
           <ModalActions>
             <Button grow onClick={onCancel}>
               Hủy
@@ -89,7 +99,7 @@ export function ConfirmFetchDialog({ url, fee, pro = false, balance, onCancel, o
                 Nạp credit
               </Link>
             ) : (
-              <Button grow variant="primary" onClick={onConfirm}>
+              <Button grow variant="primary" disabled={captcha && !token} onClick={() => onConfirm(token ?? undefined)}>
                 {isGuest ? "Lấy đề" : fee > 0 ? `Trả ${formatCredit(fee)}` : "Lấy đề"}
               </Button>
             )}

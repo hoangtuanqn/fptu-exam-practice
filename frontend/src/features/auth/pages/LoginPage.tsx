@@ -7,7 +7,8 @@ import { FormError } from "@/shared/ui/Feedback";
 import { Input, PasswordInput } from "@/shared/ui/Input";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useSubmit } from "@/shared/hooks/useSubmit";
-import { Turnstile, TURNSTILE_SITE_KEY } from "@/shared/ui/Turnstile";
+import { CaptchaDialog } from "@/shared/ui/CaptchaDialog";
+import { TURNSTILE_SITE_KEY } from "@/shared/ui/Turnstile";
 import { SocialLogin } from "@/features/auth/social/SocialLogin";
 import { AuthLayout } from "./AuthLayout";
 
@@ -16,31 +17,27 @@ export default function LoginPage() {
   const { run, loading, error, fieldErrors } = useSubmit();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  // Máy chủ đòi captcha sau vài lần đăng nhập sai (lỗi có trường "captcha"); token chỉ dùng một lần nên làm mới widget sau mỗi lần gửi
+  // Máy chủ đòi captcha sau vài lần đăng nhập sai (lỗi có trường "captcha", nội dung vẫn là "sai email/mật khẩu"):
+  // từ đó mỗi lần đăng nhập hiện hộp thoại captcha, qua rồi tự đóng và đăng nhập luôn (token chỉ dùng được một lần)
   const [needCaptcha, setNeedCaptcha] = useState(false);
-  const [captcha, setCaptcha] = useState<string | null>(null);
-  const [captchaKey, setCaptchaKey] = useState(0);
+  const [asking, setAsking] = useState(false);
   useEffect(() => {
     if (fieldErrors.captcha) setNeedCaptcha(true);
   }, [fieldErrors.captcha]);
-  const captchaOn = needCaptcha && !!TURNSTILE_SITE_KEY;
 
   // Đăng nhập xong, GuestOnly tự chuyển sang trang phù hợp
+  const login = (captchaToken?: string) => void run(async () => signIn(await authApi.login({ email, password, captchaToken })));
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
-    void run(async () => {
-      const token = captcha ?? undefined;
-      setCaptcha(null);
-      setCaptchaKey((k) => k + 1);
-      return signIn(await authApi.login({ email, password, captchaToken: token }));
-    });
+    if (needCaptcha && TURNSTILE_SITE_KEY) setAsking(true);
+    else login();
   };
 
   return (
     <AuthLayout title="Đăng nhập" subtitle="Chào mừng quay lại. Nhập thông tin để tiếp tục.">
       <SocialLogin />
       <form onSubmit={onSubmit} className="space-y-4" noValidate>
-        <FormError message={error} />
+        <FormError message={error ?? fieldErrors.captcha ?? null} />
         <Input
           label="Email"
           type="email"
@@ -65,13 +62,7 @@ export default function LoginPage() {
             </Link>
           </div>
         </div>
-        {captchaOn && (
-          <div className="space-y-2">
-            {fieldErrors.captcha && <p className="text-sm text-red-600">{fieldErrors.captcha}</p>}
-            <Turnstile key={captchaKey} onToken={setCaptcha} />
-          </div>
-        )}
-        <Button variant="primary" type="submit" disabled={loading || !email || !password || (captchaOn && !captcha)} className="w-full !py-2.5">
+        <Button variant="primary" type="submit" disabled={loading || !email || !password} className="w-full !py-2.5">
           {loading && <Loader2 size={16} className="animate-spin" />}
           Đăng nhập
         </Button>
@@ -83,6 +74,15 @@ export default function LoginPage() {
           Đăng ký
         </Link>
       </p>
+      {asking && (
+        <CaptchaDialog
+          onClose={() => setAsking(false)}
+          onVerified={(t) => {
+            setAsking(false);
+            login(t);
+          }}
+        />
+      )}
     </AuthLayout>
   );
 }

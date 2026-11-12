@@ -15,7 +15,7 @@ import { GOLD_BUTTON } from "@/shared/ui/gold";
 import { LinkImportArt } from "./LinkImportArt";
 import { FormError, LinearProgress } from "@/shared/ui/Feedback";
 import { inputClass } from "@/shared/ui/Input";
-import { Turnstile, TURNSTILE_SITE_KEY } from "@/shared/ui/Turnstile";
+import { TURNSTILE_SITE_KEY } from "@/shared/ui/Turnstile";
 import { ConfirmFetchDialog } from "./ConfirmFetchDialog";
 import { ExtLoginDialog } from "./ExtLoginDialog";
 import { useExamImport } from "../useExamImport";
@@ -70,10 +70,8 @@ export function LinkImport({ onImported, subject, compact = false }: Props) {
   const [quoting, setQuoting] = useState(false); // đang hỏi server phí thực tế của lần lấy này
   const [quotedFee, setQuotedFee] = useState<number | null>(null);
   const toast = useToast();
-  // Khách phải qua captcha mỗi lần lấy đề (token dùng một lần: làm mới widget sau khi gửi)
+  // Khách phải qua captcha mỗi lần lấy đề, ngay trong hộp xác nhận
   const guestCaptcha = !user && !!TURNSTILE_SITE_KEY;
-  const [captcha, setCaptcha] = useState<string | null>(null);
-  const [captchaKey, setCaptchaKey] = useState(0);
 
   // Kiểm tra link ngay khi gõ/dán: bước 1 ở trình duyệt (tức thì), bước 2 hỏi backend (gộp bằng debounce) để biết link có được
   // chấp nhận không và đề đã có trong kho của bạn chưa. Kết quả backend cũng dùng lại cho bước báo phí khi bấm "Lấy đề".
@@ -197,16 +195,14 @@ export function LinkImport({ onImported, subject, compact = false }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoConfirm, authLoading, user, price.loading]);
 
-  const confirm = () => {
+  const confirm = (captchaToken?: string) => {
     setConfirming(false);
-    void job.start(url.trim(), subject, captcha ?? undefined);
-    setCaptcha(null);
-    setCaptchaKey((k) => k + 1);
+    void job.start(url.trim(), subject, captchaToken);
   };
 
   // Hạn mức nhìn thấy TRƯỚC khi bấm (không phải đợi hết lượt mới biết)
   const hint = user ? (pro ? "Bạn đang dùng Pro: lấy đề không bị trừ credit." : fee > 0 ? `Số dư của bạn: ${user.balance.toLocaleString("vi-VN")} credit. Đề đã từng lấy được mở lại miễn phí.` : "Đề đã từng lấy được mở lại miễn phí.") : price.data?.guestRemaining !== undefined ? `Hôm nay bạn còn ${price.data.guestRemaining}/${price.data.guestLimit} lượt lấy đề miễn phí.` : "Khách được lấy miễn phí 1 đề mỗi ngày.";
-  const submitDisabled = !url.trim() || linkInvalid || checking || running || done || quoting || (!!user && price.loading) || (guestCaptcha && !captcha);
+  const submitDisabled = !url.trim() || linkInvalid || checking || running || done || quoting || (!!user && price.loading);
   const priceText = shownPrice > 0 ? `${shownPrice.toLocaleString("vi-VN")}đ / đề` : "Miễn phí";
 
   return (
@@ -303,11 +299,6 @@ export function LinkImport({ onImported, subject, compact = false }: Props) {
         )}
       </div>
       {compact && <p className="md-body-small mt-2.5 px-1 text-on-surface-variant">{hint}</p>}
-      {guestCaptcha && !running && !done && (
-        <div className="mt-3">
-          <Turnstile key={captchaKey} onToken={setCaptcha} />
-        </div>
-      )}
 
       {link && !running && !done && (
         <div className="mt-2 min-h-5 text-left text-xs" role="status" aria-live="polite">
@@ -380,6 +371,7 @@ export function LinkImport({ onImported, subject, compact = false }: Props) {
         pro={pro}
         balance={user ? user.balance : null}
         onCancel={() => setConfirming(false)}
+        captcha={guestCaptcha}
         onConfirm={confirm}
       />
     )}

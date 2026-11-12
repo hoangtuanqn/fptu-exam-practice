@@ -41,6 +41,8 @@ export function Turnstile({ onToken }: { onToken: (token: string | null) => void
         if (cancelled || !box.current || !window.turnstile) return;
         id = window.turnstile.render(box.current, {
           sitekey: TURNSTILE_SITE_KEY,
+          language: "vi",
+          size: window.innerWidth < 400 ? "compact" : "normal", // khung thường rộng 300px, vượt hộp thoại trên điện thoại nhỏ
           callback: (t: string) => cb.current(t),
           "expired-callback": () => cb.current(null),
           "error-callback": () => cb.current(null),

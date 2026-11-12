@@ -61,7 +61,7 @@ export const authService = {
     if (!found || !(await comparePassword(password, found.password))) {
       loginGuard.fail(key);
       const needCaptcha = failed + 1 >= CAPTCHA_AFTER;
-      throw new AppError(INVALID_LOGIN, 401, needCaptcha ? { captcha: `${INVALID_LOGIN}. Hãy xác thực captcha để thử lại` } : undefined);
+      throw new AppError(INVALID_LOGIN, 401, needCaptcha ? { captcha: INVALID_LOGIN } : undefined);
     }
     loginGuard.clear(key);
     if (found.status === "BANNED") throw AppError.forbidden("Tài khoản đã bị khoá");
