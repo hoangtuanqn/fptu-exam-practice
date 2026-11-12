@@ -15,7 +15,6 @@ import { GOLD_BUTTON } from "@/shared/ui/gold";
 import { LinkImportArt } from "./LinkImportArt";
 import { FormError, LinearProgress } from "@/shared/ui/Feedback";
 import { inputClass } from "@/shared/ui/Input";
-import { CaptchaDialog } from "@/shared/ui/CaptchaDialog";
 import { TURNSTILE_SITE_KEY } from "@/shared/ui/Turnstile";
 import { ConfirmFetchDialog } from "./ConfirmFetchDialog";
 import { ExtLoginDialog } from "./ExtLoginDialog";
@@ -71,9 +70,8 @@ export function LinkImport({ onImported, subject, compact = false }: Props) {
   const [quoting, setQuoting] = useState(false); // đang hỏi server phí thực tế của lần lấy này
   const [quotedFee, setQuotedFee] = useState<number | null>(null);
   const toast = useToast();
-  // Khách phải qua captcha (hộp thoại) mỗi lần lấy đề, sau bước xác nhận
+  // Khách phải qua captcha mỗi lần lấy đề, ngay trong hộp xác nhận
   const guestCaptcha = !user && !!TURNSTILE_SITE_KEY;
-  const [asking, setAsking] = useState(false);
 
   // Kiểm tra link ngay khi gõ/dán: bước 1 ở trình duyệt (tức thì), bước 2 hỏi backend (gộp bằng debounce) để biết link có được
   // chấp nhận không và đề đã có trong kho của bạn chưa. Kết quả backend cũng dùng lại cho bước báo phí khi bấm "Lấy đề".
@@ -197,10 +195,9 @@ export function LinkImport({ onImported, subject, compact = false }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoConfirm, authLoading, user, price.loading]);
 
-  const confirm = () => {
+  const confirm = (captchaToken?: string) => {
     setConfirming(false);
-    if (guestCaptcha) setAsking(true);
-    else void job.start(url.trim(), subject);
+    void job.start(url.trim(), subject, captchaToken);
   };
 
   // Hạn mức nhìn thấy TRƯỚC khi bấm (không phải đợi hết lượt mới biết)
@@ -374,17 +371,8 @@ export function LinkImport({ onImported, subject, compact = false }: Props) {
         pro={pro}
         balance={user ? user.balance : null}
         onCancel={() => setConfirming(false)}
+        captcha={guestCaptcha}
         onConfirm={confirm}
-      />
-    )}
-
-    {asking && (
-      <CaptchaDialog
-        onClose={() => setAsking(false)}
-        onVerified={(t) => {
-          setAsking(false);
-          void job.start(url.trim(), subject, t);
-        }}
       />
     )}
     </>
