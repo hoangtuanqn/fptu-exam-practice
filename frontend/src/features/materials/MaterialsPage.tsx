@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { Crown } from "lucide-react";
+import { Construction, Crown } from "lucide-react";
 import { useApi } from "@/shared/hooks/useApi";
 import { buttonClass } from "@/shared/ui/Button";
 import { Card, PageHeader } from "@/shared/ui/Card";
@@ -29,7 +29,7 @@ export default function MaterialsPage() {
     <div className="space-y-6">
       <PageHeader eyebrow="Học tập" title="Phân tích slide" description="Tải slide môn học lên, AI tóm tắt từng chương và cho biết chương đó xuất hiện trong bao nhiêu đề." />
       <QueryBoundary query={quota} loadingLabel="Đang tải…">
-        {(q) => (q.isPro ? <UploadCard quota={q} onUploaded={list.reload} /> : <ProUpsell />)}
+        {(q) => (q.isPro ? <UploadCard quota={q} onUploaded={list.reload} /> : q.access === "COMING_SOON" ? <ComingSoon /> : <ProUpsell />)}
       </QueryBoundary>
       {/* Chưa có Pro: chỉ hiện danh sách khi còn kết quả cũ (lúc trước từng dùng Pro) */}
       {isPro === true && (
@@ -42,13 +42,23 @@ export default function MaterialsPage() {
   );
 }
 
+function ComingSoon() {
+  return (
+    <Card>
+      <div className="flex items-center gap-3 px-5 py-4">
+        <Construction size={22} className="shrink-0 text-on-surface-variant" />
+        <p className="md-title-medium text-on-surface">Chức năng đang trong quá trình hoàn thiện</p>
+      </div>
+    </Card>
+  );
+}
+
 function ProUpsell() {
   return (
     <Card>
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
         <div className="min-w-0 space-y-1">
-          <p className="md-title-medium text-on-surface">Phân tích slide có trong gói Pro</p>
-          <p className="md-body-medium text-on-surface-variant">Tải slide PDF của một môn, AI tóm tắt ý chính từng chương và cho biết chương đó ra trong bao nhiêu đề.</p>
+          <p className="md-title-medium text-on-surface">Tính năng chỉ dành cho PRO</p>
         </div>
         <Link to="/pro" className={buttonClass({ variant: "primary" })}>
           <Crown size={16} className="text-[#f0a800]" /> Xem gói Pro

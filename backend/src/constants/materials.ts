@@ -1,5 +1,8 @@
 // Phân tích slide (Pro): người dùng tải PDF slide của một môn, AI tóm tắt theo chương. Số liệu "chương hay ra" ghép lúc đọc từ chapter_stats.
 
+// Giai đoạn thử nghiệm: chỉ admin dùng được. Đặt false để mở cho tài khoản Pro.
+export const MATERIAL_ADMIN_ONLY = true;
+
 // Giới hạn theo TỔNG token (vào + ra + ghi cache) Claude báo về, cộng dồn trong cửa sổ trượt mỗi người dùng
 export const MATERIAL_FEATURE = "material"; // giá trị cột feature của ai_token_usage
 export const MATERIAL_TOKENS_PER_WINDOW = 1_000_000;

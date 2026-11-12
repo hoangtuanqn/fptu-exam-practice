@@ -4,7 +4,8 @@ import type { StatsConfidence } from "@/features/frequent/frequent.api";
 export type MaterialStatus = "QUEUED" | "RUNNING" | "DONE" | "FAILED";
 
 export interface MaterialQuota {
-  isPro: boolean;
+  isPro: boolean; // true = dùng được ngay
+  access?: "ALLOWED" | "PRO_ONLY" | "COMING_SOON"; // máy chủ cũ chưa gửi trường này: suy ra từ isPro
   percentUsed: number; // 0-100
   resetsAt: string | null;
 }
