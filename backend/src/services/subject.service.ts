@@ -22,7 +22,7 @@ export const subjectService = {
       select: { id: true, code: true, name: true, chapters: { orderBy: { number: "asc" }, select: { number: true, title: true } } },
     });
     if (!subject) throw AppError.notFound("Không tìm thấy môn học");
-    const exams = await prisma.exam.count({ where: { title: { contains: subject.code }, answerSource: { in: ["AI", "MANUAL"] } } });
+    const exams = await prisma.exam.count({ where: { subjectCode: subject.code, answerSource: { in: ["AI", "MANUAL"] } } });
     return { id: subject.id, code: subject.code, name: subject.name, chapters: subject.chapters.filter((c) => c.number > 0), exams };
   },
 };
