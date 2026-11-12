@@ -66,6 +66,7 @@ model User {
   questionCards      UserQuestionCard[]
   reviewLogs         UserReviewLog[]
   aiTokenUsages      AiTokenUsage[]
+  explainChatUsages  ExplainChatUsage[]
   materialUploads    MaterialUpload[]
   referredBy         User?                @relation("Referral", fields: [referredById], references: [id], onDelete: SetNull)
   referrals          User[]               @relation("Referral")
@@ -1107,6 +1108,19 @@ model AiTokenUsage {
 
   @@index([userId, feature, createdAt])
   @@map("ai_token_usage")
+}
+
+// AI chat about an explained question: messages sent per user per Vietnam calendar day (day = DATE, see utils/time vnDate).
+// Incremented atomically before the AI call, decremented when the call fails.
+model ExplainChatUsage {
+  userId Int      @map("user_id")
+  day    DateTime @db.Date
+  count  Int      @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, day])
+  @@map("explain_chat_usage")
 }
 
 enum MaterialStatus {
