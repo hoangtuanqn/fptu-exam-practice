@@ -14,6 +14,8 @@ import { adminGiftCodeController } from "../controllers/admin.gift-code.controll
 import { adminCrawlerController } from "../controllers/admin.crawler.controllers";
 import { adminHistoryController } from "../controllers/admin.history.controllers";
 import { adminAccountController } from "../controllers/admin.account.controllers";
+import { adminMarketingController } from "../controllers/admin.marketing.controllers";
+import { campaignKeyParam, setCampaignBody } from "../rules/requests/marketing.request";
 import { adminLinkRewardController } from "../controllers/admin.link-reward.controllers";
 import { adminChatController } from "../controllers/admin.chat.controllers";
 import { updateChatSettingsBody } from "../rules/requests/chat.request";
@@ -75,6 +77,10 @@ adminRouter.patch("/subjects/:code", validate(subjectCodeOnlyParam, "params"), v
 adminRouter.delete("/subjects/:code/inferred-chapters", validate(subjectCodeOnlyParam, "params"), adminSubjectController.clearInferred);
 adminRouter.get("/library/subjects", adminLibraryController.board);
 adminRouter.put("/library/subjects/:code/semester", validate(subjectCodeOnlyParam, "params"), validate(subjectSemesterBody), adminLibraryController.setSemester);
+adminRouter.get("/marketing/campaigns", adminMarketingController.campaigns);
+adminRouter.patch("/marketing/campaigns/:key", validate(campaignKeyParam, "params"), validate(setCampaignBody), adminMarketingController.setEnabled);
+adminRouter.post("/marketing/campaigns/:key/test", validate(campaignKeyParam, "params"), adminMarketingController.sendTest);
+adminRouter.get("/marketing/eligible-count", adminMarketingController.eligibleCount);
 adminRouter.get("/settings/account", adminAccountController.get);
 adminRouter.put("/settings/account", validate(updateAccountBody), adminAccountController.update);
 adminRouter.get("/settings/link-reward", adminLinkRewardController.get);
