@@ -1,12 +1,20 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useLocation } from "react-router-dom";
-import { ArrowUp, RotateCcw, X } from "lucide-react";
+import { ArrowUp, Maximize2, Minimize2, RotateCcw, X } from "lucide-react";
 import { chatApi, type ChatMessage } from "@/features/chat/chat.api";
 import { MASCOT_SVG } from "@/shared/ui/mascot-art";
 import { Markdown } from "@/shared/ui/Markdown";
 import { errorMessage } from "@/shared/api/errors";
 
 const STORE_KEY = "fepass_chat_v2";
+const WIDE_KEY = "fepass_chat_wide";
+const readWide = () => {
+  try {
+    return localStorage.getItem(WIDE_KEY) === "1";
+  } catch {
+    return false;
+  }
+};
 
 // Mặt con cóc (cắt từ hình mascot) làm ảnh đại diện trong khung chat
 const AVATAR_SVG = MASCOT_SVG.replace(/viewBox="[^"]*" width="\d+" height="\d+"/, 'viewBox="20 12 64 60" width="100%" height="100%"');
@@ -42,6 +50,7 @@ export default function ChatWidget() {
   const [enabled, setEnabled] = useState(true); // chỉ ẩn khi máy chủ báo rõ là đã tắt (máy chủ chưa phản hồi thì vẫn hiện)
   const [tip, setTip] = useState(false);
   const [open, setOpen] = useState(false);
+  const [wide, setWide] = useState(readWide); // khung to cho câu trả lời dài (bảng, danh sách); chỉ có ở màn hình rộng, điện thoại luôn toàn màn hình
   const [messages, setMessages] = useState<Msg[]>(load);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -183,7 +192,7 @@ export default function ChatWidget() {
         <div
           role="dialog"
           aria-label="Chat với Cóc Pass"
-          className="fixed inset-0 z-[70] flex flex-col overflow-hidden bg-surface sm:inset-x-auto sm:bottom-5 sm:left-auto sm:right-5 sm:top-auto sm:h-[min(34rem,calc(100dvh-2.5rem))] sm:w-[23rem] sm:rounded-3xl sm:border sm:border-amber-200/70 sm:shadow-[0_20px_60px_-15px_rgba(120,80,0,0.35)]"
+          className={`fixed inset-0 z-[70] flex flex-col overflow-hidden bg-surface sm:inset-x-auto sm:bottom-5 sm:left-auto sm:right-5 sm:top-auto ${wide ? "sm:h-[calc(100dvh-2.5rem)] sm:w-[min(46rem,calc(100vw-2.5rem))]" : "sm:h-[min(34rem,calc(100dvh-2.5rem))] sm:w-[23rem]"} sm:rounded-3xl sm:border sm:border-amber-200/70 sm:shadow-[0_20px_60px_-15px_rgba(120,80,0,0.35)]`}
         >
           <div className="flex items-center gap-3 border-b border-amber-100 bg-amber-50/70 px-4 py-3">
             <Avatar size={40} />
@@ -196,6 +205,23 @@ export default function ChatWidget() {
                 <RotateCcw size={15} />
               </button>
             )}
+            <button
+              onClick={() => {
+                setWide((w) => {
+                  try {
+                    localStorage.setItem(WIDE_KEY, w ? "0" : "1");
+                  } catch {
+                    /* không lưu được thì thôi */
+                  }
+                  return !w;
+                });
+              }}
+              aria-label={wide ? "Thu nhỏ khung chat" : "Phóng to khung chat"}
+              title={wide ? "Thu nhỏ khung chat" : "Phóng to khung chat"}
+              className="hidden rounded-full p-2 text-slate-400 transition hover:bg-amber-100 hover:text-slate-700 sm:block"
+            >
+              {wide ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
+            </button>
             <button
               onClick={() => {
                 acRef.current?.abort();
