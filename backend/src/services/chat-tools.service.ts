@@ -231,10 +231,13 @@ const RUNNERS: Record<string, Runner> = {
 };
 
 // ---- recent_exams
+// catalogService.exams xếp và lọc toàn bộ đề trong bộ nhớ rồi mới cắt theo limit: xin cửa sổ lớn để bộ lọc kỳ/phân trang của công cụ thấy đủ đề, không bị mất đề cũ
+const EXAMS_WINDOW = 1000;
+
 async function recentExams(input: Record<string, unknown>, userId: number | null) {
   const subject = normalizeSubjectCode(String(input.subject ?? ""));
   if (!subject) return { error: "Mã môn không hợp lệ (ví dụ PRO192)" };
-  const data = await catalogService.exams(subject, { page: 1, limit: 50 }, userId);
+  const data = await catalogService.exams(subject, { page: 1, limit: EXAMS_WINDOW }, userId);
   if (data.total === 0) return { error: `Hệ thống chưa có đề nào của môn ${subject}` };
   const n = Number(input.limit);
   const o = Number(input.offset);
