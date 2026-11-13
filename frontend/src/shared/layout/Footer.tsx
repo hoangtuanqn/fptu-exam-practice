@@ -27,6 +27,7 @@ export function Footer() {
                 Phiên bản v{APP_VERSION} · Có gì mới
               </Link>
             </div>
+            <div>Không liên kết với FuOverflow hay trường Đại học FPT. Tên và nhãn hiệu thuộc về chủ sở hữu của chúng.</div>
             <div>
               Founder: {brand.founder}
               {brand.coFounders.length > 0 && <> · Co-Founder: {brand.coFounders.join(", ")}</>}
