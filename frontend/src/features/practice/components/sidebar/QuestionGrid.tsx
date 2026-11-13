@@ -11,6 +11,7 @@ interface Props {
   current: number;
   total?: number; // tổng số câu của đề; chưa tải xong thì các ô còn lại hiện mờ
   onSelect: (index: number) => void;
+  vertical?: boolean; // một cột dọc cuộn được (thanh bên máy tính) thay cho lưới nhiều cột (popup)
 }
 
 // Màu theo vai trò M3; mỗi trạng thái còn có tên đọc cho trình đọc màn hình nên không chỉ dựa vào màu
@@ -23,7 +24,7 @@ const STATUS_STYLE: Record<QuestionStatus, { cls: string; name: string }> = {
 };
 
 // Bảng số câu (trong popup): màu theo trạng thái, vòng primary ở câu đang xem (aria-current), cuộn dọc khi nhiều câu.
-export function QuestionGrid({ questions, answers, checked, flagged, submitted, current, total = 0, onSelect }: Props) {
+export function QuestionGrid({ questions, answers, checked, flagged, submitted, current, total = 0, onSelect, vertical = false }: Props) {
   const boxRef = useRef<HTMLDivElement>(null);
 
   // Chuyển câu bằng phím/nút thì cuộn để ô câu hiện tại luôn nằm trong tầm nhìn
@@ -32,8 +33,8 @@ export function QuestionGrid({ questions, answers, checked, flagged, submitted, 
   }, [current]);
 
   return (
-    <div ref={boxRef} className="max-h-[50dvh] overflow-y-auto p-1">
-      <div role="list" aria-label="Danh sách câu hỏi" className="grid grid-cols-6 gap-2 sm:grid-cols-8">
+    <div ref={boxRef} className={vertical ? "min-h-0 flex-1 overflow-y-auto px-2 py-1" : "max-h-[50dvh] overflow-y-auto p-1"}>
+      <div role="list" aria-label="Danh sách câu hỏi" className={vertical ? "flex flex-col gap-1.5" : "grid grid-cols-6 gap-2 sm:grid-cols-8"}>
         {questions.map((q, i) => {
           const status = getStatus(q, answers[q.number], submitted || !!checked[q.number]);
           const { cls, name } = STATUS_STYLE[status];

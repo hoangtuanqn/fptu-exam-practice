@@ -11,6 +11,7 @@ import { useAuth } from "@/features/auth/AuthContext";
 import { useExamTopicsLive } from "@/features/practice/hooks/useExamTopicsLive";
 import { usePreloadImages } from "@/features/practice/hooks/usePreloadImages";
 import type { Quiz } from "@/features/practice/hooks/useQuiz";
+import { QuestionRail } from "@/features/practice/components/sidebar/QuestionRail";
 import { Sidebar } from "@/features/practice/components/sidebar/Sidebar";
 import { AnswerPendingBanner } from "./AnswerPendingBanner";
 import { LoadingMoreBanner } from "./LoadingMoreBanner";
@@ -112,6 +113,7 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit }: Props)
 
   return (
     <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+      <QuestionRail quiz={quiz} />
       <main className={`flex min-w-0 flex-1 flex-col overflow-y-auto p-2 sm:p-3 lg:p-4 ${panelOpen ? "max-lg:pb-[60dvh]" : ""}`}>
         <Sidebar quiz={quiz} />
         {quiz.loadingMore && <LoadingMoreBanner loaded={quiz.questions.length} total={quiz.total} />}

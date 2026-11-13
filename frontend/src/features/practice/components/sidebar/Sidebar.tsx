@@ -5,7 +5,7 @@ import { useKeydown } from "@/features/practice/hooks/useKeydown";
 import { Legend } from "./Legend";
 import { QuestionGrid } from "./QuestionGrid";
 
-// Nút nhỏ "Câu 5/40 · Đã làm 12" nhỏ gọn ở đầu vùng làm bài; bấm vào mở bảng số câu (popup) để nhảy tới câu bất kỳ, chọn xong tự đóng.
+// Điện thoại/máy tính bảng: nút nhỏ "Câu 5/40 · Đã làm 12" nhỏ gọn ở đầu vùng làm bài; bấm vào mở bảng số câu (popup) để nhảy tới câu bất kỳ, chọn xong tự đóng.
 // Sau khi nộp bài, con số bên cạnh là số câu đúng.
 export function Sidebar({ quiz }: { quiz: Quiz }) {
   const [open, setOpen] = useState(false);
@@ -15,7 +15,7 @@ export function Sidebar({ quiz }: { quiz: Quiz }) {
   const done = quiz.result ? quiz.result.correct : Object.values(quiz.answers).filter((a) => a.length > 0).length;
 
   return (
-    <nav aria-label="Câu hỏi" className="sticky top-0 z-10 mb-1.5 shrink-0">
+    <nav aria-label="Câu hỏi" className="sticky top-0 z-10 mb-1.5 shrink-0 lg:hidden">
       <button
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
