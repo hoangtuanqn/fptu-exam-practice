@@ -14,6 +14,9 @@ describe("chat system prompt", () => {
     assert.ok(/syllabus[^\n]*(complete|in full|full)/i.test(CHAT_SYSTEM_PROMPT));
     assert.ok(CHAT_SYSTEM_PROMPT.includes("under 120 words"));
   });
+  it("answers several questions in one message in order, capped at three", () => {
+    assert.ok(CHAT_SYSTEM_PROMPT.includes("first 3"));
+  });
   it("keeps tables narrow enough for the chat window", () => {
     assert.ok(CHAT_SYSTEM_PROMPT.includes("at most 4 columns"));
   });

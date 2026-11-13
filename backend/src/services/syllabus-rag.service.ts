@@ -1,6 +1,7 @@
+import { pickMultiHits } from "../utils/rag-select";
 import { prisma } from "../configs/prisma";
 import { EMBEDDING_DIMS, EMBEDDING_MODEL } from "../constants/chat";
-import { RAG_MIN_CHUNKS, KIND_INTENT, KIND_LABEL, RAG_CROSS_SUBJECTS, RAG_MAX_CHUNKS, RAG_MAX_CONTEXT_CHARS, RAG_POOL, RAG_SNIPPET_CHARS, RAG_WEIGHTS, SYLLABUS_WORDS, type RagWeights, type SyllabusKind } from "../constants/rag";
+import { RAG_MULTI_MAX_CODES, RAG_MULTI_MAX_CONTEXT_CHARS, RAG_PER_CODE_MAX, RAG_PER_CODE_MIN, RAG_MIN_CHUNKS, KIND_INTENT, KIND_LABEL, RAG_CROSS_SUBJECTS, RAG_MAX_CHUNKS, RAG_MAX_CONTEXT_CHARS, RAG_POOL, RAG_SNIPPET_CHARS, RAG_WEIGHTS, SYLLABUS_WORDS, type RagWeights, type SyllabusKind } from "../constants/rag";
 import { dotF32, fromBytes } from "../utils/vector";
 import { fold, terms } from "./knowledge.service";
 
@@ -135,16 +136,21 @@ export function mightBeSyllabus(question: string) {
 export function analyze(question: string, knownCodes: string[]) {
   const matched = new Set<string>();
   const unknown = new Set<string>();
+  const groups: string[][] = []; // các môn theo từng mã người dùng gõ (thứ tự gõ, mã lặp chỉ tính một lần)
+  const seen = new Set<string>();
   for (const m of codeMatches(question)) {
     const code = `${m[1]}${m[2]}${m[3]}`.toUpperCase();
     // Nhập ADA201 thì lấy cả ADA201 và ADA201C (thêm tối đa 2 chữ cái cuối), giống cách tiện ích crawl FLM
     const hits = knownCodes.filter((k) => k === code || (k.startsWith(code) && /^[A-Z]{1,2}$/.test(k.slice(code.length))));
-    if (hits.length) hits.forEach((h) => matched.add(h));
-    else unknown.add(code);
+    if (hits.length) {
+      hits.forEach((h) => matched.add(h));
+      if (!seen.has(code)) groups.push(hits);
+    } else unknown.add(code);
+    seen.add(code);
   }
   const f = fold(question);
   const kinds = new Set<SyllabusKind>(KIND_INTENT.filter(([, re]) => re.test(f)).map(([k]) => k));
-  return { subjects: [...matched], unknownCodes: [...unknown], kinds, syllabusish: matched.size > 0 || unknown.size > 0 || SYLLABUS_WORDS.test(f) };
+  return { subjects: [...matched], groups, unknownCodes: [...unknown], kinds, syllabusish: matched.size > 0 || unknown.size > 0 || SYLLABUS_WORDS.test(f) };
 }
 
 // ---------------------------------------------------------------- tìm kiếm
@@ -229,7 +235,10 @@ export async function candidates(question: string, qvec: number[] | null, weight
     })
     .sort((x, y) => y.p - x.p);
   // Chữ chỉ tải cho các đoạn tốt nhất (hoặc tất cả khi script đo cần)
-  const keep = opts.allContent ? scored : scored.slice(0, CONTENT_TOP);
+  // Nhiều mã môn: tải chữ cho các đoạn tốt nhất của TỪNG mã (nếu không, mã có đoạn xếp thấp sẽ không có chữ để đưa vào ngữ cảnh)
+  const groups = a.groups.slice(0, RAG_MULTI_MAX_CODES);
+  const slugs = groups.length > 1 && mode === "subject" ? new Set(groups.flatMap((g) => scored.filter((h) => g.includes(h.subject)).slice(0, RAG_PER_CODE_MAX).map((h) => h.slug))) : null;
+  const keep = opts.allContent ? scored : slugs ? scored.filter((h) => slugs.has(h.slug)) : scored.slice(0, CONTENT_TOP);
   const text = new Map((await prisma.subjectChunk.findMany({ where: { slug: { in: keep.map((h) => h.slug) } }, select: { slug: true, content: true } })).map((r) => [r.slug, r.content]));
   const list: RagHit[] = keep.map((h) => ({ ...h, content: text.get(h.slug) ?? "" }));
   return { a, idx, mode, dense, list, w };
@@ -253,7 +262,9 @@ export const syllabusRagService = {
     const confident = known || (list[0]?.p ?? 0) >= w.answer;
     let hits: RagHit[];
     if (!confident) hits = [];
-    else if (mode === "subject") {
+    else if (mode === "subject" && a.groups.length > 1) {
+      hits = pickMultiHits(list, a.groups.slice(0, RAG_MULTI_MAX_CODES), { include: w.include, minPer: RAG_PER_CODE_MIN, maxPer: RAG_PER_CODE_MAX, maxChars: RAG_MULTI_MAX_CONTEXT_CHARS });
+    } else if (mode === "subject") {
       hits = [];
       let chars = 0;
       for (const h of list) {
