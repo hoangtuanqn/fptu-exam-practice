@@ -1,7 +1,8 @@
 import type { Request, Response } from "express";
 import { getValidated } from "../middlewares/validate.middlewares";
-import type { ExamIdParam, ExplainBody, ExplainChatBody, UnlockBody } from "../rules/requests/explanation.request";
+import type { ExamIdParam, ExplainBody, ExplainChatBody, ExplainFeedbackBody, UnlockBody } from "../rules/requests/explanation.request";
 import { ResponseClient } from "../rules/response";
+import { explanationFeedbackService } from "../services/explanation-feedback.service";
 import { explainChatService } from "../services/explain-chat.service";
 import { explanationService } from "../services/explanation.service";
 import { actorOf } from "../utils/actor";
@@ -25,6 +26,10 @@ export const explanationController = {
 
   async chatQuota(req: Request, res: Response) {
     res.json(new ResponseClient({ data: { quota: await explainChatService.quota(req.user!.id) } }));
+  },
+
+  async feedback(req: Request, res: Response) {
+    res.json(new ResponseClient({ message: "Cảm ơn bạn đã đánh giá", data: await explanationFeedbackService.submit(actorOf(req), req.user!.id, getValidated<ExplainFeedbackBody>(res)) }));
   },
 
   async unlock(req: Request, res: Response) {

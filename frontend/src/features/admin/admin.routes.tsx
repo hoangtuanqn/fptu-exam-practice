@@ -1,6 +1,6 @@
 import { lazy } from "react";
 import { Navigate, Route } from "react-router-dom";
-import { BookMarked, Link2, Activity, ShieldCheck as QualityIcon, MessagesSquare, ShoppingBag, Megaphone, Bot, ClipboardList, DatabaseZap, FileText, History, SlidersHorizontal, Wallet, Gift, MessageSquareWarning, UserPlus, Landmark, LayoutDashboard, Receipt, Settings, Users } from "lucide-react";
+import { BookMarked, Link2, Activity, ShieldCheck as QualityIcon, MessagesSquare, ShoppingBag, Megaphone, Bot, ClipboardList, DatabaseZap, FileText, History, SlidersHorizontal, Wallet, Gift, MessageSquareWarning, UserPlus, Landmark, LayoutDashboard, Receipt, Settings, ThumbsUp, Users } from "lucide-react";
 import type { NavItem } from "@/shared/layout/PanelLayout";
 
 /**
@@ -30,6 +30,7 @@ const ExamsPage = lazy(() => import("./content/ExamsPage"));
 const ExamEditPage = lazy(() => import("./content/ExamEditPage"));
 const CrawlerPage = lazy(() => import("./content/CrawlerPage"));
 const ReportsPage = lazy(() => import("./content/ReportsPage"));
+const FeedbackPage = lazy(() => import("./content/FeedbackPage"));
 const ChatbotPage = lazy(() => import("./content/ChatbotPage"));
 const AiPage = lazy(() => import("./content/AiPage"));
 const SubjectsManagerPage = lazy(() => import("./content/SubjectsManagerPage"));
@@ -53,6 +54,7 @@ export const ADMIN_NAV: NavItem[] = [
   { to: "/admin/sepay", label: "Cấu hình SePay", icon: Settings, group: "Tài chính" },
   { to: "/admin/exams", label: "Đề thi", icon: FileText, group: "Nội dung & AI" },
   { to: "/admin/reports", label: "Báo cáo đáp án", icon: MessageSquareWarning, group: "Nội dung & AI" },
+  { to: "/admin/explanation-feedback", label: "Đánh giá lời giải AI", icon: ThumbsUp, group: "Nội dung & AI" },
   { to: "/admin/link-rewards", label: "Vượt link", icon: Link2, group: "Nội dung & AI" },
   { to: "/admin/subjects", label: "Quản lý môn học", icon: BookMarked, group: "Nội dung & AI" },
   { to: "/admin/crawler", label: "Cấu hình lấy đề", icon: DatabaseZap, group: "Nội dung & AI" },
@@ -85,6 +87,7 @@ export const adminRoutes = (
     <Route path="exams" element={<ExamsPage />} />
     <Route path="exams/:id" element={<ExamEditPage />} />
     <Route path="reports" element={<ReportsPage />} />
+    <Route path="explanation-feedback" element={<FeedbackPage />} />
     <Route path="crawler" element={<CrawlerPage />} />
     <Route path="ai" element={<AiPage />} />
     <Route path="chatbot" element={<ChatbotPage />} />

@@ -29,6 +29,10 @@
         {
           "type": "improved",
           "text": "Chế độ Luyện tập không còn hiện đồng hồ, bạn học thoải mái hơn"
+        },
+        {
+          "type": "new",
+          "text": "Đánh giá lời giải AI bằng nút Hữu ích hoặc Chưa tốt, kèm lý do để lời giải ngày càng tốt hơn"
         }
       ]
     },

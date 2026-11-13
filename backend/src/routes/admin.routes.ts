@@ -8,6 +8,7 @@ import { adminDepositController } from "../controllers/admin.deposit.controllers
 import { adminSettingController } from "../controllers/admin.setting.controllers";
 import { adminAiController } from "../controllers/admin.ai.controllers";
 import { adminAnswerReportController } from "../controllers/admin.answer-report.controllers";
+import { adminExplanationFeedbackController } from "../controllers/admin.explanation-feedback.controllers";
 import { adminReferralController } from "../controllers/admin.referral.controllers";
 import { adminGiftCodeController } from "../controllers/admin.gift-code.controllers";
 import { adminCrawlerController } from "../controllers/admin.crawler.controllers";
@@ -25,6 +26,7 @@ import { subjectCodeOnlyParam, subjectSemesterBody, updateSubjectBody } from "..
 import { listAttemptsQuery, listCrawlJobsQuery, listPurchasesQuery, listWalletQuery } from "../rules/requests/admin-history.request";
 import { authenticate, requireAdmin } from "../middlewares/auth.middlewares";
 import { updateAccountBody, updateAiBody, updateLinkRewardBody, updateCrawlerBody, updatePromoBody, updateReferralBody, updateSepayBody } from "../rules/requests/setting.request";
+import { listFeedbackQuery } from "../rules/requests/explanation.request";
 import { listReportsQuery, reviewReportBody } from "../rules/requests/answer-report.request";
 import { createGiftCodeBody, listGiftCodesQuery, updateGiftCodeBody } from "../rules/requests/gift-code.request";
 import { validate } from "../middlewares/validate.middlewares";
@@ -116,6 +118,8 @@ adminRouter.post("/gift-codes", validate(createGiftCodeBody), adminGiftCodeContr
 adminRouter.patch("/gift-codes/:id", validate(idParam, "params"), validate(updateGiftCodeBody), adminGiftCodeController.setActive);
 adminRouter.get("/gift-codes/:id/redemptions", validate(idParam, "params"), validate(paginationQuery, "query"), adminGiftCodeController.redemptions);
 
+adminRouter.get("/explanation-feedback", validate(listFeedbackQuery, "query"), adminExplanationFeedbackController.list);
+adminRouter.get("/explanation-feedback/summary", adminExplanationFeedbackController.summary);
 adminRouter.get("/answer-reports", validate(listReportsQuery, "query"), adminAnswerReportController.list);
 adminRouter.post("/answer-reports/:id/approve", validate(idParam, "params"), validate(reviewReportBody), adminAnswerReportController.approve);
 adminRouter.post("/answer-reports/:id/reject", validate(idParam, "params"), validate(reviewReportBody), adminAnswerReportController.reject);

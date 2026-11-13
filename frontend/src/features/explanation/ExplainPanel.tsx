@@ -7,6 +7,7 @@ import { Button } from "@/shared/ui/Button";
 import { Markdown } from "@/shared/ui/Markdown";
 import { explanationApi } from "./explanation.api";
 import { ExplainChat } from "./ExplainChat";
+import { ExplainFeedback } from "./ExplainFeedback";
 import { errorMessage } from "@/shared/api/errors";
 
 interface Props {
@@ -40,6 +41,7 @@ export function ExplainPanel({ examId, questionNumber, useFreeTurn, firstTime, o
   const { refresh } = useAuth();
   const [phase, setPhase] = useState<Phase>("loading");
   const [content, setContent] = useState("");
+  const [feedback, setFeedback] = useState<boolean | null>(null); // đánh giá đã gửi trước đó cho lời giải này
   const [error, setError] = useState<string | null>(null);
   const alive = useRef(true);
   const started = useRef(false);
@@ -67,6 +69,7 @@ export function ExplainPanel({ examId, questionNumber, useFreeTurn, firstTime, o
       }
       if (!alive.current) return;
       setContent(result.content);
+      setFeedback(result.feedback ?? null);
       setPhase("done");
     } catch (err) {
       if (!alive.current) return;
@@ -147,6 +150,7 @@ export function ExplainPanel({ examId, questionNumber, useFreeTurn, firstTime, o
         {phase === "done" && (
           <>
             <Markdown>{content}</Markdown>
+            <ExplainFeedback examId={examId} questionNumber={questionNumber} initial={feedback} />
             {chat && <ExplainChat examId={examId} questionNumber={questionNumber} />}
           </>
         )}

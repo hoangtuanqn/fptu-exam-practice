@@ -139,6 +139,20 @@ export interface AiForm {
   anthropicApiKey?: string;
 }
 
+export interface ExplanationFeedbackAdmin {
+  id: number;
+  examId: number;
+  questionNumber: number;
+  helpful: boolean;
+  reason: string | null;
+  comment: string | null;
+  updatedAt: string;
+  user: { fullName: string; email: string };
+  exam: { title: string; threadId: string };
+  explanation: string | null; // lời giải đang lưu (null nếu đã bị xóa)
+  model: string | null;
+}
+
 export interface ChatbotAdmin {
   settings: {
     enabled: boolean;
@@ -401,6 +415,9 @@ export const adminApi = {
       limit: PAGE_SIZE,
     }),
 
+  explanationFeedback: (page: number, helpful: "up" | "down" | "") =>
+    http.list<ExplanationFeedbackAdmin>("/admin/explanation-feedback", { page, limit: PAGE_SIZE, helpful }),
+  explanationFeedbackSummary: () => http.get<{ up: number; down: number }>("/admin/explanation-feedback/summary"),
   answerReports: (page: number, status: ReportStatus | "") =>
     http.list<AnswerReportAdmin>("/admin/answer-reports", {
       page,
