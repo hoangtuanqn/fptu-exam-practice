@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import {
   Award,
   BookOpen,
-  Clock,
   RotateCcw,
   Send,
   Trophy,
@@ -11,8 +10,8 @@ import {
 import type { Mode } from "@/features/practice/types.ts";
 import { brand } from "@/shared/brand/brand";
 import { getModeConfig } from "@/features/practice/config/modes";
-import { formatDuration, formatScore } from "@/features/practice/utils/format";
-import { ExamTimerBar, timerTone } from "./ExamTimerBar";
+import { formatScore } from "@/features/practice/utils/format";
+import { ExamTimer } from "./ExamTimer";
 import { Logo } from "@/shared/brand/Logo";
 import { Button } from "@/shared/ui/Button";
 import { UserMenu } from "@/shared/layout/UserMenu";
@@ -70,10 +69,9 @@ export function Header({
   const waiting = !submitted && !!submitLocked; // chờ đáp án: giờ chưa chạy
   const left = timeLimitSec ? Math.max(0, timeLimitSec - elapsed) : null; // thời gian còn lại (chỉ khi thi có giới hạn)
   const showLeft = isExam && left !== null && !submitted && !waiting;
-  const showClock = waiting || showLeft;
 
   return (
-    <header className="relative z-30 flex h-16 shrink-0 items-center justify-between gap-2 border-b border-outline-variant bg-surface px-2 sm:px-4">
+    <header className="z-30 flex h-16 shrink-0 items-center justify-between gap-2 border-b border-outline-variant bg-surface px-2 sm:px-4">
       <div className="flex shrink-0 items-center gap-3 sm:min-w-0 sm:shrink">
         <Link
           to="/"
@@ -119,14 +117,10 @@ export function Header({
               </span>
             )}
 
-            {/* Chế độ + đồng hồ gộp một chip */}
+            {/* Chế độ (chip) và đồng hồ đếm ngược của bài thi (khối riêng, trên điện thoại chỉ giữ đồng hồ cho đỡ chật) */}
             <span
-              title={
-                waiting
-                  ? "Giờ làm bài sẽ bắt đầu tính khi đề có đáp án"
-                  : undefined
-              }
-              className={`inline-flex items-center gap-2 rounded-xl border px-2.5 py-1.5 text-sm transition sm:px-3 ${
+              title={waiting ? "Giờ làm bài sẽ bắt đầu tính khi đề có đáp án" : undefined}
+              className={`inline-flex items-center gap-2 rounded-xl border px-2.5 py-1.5 text-sm transition sm:px-3 ${showLeft ? "max-sm:hidden" : ""} ${
                 submitted
                   ? "border-slate-200 bg-slate-50 text-slate-500"
                   : waiting
@@ -134,26 +128,18 @@ export function Header({
                     : `border-brand-200 bg-brand-50 text-brand-800 ${flash ? "scale-105 shadow-card ring-2 ring-brand-400" : ""}`
               }`}
             >
-              {timing && isExam && (
-                <span className="relative flex h-2 w-2" aria-hidden>
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-500 opacity-75" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-600" />
-                </span>
-              )}
-              <Icon size={15} className="hidden sm:block" />
+              <Icon size={15} />
               <span className="hidden sm:inline">{label}</span>
-              {showClock && <span className="hidden h-4 w-px bg-current opacity-20 sm:block" />}
-              {showClock && <Clock size={14} className="sm:hidden" />}
-              {waiting ? (
-                <span className="whitespace-nowrap">
-                  Chờ đáp án{isExam && <span className="max-sm:hidden"> · chưa tính giờ</span>}
-                </span>
-              ) : showLeft ? (
-                <span title="Thời gian còn lại" className={`whitespace-nowrap tabular-nums ${timerTone(left!, timeLimitSec!).text}`}>
-                  Còn {formatDuration(left)}
-                </span>
-              ) : null}
+              {waiting && (
+                <>
+                  <span className="hidden h-4 w-px bg-current opacity-20 sm:block" />
+                  <span className="whitespace-nowrap">
+                    Chờ đáp án{isExam && <span className="max-sm:hidden"> · chưa tính giờ</span>}
+                  </span>
+                </>
+              )}
             </span>
+            {showLeft && timeLimitSec && <ExamTimer left={left!} limit={timeLimitSec} />}
 
             {referenceCount > 0 && onShowReferences && (
               <Button
@@ -199,7 +185,6 @@ export function Header({
         <ThemeToggle className={loaded ? "max-sm:hidden" : ""} />
         <UserMenu />
       </div>
-      {showLeft && timeLimitSec && <ExamTimerBar left={left!} limit={timeLimitSec} className="absolute inset-x-0 bottom-0" />}
     </header>
   );
 }
