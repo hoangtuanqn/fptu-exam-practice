@@ -9,6 +9,7 @@ import { examRepository } from "./repositories/exam.repository";
 import { initRealtime } from "./realtime/socket.server";
 import { startSepayCron } from "./jobs/sepay.cron";
 import { startReminderCron } from "./jobs/reminder.cron";
+import { startMarketingCron } from "./jobs/marketing.cron";
 import { startSessionCleanup } from "./jobs/session-cleanup.cron";
 import { startCreditExpiry } from "./jobs/credit-expiry.cron";
 import { startSimilarityCron } from "./jobs/similarity.cron";
@@ -26,6 +27,7 @@ server.listen(env.PORT, () => {
   startSessionCleanup();
   startCreditExpiry();
   startReminderCron();
+  startMarketingCron(); // chiến dịch nào chưa được admin bật thì không gửi gì
   startSimilarityCron(); // lỗi DB (chưa sẵn sàng) được bắt trong từng lượt chạy, API vẫn lên
   startMaterialCleanupCron();
   startMaterialWorker().catch((err) => console.error("Không khởi động được hàng đợi phân tích slide:", err.message));

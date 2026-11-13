@@ -29,4 +29,14 @@ export const planSignalRepository = {
     const net = (...types: string[]) => -rows.filter((r) => types.includes(r.type)).reduce((n, r) => n + (r._sum.amount ?? 0), 0);
     return { fetch: net("CRAWL_CHARGE", "CRAWL_REFUND"), explain: net("EXPLAIN_CHARGE", "EXPLAIN_REFUND"), pe: net("PE_CHARGE", "PE_REFUND") };
   },
+
+  // Như spentSince nhưng cho nhiều người trong một truy vấn: userId -> tổng credit đã chi lẻ (đã trừ phần hoàn)
+  async netSpendByUser(userIds: number[], since: Date) {
+    const rows = await prisma.walletTransaction.groupBy({
+      by: ["userId"],
+      where: { userId: { in: userIds }, createdAt: { gte: since }, type: { in: [...SPEND_TYPES] } },
+      _sum: { amount: true },
+    });
+    return new Map(rows.map((r) => [r.userId, Math.max(0, -(r._sum.amount ?? 0))]));
+  },
 };
