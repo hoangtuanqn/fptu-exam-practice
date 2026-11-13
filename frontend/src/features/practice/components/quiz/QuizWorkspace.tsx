@@ -93,20 +93,9 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit }: Props)
     onSubmit: !quiz.submitted && !quiz.answersPending && !quiz.loadingMore ? onSubmit : undefined,
   };
 
-  return (
-    <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-      <Sidebar quiz={quiz} />
-      <main className={`flex min-w-0 flex-1 flex-col overflow-y-auto p-2 sm:p-3 lg:p-4 ${panelOpen ? "max-lg:pb-[60dvh]" : ""}`}>
-        {quiz.loadingMore && <LoadingMoreBanner loaded={quiz.questions.length} total={quiz.total} />}
-        <AnswerPendingBanner source={quiz.answerSource} examId={quiz.examId} onRetry={quiz.waitForAnswers} />
-        {showBundle && bundle && (
-          <ExplainBundleBanner bundle={bundle} unitPrice={info.data!.price} collapsed={bannerCollapsed} onCollapse={() => setBannerCollapsed(true)} onUnlock={() => setUnlockOpen(true)} />
-        )}
-        <QuestionCard key={question.number} {...view} nudge={nudge} topic={showTopic ? question.topic : null} topicLoading={showTopic && topicsLabeling} onZoom={() => onZoomChange(true)} />
-      </main>
-
-      {panelOpen && quiz.examId !== null && (
-        <ExplainPanel
+  // Dùng chung cho màn hình làm bài và cửa sổ phóng to ảnh (chỉ gắn vào một nơi tại một thời điểm)
+  const explainPanel = panelOpen && quiz.examId !== null && (
+    <ExplainPanel
           key={question.number}
           examId={quiz.examId}
           questionNumber={question.number}
@@ -119,7 +108,21 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit }: Props)
             info.reload(); // cập nhật số lượt xem thử còn lại và giá gói
           }}
         />
-      )}
+  );
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+      <Sidebar quiz={quiz} />
+      <main className={`flex min-w-0 flex-1 flex-col overflow-y-auto p-2 sm:p-3 lg:p-4 ${panelOpen ? "max-lg:pb-[60dvh]" : ""}`}>
+        {quiz.loadingMore && <LoadingMoreBanner loaded={quiz.questions.length} total={quiz.total} />}
+        <AnswerPendingBanner source={quiz.answerSource} examId={quiz.examId} onRetry={quiz.waitForAnswers} />
+        {showBundle && bundle && (
+          <ExplainBundleBanner bundle={bundle} unitPrice={info.data!.price} collapsed={bannerCollapsed} onCollapse={() => setBannerCollapsed(true)} onUnlock={() => setUnlockOpen(true)} />
+        )}
+        <QuestionCard key={question.number} {...view} nudge={nudge} topic={showTopic ? question.topic : null} topicLoading={showTopic && topicsLabeling} onZoom={() => onZoomChange(true)} />
+      </main>
+
+      {!zoomOpen && explainPanel}
 
       {confirmExplain && info.data && (
         <ExplainConfirmDialog
@@ -163,7 +166,7 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit }: Props)
         />
       )}
 
-      {zoomOpen && <ImageViewer {...view} timer={timerOf} onClose={() => onZoomChange(false)} />}
+      {zoomOpen && <ImageViewer {...view} timer={timerOf} aside={explainPanel} onClose={() => onZoomChange(false)} />}
     </div>
   );
 }
