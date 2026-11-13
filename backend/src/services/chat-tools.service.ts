@@ -1,7 +1,9 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "../configs/prisma";
 import { AppError } from "../rules/error";
-import { fuoCatalogService, FuoSubjectNotFound, normalizeSubject } from "./crawler/fuo-catalog.service";
+import { normalizeSubjectCode } from "../utils/subject-code";
+import { pickExams } from "../utils/recent-exams";
+import { catalogService } from "./catalog.service";
 
 /**
  * Công cụ CHỈ ĐỌC cho chatbot, để trả lời "bài thi làm dở của tôi", "lịch sử nạp của tôi"...
@@ -9,7 +11,7 @@ import { fuoCatalogService, FuoSubjectNotFound, normalizeSubject } from "./crawl
  * An toàn:
  * - Mọi công cụ nhận `userId` từ phiên đăng nhập ở máy chủ, KHÔNG nhận từ Claude: Claude không thể xem tài khoản khác dù bị dụ.
  * - Công cụ tra cứu (get_my_data) chỉ đọc, mỗi lần trả tối đa vài dòng, đã bỏ trường nhạy cảm.
- * - Khách chưa đăng nhập chỉ có find_fuo_exams (dữ liệu công khai của FuOverflow).
+ * - Khách chưa đăng nhập chỉ có recent_exams (danh mục đề công khai trong hệ thống, không cào web).
  * - Dữ liệu trả về (tên đề, ghi chú giao dịch...) là DỮ LIỆU, không phải mệnh lệnh: prompt hệ thống dặn Claude như vậy.
  */
 
@@ -32,25 +34,25 @@ const ACCOUNT_TOOLS: Anthropic.Tool[] = [
   },
 ];
 
-const FUO_TOOL: Anthropic.Tool = {
-  name: "find_fuo_exams",
+const RECENT_EXAMS_TOOL: Anthropic.Tool = {
+  name: "recent_exams",
   description:
-    "Live exam threads on FuOverflow for one subject code (e.g. PRO192), newest first. kind: FE final / PE practical. term: words in title (SU26, FA25, B5, Paper 3).",
+    "Exams of one subject code (e.g. PRO192) known to FEPass, newest first. By default only the current and previous semester. status: ready/owned = open now in FEPass, fetch = not fetched yet (costs credit). Set recent=false or term (e.g. FA25) for older exams.",
   input_schema: {
     type: "object",
     properties: {
       subject: { type: "string", description: "e.g. PRO192" },
-      kind: { type: "string", enum: ["FE", "PE", "ALL"], description: "default ALL" },
-      term: { type: "string", description: "title words" },
-      limit: { type: "integer", minimum: 1, maximum: 15, description: "default 10" },
+      recent: { type: "boolean", description: "default true: only current and previous semester" },
+      term: { type: "string", description: "semester like FA25, or words in the title" },
+      limit: { type: "integer", minimum: 1, maximum: 10, description: "default 6" },
       offset: { type: "integer", minimum: 0, description: "skip N (show more)" },
     },
     required: ["subject"],
   },
 };
 
-/** Công cụ theo người đang chat: thành viên có tra cứu dữ liệu của mình + tra đề FuOverflow, khách chỉ tra danh sách đề FuOverflow. */
-export const chatToolsFor = (userId: number | null): Anthropic.Tool[] => (userId === null ? [FUO_TOOL] : [...ACCOUNT_TOOLS, FUO_TOOL]);
+/** Công cụ theo người đang chat: thành viên có tra cứu dữ liệu của mình + tra đề, khách chỉ tra đề gần đây. */
+export const chatToolsFor = (userId: number | null): Anthropic.Tool[] => (userId === null ? [RECENT_EXAMS_TOOL] : [...ACCOUNT_TOOLS, RECENT_EXAMS_TOOL]);
 
 // Câu "đang làm gì" hiện cho người dùng trong lúc công cụ chạy
 const STATUS: Record<string, string> = {
@@ -67,7 +69,10 @@ const STATUS: Record<string, string> = {
   reports: "Đang xem các báo cáo đáp án của bạn…",
 };
 export function toolStatus(name: string, input: unknown) {
-  if (name === "find_fuo_exams") return "Đang tìm đề trên FuOverflow (có thể mất vài giây)…";
+  if (name === "recent_exams") {
+    const subject = (input as { subject?: unknown } | null)?.subject;
+    return `Đang xem các đề gần đây của môn ${typeof subject === "string" ? subject.toUpperCase().slice(0, 12) : ""}…`;
+  }
   return STATUS[(input as { what?: string } | null)?.what ?? ""] ?? "Đang tra cứu…";
 }
 
@@ -225,49 +230,30 @@ const RUNNERS: Record<string, Runner> = {
   },
 };
 
-// ---- find_fuo_exams
-const KIND_PREFIX: Record<string, RegExp> = { FE: /\bFE\b/i, PE: /\bPE\b/i };
-
-async function findFuoExams(input: Record<string, unknown>) {
-  const subject = normalizeSubject(String(input.subject ?? ""));
+// ---- recent_exams
+async function recentExams(input: Record<string, unknown>, userId: number | null) {
+  const subject = normalizeSubjectCode(String(input.subject ?? ""));
   if (!subject) return { error: "Mã môn không hợp lệ (ví dụ PRO192)" };
-  let data;
-  try {
-    data = await fuoCatalogService.examsOf(subject);
-  } catch (err) {
-    if (err instanceof FuoSubjectNotFound) return { error: `FuOverflow không có môn ${subject}. Kiểm tra lại mã môn.` };
-    console.error(`[chat-tool] find_fuo_exams ${subject}: ${(err as Error).message}`);
-    return { error: "Không đọc được FuOverflow lúc này, bạn thử lại sau nhé" };
-  }
-  const kind = String(input.kind ?? "ALL").toUpperCase();
-  const words = (typeof input.term === "string" ? input.term : "").toLowerCase().split(/\s+/).filter(Boolean).slice(0, 6);
-  const matches = data.threads.filter((t) => {
-    if (kind in KIND_PREFIX && !KIND_PREFIX[kind]!.test(`${t.prefix} ${t.title}`)) return false;
-    const hay = t.title.toLowerCase();
-    return words.every((w) => hay.includes(w));
+  const data = await catalogService.exams(subject, { page: 1, limit: 50 }, userId);
+  if (data.total === 0) return { error: `Hệ thống chưa có đề nào của môn ${subject}` };
+  const n = Number(input.limit);
+  const o = Number(input.offset);
+  const picked = pickExams(data.items, {
+    code: subject,
+    recent: input.recent !== false,
+    term: typeof input.term === "string" ? input.term.slice(0, 40) : undefined,
+    limit: Number.isInteger(n) ? Math.min(10, Math.max(1, n)) : 6,
+    offset: Number.isInteger(o) ? Math.max(0, o) : 0,
   });
-  const limit = Number.isInteger(Number(input.limit)) ? Math.min(15, Math.max(1, Number(input.limit))) : 10;
-  const offset = Number.isInteger(Number(input.offset)) ? Math.max(0, Number(input.offset)) : 0;
-  const counts: Record<string, number> = {};
-  for (const t of data.threads) counts[t.prefix || "Khác"] = (counts[t.prefix || "Khác"] ?? 0) + 1;
-  return {
-    subject,
-    forum: data.forumUrl,
-    total: data.threads.length,
-    byType: counts,
-    matched: matches.length,
-    from: offset + 1,
-    ...(data.truncated && { note: "list cut at 15 pages" }),
-    // dạng gọn cho ít token: [tiêu đề, loại, ngày đăng, link]
-    items: matches.slice(offset, offset + limit).map((t) => [t.title, t.prefix || "Khác", t.postedAt?.slice(0, 10) ?? null, t.url]),
-  };
+  const updated = await prisma.fuoThread.aggregate({ where: { subjectCode: subject }, _max: { syncedAt: true } });
+  return { subject, total: data.total, matched: picked.matched, price: data.price, catalogUpdatedAt: updated._max.syncedAt?.toISOString().slice(0, 10) ?? null, ...(picked.note && { note: picked.note }), items: picked.rows };
 }
 
 /** Chạy một công cụ. Lỗi hay tên lạ trả về thông báo ngắn để Claude nói lại với người dùng, không làm hỏng cuộc trò chuyện. */
 export async function runChatTool(userId: number | null, name: string, input: unknown): Promise<string> {
   const args = input && typeof input === "object" ? (input as Record<string, unknown>) : {};
   try {
-    if (name === "find_fuo_exams") return JSON.stringify(await findFuoExams(args));
+    if (name === "recent_exams") return JSON.stringify(await recentExams(args, userId));
     if (userId === null) return JSON.stringify({ error: "Cần đăng nhập để dùng chức năng này" });
     const run = name === "get_my_data" ? RUNNERS[WHAT[String(args.what)] ?? ""] : undefined;
     if (!run) return JSON.stringify({ error: "Không có loại dữ liệu này" });
