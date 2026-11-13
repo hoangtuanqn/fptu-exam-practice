@@ -22,7 +22,8 @@ const STATUS_STYLE: Record<QuestionStatus, { cls: string; name: string }> = {
   ungraded: { cls: "border-outline-variant bg-surface-container-high text-on-surface-variant", name: "chưa có đáp án" },
 };
 
-// Lưới số câu: ô 48dp, màu theo trạng thái, vòng primary ở câu đang xem (aria-current)
+// Dải số câu gọn: ô 40dp, màu theo trạng thái, vòng primary ở câu đang xem (aria-current).
+// Điện thoại: dải cuộn ngang. Máy tính: một cột hẹp cuộn dọc.
 export function QuestionGrid({ questions, answers, checked, flagged, submitted, current, total = 0, onSelect }: Props) {
   const boxRef = useRef<HTMLDivElement>(null);
 
@@ -32,20 +33,20 @@ export function QuestionGrid({ questions, answers, checked, flagged, submitted, 
   }, [current]);
 
   return (
-    // Điện thoại: một dải cuộn ngang. Máy tính: lưới 5 cột cuộn dọc.
-    <div ref={boxRef} className="overflow-x-auto px-3 py-3 lg:flex-1 lg:overflow-y-auto lg:overflow-x-hidden lg:p-4">
-      <div role="list" aria-label="Danh sách câu hỏi" className="flex gap-2 lg:grid lg:grid-cols-5 lg:gap-2">
+    <div ref={boxRef} className="min-w-0 flex-1 overflow-x-auto px-2 py-1.5 lg:overflow-y-auto lg:overflow-x-hidden lg:py-2">
+      <div role="list" aria-label="Danh sách câu hỏi" className="flex gap-1.5 lg:flex-col">
         {questions.map((q, i) => {
           const status = getStatus(q, answers[q.number], submitted || !!checked[q.number]);
           const { cls, name } = STATUS_STYLE[status];
           return (
-            <div role="listitem" key={q.number} className="shrink-0 lg:w-auto">
+            <div role="listitem" key={q.number} className="shrink-0">
               <button
                 data-current={i === current}
                 aria-current={i === current ? "true" : undefined}
+                title={`Câu ${q.number}: ${name}`}
                 aria-label={`Câu ${q.number}, ${name}${flagged[q.number] ? ", đã đánh dấu" : ""}`}
                 onClick={() => onSelect(i)}
-                className={`md-state md-motion md-label-large relative flex h-12 w-12 items-center justify-center rounded-m3-sm border lg:w-full ${cls} ${
+                className={`md-state md-motion md-label-large relative flex h-10 w-10 items-center justify-center rounded-m3-sm border ${cls} ${
                   i === current ? "ring-2 ring-primary ring-offset-2 ring-offset-surface" : ""
                 }`}
               >
@@ -59,7 +60,7 @@ export function QuestionGrid({ questions, answers, checked, flagged, submitted, 
           <span
             key={`loading-${k}`}
             aria-hidden
-            className="md-label-large flex h-12 w-12 shrink-0 animate-pulse items-center justify-center rounded-m3-sm border border-dashed border-outline-variant text-outline lg:w-full"
+            className="md-label-large flex h-10 w-10 shrink-0 animate-pulse items-center justify-center rounded-m3-sm border border-dashed border-outline-variant text-outline"
           >
             {questions.length + k + 1}
           </span>
