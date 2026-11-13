@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { ChevronLeft } from "lucide-react";
 import { useImageZoom } from "@/features/practice/hooks/useImageZoom";
 import { useKeydown } from "@/features/practice/hooks/useKeydown";
@@ -5,15 +6,15 @@ import { Button } from "@/shared/ui/Button";
 import { ExamTimer } from "../ExamTimer";
 import { AnswerOptions } from "./AnswerOptions";
 import { AnswerStatus } from "./AnswerStatus";
-import { FlagButton } from "./FlagButton";
+import { ExplainButton } from "./ExplainButton";
 import { NextButton } from "./NextButton";
-import { QuestionKindBadge } from "./QuestionKindBadge";
 import type { QuestionViewProps } from "./types";
 import { ZoomControls } from "./ZoomControls";
 
 interface Props extends QuestionViewProps {
   onClose: () => void;
   timer?: { left: number; limit: number }; // thi có giới hạn: cửa sổ này phủ kín thanh đầu trang nên phải tự hiện thời gian còn lại
+  aside?: ReactNode; // lời giải thích AI: máy tính nằm cột bên phải cạnh ảnh, điện thoại là tấm trượt từ dưới lên
 }
 
 // Cửa sổ phóng to ảnh đề, bên cạnh có khu vực chọn đáp án
@@ -25,37 +26,43 @@ export function ImageViewer({
   canCheck,
   hasPrev,
   hasNext,
-  flagged,
-  onToggleFlag,
   onChoose,
   onCheck,
   onPrev,
   onNext,
   onSubmit,
+  onExplain,
+  explainBought,
+  explainFree,
   onClose,
   timer,
+  aside,
 }: Props) {
   const zoom = useImageZoom(question.number); // đổi câu thì về 100%
 
   useKeydown((e) => e.key === "Escape" && onClose());
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-scrim/90 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex flex-col bg-scrim/90 backdrop-blur-sm lg:flex-row">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       {/* Thanh công cụ */}
       <div className="flex h-14 shrink-0 items-center justify-between gap-3 px-5 text-white">
         <div className="font-serif text-lg font-semibold">
           Câu {question.number} <span className="font-sans text-sm font-normal text-slate-400">/ {total}</span>
         </div>
         {timer && <ExamTimer left={timer.left} limit={timer.limit} onDark />}
-        <ZoomControls
-          zoom={zoom.zoom}
-          canZoomIn={zoom.canZoomIn}
-          canZoomOut={zoom.canZoomOut}
-          onZoomIn={zoom.zoomIn}
-          onZoomOut={zoom.zoomOut}
-          onReset={zoom.reset}
-          onClose={onClose}
-        />
+        <div className="flex items-center gap-3">
+          {onExplain && <ExplainButton onExplain={onExplain} bought={explainBought} free={explainFree} />}
+          <ZoomControls
+            zoom={zoom.zoom}
+            canZoomIn={zoom.canZoomIn}
+            canZoomOut={zoom.canZoomOut}
+            onZoomIn={zoom.zoomIn}
+            onZoomOut={zoom.zoomOut}
+            onReset={zoom.reset}
+            onClose={onClose}
+          />
+        </div>
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col gap-3 px-3 pb-3 sm:px-5 sm:pb-5">
@@ -87,15 +94,13 @@ export function ImageViewer({
           </div>
 
           <div className="order-1 flex flex-1 flex-col items-stretch gap-2.5 sm:order-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-4 sm:gap-y-2">
-            <div className="flex items-center justify-between gap-2 sm:justify-start">
-              <QuestionKindBadge question={question} short />
-              <FlagButton flagged={flagged} onToggle={onToggleFlag} />
-            </div>
             <AnswerOptions compact question={question} selected={selected} revealed={revealed} onChoose={onChoose} />
             <AnswerStatus question={question} selected={selected} revealed={revealed} canCheck={canCheck} onCheck={onCheck} />
           </div>
         </section>
       </div>
+      </div>
+      {aside}
     </div>
   );
 }
