@@ -27,6 +27,9 @@ export const KIND_INTENT: [SyllabusKind, RegExp][] = [
   ["tasks", /(nhiem vu|sinh vien phai|diem danh|chuyen can|nop bai|cong cu|yeu cau cua mon|chuan bi|bat buoc|di hoc)/],
 ];
 
+// Phần ưu tiên khi câu hỏi không nêu phần nào của syllabus
+export const RAG_DEFAULT_KINDS: SyllabusKind[] = ["overview", "assessment", "chapters"];
+
 // Câu hỏi có vẻ hỏi về syllabus (kể cả khi không nêu mã môn): bật đường tìm kiếm này. Không khớp thì bỏ qua cho đỡ tốn.
 export const SYLLABUS_WORDS = /(\bmon\b|syllabus|de cuong|hoc phan|tin chi|\bclo\b|giao trinh|chuong trinh hoc|trong so|buoi hoc|lich hoc|tien quyet|chuan dau ra)/;
 
@@ -37,8 +40,8 @@ export const RAG_MAX_CHUNKS = 5; // số đoạn tối đa đưa vào ngữ cả
 export const RAG_MAX_CONTEXT_CHARS = 9000; // ~2,5 nghìn token
 export const RAG_PER_CODE_MIN = 2; // câu hỏi nêu nhiều mã môn: mỗi mã luôn có ít nhất chừng này đoạn tốt nhất
 export const RAG_PER_CODE_MAX = 4; // ... và tối đa chừng này đoạn
-export const RAG_MULTI_MAX_CODES = 4; // chỉ xét chừng này mã môn đầu tiên trong một câu hỏi
-export const RAG_MULTI_MAX_CONTEXT_CHARS = 14000; // ngân sách ký tự chung cho câu hỏi nhiều môn (~4 nghìn token)
+export const RAG_MULTI_MAX_CODES = 6; // chỉ xét chừng này mã môn đầu tiên trong một câu hỏi (quá thì bot dặn gửi phần còn lại ở tin nhắn mới)
+export const RAG_MULTI_MAX_CONTEXT_CHARS = 30000; // ngân sách ký tự chung cho câu hỏi nhiều môn (~9 nghìn token)
 export const RAG_CROSS_SUBJECTS = 5; // câu hỏi không nêu môn: liệt kê tối đa chừng này môn
 export const RAG_SNIPPET_CHARS = 700; // mỗi môn trong danh sách chỉ lấy đoạn đầu của đoạn tốt nhất
 
