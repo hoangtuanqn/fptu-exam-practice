@@ -4,7 +4,9 @@ import { ArrowUp, Maximize2, Minimize2, RotateCcw, X } from "lucide-react";
 import { chatApi, type ChatMessage } from "@/features/chat/chat.api";
 import { MASCOT_SVG } from "@/shared/ui/mascot-art";
 import { Markdown } from "@/shared/ui/Markdown";
+import { ApiError } from "@/shared/api/client";
 import { errorMessage } from "@/shared/api/errors";
+import { CaptchaDialog } from "@/shared/ui/CaptchaDialog";
 
 const STORE_KEY = "fepass_chat_v2";
 const WIDE_KEY = "fepass_chat_wide";
@@ -54,6 +56,7 @@ export default function ChatWidget() {
   const [messages, setMessages] = useState<Msg[]>(load);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
+  const [captchaFor, setCaptchaFor] = useState<{ content: string; history: Msg[] } | null>(null); // tin đang chờ xác minh captcha (hết một đợt tin nhắn trong ngày)
   const [status, setStatus] = useState(""); // Cóc Pass đang tra cứu gì (lúc chưa có chữ nào)
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -113,7 +116,7 @@ export default function ChatWidget() {
   // Không hiện ở khu quản trị và ở màn hình làm bài/luyện tập (tránh gây xao nhãng)
   if (!enabled || pathname.startsWith("/admin") || pathname.startsWith("/exam/") || pathname === "/pro" || pathname === "/features") return null; // /pro: thanh mua cố định ở đáy bị mascot che nút; /features: trang để chụp màn hình giới thiệu nên không để mascot vướng
 
-  async function send(text: string, history: Msg[] = messages) {
+  async function send(text: string, history: Msg[] = messages, captchaToken?: string) {
     const content = text.trim().slice(0, MAX_CHARS);
     if (!content || busy) return;
     const base: Msg[] = [...history, { role: "user", content }];
@@ -130,6 +133,7 @@ export default function ChatWidget() {
     try {
       await chatApi.askStream(payload, {
         signal: ac.signal,
+        captchaToken,
         onStatus: setStatus,
         onDelta: (t) => {
           setStatus("");
@@ -148,6 +152,7 @@ export default function ChatWidget() {
         // Không tạo bong bóng trả lời lỗi: đánh dấu ngay tin của người dùng, giống các app nhắn tin
         const reason = errorMessage(err, "Mình đang bận chút, bạn thử lại sau nhé");
         setMessages([...history, { role: "user", content, failed: reason }]);
+        if (err instanceof ApiError && err.errors?.captcha) setCaptchaFor({ content, history }); // hết một đợt tin nhắn: xác minh xong sẽ tự gửi lại tin này
       }
     } finally {
       setBusy(false);
@@ -318,6 +323,20 @@ export default function ChatWidget() {
             </div>
             <p className="mt-2 px-2 text-center text-[11px] leading-snug text-slate-400">Cóc Pass chỉ hướng dẫn cách dùng web, không giải bài và không thao tác thay bạn.</p>
           </form>
+        </div>
+      )}
+
+      {captchaFor && (
+        // Lớp riêng cao hơn khung chat (z-70): hộp thoại dùng chung chỉ có z-60 nên sẽ bị khung chat che
+        <div className="relative z-[80]">
+        <CaptchaDialog
+          onClose={() => setCaptchaFor(null)} // đóng thì tin vẫn nằm đó với nút "Gửi lại"
+          onVerified={(token) => {
+            const { content, history } = captchaFor;
+            setCaptchaFor(null);
+            void send(content, history, token);
+          }}
+        />
         </div>
       )}
     </>
