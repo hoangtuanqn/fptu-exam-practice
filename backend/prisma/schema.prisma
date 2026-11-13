@@ -67,6 +67,7 @@ model User {
   reviewLogs         UserReviewLog[]
   aiTokenUsages      AiTokenUsage[]
   explainChatUsages  ExplainChatUsage[]
+  explanationFeedback ExplanationFeedback[]
   materialUploads    MaterialUpload[]
   referredBy         User?                @relation("Referral", fields: [referredById], references: [id], onDelete: SetNull)
   referrals          User[]               @relation("Referral")
@@ -216,6 +217,7 @@ model Exam {
   attempts  ExamAttempt[]
   reports   AnswerReport[]
   explanations QuestionExplanation[]
+  explanationFeedback ExplanationFeedback[]
   explanationBuys ExplanationPurchase[]
   reviewItems ReviewItem[]
   explanationUnlocks ExplanationUnlock[]
@@ -1121,6 +1123,28 @@ model ExplainChatUsage {
 
   @@id([userId, day])
   @@map("explain_chat_usage")
+}
+
+// Đánh giá 👍/👎 của người dùng cho lời giải thích AI của một câu: mỗi người một đánh giá cho mỗi câu, đổi ý thì ghi đè.
+// reason (WRONG | UNCLEAR | WRONG_SUBJECT | OTHER) và comment chỉ có khi không hữu ích; dùng để cải thiện prompt.
+model ExplanationFeedback {
+  id             Int      @id @default(autoincrement())
+  userId         Int      @map("user_id")
+  examId         Int      @map("exam_id")
+  questionNumber Int      @map("question_number")
+  helpful        Boolean
+  reason         String?  @db.VarChar(20)
+  comment        String?  @db.VarChar(500)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, examId, questionNumber])
+  @@index([helpful, updatedAt])
+  @@index([examId, questionNumber])
+  @@map("explanation_feedback")
 }
 
 enum MaterialStatus {
