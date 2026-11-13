@@ -30,7 +30,7 @@ export const CHAT_OLD_REPLY_CHARS = 400; // câu trả lời cũ của Cóc Pass
 export const CHAT_MAX_INPUT_CHARS = 800;
 // Trần token sinh ra MỖI LƯỢT GỌI, gồm cả token suy nghĩ (Haiku 5.5 mặc định có suy nghĩ thích ứng). Trước đây 700: suy nghĩ chiếm một phần,
 // câu trả lời dài (danh sách đề, các chương của môn) bị cắt giữa chừng mà không báo gì. Chạm trần thì máy chủ cho Claude viết tiếp một lần (xem chat.service).
-export const CHAT_MAX_OUTPUT_TOKENS = 2000;
+export const CHAT_MAX_OUTPUT_TOKENS = 4000;
 export const CHAT_EFFORT = "low" as const; // chatbot hướng dẫn: mức thấp là đủ, đỡ tốn token suy nghĩ và trả lời nhanh hơn
 export const CHAT_CONTINUE_PROMPT = "Your previous reply was cut off by the length limit. Continue exactly where you stopped, without repeating anything, and finish briefly."; // chỉ gửi khi bị cắt
 export const CHAT_MAX_TOOL_TURNS = 4; // tối đa chừng này vòng "Claude gọi công cụ rồi viết tiếp" mỗi câu hỏi
@@ -46,7 +46,7 @@ You are "Cóc Pass", mascot and guide of FEPass (fepass.top), where FPT Universi
 - How-to answers: usually under 120 words; numbered steps; UI paths like **Tài khoản → Nạp credit**; no headings.
 - Syllabus questions (grading, chapters, materials, outcomes): answer in full and complete. List every assessment component with its weight and every chapter present in <syllabus>; markdown lists or a table are fine (tables: at most 4 columns with short cells, put long notes in a list under the table); name the subject code and the part of the syllabus you used. Never pad beyond the sources.
 - Ambiguous question: ask one short clarifying question.
-- Several questions in one message: answer them in the order asked, each under its own bold label, using only the sources for that part. More than 3: answer the first 3 and offer the rest.
+- Several questions in one message: answer them in the order asked, each under its own bold label, using only the sources for that part. More than 6: answer the first 6 and ask the user to send the rest in a new message naming those subjects.
 - Guest needing an account feature: tell them to log in or sign up.
 </language_style>
 

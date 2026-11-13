@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { pickMultiHits } from "../src/utils/rag-select";
+import { effectiveKinds, pickMultiHits } from "../src/utils/rag-select";
 import { analyze } from "../src/services/syllabus-rag.service";
 
 const hit = (subject: string, kind: string, p: number, len = 100) => ({ slug: `${subject}:${kind}:1`, subject, p, content: "x".repeat(len) });
@@ -46,7 +46,22 @@ describe("pickMultiHits", () => {
     const out = pickMultiHits(big, [["A1"], ["B2"]], OPTS);
     assert.equal(out.filter((h) => h.subject === "B2").length, 2);
   });
+  it("gives the guaranteed share to chunks of the kinds asked for before higher scoring chunks of other kinds", () => {
+    const k = (kind: string, p: number, kindMatch: boolean) => ({ ...hit("CSI106", kind, p), kindMatch });
+    const out = pickMultiHits([k("overview", 0.6, true), k("cq", 0.38, false), k("assessment", 0.3, true), k("chapters", 0.29, true)], [["CSI106"]], { ...OPTS, maxPer: 2 });
+    assert.deepEqual(out.map((h) => h.slug), ["CSI106:overview:1", "CSI106:assessment:1"]);
+  });
   it("skips a code that has no chunks", () => {
     assert.deepEqual(pickMultiHits(list, [["ZZZ999"], ["MAD101"]], OPTS).map((h) => h.subject), ["MAD101", "MAD101", "MAD101"]);
+  });
+});
+
+describe("effectiveKinds", () => {
+  const DEFAULTS = ["overview", "assessment", "chapters"] as const;
+  it("falls back to the broad kinds when the question names no particular part", () => {
+    assert.deepEqual([...effectiveKinds(new Set<string>(), DEFAULTS)].sort(), ["assessment", "chapters", "overview"]);
+  });
+  it("keeps the kinds the question asked for", () => {
+    assert.deepEqual([...effectiveKinds(new Set(["materials"]), DEFAULTS)], ["materials"]);
   });
 });
