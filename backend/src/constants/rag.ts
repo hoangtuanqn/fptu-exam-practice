@@ -41,7 +41,7 @@ export const RAG_MAX_CONTEXT_CHARS = 9000; // ~2,5 nghìn token
 export const RAG_PER_CODE_MIN = 2; // câu hỏi nêu nhiều mã môn: mỗi mã luôn có ít nhất chừng này đoạn tốt nhất
 export const RAG_PER_CODE_MAX = 4; // ... và tối đa chừng này đoạn
 export const RAG_MULTI_MAX_CODES = 6; // chỉ xét chừng này mã môn đầu tiên trong một câu hỏi (quá thì bot dặn gửi phần còn lại ở tin nhắn mới)
-export const RAG_MULTI_MAX_CONTEXT_CHARS = 20000; // ngân sách ký tự chung cho câu hỏi nhiều môn (~6 nghìn token)
+export const RAG_MULTI_MAX_CONTEXT_CHARS = 30000; // ngân sách ký tự chung cho câu hỏi nhiều môn (~9 nghìn token)
 export const RAG_CROSS_SUBJECTS = 5; // câu hỏi không nêu môn: liệt kê tối đa chừng này môn
 export const RAG_SNIPPET_CHARS = 700; // mỗi môn trong danh sách chỉ lấy đoạn đầu của đoạn tốt nhất
 
