@@ -1,11 +1,10 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, ExternalLink } from "lucide-react";
-import { brand, logos } from "@/shared/brand/brand";
+import { ArrowRight } from "lucide-react";
 import { buttonClass } from "@/shared/ui/Button";
 import { GlossCard } from "@/shared/ui/GlossCard";
 import { SectionTitle } from "@/shared/ui/SectionTitle";
 
-// Hai thẻ nổi: kho đề FuOverflow và giải thích đáp án bằng AI
+// Hai thẻ nổi: luyện đề như thi thật và giải thích đáp án bằng AI (không dùng logo/tên thương hiệu của bên thứ ba)
 export function PartnerAiSection() {
   return (
     <section className="bg-surface-container-low px-5 py-12 sm:py-16">
@@ -14,17 +13,14 @@ export function PartnerAiSection() {
 
         <div className="mt-10 grid gap-4 md:grid-cols-2">
           <GlossCard lift className="p-5 sm:p-6">
-            <div className="flex items-center gap-3">
-              <img src={logos.partner} alt={brand.partnerName} className="h-10 w-10 rounded-full ring-2 ring-[#ffc61f]/40" />
-              <span className="md-label-medium uppercase tracking-wider text-on-surface-variant">Kho đề {brand.partnerName}</span>
-            </div>
-            <h3 className="md-title-large mt-5 text-on-surface">Luyện đề thi FE từ kho đề của {brand.partnerName}</h3>
+            <span className="md-label-medium inline-flex h-6 items-center rounded-m3-sm bg-secondary-container px-2.5 uppercase tracking-wider text-on-secondary-container">Kho đề</span>
+            <h3 className="md-title-large mt-5 text-on-surface">Luyện đề thi FE như thi thật</h3>
             <p className="md-body-medium mt-2 text-on-surface-variant">
               Dán link đề, hệ thống tự lấy về và lưu vào thư viện của bạn. Làm ngay như thi thật, có chấm điểm, tính giờ và lưu lịch sử từng lần làm.
             </p>
-            <a href={brand.partnerUrl} target="_blank" rel="noreferrer" className={buttonClass({ variant: "text", className: "mt-4 -ml-3" })}>
-              Xem kho đề <ExternalLink size={16} />
-            </a>
+            <Link to="/kho-de" className={buttonClass({ variant: "text", className: "mt-4 -ml-3" })}>
+              Xem kho đề <ArrowRight size={16} />
+            </Link>
           </GlossCard>
 
           <GlossCard lift className="p-5 sm:p-6">
