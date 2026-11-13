@@ -35,6 +35,8 @@ model User {
   examDate        DateTime? @map("exam_date") @db.Date // ngay thi nguoi dung dat de thu nhac co dem nguoc
   reminderSentOn  DateTime? @map("reminder_sent_on") @db.Date // ngay gan nhat da gui thu nhac (toi da 1 thu moi ngay)
   studyGoalDays Int @default(3) @map("study_goal_days") // muc tieu so ngay hoc moi tuan (3, 5 hoac 7)
+  marketingOptOut Boolean   @default(false) @map("marketing_opt_out") // tu choi thu marketing (huy qua lien ket trong thu hoac trong Ho so)
+  lastActiveAt    DateTime? @map("last_active_at") // lan dang nhap/lam moi phien gan nhat (ghi toi da 1 lan/gio); null = chua hoat dong tu khi co cot nay
   emailVerifiedAt DateTime? @map("email_verified_at") // chÆ°a xĂ¡c minh email thĂ¬ chÆ°a dĂ¹ng Ä‘Æ°á»£c cĂ¡c dá»‹ch vá»¥ trá»« credit
   createdAt DateTime   @default(now()) @map("created_at")
   updatedAt DateTime   @updatedAt @map("updated_at")
@@ -69,6 +71,7 @@ model User {
   explainChatUsages  ExplainChatUsage[]
   explanationFeedback ExplanationFeedback[]
   materialUploads    MaterialUpload[]
+  emailCampaignLogs  EmailCampaignLog[]
   referredBy         User?                @relation("Referral", fields: [referredById], references: [id], onDelete: SetNull)
   referrals          User[]               @relation("Referral")
   rewardsAsReferrer  ReferralReward[]     @relation("RewardReferrer")
@@ -76,6 +79,7 @@ model User {
 
   @@index([referredById])
   @@index([status]) // dashboard Ä‘áº¿m theo tráº¡ng thĂ¡i
+  @@index([lastActiveAt]) // chien dich win-back loc nguoi lau khong vao
   @@index([role, status]) // danh sĂ¡ch thĂ nh viĂªn lá»c vai trĂ²/tráº¡ng thĂ¡i
   @@map("users")
   practiceSessions PracticeSession[]
@@ -1211,4 +1215,21 @@ model MaterialChapter {
 
   @@id([uploadId, chapterNumber])
   @@map("material_chapters")
+}
+
+// Thu marketing tu dong da gui (win-back, moi Pro, nhac het han Pro). Ghi TRUOC khi gui: unique chan gui trung khi cron chay lai.
+// step: winback = 1..3; chien dich lap lai (pro_upsell, pro_expiry) = cycle * 10 + buoc, cycle = so ngay UTC tu 1970 (ngay gui / ngay het han Pro)
+model EmailCampaignLog {
+  id       Int      @id @default(autoincrement())
+  userId   Int      @map("user_id")
+  campaign String   @db.VarChar(20)
+  step     Int
+  sentAt   DateTime @default(now()) @map("sent_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, campaign, step])
+  @@index([userId, sentAt]) // gioi han 1 thu / 7 ngay moi nguoi
+  @@index([campaign, step]) // admin dem so thu da gui moi buoc
+  @@map("email_campaign_logs")
 }
