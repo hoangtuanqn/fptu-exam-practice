@@ -11,7 +11,7 @@ Mạnh hơn nhưng không làm chi phí tăng đáng kể.
 ## Mục tiêu / không phải mục tiêu / điều làm hỏng mục tiêu
 
 - Mục tiêu: (1) câu hỏi syllabus được trả lời đủ ý, dạng danh sách/bảng khi cần; (2) hỏi đề gần đây thì có danh sách đề mới nhất kèm trạng thái trong FEPass và link; (3) chi phí trung bình mỗi lượt chat tăng không quá khoảng 15% token vào.
-- Không làm: đổi model, bộ định tuyến hai tầng, "thẻ môn" dựng sẵn, thống kê tần suất chủ đề, giảng kiến thức môn (rule 2 giữ nguyên).
+- Không làm: cào FuOverflow trong lúc chat, đổi model, bộ định tuyến hai tầng, "thẻ môn" dựng sẵn, thống kê tần suất chủ đề, giảng kiến thức môn (rule 2 giữ nguyên).
 - Hỏng nếu: câu hỏi hướng dẫn dùng FEPass bỗng dài ra hoặc đắt hơn; bot khuyên một đề mà dữ liệu không có; bot bịa ngày hoặc điểm.
 
 ## Hiện trạng (đã đọc code)
@@ -19,7 +19,7 @@ Mạnh hơn nhưng không làm chi phí tăng đáng kể.
 - Model `claude-haiku-5-5`, effort `low`, trần 2000 token ra, prompt hệ thống được cache, cache câu trả lời theo ý (không dùng cho syllabus).
 - Syllabus: tìm BM25 + vector (`syllabus-rag.service.ts`), khi biết môn lấy 3 đến 5 đoạn, tối đa 9.000 ký tự. Có sẵn loại đoạn `assessment` ("Cách đánh giá") và nhận diện ý định "cách tính điểm".
 - Prompt dặn "thường dưới 120 từ, không tiêu đề": mâu thuẫn với yêu cầu trả lời đầy đủ.
-- Công cụ `find_fuo_exams` cào FuOverflow trực tiếp mỗi lần (chậm, tới 15 trang), không biết đề nào đã có trong FEPass.
+- Công cụ `find_fuo_exams` cào FuOverflow trực tiếp mỗi lần (chậm, tới 15 trang), không biết đề nào đã có trong FEPass; sẽ bị gỡ.
 - `catalogService.exams(code, query, userId)` đã gộp danh mục FuOverflow (bảng `fuo_threads`) với đề hệ thống: có kỳ (`term`), trạng thái `owned/ready/fetch`, số câu, giá lấy đề, sắp mới nhất trước. Chính là dữ liệu cần cho tư vấn.
 
 ## Các cách đã cân nhắc
@@ -30,9 +30,9 @@ Mạnh hơn nhưng không làm chi phí tăng đáng kể.
 
 ## Thiết kế
 
-1. **Công cụ mới `recent_exams`** (backend `chat-tools.service.ts`): nhận `subject` (mã môn), `limit` (mặc định 6, tối đa 10). Gọi `catalogService.exams` (không cào web). "Gần đây" = đề của kỳ hiện tại và kỳ liền trước (cùng quy tắc nhãn "Đề mới": SP tháng 1-4, SU 5-8, FA 9-12, giờ Việt Nam). Trả mảng gọn `[tiêu đề, kỳ, trạng thái, số câu, ngày đăng, link]`, kèm `price` và tổng số đề. Link: đề `ready`/`owned` dẫn `/exam/{threadId}`; đề `fetch` dẫn Kho đề của môn (`/account/exams?tab=subject&subject=CODE`). Không có đề nào trong hai kỳ gần nhất thì trả vài đề mới nhất có kèm ghi chú "không có đề kỳ gần đây". Hàm `isRecentTerm` đặt ở `backend/src/utils/term.ts` (bản backend của logic frontend `term.ts`), có test.
-2. **`find_fuo_exams` giữ lại** nhưng mô tả thu hẹp: chỉ dùng cho đề PE, đề cũ hơn, hoặc khi người dùng đòi danh sách đầy đủ ("slow, live"). Prompt dặn ưu tiên `recent_exams` cho "sắp thi", "đề gần đây", "đề mới".
-3. **Prompt** (`constants/chat.ts`): câu hỏi syllabus được trả lời đầy đủ, được dùng danh sách hoặc bảng markdown, nêu mã môn và phần đã dùng; câu hướng dẫn FEPass vẫn ngắn như cũ. Thêm quy tắc tư vấn đề: gọi `recent_exams`, xếp mới nhất trước, nói rõ đề nào mở ngay và đề nào tốn credit, không giảng kiến thức, không đoán điểm hay ngày. Cập nhật câu trạng thái công cụ ("Đang xem các đề gần đây của môn...").
+1. **Một công cụ đề duy nhất `recent_exams`, đọc từ chính hệ thống** (quyết định của chủ dự án: Cóc Pass không cào FuOverflow nữa). Nhận `subject` (mã môn), `recent` (mặc định bật), `term` (tìm theo kỳ, ví dụ FA25), `limit` (mặc định 6, tối đa 10), `offset`. Gọi `catalogService.exams` (đề trong bảng `fuo_threads` + đề hệ thống). "Gần đây" = đề của kỳ hiện tại và kỳ liền trước (cùng quy tắc nhãn "Đề mới": SP tháng 1-4, SU 5-8, FA 9-12, giờ Việt Nam). Trả mảng gọn `[tiêu đề, kỳ, trạng thái, số câu, ngày đăng, link]`, kèm `price`, tổng số đề và `catalogUpdatedAt` (ngày cập nhật gần nhất của danh mục). Link: đề `ready`/`owned` dẫn `/exam/{threadId}`; đề `fetch` dẫn Kho đề của môn (`/account/exams?tab=subject&subject=CODE`). Không có đề nào trong hai kỳ gần nhất thì trả vài đề mới nhất kèm ghi chú. Hàm `isRecentTerm` đặt ở `backend/src/utils/term.ts` (bản backend của logic frontend), có test.
+2. **Gỡ `find_fuo_exams` khỏi chatbot**: xoá định nghĩa công cụ, hàm chạy và dòng mô tả trong prompt. Sau đó kiểm tra `fuo-catalog.service.ts` còn nơi nào dùng không; không còn thì xoá, còn thì giữ. Đề PE không có trong danh mục này, nên bot chỉ trỏ người dùng tới trang Tải đề PE.
+3. **Prompt** (`constants/chat.ts`): câu hỏi syllabus được trả lời đầy đủ, được dùng danh sách hoặc bảng markdown, nêu mã môn và phần đã dùng; câu hướng dẫn FEPass vẫn ngắn như cũ. Thêm quy tắc tư vấn đề: gọi `recent_exams`, xếp mới nhất trước, nói rõ đề nào mở ngay và đề nào tốn credit, không giảng kiến thức, không đoán điểm hay ngày. Bỏ mô tả `find_fuo_exams`. Cập nhật câu trạng thái công cụ ("Đang xem các đề gần đây của môn...").
 4. **Ưu tiên đoạn syllabus**: đo trước bằng `scripts/eval-rag.ts` và vài câu thật. Chỉ nếu đoạn `assessment` không nằm trong các đoạn được chọn khi hỏi cách tính điểm thì mới ghim nó lên đầu (trong ngân sách đoạn cũ). Nếu đã đúng rồi thì bỏ qua bước này.
 5. **Theo dõi chi phí**: `chatLog` đã ghi `inputTokens/outputTokens/cacheReadTokens/truncated`. Ghi lại trung bình trước khi sửa và sau vài ngày để so.
 
@@ -40,7 +40,8 @@ Mạnh hơn nhưng không làm chi phí tăng đáng kể.
 
 - Chọn giới hạn token ra (đang 2000, có cơ chế cho viết tiếp một lần); tăng nếu thấy `truncated` nhiều ở câu syllabus.
 - Chi tiết văn bản prompt và câu trạng thái.
-- Chưa kiểm tra: nội dung thật của đoạn `assessment` các môn, và độ mới của bảng `fuo_threads` (được nhập bằng công cụ crawler, có thể cũ hơn danh sách trực tiếp).
+- Rủi ro đã biết: bảng `fuo_threads` do admin nhập tay bằng extension `fuo-crawler` và `npm run import:fuo-catalog` (hướng dẫn nói "thường đầu mỗi kỳ"), nên có thể thiếu đề mới đăng. Đề người dùng đã lấy vào hệ thống thì luôn mới. Giảm nhẹ bằng `catalogUpdatedAt` để bot nói rõ "danh mục cập nhật ngày ..."; việc nhập đều đặn là việc vận hành, ngoài phạm vi này.
+- Chưa kiểm tra: nội dung thật của đoạn `assessment` các môn.
 
 ## Kiểm chứng
 
