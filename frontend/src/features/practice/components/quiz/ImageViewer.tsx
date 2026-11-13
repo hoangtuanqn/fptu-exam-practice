@@ -7,9 +7,7 @@ import { ExamTimer } from "../ExamTimer";
 import { AnswerOptions } from "./AnswerOptions";
 import { AnswerStatus } from "./AnswerStatus";
 import { ExplainButton } from "./ExplainButton";
-import { FlagButton } from "./FlagButton";
 import { NextButton } from "./NextButton";
-import { QuestionKindBadge } from "./QuestionKindBadge";
 import type { QuestionViewProps } from "./types";
 import { ZoomControls } from "./ZoomControls";
 
@@ -28,8 +26,6 @@ export function ImageViewer({
   canCheck,
   hasPrev,
   hasNext,
-  flagged,
-  onToggleFlag,
   onChoose,
   onCheck,
   onPrev,
@@ -55,15 +51,18 @@ export function ImageViewer({
           Câu {question.number} <span className="font-sans text-sm font-normal text-slate-400">/ {total}</span>
         </div>
         {timer && <ExamTimer left={timer.left} limit={timer.limit} onDark />}
-        <ZoomControls
-          zoom={zoom.zoom}
-          canZoomIn={zoom.canZoomIn}
-          canZoomOut={zoom.canZoomOut}
-          onZoomIn={zoom.zoomIn}
-          onZoomOut={zoom.zoomOut}
-          onReset={zoom.reset}
-          onClose={onClose}
-        />
+        <div className="flex items-center gap-3">
+          {onExplain && <ExplainButton onExplain={onExplain} bought={explainBought} free={explainFree} />}
+          <ZoomControls
+            zoom={zoom.zoom}
+            canZoomIn={zoom.canZoomIn}
+            canZoomOut={zoom.canZoomOut}
+            onZoomIn={zoom.zoomIn}
+            onZoomOut={zoom.zoomOut}
+            onReset={zoom.reset}
+            onClose={onClose}
+          />
+        </div>
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col gap-3 px-3 pb-3 sm:px-5 sm:pb-5">
@@ -95,13 +94,6 @@ export function ImageViewer({
           </div>
 
           <div className="order-1 flex flex-1 flex-col items-stretch gap-2.5 sm:order-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-4 sm:gap-y-2">
-            <div className="flex items-center justify-between gap-2 sm:justify-start">
-              <QuestionKindBadge question={question} short />
-              <div className="flex items-center gap-2">
-                <FlagButton flagged={flagged} onToggle={onToggleFlag} />
-                {onExplain && <ExplainButton onExplain={onExplain} bought={explainBought} free={explainFree} />}
-              </div>
-            </div>
             <AnswerOptions compact question={question} selected={selected} revealed={revealed} onChoose={onChoose} />
             <AnswerStatus question={question} selected={selected} revealed={revealed} canCheck={canCheck} onCheck={onCheck} />
           </div>
