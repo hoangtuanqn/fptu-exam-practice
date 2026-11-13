@@ -1,6 +1,7 @@
 import { prisma } from "../configs/prisma";
 import { toMeta, type PaginationQuery } from "../utils/pagination";
 import { subjectCodeFromTitle } from "../utils/subject-code";
+import { termOf, termRank } from "../utils/term";
 import { crawlerSettingService } from "./crawler-setting.service";
 
 // Kho đề theo môn: gộp danh mục đề FE trên FuOverflow (bảng fuo_threads, nhập từ tools/fuo-crawler) với các đề hệ thống đã có sẵn.
@@ -62,13 +63,6 @@ async function fuoThreads() {
   return threads;
 }
 
-const TERM = /(?<![A-Za-z0-9])(SP|SU|FA)\s?-?\s?(\d{2})(?![0-9])/i;
-export const termOf = (title: string) => {
-  const m = title.match(TERM);
-  return m ? `${m[1]!.toUpperCase()}${m[2]}` : null;
-};
-// Kỳ mới hơn xếp trước: năm lớn hơn, cùng năm thì FA (cuối năm) > SU > SP
-const termRank = (t: string) => Number(t.slice(2)) * 10 + ({ FA: 3, SU: 2, SP: 1 }[t.slice(0, 2)] ?? 0);
 
 const LATEST_COUNT = 6;
 let latestCache: { at: number; items: LatestItem[] } | null = null;
