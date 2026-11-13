@@ -150,7 +150,15 @@ Tài khoản → Điểm FAP cho biết điểm trung bình từng học kỳ, d
 - Hỏi Cóc Pass: Cóc Pass hướng dẫn cách dùng trang này nhưng không đọc được điểm FAP của bạn.
 
 ## Gói Pro
-Gói Pro (trang `/pro`) mở rộng quyền lợi: không giới hạn lượt lấy đề, giải thích AI và tải đề PE, xem đầy đủ Câu hay ra, thống kê theo chủ đề và luyện riêng phần yếu, Sổ câu sai không giới hạn số câu. Giá và thời hạn xem ở trang Gói Pro (do quản trị viên cấu hình). Điểm FAP và lịch thi dùng được ở mọi gói.
+Gói Pro (trang `/pro`) mở rộng quyền lợi: không giới hạn lượt lấy đề, giải thích AI và tải đề PE, xem đầy đủ Câu hay ra, thống kê theo chủ đề và luyện riêng phần yếu, Sổ câu sai không giới hạn số câu. Giá và thời hạn hiện hành nằm ở khối live_facts (khi câu hỏi nhắc tới giá) và ở trang Gói Pro. Điểm FAP và lịch thi dùng được ở mọi gói.
+
+Có hai gói, cùng quyền lợi: Pro (dài hạn, theo tháng, tiết kiệm hơn so với mua VIP trực tiếp trên FuOverflow) và Pro Nước rút (ngắn hạn theo ngày, rẻ, hợp với người chỉ cần ôn gấp trước kỳ thi). Trả bằng credit trong ví, một lần, không tự gia hạn. Mua khi gói đang còn hạn thì thời gian được cộng dồn.
+
+## Gói Nước rút
+Gói Pro Nước rút (mua ở trang `/pro`) có đủ quyền lợi Pro nhưng chỉ trong một số ngày ngắn với giá thấp, phù hợp khi kỳ thi đã gần. Muốn dùng dài hơn thì mua gói Pro. Số ngày và giá hiện hành xem ở khối live_facts.
+
+## Vé Pro (mua trước, kích hoạt sau)
+Ở trang `/pro` bạn có thể mua vé Pro hoặc vé Nước rút để dành: credit trừ ngay lúc mua, nhưng thời hạn gói chỉ bắt đầu tính khi bạn bấm kích hoạt vé. Vé chưa kích hoạt có hạn dùng, quá hạn thì không kích hoạt được nữa, và mỗi tài khoản giữ được một số vé nhất định cùng lúc. Con số cụ thể xem ở khối live_facts.
 
 ## Kho đề của tôi
 Tài khoản → Kho đề của tôi liệt kê mọi đề bạn đã lấy. Từ đây bấm vào đề để làm tiếp, xem trạng thái đáp án (AI giải, chỉnh tay, đang phân tích...).
