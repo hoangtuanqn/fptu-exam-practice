@@ -5,3 +5,9 @@ const withUnderscore = (title: string) => title.match(/(?<![A-Za-z0-9])[A-Za-z]{
 
 // Mã môn trong tiêu đề đề thi ("PRO192 - SU26 - FE" hoặc "MAD101_SP26_FE"), null nếu không thấy
 export const subjectCodeFromTitle = (title: string) => subjectCodeOf(title) ?? withUnderscore(title);
+
+// Mã môn người dùng gõ ("pro 192", "pro-192", "Pro192") -> "PRO192"; null nếu không giống mã môn
+export function normalizeSubjectCode(raw: string): string | null {
+  const code = raw.replace(/[\s_-]+/g, "").toUpperCase();
+  return /^[A-Z0-9]{2,12}$/.test(code) ? code : null;
+}

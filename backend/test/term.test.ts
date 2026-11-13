@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { termOf, termRank } from "../src/utils/term";
+import { isRecentTerm, termIndex, termOf, termRank } from "../src/utils/term";
 
 describe("termOf", () => {
   it("reads short and 4-digit years", () => {
@@ -23,5 +23,30 @@ describe("termOf", () => {
     assert.ok(termRank("FA24") > termRank("SU24"));
     assert.ok(termRank("SU24") > termRank("SP24"));
     assert.ok(termRank("SP25") > termRank("FA24"));
+  });
+});
+
+describe("isRecentTerm", () => {
+  it("counts the current and the previous semester", () => {
+    const nov = new Date("2026-11-13T05:00:00Z");
+    assert.equal(isRecentTerm("FA26", nov), true);
+    assert.equal(isRecentTerm("SU26", nov), true);
+    assert.equal(isRecentTerm("SP26", nov), false);
+    assert.equal(isRecentTerm("FA25", nov), false);
+    assert.equal(isRecentTerm(null, nov), false);
+  });
+  it("rolls over the new year", () => {
+    const jan = new Date("2027-01-10T05:00:00Z");
+    assert.equal(isRecentTerm("FA26", jan), true);
+    assert.equal(isRecentTerm("SU26", jan), false);
+    assert.equal(isRecentTerm("SP27", jan), true);
+  });
+  it("uses Vietnam time at the semester boundary", () => {
+    assert.equal(isRecentTerm("SP26", new Date("2026-08-31T10:00:00Z")), true); // 31/08 17:00 ở Việt Nam: còn kỳ SU
+    assert.equal(isRecentTerm("SP26", new Date("2026-08-31T20:00:00Z")), false); // đã sang 01/09: kỳ FA
+  });
+  it("orders terms and rejects junk", () => {
+    assert.ok(termIndex("FA24")! > termIndex("SU24")!);
+    assert.equal(termIndex("xx"), null);
   });
 });
