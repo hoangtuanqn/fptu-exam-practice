@@ -59,6 +59,14 @@ export default function ChatWidget() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const acRef = useRef<AbortController | null>(null);
 
+  // Ô nhập tự cao lên theo nội dung (textarea không tự giãn): đo lại mỗi khi chữ hoặc độ rộng khung đổi, quá giới hạn thì cuộn trong ô
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [input, open, wide]);
+
   // Rời trang/đóng chat giữa lúc đang trả lời thì dừng luôn để không tốn token
   useEffect(() => () => acRef.current?.abort(), []);
 
@@ -297,7 +305,7 @@ export default function ChatWidget() {
                 }}
                 placeholder="Nhắn cho Cóc Pass…"
                 aria-label="Tin nhắn"
-                className="max-h-28 min-h-[2rem] flex-1 resize-none bg-transparent py-1.5 text-[14px] leading-5 text-slate-800 placeholder:text-slate-400 focus:outline-none disabled:opacity-60"
+                className="max-h-44 min-h-[2rem] flex-1 resize-none bg-transparent py-1.5 text-[14px] leading-5 text-slate-800 placeholder:text-slate-400 focus:outline-none disabled:opacity-60"
               />
               <button
                 type="submit"
