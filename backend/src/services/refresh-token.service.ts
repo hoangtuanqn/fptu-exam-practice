@@ -1,11 +1,21 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { env } from "../configs/env";
 import { refreshTokenRepository } from "../repositories/refresh-token.repository";
+import { userRepository } from "../repositories/user.repository";
 import { AppError } from "../rules/error";
+import { TtlCache } from "../utils/ttl-cache";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 // Hai tab cùng làm mới một lúc là chuyện bình thường: token vừa bị thay trong vài giây này không bị coi là bị đánh cắp
 const REUSE_GRACE_MS = 10_000;
+// Ghi lần hoạt động gần nhất (đăng nhập, làm mới phiên) tối đa 1 lần mỗi giờ mỗi người; nhớ trong bộ nhớ nên không tốn thêm truy vấn để kiểm tra
+const ACTIVE_TOUCH_MS = 60 * 60 * 1000;
+const touched = new TtlCache<number, true>(ACTIVE_TOUCH_MS, 20_000);
+const touchActive = (userId: number) => {
+  if (touched.get(userId)) return;
+  touched.set(userId, true);
+  userRepository.touchActive(userId, new Date()).catch((err) => console.error("[auth] không ghi được lần hoạt động:", (err as Error).message));
+};
 
 export interface ClientContext {
   ip?: string;
@@ -21,7 +31,9 @@ const hashToken = (token: string) => createHash("sha256").update(token).digest("
  * Token đã thu hồi mà bị đưa lại sau thời gian châm chước là dấu hiệu bị lộ: xoá cả phiên, buộc đăng nhập lại.
  */
 export const refreshTokenService = {
+  // Gọi khi đăng nhập (mọi cách) và khi xoay vòng token, nên cũng là chỗ ghi lần hoạt động gần nhất
   async issue(userId: number, ctx: ClientContext, familyId: string = randomUUID()) {
+    touchActive(userId);
     const token = randomBytes(48).toString("base64url");
     const expiresAt = new Date(Date.now() + env.REFRESH_TOKEN_DAYS * DAY_MS);
     await refreshTokenRepository.create({
