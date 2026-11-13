@@ -12,7 +12,7 @@ export const MODES: ModeConfig[] = [
   {
     value: "practice",
     label: "Luyện tập",
-    desc: "Chọn đáp án và xác nhận, kết quả từng câu hiện ngay để học.",
+    desc: "Chọn đáp án là hiện kết quả ngay (câu nhiều đáp án thì bấm xác nhận) để học.",
     Icon: Dumbbell,
   },
   {

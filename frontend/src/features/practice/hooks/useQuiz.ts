@@ -270,9 +270,11 @@ export function useQuiz() {
         : [option];
       return { ...prev, [number]: next };
     });
+    // Luyện tập, câu chọn một đáp án: chọn là chốt và hiện kết quả ngay, không cần bấm "Xác nhận"
+    if (mode === "practice" && hasAnswer(question) && !isMultiple(question)) setChecked((prev) => ({ ...prev, [number]: true }));
   }
 
-  // Luyện tập: chọn đáp án chưa tính ngay, phải bấm "Xác nhận" mới chốt và hiện kết quả
+  // Luyện tập, câu chọn nhiều đáp án: chọn xong phải bấm "Xác nhận" mới chốt và hiện kết quả
   // (trong lúc chưa xác nhận vẫn đổi đáp án thoải mái)
   function canCheck(question: Question) {
     return (
