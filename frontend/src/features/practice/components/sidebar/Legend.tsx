@@ -20,7 +20,7 @@ export function Legend({ mode, submitted }: { mode: Mode; submitted: boolean }) 
   const items = [...(mode === "practice" ? [...BASE, ...RESULT] : submitted ? RESULT : BASE), FLAG];
 
   return (
-    <div className="md-label-medium hidden flex-wrap gap-x-4 gap-y-1.5 border-t border-outline-variant px-4 py-3 font-normal text-on-surface-variant lg:flex">
+    <div className="md-label-medium flex flex-wrap gap-x-4 gap-y-1.5 border-t border-outline-variant pt-3 font-normal text-on-surface-variant">
       {items.map((item) => (
         <span key={item.label} className="inline-flex items-center gap-1.5">
           <span aria-hidden className={`h-3 w-3 rounded-sm ${item.dot}`} />
