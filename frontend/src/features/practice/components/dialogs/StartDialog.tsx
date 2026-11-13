@@ -22,14 +22,14 @@ interface Props {
 // Hộp thoại sau khi upload đề: xác nhận + chọn chế độ (không đổi được giữa chừng).
 // Chọn chế độ là nhóm radio (role=radiogroup), chọn thời gian là các filter chip.
 export function StartDialog({ title, total, graded, answersPending, replacing, onCancel, onStart }: Props) {
-  const [mode, setMode] = useState<Mode>("practice");
+  const [mode, setMode] = useState<Mode | null>(null); // chưa chọn thì chưa cho bắt đầu
   const [limit, setLimit] = useState<number>(TIME_LIMIT_OPTIONS[0]); // phút; mặc định 90, 0 = không giới hạn (chỉ dùng ở chế độ Thi)
   const [custom, setCustom] = useState(false); // chọn "Khác": người dùng tự nhập số phút
   const [customText, setCustomText] = useState("");
   const customMin = Number(customText);
   const customValid = Number.isInteger(customMin) && customMin >= TIME_LIMIT_MIN && customMin <= TIME_LIMIT_MAX;
   const effectiveLimit = mode !== "exam" ? 0 : custom ? (customValid ? customMin : 0) : limit;
-  const blocked = mode === "exam" && custom && !customValid; // chọn "Khác" mà chưa nhập số hợp lệ
+  const blocked = mode === null || (mode === "exam" && custom && !customValid); // chưa chọn chế độ, hoặc chọn "Khác" mà chưa nhập số hợp lệ
 
   return (
     <Modal onClose={onCancel}>
@@ -126,13 +126,13 @@ export function StartDialog({ title, total, graded, answersPending, replacing, o
           <p className="md-body-small mt-1.5 text-on-surface-variant">{effectiveLimit > 0 ? "Hết giờ, bài sẽ được tự nộp và chấm điểm." : "Đồng hồ chỉ để bạn theo dõi thời gian làm bài."}</p>
         </div>
       )}
-      <p className="md-body-small mt-3 text-on-surface-variant">Không đổi được chế độ khi đang làm bài.</p>
+      <p className="md-body-small mt-3 text-on-surface-variant">{mode === null ? "Chọn một chế độ để bắt đầu. Đóng hộp thoại để quay lại." : "Không đổi được chế độ khi đang làm bài."}</p>
 
       <ModalActions>
         <Button variant="text" onClick={onCancel}>
           Hủy
         </Button>
-        <Button variant="filled" disabled={blocked} onClick={() => onStart(mode, effectiveLimit > 0 ? effectiveLimit : null)}>
+        <Button variant="filled" disabled={blocked} onClick={() => mode && onStart(mode, effectiveLimit > 0 ? effectiveLimit : null)}>
           <Play size={18} />
           <span className="sm:hidden">Bắt đầu</span>
           <span className="hidden sm:inline">Bắt đầu làm bài</span>

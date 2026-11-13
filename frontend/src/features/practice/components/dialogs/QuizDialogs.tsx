@@ -13,15 +13,31 @@ interface Props {
   dialog: SubmitDialog;
   onDialogChange: (dialog: SubmitDialog) => void;
   onCloseZoom: () => void;
+  onCancelChoose: () => void; // đóng hộp thoại chọn chế độ của đề đã mở sẵn
   nextExam?: { remaining: number; onOpen: () => void }; // bộ đề theo chương nhiều đề: còn đề kế tiếp
 }
 
 // Quyết định hộp thoại nào đang hiện: bắt đầu / lỗi thư mục / xác nhận nộp / bảng điểm
-export function QuizDialogs({ quiz, topicSummary, dialog, onDialogChange, onCloseZoom, nextExam }: Props) {
+export function QuizDialogs({ quiz, topicSummary, dialog, onDialogChange, onCloseZoom, onCancelChoose, nextExam }: Props) {
   const { pending } = quiz;
 
   return (
     <>
+      {quiz.choosing && (
+        <StartDialog
+          title={quiz.title}
+          total={quiz.questions.length}
+          graded={quiz.questions.filter((q) => q.correct.length > 0).length}
+          answersPending={quiz.answersPending}
+          replacing={false}
+          onCancel={onCancelChoose}
+          onStart={(mode, limitMin) => {
+            quiz.chooseMode(mode, limitMin);
+            onCloseZoom();
+            onDialogChange(null);
+          }}
+        />
+      )}
       {pending && (
         <StartDialog
           title={pending.title}

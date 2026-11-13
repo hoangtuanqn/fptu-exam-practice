@@ -9,7 +9,7 @@ const HEARTBEAT_MS = 20_000; // cứ chừng này lại lưu một lần để t
 // tạo lượt mới mỗi lần bắt đầu/làm lại đề của hệ thống, tự lưu đáp án + vị trí + thời gian, và lưu nốt khi đóng/tải lại trang.
 // Nhờ vậy tải lại trang vẫn làm tiếp được đúng chỗ cũ.
 export function useSessionSync(quiz: Quiz) {
-  const { sessionId, setSessionId, examId, answersPending, mode, submitted, session } = quiz;
+  const { sessionId, setSessionId, examId, answersPending, mode, submitted, session, choosing } = quiz;
   const hasQuiz = quiz.questions.length > 0;
 
   // Luôn giữ bản mới nhất để các hàm lưu chạy lúc đóng trang không đọc phải giá trị cũ
@@ -53,7 +53,7 @@ export function useSessionSync(quiz: Quiz) {
   } | null>(null);
   const creating = useRef<string | null>(null);
   useEffect(() => {
-    if (!hasQuiz || examId === null || answersPending || sessionId !== null) return;
+    if (!hasQuiz || examId === null || answersPending || choosing || sessionId !== null) return; // chưa chọn chế độ thì chưa tạo lượt
     const key = `${session}:${examId}`;
     if (creating.current === key) return; // đang tạo (kể cả khi effect chạy lặp)
     creating.current = key;
@@ -73,7 +73,7 @@ export function useSessionSync(quiz: Quiz) {
         if (creating.current === key) creating.current = null; // thử lại ở lần render sau
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasQuiz, examId, answersPending, sessionId, session]);
+  }, [hasQuiz, examId, answersPending, choosing, sessionId, session]);
 
   // Lượt được mở lại từ danh sách làm dở: ghi nhớ để "Làm lại" còn biết bỏ lượt này
   useEffect(() => {
