@@ -1,5 +1,6 @@
 import { Children, isValidElement, type ReactNode } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { DotGraph } from "./DotGraph";
 
 // Khối mã ```dot / ```graphviz là một đồ thị: trả về nguồn DOT để vẽ thành hình (xem DotGraph), ngược lại null
@@ -27,6 +28,15 @@ const components: Components = {
     <blockquote className="mb-3 rounded-r-lg border-l-4 border-amber-400 bg-amber-50 px-3 py-2 text-amber-900 last:mb-0 [&>p]:mb-0">{children}</blockquote>
   ),
   hr: () => <hr className="my-4 border-slate-200" />,
+  // Bảng (GFM): cuộn ngang trong khung khi hẹp, ô gọn, hàng tiêu đề nổi và kẻ dòng để dễ đọc
+  table: ({ children }) => (
+    <div className="mb-3 overflow-x-auto rounded-lg border border-slate-200 last:mb-0">
+      <table className="w-full border-collapse text-left text-[13px] leading-snug">{children}</table>
+    </div>
+  ),
+  thead: ({ children }) => <thead className="bg-slate-100 text-slate-700">{children}</thead>,
+  th: ({ children }) => <th className="whitespace-nowrap px-2.5 py-1.5 font-semibold">{children}</th>,
+  td: ({ children }) => <td className="border-t border-slate-200 px-2.5 py-1.5 align-top">{children}</td>,
   a: ({ href, children }) => (
     <a href={href} {...(href?.startsWith("/") ? {} : { target: "_blank", rel: "noreferrer" })} className="font-medium text-brand-700 underline underline-offset-2">
       {children}
@@ -54,7 +64,7 @@ const components: Components = {
 export function Markdown({ children }: { children: string }) {
   return (
     <div className="text-sm leading-relaxed text-slate-700">
-      <ReactMarkdown components={components}>{children}</ReactMarkdown>
+      <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>{children}</ReactMarkdown>
     </div>
   );
 }
