@@ -8,6 +8,7 @@ import { QueryBoundary } from "@/shared/ui/QueryBoundary";
 import { Pagination } from "@/shared/ui/Table";
 import { formatCredit, formatDate } from "@/shared/utils/formatters";
 import { catalogApi, type CatalogItem } from "./catalog.api";
+import { NewExamBadge } from "./NewExamBadge";
 import { isPro } from "@/shared/utils/pro";
 import { trackPrompt } from "@/shared/utils/trackPrompt";
 import { ExamFilterBar, useExamListQuery } from "./ExamFilterBar";
@@ -40,7 +41,10 @@ export function PublicExamList({ code, pageSize }: { code: string; pageSize?: nu
                   <li key={e.threadId} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 py-3.5 transition hover:bg-surface-container-low/70">
                     {e.term && <span className="md-label-medium w-14 shrink-0 rounded-full bg-primary-container/70 px-2.5 py-1 text-center text-on-primary-container">{e.term}</span>}
                     <div className="min-w-0 flex-1">
-                      <p className="md-title-small truncate text-on-surface">{e.title}</p>
+                      <div className="flex min-w-0 items-center gap-2">
+                        <p className="md-title-small truncate text-on-surface">{e.title}</p>
+                        <NewExamBadge term={e.term} />
+                      </div>
                       <p className="md-body-small flex flex-wrap items-center gap-x-3 text-on-surface-variant">
                         {e.postedAt && <span>{formatDate(e.postedAt)}</span>}
                         {e.questions !== null ? <span>{e.questions} câu</span> : null}
