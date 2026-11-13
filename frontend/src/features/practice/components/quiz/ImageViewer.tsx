@@ -58,7 +58,7 @@ export function ImageViewer({
         />
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-4 px-5 pb-5 lg:flex-row">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 px-3 pb-3 sm:px-5 sm:pb-5">
         {/* Ảnh */}
         <div ref={zoom.scrollRef} className="min-h-0 flex-1 overflow-auto rounded-xl bg-surface-container-lowest p-4">
           {/* m-auto thay cho justify-center: ảnh nhỏ thì nằm giữa, ảnh tràn khung thì vẫn cuộn tới được mọi phía */}
@@ -75,31 +75,26 @@ export function ImageViewer({
           </div>
         </div>
 
-        {/* Đáp án */}
-        <aside className="flex shrink-0 flex-col rounded-xl bg-surface-container-lowest p-5 lg:w-80">
-          <div className="flex items-center justify-between">
-            <QuestionKindBadge question={question} short />
-            <FlagButton flagged={flagged} onToggle={onToggleFlag} />
-          </div>
-          <div className="mt-4 space-y-3">
-            <AnswerOptions question={question} selected={selected} revealed={revealed} onChoose={onChoose} />
-            <AnswerStatus
-              question={question}
-              selected={selected}
-              revealed={revealed}
-              canCheck={canCheck}
-              onCheck={onCheck}
-            />
-          </div>
-
-          <div className="mt-5 flex gap-2 lg:mt-auto">
-            <Button grow onClick={onPrev} disabled={!hasPrev}>
+        {/* Thanh trả lời nằm dưới ảnh, cùng kiểu với màn hình làm bài. Điện thoại: đáp án trước, hai nút Trước/Tiếp ngang bằng nhau bên dưới.
+            Máy tính: một hàng Trước | đáp án + trạng thái | Tiếp. Hai nút cùng cỡ (size sm) để không lệch nhau. */}
+        <section className="flex max-h-[45dvh] shrink-0 flex-col gap-2.5 overflow-y-auto rounded-xl bg-surface-container-lowest p-2.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 sm:px-4 sm:py-3">
+          <div className="order-2 grid grid-cols-2 gap-2 sm:contents">
+            <Button size="sm" onClick={onPrev} disabled={!hasPrev} className="!py-3 sm:order-1 sm:!py-2">
               <ChevronLeft size={16} />
               Trước
             </Button>
-            <NextButton grow hasNext={hasNext} onNext={onNext} onSubmit={onSubmit} />
+            <NextButton hasNext={hasNext} onNext={onNext} onSubmit={onSubmit} className="!py-3 sm:order-3 sm:!py-2" />
           </div>
-        </aside>
+
+          <div className="order-1 flex flex-1 flex-col items-stretch gap-2.5 sm:order-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-4 sm:gap-y-2">
+            <div className="flex items-center justify-between gap-2 sm:justify-start">
+              <QuestionKindBadge question={question} short />
+              <FlagButton flagged={flagged} onToggle={onToggleFlag} />
+            </div>
+            <AnswerOptions compact question={question} selected={selected} revealed={revealed} onChoose={onChoose} />
+            <AnswerStatus question={question} selected={selected} revealed={revealed} canCheck={canCheck} onCheck={onCheck} />
+          </div>
+        </section>
       </div>
     </div>
   );
