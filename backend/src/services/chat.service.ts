@@ -4,6 +4,7 @@ import { aiReady } from "../constants/ai";
 import { CHAT_CANNED, CHAT_CONTINUE_PROMPT, CHAT_EFFORT, CHAT_MAX_OUTPUT_TOKENS, CHAT_MAX_TOOL_TURNS, CHAT_MAX_TURNS, CHAT_MONEY_HINT, CHAT_OLD_REPLY_CHARS, CHAT_SYSTEM_PROMPT } from "../constants/chat";
 import { HTTP_STATUS } from "../constants/httpStatus";
 import { PE_PRICE } from "../constants/pe";
+import { PRO_PLAN, SPRINT_PLAN, TICKET_MAX_OPEN, TICKET_VALID_DAYS } from "../constants/plan";
 import { activePromoEnd, promoExpired } from "../constants/promo";
 import { ANSWER_REPORT_REWARD } from "../constants/report";
 import { AppError } from "../rules/error";
@@ -44,6 +45,9 @@ async function liveFacts() {
     promo.depositBonusTiers.length ? `Thưởng khi nạp: ${promo.depositBonusTiers.map((t) => `từ ${nf.format(t.min)} ₫ thưởng thêm ${t.percent}%`).join("; ")}.` : "Hiện không có thưởng khi nạp.",
     account.signupCredit > 0 ? `Tặng ${nf.format(account.signupCredit)} credit khi đăng ký tài khoản mới.` : "Không tặng credit khi đăng ký.",
     `Báo cáo đáp án đúng được thưởng ${nf.format(ANSWER_REPORT_REWARD)} credit.`,
+    `Gói ${PRO_PLAN.name}: ${nf.format(PRO_PLAN.price)} credit cho ${PRO_PLAN.months} tháng (mua trực tiếp gói VIP trên FuOverflow cùng thời hạn là ${nf.format(PRO_PLAN.fuoPrice)} ₫).`,
+    `Gói ${SPRINT_PLAN.name}: ${nf.format(SPRINT_PLAN.price)} credit cho ${SPRINT_PLAN.days} ngày, cùng quyền lợi Pro, dành cho ôn gấp trước kỳ thi.`,
+    `Vé Pro: mua trước, kích hoạt sau; chưa kích hoạt thì dùng được trong ${TICKET_VALID_DAYS} ngày, tối đa ${TICKET_MAX_OPEN} vé chưa kích hoạt mỗi tài khoản.`,
   ];
   factsCache = { at: Date.now(), text: lines.join("\n") };
   return factsCache.text;
