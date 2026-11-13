@@ -1,6 +1,6 @@
 import type { ImportedExam } from "@/features/exam-import/types";
 import type { PickFolder } from "@/features/practice/components/FolderInput";
-import { brand, logos } from "@/shared/brand/brand";
+import { brand } from "@/shared/brand/brand";
 import { FEATURES } from "../content";
 import { ExamSourcePicker } from "./ExamSourcePicker";
 import { PromoCard } from "./PromoCard";
@@ -56,18 +56,8 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
           {!isGuest && (
             <>
               <p className="md-body-large mx-auto mt-4 max-w-xl text-on-surface-variant">
-                Luyện đề thi FE từ kho đề của {brand.partnerName}, làm bài và nhận điểm thang 10 ngay.
+                Luyện đề thi FE, làm bài như thi thật và nhận điểm thang 10 ngay.
               </p>
-
-              <a
-                href={brand.partnerUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-4 inline-flex items-center gap-2 rounded-full border border-outline-variant bg-surface-container-lowest py-1 pl-1 pr-3.5 text-xs text-on-surface-variant shadow-m3-1 transition hover:border-primary/50"
-              >
-                <img src={logos.partner} alt={brand.partnerName} className="h-6 w-6 rounded-full" />
-                Kho đề từ <b className="font-semibold text-on-surface">{brand.partnerName}</b>
-              </a>
             </>
           )}
         </div>
