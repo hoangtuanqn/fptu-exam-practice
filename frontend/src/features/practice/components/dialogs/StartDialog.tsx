@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { Check, FileText, Play } from "lucide-react";
 import type { Mode } from "@/features/practice/types.ts";
 import { MODES } from "@/features/practice/config/modes";
 import { TIME_LIMIT_MAX, TIME_LIMIT_MIN, TIME_LIMIT_OPTIONS } from "@/features/practice/utils/timeLimit";
 import { Button } from "@/shared/ui/Button";
 import { Modal, ModalActions } from "@/shared/ui/Modal";
+
+const CHIP_ON = "border-transparent bg-secondary-container text-on-secondary-container";
+const CHIP_OFF = "border-outline text-on-surface-variant";
 
 interface Props {
   title: string;
@@ -20,7 +23,7 @@ interface Props {
 // Chọn chế độ là nhóm radio (role=radiogroup), chọn thời gian là các filter chip.
 export function StartDialog({ title, total, graded, answersPending, replacing, onCancel, onStart }: Props) {
   const [mode, setMode] = useState<Mode>("practice");
-  const [limit, setLimit] = useState<number>(0); // phút; 0 = không giới hạn (chỉ dùng ở chế độ Thi)
+  const [limit, setLimit] = useState<number>(TIME_LIMIT_OPTIONS[0]); // phút; mặc định 90, 0 = không giới hạn (chỉ dùng ở chế độ Thi)
   const [custom, setCustom] = useState(false); // chọn "Khác": người dùng tự nhập số phút
   const [customText, setCustomText] = useState("");
   const customMin = Number(customText);
@@ -77,34 +80,29 @@ export function StartDialog({ title, total, graded, answersPending, replacing, o
             {TIME_LIMIT_OPTIONS.map((m) => {
               const on = !custom && limit === m;
               return (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => {
-                    setCustom(false);
-                    setLimit(m);
-                  }}
-                  aria-pressed={on}
-                  className={`md-state md-motion md-label-large relative inline-flex h-8 items-center gap-1.5 rounded-m3-sm border px-3 after:absolute after:-inset-y-2 after:inset-x-0 after:content-[''] ${
-                    on ? "border-transparent bg-secondary-container text-on-secondary-container" : "border-outline text-on-surface-variant"
-                  }`}
-                >
-                  {on && <Check size={16} />}
-                  {m === 0 ? "Không giới hạn" : `${m} phút`}
-                </button>
+                <Fragment key={m}>
+                  {/* "Khác" đứng trước "Không giới hạn" */}
+                  {m === 0 && (
+                    <button type="button" onClick={() => setCustom(true)} aria-pressed={custom} className={`md-state md-motion md-label-large relative inline-flex h-8 items-center gap-1.5 rounded-m3-sm border px-3 after:absolute after:-inset-y-2 after:inset-x-0 after:content-[''] ${custom ? CHIP_ON : CHIP_OFF}`}>
+                      {custom && <Check size={16} />}
+                      Khác
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCustom(false);
+                      setLimit(m);
+                    }}
+                    aria-pressed={on}
+                    className={`md-state md-motion md-label-large relative inline-flex h-8 items-center gap-1.5 rounded-m3-sm border px-3 after:absolute after:-inset-y-2 after:inset-x-0 after:content-[''] ${on ? CHIP_ON : CHIP_OFF}`}
+                  >
+                    {on && <Check size={16} />}
+                    {m === 0 ? "Không giới hạn" : `${m} phút`}
+                  </button>
+                </Fragment>
               );
             })}
-            <button
-              type="button"
-              onClick={() => setCustom(true)}
-              aria-pressed={custom}
-              className={`md-state md-motion md-label-large relative inline-flex h-8 items-center gap-1.5 rounded-m3-sm border px-3 after:absolute after:-inset-y-2 after:inset-x-0 after:content-[''] ${
-                custom ? "border-transparent bg-secondary-container text-on-secondary-container" : "border-outline text-on-surface-variant"
-              }`}
-            >
-              {custom && <Check size={16} />}
-              Khác
-            </button>
           </div>
           {custom && (
             <label className="mt-2.5 flex items-center gap-2">
