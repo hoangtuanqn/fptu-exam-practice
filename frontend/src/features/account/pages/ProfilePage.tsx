@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Loader2 } from "lucide-react";
 import { AvatarUpload } from "@/features/account/components/AvatarUpload";
 import { EmailSection } from "@/features/account/components/EmailSection";
+import { MarketingEmailCard } from "@/features/account/components/MarketingEmailCard";
 import { ReminderCard } from "@/features/review/ReminderCard";
 import { userApi } from "@/features/account/api/user.api";
 import { Button } from "@/shared/ui/Button";
@@ -107,6 +108,7 @@ export default function ProfilePage() {
         <PasswordForm />
         <EmailSection />
         <ReminderCard />
+        <MarketingEmailCard />
       </div>
     </>
   );

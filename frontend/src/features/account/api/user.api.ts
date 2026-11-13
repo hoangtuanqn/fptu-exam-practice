@@ -3,7 +3,7 @@ import { http, sendForm } from "@/shared/api/client";
 import { PAGE_SIZE } from "@/shared/api/pagination";
 
 export const userApi = {
-  updateProfile: (body: { fullName: string }) => http.patch<User>("/users/me", body),
+  updateProfile: (body: { fullName?: string; marketingOptOut?: boolean }) => http.patch<User>("/users/me", body),
   changePassword: (body: { currentPassword: string; newPassword: string }) =>
     http.patch<null>("/users/me/password", body),
   transactions: (page = 1, limit = PAGE_SIZE) => http.list<WalletTransaction>("/users/me/transactions", { page, limit }),
