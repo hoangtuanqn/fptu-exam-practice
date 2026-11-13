@@ -1,4 +1,4 @@
-import { byKindThenP, effectiveKinds, pickMultiHits } from "../utils/rag-select";
+import { effectiveKinds, orderGroup, pickMultiHits } from "../utils/rag-select";
 import { prisma } from "../configs/prisma";
 import { EMBEDDING_DIMS, EMBEDDING_MODEL } from "../constants/chat";
 import { RAG_DEFAULT_KINDS, RAG_MULTI_MAX_CODES, RAG_MULTI_MAX_CONTEXT_CHARS, RAG_PER_CODE_MAX, RAG_PER_CODE_MIN, RAG_MIN_CHUNKS, KIND_INTENT, KIND_LABEL, RAG_CROSS_SUBJECTS, RAG_MAX_CHUNKS, RAG_MAX_CONTEXT_CHARS, RAG_POOL, RAG_SNIPPET_CHARS, RAG_WEIGHTS, SYLLABUS_WORDS, type RagWeights, type SyllabusKind } from "../constants/rag";
@@ -238,7 +238,7 @@ export async function candidates(question: string, qvec: number[] | null, weight
   // Chữ chỉ tải cho các đoạn tốt nhất (hoặc tất cả khi script đo cần)
   // Nhiều mã môn: tải chữ cho các đoạn tốt nhất của TỪNG mã (nếu không, mã có đoạn xếp thấp sẽ không có chữ để đưa vào ngữ cảnh)
   const groups = a.groups.slice(0, RAG_MULTI_MAX_CODES);
-  const slugs = groups.length > 1 && mode === "subject" ? new Set(groups.flatMap((g) => scored.filter((h) => g.includes(h.subject)).sort(byKindThenP).slice(0, RAG_PER_CODE_MAX).map((h) => h.slug))) : null;
+  const slugs = groups.length > 1 && mode === "subject" ? new Set(groups.flatMap((g) => orderGroup(scored.filter((h) => g.includes(h.subject))).slice(0, RAG_PER_CODE_MAX).map((h) => h.slug))) : null;
   const keep = opts.allContent ? scored : slugs ? scored.filter((h) => slugs.has(h.slug)) : scored.slice(0, CONTENT_TOP);
   const text = new Map((await prisma.subjectChunk.findMany({ where: { slug: { in: keep.map((h) => h.slug) } }, select: { slug: true, content: true } })).map((r) => [r.slug, r.content]));
   const list: RagHit[] = keep.map((h) => ({ ...h, content: text.get(h.slug) ?? "" }));

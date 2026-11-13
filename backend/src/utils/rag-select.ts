@@ -4,10 +4,24 @@ export interface PickableHit {
   p: number;
   content: string;
   kindMatch?: boolean; // đoạn thuộc phần syllabus mà câu hỏi nhắc tới
+  kind?: string; // loại đoạn (overview, assessment, chapters...)
 }
 
 /** Đoạn đúng loại được hỏi lên trước, rồi tới xác suất cao: đoạn "câu hỏi gợi ý" điểm cao không được chiếm chỗ của đoạn đánh giá/chương */
 export const byKindThenP = (a: Pick<PickableHit, "p" | "kindMatch">, b: Pick<PickableHit, "p" | "kindMatch">) => Number(!!b.kindMatch) - Number(!!a.kindMatch) || b.p - a.p;
+
+/**
+ * Thứ tự ưu tiên trong một nhóm mã môn: đoạn đúng loại được hỏi trước, rồi xác suất cao; mỗi LOẠI đoạn xuất hiện một lần trước khi loại nào lặp lại
+ * (PRO192 và PRO192C đều có "tổng quan" và "đánh giá": bản thứ hai không được chiếm chỗ của phần "chương").
+ */
+export function orderGroup<T extends Pick<PickableHit, "p" | "kindMatch" | "kind">>(hits: T[]): T[] {
+  const sorted = [...hits].sort(byKindThenP);
+  const seen = new Set<string | undefined>();
+  const first: T[] = [];
+  const rest: T[] = [];
+  for (const h of sorted) (seen.has(h.kind) ? rest : first).push(h), seen.add(h.kind);
+  return [...first, ...rest];
+}
 
 /**
  * Câu hỏi nêu nhiều mã môn: mỗi mã (nhóm các môn của mã đó, ví dụ PRO192 gồm PRO192 và PRO192C) có phần riêng trong ngữ cảnh,
@@ -17,7 +31,7 @@ export const byKindThenP = (a: Pick<PickableHit, "p" | "kindMatch">, b: Pick<Pic
  * Kết quả theo thứ tự nhóm (thứ tự người dùng gõ mã).
  */
 export function pickMultiHits<T extends PickableHit>(list: T[], groups: string[][], o: { include: number; minPer: number; maxPer: number; maxChars: number }): T[] {
-  const picked = groups.map((group) => list.filter((h) => group.includes(h.subject)).sort(byKindThenP));
+  const picked = groups.map((group) => orderGroup(list.filter((h) => group.includes(h.subject))));
   const taken = picked.map((hits) => hits.slice(0, o.minPer));
   let chars = taken.flat().reduce((n, h) => n + h.content.length, 0);
   picked.forEach((hits, g) => {

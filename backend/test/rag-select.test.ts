@@ -51,6 +51,13 @@ describe("pickMultiHits", () => {
     const out = pickMultiHits([k("overview", 0.6, true), k("cq", 0.38, false), k("assessment", 0.3, true), k("chapters", 0.29, true)], [["CSI106"]], { ...OPTS, maxPer: 2 });
     assert.deepEqual(out.map((h) => h.slug), ["CSI106:overview:1", "CSI106:assessment:1"]);
   });
+  it("lets different parts of a code win before a second variant of the same part", () => {
+    const k = (subject: string, kind: string, p: number) => ({ ...hit(subject, kind, p), kind, kindMatch: true });
+    // PRO192 và PRO192C đều có tổng quan và đánh giá: bản biến thể không được chiếm hết chỗ của phần chương
+    const list = [k("PRO192C", "overview", 0.64), k("PRO192", "overview", 0.63), k("PRO192", "assessment", 0.62), k("PRO192C", "assessment", 0.61), k("PRO192", "chapters", 0.3)];
+    const out = pickMultiHits(list, [["PRO192", "PRO192C"]], { ...OPTS, maxPer: 3 });
+    assert.deepEqual(out.map((h) => h.slug), ["PRO192C:overview:1", "PRO192:assessment:1", "PRO192:chapters:1"]);
+  });
   it("skips a code that has no chunks", () => {
     assert.deepEqual(pickMultiHits(list, [["ZZZ999"], ["MAD101"]], OPTS).map((h) => h.subject), ["MAD101", "MAD101", "MAD101"]);
   });

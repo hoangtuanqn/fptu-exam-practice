@@ -21,4 +21,7 @@ describe("chat system prompt", () => {
   it("keeps tables narrow enough for the chat window", () => {
     assert.ok(CHAT_SYSTEM_PROMPT.includes("at most 4 columns"));
   });
+  it("does not repeat itself when asked to continue after everything was answered", () => {
+    assert.ok(CHAT_SYSTEM_PROMPT.includes("already answered"));
+  });
 });
