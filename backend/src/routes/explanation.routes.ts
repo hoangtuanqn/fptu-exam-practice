@@ -5,7 +5,7 @@ import { CHAT_PER_MINUTE } from "../constants/ai";
 import { makeLimiter } from "../middlewares/rateLimit.middlewares";
 import { idempotent } from "../middlewares/idempotency.middlewares";
 import { validate } from "../middlewares/validate.middlewares";
-import { examIdParam, explainBody, explainChatBody, unlockBody } from "../rules/requests/explanation.request";
+import { examIdParam, explainBody, explainChatBody, explainFeedbackBody, unlockBody } from "../rules/requests/explanation.request";
 
 const explanationRouter = Router();
 
@@ -23,6 +23,8 @@ explanationRouter.get("/exams/:examId", validate(examIdParam, "params"), explana
 explanationRouter.post("/", requireVerifiedMember, validate(explainBody), explanationController.explain);
 explanationRouter.get("/chat/quota", explanationController.chatQuota);
 explanationRouter.post("/chat", requireVerifiedMember, chatLimiter, validate(explainChatBody), explanationController.chat);
+// Đánh giá lời giải: ghi đè được, mỗi người một đánh giá cho mỗi câu
+explanationRouter.post("/feedback", requireVerifiedMember, validate(explainFeedbackBody), explanationController.feedback);
 explanationRouter.post("/unlock", requireVerifiedMember, idempotent, validate(unlockBody), explanationController.unlock);
 
 export default explanationRouter;

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { paginationQuery } from "../../utils/pagination";
 import { CHAT_ASSISTANT_MAX_CHARS, CHAT_MAX_MESSAGES, CHAT_MESSAGE_MAX_CHARS } from "../../constants/ai";
 
 export const explainBody = z.object({
@@ -32,9 +33,25 @@ export const explainChatBody = z
   })
   .strict();
 
+// Đánh giá lời giải: reason và comment chỉ dùng khi không hữu ích (bỏ qua khi hữu ích)
+export const FEEDBACK_REASONS = ["WRONG", "UNCLEAR", "WRONG_SUBJECT", "OTHER"] as const;
+export const explainFeedbackBody = z
+  .object({
+    examId: z.number("Đề không hợp lệ").int().positive(),
+    questionNumber: z.number("Câu không hợp lệ").int().positive(),
+    helpful: z.boolean("Đánh giá không hợp lệ"),
+    reason: z.enum(FEEDBACK_REASONS, "Lý do không hợp lệ").optional(),
+    comment: z.string("Góp ý phải là văn bản").trim().max(500, "Góp ý tối đa 500 ký tự").optional(),
+  })
+  .strict();
+
+export const listFeedbackQuery = paginationQuery.extend({ helpful: z.enum(["up", "down"]).optional() });
+
 export const examIdParam = z.object({ examId: z.coerce.number().int().positive() });
 
 export type ExplainBody = z.infer<typeof explainBody>;
 export type UnlockBody = z.infer<typeof unlockBody>;
 export type ExplainChatBody = z.infer<typeof explainChatBody>;
+export type ExplainFeedbackBody = z.infer<typeof explainFeedbackBody>;
+export type ListFeedbackQuery = z.infer<typeof listFeedbackQuery>;
 export type ExamIdParam = z.infer<typeof examIdParam>;
