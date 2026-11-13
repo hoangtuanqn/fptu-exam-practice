@@ -1,9 +1,8 @@
 import { ChevronLeft } from "lucide-react";
 import { useImageZoom } from "@/features/practice/hooks/useImageZoom";
 import { useKeydown } from "@/features/practice/hooks/useKeydown";
-import { formatDuration } from "@/features/practice/utils/format";
 import { Button } from "@/shared/ui/Button";
-import { ExamTimerBar, timerTone } from "../ExamTimerBar";
+import { ExamTimer } from "../ExamTimer";
 import { AnswerOptions } from "./AnswerOptions";
 import { AnswerStatus } from "./AnswerStatus";
 import { FlagButton } from "./FlagButton";
@@ -43,18 +42,11 @@ export function ImageViewer({
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-scrim/90 backdrop-blur-sm">
       {/* Thanh công cụ */}
-      <div className="relative flex h-14 shrink-0 items-center justify-between gap-3 px-5 text-white">
+      <div className="flex h-14 shrink-0 items-center justify-between gap-3 px-5 text-white">
         <div className="font-serif text-lg font-semibold">
           Câu {question.number} <span className="font-sans text-sm font-normal text-slate-400">/ {total}</span>
         </div>
-        {timer && (
-          <>
-            <span title="Thời gian còn lại" className={`ml-auto whitespace-nowrap text-sm tabular-nums ${timerTone(timer.left, timer.limit).onDark}`}>
-              Còn {formatDuration(timer.left)}
-            </span>
-            <ExamTimerBar left={timer.left} limit={timer.limit} className="absolute inset-x-0 bottom-0" />
-          </>
-        )}
+        {timer && <ExamTimer left={timer.left} limit={timer.limit} onDark />}
         <ZoomControls
           zoom={zoom.zoom}
           canZoomIn={zoom.canZoomIn}
