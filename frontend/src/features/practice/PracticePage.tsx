@@ -101,7 +101,7 @@ export default function PracticePage({ threadId }: Props) {
   // Đồng hồ bắt đầu chạy (đề có đáp án rồi): báo cho học viên biết giờ đã được tính
   const wasTiming = useRef(false);
   useEffect(() => {
-    if (quiz.timing && !wasTiming.current && quiz.elapsed === 0) toast.success("Bắt đầu tính giờ làm bài");
+    if (quiz.timing && quiz.mode === "exam" && quiz.timeLimitSec !== null && !wasTiming.current && quiz.elapsed === 0) toast.success("Bắt đầu tính giờ làm bài");
     wasTiming.current = quiz.timing;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quiz.timing]);

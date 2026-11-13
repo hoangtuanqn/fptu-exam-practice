@@ -68,6 +68,8 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit }: Props)
       <WrongAnswerNudge trialsLeft={trialsLeft} unitPrice={info.data.price} bundle={showBundle ? bundle : undefined} onExplain={openExplain} onUnlock={() => setUnlockOpen(true)} />
     ) : undefined;
 
+  const timerOf = quiz.mode === "exam" && quiz.timeLimitSec && !quiz.submitted && quiz.timing ? { left: Math.max(0, quiz.timeLimitSec - quiz.elapsed), limit: quiz.timeLimitSec } : undefined;
+
   const view: QuestionViewProps = {
     question,
     total: quiz.questions.length,
@@ -110,7 +112,7 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit }: Props)
           questionNumber={question.number}
           firstTime={panel!.firstTime}
           useFreeTurn={panel!.useFreeTurn}
-          chat={!(quiz.timing && (quiz.mode === "exam" || quiz.timeLimitSec !== null))} // đồng hồ thi còn chạy thì không mở hỏi AI
+          chat={quiz.mode !== "exam" || quiz.submitted} // đang thi thì không mở hỏi AI
           onClose={() => setPanel(null)}
           onBought={() => {
             setBought((prev) => new Set(prev).add(question.number));
@@ -161,7 +163,7 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit }: Props)
         />
       )}
 
-      {zoomOpen && <ImageViewer {...view} onClose={() => onZoomChange(false)} />}
+      {zoomOpen && <ImageViewer {...view} timer={timerOf} onClose={() => onZoomChange(false)} />}
     </div>
   );
 }

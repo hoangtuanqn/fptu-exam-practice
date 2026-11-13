@@ -6,7 +6,8 @@
       "title": "Hỏi AI ngay dưới lời giải thích",
       "highlights": [
         "Chưa hiểu câu nào, hỏi AI ngay dưới lời giải thích",
-        "Lời giải thích bám đúng môn học, không còn lẫn sang ngôn ngữ khác"
+        "Lời giải thích bám đúng môn học, không còn lẫn sang ngôn ngữ khác",
+        "Chế độ Thi có thanh thời gian còn lại, luôn thấy cả khi phóng to ảnh"
       ],
       "changes": [
         {
@@ -16,6 +17,18 @@
         {
           "type": "fixed",
           "text": "Lời giải thích AI giờ biết đúng môn học (ví dụ PFP191 là Python) nên không còn giải thích nhầm sang Java hay C++"
+        },
+        {
+          "type": "improved",
+          "text": "Chế độ Thi có giới hạn giờ: thanh thời gian giảm dần và đổi màu khi gần hết giờ"
+        },
+        {
+          "type": "fixed",
+          "text": "Phóng to ảnh đề không còn che mất thời gian còn lại"
+        },
+        {
+          "type": "improved",
+          "text": "Chế độ Luyện tập không còn hiện đồng hồ, bạn học thoải mái hơn"
         }
       ]
     },
