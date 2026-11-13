@@ -14,6 +14,7 @@ export const chatBody = z.object({
     .refine((m) => m[m.length - 1]!.role === "user", "Tin cuối cùng phải là của người dùng")
     // Câu hỏi mới nhất giới hạn chặt hơn: đây là phần tốn token và được dùng để tìm kiếm
     .refine((m) => m[m.length - 1]!.content.length <= CHAT_MAX_INPUT_CHARS, `Câu hỏi tối đa ${CHAT_MAX_INPUT_CHARS} ký tự`),
+  captchaToken: z.string().max(2048).optional(), // token Turnstile khi hết một đợt tin nhắn trong ngày
 });
 
 export const updateChatSettingsBody = z.object({

@@ -16,6 +16,7 @@ import { chatSettingService } from "./chat-setting.service";
 import { crawlerSettingService } from "./crawler-setting.service";
 import { chatToolsFor, toolStatus, runChatTool } from "./chat-tools.service";
 import { chatCacheService, type Viewer } from "./chat-cache.service";
+import { chatQuotaService } from "./chat-quota.service";
 import { knowledgeService } from "./knowledge.service";
 import { formatRagContext, mightBeSyllabus, syllabusRagService } from "./syllabus-rag.service";
 import { promoSettingService } from "./promo-setting.service";
@@ -150,6 +151,9 @@ ${facts}
       h.onDelta(canned.reply);
       return {};
     }
+
+    // Giới hạn theo ngày (lời chào ở trên miễn phí): hết một đợt tin thì cần captcha
+    await chatQuotaService.check(owner, body.captchaToken, ip);
 
     // Cache: câu hỏi hướng dẫn chung đứng riêng mà đã từng được trả lời (cùng ý) thì trả lại luôn, không gọi Claude
     const viewer: Viewer = "userId" in owner ? "member" : "guest";
