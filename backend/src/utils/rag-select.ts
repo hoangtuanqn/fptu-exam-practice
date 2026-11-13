@@ -14,8 +14,9 @@ export const byKindThenP = (a: Pick<PickableHit, "p" | "kindMatch">, b: Pick<Pic
  * Thứ tự ưu tiên trong một nhóm mã môn: đoạn đúng loại được hỏi trước, rồi xác suất cao; mỗi LOẠI đoạn xuất hiện một lần trước khi loại nào lặp lại
  * (PRO192 và PRO192C đều có "tổng quan" và "đánh giá": bản thứ hai không được chiếm chỗ của phần "chương").
  */
-export function orderGroup<T extends Pick<PickableHit, "p" | "kindMatch" | "kind">>(hits: T[]): T[] {
-  const sorted = [...hits].sort(byKindThenP);
+export function orderGroup<T extends Pick<PickableHit, "p" | "kindMatch" | "kind" | "subject">>(hits: T[], primary?: string): T[] {
+  // Mã đúng như người dùng gõ (PRO192) trước bản biến thể của nó (PRO192C), rồi mới theo loại được hỏi và xác suất
+  const sorted = [...hits].sort((a, b) => Number(b.subject === primary) - Number(a.subject === primary) || byKindThenP(a, b));
   const seen = new Set<string | undefined>();
   const first: T[] = [];
   const rest: T[] = [];
@@ -31,7 +32,7 @@ export function orderGroup<T extends Pick<PickableHit, "p" | "kindMatch" | "kind
  * Kết quả theo thứ tự nhóm (thứ tự người dùng gõ mã).
  */
 export function pickMultiHits<T extends PickableHit>(list: T[], groups: string[][], o: { include: number; minPer: number; maxPer: number; maxChars: number }): T[] {
-  const picked = groups.map((group) => orderGroup(list.filter((h) => group.includes(h.subject))));
+  const picked = groups.map((group) => orderGroup(list.filter((h) => group.includes(h.subject)), group[0]));
   const taken = picked.map((hits) => hits.slice(0, o.minPer));
   let chars = taken.flat().reduce((n, h) => n + h.content.length, 0);
   picked.forEach((hits, g) => {

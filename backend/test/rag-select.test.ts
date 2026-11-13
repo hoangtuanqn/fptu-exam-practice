@@ -56,7 +56,7 @@ describe("pickMultiHits", () => {
     // PRO192 và PRO192C đều có tổng quan và đánh giá: bản biến thể không được chiếm hết chỗ của phần chương
     const list = [k("PRO192C", "overview", 0.64), k("PRO192", "overview", 0.63), k("PRO192", "assessment", 0.62), k("PRO192C", "assessment", 0.61), k("PRO192", "chapters", 0.3)];
     const out = pickMultiHits(list, [["PRO192", "PRO192C"]], { ...OPTS, maxPer: 3 });
-    assert.deepEqual(out.map((h) => h.slug), ["PRO192C:overview:1", "PRO192:assessment:1", "PRO192:chapters:1"]);
+    assert.deepEqual(out.map((h) => h.slug), ["PRO192:overview:1", "PRO192:assessment:1", "PRO192:chapters:1"]); // mã đúng như người dùng gõ (PRO192) trước bản biến thể (PRO192C)
   });
   it("skips a code that has no chunks", () => {
     assert.deepEqual(pickMultiHits(list, [["ZZZ999"], ["MAD101"]], OPTS).map((h) => h.subject), ["MAD101", "MAD101", "MAD101"]);
