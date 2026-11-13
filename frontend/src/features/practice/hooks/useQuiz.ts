@@ -63,9 +63,10 @@ export function useQuiz() {
   const [sessionId, setSessionId] = useState<number | null>(null); // lượt làm lưu trên server (null = chưa tạo / đề mở từ thư mục)
   const [restoredSubmitted, setRestoredSubmitted] = useState(false); // bài đã nộp được mở lại sau khi tải lại trang
   const [resumedElapsed, setResumedElapsed] = useState(0); // số giây đã làm ở lượt được làm tiếp
+  const [choosing, setChoosing] = useState(false); // đề đã mở sẵn phía sau nhưng người dùng chưa chọn chế độ: chưa tính giờ, chưa tạo lượt làm
 
   // Đồng hồ chỉ chạy khi có đáp án để làm: chờ AI phân tích xong mới bắt đầu tính, dừng khi nộp bài
-  const timing = questions.length > 0 && !submitted && !answersPending;
+  const timing = questions.length > 0 && !submitted && !answersPending && !choosing;
   const elapsed = useStopwatch(timing, session, resumedElapsed);
 
   const last = questions.length - 1;
@@ -150,6 +151,21 @@ export function useQuiz() {
     }
   }
 
+  // Mở đề ngay (màn hình làm bài hiện phía sau), chờ người dùng chọn chế độ ở hộp thoại; chưa chọn thì không tính giờ
+  function openForChoice(examQuestions: Question[], examTitle: string, id: number, source: AnswerSource = "AI", examTotal = examQuestions.length) {
+    openExam(examQuestions, examTitle, id, "practice", source, examTotal);
+    setChoosing(true);
+  }
+
+  // Người dùng chọn chế độ cho đề đã mở sẵn: từ lúc này mới tính giờ và tạo lượt làm
+  function chooseMode(chosenMode: Mode, limitMin: number | null = null) {
+    const limit = chosenMode === "exam" ? limitMin : null;
+    setMode(chosenMode);
+    setTimeLimitMin(limit);
+    saveTimeLimit(examId, limit);
+    setChoosing(false);
+  }
+
   // Bước 2: người dùng xác nhận và chọn chế độ
   function startExam(chosenMode: Mode, limitMin: number | null = null) {
     if (!pending) return;
@@ -179,6 +195,7 @@ export function useQuiz() {
 
   // Lấy đề thất bại giữa chừng: đề bị gỡ, thoát khỏi màn hình làm bài
   function closeExam() {
+    setChoosing(false);
     setPending(null);
     setQuestions([]);
     setReferences([]);
@@ -294,6 +311,9 @@ export function useQuiz() {
     waitForAnswers,
     mode,
     pending,
+    choosing,
+    openForChoice,
+    chooseMode,
     notFound,
     flagged,
     elapsed,

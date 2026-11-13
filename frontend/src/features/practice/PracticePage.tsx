@@ -53,7 +53,7 @@ export default function PracticePage({ threadId }: Props) {
   const hasQuiz = quiz.questions.length > 0;
   // Bộ đề theo chương nhiều đề: ?next=<thread>,<thread> là các đề còn lại sẽ làm lần lượt sau đề này
   const nextQueue = (new URLSearchParams(location.search).get("next") ?? "").split(",").filter((s) => /^\d{1,18}$/.test(s));
-  const anyDialogOpen = !!dialog || !!quiz.pending || quiz.notFound || trialEnded || referencesOpen;
+  const anyDialogOpen = !!dialog || !!quiz.pending || quiz.choosing || quiz.notFound || trialEnded || referencesOpen;
 
   // Lưu tiến độ lên server để tải lại trang vẫn làm tiếp được (chỉ với đề của hệ thống)
   const { flush } = useSessionSync(quiz);
@@ -242,7 +242,7 @@ export default function PracticePage({ threadId }: Props) {
             submitted: saved.status === "SUBMITTED",
           });
         } else if (mode === "practice" || mode === "exam") quiz.openExam(exam.questions, exam.title, exam.id, mode, exam.answerStatus, exam.totalQuestions);
-        else quiz.loadExam(exam.questions, exam.title, exam.id, exam.answerStatus, exam.totalQuestions);
+        else quiz.openForChoice(exam.questions, exam.title, exam.id, exam.answerStatus, exam.totalQuestions); // đề hiện sẵn phía sau, hộp thoại chọn chế độ nằm đè lên
       })
       .catch((err: unknown) => {
         if (stale) return;
@@ -262,19 +262,27 @@ export default function PracticePage({ threadId }: Props) {
 
   // Địa chỉ luôn khớp với đề đang làm: đề hệ thống -> /exam/:threadId?mode=..., đề mở từ thư mục -> "/"
   useEffect(() => {
-    if (!hasQuiz) return;
+    if (!hasQuiz || quiz.choosing) return; // chưa chọn chế độ thì địa chỉ chưa có ?mode
     const chapterQs = new URLSearchParams(location.search).getAll("t").map((t) => `&t=${encodeURIComponent(t)}`).join(""); // giữ bộ đề theo chương khi tải lại
     const nextQs = nextQueue.length > 0 ? `&next=${encodeURIComponent(nextQueue.join(","))}` : ""; // giữ hàng đợi các đề còn lại khi tải lại
     const target = openedId !== null && openedThread ? `/exam/${openedThread}?mode=${quiz.mode}${quiz.sessionId ? `&session=${quiz.sessionId}` : ""}${chapterQs}${nextQs}` : "/";
     if (location.pathname + location.search !== target) navigate(target, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasQuiz, openedId, openedThread, quiz.mode, quiz.sessionId]);
+  }, [hasQuiz, quiz.choosing, openedId, openedThread, quiz.mode, quiz.sessionId]);
 
   // Đang ở /exam/:threadId mà huỷ hộp thoại chọn chế độ thì về trang chủ
   useEffect(() => {
     if (threadId && !hasQuiz && !quiz.pending && !opening && loadedFor.current === threadId) navigate("/", { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quiz.pending]);
+
+  // Đóng hộp thoại chọn chế độ: bỏ đề vừa mở và quay lại trang đã bấm (không có trang trước trong ứng dụng thì về trang chủ)
+  const cancelChoosing = () => {
+    quiz.closeExam();
+    const canGoBack = ((window.history.state as { idx?: number } | null)?.idx ?? 0) > 0;
+    if (canGoBack) navigate(-1);
+    else navigate("/", { replace: true });
+  };
 
   const pick: typeof quiz.loadFolder = (files, name) => {
     if (!user && trial.used) {
@@ -304,7 +312,7 @@ export default function PracticePage({ threadId }: Props) {
         onShowResult={() => setDialog("result")}
       />
 
-      <QuizDialogs quiz={quiz} topicSummary={topicSummary} dialog={dialog} onDialogChange={setDialog} onCloseZoom={() => setZoomOpen(false)} nextExam={nextQueue.length > 0 ? { remaining: nextQueue.length, onOpen: openNext } : undefined} />
+      <QuizDialogs quiz={quiz} topicSummary={topicSummary} dialog={dialog} onDialogChange={setDialog} onCloseZoom={() => setZoomOpen(false)} onCancelChoose={cancelChoosing} nextExam={nextQueue.length > 0 ? { remaining: nextQueue.length, onOpen: openNext } : undefined} />
       {leaveAsk && (
         <Modal onClose={() => setLeaveAsk(false)}>
           <ModalTitle icon={TriangleAlert}>Thoát và bỏ bài đang làm?</ModalTitle>
