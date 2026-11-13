@@ -22,6 +22,7 @@ import { SubjectPicker } from "@/features/subject/SubjectPicker";
 import { catalogApi, type CatalogItem } from "./catalog.api";
 import { ExamFilterBar, useExamListQuery } from "./ExamFilterBar";
 import { featuredSubjects } from "./featuredSubjects";
+import { NewExamBadge } from "./NewExamBadge";
 
 const COMPACT_PAGE_SIZE = 6; // trang chủ: chỉ vài đề mỗi trang để không đẩy các phần bên dưới đi quá xa
 
@@ -127,7 +128,10 @@ function ExamList({ code, onBack, compact }: { code: string; onBack: () => void;
                   {data.items.map((e) => (
                     <li key={e.threadId} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 py-3.5">
                       <div className="min-w-0 flex-1">
-                        <p className="md-title-small truncate text-on-surface">{e.title}</p>
+                        <div className="flex min-w-0 items-center gap-2">
+                          <p className="md-title-small truncate text-on-surface">{e.title}</p>
+                          <NewExamBadge term={e.term} />
+                        </div>
                         <p className="md-body-small flex flex-wrap items-center gap-x-3 text-on-surface-variant">
                           {e.postedAt && <span>{formatDate(e.postedAt)}</span>}
                           {e.questions !== null ? <span>{e.questions} câu</span> : null}
