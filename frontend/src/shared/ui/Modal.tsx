@@ -11,7 +11,8 @@ const FOCUSABLE = 'a[href], button:not(:disabled), input:not(:disabled), select:
  * "khung chứa" của lớp phủ position:fixed và làm nó chỉ phủ một mảng nhỏ thay vì cả màn hình.
  * Truy cập: role=dialog + aria-modal, nhốt phím Tab trong hộp, Esc để đóng, trả focus về nút đã mở hộp thoại khi đóng.
  */
-export function Modal({ children, onClose, wide = false }: { children: ReactNode; onClose?: () => void; wide?: boolean }) {
+export function Modal({ children, onClose, wide = false, light = false }: { children: ReactNode; onClose?: () => void; wide?: boolean; light?: boolean }) {
+  // light: nền phủ rất nhạt để vẫn thấy rõ nội dung phía sau (ví dụ hộp chọn chế độ nằm đè lên đề đã mở)
   const box = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -50,7 +51,7 @@ export function Modal({ children, onClose, wide = false }: { children: ReactNode
     <div
       // Bấm vào vùng nền (scrim) bên ngoài hộp thoại thì đóng (chỉ khi bấm đúng nền, không phải khi bấm trong hộp)
       onMouseDown={(e) => e.target === e.currentTarget && onClose?.()}
-      className="md-scrim-in fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-scrim/32 p-4"
+      className={`md-scrim-in fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto ${light ? "bg-scrim/10" : "bg-scrim/32"} p-4`}
     >
       <div
         ref={box}

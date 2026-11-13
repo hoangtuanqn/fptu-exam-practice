@@ -32,7 +32,7 @@ export function StartDialog({ title, total, graded, answersPending, replacing, o
   const blocked = mode === null || (mode === "exam" && custom && !customValid); // chưa chọn chế độ, hoặc chọn "Khác" mà chưa nhập số hợp lệ
 
   return (
-    <Modal onClose={onCancel}>
+    <Modal onClose={onCancel} light>
       <h2 className="md-headline-small text-on-surface">Bắt đầu làm đề</h2>
 
       <div className="mt-4 rounded-m3-md bg-surface-container-highest px-4 py-3">
