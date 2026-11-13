@@ -22,7 +22,7 @@ const STATUS_STYLE: Record<QuestionStatus, { cls: string; name: string }> = {
   ungraded: { cls: "border-outline-variant bg-surface-container-high text-on-surface-variant", name: "chưa có đáp án" },
 };
 
-// Dải số câu gọn nằm ngang: màu theo trạng thái, vòng primary ở câu đang xem (aria-current), cuộn ngang khi nhiều câu.
+// Bảng số câu (trong popup): màu theo trạng thái, vòng primary ở câu đang xem (aria-current), cuộn dọc khi nhiều câu.
 export function QuestionGrid({ questions, answers, checked, flagged, submitted, current, total = 0, onSelect }: Props) {
   const boxRef = useRef<HTMLDivElement>(null);
 
@@ -32,8 +32,8 @@ export function QuestionGrid({ questions, answers, checked, flagged, submitted, 
   }, [current]);
 
   return (
-    <div ref={boxRef} className="min-w-0 flex-1 overflow-x-auto py-1">
-      <div role="list" aria-label="Danh sách câu hỏi" className="flex gap-1.5 px-1">
+    <div ref={boxRef} className="max-h-[50dvh] overflow-y-auto p-1">
+      <div role="list" aria-label="Danh sách câu hỏi" className="grid grid-cols-6 gap-2 sm:grid-cols-8">
         {questions.map((q, i) => {
           const status = getStatus(q, answers[q.number], submitted || !!checked[q.number]);
           const { cls, name } = STATUS_STYLE[status];
@@ -45,8 +45,8 @@ export function QuestionGrid({ questions, answers, checked, flagged, submitted, 
                 title={`Câu ${q.number}: ${name}`}
                 aria-label={`Câu ${q.number}, ${name}${flagged[q.number] ? ", đã đánh dấu" : ""}`}
                 onClick={() => onSelect(i)}
-                className={`md-state md-motion md-label-large relative flex h-9 w-9 items-center justify-center rounded-full border ${cls} ${
-                  i === current ? "ring-2 ring-primary ring-offset-2 ring-offset-surface-container-low" : ""
+                className={`md-state md-motion md-label-large relative flex h-10 w-full items-center justify-center rounded-m3-sm border ${cls} ${
+                  i === current ? "ring-2 ring-primary ring-offset-2 ring-offset-surface" : ""
                 }`}
               >
                 {q.number}
@@ -59,7 +59,7 @@ export function QuestionGrid({ questions, answers, checked, flagged, submitted, 
           <span
             key={`loading-${k}`}
             aria-hidden
-            className="md-label-large flex h-9 w-9 shrink-0 animate-pulse items-center justify-center rounded-full border border-dashed border-outline-variant text-outline"
+            className="md-label-large flex h-10 w-full animate-pulse items-center justify-center rounded-m3-sm border border-dashed border-outline-variant text-outline"
           >
             {questions.length + k + 1}
           </span>
