@@ -12,25 +12,43 @@ export function Footer() {
     <footer className="mt-auto shrink-0 border-t border-outline-variant bg-surface-container-low">
       <div className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-4 sm:flex-row sm:px-6 sm:py-6 sm:items-center sm:justify-between sm:gap-8">
         <div className="flex items-center gap-3 sm:gap-4">
-          <a href={home} target="_blank" rel="noreferrer" title={brand.company} className="shrink-0">
+          <a
+            href={home}
+            target="_blank"
+            rel="noreferrer"
+            title={brand.company}
+            className="shrink-0"
+          >
             <Logo className="h-6 sm:h-8" />
           </a>
           <div className="md-body-small text-on-surface-variant">
             <div>
-              <span className="font-medium text-on-surface">{brand.product}</span> · Phát triển bởi{" "}
-              <a href={home} target="_blank" rel="noreferrer" className="font-medium text-primary hover:underline">
+              <span className="font-medium text-on-surface">
+                {brand.product}
+              </span>{" "}
+              · Phát triển bởi{" "}
+              <a
+                href={home}
+                target="_blank"
+                rel="noreferrer"
+                className="font-medium text-primary hover:underline"
+              >
                 {brand.company}
               </a>
             </div>
             <div>
-              <Link to="/changelog" className="font-medium text-primary hover:underline">
+              <Link
+                to="/changelog"
+                className="font-medium text-primary hover:underline"
+              >
                 Phiên bản v{APP_VERSION} · Có gì mới
               </Link>
             </div>
-            <div>Không liên kết với FuOverflow hay trường Đại học FPT. Tên và nhãn hiệu thuộc về chủ sở hữu của chúng.</div>
             <div>
               Founder: {brand.founder}
-              {brand.coFounders.length > 0 && <> · Co-Founder: {brand.coFounders.join(", ")}</>}
+              {brand.coFounders.length > 0 && (
+                <> · Co-Founder: {brand.coFounders.join(", ")}</>
+              )}
             </div>
           </div>
         </div>
