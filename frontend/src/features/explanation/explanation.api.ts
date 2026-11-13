@@ -28,7 +28,16 @@ export interface ExplanationResult {
   charged: number; // credit vừa bị trừ (0 nếu đã mua trước đó)
   balanceAfter: number;
   freeTurnUsed?: boolean; // đã dùng 1 lượt miễn phí cho câu này
+  feedback?: boolean | null; // đánh giá 👍/👎 của người dùng cho lời giải này (null = chưa đánh giá; máy chủ cũ không trả)
 }
+
+export type FeedbackReason = "WRONG" | "UNCLEAR" | "WRONG_SUBJECT" | "OTHER";
+export const FEEDBACK_REASONS: { value: FeedbackReason; label: string }[] = [
+  { value: "WRONG", label: "Sai đáp án hoặc kết luận" },
+  { value: "UNCLEAR", label: "Khó hiểu" },
+  { value: "WRONG_SUBJECT", label: "Nhầm môn hoặc ngôn ngữ" },
+  { value: "OTHER", label: "Khác" },
+];
 
 export interface UnlockResult {
   charged: number;
@@ -53,6 +62,7 @@ export interface ExplainChatMessage {
 export const CHAT_QUOTA_EXCEEDED = "CHAT_QUOTA_EXCEEDED";
 
 export const explanationApi = {
+  feedback: (body: { examId: number; questionNumber: number; helpful: boolean; reason?: FeedbackReason; comment?: string }) => http.post<{ helpful: boolean }>("/explanations/feedback", body),
   chatQuota: async () => (await http.get<{ quota: ChatQuota }>("/explanations/chat/quota")).quota,
   chat: (examId: number, questionNumber: number, messages: ExplainChatMessage[]) => http.post<{ reply: string; quota?: ChatQuota }>("/explanations/chat", { examId, questionNumber, messages }),
   info: (examId: number) => http.get<ExplanationInfo>(`/explanations/exams/${examId}`),
