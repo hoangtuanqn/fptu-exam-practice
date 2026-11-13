@@ -43,7 +43,6 @@ Logo là **con Cóc Pass ngồi trên chữ "FEPass"** (chữ phông Lilita One,
 | `backend/assets/mail/cover.png`, `logo.png` | Ảnh bìa và logo trong email |
 | `chrome-extension/icons/icon*.png` | Icon tiện ích Chrome |
 | `frontend/public/brand/mst-logo-*.png` | Logo công ty MST Software (bản cũ, giữ để dùng khi cần ghi nhận nhà phát triển) |
-| `frontend/public/brand/fuoverflow.webp` | Logo đối tác kho đề FuOverflow |
 
 Dùng component `Logo` (`src/shared/brand/Logo.tsx`), không gắn `<img>` logo trực tiếp.
 **Watermark** đóng lên ảnh đề (`backend/assets/brand/watermark.png`) là tài sản riêng, không thuộc bộ logo này và không đổi theo thương hiệu.
