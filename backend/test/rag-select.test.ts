@@ -41,6 +41,11 @@ describe("pickMultiHits", () => {
     const out = pickMultiHits([hit("A1", "x", 0.5, 5000), hit("B2", "x", 0.4, 5000), hit("C3", "x", 0.3, 5000)], [["A1"], ["B2"], ["C3"]], { ...OPTS, maxChars: 1000 });
     assert.deepEqual(out.map((h) => h.subject), ["A1", "B2", "C3"]);
   });
+  it("never lets the extras of earlier codes eat the guaranteed share of later codes", () => {
+    const big = [hit("A1", "a", 0.9, 4000), hit("A1", "b", 0.8, 4000), hit("A1", "c", 0.7, 4000), hit("A1", "d", 0.6, 4000), hit("B2", "a", 0.5, 4000), hit("B2", "b", 0.4, 4000)];
+    const out = pickMultiHits(big, [["A1"], ["B2"]], OPTS);
+    assert.equal(out.filter((h) => h.subject === "B2").length, 2);
+  });
   it("skips a code that has no chunks", () => {
     assert.deepEqual(pickMultiHits(list, [["ZZZ999"], ["MAD101"]], OPTS).map((h) => h.subject), ["MAD101", "MAD101", "MAD101"]);
   });
