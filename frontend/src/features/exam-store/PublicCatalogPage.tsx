@@ -1,6 +1,6 @@
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, BookOpen, ClipboardPaste, Layers, PlayCircle } from "lucide-react";
+import { ArrowLeft, BookOpen, ClipboardPaste } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useSignupGift } from "@/features/landing/useSignupGift";
 import { Footer } from "@/shared/layout/Footer";
@@ -27,10 +27,6 @@ export default function PublicCatalogPage() {
   useEffect(() => trackPrompt("library-page", "shown"), []);
   const gift = useSignupGift();
 
-  const totals = useMemo(() => {
-    const data = subjects.data ?? [];
-    return { exams: data.reduce((n, s) => n + s.total, 0), subjects: data.length };
-  }, [subjects.data]);
   const current = subjects.data?.find((s) => s.code === code);
 
   return (
@@ -59,15 +55,6 @@ export default function PublicCatalogPage() {
                   Kho đề thi <span className="italic text-primary">FE</span> của mọi môn
                 </h1>
                 <p className="md-body-large mx-auto mt-3 max-w-xl text-on-surface-variant">Chọn môn (lọc theo Kỳ 0 đến Kỳ 9) để xem danh sách đề, số credit mở mỗi đề ghi ngay trên nút. Mở đề ra luyện với đáp án, giải thích từng câu và chấm điểm thang 10.</p>
-                {totals.exams > 0 && (
-                  <Stats
-                    items={[
-                      { icon: BookOpen, text: `${(overview?.examsKnown ?? totals.exams).toLocaleString("vi-VN")} đề` },
-                      { icon: Layers, text: `${totals.subjects} môn` },
-                      ...(overview && overview.examsReady > 0 ? [{ icon: PlayCircle, text: `${overview.examsReady.toLocaleString("vi-VN")} đề mở ngay` }] : []),
-                    ]}
-                  />
-                )}
                 {!user && (
                   <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
                     <Link to="/register" className={`md-label-large inline-flex h-11 items-center justify-center rounded-full px-6 transition hover:brightness-105 ${GOLD_BUTTON}`}>
