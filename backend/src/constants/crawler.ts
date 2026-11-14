@@ -40,3 +40,8 @@ export const EXAM_STALE_AFTER_DAYS = 120;
 export const EXAM_REFRESH_RETRY_HOURS = 24;
 
 export const EXAM_IMAGES_DIR = "images";
+// Tệp đính kèm không phải ảnh (pdf, zip, video...): lưu nguyên bản ở exams/<threadId>/files/
+export const EXAM_FILES_DIR = "files";
+export const ATTACHMENT_MAX_BYTES = 50 * 1024 * 1024; // mỗi tệp; lớn hơn thì bỏ qua tệp đó (không hỏng cả đề)
+export const ATTACHMENT_TOTAL_MAX_BYTES = 200 * 1024 * 1024; // cả đề
+export const ATTACHMENT_NAME_MAX = 120; // độ dài tên lưu trên đĩa (không đuôi), filePath trong DB tối đa 255

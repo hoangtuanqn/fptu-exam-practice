@@ -1,20 +1,26 @@
 import * as cheerio from "cheerio";
 import { sanitizeName, stripExt, uniqueName } from "../../utils/filename";
+import { isFuoHttpsUrl } from "../../utils/fuo-url";
 import type { FuoClient } from "./fuo-client";
-import type { ImageRef, ThreadData } from "./types";
+import type { FileRef, ImageRef, ThreadData } from "./types";
 
 const IMAGE_SELECTOR = ".message-body img, .bbWrapper img, .message-attachments img, a.js-lbImage";
+const FILE_SELECTOR = ".message-attachments li.file a.file-preview[href]";
 const MAX_PAGES = 30; // chặn vòng lặp phân trang bất thường
 
 type RawImage = Omit<ImageRef, "fileBase">;
 
+// Tên kèm đuôi suy ra từ URL attachments: "/attachments/q1-jpg.263611/" -> "q1.jpg"
+function nameFromUrl(url: URL): string {
+  const last = decodeURIComponent(url.pathname.split("/").filter(Boolean).pop() ?? "");
+  const slug = last.replace(/\.\d+$/, ""); // "q1-jpg.263611" -> "q1-jpg"
+  return slug.replace(/-([A-Za-z0-9]{2,5})$/, ".$1");
+}
+
 /** Tên gốc: ưu tiên `alt` ("Q1.jpg"), nếu không có thì suy ra từ URL attachments ("q1-jpg.263611"). */
 function deriveName(alt: string | undefined, url: URL): string {
   if (alt && /\.[A-Za-z0-9]{2,5}$/.test(alt.trim())) return stripExt(alt.trim());
-
-  const last = decodeURIComponent(url.pathname.split("/").filter(Boolean).pop() ?? "");
-  const slug = last.replace(/\.\d+$/, ""); // "q1-jpg.263611" -> "q1-jpg"
-  return stripExt(slug.replace(/-([A-Za-z0-9]{2,5})$/, ".$1"));
+  return stripExt(nameFromUrl(url));
 }
 
 // Chỉ nhận bài có nhãn (badge) này ở tiêu đề: <span class="label label--red">Đề Thi FE</span>
@@ -87,6 +93,30 @@ export function extractImages(html: string, baseUrl: string): RawImage[] {
   return [...found.values()];
 }
 
+/** Tệp đính kèm không phải ảnh (li.file của mục "Đính kèm"); link nào extractImages đã lấy thì không tính lại. */
+export function extractFiles(html: string, baseUrl: string): FileRef[] {
+  const $ = cheerio.load(html);
+  const images = new Set(extractImages(html, baseUrl).map((img) => new URL(img.url).pathname));
+  const found = new Map<string, FileRef>(); // khử trùng theo pathname như ảnh
+
+  $(FILE_SELECTOR).each((_, el) => {
+    const $a = $(el);
+    if ($a.is(".js-lbImage") || $a.find("img").length) return; // ảnh
+    try {
+      const abs = new URL($a.attr("href")!, baseUrl);
+      // Chỉ link https của FuOverflow: lúc tải sẽ gửi kèm cookie admin
+      if (!isFuoHttpsUrl(abs.href) || !abs.pathname.includes("/attachments/") || images.has(abs.pathname) || found.has(abs.pathname)) return;
+      const $name = $a.closest("li.file").find(".file-name").first();
+      const raw = ($name.attr("title") || $name.text()).trim();
+      found.set(abs.pathname, { url: abs.href, name: sanitizeName(raw || nameFromUrl(abs), "file") });
+    } catch {
+      /* bỏ qua URL lỗi */
+    }
+  });
+
+  return [...found.values()];
+}
+
 /** Người đăng và thời gian của bài đầu tiên trong trang. */
 export function extractFirstPost(html: string): { author?: string; postedAt?: string } {
   const $ = cheerio.load(html);
@@ -112,6 +142,7 @@ function findNextPage(html: string, currentUrl: string): string | null {
 /** Duyệt toàn bộ các trang của thread: title, signature, người đăng và danh sách ảnh (khử trùng lặp). */
 export async function collectThread(client: FuoClient, startUrl: string): Promise<ThreadData> {
   const images = new Map<string, RawImage>();
+  const files = new Map<string, FileRef>();
   const visited = new Set<string>();
   let title = "";
   let signature: ReturnType<typeof extractThreadSignature> = { threadId: null, canonicalUrl: null };
@@ -130,13 +161,15 @@ export async function collectThread(client: FuoClient, startUrl: string): Promis
       firstPost = extractFirstPost(html);
     }
     for (const img of extractImages(html, next)) images.set(new URL(img.url).pathname, img);
+    for (const file of extractFiles(html, next)) files.set(new URL(file.url).pathname, file);
     next = findNextPage(html, next);
     if (next) await client.pause();
   }
 
-  if (!images.size) {
+  for (const path of images.keys()) files.delete(path); // ảnh ở trang này có thể hiện dạng tệp ở trang khác
+  if (!images.size && !files.size) {
     throw new Error(
-      `Không tìm thấy ảnh nào trong "${title}". Đề phải là ảnh; hoặc cookie hết hạn, Cloudflare chặn.`,
+      `Không tìm thấy ảnh hay tệp đính kèm nào trong "${title}". Có thể cookie hết hạn hoặc Cloudflare chặn.`,
     );
   }
 
@@ -149,5 +182,6 @@ export async function collectThread(client: FuoClient, startUrl: string): Promis
     author: firstPost.author,
     postedAt: firstPost.postedAt,
     images: named.map((img) => ({ ...img, fileBase: uniqueName(img.name, used) })),
+    files: [...files.values()],
   };
 }

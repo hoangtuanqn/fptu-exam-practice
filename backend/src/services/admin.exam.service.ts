@@ -41,6 +41,7 @@ export const adminExamService = {
     const ai = await aiSettingService.get();
     if (!aiReady(ai)) throw new AppError("Chưa bật AI hoặc chưa có khóa API ở Quản trị → AI giải đáp án");
     if (!(await examRepository.findByThreadIdOfId(id))) throw AppError.notFound("Không tìm thấy đề");
+    if ((await examRepository.countQuestions(id)) === 0) throw new AppError("Đề này không có câu hỏi để AI giải");
     if (!examSolveService.enqueue(id)) throw AppError.conflict("Đề này đang được AI giải");
   },
 

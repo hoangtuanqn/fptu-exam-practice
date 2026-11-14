@@ -21,7 +21,21 @@ export interface ImportedExam {
   answerStatus: AnswerSource; // PENDING = AI đang phân tích đáp án
   totalQuestions: number; // lớn hơn questions.length = đề còn đang được lấy về, các câu sau đến qua socket
   questions: Question[];
+  attachments?: ExamAttachment[]; // tệp không phải ảnh (pdf, zip...); máy chủ cũ không trả về. Đề chỉ có tệp thì questions rỗng
 }
+
+// Tệp đính kèm của đề. url công khai, mở thẳng bằng <a href>; thêm download=1 để tải về
+export interface ExamAttachment {
+  id: number;
+  name: string;
+  mime: string;
+  sizeBytes: number;
+  kind: "pdf" | "archive" | "text" | "video" | "audio" | "other";
+  url: string;
+}
+
+// Đề chỉ có tệp đính kèm, không có câu hỏi để làm trên web
+export const isFilesOnly = (e: ImportedExam) => e.totalQuestions === 0 && e.questions.length === 0 && (e.attachments?.length ?? 0) > 0;
 
 // Sự kiện realtime "exam:answers" (cũng là kết quả GET /exams/:id/answers, không có examId)
 export interface ExamAnswersPayload {

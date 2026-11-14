@@ -229,6 +229,7 @@ model Exam {
   reviewItems ReviewItem[]
   explanationUnlocks ExplanationUnlock[]
   savedQuestions SavedQuestion[]
+  attachments ExamAttachment[]
 
   @@index([subjectCode, answerSource])
   @@map("exams")
@@ -259,6 +260,23 @@ model ExamQuestion {
 
   @@unique([examId, number])
   @@map("exam_questions")
+}
+
+// Non-image attachment of the thread (pdf, zip, video...), stored as-is under exams/<threadId>/files/
+model ExamAttachment {
+  id        Int      @id @default(autoincrement())
+  examId    Int      @map("exam_id")
+  name      String   @db.VarChar(255) // display name from the thread
+  filePath  String   @map("file_path") @db.VarChar(255) // relative to STORAGE_DIR, like imagePath
+  mime      String   @db.VarChar(100)
+  sizeBytes Int      @map("size_bytes")
+  sourceUrl String   @map("source_url") @db.VarChar(500)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@unique([examId, filePath]) // leftmost examId also serves the FK and lookups by exam
+  @@map("exam_attachments")
 }
 
 enum CrawlJobStatus {

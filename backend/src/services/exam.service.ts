@@ -1,4 +1,5 @@
 import { examAttemptRepository } from "../repositories/exam-attempt.repository";
+import { examAttachmentRepository } from "../repositories/exam-attachment.repository";
 import { examRepository } from "../repositories/exam.repository";
 import { userExamRepository } from "../repositories/user-exam.repository";
 import type { Db } from "../repositories/wallet.repository";
@@ -7,7 +8,10 @@ import { examSolveService } from "./exam-solve.service";
 import { AppError } from "../rules/error";
 import { isMember, type Actor, type Owner } from "../utils/actor";
 import { failedMessage, toAnswersPayload } from "../utils/exam-answers";
-import { fileUrlOf } from "../utils/file-url";
+import { storageDir } from "../configs/env";
+import { attachmentKind } from "../utils/attachment";
+import { resolveInside } from "../utils/exam-zip";
+import { attachmentUrlOf, fileUrlOf } from "../utils/file-url";
 import { toMeta, type PaginationQuery } from "../utils/pagination";
 
 const imageUrlOf = fileUrlOf;
@@ -41,8 +45,9 @@ export const examService = {
     const byExam = new Map(stats.map((s) => [s.examId, s]));
 
     return {
-      items: items.map(({ exam, createdAt }) => ({
+      items: items.map(({ exam: { _count, ...exam }, createdAt }) => ({
         ...exam,
+        attachments: _count.attachments, // số tệp đính kèm (pdf, zip...)
         addedAt: createdAt,
         attempts: byExam.get(exam.id)?._count._all ?? 0,
         bestScore: byExam.get(exam.id)?._max.score ?? null,
@@ -73,7 +78,24 @@ export const examService = {
         isReference: q.isReference,
         topic: q.topic, // chủ đề theo syllabus môn (null nếu chưa gắn)
       })),
+      // Tệp đính kèm không phải ảnh; đề chỉ có tệp thì questions rỗng
+      attachments: exam.attachments.map((a) => ({
+        id: a.id,
+        name: a.name,
+        mime: a.mime,
+        sizeBytes: a.sizeBytes,
+        kind: attachmentKind(a.filePath),
+        url: attachmentUrlOf(exam.id, a.id),
+      })),
     };
+  },
+
+  // Tệp đính kèm của đề: công khai như ảnh đề (/api/v1/files), chỉ cần đúng cặp đề + tệp
+  async getAttachmentFile(examId: number, attachmentId: number) {
+    const row = await examAttachmentRepository.find(examId, attachmentId);
+    const abs = row && resolveInside(storageDir, row.filePath);
+    if (!row || !abs) throw AppError.notFound("Không tìm thấy tệp");
+    return { abs, name: row.name, filePath: row.filePath };
   },
 
   // Giao diện hỏi lại định kỳ trong lúc AI phân tích: chỉ trả trạng thái và đáp án, nhẹ hơn tải cả đề
