@@ -4,6 +4,7 @@
  *
  *   npm run import:coursera-courses -- --file=<path to courses.json> --dry-run   read only, print the counts
  *   npm run import:coursera-courses -- --file=<path to courses.json>             write
+ *   add --price=50000 to charge one flat price for every course instead of the file's prices
  *
  * Safe to re-run: new codes are created active; existing ones only get title/price updated when they differ
  * (isActive is left alone so an admin's pause sticks). Nothing is deleted. Price changes apply to future orders only.
@@ -45,7 +46,11 @@ async function main() {
   const file = args.get("file");
   if (!file) throw new Error("Usage: npm run import:coursera-courses -- --file=<courses.json> [--dry-run]");
   const dry = args.has("dry-run");
-  const { resolved, total, rows, skipped } = readInput(file);
+  const flat = args.get("price");
+  const flatPrice = flat === undefined ? undefined : z.coerce.number().int().min(0).max(COURSERA.maxPrice).parse(flat);
+  const input = readInput(file);
+  const { resolved, total, skipped } = input;
+  const rows = flatPrice === undefined ? input.rows : input.rows.map((r) => ({ ...r, price: flatPrice }));
   console.log(`File: ${resolved}: ${total} items, ${rows.length} valid unique codes, ${skipped.length} skipped.`);
   for (const s of skipped.slice(0, 15)) console.log("  skipped", s);
 
