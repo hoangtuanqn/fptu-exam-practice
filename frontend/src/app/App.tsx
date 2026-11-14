@@ -55,6 +55,7 @@ const FeaturesPage = lazy(() => import("@/features/landing/FeaturesPage"));
 const ChangelogPage = lazy(() => import("@/features/changelog/ChangelogPage"));
 const PlanPage = lazy(() => import("@/features/plan/PlanPage"));
 const GradesPage = lazy(() => import("@/features/grade/GradesPage"));
+const CourseraPage = lazy(() => import("@/features/coursera/CourseraPage"));
 const ProfilePage = lazy(() => import("@/features/account/pages/ProfilePage"));
 
 const AttemptsPage = lazy(() => import("@/features/history/pages/AttemptsPage"));
@@ -73,6 +74,7 @@ const ACCOUNT_NAV: NavItem[] = [
   { to: "/account/grades", label: "Điểm FAP", icon: GraduationCap, group: "Kết quả" },
   { to: "/pro", label: "Gói Pro", icon: Crown, group: "Ví và Pro" },
   { to: "/account/deposit", label: "Ví", icon: Wallet, group: "Ví và Pro", also: ["/account/transactions", "/account/giftcode", "/account/referral"] },
+  { to: "/account/coursera", label: "Coursera", icon: GraduationCap, group: "Dịch vụ" },
   { to: "/account/profile", label: "Hồ sơ", icon: UserRound, group: "Tài khoản" },
 ];
 
@@ -152,6 +154,7 @@ export default function App() {
             <Route path="giftcode" element={<GiftCodePage />} />
             <Route path="transactions" element={<TransactionsPage />} />
             <Route path="nhan-luot" element={<ClaimTurnPage />} />
+            <Route path="coursera" element={<CourseraPage />} />
             <Route path="profile" element={<ProfilePage />} />
           </Route>
         </Route>

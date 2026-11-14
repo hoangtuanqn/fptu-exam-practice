@@ -11,6 +11,7 @@ import type { NavItem } from "@/shared/layout/PanelLayout";
  *   content/   Đề thi, báo cáo đáp án, cấu hình lấy đề, AI giải đáp án
  * Menu và đường dẫn khai báo ở đây, thêm trang mới chỉ cần sửa file này.
  */
+const AdminCourseraPage = lazy(() => import("@/features/coursera/AdminCourseraPage"));
 const DashboardPage = lazy(() => import("./overview/DashboardPage"));
 const UsersPage = lazy(() => import("./users/UsersPage"));
 const UserDetailPage = lazy(() => import("./users/UserDetailPage"));
@@ -41,6 +42,7 @@ const MarketingPage = lazy(() => import("./marketing/MarketingPage"));
 
 export const ADMIN_NAV: NavItem[] = [
   { to: "/admin", label: "Tổng quan", icon: LayoutDashboard, end: true, group: "Chung" },
+  { to: "/admin/coursera", label: "Coursera", icon: ShoppingBag, group: "Dịch vụ" },
   { to: "/admin/users", label: "Thành viên", icon: Users, group: "Người dùng" },
   { to: "/admin/referrals", label: "Giới thiệu", icon: UserPlus, group: "Người dùng" },
   { to: "/admin/account-settings", label: "Cấu hình đăng ký", icon: SlidersHorizontal, group: "Người dùng" },
@@ -70,6 +72,7 @@ export const ADMIN_NAV: NavItem[] = [
 export const adminRoutes = (
   <>
     <Route index element={<DashboardPage />} />
+    <Route path="coursera" element={<AdminCourseraPage />} />
     <Route path="users" element={<UsersPage />} />
     <Route path="users/:id" element={<UserDetailPage />} />
     <Route path="purchases" element={<PurchasesPage />} />

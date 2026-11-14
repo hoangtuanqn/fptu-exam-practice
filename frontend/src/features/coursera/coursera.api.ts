@@ -1,0 +1,23 @@
+import { http } from "@/shared/api/client";
+
+export const ORDER_LABELS = {
+  PENDING: "Chờ xử lý", PROCESSING: "Đang xử lý", COMPLETED: "Hoàn tất", REJECTED: "Từ chối", CANCELLED: "Đã hủy",
+} as const;
+export type OrderStatus = keyof typeof ORDER_LABELS;
+export interface CourseraCourse { id: number; title: string; url: string; isActive: boolean }
+export interface CourseraOrder {
+  id: number; userId: number; courseId: number; courseTitle: string; courseUrl: string;
+  email: string; note: string; status: OrderStatus; adminNote: string; createdAt: string; updatedAt: string;
+}
+export interface OrderInput { requestKey: string; courseId: number; email: string; password: string; note: string }
+export type CourseInput = Omit<CourseraCourse, "id">;
+
+export const courseraApi = {
+  courses: (q: string, page: number, admin = false) => http.list<CourseraCourse>(`${admin ? "/admin" : ""}/coursera/courses`, { q, page }),
+  orders: (page: number, status?: OrderStatus, admin = false) => http.list<CourseraOrder>(`${admin ? "/admin" : ""}/coursera/orders`, { page, status }),
+  create: (data: OrderInput) => http.post<CourseraOrder>("/coursera/orders", data),
+  cancel: (id: number) => http.post<CourseraOrder>(`/coursera/orders/${id}/cancel`),
+  saveCourse: (data: CourseInput, id?: number) => id ? http.put<CourseraCourse>(`/admin/coursera/courses/${id}`, data) : http.post<CourseraCourse>("/admin/coursera/courses", data),
+  update: (id: number, expectedStatus: OrderStatus, status: OrderStatus, adminNote: string) => http.patch<CourseraOrder>(`/admin/coursera/orders/${id}`, { expectedStatus, status, adminNote }),
+  credentials: (id: number) => http.post<{ email: string; password: string }>(`/admin/coursera/orders/${id}/credentials`),
+};
