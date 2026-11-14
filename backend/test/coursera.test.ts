@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { after, before, describe, it } from "node:test";
-import { encryptCourseraPassword, decryptCourseraPassword } from "../src/utils/coursera-credentials";
+import { encryptCourseraPassword, decryptCourseraPassword, readCourseraPassword } from "../src/utils/coursera-credentials";
 import { courseraCourseBody, courseraOrderBody } from "../src/rules/requests/coursera.request";
 
 describe("Coursera credentials and validation", () => {
@@ -26,6 +26,18 @@ describe("Coursera credentials and validation", () => {
     delete process.env.COURSERA_ENCRYPTION_KEY;
     assert.throws(() => encryptCourseraPassword("private-value"), /chưa sẵn sàng/);
     process.env.COURSERA_ENCRYPTION_KEY = key;
+  });
+  it("reads plaintext as is and only decrypts exact legacy envelopes", () => {
+    assert.equal(readCourseraPassword(" plain secret "), " plain secret ");
+    assert.equal(readCourseraPassword("v1.a.b.c"), "v1.a.b.c");
+    assert.equal(readCourseraPassword(encryptCourseraPassword("legacy")), "legacy");
+  });
+  it("accepts an optional code and URL, storing blanks as null", () => {
+    assert.deepEqual(courseraCourseBody.parse({ title: "Course", code: " CSE101 " }), { title: "Course", code: "CSE101", isActive: true });
+    const blank = courseraCourseBody.parse({ title: "Course", code: "", url: "  " });
+    assert.equal(blank.code, null);
+    assert.equal(blank.url, null);
+    assert.equal(courseraCourseBody.safeParse({ title: "Course", code: "x".repeat(33) }).success, false);
   });
   it("accepts Coursera HTTPS URLs and rejects invalid or deceptive URLs", () => {
     for (const url of ["https://www.coursera.org/learn/example", "https://coursera.org/specializations/example"]) {
