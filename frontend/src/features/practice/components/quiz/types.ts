@@ -12,6 +12,8 @@ export interface QuestionViewProps {
   hasNext: boolean;
   flagged: boolean; // đã đánh dấu xem lại chưa
   onToggleFlag: () => void;
+  saved?: boolean; // câu đã có trong "Câu đã lưu"
+  onToggleSave?: () => void; // lưu/bỏ lưu câu (chỉ khi đã đăng nhập và là đề của hệ thống)
   onReport?: () => void; // có khi đã có kết quả của câu và người dùng đã đăng nhập (báo cáo đáp án sai)
   onExplain?: () => void; // xem lời giải thích AI của câu (trả phí credit)
   explainBought?: boolean; // đã mua lời giải của câu này (xem lại miễn phí)

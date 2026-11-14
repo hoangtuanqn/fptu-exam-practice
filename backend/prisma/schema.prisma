@@ -74,6 +74,7 @@ model User {
   explanationFeedback ExplanationFeedback[]
   materialUploads    MaterialUpload[]
   emailCampaignLogs  EmailCampaignLog[]
+  savedQuestions     SavedQuestion[]
   referredBy         User?                @relation("Referral", fields: [referredById], references: [id], onDelete: SetNull)
   referrals          User[]               @relation("Referral")
   rewardsAsReferrer  ReferralReward[]     @relation("RewardReferrer")
@@ -227,6 +228,7 @@ model Exam {
   explanationBuys ExplanationPurchase[]
   reviewItems ReviewItem[]
   explanationUnlocks ExplanationUnlock[]
+  savedQuestions SavedQuestion[]
 
   @@index([subjectCode, answerSource])
   @@map("exams")
@@ -692,6 +694,22 @@ model ReviewItem {
   @@unique([userId, examId, questionNumber])
   @@index([userId, mastered, nextReviewAt])
   @@map("review_items")
+}
+
+// Cau nguoi dung tu luu de xem lai (khong lich on, khong cham diem). Tham chieu (exam_id, question_number) nen luon lay anh/dap an moi nhat
+model SavedQuestion {
+  id             Int      @id @default(autoincrement())
+  userId         Int      @map("user_id")
+  examId         Int      @map("exam_id")
+  questionNumber Int      @map("question_number")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, examId, questionNumber])
+  @@index([userId, createdAt])
+  @@map("saved_questions")
 }
 
 // Ngay co hoc that (theo gio Viet Nam): co nop bai hoac on xong cau trong so cau sai. Dung de tinh chuoi ngay hoc va muc tieu tuan

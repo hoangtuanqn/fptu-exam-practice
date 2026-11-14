@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
-import { Crown, FileText, Flame, NotebookPen, Download, BookOpen, ListChecks, GraduationCap, LayoutDashboard, UserRound, Wallet } from "lucide-react";
+import { Bookmark, Crown, FileText, Flame, NotebookPen, Download, BookOpen, ListChecks, GraduationCap, LayoutDashboard, UserRound, Wallet } from "lucide-react";
 import { PanelLayout, type NavItem } from "@/shared/layout/PanelLayout";
 import { Loading } from "@/shared/ui/Feedback";
 import LoginPage from "@/features/auth/pages/LoginPage";
@@ -39,6 +39,7 @@ const DepositPage = lazy(() => import("@/features/account/pages/DepositPage"));
 const TransactionsPage = lazy(() => import("@/features/account/pages/TransactionsPage"));
 const ExamStorePage = lazy(() => import("@/features/exam-store/ExamStorePage"));
 const ReviewPage = lazy(() => import("@/features/review/ReviewPage"));
+const SavedPage = lazy(() => import("@/features/saved/SavedPage"));
 const SubjectPage = lazy(() => import("@/features/landing/SubjectPage"));
 const PublicCatalogPage = lazy(() => import("@/features/exam-store/PublicCatalogPage"));
 const FrequentPage = lazy(() => import("@/features/frequent/FrequentPage"));
@@ -64,6 +65,7 @@ const ACCOUNT_NAV: NavItem[] = [
   { to: "/account/exams", label: "Kho đề", icon: BookOpen, group: "Luyện đề" },
   { to: "/account/pe", label: "Tải đề thi PE", icon: Download, group: "Luyện đề" },
   { to: "/account/review", label: "Sổ câu sai", icon: NotebookPen, group: "Ôn tập" },
+  { to: "/account/saved", label: "Câu đã lưu", icon: Bookmark, group: "Ôn tập" },
   { to: "/account/frequent", label: "Câu hay ra", icon: Flame, group: "Ôn tập" },
   { to: "/account/materials", label: "Phân tích slide", icon: FileText, group: "Ôn tập" },
   { to: "/account/attempts", label: "Lịch sử làm bài", icon: ListChecks, group: "Kết quả", also: ["/account/reports"] },
@@ -139,6 +141,7 @@ export default function App() {
             <Route path="chapters" element={<Navigate to="/account/exams?tab=chapters" replace />} />
             <Route path="review" element={<ReviewPage />} />
             <Route path="review/practice" element={<ReviewPracticePage />} />
+            <Route path="saved" element={<SavedPage />} />
             <Route path="pe" element={<PeDownloadPage />} />
             <Route path="reports" element={<MyReportsPage />} />
             <Route path="grades" element={<GradesPage />} />

@@ -5,6 +5,9 @@ import { ExplainUnlockDialog } from "@/features/explanation/ExplainUnlockDialog"
 import { WrongAnswerNudge } from "@/features/explanation/WrongAnswerNudge";
 import { ExplainPanel } from "@/features/explanation/ExplainPanel";
 import { explanationApi } from "@/features/explanation/explanation.api";
+import { savedApi } from "@/features/saved/saved.api";
+import { errorMessage } from "@/shared/api/errors";
+import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
 import { ReportAnswerDialog } from "@/features/answer-report/ReportAnswerDialog";
 import { useAuth } from "@/features/auth/AuthContext";
@@ -35,6 +38,11 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit }: Props)
   const explainEnabled = !!user && quiz.examId !== null;
   const info = useApi(() => (explainEnabled ? explanationApi.info(quiz.examId!) : Promise.resolve(null)), [explainEnabled, quiz.examId]);
   const [reported, setReported] = useState<Set<number>>(new Set()); // các câu đã báo cáo trong phiên này
+  const toast = useToast();
+  // Câu đã lưu của đề: tải một lần mỗi đề, sau đó cập nhật tại chỗ khi bấm lưu/bỏ lưu (khoá theo "đề:câu")
+  const saveEnabled = !!user && quiz.examId !== null;
+  const savedOfExam = useApi(() => (saveEnabled ? savedApi.ofExam(quiz.examId!) : Promise.resolve(null)), [saveEnabled, quiz.examId]);
+  const [savedChanged, setSavedChanged] = useState<Record<string, boolean>>({});
   const [unlockOpen, setUnlockOpen] = useState(false); // hộp xác nhận mở khóa cả đề
   const [bannerCollapsed, setBannerCollapsed] = useState(false); // thẻ ưu đãi thu thành viên thuốc
   usePreloadImages(quiz);
@@ -68,6 +76,20 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit }: Props)
       <WrongAnswerNudge trialsLeft={trialsLeft} unitPrice={info.data.price} bundle={showBundle ? bundle : undefined} onExplain={openExplain} onUnlock={() => setUnlockOpen(true)} />
     ) : undefined;
 
+  const savedKey = `${quiz.examId}:${question.number}`;
+  const isSaved = savedChanged[savedKey] ?? (Array.isArray(savedOfExam.data) && savedOfExam.data.includes(question.number));
+  const toggleSave = async () => {
+    const { number } = question;
+    const next = !isSaved;
+    try {
+      await (next ? savedApi.save(quiz.examId!, number) : savedApi.remove(quiz.examId!, number));
+      setSavedChanged((prev) => ({ ...prev, [savedKey]: next }));
+      toast.success(next ? `Đã lưu câu ${number}` : `Đã bỏ lưu câu ${number}`);
+    } catch (err) {
+      toast.error(errorMessage(err, next ? "Chưa lưu được câu này" : "Chưa bỏ lưu được câu này"));
+    }
+  };
+
   const timerOf = quiz.mode === "exam" && quiz.timeLimitSec && !quiz.submitted && quiz.timing ? { left: Math.max(0, quiz.timeLimitSec - quiz.elapsed), limit: quiz.timeLimitSec } : undefined;
 
   const view: QuestionViewProps = {
@@ -80,6 +102,8 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit }: Props)
     hasNext: quiz.current < quiz.questions.length - 1,
     flagged: !!quiz.flagged[question.number],
     onToggleFlag: () => quiz.toggleFlag(question.number),
+    saved: isSaved,
+    onToggleSave: saveEnabled ? () => void toggleSave() : undefined,
     onReport: canReport ? () => setReportOpen(true) : undefined,
     onExplain: canReport && info.data ? openExplain : undefined,
     explainBought,
