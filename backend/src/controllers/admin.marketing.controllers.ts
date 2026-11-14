@@ -1,8 +1,10 @@
 import type { Request, Response } from "express";
 import { getValidated } from "../middlewares/validate.middlewares";
-import type { CampaignKeyParam, SetCampaignBody } from "../rules/requests/marketing.request";
+import type { CampaignKeyParam, SetCampaignBody, SetPausedBody } from "../rules/requests/marketing.request";
 import { ResponseClient } from "../rules/response";
 import { marketingService } from "../services/marketing.service";
+import { marketingSettingService } from "../services/marketing-setting.service";
+import { marketingStatsService } from "../services/marketing-stats.service";
 
 const keyOf = (res: Response) => getValidated<CampaignKeyParam>(res, "params").key;
 
@@ -22,5 +24,14 @@ export const adminMarketingController = {
 
   async eligibleCount(_req: Request, res: Response) {
     res.json(new ResponseClient({ data: await marketingService.eligibleCounts() }));
+  },
+
+  async overview(_req: Request, res: Response) {
+    res.json(new ResponseClient({ data: await marketingStatsService.overview() }));
+  },
+
+  async setPaused(_req: Request, res: Response) {
+    const paused = await marketingSettingService.setPaused(getValidated<SetPausedBody>(res).paused);
+    res.json(new ResponseClient({ message: paused ? "Đã tạm dừng mọi thư marketing" : "Đã tiếp tục gửi thư marketing", data: { paused } }));
   },
 };

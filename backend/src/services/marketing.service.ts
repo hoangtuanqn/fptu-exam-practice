@@ -3,6 +3,7 @@ import { CAMPAIGN_KEYS, CAMPAIGN_META, type CampaignKey } from "../constants/mar
 import { marketingRepository } from "../repositories/marketing.repository";
 import { userRepository, type PublicUser } from "../repositories/user.repository";
 import { AppError } from "../rules/error";
+import { safeTarget, verifyClickToken } from "../utils/marketing-click";
 import { verifyMarketingToken } from "../utils/marketing-token";
 import { mailService } from "./mail.service";
 import { marketingCampaignService, oneClickUrl } from "./marketing-campaign.service";
@@ -15,6 +16,18 @@ export const marketingService = {
     if (userId === null) throw new AppError("Liên kết không hợp lệ", 400);
     await userRepository.optOutMarketing(userId);
     return { ok: true };
+  },
+
+  /** Nút trong thư: ghi lượt bấm, trả địa chỉ chuyển hướng. Đích luôn là CLIENT_URL + đường dẫn lưu trong log, không bao giờ lấy từ URL. */
+  async click(token: string) {
+    const logId = verifyClickToken(env.JWT_SECRET, token);
+    if (logId === null) return env.CLIENT_URL;
+    try {
+      return env.CLIENT_URL + safeTarget(await marketingRepository.recordClick(logId, new Date()));
+    } catch (err) {
+      console.error("[marketing] không ghi được lượt bấm:", (err as Error).message);
+      return env.CLIENT_URL; // người bấm vẫn vào được trang
+    }
   },
 
   async campaigns() {

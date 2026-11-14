@@ -1220,16 +1220,20 @@ model MaterialChapter {
 // Thu marketing tu dong da gui (win-back, moi Pro, nhac het han Pro). Ghi TRUOC khi gui: unique chan gui trung khi cron chay lai.
 // step: winback = 1..3; chien dich lap lai (pro_upsell, pro_expiry) = cycle * 10 + buoc, cycle = so ngay UTC tu 1970 (ngay gui / ngay het han Pro)
 model EmailCampaignLog {
-  id       Int      @id @default(autoincrement())
-  userId   Int      @map("user_id")
-  campaign String   @db.VarChar(20)
-  step     Int
-  sentAt   DateTime @default(now()) @map("sent_at")
+  id         Int       @id @default(autoincrement())
+  userId     Int       @map("user_id")
+  campaign   String    @db.VarChar(20)
+  step       Int
+  sentAt     DateTime  @default(now()) @map("sent_at")
+  target     String?   @db.VarChar(120) // internal path the mail button leads to (click redirect never reads it from the URL)
+  clickedAt  DateTime? @map("clicked_at") // first click on the button, scanner hits right after sending ignored
+  returnedAt DateTime? @map("returned_at") // first activity of the user within 7 days after the mail
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, campaign, step])
   @@index([userId, sentAt]) // gioi han 1 thu / 7 ngay moi nguoi
   @@index([campaign, step]) // admin dem so thu da gui moi buoc
+  @@index([campaign, sentAt]) // so thu hom nay, pheu 30 ngay theo chien dich
   @@map("email_campaign_logs")
 }

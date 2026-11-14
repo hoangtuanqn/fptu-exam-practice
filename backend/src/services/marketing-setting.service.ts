@@ -1,4 +1,4 @@
-import { CAMPAIGN_KEYS, MARKETING_FLAG_CACHE_MS, MARKETING_KEY_PREFIX, type CampaignKey } from "../constants/marketing";
+import { CAMPAIGN_KEYS, MARKETING_FLAG_CACHE_MS, MARKETING_KEY_PREFIX, MARKETING_PAUSED_KEY, type CampaignKey } from "../constants/marketing";
 import { settingRepository } from "../repositories/setting.repository";
 import { TtlCache } from "../utils/ttl-cache";
 
@@ -19,5 +19,13 @@ export const marketingSettingService = {
     await settingRepository.setMany({ [keyOf(key)]: String(enabled) });
     cache.clear();
     return this.flags();
+  },
+
+  // Tạm dừng tất cả: không cache để bấm dừng có hiệu lực ngay cả khi cron đang chạy dở
+  isPaused: async () => (await settingRepository.getMany([MARKETING_PAUSED_KEY]))[MARKETING_PAUSED_KEY] === "true",
+
+  async setPaused(paused: boolean) {
+    await settingRepository.setMany({ [MARKETING_PAUSED_KEY]: String(paused) });
+    return paused;
   },
 };

@@ -1,5 +1,6 @@
 // Email marketing tự động: chạy mỗi ngày 10:00 giờ Việt Nam. Mọi chiến dịch mặc định TẮT, admin tự bật.
-export const MARKETING_CRON = "0 10 * * *";
+export const MARKETING_RUN_HOUR = 10; // admin chỉ xem, không sửa
+export const MARKETING_CRON = `0 ${MARKETING_RUN_HOUR} * * *`;
 export const MARKETING_TIMEZONE = "Asia/Ho_Chi_Minh";
 export const MARKETING_MAX_PER_RUN = 150; // trần tổng số thư mỗi lần chạy (mọi chiến dịch cộng lại)
 export const MARKETING_SEND_GAP_MS = 1000; // nghỉ giữa hai thư để không dồn lên máy chủ thư
@@ -7,6 +8,12 @@ export const MARKETING_MIN_GAP_DAYS = 7; // mỗi người tối đa 1 thư mark
 
 export const MARKETING_KEY_PREFIX = "marketing."; // cờ bật/tắt lưu trong bảng settings: marketing.<key>.enabled
 export const MARKETING_FLAG_CACHE_MS = 60_000;
+export const MARKETING_PAUSED_KEY = "marketing.paused"; // "true" = không gửi thư nào (kể cả nhắc hết hạn Pro)
+
+// Đo lường: lượt bấm nút trong thư, mua Pro và quay lại sau thư
+export const CLICK_SCANNER_MS = 30_000; // bấm trong chừng này sau khi gửi coi là trình quét thư tự mở link, không tính
+export const CONVERSION_DAYS = 7; // mua Pro / quay lại trong chừng này ngày sau thư mới tính "sau thư"
+export const STATS_WINDOW_DAYS = 30; // phễu kết quả tính trên thư gửi trong chừng này ngày
 
 export const CAMPAIGN_KEYS = ["winback", "pro_upsell", "pro_expiry"] as const;
 export type CampaignKey = (typeof CAMPAIGN_KEYS)[number];
