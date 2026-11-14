@@ -162,7 +162,7 @@ describe("marketing audiences (MySQL)", { skip: DB_TESTS_ENABLED ? false : DB_SK
     try {
       const logsBefore = await m.prisma.emailCampaignLog.count();
       const outboxBefore = outbox.length;
-      assert.deepEqual(await m.campaigns.run(), { winback: 0, pro_upsell: 0, pro_expiry: 0 });
+      assert.deepEqual(await m.campaigns.run(), { winback: 0, pro_upsell: 0, pro_expiry: 0, broadcast: 0 });
       assert.equal(await m.prisma.emailCampaignLog.count(), logsBefore);
       assert.equal(outbox.length, outboxBefore);
       assert.equal((await m.stats.overview()).status.paused, true);
@@ -220,7 +220,7 @@ describe("marketing audiences (MySQL)", { skip: DB_TESTS_ENABLED ? false : DB_SK
       await m.settings.setEnabled("pro_expiry", true);
       const sent = await m.campaigns.run();
       assert.equal(sent.pro_expiry, 1); // hạn mức ngày tính cả thư đã gửi hôm nay
-      assert.deepEqual(await m.campaigns.run(), { winback: 0, pro_upsell: 0, pro_expiry: 0 }); // chạy lại: đã hết hạn mức
+      assert.deepEqual(await m.campaigns.run(), { winback: 0, pro_upsell: 0, pro_expiry: 0, broadcast: 0 }); // chạy lại: đã hết hạn mức
     } finally {
       await m.settings.setEnabled("pro_expiry", false);
       assert.deepEqual((await m.settings.resetParams()), m.defaults);

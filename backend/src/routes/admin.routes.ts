@@ -15,7 +15,17 @@ import { adminCrawlerController } from "../controllers/admin.crawler.controllers
 import { adminHistoryController } from "../controllers/admin.history.controllers";
 import { adminAccountController } from "../controllers/admin.account.controllers";
 import { adminMarketingController } from "../controllers/admin.marketing.controllers";
-import { campaignKeyParam, previewQuery, setCampaignBody, setParamsBody, setPausedBody } from "../rules/requests/marketing.request";
+import {
+  campaignKeyParam,
+  createBroadcastBody,
+  listBroadcastsQuery,
+  listLogsQuery,
+  previewQuery,
+  setCampaignBody,
+  setParamsBody,
+  setPausedBody,
+  startBroadcastBody,
+} from "../rules/requests/marketing.request";
 import { adminLinkRewardController } from "../controllers/admin.link-reward.controllers";
 import { adminChatController } from "../controllers/admin.chat.controllers";
 import { updateChatSettingsBody } from "../rules/requests/chat.request";
@@ -87,6 +97,14 @@ adminRouter.get("/marketing/params", adminMarketingController.params);
 adminRouter.put("/marketing/params", validate(setParamsBody), adminMarketingController.setParams);
 adminRouter.post("/marketing/params/reset", adminMarketingController.resetParams);
 adminRouter.get("/marketing/campaigns/:key/preview", validate(campaignKeyParam, "params"), validate(previewQuery, "query"), adminMarketingController.preview);
+adminRouter.get("/marketing/logs", validate(listLogsQuery, "query"), adminMarketingController.logs);
+adminRouter.post("/marketing/broadcasts", validate(createBroadcastBody), adminMarketingController.createBroadcast);
+adminRouter.get("/marketing/broadcasts", validate(listBroadcastsQuery, "query"), adminMarketingController.broadcasts);
+adminRouter.get("/marketing/broadcasts/:id/estimate", validate(idParam, "params"), adminMarketingController.estimateBroadcast);
+adminRouter.get("/marketing/broadcasts/:id/preview", validate(idParam, "params"), adminMarketingController.previewBroadcast);
+adminRouter.post("/marketing/broadcasts/:id/test", validate(idParam, "params"), adminMarketingController.testBroadcast);
+adminRouter.post("/marketing/broadcasts/:id/start", validate(idParam, "params"), validate(startBroadcastBody), adminMarketingController.startBroadcast);
+adminRouter.post("/marketing/broadcasts/:id/cancel", validate(idParam, "params"), adminMarketingController.cancelBroadcast);
 adminRouter.get("/settings/account", adminAccountController.get);
 adminRouter.put("/settings/account", validate(updateAccountBody), adminAccountController.update);
 adminRouter.get("/settings/link-reward", adminLinkRewardController.get);

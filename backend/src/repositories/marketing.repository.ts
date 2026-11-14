@@ -1,6 +1,19 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../configs/prisma";
-import { CAMPAIGN_META, CLICK_SCANNER_MS, CONVERSION_DAYS, STEP_CYCLE_FACTOR, TOPIC_BITS, type CampaignKey } from "../constants/marketing";
+import {
+  BROADCAST_PREFIX,
+  BROADCAST_STEP,
+  CAMPAIGN_KEYS,
+  CLICK_SCANNER_MS,
+  CONVERSION_DAYS,
+  STEP_CYCLE_FACTOR,
+  TOPIC_BITS,
+  broadcastCampaign,
+  isBroadcast,
+  topicOf,
+  type BroadcastSegment,
+  type LogCampaign,
+} from "../constants/marketing";
 import { DAY_MS } from "../utils/time";
 
 export interface Recipient {
@@ -11,15 +24,15 @@ export interface Recipient {
 }
 
 // Tạm dừng 30 ngày chặn mọi chiến dịch trừ nhắc hết hạn Pro (tắt riêng loại "renewal" hoặc huỷ tất cả mới chặn thư đó)
-const pauseApplies = (campaign: CampaignKey) => campaign !== "pro_expiry";
+const pauseApplies = (campaign: LogCampaign) => campaign !== "pro_expiry";
 
 /**
  * Ai được nhận thư của chiến dịch: thành viên thường, đang hoạt động, đã xác minh email, không từ chối nhận thư,
  * không tắt loại thư của chiến dịch, và không đang tạm dừng tại `pausedAt` (null = bỏ qua tạm dừng, chỉ dùng cho nhắc hết hạn Pro).
  */
-const eligible = (campaign: CampaignKey, pausedAt: Date | null) =>
+const eligible = (campaign: LogCampaign, pausedAt: Date | null) =>
   Prisma.sql`u.role = 'USER' AND u.status = 'ACTIVE' AND u.email_verified_at IS NOT NULL AND u.marketing_opt_out = false
-    AND (u.marketing_muted_topics & ${TOPIC_BITS[CAMPAIGN_META[campaign].topic]}) = 0
+    AND (u.marketing_muted_topics & ${TOPIC_BITS[topicOf(campaign)]}) = 0
     ${pausedAt ? Prisma.sql`AND (u.marketing_muted_until IS NULL OR u.marketing_muted_until <= ${pausedAt})` : Prisma.empty}`;
 
 // Không có thư chiến dịch nào gửi từ `since` (giới hạn 1 thư / N ngày mỗi người)
@@ -35,7 +48,46 @@ const notSent = (campaign: string, step: Prisma.Sql | number) =>
  */
 const LAST_ACTIVE = Prisma.sql`COALESCE(u.last_active_at, GREATEST(u.created_at, COALESCE((SELECT MAX(rt.created_at) FROM refresh_tokens rt WHERE rt.user_id = u.id), u.created_at)))`;
 
-const SPEND_CHARGES = Prisma.sql`'CRAWL_CHARGE', 'EXPLAIN_CHARGE', 'PE_CHARGE'`;
+// Mọi thư marketing (3 chiến dịch tự động + gửi thủ công), viết để dùng được chỉ số (campaign, sent_at)
+const MARKETING_LOG = Prisma.sql`(l.campaign IN (${Prisma.join(CAMPAIGN_KEYS)}) OR l.campaign LIKE ${`${BROADCAST_PREFIX}%`})`;
+
+/**
+ * Thư `l` dẫn tới mua Pro: có plan_purchases trả tiền (price > 0, tức mua bằng credit hoặc kích hoạt vé; Pro tặng không có dòng trả tiền) trong
+ * CONVERSION_DAYS ngày sau thư, và thư là thư gần nhất người đó nhận trước lúc mua (last-touch, mọi chiến dịch), nên một lần mua chỉ tính cho một thư.
+ */
+const BOUGHT = Prisma.sql`EXISTS (
+  SELECT 1 FROM plan_purchases p
+  WHERE p.user_id = l.user_id AND p.price > 0 AND p.created_at >= l.sent_at AND p.created_at < DATE_ADD(l.sent_at, INTERVAL ${CONVERSION_DAYS} DAY)
+    AND NOT EXISTS (
+      SELECT 1 FROM email_campaign_logs l2
+      WHERE l2.user_id = l.user_id AND l2.sent_at <= p.created_at AND (l2.sent_at > l.sent_at OR (l2.sent_at = l.sent_at AND l2.id > l.id))
+    )
+)`;
+
+export interface BroadcastAudience {
+  id: number;
+  segment: BroadcastSegment;
+  segmentDays: number | null;
+}
+
+// Nhóm người nhận của thư gửi thủ công: danh sách cố định, không nhận SQL tự do
+const segmentSql = (b: BroadcastAudience, now: Date, examFrom: Date, examTo: Date) => {
+  switch (b.segment) {
+    case "pro":
+      return Prisma.sql`u.pro_expires_at > ${now}`;
+    case "free":
+      return Prisma.sql`(u.pro_expires_at IS NULL OR u.pro_expires_at <= ${now})`;
+    case "inactive":
+      return Prisma.sql`${LAST_ACTIVE} <= ${new Date(now.getTime() - (b.segmentDays ?? 0) * DAY_MS)}`;
+    case "exam_soon":
+      return Prisma.sql`((u.exam_date >= ${examFrom} AND u.exam_date <= ${examTo})
+        OR EXISTS (SELECT 1 FROM user_exam_slots s WHERE s.user_id = u.id AND s.exam_date >= ${examFrom} AND s.exam_date <= ${examTo}))`;
+    case "all":
+      return Prisma.sql`TRUE`;
+  }
+};
+
+const SPEND_CHARGES =Prisma.sql`'CRAWL_CHARGE', 'EXPLAIN_CHARGE', 'PE_CHARGE'`;
 const SPEND_REFUNDS = Prisma.sql`'CRAWL_REFUND', 'EXPLAIN_REFUND', 'PE_REFUND'`;
 
 /** Phần FROM ... WHERE của từng nhóm người nhận; dùng chung cho lấy danh sách và đếm. */
@@ -63,7 +115,24 @@ export const audience = {
   proExpiry: (step: number, from: Date, to: Date) =>
     Prisma.sql`FROM users u WHERE ${eligible("pro_expiry", null)} AND u.pro_expires_at > ${from} AND u.pro_expires_at <= ${to}
       AND ${notSent("pro_expiry", Prisma.sql`DATEDIFF(u.pro_expires_at, '1970-01-01') * ${STEP_CYCLE_FACTOR} + ${step}`)}`,
+
+  // Gửi thủ công: nhóm đã chọn, chưa nhận thư này. `quiet` null = bỏ qua khoảng cách giữa hai thư (chỉ để đếm "còn ai chưa nhận" và ước tính)
+  broadcast: (b: BroadcastAudience, p: { now: Date; quiet: Date | null; examFrom: Date; examTo: Date }) =>
+    Prisma.sql`FROM users u WHERE ${eligible(broadcastCampaign(b.id), p.now)} ${p.quiet ? Prisma.sql`AND ${quietSince(p.quiet)}` : Prisma.empty}
+      AND ${notSent(broadcastCampaign(b.id), BROADCAST_STEP)} AND ${segmentSql(b, p.now, p.examFrom, p.examTo)}`,
 };
+
+export interface LogFilter {
+  campaign?: string; // khoá chiến dịch, "broadcast" (mọi thư gửi thủ công) hoặc broadcast:<id>
+  from?: Date;
+  to?: Date; // không gồm mốc này
+  email?: string; // email chứa chuỗi này
+  skip: number;
+  take: number;
+}
+
+// Ký tự đại diện của LIKE trong chuỗi admin nhập được hiểu đúng nghĩa đen
+const likeContains = (s: string) => `%${s.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
 
 // Hằng số ghi thẳng vào câu SQL (không phải tham số) để MySQL thấy hai biểu thức MOD giống nhau (only_full_group_by)
 const CYCLE = Prisma.raw(String(STEP_CYCLE_FACTOR));
@@ -80,12 +149,15 @@ export const marketingRepository = {
   },
 
   /** Giữ chỗ trước khi gửi: trùng (đã gửi bước này) thì trả null, không gửi lại. `target` = đường dẫn nội bộ của nút trong thư. */
-  async claim(userId: number, campaign: CampaignKey, step: number, target: string) {
+  async claim(userId: number, campaign: LogCampaign, step: number, target: string) {
     // Hủy, tắt loại thư hoặc tạm dừng giữa lúc dựng danh sách và lúc gửi (tối đa vài phút) vẫn phải được tôn trọng
     const now = new Date();
     const pause = pauseApplies(campaign) ? { OR: [{ marketingMutedUntil: null }, { marketingMutedUntil: { lte: now } }] } : {};
     const user = await prisma.user.findFirst({ where: { id: userId, marketingOptOut: false, ...pause }, select: { marketingMutedTopics: true } });
-    if (!user || (user.marketingMutedTopics & TOPIC_BITS[CAMPAIGN_META[campaign].topic]) !== 0) return null;
+    if (!user || (user.marketingMutedTopics & TOPIC_BITS[topicOf(campaign)]) !== 0) return null;
+    // Gửi thủ công bị dừng giữa lượt chạy: các thư còn lại trong lô không gửi
+    const broadcastId = isBroadcast(campaign) ? Number(campaign.slice(BROADCAST_PREFIX.length)) : null;
+    if (broadcastId !== null && !(await prisma.marketingBroadcast.findFirst({ where: { id: broadcastId, status: "SENDING" }, select: { id: true } }))) return null;
     try {
       return (await prisma.emailCampaignLog.create({ data: { userId, campaign, step, target }, select: { id: true } })).id;
     } catch (err) {
@@ -119,35 +191,66 @@ export const marketingRepository = {
 
   // ---- Thống kê cho trang admin
 
-  // Số thư gửi từ `since` của các chiến dịch này (chỉ số campaign, sent_at)
-  async sentSince(campaigns: readonly string[], since: Date) {
-    const [row] = await prisma.$queryRaw<{ n: bigint }[]>`SELECT COUNT(*) AS n FROM email_campaign_logs WHERE campaign IN (${Prisma.join(campaigns)}) AND sent_at >= ${since}`;
+  // Số thư marketing gửi từ `since`, gồm cả gửi thủ công (chỉ số campaign, sent_at)
+  async sentSince(since: Date) {
+    const [row] = await prisma.$queryRaw<{ n: bigint }[]>`SELECT COUNT(*) AS n FROM email_campaign_logs l WHERE ${MARKETING_LOG} AND l.sent_at >= ${since}`;
     return Number(row?.n ?? 0);
   },
 
   /**
-   * Phễu theo chiến dịch cho thư gửi trong [since, now). Thư gửi sau `matured` (chưa đủ CONVERSION_DAYS ngày) chỉ đếm vào `pending`.
-   * Mua Pro: có plan_purchases trả tiền (price > 0, tức mua bằng credit hoặc kích hoạt vé; Pro tặng không có dòng trả tiền) trong
-   * CONVERSION_DAYS ngày sau thư, và thư là thư gần nhất người đó nhận trước lúc mua (last-touch, mọi chiến dịch), nên một lần mua chỉ tính cho một thư.
+   * Phễu theo chiến dịch (mỗi thư gửi thủ công một dòng broadcast:<id>) cho thư gửi trong [since, now).
+   * Thư gửi sau `matured` (chưa đủ CONVERSION_DAYS ngày) chỉ đếm vào `pending`. Mua Pro theo BOUGHT (last-touch).
    */
-  funnel: (campaigns: readonly string[], since: Date, matured: Date) =>
+  funnel: (since: Date, matured: Date) =>
     prisma.$queryRaw<{ campaign: string; sent: unknown; pending: unknown; clicked: unknown; returned: unknown; bought: unknown }[]>`
       SELECT l.campaign,
         SUM(l.sent_at < ${matured}) AS sent,
         SUM(l.sent_at >= ${matured}) AS pending,
         SUM(l.sent_at < ${matured} AND l.clicked_at IS NOT NULL) AS clicked,
         SUM(l.sent_at < ${matured} AND l.returned_at IS NOT NULL) AS returned,
-        SUM(l.sent_at < ${matured} AND EXISTS (
-          SELECT 1 FROM plan_purchases p
-          WHERE p.user_id = l.user_id AND p.price > 0 AND p.created_at >= l.sent_at AND p.created_at < DATE_ADD(l.sent_at, INTERVAL ${CONVERSION_DAYS} DAY)
-            AND NOT EXISTS (
-              SELECT 1 FROM email_campaign_logs l2
-              WHERE l2.user_id = l.user_id AND l2.sent_at <= p.created_at AND (l2.sent_at > l.sent_at OR (l2.sent_at = l.sent_at AND l2.id > l.id))
-            )
-        )) AS bought
+        SUM(l.sent_at < ${matured} AND ${BOUGHT}) AS bought
       FROM email_campaign_logs l
-      WHERE l.campaign IN (${Prisma.join(campaigns)}) AND l.sent_at >= ${since}
+      WHERE ${MARKETING_LOG} AND l.sent_at >= ${since}
       GROUP BY l.campaign`,
+
+  // Số thư đã gửi và đã bấm của từng thư gửi thủ công (chỉ số campaign, sent_at)
+  async broadcastCounts(ids: number[]) {
+    if (ids.length === 0) return new Map<number, { sent: number; clicked: number }>();
+    const rows = await prisma.$queryRaw<{ campaign: string; sent: bigint; clicked: unknown }[]>`
+      SELECT campaign, COUNT(*) AS sent, SUM(clicked_at IS NOT NULL) AS clicked FROM email_campaign_logs
+      WHERE campaign IN (${Prisma.join(ids.map(broadcastCampaign))}) GROUP BY campaign`;
+    return new Map(rows.map((r) => [Number(r.campaign.slice(BROADCAST_PREFIX.length)), { sent: Number(r.sent), clicked: Number(r.clicked ?? 0) }]));
+  },
+
+  /**
+   * Nhật ký thư, mới nhất trước. Lọc đúng một chiến dịch thì sắp theo (sent_at, id) trên chỉ số (campaign, sent_at);
+   * còn lại sắp theo id (khoá chính, cùng chiều thời gian gửi).
+   * shortcut: tìm email dạng "chứa" nên không dùng được chỉ số users.email; ổn với vài chục nghìn người dùng, đổi sang tìm theo tiền tố nếu chậm.
+   */
+  async logs(f: LogFilter) {
+    const cond = Prisma.join(
+      [
+        f.campaign === "broadcast" ? Prisma.sql`l.campaign LIKE ${`${BROADCAST_PREFIX}%`}` : f.campaign ? Prisma.sql`l.campaign = ${f.campaign}` : MARKETING_LOG,
+        ...(f.from ? [Prisma.sql`l.sent_at >= ${f.from}`] : []),
+        ...(f.to ? [Prisma.sql`l.sent_at < ${f.to}`] : []),
+        ...(f.email ? [Prisma.sql`u.email LIKE ${likeContains(f.email)}`] : []),
+      ],
+      " AND ",
+    );
+    const order = f.campaign && f.campaign !== "broadcast" ? Prisma.sql`l.sent_at DESC, l.id DESC` : Prisma.sql`l.id DESC`;
+    const [items, [count]] = await Promise.all([
+      prisma.$queryRaw<{ id: number; sentAt: Date; email: string; campaign: string; step: unknown; clicked: unknown; bought: unknown; returned: unknown }[]>`
+        SELECT l.id, l.sent_at AS sentAt, u.email, l.campaign, MOD(l.step, ${CYCLE}) AS step, l.clicked_at IS NOT NULL AS clicked, ${BOUGHT} AS bought, l.returned_at IS NOT NULL AS returned
+        FROM email_campaign_logs l JOIN users u ON u.id = l.user_id
+        WHERE ${cond} ORDER BY ${order} LIMIT ${f.take} OFFSET ${f.skip}`,
+      prisma.$queryRaw<{ n: bigint }[]>`SELECT COUNT(*) AS n FROM email_campaign_logs l JOIN users u ON u.id = l.user_id WHERE ${cond}`,
+    ]);
+    const yes = (v: unknown) => Number(v) === 1;
+    return {
+      items: items.map((r) => ({ id: r.id, sentAt: r.sentAt, email: r.email, campaign: r.campaign, step: Number(r.step), clicked: yes(r.clicked), bought: yes(r.bought), returned: yes(r.returned) })),
+      total: Number(count?.n ?? 0),
+    };
+  },
 
   // Tỷ lệ huỷ nhận thư: người đã huỷ / thành viên đã xác minh email
   async optOutCounts() {

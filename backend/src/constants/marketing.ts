@@ -74,6 +74,22 @@ export const TOPIC_BITS: Record<MarketingTopic, number> = { review: 1, offers: 2
 export const ALL_TOPICS_MASK = 15;
 export const MARKETING_PAUSE_DAYS = 30; // "Tạm dừng 30 ngày": chặn mọi thư trừ nhắc hết hạn Pro
 
+// ---- Gửi thủ công (admin soạn, loại thư "news"). Log ghi campaign = broadcast:<id>, step = BROADCAST_STEP (mỗi người nhận tối đa 1 lần).
+export const BROADCAST_PREFIX = "broadcast:";
+export const BROADCAST_STEP = 1;
+export const BROADCAST_TOPIC: MarketingTopic = "news";
+export const BROADCAST_SEGMENTS = ["all", "pro", "free", "inactive", "exam_soon"] as const;
+export type BroadcastSegment = (typeof BROADCAST_SEGMENTS)[number];
+export const BROADCAST_INACTIVE_DAYS = { min: 7, max: 180 } as const; // nhóm "không hoạt động từ N ngày"
+export const BROADCAST_EXAM_DAYS = 30; // nhóm "có buổi thi trong chừng này ngày tới"
+export const BROADCAST_LIMITS = { subject: 120, body: 5000, ctaLabel: 40, ctaPath: 120 } as const; // khớp độ dài cột
+export const BROADCAST_CONFIRM = "GỬI"; // admin phải gõ đúng chữ này mới bắt đầu gửi
+
+/** Tên chiến dịch ghi trong log: một trong CAMPAIGN_KEYS hoặc broadcast:<id>. */
+export type LogCampaign = CampaignKey | `broadcast:${number}`;
+export const broadcastCampaign = (id: number): LogCampaign => `${BROADCAST_PREFIX}${id}` as LogCampaign;
+export const isBroadcast = (c: string) => c.startsWith(BROADCAST_PREFIX);
+
 // Chiến dịch lặp lại ghi step = cycle * 10 + bước (cycle = số ngày UTC từ 1970), để unique (user, campaign, step) không chặn chu kỳ sau
 export const STEP_CYCLE_FACTOR = 10;
 
@@ -98,3 +114,5 @@ export const CAMPAIGN_META: Record<CampaignKey, { label: string; description: (p
     topic: "renewal",
   },
 };
+
+export const topicOf = (c: LogCampaign): MarketingTopic => (isBroadcast(c) ? BROADCAST_TOPIC : CAMPAIGN_META[c as CampaignKey].topic);

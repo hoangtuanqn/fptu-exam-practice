@@ -1,6 +1,9 @@
 import { env } from "../configs/env";
+import type { MarketingBroadcast } from "@prisma/client";
 import {
-  CAMPAIGN_KEYS,
+  BROADCAST_EXAM_DAYS,
+  BROADCAST_STEP,
+  BROADCAST_TOPIC,
   CAMPAIGN_META,
   DEFAULT_MARKETING_PARAMS,
   MARKETING_SEND_GAP_MS,
@@ -9,11 +12,15 @@ import {
   UPSELL_SPEND_DAYS,
   WINBACK_CREDIT_EXPIRY_DAYS,
   WINBACK_NEW_EXAMS_DAYS,
+  broadcastCampaign,
+  type BroadcastSegment,
   type CampaignKey,
+  type LogCampaign,
   type MarketingParams,
   type MarketingTopic,
 } from "../constants/marketing";
-import { renderExpiry, renderUpsell, renderWinback1, renderWinback2, renderWinback3, type MarketingMail } from "../mail/templates/marketing";
+import { renderBroadcast, renderExpiry, renderUpsell, renderWinback1, renderWinback2, renderWinback3, type MarketingMail } from "../mail/templates/marketing";
+import { broadcastRepository } from "../repositories/marketing-broadcast.repository";
 import { audience, marketingRepository, type Recipient } from "../repositories/marketing.repository";
 import { planSignalRepository } from "../repositories/plan-signal.repository";
 import { CLICK_PLACEHOLDER, signClickToken, withClickUrl } from "../utils/marketing-click";
@@ -29,7 +36,7 @@ import { reminderService } from "./reminder.service";
 // Mỗi thư được ghi vào email_campaign_logs TRƯỚC khi gửi (unique theo người + chiến dịch + bước) nên chạy lại hay sập giữa chừng không gửi trùng.
 
 export interface CampaignJob {
-  campaign: CampaignKey;
+  campaign: LogCampaign;
   step: number; // giá trị lưu trong log
   target: string; // đường dẫn nội bộ của nút trong thư (vd /pro); link nút trong `mail` là CLICK_PLACEHOLDER
   to: Recipient;
@@ -143,8 +150,34 @@ const winbackAudience = (now: Date, p: MarketingParams, i: number, days: number)
 // Bước i của nhắc hết hạn: hết hạn trong (mốc bước sau, mốc bước này]
 const expiryAudience = (now: Date, p: MarketingParams, i: number, days: number) => audience.proExpiry(i + 1, ahead(now, p.expiryStepDays[i + 1] ?? 0), ahead(now, days));
 
-// Nhắc hết hạn Pro gần như thư giao dịch nên chạy trước; thư gửi trước được ghi log nên chiến dịch sau tự bỏ qua người vừa nhận
-const ORDER: CampaignKey[] = ["pro_expiry", "pro_upsell", "winback"];
+// ---- Gửi thủ công
+
+type BroadcastRow = Pick<MarketingBroadcast, "id" | "segment" | "segmentDays">;
+
+/** Người nhận thư gửi thủ công lúc `now` (tính lại mỗi lần, không chụp sẵn). `quiet` null = bỏ qua khoảng cách giữa hai thư. */
+export const broadcastAudience = (b: BroadcastRow, now: Date, quiet: Date | null) => {
+  const today = vnDate(now.getTime());
+  return audience.broadcast({ id: b.id, segment: b.segment as BroadcastSegment, segmentDays: b.segmentDays }, { now, quiet, examFrom: today, examTo: ahead(today, BROADCAST_EXAM_DAYS) });
+};
+
+export const broadcastMail = (b: Pick<MarketingBroadcast, "subject" | "body" | "ctaLabel">, u: Recipient, link: string) =>
+  renderBroadcast({ name: u.fullName, unsubscribeUrl: unsubscribePageUrl(u.id, BROADCAST_TOPIC), subject: b.subject, body: b.body, ctaLabel: b.ctaLabel, url: link });
+
+export const broadcastPreviewUrl = (path: string) => site(path);
+
+async function broadcastJobs(now: Date, take: number, p: MarketingParams): Promise<CampaignJob[]> {
+  const b = await broadcastRepository.sending();
+  if (!b) return [];
+  const users = await marketingRepository.pick(broadcastAudience(b, now, ago(now, p.minGapDays)), take);
+  // Không còn ai chưa nhận, kể cả người đang trong khoảng cách giữa hai thư: xong đợt
+  if (users.length === 0 && (await marketingRepository.count(broadcastAudience(b, now, null))) === 0) await broadcastRepository.finish(b.id);
+  const campaign = broadcastCampaign(b.id);
+  return users.map((u) => ({ campaign, step: BROADCAST_STEP, target: b.ctaPath, to: u, mail: broadcastMail(b, u, url) }));
+}
+
+// Nhắc hết hạn Pro gần như thư giao dịch nên chạy trước, rồi gửi thủ công (admin chủ động); thư gửi trước được ghi log nên phần sau tự bỏ qua người vừa nhận
+const ORDER = ["pro_expiry", "broadcast", "pro_upsell", "winback"] as const;
+export type RunKey = (typeof ORDER)[number];
 
 export const marketingCampaignService = {
   /** Số người đang đủ điều kiện mỗi chiến dịch (chưa tính trần thư mỗi lần chạy). */
@@ -162,13 +195,14 @@ export const marketingCampaignService = {
     const [flags, p, sentToday] = await Promise.all([
       marketingSettingService.flags(),
       marketingSettingService.params(),
-      marketingRepository.sentSince(CAMPAIGN_KEYS, startOfVnDay(now.getTime())),
+      marketingRepository.sentSince(startOfVnDay(now.getTime())),
     ]);
-    const sent = Object.fromEntries(CAMPAIGN_KEYS.map((k) => [k, 0])) as Record<CampaignKey, number>;
-    let left = p.dailyCap - sentToday; // chạy lại trong ngày cũng không vượt hạn mức
+    const sent = Object.fromEntries(ORDER.map((k) => [k, 0])) as Record<RunKey, number>;
+    let left = p.dailyCap - sentToday; // chạy lại trong ngày cũng không vượt hạn mức (tính cả thư gửi thủ công)
     for (const key of ORDER) {
-      if (!flags[key] || left <= 0) continue;
-      for (const job of await builders[key](now, left, p)) {
+      // Gửi thủ công không có công tắc: chỉ có thư khi admin đã xác nhận bắt đầu (trạng thái SENDING)
+      if (left <= 0 || (key !== "broadcast" && !flags[key])) continue;
+      for (const job of await (key === "broadcast" ? broadcastJobs(now, left, p) : builders[key](now, left, p))) {
         if (left <= 0) break;
         if (await marketingSettingService.isPaused()) return sent; // kiểm tra trước mỗi thư: bấm tạm dừng giữa lượt chạy dừng ngay
         left--;
