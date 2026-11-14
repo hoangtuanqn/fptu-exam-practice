@@ -8,7 +8,6 @@ import { Field, Input, PasswordInput, inputClass } from "@/shared/ui/Input";
 import { FormError } from "@/shared/ui/Feedback";
 import { ChargeSummary } from "@/shared/ui/ChargeSummary";
 import { useConfirm } from "@/shared/ui/ConfirmDialog";
-import { formatCredit } from "@/shared/utils/formatters";
 import { useAuth } from "@/features/auth/AuthContext";
 import { courseraApi, type CourseraCourse, type CourseraOrder } from "./coursera.api";
 
@@ -106,34 +105,19 @@ export function OrderForm({ course, onBack, onCreated }: Props) {
           </Field>
         </fieldset>
 
-        <div className="rounded-m3-sm bg-surface-container-low p-4">
-          <dl className="md-body-medium space-y-2">
-            <div className="flex justify-between gap-3">
-              <dt className="text-on-surface-variant">Phí khóa học</dt>
-              <dd className="md-title-medium tabular-nums text-on-surface">{price === undefined ? "Chưa có giá" : formatCredit(price)}</dd>
-            </div>
-            <div className="flex justify-between gap-3">
-              <dt className="text-on-surface-variant">Số dư ví</dt>
-              <dd className="tabular-nums text-on-surface">{formatCredit(balance)}</dd>
-            </div>
-          </dl>
-          <p className="md-body-small mt-3 text-on-surface-variant">
-            Phí được trừ khi đặt đơn và hoàn lại nếu đơn bị hủy hoặc từ chối. FEPass gửi email cho bạn mỗi khi đơn đổi trạng thái.
+        {insufficient && (
+          <p role="status" className="md-body-medium text-error">
+            Số dư chưa đủ.{" "}
+            <Link className="underline" to="/account/deposit">
+              Nạp thêm credit
+            </Link>{" "}
+            hoặc{" "}
+            <button type="button" className="underline" onClick={() => void refresh()}>
+              cập nhật số dư
+            </button>
+            .
           </p>
-          {insufficient && (
-            <p role="status" className="md-body-medium mt-3 text-error">
-              Số dư chưa đủ.{" "}
-              <Link className="underline" to="/account/deposit">
-                Nạp thêm credit
-              </Link>{" "}
-              hoặc{" "}
-              <button type="button" className="underline" onClick={() => void refresh()}>
-                cập nhật số dư
-              </button>
-              .
-            </p>
-          )}
-        </div>
+        )}
 
         <div className="flex flex-wrap justify-end gap-3">
           <Button type="button" disabled={busy} onClick={onBack}>
