@@ -3,6 +3,7 @@ import { COURSERA_TRANSITIONS } from "../constants/coursera";
 import { courseraRepository } from "../repositories/coursera.repository";
 import { AppError } from "../rules/error";
 import type { CourseraCourseBody, CourseraCoursesQuery, CourseraOrderBody, CourseraOrdersQuery, CourseraStatusBody } from "../rules/requests/coursera.request";
+import { walletService } from "./wallet.service";
 import { decryptCourseraPassword, encryptCourseraPassword } from "../utils/coursera-credentials";
 
 // Prisma errors may include argument values. Keep account details out of logs and error responses.
@@ -18,6 +19,17 @@ async function safe<T>(run: () => Promise<T>): Promise<T> {
   }
 }
 
+function changeStatus(id: number, data: CourseraStatusBody, userId?: number) {
+  return courseraRepository.transaction(async (tx) => {
+    const order = await courseraRepository.updateStatus(tx, id, data, userId);
+    if ((data.status === "CANCELLED" || data.status === "REJECTED") && order.amount > 0 && !order.refundedAt) {
+      await walletService.applyChange(tx, { userId: order.userId, amount: order.amount, type: "COURSERA_REFUND", note: `Hoàn phí đơn Coursera #${order.id}` });
+      return courseraRepository.markRefunded(tx, id);
+    }
+    return order;
+  });
+}
+
 export const courseraService = {
   courses: (query: CourseraCoursesQuery, admin = false) => safe(() => courseraRepository.courses(query, admin)),
   saveCourse: (data: CourseraCourseBody, id?: number) => safe(() => courseraRepository.saveCourse(data, id)),
@@ -27,7 +39,12 @@ export const courseraService = {
     if (existing) return existing;
     const { password, ...rest } = data;
     try {
-      return await courseraRepository.createOrder({ ...rest, userId, encryptedPassword: encryptCourseraPassword(password) });
+      const encryptedPassword = encryptCourseraPassword(password);
+      return await courseraRepository.transaction(async (tx) => {
+        const order = await courseraRepository.createOrder(tx, { ...rest, userId, encryptedPassword });
+        if (order.amount > 0) await walletService.charge(tx, { userId, amount: order.amount, type: "COURSERA_CHARGE", note: `Đặt đơn Coursera #${order.id}` });
+        return order;
+      });
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
         const duplicate = await courseraRepository.findRequest(userId, data.requestKey);
@@ -38,9 +55,9 @@ export const courseraService = {
   }),
   updateStatus: (id: number, data: CourseraStatusBody) => safe(() => {
     if (!COURSERA_TRANSITIONS[data.expectedStatus].includes(data.status)) throw AppError.conflict("Không thể chuyển đơn sang trạng thái này");
-    return courseraRepository.updateStatus(id, data);
+    return changeStatus(id, data);
   }),
-  cancel: (id: number, userId: number) => safe(() => courseraRepository.updateStatus(id, { expectedStatus: "PENDING", status: "CANCELLED", adminNote: "" }, userId)),
+  cancel: (id: number, userId: number) => safe(() => changeStatus(id, { expectedStatus: "PENDING", status: "CANCELLED", adminNote: "" }, userId)),
   credentials: (id: number, adminId: number) => safe(async () => {
     const row = await courseraRepository.credentials(id, adminId);
     return { email: row.email, password: decryptCourseraPassword(row.encryptedPassword!) };

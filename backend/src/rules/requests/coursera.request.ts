@@ -13,10 +13,13 @@ export const courseraCourseBody = z.object({
     } catch { return false; }
   }, "Vui lòng nhập liên kết HTTPS của Coursera"),
   isActive: z.boolean().default(true),
+  price: z.number().int().min(0).max(COURSERA.maxPrice).optional(),
 });
 export const courseraOrderBody = z.object({
   requestKey: z.string().uuid(),
   courseId: z.number().int().positive(),
+  // Older clients may submit only free orders; never charge an unconfirmed price.
+  expectedPrice: z.number().int().min(0).max(COURSERA.maxPrice).default(0),
   email: z.string().trim().email().max(COURSERA.emailLength),
   password: z.string().min(1, "Vui lòng nhập mật khẩu Coursera").max(COURSERA.passwordLength),
   note: z.string().trim().max(COURSERA.noteLength).default(""),

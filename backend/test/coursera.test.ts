@@ -35,6 +35,16 @@ describe("Coursera credentials and validation", () => {
       assert.equal(courseraCourseBody.safeParse({ title: "Course", url }).success, false);
     }
   });
+  it("rejects invalid prices and defaults older clients to a zero-price quote", () => {
+    const course = { title: "Course", url: "https://www.coursera.org/learn/example" };
+    for (const price of [-1, 0.5, 100_000_001, "100", Infinity]) {
+      assert.equal(courseraCourseBody.safeParse({ ...course, price }).success, false);
+    }
+    assert.equal(courseraCourseBody.parse({ ...course, price: 25000 }).price, 25000);
+    const order = { courseId: 1, requestKey: "d04d43e4-aeac-4ccb-9ec3-34ea25be01ab", email: "test@example.invalid", password: "test" };
+    assert.equal(courseraOrderBody.parse(order).expectedPrice, 0);
+    assert.equal(courseraOrderBody.safeParse({ ...order, expectedPrice: -1 }).success, false);
+  });
   it("validates order fields without trimming the account password", () => {
     const body = { courseId: 1, requestKey: "d04d43e4-aeac-4ccb-9ec3-34ea25be01ab", email: "test@example.invalid", password: " secret ", note: " Note " };
     assert.equal(courseraOrderBody.parse(body).password, " secret ");

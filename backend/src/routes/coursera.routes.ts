@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { COURSERA } from "../constants/coursera";
 import { courseraController as controller } from "../controllers/coursera.controllers";
-import { authenticate, requireAdmin } from "../middlewares/auth.middlewares";
+import { authenticate, requireAdmin, requireVerifiedMember } from "../middlewares/auth.middlewares";
+import { idempotent } from "../middlewares/idempotency.middlewares";
 import { makeLimiter } from "../middlewares/rateLimit.middlewares";
 import { validate } from "../middlewares/validate.middlewares";
 import { idParam } from "../rules/requests/admin.request";
@@ -14,7 +15,7 @@ export const courseraRouter = Router();
 courseraRouter.use(authenticate, courseraNoStore);
 courseraRouter.get("/courses", validate(courseraCoursesQuery, "query"), controller.courses);
 courseraRouter.get("/orders", validate(courseraOrdersQuery, "query"), controller.orders);
-courseraRouter.post("/orders", orderLimiter, validate(courseraOrderBody), controller.createOrder);
+courseraRouter.post("/orders", requireVerifiedMember, orderLimiter, validate(courseraOrderBody), idempotent, controller.createOrder);
 courseraRouter.post("/orders/:id/cancel", validate(idParam, "params"), controller.cancel);
 
 export const adminCourseraRouter = Router();

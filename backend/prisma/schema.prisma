@@ -102,6 +102,7 @@ model CourseraCourse {
   title     String   @db.VarChar(255)
   url       String   @unique @db.VarChar(500)
   isActive  Boolean  @default(true) @map("is_active")
+  price     Int      @default(0)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   orders    CourseraOrder[]
@@ -118,6 +119,8 @@ model CourseraOrder {
   requestKey         String              @map("request_key") @db.VarChar(36)
   courseTitle        String              @map("course_title") @db.VarChar(255)
   courseUrl          String              @map("course_url") @db.VarChar(500)
+  amount             Int                 @default(0)
+  refundedAt         DateTime?           @map("refunded_at")
   email              String              @db.VarChar(254)
   encryptedPassword  String?             @map("encrypted_password") @db.Text
   note               String              @db.Text
@@ -216,6 +219,8 @@ enum TransactionType {
   PLAN_CHARGE // mua gói Pro
   CHECKIN_REWARD // thưởng điểm danh hằng ngày (kể cả thưởng đủ 7 ngày)
   CREDIT_EXPIRED // credit nhan tu giftcode co han da het han ma chua dung
+  COURSERA_CHARGE // coursera order payment
+  COURSERA_REFUND // cancelled or rejected coursera order
 }
 
 // Sá»• cĂ¡i vĂ­: má»—i láº§n sá»‘ dÆ° Ä‘á»•i lĂ  má»™t dĂ²ng (amount Ă¢m = trá»« tiá»n)

@@ -5,6 +5,7 @@ export const COURSERA = {
   passwordLength: 512,
   noteLength: 2000,
   searchLength: 100,
+  maxPrice: 100_000_000,
   orderRate: 5,
   credentialRate: 20,
 } as const;
