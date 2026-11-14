@@ -10,9 +10,12 @@ import { Pagination } from "@/shared/ui/Table";
 import { Select } from "@/shared/ui/Input";
 import { useConfirm } from "@/shared/ui/ConfirmDialog";
 import { courseraApi, ORDER_LABELS, type CourseraOrder, type OrderStatus } from "./coursera.api";
+import { formatCredit } from "@/shared/utils/formatters";
+import { useAuth } from "@/features/auth/AuthContext";
 import { AdminOrderDialog } from "./AdminOrderDialog";
 
 export function OrderHistory({ revision = 0, admin = false }: { revision?: number; admin?: boolean }) {
+  const { refresh } = useAuth();
   const [url, setUrl] = useUrlState({ orderPage: "1", status: "" });
   const status = Object.prototype.hasOwnProperty.call(ORDER_LABELS, url.status) ? url.status as OrderStatus : undefined;
   const page = toPage(url.orderPage);
@@ -24,8 +27,8 @@ export function OrderHistory({ revision = 0, admin = false }: { revision?: numbe
   async function cancel(order: CourseraOrder) {
     setBusy(true);
     try {
-      if (!await confirm({ title: `Hủy đơn #${order.id}?`, message: "Đơn sẽ dừng xử lý và thông tin mật khẩu sẽ được xóa.", confirmLabel: "Hủy đơn", tone: "danger" })) return;
-      setError(""); await courseraApi.cancel(order.id); query.reload();
+      if (!await confirm({ title: `Hủy đơn #${order.id}?`, message: `Đơn sẽ dừng xử lý và thông tin mật khẩu sẽ được xóa.${order.amount ? ` Bạn sẽ được hoàn ${formatCredit(order.amount)} vào ví.` : ""}`, confirmLabel: "Hủy đơn", tone: "danger" })) return;
+      setError(""); await courseraApi.cancel(order.id); await refresh(); query.reload();
     } catch (err) { setError(errorMessage(err)); }
     finally { setBusy(false); }
   }
@@ -41,6 +44,7 @@ export function OrderHistory({ revision = 0, admin = false }: { revision?: numbe
           <div className="flex flex-wrap justify-between gap-2"><h3 className="md-title-medium break-words">#{order.id} · {order.courseTitle}</h3><span className="md-label-large text-primary">{ORDER_LABELS[order.status]}</span></div>
           <p className="md-body-small text-on-surface-variant">{new Date(order.createdAt).toLocaleString("vi-VN")}{admin ? ` · Thành viên #${order.userId}` : ""}</p>
           <p className="break-all">{order.email}</p>
+          {order.amount !== undefined && <p>Đã thu: {formatCredit(order.amount)}{order.refundedAt ? ` · Đã hoàn ${formatCredit(order.amount)}` : ""}</p>}
           {order.note && <p className="whitespace-pre-wrap break-words">Ghi chú: {order.note}</p>}
           {order.adminNote && <p className="whitespace-pre-wrap break-words text-primary">Phản hồi: {order.adminNote}</p>}
           {admin ? <Button disabled={query.loading} onClick={() => setSelected(order)}>Xử lý đơn</Button> : order.status === "PENDING" && <Button disabled={busy || query.loading} onClick={() => void cancel(order)}>Hủy đơn</Button>}

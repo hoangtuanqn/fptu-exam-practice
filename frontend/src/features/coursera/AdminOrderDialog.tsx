@@ -5,6 +5,7 @@ import { Field, inputClass, Select } from "@/shared/ui/Input";
 import { FormError } from "@/shared/ui/Feedback";
 import { Modal, ModalActions } from "@/shared/ui/Modal";
 import { useConfirm } from "@/shared/ui/ConfirmDialog";
+import { formatCredit } from "@/shared/utils/formatters";
 import { courseraApi, ORDER_LABELS, type CourseraOrder, type OrderStatus } from "./coursera.api";
 
 const transitions: Record<OrderStatus, OrderStatus[]> = {
@@ -34,7 +35,7 @@ export function AdminOrderDialog({ order, onClose, onSaved }: { order: CourseraO
   async function save(event: FormEvent) {
     event.preventDefault(); setBusy(true); setError(""); setPassword(null);
     try {
-      if (!await confirm({ title: "Cập nhật đơn?", message: `Chuyển đơn #${order.id} sang “${ORDER_LABELS[status]}”.${transitions[status].length ? "" : " Đơn kết thúc sẽ không thể mở lại."}`, confirmLabel: "Cập nhật", tone: "primary" })) return;
+      if (!await confirm({ title: "Cập nhật đơn?", message: `Chuyển đơn #${order.id} sang “${ORDER_LABELS[status]}”.${transitions[status].length ? "" : " Đơn kết thúc sẽ không thể mở lại."}${(status === "REJECTED" || status === "CANCELLED") && order.amount ? ` Hoàn ${formatCredit(order.amount)} vào ví người đặt.` : ""}`, confirmLabel: "Cập nhật", tone: "primary" })) return;
       await courseraApi.update(order.id, order.status, status, note); onSaved();
     } catch (err) { setError(errorMessage(err)); }
     finally { setBusy(false); }
@@ -44,6 +45,7 @@ export function AdminOrderDialog({ order, onClose, onSaved }: { order: CourseraO
     <p className="my-3 break-words">{order.courseTitle}</p>
     <a href={order.courseUrl} target="_blank" rel="noreferrer" className="text-primary underline">Mở khóa học</a>
     <p className="my-3 break-all">{order.email}</p>
+    {order.amount !== undefined && <p className="my-3">Đã thu: {formatCredit(order.amount)}{order.refundedAt ? " · Đã hoàn tiền" : ""}</p>}
     {options.length > 0 && <div className="space-y-3">
       {password !== null && <p className="whitespace-pre-wrap break-all rounded-m3-sm bg-surface-container-highest p-3 font-mono">{password}</p>}
       <Button disabled={busy} onClick={() => password !== null ? setPassword(null) : void reveal()}>{password !== null ? "Ẩn mật khẩu" : "Xem mật khẩu Coursera"}</Button>

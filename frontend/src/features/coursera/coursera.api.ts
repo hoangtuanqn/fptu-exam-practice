@@ -4,13 +4,14 @@ export const ORDER_LABELS = {
   PENDING: "Chờ xử lý", PROCESSING: "Đang xử lý", COMPLETED: "Hoàn tất", REJECTED: "Từ chối", CANCELLED: "Đã hủy",
 } as const;
 export type OrderStatus = keyof typeof ORDER_LABELS;
-export interface CourseraCourse { id: number; title: string; url: string; isActive: boolean }
+export interface CourseraCourse { id: number; title: string; url: string; isActive: boolean; price?: number }
 export interface CourseraOrder {
   id: number; userId: number; courseId: number; courseTitle: string; courseUrl: string;
   email: string; note: string; status: OrderStatus; adminNote: string; createdAt: string; updatedAt: string;
+  amount?: number; refundedAt?: string | null;
 }
-export interface OrderInput { requestKey: string; courseId: number; email: string; password: string; note: string }
-export type CourseInput = Omit<CourseraCourse, "id">;
+export interface OrderInput { requestKey: string; courseId: number; expectedPrice: number; email: string; password: string; note: string }
+export type CourseInput = Omit<CourseraCourse, "id" | "price"> & { price: number };
 
 export const courseraApi = {
   courses: (q: string, page: number, admin = false) => http.list<CourseraCourse>(`${admin ? "/admin" : ""}/coursera/courses`, { q, page }),

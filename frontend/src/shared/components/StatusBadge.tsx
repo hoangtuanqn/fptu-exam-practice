@@ -46,6 +46,8 @@ export const TRANSACTION_LABEL: Record<TransactionType, string> = {
   DEPOSIT_BONUS: "Thưởng nạp tiền",
   PE_CHARGE: "Tải tài nguyên đề PE",
   PE_REFUND: "Hoàn phí tải đề PE",
+  COURSERA_CHARGE: "Đặt đơn Coursera",
+  COURSERA_REFUND: "Hoàn phí Coursera",
   PLAN_CHARGE: "Mua gói Pro",
   CHECKIN_REWARD: "Thưởng điểm danh",
   CREDIT_EXPIRED: "Credit hết hạn",
