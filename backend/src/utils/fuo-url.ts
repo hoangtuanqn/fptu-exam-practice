@@ -12,11 +12,24 @@ export function parseThreadId(url: string): string | null {
   }
 }
 
+/** Đúng domain FuOverflow hoặc subdomain của nó (không nhận tên giả dạng như fuoverflow.com.evil.example). */
+export const isFuoHostname = (hostname: string) => hostname === FUO_HOST || hostname.endsWith(`.${FUO_HOST}`);
+
+/** Link https tới FuOverflow: chỉ những link này mới được gửi kèm cookie admin khi tải tệp. */
+export function isFuoHttpsUrl(url: string): boolean {
+  try {
+    const { protocol, hostname } = new URL(url);
+    return protocol === "https:" && isFuoHostname(hostname);
+  } catch {
+    return false;
+  }
+}
+
 /** Link thread hợp lệ của FuOverflow: http(s), đúng domain (hoặc subdomain) và có ID thread. Dùng chung cho mọi chỗ nhận link. */
 export function isFuoThreadUrl(url: string): boolean {
   try {
     const { protocol, hostname } = new URL(url);
-    return (protocol === "https:" || protocol === "http:") && (hostname === FUO_HOST || hostname.endsWith(`.${FUO_HOST}`)) && parseThreadId(url) !== null;
+    return (protocol === "https:" || protocol === "http:") && isFuoHostname(hostname) && parseThreadId(url) !== null;
   } catch {
     return false;
   }

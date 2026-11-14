@@ -28,6 +28,15 @@ export interface ThreadData {
   author?: string;
   postedAt?: string;
   images: ImageRef[];
+  /** Tệp đính kèm không phải ảnh (pdf, zip...) */
+  files: FileRef[];
+}
+
+export interface FileRef {
+  /** Link tải (cần cookie) */
+  url: string;
+  /** Tên hiển thị trên thread, VD "paper.pdf" */
+  name: string;
 }
 
 export interface QuestionComments {
