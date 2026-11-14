@@ -45,7 +45,7 @@ export default function CourseraPage() {
 
       <div className="mt-6">
         <Card>
-          <CardHeader title="Nhập link khóa học" description="Không thấy khóa trong danh sách? Dán link khóa học trên Coursera để kiểm tra." />
+          <CardHeader title="Nhập link khóa học" description="Không thấy khóa trong danh sách? Dán link khóa học trên Coursera, hệ thống tự kiểm tra và hiện tên khóa." />
           <LinkLookup onSelect={select} />
         </Card>
       </div>
