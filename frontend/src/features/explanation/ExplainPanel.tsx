@@ -90,7 +90,7 @@ export function ExplainPanel({ examId, questionNumber, useFreeTurn, firstTime, o
     <aside
       aria-label={`Lời giải thích câu ${questionNumber}`}
       style={{ "--panel-w": `${resize.width}px` } as CSSProperties}
-      className="fixed inset-x-0 bottom-0 z-30 flex max-h-[58dvh] flex-col rounded-t-2xl border-t border-slate-200 bg-surface-container-lowest shadow-[0_-8px_30px_rgba(15,23,42,0.12)] lg:relative lg:z-auto lg:max-h-none lg:w-[var(--panel-w)] lg:shrink-0 lg:rounded-none lg:border-l lg:border-t-0 lg:shadow-none"
+      className="fixed inset-x-0 bottom-0 z-30 flex max-h-[58dvh] flex-col rounded-t-2xl border-t border-slate-200 bg-surface-container-lowest shadow-[0_-8px_30px_rgba(15,23,42,0.12)] lg:relative lg:z-auto lg:max-h-none lg:min-h-0 lg:w-[var(--panel-w)] lg:shrink-0 lg:rounded-none lg:border-l lg:border-t-0 lg:shadow-none"
     >
       {/* Tay kéo ở mép trái (chỉ màn hình rộng): kéo sang trái để rộng ra, sang phải để hẹp lại; nhấp đúp về mặc định */}
       <div
