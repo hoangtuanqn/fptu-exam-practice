@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { BookOpen, History } from "lucide-react";
+import { BookOpen, Eye, History } from "lucide-react";
 import { useOnLibraryChanged } from "@/features/exam-store/libraryEvents";
 import { examLibraryApi, type LibraryExam } from "@/features/exam-store/exam-library.api";
 import { ResumeList } from "@/features/practice-session/ResumeList";
@@ -8,6 +8,7 @@ import { useApi } from "@/shared/hooks/useApi";
 import { useClampPage } from "@/shared/hooks/useClampPage";
 import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
 import { Badge } from "@/shared/ui/Badge";
+import { buttonClass } from "@/shared/ui/Button";
 import { Card } from "@/shared/ui/Card";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
@@ -33,6 +34,13 @@ const AttemptsCell = ({ e }: { e: LibraryExam }) =>
     <>{attemptsText(e)}</>
   );
 
+// Mở trang xem đề chỉ đọc (bấm tên đề vẫn là vào làm bài)
+const ViewLink = ({ threadId }: { threadId: string }) => (
+  <Link to={`/exam/${threadId}/view`} className={buttonClass({ size: "sm", variant: "text" })}>
+    <Eye size={15} /> Xem đề
+  </Link>
+);
+
 // Tab "Của tôi" trong Kho đề: toàn bộ đề đã lấy về, phân trang trên server (trang chủ chỉ hiện vài đề gần nhất)
 export function MyExamsTab() {
   const navigate = useNavigate();
@@ -55,8 +63,8 @@ export function MyExamsTab() {
           <div className={loading ? "opacity-60 transition" : "transition"}>
             <ul className="divide-y divide-slate-100 md:hidden">
               {data.items.map((e) => (
-                <li key={e.id}>
-                  <Link to={`/exam/${e.threadId}`} className="block px-4 py-3 transition active:bg-slate-50">
+                <li key={e.id} className="flex items-center gap-1 pr-2">
+                  <Link to={`/exam/${e.threadId}`} className="block min-w-0 flex-1 px-4 py-3 transition active:bg-slate-50">
                     <div className="truncate text-sm font-medium text-slate-900">{e.title}</div>
                     <div className="mt-0.5 text-xs text-slate-500">
                       {e.totalQuestions} câu · {attemptsText(e)}
@@ -78,6 +86,7 @@ export function MyExamsTab() {
                       <span className="text-xs text-slate-400">Thêm {formatDate(e.addedAt)}</span>
                     </div>
                   </Link>
+                  <ViewLink threadId={e.threadId} />
                 </li>
               ))}
             </ul>
@@ -94,9 +103,12 @@ export function MyExamsTab() {
                   {data.items.map((e) => (
                     <Tr key={e.id}>
                       <Td>
-                        <Link to={`/exam/${e.threadId}`} className="font-medium text-slate-900 hover:text-brand-700 hover:underline">
-                          {e.title}
-                        </Link>
+                        <div className="flex items-center justify-between gap-2">
+                          <Link to={`/exam/${e.threadId}`} className="font-medium text-slate-900 hover:text-brand-700 hover:underline">
+                            {e.title}
+                          </Link>
+                          <ViewLink threadId={e.threadId} />
+                        </div>
                       </Td>
                       <Td className="text-right tabular-nums">{e.totalQuestions}</Td>
                       <Td className="whitespace-nowrap text-slate-600">
