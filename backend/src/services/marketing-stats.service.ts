@@ -1,6 +1,8 @@
 import { isMailConfigured } from "../configs/mailer";
-import { CAMPAIGN_KEYS, CONVERSION_DAYS, MARKETING_RUN_HOUR, STATS_WINDOW_DAYS, type CampaignKey } from "../constants/marketing";
+import { CAMPAIGN_KEYS, CONVERSION_DAYS, MARKETING_RUN_HOUR, STATS_WINDOW_DAYS, isBroadcast, type CampaignKey } from "../constants/marketing";
 import { marketingRepository } from "../repositories/marketing.repository";
+import type { ListLogsQuery } from "../rules/requests/marketing.request";
+import { toSkipTake } from "../utils/pagination";
 import { DAY_MS, startOfVnDay } from "../utils/time";
 import { marketingSettingService } from "./marketing-setting.service";
 
@@ -28,17 +30,23 @@ export const marketingStatsService = {
     const since = new Date(now.getTime() - STATS_WINDOW_DAYS * DAY_MS);
     const matured = new Date(now.getTime() - CONVERSION_DAYS * DAY_MS);
     const [sentToday, optOut, paused, rows, params] = await Promise.all([
-      marketingRepository.sentSince(CAMPAIGN_KEYS, startOfVnDay(now.getTime())),
+      marketingRepository.sentSince(startOfVnDay(now.getTime())),
       marketingRepository.optOutCounts(),
       marketingSettingService.isPaused(),
-      marketingRepository.funnel(CAMPAIGN_KEYS, since, matured),
+      marketingRepository.funnel(since, matured),
       marketingSettingService.params(),
     ]);
-    const funnel = Object.fromEntries(CAMPAIGN_KEYS.map((k) => [k, empty()])) as Record<CampaignKey, FunnelRow>;
+    // `broadcast` cộng mọi thư gửi thủ công (mỗi đợt một dòng trong kết quả truy vấn)
+    const funnel = Object.fromEntries([...CAMPAIGN_KEYS, "broadcast"].map((k) => [k, empty()])) as Record<CampaignKey | "broadcast", FunnelRow>;
     for (const r of rows) {
-      const key = r.campaign as CampaignKey;
-      if (!funnel[key]) continue;
-      funnel[key] = { sent: Number(r.sent), clicked: Number(r.clicked), bought: Number(r.bought), returned: key === "winback" ? Number(r.returned) : 0, pending: Number(r.pending) };
+      const key = isBroadcast(r.campaign) ? "broadcast" : (r.campaign as CampaignKey);
+      const row = funnel[key];
+      if (!row) continue;
+      row.sent += Number(r.sent);
+      row.clicked += Number(r.clicked);
+      row.bought += Number(r.bought);
+      row.returned += key === "winback" ? Number(r.returned) : 0;
+      row.pending += Number(r.pending);
     }
     return {
       status: {
@@ -51,5 +59,10 @@ export const marketingStatsService = {
       },
       funnel,
     };
+  },
+
+  /** Nhật ký thư đã gửi, mới nhất trước; `to` gồm cả ngày đó. Mua Pro theo cùng quy tắc last-touch 7 ngày với phễu. */
+  logs(q: ListLogsQuery) {
+    return marketingRepository.logs({ ...toSkipTake(q), campaign: q.campaign, from: q.from, to: q.to && new Date(q.to.getTime() + DAY_MS), email: q.email });
   },
 };

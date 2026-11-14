@@ -129,6 +129,35 @@ export function renderUpsell(i: UpsellInput): MarketingMail {
   });
 }
 
+// ---------- Gửi thủ công: văn bản thường do admin soạn (luôn escape, không nhận HTML), một nút tới đường dẫn nội bộ
+
+export interface BroadcastInput extends Base {
+  subject: string;
+  body: string; // đoạn cách nhau bằng dòng trống
+  ctaLabel: string;
+  url: string;
+}
+
+const PREHEADER_CHARS = 140;
+
+export const broadcastParagraphs = (body: string) =>
+  body
+    .split(/\r?\n[ \t]*\r?\n/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+export function renderBroadcast(i: BroadcastInput): MarketingMail {
+  const paras = broadcastParagraphs(i.body);
+  return build({
+    ...i,
+    title: i.subject,
+    preheader: (paras[0] ?? "").replace(/\s+/g, " ").slice(0, PREHEADER_CHARS),
+    blocks: [...paras.map((t) => p(esc(t).replace(/\r?\n/g, "<br />"))), button(i.ctaLabel, i.url)],
+    textLines: [...paras.flatMap((t, n) => (n ? ["", t] : [t])), "", `${i.ctaLabel}: ${i.url}`],
+    why: WHY_ACCOUNT,
+  });
+}
+
 // ---------- Pro sắp hết hạn
 
 // Quyền lợi đang bật trong PRO_BENEFITS, viết cho người dùng

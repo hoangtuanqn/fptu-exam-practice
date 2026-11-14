@@ -1224,7 +1224,7 @@ model MaterialChapter {
 model EmailCampaignLog {
   id         Int       @id @default(autoincrement())
   userId     Int       @map("user_id")
-  campaign   String    @db.VarChar(20)
+  campaign   String    @db.VarChar(40) // campaign key or broadcast:<id>
   step       Int
   sentAt     DateTime  @default(now()) @map("sent_at")
   target     String?   @db.VarChar(120) // internal path the mail button leads to (click redirect never reads it from the URL)
@@ -1238,4 +1238,29 @@ model EmailCampaignLog {
   @@index([campaign, step]) // admin dem so thu da gui moi buoc
   @@index([campaign, sentAt]) // so thu hom nay, pheu 30 ngay theo chien dich
   @@map("email_campaign_logs")
+}
+
+enum BroadcastStatus {
+  DRAFT
+  SENDING
+  DONE
+  CANCELLED
+}
+
+// Thu gui thu cong (admin soan, chu de "news"). Gui qua dung luot chay marketing hang ngay, log campaign = broadcast:<id>, step 1.
+// Nguoi nhan tinh lai moi ngay theo segment (khong chup san).
+model MarketingBroadcast {
+  id          Int             @id @default(autoincrement())
+  subject     String          @db.VarChar(120)
+  body        String          @db.Text // plain text, escaped when rendered
+  ctaLabel    String          @map("cta_label") @db.VarChar(40)
+  ctaPath     String          @map("cta_path") @db.VarChar(120) // internal path only
+  segment     String          @db.VarChar(20) // all | pro | free | inactive | exam_soon
+  segmentDays Int?            @map("segment_days") // inactive: days without activity (7..180)
+  status      BroadcastStatus @default(DRAFT)
+  sendingLock Boolean?        @unique @map("sending_lock") // true only while SENDING: at most one SENDING broadcast
+  createdById Int             @map("created_by_id")
+  createdAt   DateTime        @default(now()) @map("created_at")
+
+  @@map("marketing_broadcasts")
 }

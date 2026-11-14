@@ -23,7 +23,7 @@ import { marketingSettingService } from "./marketing-setting.service";
 export type UnsubscribeMode = "all" | "pause" | "topic";
 
 // Người nhận giả cho xem trước: không dùng dữ liệu của ai (id 0 không phải tài khoản nào)
-const PREVIEW_RECIPIENT: Recipient = { id: 0, email: "ban@example.com", fullName: "Bạn", proExpiresAt: null };
+export const PREVIEW_RECIPIENT: Recipient = { id: 0, email: "ban@example.com", fullName: "Bạn", proExpiresAt: null };
 
 const paramsView = (values: MarketingParams) => ({ values, defaults: DEFAULT_MARKETING_PARAMS, limits: PARAM_LIMITS });
 
