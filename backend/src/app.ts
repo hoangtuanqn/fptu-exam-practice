@@ -4,6 +4,7 @@ import helmet from "helmet";
 import { env, storageDir } from "./configs/env";
 import { errorHandler, notFoundHandler } from "./middlewares/error.middlewares";
 import rootRouter from "./routes/root.routes";
+import { isAttachmentStaticPath } from "./utils/attachment";
 
 // Tách app khỏi việc listen để dễ test
 export const createApp = () => {
@@ -19,7 +20,9 @@ export const createApp = () => {
   // Ảnh đề đã crawl. Cho phép trang web ở origin khác nhúng (helmet mặc định chỉ cho cùng origin)
   app.use(
     "/api/v1/files",
-    (_req, res, next) => {
+    (req, res, next) => {
+      // Tệp đính kèm (pdf, zip...) chỉ đi qua /exams/:id/attachments/:id để có Content-Type/Disposition an toàn
+      if (isAttachmentStaticPath(req.path)) return notFoundHandler(req, res, next);
       res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
       next();
     },
