@@ -112,6 +112,7 @@ adminRouter.patch("/exams/:id/questions", validate(idParam, "params"), validate(
 adminRouter.post("/exams/:id/questions/:number/resolve", validate(questionParam, "params"), adminAiController.resolveQuestion);
 adminRouter.post("/exams/:id/solve", validate(idParam, "params"), adminAiController.solve);
 adminRouter.get("/exams/:id/report", validate(idParam, "params"), adminAiController.report);
+adminRouter.get("/exams/:id/download", validate(idParam, "params"), adminAiController.downloadExam);
 
 adminRouter.get("/gift-codes", validate(listGiftCodesQuery, "query"), adminGiftCodeController.list);
 adminRouter.post("/gift-codes", validate(createGiftCodeBody), adminGiftCodeController.create);

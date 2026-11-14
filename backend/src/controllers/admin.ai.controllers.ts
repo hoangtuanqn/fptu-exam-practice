@@ -39,6 +39,16 @@ export const adminAiController = {
     res.json(new ResponseClient({ data: await adminExamService.detail(id) }));
   },
 
+  // Tệp nhị phân nên không bọc ResponseClient; lỗi vẫn đi qua AppError như thường
+  async downloadExam(req: Request, res: Response) {
+    const { id } = getValidated<IdParam>(res, "params");
+    const { zip, filename } = await adminExamService.download(req.user!.id, id);
+    res.setHeader("Content-Type", "application/zip");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.setHeader("Cache-Control", "private, no-store");
+    res.send(zip);
+  },
+
   async saveQuestions(req: Request, res: Response) {
     const { id } = getValidated<IdParam>(res, "params");
     const data = await adminExamService.saveQuestions(req.user!.id, id, getValidated<UpdateExamQuestionsBody>(res));
