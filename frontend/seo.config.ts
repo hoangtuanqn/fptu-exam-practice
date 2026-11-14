@@ -14,7 +14,7 @@ export interface PageSeo {
 // Trang công khai, cho phép lên Google. Khoá là đường dẫn.
 export const PUBLIC_PAGES: Record<string, PageSeo> = {
   "/": {
-    title: "Luyện thi FE FPTU: đề thi có đáp án AI",
+    title: "FEPass: Luyện thi FE FPTU có đáp án và giải thích AI",
     description: "Dán một link FuOverflow là có ngay đề thi FE kèm đáp án AI, giải thích từng câu, chấm điểm thang 10. Cài tiện ích Chrome, đăng ký tặng credit.",
     index: true,
   },
