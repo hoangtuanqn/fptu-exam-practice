@@ -6,7 +6,7 @@ import { idempotent } from "../middlewares/idempotency.middlewares";
 import { makeLimiter } from "../middlewares/rateLimit.middlewares";
 import { validate } from "../middlewares/validate.middlewares";
 import { idParam } from "../rules/requests/admin.request";
-import { courseraCourseBody, courseraCoursesQuery, courseraLookupBody, courseraOrderBody, courseraOrdersQuery, courseraStatusBody } from "../rules/requests/coursera.request";
+import { courseraCourseBody, courseraCoursesQuery, courseraLookupBody, courseraNoteBody, courseraOrderBody, courseraOrdersQuery, courseraStatusBody } from "../rules/requests/coursera.request";
 import { courseraNoStore } from "../middlewares/coursera.middlewares";
 
 const orderLimiter = makeLimiter({ limit: COURSERA.orderRate, keyGenerator: (req) => `user:${req.user!.id}`, validate: { keyGeneratorIpFallback: false } });
@@ -27,4 +27,5 @@ adminCourseraRouter.post("/courses", validate(courseraCourseBody), controller.cr
 adminCourseraRouter.put("/courses/:id", validate(idParam, "params"), validate(courseraCourseBody), controller.updateCourse);
 adminCourseraRouter.get("/orders", validate(courseraOrdersQuery, "query"), controller.adminOrders);
 adminCourseraRouter.patch("/orders/:id", validate(idParam, "params"), validate(courseraStatusBody), controller.updateStatus);
+adminCourseraRouter.post("/orders/:id/note", validate(idParam, "params"), validate(courseraNoteBody), controller.updateNote);
 adminCourseraRouter.post("/orders/:id/credentials", credentialLimiter, validate(idParam, "params"), controller.credentials);

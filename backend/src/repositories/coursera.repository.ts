@@ -66,6 +66,13 @@ export const courseraRepository = {
     if (!result.count) throw AppError.conflict("Đơn không còn ở trạng thái đã chọn. Vui lòng tải lại danh sách.");
     return tx.courseraOrder.findUniqueOrThrow({ where: { id }, select: orderSelect });
   },
+  // Note-only edit in any status: never touches status, amount, refund or password. Compared in JS because the column collation is case-insensitive.
+  async updateNote(id: number, adminNote: string) {
+    const current = await prisma.courseraOrder.findUnique({ where: { id }, select: orderSelect });
+    if (!current) throw AppError.notFound();
+    if (current.adminNote === adminNote) return { order: current, changed: false };
+    return { order: await prisma.courseraOrder.update({ where: { id }, data: { adminNote }, select: orderSelect }), changed: true };
+  },
   markRefunded(tx: Prisma.TransactionClient, id: number) {
     return tx.courseraOrder.update({ where: { id }, data: { refundedAt: new Date() }, select: orderSelect });
   },

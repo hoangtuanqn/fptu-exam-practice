@@ -16,6 +16,7 @@
 - Migrations 0073, 0074 and 0075 are additive (0074 adds pricing fields and wallet transaction enum values; 0075 adds the course code and makes the course URL nullable). Apply migrations and deploy the backend before the frontend. This pricing branch depends on the original Coursera feature branch.
 - COURSERA_ENCRYPTION_KEY is no longer needed for new orders. Keep it configured only while legacy `v1.` rows remain on pending or processing orders; without it those credentials cannot be revealed.
 - New orders notify admins (`coursera.ordered`, important) and user cancellations add a `coursera.cancelled` notice. Members receive mails after commit for order receipt (amount, balance after) and admin status changes (processing, completed, rejected or cancelled with refund and balance after).
+- Admins can also save a reply alone (`POST /api/admin/coursera/orders/:id/note`) in any status, terminal included; it changes only `adminNote` (no status, amount, refund or password change) and mails the member a `note` event after the write, unless the text is unchanged. Status-change mails still carry the current note.
 - Admins must populate the course catalog and set each course price before members can place paid orders. Zero means free. No sample courses or prices are inserted into live data.
 - Catalog search uses bounded substring queries on title or code for the initial small catalog. Measure before introducing full-text search as it grows.
 

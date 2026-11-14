@@ -10,8 +10,8 @@ export interface CourseraOrderEmailInput {
   name: string;
   orderId: number;
   courseTitle: string;
-  event: "received" | Exclude<CourseraStatus, "PENDING">;
-  amount: number; // charged for "received", refunded for REJECTED/CANCELLED, 0 otherwise
+  event: "received" | "note" | Exclude<CourseraStatus, "PENDING">;
+  amount: number; // charged for "received", refunded for REJECTED/CANCELLED, 0 otherwise (never shown for "note")
   balanceAfter: number | null;
   adminNote: string;
   at: Date;
@@ -20,6 +20,7 @@ export interface CourseraOrderEmailInput {
 
 const COPY: Record<CourseraOrderEmailInput["event"], { title: string; lead: string; amountLabel?: string; sign?: string }> = {
   received: { title: "Đã nhận đơn Coursera", lead: "Chúng mình đã nhận đơn Coursera của bạn và sẽ xử lý sớm nhất có thể.", amountLabel: "Phí đơn", sign: "−" },
+  note: { title: "Đơn Coursera có phản hồi mới", lead: "Quản trị viên vừa gửi phản hồi mới cho đơn Coursera của bạn." },
   PROCESSING: { title: "Đơn Coursera đang xử lý", lead: "Đơn Coursera của bạn đang được xử lý." },
   COMPLETED: { title: "Đơn Coursera đã hoàn tất", lead: "Đơn Coursera của bạn đã được xử lý xong." },
   REJECTED: { title: "Đơn Coursera bị từ chối", lead: "Rất tiếc, đơn Coursera của bạn không thể xử lý.", amountLabel: "Đã hoàn", sign: "+" },

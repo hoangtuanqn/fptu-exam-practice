@@ -2,7 +2,7 @@ import { Prisma } from "@prisma/client";
 import { COURSERA, COURSERA_TRANSITIONS } from "../constants/coursera";
 import { courseraRepository } from "../repositories/coursera.repository";
 import { AppError } from "../rules/error";
-import type { CourseraCourseBody, CourseraCoursesQuery, CourseraOrderBody, CourseraOrdersQuery, CourseraStatusBody } from "../rules/requests/coursera.request";
+import type { CourseraCourseBody, CourseraCoursesQuery, CourseraNoteBody, CourseraOrderBody, CourseraOrdersQuery, CourseraStatusBody } from "../rules/requests/coursera.request";
 import { walletService } from "./wallet.service";
 import { readCourseraPassword } from "../utils/coursera-credentials";
 import { CourseraUpstreamError, fetchCourseraName, parseCourseraLink } from "../utils/coursera-lookup";
@@ -90,6 +90,11 @@ export const courseraService = {
     if (!COURSERA_TRANSITIONS[data.expectedStatus].includes(data.status)) throw AppError.conflict("Không thể chuyển đơn sang trạng thái này");
     const { order, refunded, balanceAfter } = await changeStatus(id, data);
     if (order.status !== "PENDING") mailOrder(order, order.status, refunded, balanceAfter);
+    return order;
+  }),
+  updateNote: (id: number, data: CourseraNoteBody) => safe(async () => {
+    const { order, changed } = await courseraRepository.updateNote(id, data.adminNote);
+    if (changed) mailOrder(order, "note", 0);
     return order;
   }),
   cancel: (id: number, userId: number) => safe(async () => {

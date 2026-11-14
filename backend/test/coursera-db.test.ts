@@ -11,7 +11,7 @@ const load = async () => ({
   legacy: (await import("../src/utils/coursera-credentials")).encryptCourseraPassword,
 });
 type Push = { kind: string; title: string; body?: string | null; userId?: number | null };
-type Mail = { to: string; event: string; amount: number; balanceAfter: number | null; text: string };
+type Mail = { to: string; event: string; amount: number; balanceAfter: number | null; text: string; html: string };
 const page = { page: 1, limit: 20 };
 const hasStatus = (status: number) => (error: unknown) => (error as { status?: number }).status === status;
 
@@ -29,7 +29,8 @@ describe("Coursera orders (throwaway MySQL)", { skip: DB_TESTS_ENABLED ? false :
     m.notices.push = (kind, input) => { pushes.push({ kind, ...input }); };
     m.mail.sendCourseraOrder = async (to, input) => {
       const { renderCourseraOrderEmail } = await import("../src/mail/templates/coursera-notice");
-      mails.push({ to, event: input.event, amount: input.amount, balanceAfter: input.balanceAfter, text: renderCourseraOrderEmail(input).text });
+      const { text, html } = renderCourseraOrderEmail(input);
+      mails.push({ to, event: input.event, amount: input.amount, balanceAfter: input.balanceAfter, text, html });
     };
     userId = (await m.prisma.user.create({ data: { email: "coursera@example.invalid", fullName: "Test", password: "test" } })).id;
     otherId = (await m.prisma.user.create({ data: { email: "other@example.invalid", fullName: "Other", password: "test" } })).id;
@@ -202,5 +203,35 @@ describe("Coursera orders (throwaway MySQL)", { skip: DB_TESTS_ENABLED ? false :
     const mine = mails.filter((x) => x.to === buyer.email);
     assert.deepEqual(mine.map((x) => [x.event, x.amount, x.balanceAfter]), [["received", 40, 60], ["PROCESSING", 0, 100 - 40], ["REJECTED", 40, 100]]);
     assert.match(mine[2]!.text, /Sai tài khoản/);
+  });
+
+  it("saves a standalone admin note in any status and mails only when it changes", async () => {
+    const course = await m.service.saveCourse({ title: "Note course", url: "https://www.coursera.org/learn/note-test", price: 20, isActive: true });
+    const buyer = await m.prisma.user.create({ data: { email: "note@example.invalid", fullName: "Note", password: "test", balance: 100 } });
+    const body = { ...input(), courseId: course.id, expectedPrice: 20, password: "note secret" };
+    const order = await m.service.createOrder(buyer.id, body);
+    const noteMails = () => mails.filter((x) => x.to === buyer.email && x.event === "note");
+
+    const pending = await m.service.updateNote(order.id, { adminNote: "<b>Kiểm tra</b> & đợi" });
+    assert.deepEqual([pending.status, pending.adminNote, pending.amount, "password" in pending], ["PENDING", "<b>Kiểm tra</b> & đợi", 20, false]);
+    assert.equal((await m.prisma.courseraOrder.findUniqueOrThrow({ where: { id: order.id } })).password, body.password); // credentials untouched
+    await m.service.updateNote(order.id, { adminNote: "<b>Kiểm tra</b> & đợi" }); // unchanged: no second mail
+    await settle();
+    assert.equal(noteMails().length, 1);
+    const mail = noteMails()[0]!;
+    assert.ok(mail.html.includes("&lt;b&gt;Kiểm tra&lt;/b&gt; &amp; đợi") && !mail.html.includes("<b>Kiểm tra</b>"));
+    assert.match(mail.text, /Ghi chú: <b>Kiểm tra<\/b> & đợi/);
+    assert.match(mail.text, /\/account\/coursera/);
+    for (const value of [mail.text, mail.html]) assert.ok(!value.includes(body.password) && !value.includes("Phí đơn") && !value.includes("Số dư"));
+
+    await m.service.cancel(order.id, buyer.id);
+    const before = await m.prisma.courseraOrder.findUniqueOrThrow({ where: { id: order.id } });
+    const terminal = await m.service.updateNote(order.id, { adminNote: "Đã hoàn phí" });
+    const after = await m.prisma.courseraOrder.findUniqueOrThrow({ where: { id: order.id } });
+    assert.deepEqual([terminal.status, after.adminNote, after.amount, after.refundedAt?.getTime(), after.password], ["CANCELLED", "Đã hoàn phí", before.amount, before.refundedAt?.getTime(), null]);
+    assert.equal((await m.prisma.user.findUniqueOrThrow({ where: { id: buyer.id } })).balance, 100);
+    await settle();
+    assert.equal(noteMails().length, 2);
+    await assert.rejects(m.service.updateNote(2147483647, { adminNote: "x" }), hasStatus(404));
   });
 });

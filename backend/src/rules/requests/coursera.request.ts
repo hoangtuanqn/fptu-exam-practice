@@ -39,9 +39,11 @@ export const courseraStatusBody = z.object({
   status: z.enum(COURSERA_STATUSES),
   adminNote: z.string().trim().max(COURSERA.noteLength).default(""),
 });
-export type CourseraCoursesQuery = z.infer<typeof courseraCoursesQuery>;
+export const courseraNoteBody = z.object({ adminNote: z.string().trim().min(1).max(COURSERA.noteLength) });
+export type CourseraCoursesQuery =z.infer<typeof courseraCoursesQuery>;
 export type CourseraOrdersQuery = z.infer<typeof courseraOrdersQuery>;
 export type CourseraCourseBody = z.infer<typeof courseraCourseBody>;
 export type CourseraOrderBody = z.infer<typeof courseraOrderBody>;
 export type CourseraLookupBody = z.infer<typeof courseraLookupBody>;
 export type CourseraStatusBody = z.infer<typeof courseraStatusBody>;
+export type CourseraNoteBody = z.infer<typeof courseraNoteBody>;

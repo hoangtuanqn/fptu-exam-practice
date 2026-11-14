@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { getValidated } from "../middlewares/validate.middlewares";
 import type { IdParam } from "../rules/requests/admin.request";
-import type { CourseraCourseBody, CourseraCoursesQuery, CourseraLookupBody, CourseraOrderBody, CourseraOrdersQuery, CourseraStatusBody } from "../rules/requests/coursera.request";
+import type { CourseraCourseBody, CourseraCoursesQuery, CourseraLookupBody, CourseraNoteBody, CourseraOrderBody, CourseraOrdersQuery, CourseraStatusBody } from "../rules/requests/coursera.request";
 import { ResponseClient } from "../rules/response";
 import { courseraService } from "../services/coursera.service";
 
@@ -40,6 +40,9 @@ export const courseraController = {
   },
   async updateStatus(_req: Request, res: Response) {
     res.json(new ResponseClient({ data: await courseraService.updateStatus(idOf(res), getValidated<CourseraStatusBody>(res)) }));
+  },
+  async updateNote(_req: Request, res: Response) {
+    res.json(new ResponseClient({ data: await courseraService.updateNote(idOf(res), getValidated<CourseraNoteBody>(res)) }));
   },
   async credentials(req: Request, res: Response) {
     res.json(new ResponseClient({ data: await courseraService.credentials(idOf(res), req.user!.id) }));
