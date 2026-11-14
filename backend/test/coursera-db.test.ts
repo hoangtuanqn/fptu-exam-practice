@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { randomBytes, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { after, before, describe, it } from "node:test";
 import { createThrowawayDb, DB_SKIP_REASON, DB_TESTS_ENABLED, type ThrowawayDb } from "./helpers/test-db";
 
@@ -8,7 +8,6 @@ const load = async () => ({
   service: (await import("../src/services/coursera.service")).courseraService,
   notices: (await import("../src/services/admin-notice.service")).adminNoticeService,
   mail: (await import("../src/services/mail.service")).mailService,
-  legacy: (await import("../src/utils/coursera-credentials")).encryptCourseraPassword,
 });
 type Push = { kind: string; title: string; body?: string | null; userId?: number | null };
 type Mail = { to: string; event: string; amount: number; balanceAfter: number | null; text: string; html: string };
@@ -22,10 +21,8 @@ describe("Coursera orders (throwaway MySQL)", { skip: DB_TESTS_ENABLED ? false :
   const pushes: Push[] = [];
   const mails: Mail[] = [];
   const settle = () => new Promise((resolve) => setTimeout(resolve, 50)); // mails resolve the user before sending
-  const previousKey = process.env.COURSERA_ENCRYPTION_KEY;
   before(async () => {
     db = await createThrowawayDb(); m = await load();
-    process.env.COURSERA_ENCRYPTION_KEY = randomBytes(32).toString("hex"); // only for the legacy "v1." row test
     m.notices.push = (kind, input) => { pushes.push({ kind, ...input }); };
     m.mail.sendCourseraOrder = async (to, input) => {
       const { renderCourseraOrderEmail } = await import("../src/mail/templates/coursera-notice");
@@ -37,7 +34,6 @@ describe("Coursera orders (throwaway MySQL)", { skip: DB_TESTS_ENABLED ? false :
     courseId = (await m.service.saveCourse({ title: "Original course", url: "https://www.coursera.org/learn/test", isActive: true })).id;
   });
   after(async () => {
-    if (previousKey === undefined) delete process.env.COURSERA_ENCRYPTION_KEY; else process.env.COURSERA_ENCRYPTION_KEY = previousKey;
     await m?.prisma.$disconnect(); await db?.drop();
   });
   const input = () => ({ courseId, expectedPrice: 0, requestKey: randomUUID(), email: "learner@example.invalid", password: "test secret", note: "Example note" });
@@ -141,13 +137,10 @@ describe("Coursera orders (throwaway MySQL)", { skip: DB_TESTS_ENABLED ? false :
     assert.equal(order.courseUrl, "");
   });
 
-  it("reveals plaintext passwords as stored and decrypts legacy v1 rows", async () => {
+  it("reveals passwords exactly as stored", async () => {
     const free = (await m.service.saveCourse({ title: "Credential course", isActive: true })).id;
     const plain = await m.service.createOrder(userId, { ...input(), courseId: free, password: "v1.looks-like-an-envelope" });
     assert.equal((await m.service.credentials(plain.id, otherId)).password, "v1.looks-like-an-envelope");
-    const legacy = await m.service.createOrder(userId, { ...input(), courseId: free });
-    await m.prisma.courseraOrder.update({ where: { id: legacy.id }, data: { password: m.legacy("old secret") } });
-    assert.equal((await m.service.credentials(legacy.id, otherId)).password, "old secret");
   });
 
   it("looks up a pasted link once as an unlisted course, hides it from members and charges the link price", async () => {

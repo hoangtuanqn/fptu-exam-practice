@@ -1,37 +1,8 @@
 import assert from "node:assert/strict";
-import { randomBytes } from "node:crypto";
-import { after, before, describe, it } from "node:test";
-import { encryptCourseraPassword, decryptCourseraPassword, readCourseraPassword } from "../src/utils/coursera-credentials";
+import { describe, it } from "node:test";
 import { courseraCourseBody, courseraOrderBody } from "../src/rules/requests/coursera.request";
 
-describe("Coursera credentials and validation", () => {
-  const previous = process.env.COURSERA_ENCRYPTION_KEY;
-  before(() => { process.env.COURSERA_ENCRYPTION_KEY = randomBytes(32).toString("hex"); });
-  after(() => { if (previous === undefined) delete process.env.COURSERA_ENCRYPTION_KEY; else process.env.COURSERA_ENCRYPTION_KEY = previous; });
-  it("preserves password whitespace and Unicode, with randomized ciphertext", () => {
-    const password = "  mật khẩu thử nghiệm  ";
-    const first = encryptCourseraPassword(password);
-    assert.notEqual(first, encryptCourseraPassword(password));
-    assert.equal(first.includes(password), false);
-    assert.equal(decryptCourseraPassword(first), password);
-  });
-  it("rejects tampered data and missing keys without exposing credentials", () => {
-    const value = encryptCourseraPassword("private-value");
-    const parts = value.split(".");
-    const ciphertext = Buffer.from(parts[3]!, "base64");
-    ciphertext[0] = ciphertext[0]! ^ 1;
-    parts[3] = ciphertext.toString("base64");
-    assert.throws(() => decryptCourseraPassword(parts.join(".")), /Không thể đọc/);
-    const key = process.env.COURSERA_ENCRYPTION_KEY;
-    delete process.env.COURSERA_ENCRYPTION_KEY;
-    assert.throws(() => encryptCourseraPassword("private-value"), /chưa sẵn sàng/);
-    process.env.COURSERA_ENCRYPTION_KEY = key;
-  });
-  it("reads plaintext as is and only decrypts exact legacy envelopes", () => {
-    assert.equal(readCourseraPassword(" plain secret "), " plain secret ");
-    assert.equal(readCourseraPassword("v1.a.b.c"), "v1.a.b.c");
-    assert.equal(readCourseraPassword(encryptCourseraPassword("legacy")), "legacy");
-  });
+describe("Coursera validation", () => {
   it("accepts an optional code and URL, storing blanks as null", () => {
     assert.deepEqual(courseraCourseBody.parse({ title: "Course", code: " CSE101 " }), { title: "Course", code: "CSE101", isActive: true });
     const blank = courseraCourseBody.parse({ title: "Course", code: "", url: "  " });

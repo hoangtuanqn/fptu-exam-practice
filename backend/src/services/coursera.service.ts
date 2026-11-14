@@ -4,7 +4,6 @@ import { courseraRepository } from "../repositories/coursera.repository";
 import { AppError } from "../rules/error";
 import type { CourseraCourseBody, CourseraCoursesQuery, CourseraNoteBody, CourseraOrderBody, CourseraOrdersQuery, CourseraStatusBody } from "../rules/requests/coursera.request";
 import { walletService } from "./wallet.service";
-import { readCourseraPassword } from "../utils/coursera-credentials";
 import { CourseraUpstreamError, fetchCourseraName, parseCourseraLink } from "../utils/coursera-lookup";
 import { formatCredit } from "../utils/format";
 import { adminNoticeService } from "./admin-notice.service";
@@ -105,6 +104,6 @@ export const courseraService = {
   }),
   credentials: (id: number, adminId: number) => safe(async () => {
     const row = await courseraRepository.credentials(id, adminId);
-    return { email: row.email, password: readCourseraPassword(row.password!) };
+    return { email: row.email, password: row.password! };
   }),
 };
