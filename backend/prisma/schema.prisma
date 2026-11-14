@@ -100,7 +100,9 @@ enum CourseraOrderStatus {
 model CourseraCourse {
   id        Int      @id @default(autoincrement())
   title     String   @db.VarChar(255)
-  url       String   @unique @db.VarChar(500)
+  // Optional: the FuOverflow catalog has no Coursera link; many NULLs are allowed under the unique index
+  url       String?  @unique @db.VarChar(500)
+  code      String?  @unique @db.VarChar(32)
   isActive  Boolean  @default(true) @map("is_active")
   price     Int      @default(0)
   createdAt DateTime @default(now()) @map("created_at")
@@ -122,7 +124,8 @@ model CourseraOrder {
   amount             Int                 @default(0)
   refundedAt         DateTime?           @map("refunded_at")
   email              String              @db.VarChar(254)
-  encryptedPassword  String?             @map("encrypted_password") @db.Text
+  // Plaintext by owner decision (ADR 0005); legacy rows may hold a "v1." AES-GCM envelope. Erased on terminal status.
+  password           String?             @map("encrypted_password") @db.Text
   note               String              @db.Text
   status             CourseraOrderStatus @default(PENDING)
   adminNote          String              @default("") @map("admin_note") @db.VarChar(2000)
