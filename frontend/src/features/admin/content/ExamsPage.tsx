@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Copy, ExternalLink, FileText, Loader2, Sparkles } from "lucide-react";
+import { Copy, Download, ExternalLink, FileText, Loader2, Sparkles } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { adminApi } from "@/features/admin/api/admin.api";
 import { useToast } from "@/shared/context/ToastContext";
@@ -70,6 +70,7 @@ export default function ExamsPage() {
   const [report, setReport] = useState<number | null>(null);
   const [fullError, setFullError] = useState<{ title: string; text: string } | null>(null); // lỗi AI đang xem toàn văn
   const [starting, setStarting] = useState<number | null>(null);
+  const [downloading, setDownloading] = useState<number | null>(null);
 
   // Có đề đang được AI giải thì hỏi lại định kỳ để thấy khi xong
   const anySolving = data?.items.some((e) => e.solving) ?? false;
@@ -90,6 +91,18 @@ export default function ExamsPage() {
       toast.error(errorMessage(err, "Không bắt đầu được"));
     } finally {
       setStarting(null);
+    }
+  }
+
+  async function download(id: number) {
+    setDownloading(id);
+    try {
+      await adminApi.downloadExam(id);
+      toast.success("Đã tải đề");
+    } catch (err) {
+      toast.error(errorMessage(err, "Không tải được đề"));
+    } finally {
+      setDownloading(null);
     }
   }
 
@@ -131,7 +144,7 @@ export default function ExamsPage() {
       <span>{e.threadId}</span>
     );
 
-  // Thao tác gọn: hai nút biểu tượng (xem chi tiết/sửa là bấm vào dòng đề)
+  // Thao tác gọn: các nút biểu tượng (xem chi tiết/sửa là bấm vào dòng đề)
   const iconBtn = "inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:opacity-40";
   const action = (e: AdminExam) => {
     const busy = e.solving || starting === e.id;
@@ -139,6 +152,9 @@ export default function ExamsPage() {
       <div className="flex items-center justify-end gap-1.5">
         <button type="button" className={iconBtn} title="Báo cáo của AI" aria-label="Báo cáo của AI" onClick={(ev) => { ev.stopPropagation(); setReport(e.id); }}>
           <FileText size={15} />
+        </button>
+        <button type="button" className={iconBtn} title="Tải đề (.zip): ảnh từng câu và file đáp án" aria-label="Tải đề (.zip)" disabled={downloading === e.id} onClick={(ev) => { ev.stopPropagation(); void download(e.id); }}>
+          {downloading === e.id ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}
         </button>
         <button type="button" className={iconBtn} title={busy ? "AI đang giải…" : "AI giải lại cả đề"} aria-label="AI giải lại cả đề" disabled={busy} onClick={(ev) => { ev.stopPropagation(); void solve(e); }}>
           {busy ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}

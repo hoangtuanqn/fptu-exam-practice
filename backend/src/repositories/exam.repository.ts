@@ -71,6 +71,13 @@ export const examRepository = {
       },
     }),
 
+  // Admin tải đề .zip: chỉ ảnh + đáp án từng câu
+  findForExport: (id: number) =>
+    prisma.exam.findUnique({
+      where: { id },
+      select: { threadId: true, subjectCode: true, answerSource: true, questions: { orderBy: { number: "asc" }, select: { number: true, imagePath: true, answer: true } } },
+    }),
+
   // Dữ liệu để nhờ AI giải lại: tên + đường dẫn ảnh từng câu
   findForSolve: (id: number) =>
     prisma.exam.findUnique({

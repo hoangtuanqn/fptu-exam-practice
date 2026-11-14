@@ -19,6 +19,9 @@ import { crawlerSettingService } from "./crawler-setting.service";
 import { fuoSessionService, isFuoAuthFailure } from "./crawler/fuo-session.service";
 import { examSolveService } from "./exam-solve.service";
 import { subjectCodeFromTitle } from "../utils/subject-code";
+import { buildExamZip, ExamZipTooLarge, withTrustedAnswers } from "../utils/exam-zip";
+import { EXAM_ZIP_MAX_BYTES, EXAM_ZIP_MAX_QUESTIONS } from "../constants/exam";
+import { HTTP_STATUS } from "../constants/httpStatus";
 
 export const adminExamService = {
   async list(query: PaginationQuery) {
@@ -124,6 +127,22 @@ export const adminExamService = {
       solving: examSolveService.isBusy(id) || exam.answerSource === "PENDING",
       questions: questions.map(({ imagePath, ...q }) => ({ ...q, imageUrl: fileUrlOf(imagePath) })),
     };
+  },
+
+  // Tải đề dạng .zip: images/NN.ext + dap-an/dap-an.txt. Ảnh thiếu thì bỏ qua, không làm hỏng cả file
+  async download(adminId: number, id: number) {
+    const exam = await examRepository.findForExport(id);
+    if (!exam) throw AppError.notFound("Không tìm thấy đề");
+    const tooLarge = new AppError("Đề quá lớn để tải về", HTTP_STATUS.PAYLOAD_TOO_LARGE);
+    if (exam.questions.length > EXAM_ZIP_MAX_QUESTIONS) throw tooLarge;
+    const built = await buildExamZip(withTrustedAnswers(exam.questions, exam.answerSource), { root: storageDir, readFile: (p) => fs.readFile(p), maxBytes: EXAM_ZIP_MAX_BYTES }).catch((e) => {
+      throw e instanceof ExamZipTooLarge ? tooLarge : e;
+    });
+    for (const n of built.skipped) console.warn(`[admin] tải đề #${id}: bỏ qua ảnh câu ${n} (không đọc được)`);
+    console.log(`[admin] #${adminId} tải đề #${id}`);
+    const name = `${exam.subjectCode ?? "de"}_${exam.threadId}`.replace(/[^A-Za-z0-9_-]/g, "") || `de_${id}`;
+    // shortcut: zip dựng trong bộ nhớ (trần 100 MB), chuyển sang fflate Zip streaming khi đề lớn hơn nhiều
+    return { zip: Buffer.from(built.zip.buffer, built.zip.byteOffset, built.zip.byteLength), filename: `${name}.zip` };
   },
 
   /**

@@ -30,7 +30,7 @@ import type {
   User,
   UserStatus,
 } from "@/shared/types/api";
-import { http } from "@/shared/api/client";
+import { ApiError, BASE, http, tokenStore } from "@/shared/api/client";
 import { PAGE_SIZE } from "@/shared/api/pagination";
 
 export type NoticeCategory = "account" | "fetch" | "money" | "exam" | "system";
@@ -468,6 +468,40 @@ export const adminApi = {
   renameExam: (id: number, title: string) =>
     http.patch<ExamAdminDetail>(`/admin/exams/${id}`, { title }),
   deleteExam: (id: number) => http.delete(`/admin/exams/${id}`),
+  // Tải đề dạng zip (ảnh + đáp án) rồi lưu xuống máy; trả về tên file đã lưu
+  async downloadExam(id: number): Promise<string> {
+    await http.get("/users/me").catch(() => undefined); // làm mới token nếu sắp hết hạn (fetch thô bên dưới không tự làm mới)
+    let res: Response;
+    try {
+      res = await fetch(`${BASE}/admin/exams/${id}/download`, {
+        headers: { Authorization: `Bearer ${tokenStore.get() ?? ""}` },
+        credentials: "include",
+      });
+    } catch {
+      throw new ApiError("Không kết nối được máy chủ", 0);
+    }
+    if (!res.ok) {
+      const json = (await res.json().catch(() => null)) as { message?: string } | null;
+      throw new ApiError(json?.message ?? `Lỗi ${res.status}`, res.status);
+    }
+    const cd = res.headers.get("content-disposition") ?? "";
+    const star = cd.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+    const plain = cd.match(/filename="?([^";]+)"?/i)?.[1];
+    let filename = plain ?? `de-${id}.zip`;
+    try {
+      if (star) filename = decodeURIComponent(star);
+    } catch {
+      /* tên mã hoá lỗi: giữ tên thường */
+    }
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(await res.blob());
+    a.download = filename;
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
+    return filename;
+  },
   peDownloads: (f: { page: number; userId?: string; search?: string }) =>
     http.list<AdminPeDownload>("/admin/pe-downloads", {
       ...f,

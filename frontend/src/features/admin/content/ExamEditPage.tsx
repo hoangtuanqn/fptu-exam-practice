@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, BookOpen, Check, ClipboardPaste, ExternalLink, Loader2, Pencil, RotateCcw, Save, Search, Sparkles, Trash2, X } from "lucide-react";
+import { ArrowLeft, BookOpen, Check, ClipboardPaste, Download, ExternalLink, Loader2, Pencil, RotateCcw, Save, Search, Sparkles, Trash2, X } from "lucide-react";
 import { adminApi, type ExamAdminDetail, type ExamQuestionAdmin, type QuestionChange, type QuestionResolve } from "@/features/admin/api/admin.api";
 import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
@@ -326,6 +326,7 @@ export default function ExamEditPage() {
   const [pasting, setPasting] = useState(false);
   const [zoom, setZoom] = useState<ExamQuestionAdmin | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [solvingNo, setSolvingNo] = useState<number | null>(null); // câu đang nhờ AI giải (mỗi lần một câu để không dồn token)
   const [aiNotes, setAiNotes] = useState<Record<number, QuestionResolve>>({});
 
@@ -411,6 +412,18 @@ export default function ExamEditPage() {
     }
   }
 
+  async function download() {
+    setDownloading(true);
+    try {
+      await adminApi.downloadExam(examId);
+      toast.success("Đã tải đề");
+    } catch (err) {
+      toast.error(errorMessage(err, "Không tải được đề"));
+    } finally {
+      setDownloading(false);
+    }
+  }
+
   function applyPasted(map: Map<number, string>) {
     let applied = 0;
     setDraft((prev) => {
@@ -474,7 +487,11 @@ export default function ExamEditPage() {
         </div>
       </div>
 
-      <div className="mb-3 flex justify-end">
+      <div className="mb-3 flex flex-wrap items-center justify-end gap-2">
+        <span className="text-xs text-slate-500">Gồm thư mục images (ảnh từng câu) và dap-an (file đáp án)</span>
+        <Button size="sm" disabled={downloading} onClick={() => void download()}>
+          {downloading ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />} Tải đề (.zip)
+        </Button>
         <Button size="sm" variant="ghost" className="text-rose-600 hover:bg-rose-50 hover:text-rose-700" disabled={locked} onClick={() => setDeleting(true)}>
           <Trash2 size={14} /> Xoá đề
         </Button>
