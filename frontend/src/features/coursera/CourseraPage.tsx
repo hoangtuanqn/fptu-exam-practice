@@ -1,7 +1,6 @@
 import { useRef, useState } from "react";
 import { Card, CardHeader, PageHeader } from "@/shared/ui/Card";
 import { useUrlState } from "@/shared/hooks/useUrlState";
-import { CoursePicker } from "./CoursePicker";
 import { OrderForm } from "./OrderForm";
 import { LinkLookup } from "./LinkLookup";
 import { OrderHistory } from "./OrderHistory";
@@ -30,7 +29,7 @@ export default function CourseraPage() {
 
   return (
     <>
-      <PageHeader title="Đặt đơn Coursera" description="Tìm khóa học, điền thông tin tài khoản và theo dõi tiến độ xử lý đơn." />
+      <PageHeader title="Đặt đơn Coursera" description="Dán link khóa học, điền thông tin tài khoản và theo dõi tiến độ xử lý đơn." />
 
       {created && (
         <p role="status" className="md-body-medium mb-6 rounded-m3-md bg-success-container px-4 py-3 text-on-success-container">
@@ -39,16 +38,9 @@ export default function CourseraPage() {
       )}
 
       <Card>
-        <CardHeader title="Chọn khóa học" description="Tìm theo mã môn hoặc tên khóa, bấm vào một môn để điền thông tin đặt đơn bên dưới." />
-        <CoursePicker selectedId={course?.id} onSelect={select} />
+        <CardHeader title="Nhập link khóa học" description="Dán link khóa học trên Coursera, hệ thống tự kiểm tra và hiện tên khóa." />
+        <LinkLookup onSelect={select} />
       </Card>
-
-      <div className="mt-6">
-        <Card>
-          <CardHeader title="Nhập link khóa học" description="Không thấy khóa trong danh sách? Dán link khóa học trên Coursera, hệ thống tự kiểm tra và hiện tên khóa." />
-          <LinkLookup onSelect={select} />
-        </Card>
-      </div>
 
       <div ref={formRef} className="mt-6 scroll-mt-20">
         {course ? (
@@ -56,7 +48,7 @@ export default function CourseraPage() {
         ) : (
           <Card>
             <CardHeader title="Thông tin đặt đơn" />
-            <p className="md-body-medium p-5 text-on-surface-variant">Chọn một khóa học ở danh sách trên để điền tài khoản Coursera và đặt đơn.</p>
+            <p className="md-body-medium p-5 text-on-surface-variant">Dán link khóa học ở trên để điền tài khoản Coursera và đặt đơn.</p>
           </Card>
         )}
       </div>
