@@ -28,6 +28,9 @@ export const RETRIEVE_MIN_SCORE = 0.45; // dưới mức này coi như không c�
 export const CHAT_MAX_TURNS = 6; // chỉ gửi chừng này tin gần nhất cho Claude
 export const CHAT_OLD_REPLY_CHARS = 400; // câu trả lời cũ của Cóc Pass trong lịch sử được cắt còn chừng này ký tự (chỉ cần đủ ngữ cảnh)
 export const CHAT_MAX_INPUT_CHARS = 800;
+// Số tin mỗi đợt trong ngày (giờ Việt Nam, đặt lại 0h): hết đợt thì tin kế tiếp phải qua captcha, qua rồi mở đợt kế tiếp
+export const CHAT_GUEST_BATCH = 10;
+export const CHAT_MEMBER_BATCH = 20;
 // Trần token sinh ra MỖI LƯỢT GỌI, gồm cả token suy nghĩ (Haiku 5.5 mặc định có suy nghĩ thích ứng). Trước đây 700: suy nghĩ chiếm một phần,
 // câu trả lời dài (danh sách đề, các chương của môn) bị cắt giữa chừng mà không báo gì. Chạm trần thì máy chủ cho Claude viết tiếp một lần (xem chat.service).
 export const CHAT_MAX_OUTPUT_TOKENS = 4000;

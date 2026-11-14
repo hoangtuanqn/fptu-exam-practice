@@ -10,6 +10,7 @@ interface StreamHandlers {
   onDelta: (text: string) => void;
   onStatus?: (text: string) => void; // máy chủ đang tra cứu dữ liệu cho người dùng
   signal?: AbortSignal;
+  captchaToken?: string; // token Turnstile khi máy chủ báo hết một đợt tin nhắn trong ngày
 }
 
 // Người dùng không cần biết mã lỗi: đổi mọi lỗi kỹ thuật thành một câu dễ hiểu và biết phải làm gì
@@ -22,16 +23,16 @@ function friendly(status: number, serverMessage?: string): string {
 }
 
 // Gửi yêu cầu stream; token hết hạn (401) thì làm mới một lần rồi gửi lại, giống các API khác
-async function open(messages: ChatMessage[], signal: AbortSignal | undefined, retried = false): Promise<Response> {
+async function open(messages: ChatMessage[], signal: AbortSignal | undefined, captchaToken?: string, retried = false): Promise<Response> {
   const token = tokenStore.get();
   const res = await fetch(`${BASE}/chat/stream`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "text/event-stream", "X-Guest-Id": getGuestId(), ...(token && { Authorization: `Bearer ${token}` }) },
-    body: JSON.stringify({ messages }),
+    body: JSON.stringify({ messages, ...(captchaToken && { captchaToken }) }),
     credentials: "include",
     signal,
   });
-  if (res.status === 401 && token && !retried && (await refreshAccessToken()) === "ok") return open(messages, signal, true);
+  if (res.status === 401 && token && !retried && (await refreshAccessToken()) === "ok") return open(messages, signal, captchaToken, true);
   return res;
 }
 
@@ -42,17 +43,17 @@ export const chatApi = {
    * Hỏi trợ lý và nhận câu trả lời dạng stream (SSE): từng đoạn chữ gọi onDelta ngay khi tới.
    * Lỗi (chatbot tắt, hỏi quá nhanh, đứt giữa chừng) ném ApiError/Error với lời nhắn tiếng Việt.
    */
-  async askStream(messages: ChatMessage[], { onDelta, onStatus, signal }: StreamHandlers): Promise<void> {
+  async askStream(messages: ChatMessage[], { onDelta, onStatus, signal, captchaToken }: StreamHandlers): Promise<void> {
     let res: Response;
     try {
-      res = await open(messages, signal);
+      res = await open(messages, signal, captchaToken);
     } catch (err) {
       if ((err as Error).name === "AbortError") throw err;
       throw new ApiError(friendly(0), 0);
     }
     if (!res.ok || !res.body) {
-      const json = (await res.json().catch(() => null)) as { message?: string } | null;
-      throw new ApiError(friendly(res.status, json?.message), res.status);
+      const json = (await res.json().catch(() => null)) as { message?: string; errors?: Record<string, string> } | null;
+      throw new ApiError(friendly(res.status, json?.message), res.status, json?.errors); // errors.captcha: hết một đợt tin nhắn, cần xác minh
     }
 
     const reader = res.body.getReader();
