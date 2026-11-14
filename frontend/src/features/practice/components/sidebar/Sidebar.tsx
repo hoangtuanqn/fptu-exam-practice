@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ChevronDown, ChevronRight, LayoutGrid } from "lucide-react";
 import type { Quiz } from "@/features/practice/hooks/useQuiz";
 import { useKeydown } from "@/features/practice/hooks/useKeydown";
+import { AnswerOptions } from "@/features/practice/components/quiz/AnswerOptions";
 import { Legend } from "./Legend";
 import { QuestionGrid } from "./QuestionGrid";
 
@@ -32,6 +33,7 @@ export function Sidebar({ quiz }: { quiz: Quiz }) {
   };
   useKeydown((e) => open && e.key === "Escape" && setOpen(false));
 
+  const question = quiz.questions[quiz.current];
   const count = Math.max(quiz.total, quiz.questions.length);
   const done = quiz.result ? quiz.result.correct : Object.values(quiz.answers).filter((a) => a.length > 0).length;
 
@@ -57,6 +59,13 @@ export function Sidebar({ quiz }: { quiz: Quiz }) {
         <ChevronDown size={14} className={`lg:hidden ${open ? "rotate-180" : ""}`} />
         <ChevronRight size={14} className={`hidden lg:block ${open ? "rotate-180" : ""}`} />
       </button>
+
+      {/* Màn hình rộng: đáp án A–H xếp dọc ngay dưới nút danh sách câu, nút nhỏ để dành chỗ cho đề (màn nhỏ: đáp án ở thanh dưới). Quá dài thì cuộn */}
+      {question && (
+        <div className="mt-2 hidden max-h-[calc(100dvh-18rem)] w-full flex-col items-center overflow-y-auto rounded-2xl border border-outline-variant bg-surface-container-lowest px-1.5 py-2 shadow-sm lg:flex">
+          <AnswerOptions vertical question={question} selected={quiz.answers[question.number] ?? []} revealed={quiz.isRevealed(question)} onChoose={(opt) => quiz.choose(question, opt)} />
+        </div>
+      )}
 
       {open && (
         <>
