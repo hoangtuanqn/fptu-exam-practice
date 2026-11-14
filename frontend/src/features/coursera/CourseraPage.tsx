@@ -29,10 +29,8 @@ export default function CourseraPage() {
         </p>
       )}
 
-      {course ? (
-        <OrderForm key={course.id} course={course} onBack={() => setCourse(null)} onCreated={onCreated} />
-      ) : (
-        <Card>
+      <div className="grid items-start gap-6 expanded:grid-cols-5">
+        <Card className="expanded:col-span-3">
           <CardHeader title="Chọn khóa học" description="Tìm theo mã môn hoặc tên khóa, bấm Chọn để điền thông tin đặt đơn." />
           <CoursePicker
             onSelect={(value) => {
@@ -41,7 +39,18 @@ export default function CourseraPage() {
             }}
           />
         </Card>
-      )}
+
+        <div className="expanded:col-span-2">
+          {course ? (
+            <OrderForm key={course.id} course={course} onBack={() => setCourse(null)} onCreated={onCreated} />
+          ) : (
+            <Card>
+              <CardHeader title="Thông tin đặt đơn" />
+              <p className="md-body-medium p-5 text-on-surface-variant">Chọn một khóa học ở danh sách để điền tài khoản Coursera và đặt đơn.</p>
+            </Card>
+          )}
+        </div>
+      </div>
 
       <div className="mt-6">
         <OrderHistory revision={revision} />

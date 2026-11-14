@@ -106,14 +106,7 @@ export function OrderHistory({ revision = 0, admin = false }: { revision?: numbe
 
   return (
     <Card>
-      <CardHeader
-        title={admin ? "Đơn Coursera" : "Lịch sử đặt đơn"}
-        action={
-          <Button size="sm" onClick={query.reload} disabled={query.loading}>
-            Tải lại
-          </Button>
-        }
-      />
+      <CardHeader title={admin ? "Đơn Coursera" : "Lịch sử đặt đơn"} />
       <div className="flex flex-wrap items-center gap-3 border-b border-outline-variant p-4">
         <Segmented
           label="Lọc theo trạng thái"
