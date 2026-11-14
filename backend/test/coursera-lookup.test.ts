@@ -10,6 +10,8 @@ describe("Coursera link lookup", () => {
     assert.deepEqual(parseCourseraLink(" https://www.coursera.org/learn/Machine-Learning/?utm=x#top "), { kind: "course", slug: "machine-learning", url: "https://www.coursera.org/learn/machine-learning" });
     assert.deepEqual(parseCourseraLink("https://coursera.org/vi/learn/python"), { kind: "course", slug: "python", url: "https://www.coursera.org/learn/python" });
     assert.equal(parseCourseraLink("https://www.coursera.org/vi/learn/python/home/week/1?x=1")?.url, "https://www.coursera.org/learn/python");
+    assert.equal(parseCourseraLink("https://www.coursera.org/organizations/fptuniversity/professional-certificates/java-developer")?.url, "https://www.coursera.org/specializations/java-developer");
+    assert.equal(parseCourseraLink("https://www.coursera.org/vi/organizations/fptuniversity/learn/python")?.url, "https://www.coursera.org/learn/python");
     // Admin-entered catalog urls are stored canonically so the lookup finds (and respects) those rows.
     assert.equal(courseraCourseBody.parse({ title: "x", url: "https://coursera.org/learn/Python/?utm=x" }).url, "https://www.coursera.org/learn/python");
     assert.equal(parseCourseraLink("https://www.coursera.org/zh-tw/specializations/deep-learning")?.url, "https://www.coursera.org/specializations/deep-learning");

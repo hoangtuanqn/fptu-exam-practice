@@ -15,7 +15,9 @@ export function parseCourseraLink(raw: string): CourseraLink | null {
   try { url = new URL(raw.trim()); } catch { return null; }
   if (url.protocol !== "https:" || !["coursera.org", "www.coursera.org"].includes(url.hostname) || url.username || url.password || url.port) return null;
   const parts = url.pathname.split("/").filter(Boolean);
-  if (parts.length >= 3 && LOCALE.test(parts[0]!) && SEGMENTS[parts[1]!]) parts.shift();
+  if (parts.length >= 3 && LOCALE.test(parts[0]!) && (SEGMENTS[parts[1]!] || parts[1] === "organizations")) parts.shift();
+  // Organization-scoped links (/organizations/<org>/learn/<slug>) point at the same public course.
+  if (parts[0] === "organizations" && parts.length >= 4 && SLUG.test(parts[1]!) && SEGMENTS[parts[2]!]) parts.splice(0, 2);
   // Links copied from inside a course (/learn/<slug>/home/week/1) still name the same course.
   if (parts.length < 2 || (parts.length > 2 && !SEGMENTS[parts[0]!])) return null;
   const [segment, slug] = parts as [string, string];
