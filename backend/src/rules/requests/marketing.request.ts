@@ -8,10 +8,16 @@ const tokenField = z.string().optional();
 export const unsubscribeQuery = z.object({ t: tokenField });
 export const unsubscribeBody = z.object({ token: tokenField }).optional();
 
+// Nút trong thư: chỉ đọc `t`; tham số khác bị bỏ (đích chuyển hướng lấy từ log, không từ URL)
+export const clickQuery = z.object({ t: z.string().max(64).optional() });
+export const setPausedBody = z.object({ paused: z.boolean() });
+
 export const campaignKeyParam = z.object({ key: z.enum(CAMPAIGN_KEYS) });
 export const setCampaignBody = z.object({ enabled: z.boolean() });
 
 export type UnsubscribeQuery = z.infer<typeof unsubscribeQuery>;
 export type UnsubscribeBody = z.infer<typeof unsubscribeBody>;
+export type ClickQuery = z.infer<typeof clickQuery>;
+export type SetPausedBody = z.infer<typeof setPausedBody>;
 export type CampaignKeyParam = z.infer<typeof campaignKeyParam>;
 export type SetCampaignBody = z.infer<typeof setCampaignBody>;

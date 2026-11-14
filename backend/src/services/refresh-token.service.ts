@@ -1,5 +1,6 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { env } from "../configs/env";
+import { marketingRepository } from "../repositories/marketing.repository";
 import { refreshTokenRepository } from "../repositories/refresh-token.repository";
 import { userRepository } from "../repositories/user.repository";
 import { AppError } from "../rules/error";
@@ -14,7 +15,10 @@ const touched = new TtlCache<number, true>(ACTIVE_TOUCH_MS, 20_000);
 const touchActive = (userId: number) => {
   if (touched.get(userId)) return;
   touched.set(userId, true);
-  userRepository.touchActive(userId, new Date()).catch((err) => console.error("[auth] không ghi được lần hoạt động:", (err as Error).message));
+  const now = new Date();
+  userRepository.touchActive(userId, now).catch((err) => console.error("[auth] không ghi được lần hoạt động:", (err as Error).message));
+  // "Quay lại sau thư" phải ghi lúc này: last_active_at chỉ giữ lần mới nhất nên không tính ngược được
+  marketingRepository.markReturned(userId, now).catch((err) => console.error("[marketing] không ghi được lượt quay lại:", (err as Error).message));
 };
 
 export interface ClientContext {
