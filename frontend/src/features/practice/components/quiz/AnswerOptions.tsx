@@ -10,12 +10,13 @@ interface Props {
   onChoose: (option: string) => void;
   compact?: boolean;
   vertical?: boolean; // xếp dọc, nút 40dp: dùng trong thanh dọc cạnh ảnh đề để dành chỗ cho đề
+  dense?: boolean; // xếp một hàng ngang, nút 40dp (điện thoại, máy tính bảng)
 }
 
 // Hàng lựa chọn A–H, mỗi nút 48x48dp (thanh dọc: 40dp). Tròn = chọn một, bo góc = chọn nhiều.
 // Trạng thái dùng vai trò M3: chọn = secondary-container, đúng = success-container, sai = error-container.
 // Kết quả KHÔNG chỉ dựa vào màu: đúng có dấu tích, sai có dấu X (WCAG 1.4.1).
-export function AnswerOptions({ question, selected, revealed, onChoose, compact = false, vertical = false }: Props) {
+export function AnswerOptions({ question, selected, revealed, onChoose, compact = false, vertical = false, dense = false }: Props) {
   const { correct } = question;
   const multiple = isMultiple(question);
   const graded = hasAnswer(question);
@@ -38,7 +39,7 @@ export function AnswerOptions({ question, selected, revealed, onChoose, compact 
     <div
       role="group"
       aria-label={multiple ? "Chọn một hoặc nhiều đáp án" : "Chọn một đáp án"}
-      className={vertical ? "flex flex-col items-center gap-1" : compact ? "grid grid-cols-4 gap-2 sm:flex sm:flex-wrap sm:justify-center" : "flex flex-wrap gap-3"}
+      className={vertical ? "flex flex-col items-center gap-1" : dense ? "flex flex-wrap justify-center gap-1.5" : compact ? "grid grid-cols-4 gap-2 sm:flex sm:flex-wrap sm:justify-center" : "flex flex-wrap gap-3"}
     >
       {OPTIONS.map((opt) => {
         const { cls, mark } = state(opt);
@@ -51,7 +52,7 @@ export function AnswerOptions({ question, selected, revealed, onChoose, compact 
             aria-pressed={selected.includes(opt)}
             aria-label={`Đáp án ${opt}${mark === "right" ? ", đúng" : mark === "wrong" ? ", sai" : ""}`}
             className={`md-state md-motion md-title-medium relative inline-flex items-center justify-center gap-0.5 border disabled:cursor-not-allowed disabled:opacity-[0.38] ${
-              vertical ? "h-10 w-10 min-w-10" : `h-12 min-w-12 ${compact ? "w-full sm:w-12" : "w-12"}`
+              vertical || dense ? "h-10 w-10 min-w-10" : `h-12 min-w-12 ${compact ? "w-full sm:w-12" : "w-12"}`
             } ${multiple ? "rounded-m3-md" : "rounded-full"} ${cls}`}
           >
             {opt}
