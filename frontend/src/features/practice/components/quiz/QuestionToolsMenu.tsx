@@ -1,11 +1,13 @@
 import { useState, type ReactNode } from "react";
-import { Flag, Maximize2, MessageSquareWarning, MoreHorizontal, ZoomIn, ZoomOut } from "lucide-react";
+import { Bookmark, Flag, Maximize2, MessageSquareWarning, MoreHorizontal, ZoomIn, ZoomOut } from "lucide-react";
 import { useKeydown } from "@/features/practice/hooks/useKeydown";
 import type { useQuestionImageScale } from "@/features/practice/hooks/useQuestionImageScale";
 
 interface Props {
   flagged: boolean;
   onToggleFlag: () => void;
+  saved?: boolean;
+  onToggleSave?: () => void; // chỉ có khi đã đăng nhập và là đề của hệ thống
   onZoom: () => void;
   onReport?: () => void; // chỉ có khi đã có kết quả của câu và người dùng đã đăng nhập
   reported?: boolean;
@@ -13,8 +15,8 @@ interface Props {
 }
 
 // Các công cụ phụ của câu hỏi gom vào một nút "…" cho khu vực làm bài gọn: đánh dấu xem lại, phóng to ảnh, cỡ ảnh, báo cáo đáp án sai.
-// Câu đang đánh dấu thì nút "…" có chấm nhỏ để vẫn thấy.
-export function QuestionToolsMenu({ flagged, onToggleFlag, onZoom, onReport, reported, size }: Props) {
+// Câu đang đánh dấu hoặc đã lưu thì nút "…" có chấm nhỏ để vẫn thấy.
+export function QuestionToolsMenu({ flagged, onToggleFlag, saved, onToggleSave, onZoom, onReport, reported, size }: Props) {
   const [open, setOpen] = useState(false);
   useKeydown((e) => open && e.key === "Escape" && setOpen(false));
   const run = (fn: () => void) => () => {
@@ -30,11 +32,11 @@ export function QuestionToolsMenu({ flagged, onToggleFlag, onZoom, onReport, rep
         aria-expanded={open}
         aria-haspopup="menu"
         aria-label="Công cụ khác của câu hỏi"
-        title="Đánh dấu, phóng to, cỡ ảnh, báo cáo"
+        title="Đánh dấu, lưu câu, phóng to, cỡ ảnh, báo cáo"
         className="relative flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-surface-container-lowest text-slate-500 transition hover:border-slate-400 hover:text-slate-800"
       >
         <MoreHorizontal size={18} />
-        {flagged && <span aria-hidden className="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary" />}
+        {(flagged || saved) && <span aria-hidden className="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary" />}
       </button>
 
       {open && (
@@ -42,6 +44,7 @@ export function QuestionToolsMenu({ flagged, onToggleFlag, onZoom, onReport, rep
           <button type="button" aria-label="Đóng menu" onClick={() => setOpen(false)} className="fixed inset-0 z-10 cursor-default" tabIndex={-1} />
           <div role="menu" className="absolute right-0 top-full z-20 mt-1 w-64 space-y-0.5 rounded-xl border border-outline-variant bg-surface p-1.5 shadow-lg">
             <Item icon={<Flag size={16} className={flagged ? "fill-current text-primary" : ""} />} label={flagged ? "Bỏ đánh dấu xem lại" : "Đánh dấu xem lại"} hint="M" onClick={run(onToggleFlag)} />
+            {onToggleSave && <Item icon={<Bookmark size={16} className={saved ? "fill-current text-primary" : ""} />} label={saved ? "Bỏ lưu câu này" : "Lưu câu này"} onClick={run(onToggleSave)} />}
             <Item icon={<Maximize2 size={16} />} label="Mở cửa sổ phóng to ảnh" onClick={run(onZoom)} />
             <div role="group" aria-label="Cỡ ảnh đề" className="flex items-center gap-1 px-2.5 py-1.5">
               <span className="flex-1 text-sm text-slate-700">Cỡ ảnh đề</span>

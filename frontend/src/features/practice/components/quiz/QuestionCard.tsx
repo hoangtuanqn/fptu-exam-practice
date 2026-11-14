@@ -32,6 +32,8 @@ export function QuestionCard({
   hasNext,
   flagged,
   onToggleFlag,
+  saved,
+  onToggleSave,
   onReport,
   reported,
   onExplain,
@@ -79,7 +81,7 @@ export function QuestionCard({
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
             {onExplain && <ExplainButton onExplain={onExplain} bought={explainBought} free={explainFree} />}
-            <QuestionToolsMenu flagged={flagged} onToggleFlag={onToggleFlag} onZoom={onZoom} onReport={onReport} reported={reported} size={size} />
+            <QuestionToolsMenu flagged={flagged} onToggleFlag={onToggleFlag} saved={saved} onToggleSave={onToggleSave} onZoom={onZoom} onReport={onReport} reported={reported} size={size} />
             <div className="hidden items-center gap-1.5 lg:flex">
               <Button size="sm" onClick={onPrev} disabled={!hasPrev} aria-label="Câu trước" className="!min-h-9 !px-3">
                 <ChevronLeft size={16} />
