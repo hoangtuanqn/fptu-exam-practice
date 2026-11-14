@@ -15,6 +15,7 @@
     "prisma:migrate": "prisma migrate deploy",
     "seed": "tsx src/seeders/admin.seeder.ts",
     "import:fuo-catalog": "tsx scripts/import-fuo-catalog.ts",
+    "import:coursera-courses": "tsx scripts/import-coursera-courses.ts",
     "import:subject-semesters": "tsx scripts/import-subject-semesters.ts",
     "sync:subject-semesters": "tsx scripts/sync-subject-semesters.ts",
     "import:syllabus": "tsx scripts/import-syllabus.ts",
