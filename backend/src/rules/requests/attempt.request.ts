@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { paginationQuery } from "../../utils/pagination";
+import { violations } from "./violation.request";
 
 const option = z.string().regex(/^[A-Z]$/, "Đáp án không hợp lệ");
 
@@ -14,6 +15,7 @@ export const submitAttemptBody = z.object({
   answers,
   only: z.array(z.number().int().min(1).max(9999)).max(500).optional(), // bộ đề theo chương: chỉ chấm các câu này
   flagged: z.array(z.number().int().min(1).max(9999)).max(500).optional(), // các câu đã đánh dấu phân vân
+  violations: violations.optional(),
 });
 
 export const listAttemptsQuery = paginationQuery.extend({
