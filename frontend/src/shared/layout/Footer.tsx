@@ -38,6 +38,13 @@ export function Footer() {
             </div>
             <div>
               <Link
+                to="/features"
+                className="font-medium text-primary hover:underline"
+              >
+                Tính năng
+              </Link>
+              {" · "}
+              <Link
                 to="/changelog"
                 className="font-medium text-primary hover:underline"
               >
