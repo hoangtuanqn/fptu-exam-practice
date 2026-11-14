@@ -1,7 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "../configs/prisma";
-import { aiReady } from "../constants/ai";
-import { CHAT_CANNED, CHAT_CONTINUE_PROMPT, CHAT_EFFORT, CHAT_MAX_OUTPUT_TOKENS, CHAT_MAX_TOOL_TURNS, CHAT_MAX_TURNS, CHAT_MONEY_HINT, CHAT_OLD_REPLY_CHARS, CHAT_SYSTEM_PROMPT } from "../constants/chat";
+import { CHAT_CANNED, CHAT_CONTINUE_PROMPT, CHAT_EFFORT, CHAT_LIMITS, CHAT_MONEY_HINT, CHAT_SYSTEM_PROMPT, chatProviderReady, type ChatConfig } from "../constants/chat";
 import { HTTP_STATUS } from "../constants/httpStatus";
 import { PE_PRICE } from "../constants/pe";
 import { PRO_PLAN, SPRINT_PLAN, TICKET_MAX_OPEN, TICKET_VALID_DAYS } from "../constants/plan";
@@ -16,6 +15,7 @@ import { aiSettingService } from "./ai-setting.service";
 import { chatSettingService } from "./chat-setting.service";
 import { crawlerSettingService } from "./crawler-setting.service";
 import { chatToolsFor, toolStatus, runChatTool } from "./chat-tools.service";
+import { streamResponses, toResponsesTools, type ChatUpstream } from "./ai/chat-openai.client";
 import { chatCacheService, type Viewer } from "./chat-cache.service";
 import { chatQuotaService } from "./chat-quota.service";
 import { knowledgeService } from "./knowledge.service";
@@ -68,19 +68,21 @@ export const chatService = {
   async status() {
     const c = await chatSettingService.get();
     const ai = await aiSettingService.get();
-    return { enabled: c.enabled && aiReady(ai) };
+    const { maxInputChars, maxTurns } = CHAT_LIMITS[c.chatProvider];
+    return { enabled: c.enabled && chatProviderReady(c, ai), maxInputChars, maxTurns }; // trần của nơi trả lời đang dùng, để giao diện chặn trước
   },
 
   /**
    * Việc chung trước khi hỏi Claude (cả kiểu trả một lần lẫn stream): kiểm tra bật/tắt và giới hạn ngày, tìm đoạn hướng dẫn,
    * ghi nhận lượt hỏi. Mọi lỗi ném ra ở đây xảy ra TRƯỚC khi gửi byte nào cho người dùng nên vẫn trả được mã lỗi HTTP đúng.
    */
-  async prepare(owner: Owner, ip: string | undefined, { messages }: ChatBody) {
-    const [config, ai] = await Promise.all([chatSettingService.get(), aiSettingService.get()]);
-    if (!config.enabled || !aiReady(ai)) throw new AppError("Cóc Pass tạm nghỉ chút, bạn quay lại sau nhé", HTTP_STATUS.SERVICE_UNAVAILABLE);
+  async prepare(owner: Owner, ip: string | undefined, { messages }: ChatBody, loaded?: ChatConfig) {
+    const [config, ai] = await Promise.all([loaded ?? chatSettingService.get(), aiSettingService.get()]);
+    if (!config.enabled || !chatProviderReady(config, ai)) throw new AppError("Cóc Pass tạm nghỉ chút, bạn quay lại sau nhé", HTTP_STATUS.SERVICE_UNAVAILABLE);
 
     // Câu trả lời cũ của Cóc Pass chỉ cần đủ ngữ cảnh: cắt ngắn (câu hỏi của người dùng giữ nguyên)
-    const history = messages.slice(-CHAT_MAX_TURNS).map((m, i, all) => (m.role === "assistant" && i < all.length - 1 && m.content.length > CHAT_OLD_REPLY_CHARS ? { ...m, content: `${m.content.slice(0, CHAT_OLD_REPLY_CHARS)}…` } : m));
+    const { maxTurns, oldReplyChars, maxOutputTokens } = CHAT_LIMITS[config.chatProvider];
+    const history = messages.slice(-maxTurns).map((m, i, all) => (m.role === "assistant" && i < all.length - 1 && m.content.length > oldReplyChars ? { ...m, content: `${m.content.slice(0, oldReplyChars)}…` } : m));
     while (history[0] && history[0].role !== "user") history.shift(); // phải bắt đầu bằng tin của người dùng
     const question = history[history.length - 1]!.content;
     // Câu hỏi nối tiếp ngắn ("còn giá thì sao?") tìm kèm câu hỏi trước đó của người dùng để đúng ngữ cảnh
@@ -110,41 +112,49 @@ export const chatService = {
       select: { id: true },
     });
 
+    // Phần đổi theo lượt của prompt hệ thống, dùng chung cho cả hai nơi trả lời
+    const turnText = `<viewer>${"userId" in owner ? "logged_in" : "guest"}</viewer>${facts ? `
+<live_facts>
+${facts}
+</live_facts>` : ""}
+<knowledge>\n${knowledge}\n</knowledge>${syllabus ? `\n${syllabus}` : ""}`;
+    const turns = history.map((m) => ({ role: m.role, content: m.content }));
+    const base = { logId: log.id, matched, userId: "userId" in owner ? owner.userId : null };
+
+    if (config.chatProvider === "openai") {
+      const upstream: ChatUpstream = { baseUrl: config.chatBaseUrl, model: config.chatModel, apiKey: config.chatApiKey, extraHeader: config.chatExtraHeader };
+      return { ...base, openai: { upstream, instructions: `${CHAT_SYSTEM_PROMPT}\n\n${turnText}`, messages: turns }, request: null };
+    }
     return {
-      logId: log.id,
-      matched,
-      userId: "userId" in owner ? owner.userId : null,
+      ...base,
+      openai: null,
       request: {
         client: new Anthropic({ apiKey: ai.anthropicApiKey, timeout: 45_000, maxRetries: 1 }),
         params: {
           model: config.claudeModel,
-          max_tokens: CHAT_MAX_OUTPUT_TOKENS,
+          max_tokens: maxOutputTokens,
           output_config: { effort: CHAT_EFFORT },
           system: [
             // Khối tĩnh được cache: các lượt hỏi sau đọc lại prompt hệ thống (và danh sách công cụ đứng trước nó) với giá rẻ. Phần đổi theo lượt nằm ở khối sau.
             { type: "text" as const, text: CHAT_SYSTEM_PROMPT, cache_control: { type: "ephemeral" as const } },
-            { type: "text" as const, text: `<viewer>${"userId" in owner ? "logged_in" : "guest"}</viewer>${facts ? `
-<live_facts>
-${facts}
-</live_facts>` : ""}
-<knowledge>\n${knowledge}\n</knowledge>${syllabus ? `\n${syllabus}` : ""}` },
+            { type: "text" as const, text: turnText },
           ],
-          messages: history.map((m) => ({ role: m.role, content: m.content })),
+          messages: turns,
         },
       },
     };
   },
 
   // Lỗi phía hệ thống thì không tính vào lượt hỏi của người dùng
-  async refund(logId: number, err: unknown) {
+  async refund(logId: number, err: unknown, provider = "Claude") {
     await prisma.chatLog.delete({ where: { id: logId } }).catch(() => undefined);
-    console.error(`[chat] lỗi gọi Claude: ${(err as Error).message}`);
+    console.error(`[chat] lỗi gọi ${provider}: ${(err as Error).message}`);
   },
 
   /**
    * Trả lời dạng stream: mỗi đoạn chữ Claude sinh ra được đẩy ngay cho người dùng (onDelta).
    * Thành viên có công cụ tra cứu dữ liệu của chính họ và tra đề trên FuOverflow, khách chỉ tra được danh sách đề FuOverflow: khi Claude gọi công cụ (stop_reason = tool_use) máy chủ chạy công cụ,
-   * trả kết quả lại và Claude viết tiếp, tối đa CHAT_MAX_TOOL_TURNS vòng. `signal` huỷ khi người dùng đóng khung chat giữa chừng.
+   * trả kết quả lại và Claude viết tiếp, tối đa CHAT_LIMITS[provider].maxToolTurns vòng. `signal` huỷ khi người dùng đóng khung chat giữa chừng.
    */
   async stream(owner: Owner, ip: string | undefined, body: ChatBody, h: { onStart: () => void; onDelta: (text: string) => void; onStatus: (text: string) => void; signal: AbortSignal }) {
     const last = body.messages[body.messages.length - 1]!.content.trim();
@@ -156,8 +166,15 @@ ${facts}
       return {};
     }
 
+    // Trần độ dài theo nơi trả lời (schema chỉ chặn ở mức cao nhất): kiểm trước khi tính lượt hay gọi model, để Claude không nhận câu dài
+    const config = await chatSettingService.get();
+    const { chatProvider } = config;
+    const { maxInputChars } = CHAT_LIMITS[chatProvider];
+    if (body.messages[body.messages.length - 1]!.content.length > maxInputChars) throw new AppError(`Câu hỏi tối đa ${maxInputChars} ký tự`, HTTP_STATUS.BAD_REQUEST);
+    if (body.messages.some((m) => m.content.length > maxInputChars * 4)) throw new AppError("Tin nhắn quá dài", HTTP_STATUS.BAD_REQUEST);
+
     // Giới hạn theo ngày (lời chào ở trên miễn phí): hết một đợt tin thì cần captcha
-    await chatQuotaService.check(owner, body.captchaToken, ip);
+    await chatQuotaService.check(owner, body.captchaToken, ip, chatProvider);
 
     // Cache: câu hỏi hướng dẫn chung đứng riêng mà đã từng được trả lời (cùng ý) thì trả lại luôn, không gọi Claude
     const viewer: Viewer = "userId" in owner ? "member" : "guest";
@@ -183,7 +200,10 @@ ${facts}
       }
     }
 
-    const { logId, userId, request, matched } = await this.prepare(owner, ip, body);
+    const prep = await this.prepare(owner, ip, body, config);
+    if (prep.openai) return this.streamOpenai(prep.logId, prep.userId, prep.matched, prep.openai, h, { vec, viewer, question });
+    const { logId, userId, matched } = prep;
+    const request = prep.request!;
     h.onStart(); // từ đây đã gửi header, lỗi sau này báo bằng sự kiện trong luồng
     let answer = ""; // toàn bộ câu trả lời, để lưu vào cache
     let usedTools = false;
@@ -202,7 +222,8 @@ ${facts}
       console.log(`[chat] #${logId} stop=${stop} in=${usage.input} cache_read=${usage.cacheRead} cache_write=${usage.cacheWrite} out=${usage.output}${usedTools ? " tools" : ""}${truncated ? " TRUNCATED" : ""}`);
     };
     try {
-      for (let turn = 0; turn <= CHAT_MAX_TOOL_TURNS; turn++) {
+      const maxToolTurns = CHAT_LIMITS.anthropic.maxToolTurns;
+      for (let turn = 0; turn <= maxToolTurns; turn++) {
         const stream = request.client.messages.stream({ ...request.params, messages, tools });
         h.signal.addEventListener("abort", () => stream.abort(), { once: true });
         stream.on("text", (t) => {
@@ -235,7 +256,7 @@ ${facts}
           return {};
         }
 
-        if (final.stop_reason === "tool_use" && turn < CHAT_MAX_TOOL_TURNS) {
+        if (final.stop_reason === "tool_use" && turn < maxToolTurns) {
           usedTools = true;
           const calls = final.content.filter((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
           messages.push({ role: "assistant", content: final.content });
@@ -258,6 +279,94 @@ ${facts}
     } catch (err) {
       if (h.signal.aborted) return { aborted: true as const }; // người dùng tự đóng
       await this.refund(logId, err);
+      throw new AppError("Mình đang bận chút, bạn thử lại sau ít phút nhé", HTTP_STATUS.SERVICE_UNAVAILABLE);
+    }
+  },
+
+  /**
+   * Cùng cách trả lời như đường Claude ở trên nhưng qua endpoint OpenAI Responses API do admin cấu hình:
+   * cùng công cụ, cùng số vòng, cùng cách viết tiếp một lần khi chạm trần token, cùng ghi usage, hoàn lượt và lỗi chung khi thất bại.
+   */
+  async streamOpenai(
+    logId: number,
+    userId: number | null,
+    matched: boolean,
+    req: { upstream: ChatUpstream; instructions: string; messages: { role: "user" | "assistant"; content: string }[] },
+    h: { onStart: () => void; onDelta: (text: string) => void; onStatus: (text: string) => void; signal: AbortSignal },
+    cache: { vec: number[] | null; viewer: Viewer; question: string },
+  ) {
+    h.onStart();
+    let answer = "";
+    let usedTools = false;
+    const input: Record<string, unknown>[] = [...req.messages];
+    const tools = toResponsesTools(chatToolsFor(userId));
+    let produced = false;
+    let separate = false;
+    let continued = false;
+    const usage = { input: 0, output: 0, cacheRead: 0 };
+    let truncated = false;
+    const emit = (t: string) => ((answer += t), h.onDelta(t));
+    const finish = (stop: string) => {
+      void prisma.chatLog.update({ where: { id: logId }, data: { inputTokens: usage.input, outputTokens: usage.output, cacheReadTokens: usage.cacheRead, truncated } }).catch(() => undefined);
+      console.log(`[chat] #${logId} openai stop=${stop} in=${usage.input} cache_read=${usage.cacheRead} out=${usage.output}${usedTools ? " tools" : ""}${truncated ? " TRUNCATED" : ""}`);
+    };
+    try {
+      const { maxToolTurns, maxOutputTokens } = CHAT_LIMITS.openai;
+      for (let turn = 0; turn <= maxToolTurns; turn++) {
+        let turnText = "";
+        const out = await streamResponses(req.upstream, { instructions: req.instructions, input, tools, max_output_tokens: maxOutputTokens }, h.signal, (t) => {
+          if (separate) {
+            emit("\n\n");
+            separate = false;
+          }
+          produced = true;
+          turnText += t;
+          emit(t);
+        });
+        usage.input += out.usage.input;
+        usage.output += out.usage.output;
+        usage.cacheRead += out.usage.cached;
+
+        if (out.status === "incomplete" && out.incompleteReason === "max_output_tokens") {
+          if (out.calls.length === 0 && produced && !continued) {
+            continued = true;
+            input.push({ role: "assistant", content: turnText }, { role: "user", content: CHAT_CONTINUE_PROMPT });
+            continue;
+          }
+          truncated = true;
+          if (!produced) throw new Error("empty");
+          emit(" …");
+          finish("max_output_tokens");
+          return {};
+        }
+        if (out.status !== "completed") throw new Error(`status ${out.status}`);
+
+        if (out.calls.length > 0 && turn < maxToolTurns) {
+          usedTools = true;
+          if (turnText) input.push({ role: "assistant", content: turnText });
+          for (const c of out.calls) {
+            let args: unknown = {};
+            try {
+              args = JSON.parse(c.arguments);
+            } catch {
+              // tham số hỏng: công cụ tự trả lỗi ngắn
+            }
+            h.onStatus(toolStatus(c.name, args));
+            input.push({ type: "function_call", call_id: c.call_id, name: c.name, arguments: c.arguments });
+            input.push({ type: "function_call_output", call_id: c.call_id, output: await runChatTool(userId, c.name, args) });
+          }
+          separate = produced;
+          continue;
+        }
+        if (!produced) throw new Error("empty");
+        finish(out.calls.length ? "tool_calls" : "completed");
+        if (cache.vec && matched && !usedTools && !continued && out.calls.length === 0) void chatCacheService.save(cache.vec, cache.viewer, cache.question, answer);
+        return {};
+      }
+      throw new Error("quá nhiều vòng tra cứu");
+    } catch (err) {
+      if (h.signal.aborted) return { aborted: true as const };
+      await this.refund(logId, err, "chat endpoint");
       throw new AppError("Mình đang bận chút, bạn thử lại sau ít phút nhé", HTTP_STATUS.SERVICE_UNAVAILABLE);
     }
   },
