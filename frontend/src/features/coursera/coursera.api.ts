@@ -15,7 +15,7 @@ export interface OrderInput { requestKey: string; courseId: number; expectedPric
 export interface CourseInput { title: string; code: string | null; url: string | null; isActive: boolean; price: number }
 
 export const courseraApi = {
-  courses: (q: string, page: number, admin = false) => http.list<CourseraCourse>(`${admin ? "/admin" : ""}/coursera/courses`, { q, page }),
+  courses: (q: string, page: number, admin = false, limit?: number) => http.list<CourseraCourse>(`${admin ? "/admin" : ""}/coursera/courses`, { q, page, limit }),
   orders: (page: number, status?: OrderStatus, admin = false) => http.list<CourseraOrder>(`${admin ? "/admin" : ""}/coursera/orders`, { page, status }),
   create: (data: OrderInput) => http.post<CourseraOrder>("/coursera/orders", data),
   cancel: (id: number) => http.post<CourseraOrder>(`/coursera/orders/${id}/cancel`),

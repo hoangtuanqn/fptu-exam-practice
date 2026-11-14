@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Card, CardHeader, PageHeader } from "@/shared/ui/Card";
 import { useUrlState } from "@/shared/hooks/useUrlState";
 import { CoursePicker } from "./CoursePicker";
@@ -10,6 +10,7 @@ export default function CourseraPage() {
   const [course, setCourse] = useState<CourseraCourse | null>(null);
   const [created, setCreated] = useState<CourseraOrder | null>(null);
   const [revision, setRevision] = useState(0);
+  const formRef = useRef<HTMLDivElement>(null);
   const [, setUrl] = useUrlState({ orderPage: "1", status: "" });
 
   const onCreated = (order: CourseraOrder) => {
@@ -29,27 +30,28 @@ export default function CourseraPage() {
         </p>
       )}
 
-      <div className="grid items-start gap-6 expanded:grid-cols-5">
-        <Card className="expanded:col-span-3">
-          <CardHeader title="Chọn khóa học" description="Tìm theo mã môn hoặc tên khóa, bấm Chọn để điền thông tin đặt đơn." />
-          <CoursePicker
-            onSelect={(value) => {
-              setCourse(value);
-              setCreated(null);
-            }}
-          />
-        </Card>
+      <Card>
+        <CardHeader title="Chọn khóa học" description="Tìm theo mã môn hoặc tên khóa, bấm vào một môn để điền thông tin đặt đơn bên dưới." />
+        <CoursePicker
+          selectedId={course?.id}
+          onSelect={(value) => {
+            setCourse(value);
+            setCreated(null);
+            // Đưa form nhập tài khoản vào tầm nhìn sau khi chọn môn
+            requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+          }}
+        />
+      </Card>
 
-        <div className="expanded:col-span-2">
-          {course ? (
-            <OrderForm key={course.id} course={course} onBack={() => setCourse(null)} onCreated={onCreated} />
-          ) : (
-            <Card>
-              <CardHeader title="Thông tin đặt đơn" />
-              <p className="md-body-medium p-5 text-on-surface-variant">Chọn một khóa học ở danh sách để điền tài khoản Coursera và đặt đơn.</p>
-            </Card>
-          )}
-        </div>
+      <div ref={formRef} className="mt-6 scroll-mt-20">
+        {course ? (
+          <OrderForm key={course.id} course={course} onBack={() => setCourse(null)} onCreated={onCreated} />
+        ) : (
+          <Card>
+            <CardHeader title="Thông tin đặt đơn" />
+            <p className="md-body-medium p-5 text-on-surface-variant">Chọn một khóa học ở danh sách trên để điền tài khoản Coursera và đặt đơn.</p>
+          </Card>
+        )}
       </div>
 
       <div className="mt-6">
