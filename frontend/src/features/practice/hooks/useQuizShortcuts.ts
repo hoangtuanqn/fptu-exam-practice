@@ -9,6 +9,9 @@ export function useQuizShortcuts(quiz: Quiz, enabled: boolean, onSubmit?: () => 
 
   useKeydown((e) => {
     if (!question) return;
+    // Đang gõ vào ô nhập (hỏi AI về câu này, góp ý...) hoặc đang gõ tiếng Việt có dấu: phím thuộc về ô nhập, không phải phím tắt
+    const t = e.target;
+    if (e.isComposing || (t instanceof HTMLElement && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)))) return;
 
     if (e.key === "ArrowRight") quiz.next();
     else if (e.key === "ArrowLeft") quiz.prev();
