@@ -1,3 +1,5 @@
+import type { Violation } from "@/features/practice/types";
+
 export type AttemptMode = "PRACTICE" | "EXAM";
 export type Outcome = "correct" | "wrong" | "skipped" | "ungraded";
 
@@ -25,6 +27,7 @@ export interface AttemptQuestion {
 
 export interface AttemptDetail extends AttemptSummary {
   details: AttemptQuestion[];
+  violations?: Violation[]; // các lần rời bài thi (chế độ Thi); bài cũ không có
 }
 
 // Số lần làm và điểm cao nhất của một đề
@@ -39,6 +42,7 @@ export interface AttemptPayload {
   answers: Record<number, string[]>;
   only?: number[]; // bộ đề theo chương: chỉ chấm các câu này
   flagged?: number[]; // các câu đã đánh dấu phân vân (vào Sổ câu sai dù làm đúng)
+  violations?: Violation[]; // các lần rời bài thi (chế độ Thi)
 }
 
 // Kết quả lưu bài: kèm số câu mới vào Sổ câu sai và số câu không vào được vì sổ đã đầy (gói thường)
