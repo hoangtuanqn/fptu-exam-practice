@@ -34,3 +34,14 @@ export const initials = (name: string) => {
   const parts = name.trim().split(/\s+/);
   return ((parts[0]?.[0] ?? "") + (parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? "") : "")).toUpperCase();
 };
+
+// 2048 -> "2 KB", 5_400_000 -> "5,1 MB"
+export const formatBytes = (n: number) => {
+  const units = ["B", "KB", "MB", "GB"];
+  let i = 0;
+  while (n >= 1024 && i < units.length - 1) {
+    n /= 1024;
+    i++;
+  }
+  return `${n.toLocaleString("vi-VN", { maximumFractionDigits: i > 1 ? 1 : 0 })} ${units[i]}`;
+};

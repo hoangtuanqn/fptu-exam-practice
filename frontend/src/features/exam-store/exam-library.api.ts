@@ -10,7 +10,11 @@ export interface LibraryExam {
   attempts: number; // số lần đã làm
   bestScore: number | null;
   answerSource: "PENDING" | "FAILED" | "DEFAULT" | "AI" | "MANUAL";
+  attachments?: number; // số tệp đính kèm (máy chủ cũ không trả về)
 }
+
+// "40 câu"; đề chỉ có tệp thì "2 tệp đính kèm"
+export const sizeText = (e: LibraryExam) => (e.totalQuestions === 0 && (e.attachments ?? 0) > 0 ? `${e.attachments} tệp đính kèm` : `${e.totalQuestions} câu`);
 
 export const examLibraryApi = {
   list: (page = 1, limit = PAGE_SIZE, subject?: string) => http.list<LibraryExam>("/exams", { page, limit, ...(subject && { subject }) }),
