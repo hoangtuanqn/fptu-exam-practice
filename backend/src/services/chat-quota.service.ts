@@ -7,7 +7,7 @@ import { captchaService } from "./captcha.service";
 
 const defaults = {
   // Số tin của chính chủ này từ 0h hôm nay (giờ Việt Nam): thành viên theo tài khoản, khách theo ID khách của trình duyệt
-  count: (owner: Owner) => prisma.chatLog.count({ where: { createdAt: { gte: startOfVnDay() }, ...("userId" in owner ? { userId: owner.userId } : { guestId: owner.guestId }) } }),
+  count: (owner: Owner): Promise<number> => prisma.chatLog.count({ where: { createdAt: { gte: startOfVnDay() }, ...("userId" in owner ? { userId: owner.userId } : { guestId: owner.guestId }) } }),
   assert: (token: string | undefined, ip?: string) => captchaService.assert(token, ip),
 };
 
