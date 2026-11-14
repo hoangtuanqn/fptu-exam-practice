@@ -9,7 +9,8 @@ export const unsubscribeQuery = z.object({ t: tokenField });
 export const unsubscribeBody = z.object({ token: tokenField }).optional();
 
 // Nút trong thư: chỉ đọc `t`; tham số khác bị bỏ (đích chuyển hướng lấy từ log, không từ URL)
-export const clickQuery = z.object({ t: z.string().max(64).optional() });
+// Liên kết hỏng (t lặp, quá dài) không báo lỗi 400 mà rơi về trang chủ như token sai
+export const clickQuery = z.object({ t: z.preprocess((v) => (typeof v === "string" ? v.slice(0, 64) : undefined), z.string().optional()) });
 export const setPausedBody = z.object({ paused: z.boolean() });
 
 export const campaignKeyParam = z.object({ key: z.enum(CAMPAIGN_KEYS) });
