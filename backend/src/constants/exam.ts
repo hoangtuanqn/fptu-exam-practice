@@ -9,3 +9,6 @@ export const EXAM_ZIP_MAX_BYTES = 100 * 1024 * 1024;
 // Thi thử: số lần rời toàn màn hình/tab tối đa được lưu cho một lượt, và giới hạn giây của mỗi lần
 export const EXAM_VIOLATIONS_MAX = 200;
 export const EXAM_VIOLATION_MAX_SEC = 24 * 3600;
+
+// Đề chỉ có tệp đính kèm (0 câu): không làm bài/giải được
+export const NO_QUESTIONS_MESSAGE = "Đề này chỉ có tệp đính kèm, không có câu hỏi để làm bài.";

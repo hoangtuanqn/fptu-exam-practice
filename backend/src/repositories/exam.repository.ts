@@ -51,7 +51,10 @@ export const examRepository = {
   findDetail: (id: number) =>
     prisma.exam.findUnique({
       where: { id },
-      include: { questions: { orderBy: { number: "asc" }, select: { number: true, imagePath: true, answer: true, isReference: true, topic: true } } },
+      include: {
+        questions: { orderBy: { number: "asc" }, select: { number: true, imagePath: true, answer: true, isReference: true, topic: true } },
+        attachments: { orderBy: { id: "asc" }, select: { id: true, name: true, filePath: true, mime: true, sizeBytes: true } },
+      },
     }),
 
   // Admin xem/sửa đề: thông tin đề + từng câu (ảnh, đáp án, có phải tài liệu tham khảo)
@@ -207,8 +210,10 @@ export const examRepository = {
 
   countQuestions: (examId: number) => prisma.examQuestion.count({ where: { examId } }),
 
+  // Đề chỉ có tệp (0 câu) coi là xong khi đã ghi tệp đính kèm (ghi một lần ở cuối lượt lấy đề)
   isComplete: async (exam: { id: number; totalQuestions: number }) =>
-    (await prisma.examQuestion.count({ where: { examId: exam.id } })) >= exam.totalQuestions,
+    (await prisma.examQuestion.count({ where: { examId: exam.id } })) >= exam.totalQuestions &&
+    (exam.totalQuestions > 0 || (await prisma.examAttachment.count({ where: { examId: exam.id } })) > 0),
 
   // Xóa đề (câu hỏi, kho của người dùng... xóa theo). Dùng khi lấy đề thất bại giữa chừng.
   deleteById: (id: number) => prisma.exam.deleteMany({ where: { id } }),
