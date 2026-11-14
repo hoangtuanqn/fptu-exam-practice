@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
-import { Bookmark, Crown, FileText, Flame, NotebookPen, Download, BookOpen, ListChecks, GraduationCap, LayoutDashboard, UserRound, Wallet } from "lucide-react";
+import { Bookmark, Crown, FileText, Flame, NotebookPen, Download, BookOpen, ListChecks, GraduationCap, LayoutDashboard, UserRound, Wallet, Receipt, Gift, UserPlus, ShoppingBag } from "lucide-react";
 import { PanelLayout, type NavItem } from "@/shared/layout/PanelLayout";
 import { Loading } from "@/shared/ui/Feedback";
 import LoginPage from "@/features/auth/pages/LoginPage";
@@ -73,8 +73,11 @@ const ACCOUNT_NAV: NavItem[] = [
   { to: "/account/attempts", label: "Lịch sử làm bài", icon: ListChecks, group: "Kết quả", also: ["/account/reports"] },
   { to: "/account/grades", label: "Điểm FAP", icon: GraduationCap, group: "Kết quả" },
   { to: "/pro", label: "Gói Pro", icon: Crown, group: "Ví và Pro" },
-  { to: "/account/deposit", label: "Ví", icon: Wallet, group: "Ví và Pro", also: ["/account/transactions", "/account/giftcode", "/account/referral"] },
-  { to: "/account/coursera", label: "Coursera", icon: GraduationCap, group: "Dịch vụ" },
+  { to: "/account/deposit", label: "Nạp credit", icon: Wallet, group: "Ví và Pro" },
+  { to: "/account/transactions", label: "Lịch sử giao dịch", icon: Receipt, group: "Ví và Pro" },
+  { to: "/account/giftcode", label: "Mã quà tặng", icon: Gift, group: "Ưu đãi" },
+  { to: "/account/referral", label: "Giới thiệu bạn bè", icon: UserPlus, group: "Ưu đãi" },
+  { to: "/account/coursera", label: "Đặt đơn Coursera", icon: ShoppingBag, group: "Dịch vụ" },
   { to: "/account/profile", label: "Hồ sơ", icon: UserRound, group: "Tài khoản" },
 ];
 
