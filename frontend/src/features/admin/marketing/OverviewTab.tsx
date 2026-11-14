@@ -35,14 +35,15 @@ function Step({ label, value, sent }: { label: string; value: number; sent?: num
   );
 }
 
-function FunnelLine({ c, row }: { c: Campaign; row: FunnelRow | undefined }) {
+// Dòng gửi thủ công không có công tắc bật/tắt: enabled bỏ trống thì không hiện nhãn trạng thái
+function FunnelLine({ c, row }: { c: { key: string; label: string; enabled?: boolean }; row: FunnelRow | undefined }) {
   const r = { sent: 0, clicked: 0, bought: 0, returned: 0, pending: 0, ...row };
   return (
     <Card>
       <div className="space-y-2 p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="md-title-medium text-on-surface">{c.label}</h3>
-          <Badge tone={c.enabled ? "success" : "neutral"}>{c.enabled ? "Đang bật" : "Đang tắt"}</Badge>
+          {c.enabled !== undefined && <Badge tone={c.enabled ? "success" : "neutral"}>{c.enabled ? "Đang bật" : "Đang tắt"}</Badge>}
         </div>
         {r.sent === 0 ? (
           <p className="md-body-medium text-on-surface-variant">Chưa có dữ liệu</p>
@@ -143,6 +144,7 @@ export function OverviewTab({ overview, campaigns }: { overview: OverviewQuery; 
                   {campaigns.map((c) => (
                     <FunnelLine key={c.key} c={c} row={funnel?.[c.key]} />
                   ))}
+                  {funnel?.broadcast && <FunnelLine c={{ key: "broadcast", label: "Thủ công" }} row={funnel.broadcast} />}
                 </div>
               )}
             </div>
