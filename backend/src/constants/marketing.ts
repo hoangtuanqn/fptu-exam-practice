@@ -33,11 +33,68 @@ export const UPSELL_REPEAT_DAYS = 45; // mỗi người nhận lại tối đa 1
 // Nhắc hết hạn Pro: bước 1 còn <= 7 ngày, bước 2 còn <= 1 ngày
 export const EXPIRY_STEP_DAYS = [7, 1] as const;
 
+// ---- Tham số admin chỉnh được (lưu trong settings, key MARKETING_PARAMS_KEY, JSON). Hằng số ở trên là giá trị mặc định.
+export const MARKETING_PARAMS_KEY = "marketing.params";
+
+export interface MarketingParams {
+  dailyCap: number; // trần tổng số thư mỗi ngày (cron chạy 1 lần/ngày)
+  minGapDays: number; // mỗi người tối đa 1 thư mỗi chừng này ngày (trừ nhắc hết hạn Pro)
+  winbackStepDays: [number, number, number]; // tăng dần
+  winbackMaxInactiveDays: number; // lớn hơn bước win-back cuối
+  upsellMinPurchases: number;
+  upsellRepeatDays: number;
+  expiryStepDays: [number, number]; // giảm dần: bước 1 báo trước nhiều ngày hơn bước 2
+}
+
+export const DEFAULT_MARKETING_PARAMS: MarketingParams = {
+  dailyCap: MARKETING_MAX_PER_RUN,
+  minGapDays: MARKETING_MIN_GAP_DAYS,
+  winbackStepDays: [...WINBACK_STEP_DAYS],
+  winbackMaxInactiveDays: WINBACK_MAX_INACTIVE_DAYS,
+  upsellMinPurchases: UPSELL_MIN_PURCHASES,
+  upsellRepeatDays: UPSELL_REPEAT_DAYS,
+  expiryStepDays: [...EXPIRY_STEP_DAYS],
+};
+
+// Trần cứng: nhập sai cũng không gây gửi ào ạt (hạn mức <= 300 thư/ngày, cách nhau >= 3 ngày)
+export const PARAM_LIMITS = {
+  dailyCap: { min: 1, max: 300 },
+  minGapDays: { min: 3, max: 30 },
+  winbackStepDays: { min: 7, max: 365 },
+  winbackMaxInactiveDays: { min: 30, max: 365 },
+  upsellMinPurchases: { min: 1, max: 20 },
+  upsellRepeatDays: { min: 14, max: 180 },
+  expiryStepDays: { min: 1, max: 30 },
+} as const satisfies Record<keyof MarketingParams, { min: number; max: number }>;
+
+// ---- Loại thư người dùng tắt riêng được (bitmask users.marketing_muted_topics)
+export const MARKETING_TOPICS = ["review", "offers", "renewal", "news"] as const;
+export type MarketingTopic = (typeof MARKETING_TOPICS)[number];
+export const TOPIC_BITS: Record<MarketingTopic, number> = { review: 1, offers: 2, renewal: 4, news: 8 };
+export const ALL_TOPICS_MASK = 15;
+export const MARKETING_PAUSE_DAYS = 30; // "Tạm dừng 30 ngày": chặn mọi thư trừ nhắc hết hạn Pro
+
 // Chiến dịch lặp lại ghi step = cycle * 10 + bước (cycle = số ngày UTC từ 1970), để unique (user, campaign, step) không chặn chu kỳ sau
 export const STEP_CYCLE_FACTOR = 10;
 
-export const CAMPAIGN_META: Record<CampaignKey, { label: string; description: string; steps: number }> = {
-  winback: { label: "Gọi người dùng quay lại", description: "Vắng 14, 30 và 60 ngày: số câu còn cần ôn, đề mới của môn, thư cuối hỏi đã thi xong chưa.", steps: 3 },
-  pro_upsell: { label: "Mời dùng Pro", description: "Chưa có Pro và đã trả lẻ từ 3 lần trong 30 ngày hoặc sắp thi trong 30 ngày. Tối đa 1 thư mỗi 45 ngày.", steps: 1 },
-  pro_expiry: { label: "Nhắc Pro sắp hết hạn", description: "Còn 7 ngày và còn 1 ngày. Không tính vào giới hạn 1 thư mỗi 7 ngày.", steps: 2 },
+// Mô tả cho admin dựng theo tham số đang dùng (không lộ ra cho người dùng)
+export const CAMPAIGN_META: Record<CampaignKey, { label: string; description: (p: MarketingParams) => string; steps: number; topic: MarketingTopic }> = {
+  winback: {
+    label: "Gọi người dùng quay lại",
+    description: (p) => `Vắng ${p.winbackStepDays.join(", ")} ngày (tối đa ${p.winbackMaxInactiveDays}): số câu còn cần ôn, đề mới của môn, thư cuối hỏi đã thi xong chưa.`,
+    steps: 3,
+    topic: "review",
+  },
+  pro_upsell: {
+    label: "Mời dùng Pro",
+    description: (p) => `Chưa có Pro và đã trả lẻ từ ${p.upsellMinPurchases} lần trong ${UPSELL_SPEND_DAYS} ngày hoặc sắp thi trong ${UPSELL_EXAM_DAYS} ngày. Tối đa 1 thư mỗi ${p.upsellRepeatDays} ngày.`,
+    steps: 1,
+    topic: "offers",
+  },
+  pro_expiry: {
+    label: "Nhắc Pro sắp hết hạn",
+    description: (p) => `Còn ${p.expiryStepDays[0]} ngày và còn ${p.expiryStepDays[1]} ngày. Không tính vào giới hạn 1 thư mỗi ${p.minGapDays} ngày, vẫn gửi khi người dùng tạm dừng thư.`,
+    steps: 2,
+    topic: "renewal",
+  },
 };

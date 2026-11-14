@@ -15,7 +15,7 @@ import { adminCrawlerController } from "../controllers/admin.crawler.controllers
 import { adminHistoryController } from "../controllers/admin.history.controllers";
 import { adminAccountController } from "../controllers/admin.account.controllers";
 import { adminMarketingController } from "../controllers/admin.marketing.controllers";
-import { campaignKeyParam, setCampaignBody, setPausedBody } from "../rules/requests/marketing.request";
+import { campaignKeyParam, previewQuery, setCampaignBody, setParamsBody, setPausedBody } from "../rules/requests/marketing.request";
 import { adminLinkRewardController } from "../controllers/admin.link-reward.controllers";
 import { adminChatController } from "../controllers/admin.chat.controllers";
 import { updateChatSettingsBody } from "../rules/requests/chat.request";
@@ -83,6 +83,10 @@ adminRouter.post("/marketing/campaigns/:key/test", validate(campaignKeyParam, "p
 adminRouter.get("/marketing/eligible-count", adminMarketingController.eligibleCount);
 adminRouter.get("/marketing/overview", adminMarketingController.overview);
 adminRouter.put("/marketing/paused", validate(setPausedBody), adminMarketingController.setPaused);
+adminRouter.get("/marketing/params", adminMarketingController.params);
+adminRouter.put("/marketing/params", validate(setParamsBody), adminMarketingController.setParams);
+adminRouter.post("/marketing/params/reset", adminMarketingController.resetParams);
+adminRouter.get("/marketing/campaigns/:key/preview", validate(campaignKeyParam, "params"), validate(previewQuery, "query"), adminMarketingController.preview);
 adminRouter.get("/settings/account", adminAccountController.get);
 adminRouter.put("/settings/account", validate(updateAccountBody), adminAccountController.update);
 adminRouter.get("/settings/link-reward", adminLinkRewardController.get);

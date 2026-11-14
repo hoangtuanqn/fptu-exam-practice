@@ -3,9 +3,14 @@ import { userRepository } from "../repositories/user.repository";
 import { AppError } from "../rules/error";
 import type { ChangePasswordBody, UpdateProfileBody } from "../rules/requests/user.request";
 import { comparePassword, hashPassword } from "../utils/password";
+import { DAY_MS } from "../utils/time";
 
 export const userService = {
-  updateProfile: (userId: number, body: UpdateProfileBody) => userRepository.updateProfile(userId, body),
+  updateProfile: (userId: number, { pauseMarketingDays, ...body }: UpdateProfileBody) =>
+    userRepository.updateProfile(userId, {
+      ...body,
+      ...(pauseMarketingDays !== undefined && { marketingMutedUntil: pauseMarketingDays ? new Date(Date.now() + pauseMarketingDays * DAY_MS) : null }),
+    }),
 
   async changePassword(userId: number, { currentPassword, newPassword }: ChangePasswordBody) {
     const user = await userRepository.findByIdWithPassword(userId);

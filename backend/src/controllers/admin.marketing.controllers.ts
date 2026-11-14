@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { getValidated } from "../middlewares/validate.middlewares";
-import type { CampaignKeyParam, SetCampaignBody, SetPausedBody } from "../rules/requests/marketing.request";
+import type { CampaignKeyParam, PreviewQuery, SetCampaignBody, SetParamsBody, SetPausedBody } from "../rules/requests/marketing.request";
 import { ResponseClient } from "../rules/response";
 import { marketingService } from "../services/marketing.service";
 import { marketingSettingService } from "../services/marketing-setting.service";
@@ -33,5 +33,21 @@ export const adminMarketingController = {
   async setPaused(_req: Request, res: Response) {
     const paused = await marketingSettingService.setPaused(getValidated<SetPausedBody>(res).paused);
     res.json(new ResponseClient({ message: paused ? "Đã tạm dừng mọi thư marketing" : "Đã tiếp tục gửi thư marketing", data: { paused } }));
+  },
+
+  async params(_req: Request, res: Response) {
+    res.json(new ResponseClient({ data: await marketingService.params() }));
+  },
+
+  async setParams(_req: Request, res: Response) {
+    res.json(new ResponseClient({ message: "Đã lưu tham số", data: await marketingService.setParams(getValidated<SetParamsBody>(res)) }));
+  },
+
+  async resetParams(_req: Request, res: Response) {
+    res.json(new ResponseClient({ message: "Đã khôi phục mặc định", data: await marketingService.resetParams() }));
+  },
+
+  async preview(_req: Request, res: Response) {
+    res.json(new ResponseClient({ data: await marketingService.preview(keyOf(res), getValidated<PreviewQuery>(res, "query").step) }));
   },
 };

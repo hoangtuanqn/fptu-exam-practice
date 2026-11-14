@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../configs/prisma";
-import { CLICK_SCANNER_MS, CONVERSION_DAYS, STEP_CYCLE_FACTOR } from "../constants/marketing";
+import { CAMPAIGN_META, CLICK_SCANNER_MS, CONVERSION_DAYS, STEP_CYCLE_FACTOR, TOPIC_BITS, type CampaignKey } from "../constants/marketing";
 import { DAY_MS } from "../utils/time";
 
 export interface Recipient {
@@ -10,8 +10,17 @@ export interface Recipient {
   proExpiresAt: Date | null;
 }
 
-// Ai được nhận thư marketing: thành viên thường, đang hoạt động, đã xác minh email, không từ chối nhận thư
-const ELIGIBLE = Prisma.sql`u.role = 'USER' AND u.status = 'ACTIVE' AND u.email_verified_at IS NOT NULL AND u.marketing_opt_out = false`;
+// Tạm dừng 30 ngày chặn mọi chiến dịch trừ nhắc hết hạn Pro (tắt riêng loại "renewal" hoặc huỷ tất cả mới chặn thư đó)
+const pauseApplies = (campaign: CampaignKey) => campaign !== "pro_expiry";
+
+/**
+ * Ai được nhận thư của chiến dịch: thành viên thường, đang hoạt động, đã xác minh email, không từ chối nhận thư,
+ * không tắt loại thư của chiến dịch, và không đang tạm dừng tại `pausedAt` (null = bỏ qua tạm dừng, chỉ dùng cho nhắc hết hạn Pro).
+ */
+const eligible = (campaign: CampaignKey, pausedAt: Date | null) =>
+  Prisma.sql`u.role = 'USER' AND u.status = 'ACTIVE' AND u.email_verified_at IS NOT NULL AND u.marketing_opt_out = false
+    AND (u.marketing_muted_topics & ${TOPIC_BITS[CAMPAIGN_META[campaign].topic]}) = 0
+    ${pausedAt ? Prisma.sql`AND (u.marketing_muted_until IS NULL OR u.marketing_muted_until <= ${pausedAt})` : Prisma.empty}`;
 
 // Không có thư chiến dịch nào gửi từ `since` (giới hạn 1 thư / N ngày mỗi người)
 const quietSince = (since: Date) => Prisma.sql`NOT EXISTS (SELECT 1 FROM email_campaign_logs l WHERE l.user_id = u.id AND l.sent_at >= ${since})`;
@@ -32,13 +41,13 @@ const SPEND_REFUNDS = Prisma.sql`'CRAWL_REFUND', 'EXPLAIN_REFUND', 'PE_REFUND'`;
 /** Phần FROM ... WHERE của từng nhóm người nhận; dùng chung cho lấy danh sách và đếm. */
 export const audience = {
   // Vắng trong khoảng (inactiveTo, inactiveFrom] và chưa nhận bước này
-  winback: (step: number, inactiveFrom: Date, inactiveTo: Date, quiet: Date) =>
-    Prisma.sql`FROM users u WHERE ${ELIGIBLE} AND ${quietSince(quiet)} AND ${notSent("winback", step)}
+  winback: (step: number, inactiveFrom: Date, inactiveTo: Date, quiet: Date, now: Date) =>
+    Prisma.sql`FROM users u WHERE ${eligible("winback", now)} AND ${quietSince(quiet)} AND ${notSent("winback", step)}
       AND ${LAST_ACTIVE} <= ${inactiveFrom} AND ${LAST_ACTIVE} > ${inactiveTo}`,
 
   // Chưa có Pro, không giữ vé Pro chưa kích hoạt, chưa được mời gần đây, và (trả lẻ nhiều lần gần đây hoặc sắp thi)
   proUpsell: (p: { now: Date; quiet: Date; repeatSince: Date; spendSince: Date; minPurchases: number; examFrom: Date; examTo: Date }) =>
-    Prisma.sql`FROM users u WHERE ${ELIGIBLE} AND ${quietSince(p.quiet)}
+    Prisma.sql`FROM users u WHERE ${eligible("pro_upsell", p.now)} AND ${quietSince(p.quiet)}
       AND (u.pro_expires_at IS NULL OR u.pro_expires_at <= ${p.now})
       AND NOT EXISTS (SELECT 1 FROM pro_tickets t WHERE t.user_id = u.id AND t.activated_at IS NULL AND t.expires_at > ${p.now})
       AND NOT EXISTS (SELECT 1 FROM email_campaign_logs l WHERE l.user_id = u.id AND l.campaign = 'pro_upsell' AND l.sent_at >= ${p.repeatSince})
@@ -52,7 +61,7 @@ export const audience = {
 
   // Pro hết hạn trong (from, to] và chưa nhận bước này cho đúng ngày hết hạn đó (gia hạn xong là chu kỳ mới)
   proExpiry: (step: number, from: Date, to: Date) =>
-    Prisma.sql`FROM users u WHERE ${ELIGIBLE} AND u.pro_expires_at > ${from} AND u.pro_expires_at <= ${to}
+    Prisma.sql`FROM users u WHERE ${eligible("pro_expiry", null)} AND u.pro_expires_at > ${from} AND u.pro_expires_at <= ${to}
       AND ${notSent("pro_expiry", Prisma.sql`DATEDIFF(u.pro_expires_at, '1970-01-01') * ${STEP_CYCLE_FACTOR} + ${step}`)}`,
 };
 
@@ -71,9 +80,12 @@ export const marketingRepository = {
   },
 
   /** Giữ chỗ trước khi gửi: trùng (đã gửi bước này) thì trả null, không gửi lại. `target` = đường dẫn nội bộ của nút trong thư. */
-  async claim(userId: number, campaign: string, step: number, target: string) {
-    // Hủy nhận thư giữa lúc dựng danh sách và lúc gửi (tối đa vài phút) vẫn phải được tôn trọng
-    if (!(await prisma.user.findFirst({ where: { id: userId, marketingOptOut: false }, select: { id: true } }))) return null;
+  async claim(userId: number, campaign: CampaignKey, step: number, target: string) {
+    // Hủy, tắt loại thư hoặc tạm dừng giữa lúc dựng danh sách và lúc gửi (tối đa vài phút) vẫn phải được tôn trọng
+    const now = new Date();
+    const pause = pauseApplies(campaign) ? { OR: [{ marketingMutedUntil: null }, { marketingMutedUntil: { lte: now } }] } : {};
+    const user = await prisma.user.findFirst({ where: { id: userId, marketingOptOut: false, ...pause }, select: { marketingMutedTopics: true } });
+    if (!user || (user.marketingMutedTopics & TOPIC_BITS[CAMPAIGN_META[campaign].topic]) !== 0) return null;
     try {
       return (await prisma.emailCampaignLog.create({ data: { userId, campaign, step, target }, select: { id: true } })).id;
     } catch (err) {
