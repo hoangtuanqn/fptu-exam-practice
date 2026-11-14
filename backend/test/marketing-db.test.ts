@@ -169,4 +169,26 @@ describe("marketing audiences (MySQL)", { skip: DB_TESTS_ENABLED ? false : DB_SK
       await m.settings.setEnabled("pro_expiry", false);
     }
   });
+
+  it("stops at once when paused in the middle of a run", async () => {
+    const expiresAt = new Date(Date.now() + 5 * DAY);
+    for (const key of ["pauseA", "pauseB"]) {
+      await m.prisma.user.create({ data: { email: `${key}@test.local`, fullName: key, password: "x", emailVerifiedAt: daysAgo(200), createdAt: daysAgo(200), proExpiresAt: expiresAt } });
+    }
+    await m.settings.setEnabled("pro_expiry", true);
+    const original = m.mail.sendMarketing;
+    m.mail.sendMarketing = async (to, mail, url) => {
+      await original(to, mail, url);
+      await m.settings.setPaused(true); // admin bấm tạm dừng ngay sau thư đầu tiên
+    };
+    try {
+      const before = outbox.length;
+      await m.campaigns.run();
+      assert.equal(outbox.length - before, 1);
+    } finally {
+      m.mail.sendMarketing = original;
+      await m.settings.setPaused(false);
+      await m.settings.setEnabled("pro_expiry", false);
+    }
+  });
 });

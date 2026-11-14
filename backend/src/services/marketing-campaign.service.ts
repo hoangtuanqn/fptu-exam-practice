@@ -162,9 +162,9 @@ export const marketingCampaignService = {
     let left = MARKETING_MAX_PER_RUN;
     for (const key of ORDER) {
       if (!flags[key] || left <= 0) continue;
-      if (await marketingSettingService.isPaused()) break; // kiểm tra trước mỗi chiến dịch: bấm tạm dừng giữa lượt chạy cũng dừng phần còn lại
       for (const job of await builders[key](now, left)) {
         if (left <= 0) break;
+        if (await marketingSettingService.isPaused()) return sent; // kiểm tra trước mỗi thư: bấm tạm dừng giữa lượt chạy dừng ngay
         left--;
         if (await this.deliver(job)) sent[key]++;
         await sleep(MARKETING_SEND_GAP_MS);
