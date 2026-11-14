@@ -2,7 +2,8 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Crown, Eye, Loader2, RotateCcw, Target } from "lucide-react";
 import type { TopicSummary } from "@/features/history/types";
 import { useAuth } from "@/features/auth/AuthContext";
-import type { AnswerSource } from "@/features/practice/types";
+import type { AnswerSource, Violation } from "@/features/practice/types";
+import { ViolationSummary } from "@/features/practice/components/ViolationSummary";
 import { ResultUpgradeCard } from "@/features/plan/ResultUpgradeCard";
 import { SignUpCta } from "@/features/trial/SignUpCta";
 import { MAX_SCORE, PASS_SCORE } from "@/features/practice/config/scoring";
@@ -23,12 +24,13 @@ interface Props {
   answerSource: AnswerSource | null; // nguồn đáp án, để ghi chú độ tin cậy của điểm
   savable: boolean; // đề của hệ thống: bài vừa làm lưu được vào lịch sử khi đăng ký
   nextExam?: { remaining: number; onOpen: () => void }; // bộ đề theo chương nhiều đề: còn đề kế tiếp
+  violations?: Violation[]; // chỉ có ở chế độ Thi toàn màn hình
   onReview: () => void;
   onRetry: () => void;
 }
 
 // Bảng điểm sau khi nộp
-export function ResultDialog({ result, topicSummary = null, elapsed, savable, answersPending, answerSource, nextExam, onReview, onRetry }: Props) {
+export function ResultDialog({ result, topicSummary = null, elapsed, savable, answersPending, answerSource, nextExam, violations, onReview, onRetry }: Props) {
   const { user } = useAuth();
   const passed = result.score >= PASS_SCORE;
   const tone = result.total === 0 ? "neutral" : passed ? "success" : "danger";
@@ -85,6 +87,8 @@ export function ResultDialog({ result, topicSummary = null, elapsed, savable, an
       {!answersPending && result.total === 0 && (
         <p className="mt-4 text-center text-xs text-slate-500">Chưa có đáp án trong ans.txt nên không thể chấm điểm.</p>
       )}
+
+      {violations && <ViolationSummary violations={violations} className="mt-4" />}
 
       {!answersPending && topicSummary && <TopicBreakdown summary={topicSummary} />}
 
