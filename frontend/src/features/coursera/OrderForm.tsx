@@ -92,6 +92,7 @@ export function OrderForm({ course, onBack, onCreated }: Props) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             error={errors.password}
+            hint="Sau khi đơn hàng hoàn thành thì vui lòng đổi mật khẩu."
           />
           <Field label="Ghi chú (không bắt buộc)" error={errors.note}>
             <textarea
