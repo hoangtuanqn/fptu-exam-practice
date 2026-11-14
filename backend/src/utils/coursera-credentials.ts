@@ -1,13 +1,18 @@
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 import { AppError } from "../rules/error";
 
-// A separate key prevents JWT/password changes from making stored credentials unreadable.
+// Orders now store the Coursera password as plaintext (owner decision, ADR 0005). This module only reads
+// legacy rows written as "v1." AES-256-GCM envelopes; the key is needed only while such rows exist.
 function key() {
   const value = process.env.COURSERA_ENCRYPTION_KEY ?? "";
   if (!/^[a-f\d]{64}$/i.test(value)) throw new AppError("Dịch vụ Coursera chưa sẵn sàng, vui lòng thử lại sau", 503);
   return Buffer.from(value, "hex");
 }
 
+// Exact envelope shape (12-byte IV, 16-byte tag, base64) so a plaintext password starting with "v1." is not mistaken for one.
+const LEGACY_ENVELOPE = /^v1\.[A-Za-z0-9+/]{16}\.[A-Za-z0-9+/]{22}==\.[A-Za-z0-9+/]+={0,2}$/;
+
+/** Legacy writer, kept so tests can build "v1." rows. New orders must not call it. */
 export function encryptCourseraPassword(password: string) {
   const iv = randomBytes(12);
   const cipher = createCipheriv("aes-256-gcm", key(), iv);
@@ -26,3 +31,6 @@ export function decryptCourseraPassword(value: string) {
     throw new AppError("Không thể đọc thông tin đăng nhập của đơn này", 503);
   }
 }
+
+/** Stored value to the password shown to an admin: legacy envelopes are decrypted, plaintext is returned as is. */
+export const readCourseraPassword = (stored: string) => (LEGACY_ENVELOPE.test(stored) ? decryptCourseraPassword(stored) : stored);

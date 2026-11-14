@@ -1,6 +1,7 @@
 export const COURSERA = {
   titleLength: 255,
   urlLength: 500,
+  codeLength: 32,
   emailLength: 254,
   passwordLength: 512,
   noteLength: 2000,

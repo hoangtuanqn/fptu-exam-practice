@@ -4,7 +4,10 @@ import { courseraRepository } from "../repositories/coursera.repository";
 import { AppError } from "../rules/error";
 import type { CourseraCourseBody, CourseraCoursesQuery, CourseraOrderBody, CourseraOrdersQuery, CourseraStatusBody } from "../rules/requests/coursera.request";
 import { walletService } from "./wallet.service";
-import { decryptCourseraPassword, encryptCourseraPassword } from "../utils/coursera-credentials";
+import { readCourseraPassword } from "../utils/coursera-credentials";
+import { formatCredit } from "../utils/format";
+import { adminNoticeService } from "./admin-notice.service";
+import { notificationService } from "./notification.service";
 
 // Prisma errors may include argument values. Keep account details out of logs and error responses.
 async function safe<T>(run: () => Promise<T>): Promise<T> {
@@ -19,16 +22,23 @@ async function safe<T>(run: () => Promise<T>): Promise<T> {
   }
 }
 
+type Order = Awaited<ReturnType<typeof courseraRepository.updateStatus>>;
+const ADMIN_LINK = "/admin/coursera";
+
 function changeStatus(id: number, data: CourseraStatusBody, userId?: number) {
   return courseraRepository.transaction(async (tx) => {
     const order = await courseraRepository.updateStatus(tx, id, data, userId);
     if ((data.status === "CANCELLED" || data.status === "REJECTED") && order.amount > 0 && !order.refundedAt) {
-      await walletService.applyChange(tx, { userId: order.userId, amount: order.amount, type: "COURSERA_REFUND", note: `Hoàn phí đơn Coursera #${order.id}` });
-      return courseraRepository.markRefunded(tx, id);
+      const entry = await walletService.applyChange(tx, { userId: order.userId, amount: order.amount, type: "COURSERA_REFUND", note: `Hoàn phí đơn Coursera #${order.id}` });
+      return { order: await courseraRepository.markRefunded(tx, id), refunded: order.amount, balanceAfter: entry.balanceAfter };
     }
-    return order;
+    return { order, refunded: 0, balanceAfter: undefined };
   });
 }
+
+// Notices and mails run after commit and never throw; they carry no credentials.
+const mailOrder = (order: Order, event: Parameters<typeof notificationService.courseraOrder>[0]["event"], amount: number, balanceAfter?: number) =>
+  notificationService.courseraOrder({ userId: order.userId, event, orderId: order.id, courseTitle: order.courseTitle, amount, balanceAfter, adminNote: event === "received" ? "" : order.adminNote });
 
 export const courseraService = {
   courses: (query: CourseraCoursesQuery, admin = false) => safe(() => courseraRepository.courses(query, admin)),
@@ -37,14 +47,15 @@ export const courseraService = {
   createOrder: (userId: number, data: CourseraOrderBody) => safe(async () => {
     const existing = await courseraRepository.findRequest(userId, data.requestKey);
     if (existing) return existing;
-    const { password, ...rest } = data;
     try {
-      const encryptedPassword = encryptCourseraPassword(password);
-      return await courseraRepository.transaction(async (tx) => {
-        const order = await courseraRepository.createOrder(tx, { ...rest, userId, encryptedPassword });
-        if (order.amount > 0) await walletService.charge(tx, { userId, amount: order.amount, type: "COURSERA_CHARGE", note: `Đặt đơn Coursera #${order.id}` });
-        return order;
+      const { order, balanceAfter } = await courseraRepository.transaction(async (tx) => {
+        const order = await courseraRepository.createOrder(tx, { ...data, userId });
+        const charge = order.amount > 0 ? await walletService.charge(tx, { userId, amount: order.amount, type: "COURSERA_CHARGE", note: `Đặt đơn Coursera #${order.id}` }) : null;
+        return { order, balanceAfter: charge?.balanceAfter };
       });
+      adminNoticeService.push("coursera.ordered", { title: `Đơn Coursera mới #${order.id}`, body: `${order.courseTitle} · ${formatCredit(order.amount)}`, userId, link: ADMIN_LINK });
+      mailOrder(order, "received", order.amount, balanceAfter);
+      return order;
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
         const duplicate = await courseraRepository.findRequest(userId, data.requestKey);
@@ -53,13 +64,20 @@ export const courseraService = {
       throw error;
     }
   }),
-  updateStatus: (id: number, data: CourseraStatusBody) => safe(() => {
+  updateStatus: (id: number, data: CourseraStatusBody) => safe(async () => {
     if (!COURSERA_TRANSITIONS[data.expectedStatus].includes(data.status)) throw AppError.conflict("Không thể chuyển đơn sang trạng thái này");
-    return changeStatus(id, data);
+    const { order, refunded, balanceAfter } = await changeStatus(id, data);
+    if (order.status !== "PENDING") mailOrder(order, order.status, refunded, balanceAfter);
+    return order;
   }),
-  cancel: (id: number, userId: number) => safe(() => changeStatus(id, { expectedStatus: "PENDING", status: "CANCELLED", adminNote: "" }, userId)),
+  cancel: (id: number, userId: number) => safe(async () => {
+    const { order, refunded, balanceAfter } = await changeStatus(id, { expectedStatus: "PENDING", status: "CANCELLED", adminNote: "" }, userId);
+    adminNoticeService.push("coursera.cancelled", { title: `Đơn Coursera #${order.id} bị người dùng hủy`, body: `${order.courseTitle}${refunded ? ` · đã hoàn ${formatCredit(refunded)}` : ""}`, userId, link: ADMIN_LINK });
+    mailOrder(order, "CANCELLED", refunded, balanceAfter);
+    return order;
+  }),
   credentials: (id: number, adminId: number) => safe(async () => {
     const row = await courseraRepository.credentials(id, adminId);
-    return { email: row.email, password: decryptCourseraPassword(row.encryptedPassword!) };
+    return { email: row.email, password: readCourseraPassword(row.password!) };
   }),
 };

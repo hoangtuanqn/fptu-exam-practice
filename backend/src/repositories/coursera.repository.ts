@@ -16,7 +16,8 @@ export const courseraRepository = {
   async courses(query: CourseraCoursesQuery, admin: boolean) {
     const where: Prisma.CourseraCourseWhereInput = {
       ...(!admin && { isActive: true }),
-      ...(query.q && { title: { contains: query.q } }),
+      // utf8mb4_unicode_ci makes contains case-insensitive
+      ...(query.q && { OR: [{ title: { contains: query.q } }, { code: { contains: query.q } }] }),
     };
     const [items, total] = await Promise.all([
       prisma.courseraCourse.findMany({ where, orderBy: { id: "desc" }, ...toSkipTake(query) }),
@@ -38,14 +39,14 @@ export const courseraRepository = {
   findRequest(userId: number, requestKey: string) {
     return prisma.courseraOrder.findUnique({ where: { userId_requestKey: { userId, requestKey } }, select: orderSelect });
   },
-  async createOrder(tx: Prisma.TransactionClient, data: { userId: number; courseId: number; requestKey: string; email: string; encryptedPassword: string; note: string; expectedPrice: number }) {
+  async createOrder(tx: Prisma.TransactionClient, data: { userId: number; courseId: number; requestKey: string; email: string; password: string; note: string; expectedPrice: number }) {
     const { expectedPrice, ...order } = data;
     // Serialize catalog edits with checkout so the accepted price and availability stay consistent.
     await tx.$queryRaw`SELECT id FROM coursera_courses WHERE id = ${data.courseId} FOR UPDATE`;
     const course = await tx.courseraCourse.findFirst({ where: { id: data.courseId, isActive: true } });
     if (!course) throw AppError.conflict("Khóa học này hiện không nhận đơn. Vui lòng chọn khóa khác.");
     if (course.price !== expectedPrice) throw AppError.conflict("Giá khóa học đã thay đổi. Vui lòng chọn lại khóa học và xác nhận giá mới.");
-    return tx.courseraOrder.create({ data: { ...order, amount: course.price, courseTitle: course.title, courseUrl: course.url }, select: orderSelect });
+    return tx.courseraOrder.create({ data: { ...order, amount: course.price, courseTitle: course.title, courseUrl: course.url ?? "" }, select: orderSelect });
   },
   async updateStatus(tx: Prisma.TransactionClient, id: number, data: CourseraStatusBody, userId?: number) {
     const result = await tx.courseraOrder.updateMany({
@@ -53,7 +54,7 @@ export const courseraRepository = {
       data: {
         status: data.status,
         ...(userId === undefined && { adminNote: data.adminNote }),
-        ...(isCourseraTerminal(data.status) && { encryptedPassword: null }),
+        ...(isCourseraTerminal(data.status) && { password: null }),
       },
     });
     if (!result.count) throw AppError.conflict("Đơn không còn ở trạng thái đã chọn. Vui lòng tải lại danh sách.");
@@ -65,11 +66,11 @@ export const courseraRepository = {
   async credentials(id: number, adminId: number) {
     return prisma.$transaction(async (tx) => {
       const result = await tx.courseraOrder.updateMany({
-        where: { id, status: { in: ["PENDING", "PROCESSING"] }, encryptedPassword: { not: null } },
+        where: { id, status: { in: ["PENDING", "PROCESSING"] }, password: { not: null } },
         data: { credentialViewedBy: adminId, credentialViewedAt: new Date() },
       });
       if (!result.count) throw AppError.notFound("Đơn này không còn thông tin đăng nhập để xem");
-      return tx.courseraOrder.findUniqueOrThrow({ where: { id }, select: { email: true, encryptedPassword: true } });
+      return tx.courseraOrder.findUniqueOrThrow({ where: { id }, select: { email: true, password: true } });
     });
   },
 };
