@@ -80,7 +80,7 @@ export function OverviewTab({ overview, campaigns }: { overview: OverviewQuery; 
     if (paused) {
       const ok = await confirm({
         title: "Tạm dừng tất cả thư marketing?",
-        message: "Không thư tự động nào được gửi cho tới khi bấm Tiếp tục gửi. Trạng thái bật/tắt của từng chiến dịch vẫn giữ nguyên.",
+        message: "Không thư marketing nào được gửi cho tới khi bấm Tiếp tục gửi. Trạng thái bật/tắt của từng chiến dịch vẫn giữ nguyên.",
         confirmLabel: "Tạm dừng",
         icon: Pause,
       });
