@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../configs/prisma";
-import { STEP_CYCLE_FACTOR } from "../constants/marketing";
+import { CLICK_SCANNER_MS, CONVERSION_DAYS, STEP_CYCLE_FACTOR } from "../constants/marketing";
+import { DAY_MS } from "../utils/time";
 
 export interface Recipient {
   id: number;
@@ -69,12 +70,12 @@ export const marketingRepository = {
     return Number(row?.n ?? 0);
   },
 
-  /** Giữ chỗ trước khi gửi: trùng (đã gửi bước này) thì trả null, không gửi lại. */
-  async claim(userId: number, campaign: string, step: number) {
+  /** Giữ chỗ trước khi gửi: trùng (đã gửi bước này) thì trả null, không gửi lại. `target` = đường dẫn nội bộ của nút trong thư. */
+  async claim(userId: number, campaign: string, step: number, target: string) {
     // Hủy nhận thư giữa lúc dựng danh sách và lúc gửi (tối đa vài phút) vẫn phải được tôn trọng
     if (!(await prisma.user.findFirst({ where: { id: userId, marketingOptOut: false }, select: { id: true } }))) return null;
     try {
-      return (await prisma.emailCampaignLog.create({ data: { userId, campaign, step }, select: { id: true } })).id;
+      return (await prisma.emailCampaignLog.create({ data: { userId, campaign, step, target }, select: { id: true } })).id;
     } catch (err) {
       if (isUniqueViolation(err)) return null;
       throw err;
@@ -84,10 +85,64 @@ export const marketingRepository = {
   // Gửi lỗi: bỏ chỗ đã giữ để lần chạy sau thử lại
   release: (id: number) => prisma.emailCampaignLog.deleteMany({ where: { id } }),
 
+  /**
+   * Ghi lượt bấm đầu tiên rồi trả đích đã lưu (null nếu log không còn). Bấm trong CLICK_SCANNER_MS sau khi gửi không ghi:
+   * shortcut: trình quét thư (Outlook, Gmail) mở link ngay khi nhận; quét chậm hơn 30 s vẫn bị tính là bấm, chưa có cách lọc tốt hơn.
+   */
+  async recordClick(logId: number, now: Date) {
+    await prisma.emailCampaignLog.updateMany({ where: { id: logId, clickedAt: null, sentAt: { lte: new Date(now.getTime() - CLICK_SCANNER_MS) } }, data: { clickedAt: now } });
+    return (await prisma.emailCampaignLog.findUnique({ where: { id: logId }, select: { target: true } }))?.target ?? null;
+  },
+
+  // Người dùng vừa hoạt động: đánh dấu "quay lại" cho các thư của họ trong CONVERSION_DAYS ngày qua chưa được đánh dấu (chỉ số user_id, sent_at)
+  markReturned: (userId: number, now: Date) =>
+    prisma.emailCampaignLog
+      .updateMany({ where: { userId, returnedAt: null, sentAt: { gte: new Date(now.getTime() - CONVERSION_DAYS * DAY_MS), lte: now } }, data: { returnedAt: now } })
+      .then(() => undefined),
+
   // Số thư đã gửi theo chiến dịch và bước (step % 10 = bước thật của chiến dịch lặp lại)
   sentCounts: () =>
     prisma.$queryRaw<{ campaign: string; step: number; n: bigint }[]>`
       SELECT campaign, MOD(step, ${CYCLE}) AS step, COUNT(*) AS n FROM email_campaign_logs GROUP BY campaign, MOD(step, ${CYCLE})`,
+
+  // ---- Thống kê cho trang admin
+
+  // Số thư gửi từ `since` của các chiến dịch này (chỉ số campaign, sent_at)
+  async sentSince(campaigns: readonly string[], since: Date) {
+    const [row] = await prisma.$queryRaw<{ n: bigint }[]>`SELECT COUNT(*) AS n FROM email_campaign_logs WHERE campaign IN (${Prisma.join(campaigns)}) AND sent_at >= ${since}`;
+    return Number(row?.n ?? 0);
+  },
+
+  /**
+   * Phễu theo chiến dịch cho thư gửi trong [since, now). Thư gửi sau `matured` (chưa đủ CONVERSION_DAYS ngày) chỉ đếm vào `pending`.
+   * Mua Pro: có plan_purchases trả tiền (price > 0, tức mua bằng credit hoặc kích hoạt vé; Pro tặng không có dòng trả tiền) trong
+   * CONVERSION_DAYS ngày sau thư, và thư là thư gần nhất người đó nhận trước lúc mua (last-touch, mọi chiến dịch), nên một lần mua chỉ tính cho một thư.
+   */
+  funnel: (campaigns: readonly string[], since: Date, matured: Date) =>
+    prisma.$queryRaw<{ campaign: string; sent: unknown; pending: unknown; clicked: unknown; returned: unknown; bought: unknown }[]>`
+      SELECT l.campaign,
+        SUM(l.sent_at < ${matured}) AS sent,
+        SUM(l.sent_at >= ${matured}) AS pending,
+        SUM(l.sent_at < ${matured} AND l.clicked_at IS NOT NULL) AS clicked,
+        SUM(l.sent_at < ${matured} AND l.returned_at IS NOT NULL) AS returned,
+        SUM(l.sent_at < ${matured} AND EXISTS (
+          SELECT 1 FROM plan_purchases p
+          WHERE p.user_id = l.user_id AND p.price > 0 AND p.created_at >= l.sent_at AND p.created_at < DATE_ADD(l.sent_at, INTERVAL ${CONVERSION_DAYS} DAY)
+            AND NOT EXISTS (
+              SELECT 1 FROM email_campaign_logs l2
+              WHERE l2.user_id = l.user_id AND l2.sent_at <= p.created_at AND (l2.sent_at > l.sent_at OR (l2.sent_at = l.sent_at AND l2.id > l.id))
+            )
+        )) AS bought
+      FROM email_campaign_logs l
+      WHERE l.campaign IN (${Prisma.join(campaigns)}) AND l.sent_at >= ${since}
+      GROUP BY l.campaign`,
+
+  // Tỷ lệ huỷ nhận thư: người đã huỷ / thành viên đã xác minh email
+  async optOutCounts() {
+    const [row] = await prisma.$queryRaw<{ total: bigint; optedOut: unknown }[]>`
+      SELECT COUNT(*) AS total, COALESCE(SUM(u.marketing_opt_out), 0) AS optedOut FROM users u WHERE u.role = 'USER' AND u.email_verified_at IS NOT NULL`;
+    return { total: Number(row?.total ?? 0), optedOut: Number(row?.optedOut ?? 0) };
+  },
 
   // ---- Dữ liệu thật cho nội dung thư, lấy theo lô (không hỏi riêng từng người)
 
