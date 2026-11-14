@@ -3,6 +3,7 @@ import { Card, CardHeader, PageHeader } from "@/shared/ui/Card";
 import { useUrlState } from "@/shared/hooks/useUrlState";
 import { CoursePicker } from "./CoursePicker";
 import { OrderForm } from "./OrderForm";
+import { LinkLookup } from "./LinkLookup";
 import { OrderHistory } from "./OrderHistory";
 import type { CourseraCourse, CourseraOrder } from "./coursera.api";
 
@@ -20,6 +21,13 @@ export default function CourseraPage() {
     setUrl({ orderPage: "1", status: "" });
   };
 
+  const select = (value: CourseraCourse) => {
+    setCourse(value);
+    setCreated(null);
+    // Đưa form nhập tài khoản vào tầm nhìn sau khi chọn môn
+    requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  };
+
   return (
     <>
       <PageHeader title="Đặt đơn Coursera" description="Tìm khóa học, điền thông tin tài khoản và theo dõi tiến độ xử lý đơn." />
@@ -32,16 +40,15 @@ export default function CourseraPage() {
 
       <Card>
         <CardHeader title="Chọn khóa học" description="Tìm theo mã môn hoặc tên khóa, bấm vào một môn để điền thông tin đặt đơn bên dưới." />
-        <CoursePicker
-          selectedId={course?.id}
-          onSelect={(value) => {
-            setCourse(value);
-            setCreated(null);
-            // Đưa form nhập tài khoản vào tầm nhìn sau khi chọn môn
-            requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
-          }}
-        />
+        <CoursePicker selectedId={course?.id} onSelect={select} />
       </Card>
+
+      <div className="mt-6">
+        <Card>
+          <CardHeader title="Nhập link khóa học" description="Không thấy khóa trong danh sách? Dán link khóa học trên Coursera để kiểm tra." />
+          <LinkLookup onSelect={select} />
+        </Card>
+      </div>
 
       <div ref={formRef} className="mt-6 scroll-mt-20">
         {course ? (

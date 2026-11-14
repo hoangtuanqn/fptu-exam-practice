@@ -6,6 +6,7 @@ export const ORDER_LABELS = {
 export type OrderStatus = keyof typeof ORDER_LABELS;
 // code optional: older backends do not send it yet
 export interface CourseraCourse { id: number; title: string; code?: string | null; url: string | null; isActive: boolean; price?: number }
+export interface LookedUpCourse extends CourseraCourse { kind?: "course" | "specialization" }
 export interface CourseraOrder {
   id: number; userId: number; courseId: number; courseTitle: string; courseUrl: string;
   email: string; note: string; status: OrderStatus; adminNote: string; createdAt: string; updatedAt: string;
@@ -17,6 +18,7 @@ export interface CourseInput { title: string; code: string | null; url: string |
 export const courseraApi = {
   courses: (q: string, page: number, admin = false, limit?: number) => http.list<CourseraCourse>(`${admin ? "/admin" : ""}/coursera/courses`, { q, page, limit }),
   orders: (page: number, status?: OrderStatus, admin = false) => http.list<CourseraOrder>(`${admin ? "/admin" : ""}/coursera/orders`, { page, status }),
+  lookup: (url: string) => http.post<LookedUpCourse>("/coursera/lookup", { url }),
   create: (data: OrderInput) => http.post<CourseraOrder>("/coursera/orders", data),
   cancel: (id: number) => http.post<CourseraOrder>(`/coursera/orders/${id}/cancel`),
   saveCourse: (data: CourseInput, id?: number) => id ? http.put<CourseraCourse>(`/admin/coursera/courses/${id}`, data) : http.post<CourseraCourse>("/admin/coursera/courses", data),
