@@ -27,7 +27,7 @@ export default function MarketingPage() {
         action={<Segmented<TabKey> label="Mục email marketing" value={tab} options={[...TABS]} onChange={(v) => setUrl({ tab: v })} />}
       />
       {tab === "overview" && <OverviewTab overview={overview} campaigns={campaigns.data} />}
-      {tab === "campaigns" && <CampaignsTab campaigns={campaigns} dailyCap={overview.data?.status?.dailyCap} />}
+      {tab === "campaigns" && <CampaignsTab campaigns={campaigns} dailyCap={overview.data?.status?.dailyCap} onParamsSaved={overview.reload} />}
     </>
   );
 }

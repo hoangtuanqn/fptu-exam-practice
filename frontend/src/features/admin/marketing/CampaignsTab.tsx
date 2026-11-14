@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Loader2, Mail, Send } from "lucide-react";
+import { useCallback, useState } from "react";
+import { Eye, Loader2, Mail, Send, SlidersHorizontal } from "lucide-react";
 import { errorMessage } from "@/shared/api/errors";
 import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
@@ -10,6 +10,8 @@ import { Empty } from "@/shared/ui/Feedback";
 import { QueryBoundary } from "@/shared/ui/QueryBoundary";
 import { Switch } from "@/shared/ui/Switch";
 import { marketingAdminApi, type Campaign, type CampaignKey } from "./marketing.api";
+import { ParamsDialog } from "./ParamsDialog";
+import { PreviewDialog } from "./PreviewDialog";
 
 const nf = new Intl.NumberFormat("vi-VN");
 
@@ -28,11 +30,13 @@ function reachText(eligible: number | undefined, dailyCap: number | undefined) {
   return `Hiện có ${nf.format(eligible)} người đủ điều kiện${days}. `;
 }
 
-export function CampaignsTab({ campaigns, dailyCap }: { campaigns: CampaignsQuery; dailyCap: number | undefined }) {
+export function CampaignsTab({ campaigns, dailyCap, onParamsSaved }: { campaigns: CampaignsQuery; dailyCap: number | undefined; onParamsSaved: () => void }) {
   const toast = useToast();
   const { confirm, confirmDialog } = useConfirm();
   const eligible = useApi(() => marketingAdminApi.eligibleCount(), []);
   const [busy, setBusy] = useState<CampaignKey | null>(null);
+  const [dialog, setDialog] = useState<"params" | Campaign | null>(null);
+  const closeDialog = useCallback(() => setDialog(null), []); // ổn định để Modal không chạy lại effect focus mỗi lần render
 
   const toggle = async (c: Campaign, on: boolean) => {
     if (on) {
@@ -70,6 +74,12 @@ export function CampaignsTab({ campaigns, dailyCap }: { campaigns: CampaignsQuer
 
   return (
     <>
+      <div className="mb-4 flex justify-end">
+        <Button size="sm" onClick={() => setDialog("params")}>
+          <SlidersHorizontal size={16} />
+          Chỉnh thông số
+        </Button>
+      </div>
       <QueryBoundary query={campaigns}>
         {(list) =>
           list.length === 0 ? (
@@ -92,10 +102,16 @@ export function CampaignsTab({ campaigns, dailyCap }: { campaigns: CampaignsQuer
                         </li>
                       ))}
                     </ul>
-                    <Button size="sm" disabled={busy === c.key} onClick={() => void sendTest(c)}>
-                      {busy === c.key ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-                      Gửi thử cho tôi
-                    </Button>
+                    <div className="flex flex-wrap gap-2">
+                      <Button size="sm" onClick={() => setDialog(c)}>
+                        <Eye size={16} />
+                        Xem thư
+                      </Button>
+                      <Button size="sm" disabled={busy === c.key} onClick={() => void sendTest(c)}>
+                        {busy === c.key ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                        Gửi thử cho tôi
+                      </Button>
+                    </div>
                   </div>
                 </Card>
               ))}
@@ -103,6 +119,8 @@ export function CampaignsTab({ campaigns, dailyCap }: { campaigns: CampaignsQuer
           )
         }
       </QueryBoundary>
+      {dialog === "params" && <ParamsDialog onClose={closeDialog} onSaved={onParamsSaved} />}
+      {dialog && dialog !== "params" && <PreviewDialog campaign={dialog} onClose={closeDialog} />}
       {confirmDialog}
     </>
   );
