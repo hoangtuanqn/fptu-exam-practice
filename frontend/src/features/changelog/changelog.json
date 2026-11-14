@@ -1,6 +1,30 @@
 {
   "web": [
     {
+      "version": "1.10.0",
+      "date": "2026-11-14",
+      "title": "Thi thử toàn màn hình như phòng thi thật",
+      "highlights": [
+        "Chế độ Thi chạy toàn màn hình, rời bài sẽ được ghi lại",
+        "Số thời gian còn lại chớp nháy khi sắp hết giờ",
+        "Xem lại số lần rời bài trong kết quả và lịch sử"
+      ],
+      "changes": [
+        {
+          "type": "new",
+          "text": "Chế độ Thi chạy toàn màn hình: rời màn hình hoặc chuyển tab sẽ che bài và tính một lượt vi phạm, thi thử nên không giới hạn số lần"
+        },
+        {
+          "type": "new",
+          "text": "Kết quả và lịch sử làm bài hiện số lần rời bài, tổng thời gian rời và thời điểm từng lần để bạn rèn tính tập trung"
+        },
+        {
+          "type": "improved",
+          "text": "Khi còn dưới 25% thời gian, số đếm ngược chớp chậm; dưới 10% chớp nhanh để bạn kịp chú ý"
+        }
+      ]
+    },
+    {
       "version": "1.9.0",
       "date": "2026-11-13",
       "title": "Hỏi AI ngay dưới lời giải thích",
