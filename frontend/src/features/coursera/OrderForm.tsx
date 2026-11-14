@@ -15,6 +15,7 @@ import { courseraApi, type CourseraCourse, type CourseraOrder } from "./coursera
 export function OrderForm({ course, onBack, onCreated }: { course: CourseraCourse; onBack: () => void; onCreated: (order: CourseraOrder) => void }) {
   const { user, refresh } = useAuth();
   const price = course.price;
+  const title = course.code ? `${course.code} · ${course.title}` : course.title;
   const insufficient = price !== undefined && (user?.balance ?? 0) < price;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,7 +32,7 @@ export function OrderForm({ course, onBack, onCreated }: { course: CourseraCours
     submitting.current = true;
     setBusy(true); setError(""); setErrors({});
     try {
-      if (!await confirm({ title: "Đặt đơn Coursera?", message: <div className="space-y-4"><p>Khóa học: {course.title}. FEPass sẽ nhận thông tin tài khoản bạn cung cấp để xử lý đơn.</p><ChargeSummary amount={price} balance={user?.balance ?? null} /><p>Phí được hoàn vào ví nếu đơn bị hủy hoặc từ chối.</p></div>, confirmLabel: "Xác nhận đặt đơn", tone: "primary" })) return;
+      if (!await confirm({ title: "Đặt đơn Coursera?", message: <div className="space-y-4"><p>Khóa học: {title}. FEPass sẽ nhận thông tin tài khoản bạn cung cấp để xử lý đơn.</p><ChargeSummary amount={price} balance={user?.balance ?? null} /><p>Phí được hoàn vào ví nếu đơn bị hủy hoặc từ chối.</p></div>, confirmLabel: "Xác nhận đặt đơn", tone: "primary" })) return;
       const order = await courseraApi.create({ requestKey: requestKey.current, courseId: course.id, expectedPrice: price, email, password, note });
       setPassword("");
       await refresh();
@@ -42,7 +43,7 @@ export function OrderForm({ course, onBack, onCreated }: { course: CourseraCours
     } finally { submitting.current = false; setBusy(false); }
   }
   return <Card>
-    <CardHeader title={course.title} description="Điền thông tin tài khoản Coursera để đặt đơn." />
+    <CardHeader title={title} description="Điền thông tin tài khoản Coursera để đặt đơn." />
     <form onSubmit={submit} className="space-y-4 p-5">
       <fieldset disabled={busy} className="space-y-4">
         <Input label="Email Coursera" type="email" autoComplete="off" required maxLength={254} value={email} onChange={(e) => setEmail(e.target.value)} error={errors.email} />
@@ -51,6 +52,7 @@ export function OrderForm({ course, onBack, onCreated }: { course: CourseraCours
       </fieldset>
       <p className="md-title-medium">Phí khóa học: {price === undefined ? "Chưa có thông tin giá" : formatCredit(price)}</p>
       <p className="md-body-medium text-on-surface-variant">Số dư ví: {formatCredit(user?.balance ?? 0)}. Phí được trừ khi đặt đơn và hoàn lại nếu đơn bị hủy hoặc từ chối.</p>
+      <p className="md-body-medium text-on-surface-variant">FEPass sẽ gửi email cho bạn mỗi khi đơn đổi trạng thái.</p>
       {insufficient && <p role="status" className="text-error">Số dư chưa đủ. <Link className="underline" to="/account/deposit">Nạp thêm credit</Link> hoặc <button type="button" className="underline" onClick={() => void refresh()}>cập nhật số dư</button>.</p>}
       <FormError message={error} />
       <div className="flex flex-wrap justify-end gap-3">

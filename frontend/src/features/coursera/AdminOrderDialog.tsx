@@ -43,7 +43,7 @@ export function AdminOrderDialog({ order, onClose, onSaved }: { order: CourseraO
   return <Modal onClose={busy ? undefined : onClose}>
     <h2 className="md-headline-small">Đơn #{order.id}</h2>
     <p className="my-3 break-words">{order.courseTitle}</p>
-    <a href={order.courseUrl} target="_blank" rel="noreferrer" className="text-primary underline">Mở khóa học</a>
+    {order.courseUrl && <a href={order.courseUrl} target="_blank" rel="noreferrer" className="text-primary underline">Mở khóa học</a>}
     <p className="my-3 break-all">{order.email}</p>
     {order.amount !== undefined && <p className="my-3">Đã thu: {formatCredit(order.amount)}{order.refundedAt ? " · Đã hoàn tiền" : ""}</p>}
     {options.length > 0 && <div className="space-y-3">
