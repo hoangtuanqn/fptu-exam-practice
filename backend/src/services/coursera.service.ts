@@ -1,10 +1,11 @@
 import { Prisma } from "@prisma/client";
-import { COURSERA_TRANSITIONS } from "../constants/coursera";
+import { COURSERA, COURSERA_TRANSITIONS } from "../constants/coursera";
 import { courseraRepository } from "../repositories/coursera.repository";
 import { AppError } from "../rules/error";
 import type { CourseraCourseBody, CourseraCoursesQuery, CourseraOrderBody, CourseraOrdersQuery, CourseraStatusBody } from "../rules/requests/coursera.request";
 import { walletService } from "./wallet.service";
 import { readCourseraPassword } from "../utils/coursera-credentials";
+import { CourseraUpstreamError, fetchCourseraName, parseCourseraLink } from "../utils/coursera-lookup";
 import { formatCredit } from "../utils/format";
 import { adminNoticeService } from "./admin-notice.service";
 import { notificationService } from "./notification.service";
@@ -43,6 +44,27 @@ const mailOrder = (order: Order, event: Parameters<typeof notificationService.co
 export const courseraService = {
   courses: (query: CourseraCoursesQuery, admin = false) => safe(() => courseraRepository.courses(query, admin)),
   saveCourse: (data: CourseraCourseBody, id?: number) => safe(() => courseraRepository.saveCourse(data, id)),
+  // Verifies a member-pasted link on Coursera and returns the matching catalog row, creating an unlisted one on first use.
+  lookup: (raw: string, fetcher: typeof fetch = fetch) => safe(async () => {
+    const link = parseCourseraLink(raw);
+    if (!link) throw new AppError("Vui lòng nhập liên kết khóa học Coursera, dạng https://www.coursera.org/learn/...");
+    const known = await courseraRepository.findCourseByUrl(link.url);
+    if (known) return { ...known, kind: link.kind };
+    let name: string | null;
+    try { name = await fetchCourseraName(link, fetcher); } catch (error) {
+      if (error instanceof CourseraUpstreamError) throw new AppError("Không kiểm tra được khóa học lúc này, vui lòng thử lại", 503);
+      throw error;
+    }
+    if (!name) throw AppError.notFound("Không tìm thấy khóa học này trên Coursera");
+    try {
+      return { ...await courseraRepository.createLinkCourse({ url: link.url, title: name, price: COURSERA.linkPrice }), kind: link.kind };
+    } catch (error) {
+      if (!(error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002")) throw error;
+      const raced = await courseraRepository.findCourseByUrl(link.url); // another lookup created it first
+      if (!raced) throw error;
+      return { ...raced, kind: link.kind };
+    }
+  }),
   orders: (query: CourseraOrdersQuery, userId?: number) => safe(() => courseraRepository.orders(query, userId)),
   createOrder: (userId: number, data: CourseraOrderBody) => safe(async () => {
     const existing = await courseraRepository.findRequest(userId, data.requestKey);

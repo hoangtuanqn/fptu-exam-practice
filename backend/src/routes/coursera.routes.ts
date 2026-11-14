@@ -6,14 +6,16 @@ import { idempotent } from "../middlewares/idempotency.middlewares";
 import { makeLimiter } from "../middlewares/rateLimit.middlewares";
 import { validate } from "../middlewares/validate.middlewares";
 import { idParam } from "../rules/requests/admin.request";
-import { courseraCourseBody, courseraCoursesQuery, courseraOrderBody, courseraOrdersQuery, courseraStatusBody } from "../rules/requests/coursera.request";
+import { courseraCourseBody, courseraCoursesQuery, courseraLookupBody, courseraOrderBody, courseraOrdersQuery, courseraStatusBody } from "../rules/requests/coursera.request";
 import { courseraNoStore } from "../middlewares/coursera.middlewares";
 
 const orderLimiter = makeLimiter({ limit: COURSERA.orderRate, keyGenerator: (req) => `user:${req.user!.id}`, validate: { keyGeneratorIpFallback: false } });
 const credentialLimiter = makeLimiter({ limit: COURSERA.credentialRate, keyGenerator: (req) => `user:${req.user!.id}`, validate: { keyGeneratorIpFallback: false } });
+const lookupLimiter = makeLimiter({ limit: COURSERA.lookupRate, keyGenerator: (req) => `user:${req.user!.id}`, validate: { keyGeneratorIpFallback: false } });
 export const courseraRouter = Router();
 courseraRouter.use(authenticate, courseraNoStore);
 courseraRouter.get("/courses", validate(courseraCoursesQuery, "query"), controller.courses);
+courseraRouter.post("/lookup", requireVerifiedMember, lookupLimiter, validate(courseraLookupBody), controller.lookup);
 courseraRouter.get("/orders", validate(courseraOrdersQuery, "query"), controller.orders);
 courseraRouter.post("/orders", requireVerifiedMember, orderLimiter, validate(courseraOrderBody), idempotent, controller.createOrder);
 courseraRouter.post("/orders/:id/cancel", validate(idParam, "params"), controller.cancel);

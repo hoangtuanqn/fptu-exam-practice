@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { getValidated } from "../middlewares/validate.middlewares";
 import type { IdParam } from "../rules/requests/admin.request";
-import type { CourseraCourseBody, CourseraCoursesQuery, CourseraOrderBody, CourseraOrdersQuery, CourseraStatusBody } from "../rules/requests/coursera.request";
+import type { CourseraCourseBody, CourseraCoursesQuery, CourseraLookupBody, CourseraOrderBody, CourseraOrdersQuery, CourseraStatusBody } from "../rules/requests/coursera.request";
 import { ResponseClient } from "../rules/response";
 import { courseraService } from "../services/coursera.service";
 
@@ -20,6 +20,9 @@ export const courseraController = {
   },
   async updateCourse(_req: Request, res: Response) {
     res.json(new ResponseClient({ data: await courseraService.saveCourse(getValidated<CourseraCourseBody>(res), idOf(res)) }));
+  },
+  async lookup(_req: Request, res: Response) {
+    res.json(new ResponseClient({ data: await courseraService.lookup(getValidated<CourseraLookupBody>(res).url) }));
   },
   async orders(req: Request, res: Response) {
     const { items, meta } = await courseraService.orders(getValidated<CourseraOrdersQuery>(res, "query"), req.user!.id);

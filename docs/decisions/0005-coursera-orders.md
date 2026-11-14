@@ -18,3 +18,10 @@
 - New orders notify admins (`coursera.ordered`, important) and user cancellations add a `coursera.cancelled` notice. Members receive mails after commit for order receipt (amount, balance after) and admin status changes (processing, completed, rejected or cancelled with refund and balance after).
 - Admins must populate the course catalog and set each course price before members can place paid orders. Zero means free. No sample courses or prices are inserted into live data.
 - Catalog search uses bounded substring queries on title or code for the initial small catalog. Measure before introducing full-text search as it grows.
+
+## Courses from a pasted link (2026-11)
+
+- Members may paste a Coursera link (`/learn/<slug>`, `/specializations/<slug>`, `/professional-certificates/<slug>`, optional locale prefix). `POST /api/coursera/lookup` verifies the slug against Coursera's public catalog API and returns the matching catalog row plus `kind`; the order flow (`courseId` + `expectedPrice`) is unchanged.
+- The Coursera API is unofficial and keyless: it may change or disappear without notice. Calls are bounded (timeout, capped body, no redirects, per-user rate limit) and failures return a generic 503. Links already in the catalog are answered from the database without calling Coursera.
+- The title always comes from Coursera, never from the client. Rows are keyed by the canonical `https://www.coursera.org/<segment>/<slug>` URL; concurrent first lookups resolve to one row.
+- New link rows are active, have no code, cost `COURSERA.linkPrice` (50,000 credits) and have `listed = false`, so they do not appear in the member catalog. Admins see every row and can set `listed` through the admin API to promote one (no admin screen for it yet). Migration 0076 adds `listed` (default true, additive; existing rows stay listed).

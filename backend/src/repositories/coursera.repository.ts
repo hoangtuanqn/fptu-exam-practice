@@ -15,7 +15,7 @@ export const courseraRepository = {
   transaction: <T>(run: (tx: Prisma.TransactionClient) => Promise<T>) => prisma.$transaction(run),
   async courses(query: CourseraCoursesQuery, admin: boolean) {
     const where: Prisma.CourseraCourseWhereInput = {
-      ...(!admin && { isActive: true }),
+      ...(!admin && { isActive: true, listed: true }),
       // utf8mb4_unicode_ci makes contains case-insensitive
       ...(query.q && { OR: [{ title: { contains: query.q } }, { code: { contains: query.q } }] }),
     };
@@ -27,6 +27,12 @@ export const courseraRepository = {
   },
   saveCourse(data: CourseraCourseBody, id?: number) {
     return id ? prisma.courseraCourse.update({ where: { id }, data }) : prisma.courseraCourse.create({ data });
+  },
+  findCourseByUrl(url: string) {
+    return prisma.courseraCourse.findUnique({ where: { url } });
+  },
+  createLinkCourse(data: { url: string; title: string; price: number }) {
+    return prisma.courseraCourse.create({ data: { ...data, code: null, isActive: true, listed: false } });
   },
   async orders(query: CourseraOrdersQuery, userId?: number) {
     const where = { userId, status: query.status };

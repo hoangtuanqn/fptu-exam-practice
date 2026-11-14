@@ -149,6 +149,49 @@ describe("Coursera orders (throwaway MySQL)", { skip: DB_TESTS_ENABLED ? false :
     assert.equal((await m.service.credentials(legacy.id, otherId)).password, "old secret");
   });
 
+  it("looks up a pasted link once as an unlisted course, hides it from members and charges the link price", async () => {
+    let calls = 0;
+    const fetcher = (async () => { calls++; return new Response(JSON.stringify({ elements: [{ name: "Linked Course", slug: "linked-course" }] }), { status: 200 }); }) as typeof fetch;
+    const [first, raced] = await Promise.all([
+      m.service.lookup("https://coursera.org/vi/learn/linked-course/?x=1", fetcher),
+      m.service.lookup("https://www.coursera.org/learn/linked-course", fetcher),
+    ]);
+    assert.equal(first.id, raced.id);
+    assert.deepEqual({ url: first.url, title: first.title, kind: first.kind, price: first.price, listed: first.listed, code: first.code, isActive: first.isActive },
+      { url: "https://www.coursera.org/learn/linked-course", title: "Linked Course", kind: "course", price: 50000, listed: false, code: null, isActive: true });
+    const before = calls;
+    assert.equal((await m.service.lookup("https://www.coursera.org/learn/linked-course", fetcher)).id, first.id);
+    assert.equal(calls, before); // known rows are returned without calling Coursera
+    assert.equal(await m.prisma.courseraCourse.count({ where: { url: first.url } }), 1);
+    assert.equal((await m.service.courses({ ...page, q: "Linked Course" })).meta.total, 0);
+    assert.equal((await m.service.courses({ ...page, q: "Linked Course" }, true)).items[0]?.listed, false);
+
+    // Existing catalog rows keep their own price; admins can list a link course.
+    const catalog = await m.service.saveCourse({ title: "Catalog", url: "https://www.coursera.org/learn/catalog-course", price: 70, isActive: true });
+    const known = await m.service.lookup("https://www.coursera.org/learn/catalog-course", fetcher);
+    assert.deepEqual([known.id, known.price, known.listed], [catalog.id, 70, true]);
+    await m.service.saveCourse({ title: first.title, url: first.url, isActive: true, listed: true }, first.id);
+    assert.equal((await m.service.courses({ ...page, q: "Linked Course" })).meta.total, 1);
+    await m.service.saveCourse({ title: "Renamed link", url: first.url, isActive: true }, first.id); // omitted listed stays true
+    assert.equal((await m.prisma.courseraCourse.findUniqueOrThrow({ where: { id: first.id } })).listed, true);
+
+    const buyer = await m.prisma.user.create({ data: { email: "link@example.invalid", fullName: "Link", password: "test", balance: 60000 } });
+    const order = await m.service.createOrder(buyer.id, { ...input(), courseId: first.id, expectedPrice: first.price });
+    assert.equal(order.amount, 50000);
+    assert.equal((await m.prisma.user.findUniqueOrThrow({ where: { id: buyer.id } })).balance, 10000);
+  });
+
+  it("maps invalid links, unknown courses and Coursera failures without creating rows", async () => {
+    const empty = (async () => new Response(JSON.stringify({ elements: [] }), { status: 200 })) as typeof fetch;
+    const down = (async () => { throw new Error("upstream detail"); }) as typeof fetch;
+    const count = () => m.prisma.courseraCourse.count();
+    const start = await count();
+    await assert.rejects(m.service.lookup("https://evil.invalid/learn/x", empty), (e: unknown) => hasStatus(400)(e) && /coursera\.org\/learn/.test((e as Error).message));
+    await assert.rejects(m.service.lookup("https://www.coursera.org/learn/missing-course", empty), (e: unknown) => hasStatus(404)(e) && (e as Error).message === "Không tìm thấy khóa học này trên Coursera");
+    await assert.rejects(m.service.lookup("https://www.coursera.org/specializations/down-course", down), (e: unknown) => hasStatus(503)(e) && !(e as Error).message.includes("upstream"));
+    assert.equal(await count(), start);
+  });
+
   it("mails status changes with the refund and balance after", async () => {
     const course = await m.service.saveCourse({ title: "Mail course", url: "https://www.coursera.org/learn/mail-test", price: 40, isActive: true });
     const buyer = await m.prisma.user.create({ data: { email: "mail@example.invalid", fullName: "Mail", password: "test", balance: 100 } });

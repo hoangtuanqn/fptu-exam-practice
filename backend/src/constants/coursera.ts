@@ -9,6 +9,10 @@ export const COURSERA = {
   maxPrice: 100_000_000,
   orderRate: 5,
   credentialRate: 20,
+  lookupRate: 10, // per user per minute
+  lookupTimeoutMs: 5000,
+  lookupMaxBytes: 64 * 1024,
+  linkPrice: 50000, // wallet credits for a course added from a member-pasted link
 } as const;
 
 export const COURSERA_STATUSES = ["PENDING", "PROCESSING", "COMPLETED", "REJECTED", "CANCELLED"] as const;
