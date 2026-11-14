@@ -110,22 +110,28 @@ export function QuestionCard({
         </div>
 
         {/* Ảnh rộng hết khung (chữ to hơn nhiều so với co ảnh vừa cả chiều cao); đề dài thì cuộn trong khung. Bấm vào ảnh mở cửa sổ phóng to */}
-        <div className="min-h-0 w-full flex-1 overflow-auto bg-slate-50 p-2">
-          <img
-            src={imageUrl}
-            alt={`Câu ${number}`}
-            onClick={onZoom}
-            title="Bấm để mở cửa sổ phóng to"
-            className="block h-auto cursor-zoom-in"
-            style={{ width: `${size.scale * 100}%`, maxWidth: "none" }}
-          />
+        <div className="flex min-h-0 w-full flex-1 bg-slate-50">
+          {/* Thanh đáp án dọc bên trái ảnh (cùng phía với danh sách câu): nút nhỏ, không chiếm chiều cao của đề; quá dài thì cuộn */}
+          <div className="my-2 ml-2 flex w-14 shrink-0 flex-col items-center overflow-y-auto rounded-2xl border border-outline-variant bg-surface-container-lowest px-2 py-2 shadow-sm">
+            <AnswerOptions vertical question={question} selected={selected} revealed={revealed} onChoose={onChoose} />
+          </div>
+          <div className="min-h-0 min-w-0 flex-1 overflow-auto p-2">
+            <img
+              src={imageUrl}
+              alt={`Câu ${number}`}
+              onClick={onZoom}
+              title="Bấm để mở cửa sổ phóng to"
+              className="block h-auto cursor-zoom-in"
+              style={{ width: `${size.scale * 100}%`, maxWidth: "none" }}
+            />
+          </div>
         </div>
       </section>
 
       {nudge}
 
-      {/* Thanh trả lời. Điện thoại: hàng đáp án (4 cột, nút to dễ chạm), trạng thái, rồi hai nút Trước/Tiếp ngang bằng nhau.
-          Máy tính: một hàng Trước | đáp án + trạng thái | Tiếp (sm:contents làm hai nút nhập vào hàng cùng cấp). */}
+      {/* Thanh điều hướng (đáp án đã nằm ở thanh dọc cạnh ảnh). Điện thoại: trạng thái, rồi hai nút Trước/Tiếp ngang bằng nhau.
+          Máy tính: một hàng Trước | trạng thái | Tiếp (sm:contents làm hai nút nhập vào hàng cùng cấp). */}
       <section className="flex shrink-0 flex-col gap-2.5 rounded-xl border border-slate-200 bg-surface-container-lowest p-2.5 shadow-sm sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 sm:px-3 sm:py-2">
         <div className="order-2 grid grid-cols-2 gap-2 sm:contents">
           <Button size="sm" onClick={onPrev} disabled={!hasPrev} className="!py-3 sm:order-1 sm:!py-2">
@@ -136,7 +142,6 @@ export function QuestionCard({
         </div>
 
         <div className="order-1 flex flex-1 flex-col items-stretch gap-2.5 sm:order-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-4 sm:gap-y-2">
-          <AnswerOptions compact question={question} selected={selected} revealed={revealed} onChoose={onChoose} />
           <AnswerStatus
             question={question}
             selected={selected}
