@@ -14,6 +14,7 @@ export interface NewAttempt {
   skipped: number;
   durationSec: number;
   details: Prisma.InputJsonValue;
+  violations: Prisma.InputJsonValue;
 }
 
 const withExam = { exam: { select: { id: true, title: true, threadId: true, totalQuestions: true } } } satisfies Prisma.ExamAttemptInclude;

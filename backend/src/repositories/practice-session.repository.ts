@@ -13,11 +13,12 @@ export interface SessionState {
   flagged: Prisma.InputJsonValue;
   current: number;
   elapsedSec: number;
+  violations?: Prisma.InputJsonValue; // undefined = Prisma bỏ qua, cột giữ nguyên
 }
 
 export const practiceSessionRepository = {
   create: (owner: Owner, examId: number, mode: AttemptMode) =>
-    prisma.practiceSession.create({ data: { ...whereOf(owner), examId, mode, answers: {}, checked: {}, flagged: {} }, include: withExam }),
+    prisma.practiceSession.create({ data: { ...whereOf(owner), examId, mode, answers: {}, checked: {}, flagged: {}, violations: [] }, include: withExam }),
 
   findOfOwner: (owner: Owner, id: number) => prisma.practiceSession.findFirst({ where: { id, ...whereOf(owner) }, include: withExam }),
 

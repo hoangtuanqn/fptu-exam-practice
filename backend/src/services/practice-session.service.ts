@@ -1,6 +1,7 @@
 import { practiceSessionRepository } from "../repositories/practice-session.repository";
 import { AppError } from "../rules/error";
 import type { CreateSessionBody, ListSessionsQuery, SaveSessionBody } from "../rules/requests/session.request";
+import type { Violation } from "../rules/requests/violation.request";
 import type { Actor } from "../utils/actor";
 import { toMeta } from "../utils/pagination";
 import { examService } from "./exam.service";
@@ -21,6 +22,7 @@ const toDto = (s: Row) => {
     flagged: s.flagged as Record<string, boolean>,
     current: s.current,
     elapsedSec: s.elapsedSec,
+    violations: s.violations as Violation[],
     answered: answeredOf(answers),
     createdAt: s.createdAt,
     updatedAt: s.updatedAt,
