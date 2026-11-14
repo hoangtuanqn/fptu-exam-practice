@@ -87,7 +87,7 @@ const segmentSql = (b: BroadcastAudience, now: Date, examFrom: Date, examTo: Dat
   }
 };
 
-const SPEND_CHARGES =Prisma.sql`'CRAWL_CHARGE', 'EXPLAIN_CHARGE', 'PE_CHARGE'`;
+const SPEND_CHARGES = Prisma.sql`'CRAWL_CHARGE', 'EXPLAIN_CHARGE', 'PE_CHARGE'`;
 const SPEND_REFUNDS = Prisma.sql`'CRAWL_REFUND', 'EXPLAIN_REFUND', 'PE_REFUND'`;
 
 /** Phần FROM ... WHERE của từng nhóm người nhận; dùng chung cho lấy danh sách và đếm. */

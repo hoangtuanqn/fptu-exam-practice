@@ -69,8 +69,12 @@ export const listBroadcastsQuery = paginationQuery;
 const vnDay = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/, "Ngày không hợp lệ")
-  .transform((s) => new Date(`${s}T00:00:00+07:00`))
-  .refine((d) => !Number.isNaN(d.getTime()), "Ngày không hợp lệ");
+  // Ngày không có thật (2026-02-31) bị JS cuộn sang tháng sau: chỉ nhận khi đổi ngược ra đúng chuỗi cũ
+  .refine((s) => {
+    const t = new Date(`${s}T00:00:00+07:00`).getTime();
+    return !Number.isNaN(t) && new Date(t + 7 * 3_600_000).toISOString().startsWith(s);
+  }, "Ngày không hợp lệ")
+  .transform((s) => new Date(`${s}T00:00:00+07:00`));
 
 export const listLogsQuery = paginationQuery.extend({
   campaign: z.union([z.enum(CAMPAIGN_KEYS), z.literal("broadcast"), z.string().regex(/^broadcast:\d{1,10}$/)]).optional(),
