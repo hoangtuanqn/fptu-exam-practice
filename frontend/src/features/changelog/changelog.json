@@ -12,6 +12,10 @@
       "changes": [
         {
           "type": "new",
+          "text": "Tìm khóa học Coursera, đặt đơn ngay trên FEPass và theo dõi tiến độ xử lý trong tài khoản"
+        },
+        {
+          "type": "new",
           "text": "Chế độ Thi chạy toàn màn hình: rời màn hình hoặc chuyển tab sẽ che bài và tính một lượt vi phạm, thi thử nên không giới hạn số lần"
         },
         {
