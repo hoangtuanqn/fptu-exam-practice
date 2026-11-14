@@ -23,6 +23,7 @@ import extensionRouter from "./extension.routes";
 import peRouter from "./pe.routes";
 import { referralPublicRouter, referralRouter } from "./referral.routes";
 import reminderPublicRouter from "./reminder-public.routes";
+import savedQuestionRouter from "./saved-question.routes";
 import gradeRouter from "./grade.routes";
 import materialRouter from "./material.routes";
 import marketingRouter from "./marketing.routes";
@@ -63,6 +64,7 @@ rootRouter.use("/attempts", attemptRouter);
 rootRouter.use("/review", reviewRouter);
 rootRouter.use("/reviews", fsrsReviewRouter); // lịch ôn FSRS (khác /review là Sổ câu sai Leitner)
 rootRouter.use("/study", studyRouter);
+rootRouter.use("/saved-questions", savedQuestionRouter);
 rootRouter.use("/sessions", sessionRouter);
 rootRouter.use("/answer-reports", answerReportRouter);
 rootRouter.use("/admin", adminRouter);
