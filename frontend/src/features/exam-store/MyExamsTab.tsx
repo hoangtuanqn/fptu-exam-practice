@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { BookOpen, Eye, History } from "lucide-react";
 import { useOnLibraryChanged } from "@/features/exam-store/libraryEvents";
-import { examLibraryApi, type LibraryExam } from "@/features/exam-store/exam-library.api";
+import { examLibraryApi, sizeText, type LibraryExam } from "@/features/exam-store/exam-library.api";
 import { ResumeList } from "@/features/practice-session/ResumeList";
 import { formatScore } from "@/features/practice/utils/format";
 import { useApi } from "@/shared/hooks/useApi";
@@ -67,7 +67,7 @@ export function MyExamsTab() {
                   <Link to={`/exam/${e.threadId}`} className="block min-w-0 flex-1 px-4 py-3 transition active:bg-slate-50">
                     <div className="truncate text-sm font-medium text-slate-900">{e.title}</div>
                     <div className="mt-0.5 text-xs text-slate-500">
-                      {e.totalQuestions} câu · {attemptsText(e)}
+                      {sizeText(e)} · {attemptsText(e)}
                     </div>
                     <div className="mt-1 flex items-center gap-2">
                       <AnswerBadge source={e.answerSource} />
@@ -110,7 +110,7 @@ export function MyExamsTab() {
                           <ViewLink threadId={e.threadId} />
                         </div>
                       </Td>
-                      <Td className="text-right tabular-nums">{e.totalQuestions}</Td>
+                      <Td className="text-right tabular-nums">{e.totalQuestions === 0 && (e.attachments ?? 0) > 0 ? sizeText(e) : e.totalQuestions}</Td>
                       <Td className="whitespace-nowrap text-slate-600">
                         <AttemptsCell e={e} />
                       </Td>

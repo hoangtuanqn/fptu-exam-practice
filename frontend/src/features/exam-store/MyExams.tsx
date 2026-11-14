@@ -9,7 +9,7 @@ import { useAuth } from "@/features/auth/AuthContext";
 import { ProgressRing } from "@/shared/ui/ProgressRing";
 import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
-import { examLibraryApi } from "./exam-library.api";
+import { examLibraryApi, sizeText } from "./exam-library.api";
 import { useOnLibraryChanged } from "./libraryEvents";
 
 const SHOWN = 6;
@@ -95,7 +95,7 @@ export function MyExams({ onOpen }: Props) {
                       {(e.answerSource === "FAILED" || e.answerSource === "DEFAULT") && (
                         <span className="font-medium text-amber-700">Chưa có đáp án · </span>
                       )}
-                      {e.totalQuestions} câu · {hasDone ? `${e.attempts} lần làm, cao nhất ${formatScore(score)}` : "chưa làm"}
+                      {sizeText(e)} · {hasDone ? `${e.attempts} lần làm, cao nhất ${formatScore(score)}` : "chưa làm"}
                     </span>
                   </span>
                 </button>

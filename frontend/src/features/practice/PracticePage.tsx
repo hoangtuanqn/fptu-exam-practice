@@ -5,6 +5,8 @@ import { historyApi } from "@/features/history/history.api";
 import type { TopicSummary } from "@/features/history/types";
 import { pendingAttempt } from "@/features/guest-sync/pendingAttempt";
 import { examImportApi } from "@/features/exam-import/exam-import.api";
+import { isFilesOnly, type ExamAttachment } from "@/features/exam-import/types";
+import { FilesOnlyExam } from "@/features/exam-attachments/FilesOnlyExam";
 import { sessionApi } from "@/features/practice-session/session.api";
 import { useSessionSync } from "@/features/practice-session/useSessionSync";
 import { useLeaveWarning } from "@/shared/hooks/useLeaveWarning";
@@ -50,10 +52,13 @@ export default function PracticePage({ threadId }: Props) {
   const [dialog, setDialog] = useState<SubmitDialog>(null);
   const [trialEnded, setTrialEnded] = useState(false);
   const [referencesOpen, setReferencesOpen] = useState(false); // đang xem tài liệu tham khảo của đề
+  const [attachments, setAttachments] = useState<{ examId: number; list: ExamAttachment[] } | null>(null); // tệp đính kèm của đề mở theo địa chỉ
+  const [filesOnly, setFilesOnly] = useState<{ title: string; list: ExamAttachment[] } | null>(null); // đề chỉ có tệp: không mở bài làm
   const [bestScore, setBestScore] = useState<number | null>(null); // điểm cao nhất của người dùng ở đề đang mở
   const [topicSummary, setTopicSummary] = useState<TopicSummary>(null); // kết quả theo chủ đề của bài vừa nộp, hiện trong bảng điểm
 
   const hasQuiz = quiz.questions.length > 0;
+  const examFiles = attachments && attachments.examId === quiz.examId ? attachments.list : [];
   // Bộ đề theo chương nhiều đề: ?next=<thread>,<thread> là các đề còn lại sẽ làm lần lượt sau đề này
   const nextQueue = (new URLSearchParams(location.search).get("next") ?? "").split(",").filter((s) => /^\d{1,18}$/.test(s));
   // Thi thử toàn màn hình: rời khỏi (Esc, chuyển tab, mất focus) là một lần vi phạm, đề bị gỡ khỏi trang cho tới khi quay lại
@@ -223,6 +228,7 @@ export default function PracticePage({ threadId }: Props) {
 
     let stale = false;
     setOpening(true);
+    setFilesOnly(null);
     const params = new URLSearchParams(location.search);
     const sessionId = Number(params.get("session")) || null; // có thì làm tiếp đúng lượt đó
     Promise.all([examImportApi.examByThread(threadId), sessionId ? sessionApi.get(sessionId).catch(() => null) : Promise.resolve(null)])
@@ -230,6 +236,13 @@ export default function PracticePage({ threadId }: Props) {
         if (stale) return;
         loadedFor.current = threadId; // đã tải xong đề này
         setOpenedThread(exam.threadId);
+        setAttachments({ examId: exam.id, list: exam.attachments ?? [] });
+        // Đề chỉ có tệp: không có câu để làm, không tạo lượt làm bài
+        if (isFilesOnly(exam)) {
+          quiz.closeExam(); // đang mở đề khác (đi tiếp từ bộ đề) thì gỡ đề đó ra
+          setFilesOnly({ title: exam.title, list: exam.attachments ?? [] });
+          return;
+        }
         const mode = params.get("mode");
         // Bộ đề theo chương (?t=chương&t=chương): chỉ giữ các câu thuộc những chương đã chọn
         const chapters = new Set(params.getAll("t"));
@@ -317,7 +330,7 @@ export default function PracticePage({ threadId }: Props) {
         elapsed={quiz.elapsed}
         timeLimitSec={quiz.timeLimitSec}
         bestScore={bestScore}
-        referenceCount={quiz.references.length}
+        referenceCount={quiz.references.length + examFiles.length}
         onShowReferences={() => setReferencesOpen(true)}
         timing={quiz.timing}
         onHome={goHome}
@@ -352,10 +365,12 @@ export default function PracticePage({ threadId }: Props) {
       )}
       {trialEnded && <TrialEndedDialog onClose={() => setTrialEnded(false)} />}
       {guard.away && <ExamGuardOverlay away={guard.away} count={quiz.violations.length} onResume={guard.resume} onSubmit={requestSubmit} onTamper={guard.tamper} />}
-      {referencesOpen && !guard.away && quiz.references.length > 0 && <ReferenceDialog references={quiz.references} onClose={() => setReferencesOpen(false)} />}
+      {referencesOpen && !guard.away && quiz.references.length + examFiles.length > 0 && <ReferenceDialog references={quiz.references} attachments={examFiles} guarded={quiz.timing && quiz.mode === "exam" && canFullscreen} onClose={() => setReferencesOpen(false)} />}
 
       {guard.away ? null : hasQuiz ? ( // đang ở ngoài bài thi: gỡ hẳn đề khỏi trang, mọi trạng thái bài làm vẫn nằm trong useQuiz
         <QuizWorkspace quiz={quiz} zoomOpen={zoomOpen} onZoomChange={setZoomOpen} onSubmit={requestSubmit} />
+      ) : filesOnly && threadId ? (
+        <FilesOnlyExam title={filesOnly.title} attachments={filesOnly.list} />
       ) : opening ? (
         <div className="flex flex-1 items-center justify-center bg-surface">
           <Loading label="Đang mở đề…" />

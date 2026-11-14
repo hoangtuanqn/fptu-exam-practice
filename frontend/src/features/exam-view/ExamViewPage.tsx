@@ -3,7 +3,8 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import { FileSearch, Play } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { examImportApi } from "@/features/exam-import/exam-import.api";
-import type { ExamQuestionsPayload, ImportedExam } from "@/features/exam-import/types";
+import { isFilesOnly, type ExamQuestionsPayload, type ImportedExam } from "@/features/exam-import/types";
+import { AttachmentList } from "@/features/exam-attachments/AttachmentList";
 import { LoadingMoreBanner } from "@/features/practice/components/quiz/LoadingMoreBanner";
 import { useExamQuestionsLive } from "@/features/practice/hooks/useExamQuestionsLive";
 import type { Question } from "@/features/practice/types";
@@ -91,6 +92,8 @@ function ExamView({ exam }: { exam: ImportedExam }) {
   const fetching = !failed && questions.length < total;
   const references = questions.filter((q) => q.isReference);
   const items = questions.filter((q) => !q.isReference);
+  const attachments = exam.attachments ?? [];
+  const filesOnly = isFilesOnly(exam);
 
   useExamQuestionsLive(
     exam.id,
@@ -158,23 +161,35 @@ function ExamView({ exam }: { exam: ImportedExam }) {
     <>
       <PageHeader
         title={exam.title}
-        description={`${fetching ? total : items.length} câu`}
+        description={filesOnly ? `${attachments.length} tệp đính kèm` : `${fetching ? total : items.length} câu`}
         action={
-          <div className="flex flex-wrap items-center gap-4">
-            {hasAnswers ? (
-              <label className="md-label-large flex items-center gap-3 text-on-surface">
-                <Switch checked={show} onChange={changeShow} label="Hiện đáp án" />
-                Hiện đáp án
-              </label>
-            ) : (
-              <span className="md-body-medium text-on-surface-variant">Đề này chưa có đáp án</span>
-            )}
-            <Link to={`/exam/${exam.threadId}`} className={buttonClass({ variant: "filled" })}>
-              <Play size={16} /> Làm bài ngay
-            </Link>
-          </div>
+          filesOnly ? undefined : (
+            <div className="flex flex-wrap items-center gap-4">
+              {hasAnswers ? (
+                <label className="md-label-large flex items-center gap-3 text-on-surface">
+                  <Switch checked={show} onChange={changeShow} label="Hiện đáp án" />
+                  Hiện đáp án
+                </label>
+              ) : (
+                <span className="md-body-medium text-on-surface-variant">Đề này chưa có đáp án</span>
+              )}
+              <Link to={`/exam/${exam.threadId}`} className={buttonClass({ variant: "filled" })}>
+                <Play size={16} /> Làm bài ngay
+              </Link>
+            </div>
+          )
         }
       />
+
+      {attachments.length > 0 && (
+        <section className="mb-4 space-y-2">
+          <h2 className="md-title-medium text-on-surface">Tệp đính kèm của đề</h2>
+          {filesOnly && (
+            <p className="md-body-medium text-on-surface-variant">Đề này chỉ có tệp đính kèm, không có câu hỏi để làm trên web. Mở hoặc tải tệp bên dưới.</p>
+          )}
+          <AttachmentList attachments={attachments} />
+        </section>
+      )}
 
       {fetching && <LoadingMoreBanner loaded={questions.length} total={total} />}
 
