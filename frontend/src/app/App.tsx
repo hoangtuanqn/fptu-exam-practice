@@ -69,7 +69,7 @@ const ACCOUNT_NAV: NavItem[] = [
   { to: "/account/review", label: "Sổ câu sai", icon: NotebookPen, group: "Ôn tập" },
   { to: "/account/saved", label: "Câu đã lưu", icon: Bookmark, group: "Ôn tập" },
   { to: "/account/frequent", label: "Câu hay ra", icon: Flame, group: "Ôn tập" },
-  { to: "/account/materials", label: "Phân tích slide", icon: FileText, group: "Ôn tập" },
+  // Tạm ẩn: { to: "/account/materials", label: "Phân tích slide", icon: FileText, group: "Ôn tập" },
   { to: "/account/attempts", label: "Lịch sử làm bài", icon: ListChecks, group: "Kết quả", also: ["/account/reports"] },
   { to: "/account/grades", label: "Điểm FAP", icon: GraduationCap, group: "Kết quả" },
   { to: "/pro", label: "Gói Pro", icon: Crown, group: "Ví và Pro" },
