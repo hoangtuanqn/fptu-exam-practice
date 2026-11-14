@@ -55,6 +55,7 @@ export const PRIVATE_PAGES: Record<string, PageSeo> = {
   "/forgot-password": { title: "Quên mật khẩu", description: "Nhập email để nhận liên kết đặt lại mật khẩu tài khoản Luyện thi FE FPTU." },
   "/reset-password": { title: "Đặt lại mật khẩu", description: "Tạo mật khẩu mới cho tài khoản Luyện thi FE FPTU của bạn." },
   "/verify-email": { title: "Xác minh email", description: "Xác minh địa chỉ email để mở khoá đầy đủ tính năng tài khoản." },
+  "/unsubscribe": { title: "Huỷ nhận thư gợi ý", description: "Dừng nhận thư gợi ý ôn tập và ưu đãi. Thư về tài khoản và giao dịch vẫn được gửi." },
   "/auth/github/callback": { title: "Đăng nhập bằng GitHub", description: "Đang hoàn tất đăng nhập bằng tài khoản GitHub của bạn." },
 
   "/account": { title: "Tổng quan tài khoản", description: "Số dư credit, đề đã lấy, lần làm bài gần đây và các lối tắt trong tài khoản của bạn." },
@@ -100,6 +101,7 @@ export const PRIVATE_PAGES: Record<string, PageSeo> = {
   "/admin/funnel": { title: "Quản trị: phễu người dùng", description: "Người đăng ký đi được tới đâu: lấy đề, nộp bài, nạp tiền, mua Pro." },
   "/admin/quality": { title: "Quản trị: chất lượng đề", description: "Câu nhiều người sai và đáp án có thể sai theo bài làm thực tế." },
   "/admin/chatbot": { title: "Quản trị: chatbot hỗ trợ", description: "Cấu hình trợ lý Cóc Pass." },
+  "/admin/marketing": { title: "Quản trị: email marketing", description: "Bật tắt các chiến dịch thư gợi ý và gửi thư mẫu." },
 };
 
 // Trang có tham số trên đường dẫn (khớp theo mẫu)

@@ -33,6 +33,7 @@ const ChatWidget = lazy(() => import("@/features/chat/ChatWidget"));
 const M3Gallery = import.meta.env.DEV ? lazy(() => import("@/features/design-system/M3Gallery")) : null;
 const ClaimTurnPage = lazy(() => import("@/features/link-reward/ClaimTurnPage"));
 const PublicDepositPage = lazy(() => import("@/features/account/pages/PublicDepositPage"));
+const UnsubscribePage = lazy(() => import("@/features/marketing/UnsubscribePage"));
 const OverviewPage = lazy(() => import("@/features/account/pages/OverviewPage"));
 const DepositPage = lazy(() => import("@/features/account/pages/DepositPage"));
 const TransactionsPage = lazy(() => import("@/features/account/pages/TransactionsPage"));
@@ -121,6 +122,7 @@ export default function App() {
         {/* Mở từ email nên không chặn người đang đăng nhập */}
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/unsubscribe" element={<UnsubscribePage />} />
 
         <Route element={<RequireAuth />}>
           <Route path="/account" element={<PanelLayout title="Tài khoản" items={ACCOUNT_NAV} />}>

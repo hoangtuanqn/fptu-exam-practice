@@ -3,6 +3,7 @@ import { env } from "../configs/env";
 import { isMailConfigured, mailer, mailFrom } from "../configs/mailer";
 import { MAIL_ASSETS_DIR, MAIL_BRAND, MAIL_IMAGES } from "../constants/mail";
 import { renderReminderEmail, type ReminderEmailInput } from "../mail/templates/study-reminder";
+import type { MarketingMail } from "../mail/templates/marketing";
 import { renderResetPasswordEmail } from "../mail/templates/reset-password";
 import { renderVerifyEmail } from "../mail/templates/verify-email";
 import {
@@ -119,6 +120,10 @@ export const mailService = {
       `${tag} ${input.banned ? "Tài khoản của bạn đã bị khóa" : "Tài khoản của bạn đã được mở khóa"}`,
       renderAccountStatusEmail(input),
     ),
+
+  // Thư marketing tự động: header hủy một chạm (RFC 8058) trỏ về API, Gmail/Outlook hiện nút "Hủy đăng ký" gửi POST tới đó
+  sendMarketing: (to: string, mail: MarketingMail, oneClickUrl: string) =>
+    send(to, `${tag} ${mail.subject}`, mail, { "List-Unsubscribe": `<${oneClickUrl}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" }),
 
   sendFetchCharged: (to: string, input: ChargeEmailInput) =>
     send(to, `${tag} Biên lai: phí lấy đề −${credit(input.amount)}`, renderChargeEmail(input)),

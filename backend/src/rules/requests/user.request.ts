@@ -2,9 +2,13 @@ import { emailField } from "./auth.request";
 import { z } from "zod";
 import { passwordField } from "./auth.request";
 
-export const updateProfileBody = z.object({
-  fullName: z.string().trim().min(2, "Họ tên tối thiểu 2 ký tự").max(100),
-});
+// Gửi trường nào thì đổi trường đó (giao diện cũ luôn gửi fullName)
+export const updateProfileBody = z
+  .object({
+    fullName: z.string().trim().min(2, "Họ tên tối thiểu 2 ký tự").max(100).optional(),
+    marketingOptOut: z.boolean().optional(), // true = không nhận thư giới thiệu, gợi ý ôn tập
+  })
+  .refine((v) => v.fullName !== undefined || v.marketingOptOut !== undefined, { message: "Không có thông tin nào để cập nhật" });
 
 export const changePasswordBody = z
   .object({

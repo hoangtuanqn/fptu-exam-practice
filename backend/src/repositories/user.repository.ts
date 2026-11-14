@@ -16,6 +16,7 @@ export const publicUserSelect = {
   balance: true,
   proExpiresAt: true,
   emailVerifiedAt: true,
+  marketingOptOut: true,
   createdAt: true,
 } satisfies Prisma.UserSelect;
 
@@ -68,7 +69,13 @@ export const userRepository = {
 
   countByStatus: () => prisma.user.groupBy({ by: ["status"], _count: { _all: true } }),
 
-  updateProfile: async (id: number, data: { fullName: string }) => fresh(id, await prisma.user.update({ where: { id }, data, select: publicUserSelect })),
+  // Lần hoạt động gần nhất (không có trong publicUserSelect nên không cần xoá cache xác thực)
+  touchActive: (id: number, at: Date) => prisma.user.updateMany({ where: { id }, data: { lastActiveAt: at } }),
+
+  // Hủy nhận thư marketing từ liên kết trong thư (tài khoản đã xoá thì không làm gì)
+  optOutMarketing: async (id: number) => fresh(id, await prisma.user.updateMany({ where: { id }, data: { marketingOptOut: true } })),
+
+  updateProfile: async (id: number, data: { fullName?: string; marketingOptOut?: boolean }) => fresh(id, await prisma.user.update({ where: { id }, data, select: publicUserSelect })),
 
   // Xác minh email xong: đặt (hoặc đổi) email và đánh dấu đã xác minh
   markEmailVerified: async (db: Db, id: number, email: string) =>
