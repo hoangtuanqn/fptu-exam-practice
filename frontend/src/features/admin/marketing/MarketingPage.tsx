@@ -2,7 +2,9 @@ import { useApi } from "@/shared/hooks/useApi";
 import { useUrlState } from "@/shared/hooks/useUrlState";
 import { PageHeader } from "@/shared/ui/Card";
 import { Segmented } from "@/shared/ui/Segmented";
+import { BroadcastsTab } from "./BroadcastsTab";
 import { CampaignsTab } from "./CampaignsTab";
+import { LogsTab } from "./LogsTab";
 import { marketingAdminApi } from "./marketing.api";
 import { OverviewTab } from "./OverviewTab";
 
@@ -10,6 +12,8 @@ import { OverviewTab } from "./OverviewTab";
 const TABS = [
   { value: "overview", label: "Tổng quan" },
   { value: "campaigns", label: "Chiến dịch" },
+  { value: "broadcasts", label: "Gửi thủ công" },
+  { value: "logs", label: "Nhật ký" },
 ] as const;
 type TabKey = (typeof TABS)[number]["value"];
 
@@ -28,6 +32,8 @@ export default function MarketingPage() {
       />
       {tab === "overview" && <OverviewTab overview={overview} campaigns={campaigns.data} />}
       {tab === "campaigns" && <CampaignsTab campaigns={campaigns} dailyCap={overview.data?.status?.dailyCap} onParamsSaved={overview.reload} />}
+      {tab === "broadcasts" && <BroadcastsTab />}
+      {tab === "logs" && <LogsTab campaigns={campaigns.data} />}
     </>
   );
 }
