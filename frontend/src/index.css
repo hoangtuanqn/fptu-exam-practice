@@ -199,6 +199,13 @@ h3 {
   }
 }
 
+/* Đồng hồ thi sắp hết giờ: số nhấp nháy (chỉ đổi opacity). Tắt chuyển động thì chỉ giữ chữ đậm + màu */
+@keyframes timer-blink { 50% { opacity: 0.35; } }
+@media (prefers-reduced-motion: no-preference) {
+  .timer-blink-slow { animation: timer-blink 1.5s ease-in-out infinite; }
+  .timer-blink-fast { animation: timer-blink 0.6s ease-in-out infinite; }
+}
+
 /* Linh vật Cóc Vàng: chỉ animate transform, không ảnh hưởng layout */
 .mascot { --mw: 132px; position: fixed; left: 0; right: 0; bottom: 4px; height: 150px; display: flex; align-items: flex-end; z-index: 30; pointer-events: none; overflow: hidden; }
 .mascot-travel { width: var(--mw); }
