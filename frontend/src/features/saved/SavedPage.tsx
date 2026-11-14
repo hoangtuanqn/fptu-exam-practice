@@ -39,7 +39,7 @@ function SavedCard({ q, onZoom, onRemove }: { q: SavedQuestion; onZoom: (q: Save
           </div>
           {correct.length > 0 && <p className="md-body-medium text-on-surface">Đáp án: <b>{correct.join(" ")}</b></p>}
           <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
-            <Link to={`/exam/${q.threadId}`} className={buttonClass({ size: "sm" })}>
+            <Link to={`/exam/${q.threadId}/view?q=${q.number}`} className={buttonClass({ size: "sm" })}>
               <ExternalLink size={15} /> Mở đề
             </Link>
             <Button size="sm" variant="text" onClick={() => onRemove(q)}>

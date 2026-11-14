@@ -40,6 +40,7 @@ const TransactionsPage = lazy(() => import("@/features/account/pages/Transaction
 const ExamStorePage = lazy(() => import("@/features/exam-store/ExamStorePage"));
 const ReviewPage = lazy(() => import("@/features/review/ReviewPage"));
 const SavedPage = lazy(() => import("@/features/saved/SavedPage"));
+const ExamViewPage = lazy(() => import("@/features/exam-view/ExamViewPage"));
 const SubjectPage = lazy(() => import("@/features/landing/SubjectPage"));
 const PublicCatalogPage = lazy(() => import("@/features/exam-store/PublicCatalogPage"));
 const FrequentPage = lazy(() => import("@/features/frequent/FrequentPage"));
@@ -95,6 +96,8 @@ export default function App() {
       <Routes>
         <Route path="/" element={<PracticeRoute />} />
         <Route path="/exam/:threadId" element={<PracticeRoute />} />
+        {/* Xem đề chỉ đọc: công khai như trang làm đề (người xem cần có đề trong kho) */}
+        <Route path="/exam/:threadId/view" element={<ExamViewPage />} />
         {M3Gallery && <Route path="/dev/m3" element={<Suspense fallback={null}><M3Gallery /></Suspense>} />}
 
         {/* Bảng tính năng của hệ thống (để giới thiệu/chụp màn hình): công khai */}
