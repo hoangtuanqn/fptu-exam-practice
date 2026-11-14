@@ -5,6 +5,7 @@ import { Field, inputClass, Select } from "@/shared/ui/Input";
 import { FormError } from "@/shared/ui/Feedback";
 import { Modal, ModalActions } from "@/shared/ui/Modal";
 import { useConfirm } from "@/shared/ui/ConfirmDialog";
+import { useToast } from "@/shared/context/ToastContext";
 import { formatCredit } from "@/shared/utils/formatters";
 import { courseraApi, ORDER_LABELS, type CourseraOrder, type OrderStatus } from "./coursera.api";
 
@@ -20,6 +21,7 @@ export function AdminOrderDialog({ order, onClose, onSaved }: { order: CourseraO
   const [error, setError] = useState("");
   const alive = useRef(true);
   const { confirm, confirmDialog } = useConfirm();
+  const toast = useToast();
   useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
   useEffect(() => {
     const hide = () => setPassword(null);
@@ -40,6 +42,12 @@ export function AdminOrderDialog({ order, onClose, onSaved }: { order: CourseraO
     } catch (err) { setError(errorMessage(err)); }
     finally { setBusy(false); }
   }
+  async function sendNote() {
+    setBusy(true); setError(""); setPassword(null);
+    try { await courseraApi.note(order.id, note); toast.success("Đã gửi ghi chú cho người đặt"); onSaved(); }
+    catch (err) { setError(errorMessage(err)); }
+    finally { setBusy(false); }
+  }
   return <Modal onClose={busy ? undefined : onClose}>
     <h2 className="md-headline-small">Đơn #{order.id}</h2>
     <p className="my-3 break-words">{order.courseTitle}</p>
@@ -51,12 +59,11 @@ export function AdminOrderDialog({ order, onClose, onSaved }: { order: CourseraO
       <Button disabled={busy} onClick={() => password !== null ? setPassword(null) : void reveal()}>{password !== null ? "Ẩn mật khẩu" : "Xem mật khẩu Coursera"}</Button>
     </div>}
     <form onSubmit={save} className="mt-5 space-y-4">
-      {options.length > 0 ? <>
-        <Select label="Chuyển trạng thái" disabled={busy} value={status} onChange={(e) => setStatus(e.target.value as OrderStatus)}>{options.map((value) => <option key={value} value={value}>{ORDER_LABELS[value]}</option>)}</Select>
-        <Field label="Phản hồi cho người đặt"><textarea className={`${inputClass()} min-h-28 py-3`} maxLength={2000} disabled={busy} value={note} onChange={(e) => setNote(e.target.value)} /></Field>
-      </> : <p>Đơn đã kết thúc: {ORDER_LABELS[order.status]}.</p>}
+      {options.length > 0 && <Select label="Chuyển trạng thái" disabled={busy} value={status} onChange={(e) => setStatus(e.target.value as OrderStatus)}>{options.map((value) => <option key={value} value={value}>{ORDER_LABELS[value]}</option>)}</Select>}
+      {options.length === 0 && <p>Đơn đã kết thúc: {ORDER_LABELS[order.status]}.</p>}
+      <Field label="Ghi chú cho người đặt" hint="Người đặt nhận email và thấy ghi chú trong lịch sử đơn."><textarea className={`${inputClass()} min-h-28 py-3`} maxLength={2000} disabled={busy} value={note} onChange={(e) => setNote(e.target.value)} /></Field>
       <FormError message={error} />
-      <ModalActions><Button type="button" disabled={busy} onClick={onClose}>Đóng</Button>{options.length > 0 && <Button type="submit" variant="primary" disabled={busy}>Cập nhật</Button>}</ModalActions>
+      <ModalActions><Button type="button" disabled={busy} onClick={onClose}>Đóng</Button><Button type="button" disabled={busy || !note.trim() || note.trim() === order.adminNote.trim()} onClick={() => void sendNote()}>Chỉ gửi ghi chú</Button>{options.length > 0 && <Button type="submit" variant="primary" disabled={busy}>Cập nhật trạng thái</Button>}</ModalActions>
     </form>
     {confirmDialog}
   </Modal>;

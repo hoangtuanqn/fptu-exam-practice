@@ -23,5 +23,6 @@ export const courseraApi = {
   cancel: (id: number) => http.post<CourseraOrder>(`/coursera/orders/${id}/cancel`),
   saveCourse: (data: CourseInput, id?: number) => id ? http.put<CourseraCourse>(`/admin/coursera/courses/${id}`, data) : http.post<CourseraCourse>("/admin/coursera/courses", data),
   update: (id: number, expectedStatus: OrderStatus, status: OrderStatus, adminNote: string) => http.patch<CourseraOrder>(`/admin/coursera/orders/${id}`, { expectedStatus, status, adminNote }),
+  note: (id: number, adminNote: string) => http.post<CourseraOrder>(`/admin/coursera/orders/${id}/note`, { adminNote }),
   credentials: (id: number) => http.post<{ email: string; password: string }>(`/admin/coursera/orders/${id}/credentials`),
 };
