@@ -1,6 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { CHAT_EFFORT, CHAT_HISTORY_SENT, CHAT_MAX_OUTPUT_TOKENS, type AiConfig } from "../../constants/ai";
 import { buildSystem, resolveModuleKey } from "../../prompts";
+import { plainMath } from "../../utils/plain-math";
 import { askClaudeText, type ClaudeContent } from "./claude.client";
 import { questionContextBlocks, type ExplainInput } from "./question-explainer.service";
 
@@ -33,14 +34,14 @@ export async function chatAboutQuestion(config: AiConfig, input: QuestionChatInp
 
   const context: ClaudeContent[] = [
     ...(await questionContextBlocks(input)),
-    { type: "text", text: `<explanation>\n${input.explanation}\n</explanation>`, cache_control: { type: "ephemeral" } },
+    { type: "text", text: `<explanation>\n${plainMath(input.explanation)}\n</explanation>`, cache_control: { type: "ephemeral" } },
   ];
   const messages: Anthropic.MessageParam[] = history.map((m, i) => ({
     role: m.role,
     content: i === 0 ? [...context, { type: "text", text: m.content }] : m.content,
   }));
 
-  return askClaudeText({
+  return plainMath(await askClaudeText({
     apiKey: config.anthropicApiKey,
     model: config.claudeModel,
     effort: CHAT_EFFORT,
@@ -49,5 +50,5 @@ export async function chatAboutQuestion(config: AiConfig, input: QuestionChatInp
     messages,
     maxTokens: CHAT_MAX_OUTPUT_TOKENS,
     onUsage,
-  });
+  }));
 }

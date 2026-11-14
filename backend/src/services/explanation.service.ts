@@ -12,6 +12,7 @@ import { explanationRepository } from "../repositories/explanation.repository";
 import { examRepository } from "../repositories/exam.repository";
 import { subjectRepository } from "../repositories/subject.repository";
 import { userRepository } from "../repositories/user.repository";
+import { plainMath } from "../utils/plain-math";
 import { subjectCodeFromTitle } from "../utils/subject-code";
 import { AppError } from "../rules/error";
 import type { Actor } from "../utils/actor";
@@ -179,7 +180,8 @@ export const explanationService = {
     }
 
     const user = await userRepository.findById(userId);
-    return { content, cached: Boolean(saved), charged, balanceAfter: user?.balance ?? 0, freeTurnUsed: viaTurn, feedback: await explanationFeedbackService.mine(userId, examId, questionNumber) };
+    // Lời giải lưu từ trước khi có bộ lọc vẫn có thể chứa LaTeX: làm sạch khi đọc (idempotent)
+    return { content: plainMath(content), cached: Boolean(saved), charged, balanceAfter: user?.balance ?? 0, freeTurnUsed: viaTurn, feedback: await explanationFeedbackService.mine(userId, examId, questionNumber) };
   },
 
   // Gọi AI một lần cho mỗi câu (gộp các yêu cầu cùng lúc) và lưu lại để người sau dùng
