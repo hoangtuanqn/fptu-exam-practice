@@ -43,6 +43,7 @@ model User {
   createdAt DateTime   @default(now()) @map("created_at")
   updatedAt DateTime   @updatedAt @map("updated_at")
 
+  courseraOrders     CourseraOrder[]
   walletTransactions WalletTransaction[]
   depositOrders      DepositOrder[]
   userExams          UserExam[]
@@ -86,6 +87,62 @@ model User {
   @@index([role, status]) // danh sĂ¡ch thĂ nh viĂªn lá»c vai trĂ²/tráº¡ng thĂ¡i
   @@map("users")
   practiceSessions PracticeSession[]
+}
+
+enum CourseraOrderStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  REJECTED
+  CANCELLED
+}
+
+model CourseraCourse {
+  id        Int      @id @default(autoincrement())
+  title     String   @db.VarChar(255)
+  // Optional: the FuOverflow catalog has no Coursera link; many NULLs are allowed under the unique index
+  url       String?  @unique @db.VarChar(500)
+  code      String?  @unique @db.VarChar(32)
+  isActive  Boolean  @default(true) @map("is_active")
+  // false for courses added from a member-pasted link; hidden from the member catalog
+  listed    Boolean  @default(true)
+  price     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  orders    CourseraOrder[]
+
+  @@index([isActive, id])
+  @@index([title])
+  @@map("coursera_courses")
+}
+
+model CourseraOrder {
+  id                 Int                 @id @default(autoincrement())
+  userId             Int                 @map("user_id")
+  courseId           Int                 @map("course_id")
+  requestKey         String              @map("request_key") @db.VarChar(36)
+  courseTitle        String              @map("course_title") @db.VarChar(255)
+  courseUrl          String              @map("course_url") @db.VarChar(500)
+  amount             Int                 @default(0)
+  refundedAt         DateTime?           @map("refunded_at")
+  email              String              @db.VarChar(254)
+  // Plaintext by owner decision (ADR 0005); legacy rows may hold a "v1." AES-GCM envelope. Erased on terminal status.
+  password           String?             @map("encrypted_password") @db.Text
+  note               String              @db.Text
+  status             CourseraOrderStatus @default(PENDING)
+  adminNote          String              @default("") @map("admin_note") @db.VarChar(2000)
+  credentialViewedBy Int?                @map("credential_viewed_by")
+  credentialViewedAt DateTime?           @map("credential_viewed_at")
+  createdAt          DateTime            @default(now()) @map("created_at")
+  updatedAt          DateTime            @updatedAt @map("updated_at")
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course             CourseraCourse      @relation(fields: [courseId], references: [id])
+
+  @@unique([userId, requestKey])
+  @@index([userId, id])
+  @@index([status, id])
+  @@index([courseId])
+  @@map("coursera_orders")
 }
 
 enum DepositStatus {
@@ -167,6 +224,8 @@ enum TransactionType {
   PLAN_CHARGE // mua gói Pro
   CHECKIN_REWARD // thưởng điểm danh hằng ngày (kể cả thưởng đủ 7 ngày)
   CREDIT_EXPIRED // credit nhan tu giftcode co han da het han ma chua dung
+  COURSERA_CHARGE // coursera order payment
+  COURSERA_REFUND // cancelled or rejected coursera order
 }
 
 // Sá»• cĂ¡i vĂ­: má»—i láº§n sá»‘ dÆ° Ä‘á»•i lĂ  má»™t dĂ²ng (amount Ă¢m = trá»« tiá»n)

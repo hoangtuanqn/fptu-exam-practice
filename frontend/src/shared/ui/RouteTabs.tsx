@@ -24,13 +24,6 @@ export function RouteTabs({ label, tabs }: { label: string; tabs: Tab[] }) {
   );
 }
 
-export const WALLET_TABS: Tab[] = [
-  { to: "/account/deposit", label: "Nạp credit" },
-  { to: "/account/transactions", label: "Lịch sử giao dịch" },
-  { to: "/account/giftcode", label: "Giftcode" },
-  { to: "/account/referral", label: "Giới thiệu bạn bè" },
-];
-
 export const HISTORY_TABS: Tab[] = [
   { to: "/account/attempts", label: "Bài đã làm" },
   { to: "/account/reports", label: "Báo cáo đáp án" },

@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { courseraRouter, adminCourseraRouter } from "./coursera.routes";
 import adminRouter from "./admin.routes";
 import answerReportRouter from "./answer-report.routes";
 import attemptRouter from "./attempt.routes";
@@ -67,6 +68,8 @@ rootRouter.use("/study", studyRouter);
 rootRouter.use("/saved-questions", savedQuestionRouter);
 rootRouter.use("/sessions", sessionRouter);
 rootRouter.use("/answer-reports", answerReportRouter);
+rootRouter.use("/coursera", courseraRouter);
+rootRouter.use("/admin/coursera", adminCourseraRouter);
 rootRouter.use("/admin", adminRouter);
 
 export default rootRouter;

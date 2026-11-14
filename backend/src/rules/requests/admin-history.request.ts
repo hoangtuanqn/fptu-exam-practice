@@ -23,6 +23,8 @@ export const listWalletQuery = paginationQuery.extend({
       "DEPOSIT_BONUS",
       "PE_CHARGE",
       "PE_REFUND",
+      "COURSERA_CHARGE",
+      "COURSERA_REFUND",
       "PLAN_CHARGE",
       "CHECKIN_REWARD",
       "CREDIT_EXPIRED",

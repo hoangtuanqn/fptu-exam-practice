@@ -3,6 +3,7 @@ import { userRepository } from "../repositories/user.repository";
 import { threadUrl } from "../utils/fuo-url";
 import { EMAIL_VERIFICATION_EXPIRES_HOURS } from "../constants/email-verification";
 import { MAIL_BRAND } from "../constants/mail";
+import type { CourseraOrderEmailInput } from "../mail/templates/coursera-notice";
 import { mailService } from "./mail.service";
 
 const walletUrl = () => `${env.CLIENT_URL}/account/transactions`;
@@ -203,6 +204,25 @@ export const notificationService = {
         balanceAfter: n.balanceAfter,
         at: new Date(),
         walletUrl: walletUrl(),
+      });
+    });
+  },
+
+  // Đơn Coursera vừa tạo hoặc được admin đổi trạng thái (gọi SAU khi transaction đã commit). Không bao giờ kèm mật khẩu.
+  courseraOrder(n: { userId: number; event: CourseraOrderEmailInput["event"]; orderId: number; courseTitle: string; amount: number; balanceAfter?: number; adminNote: string }) {
+    notify("đơn Coursera", async () => {
+      const user = await userRepository.findById(n.userId);
+      if (!user) return;
+      await mailService.sendCourseraOrder(user.email, {
+        name: user.fullName,
+        orderId: n.orderId,
+        courseTitle: n.courseTitle,
+        event: n.event,
+        amount: n.amount,
+        balanceAfter: n.balanceAfter ?? user.balance,
+        adminNote: n.adminNote,
+        at: new Date(),
+        ordersUrl: `${env.CLIENT_URL}/account/coursera`,
       });
     });
   },

@@ -12,6 +12,10 @@
       "changes": [
         {
           "type": "new",
+          "text": "Tìm khóa học Coursera, xem phí từng khóa, thanh toán bằng credit và theo dõi đơn; tự hoàn phí khi đơn bị hủy hoặc từ chối"
+        },
+        {
+          "type": "new",
           "text": "Chế độ Thi chạy toàn màn hình: rời màn hình hoặc chuyển tab sẽ che bài và tính một lượt vi phạm, thi thử nên không giới hạn số lần"
         },
         {
