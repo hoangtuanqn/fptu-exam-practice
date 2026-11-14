@@ -24,6 +24,8 @@ export const NOTICE_KINDS = {
   "gift.redeemed": { category: "money", level: "info", important: false },
   "deposit.success": { category: "money", level: "success", important: true },
   "plan.purchased": { category: "money", level: "success", important: true },
+  "coursera.ordered": { category: "money", level: "info", important: true },
+  "coursera.cancelled": { category: "money", level: "info", important: false },
   "fetch.done": { category: "fetch", level: "success", important: false },
   "fetch.failed": { category: "fetch", level: "error", important: true },
   "pe.done": { category: "fetch", level: "success", important: false },

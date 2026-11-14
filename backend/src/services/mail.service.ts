@@ -7,6 +7,7 @@ import { renderReminderEmail, type ReminderEmailInput } from "../mail/templates/
 import type { MarketingMail } from "../mail/templates/marketing";
 import { renderResetPasswordEmail } from "../mail/templates/reset-password";
 import { renderVerifyEmail } from "../mail/templates/verify-email";
+import { renderCourseraOrderEmail, type CourseraOrderEmailInput } from "../mail/templates/coursera-notice";
 import {
   renderChargeEmail,
   renderDepositEmail,
@@ -135,4 +136,9 @@ export const mailService = {
 
   sendFetchCharged: (to: string, input: ChargeEmailInput) =>
     send(to, `${tag} Biên lai: phí lấy đề −${credit(input.amount)}`, renderChargeEmail(input)),
+
+  sendCourseraOrder: (to: string, input: CourseraOrderEmailInput) => {
+    const mail = renderCourseraOrderEmail(input);
+    return send(to, `${tag} ${mail.subject} #${input.orderId}`, mail);
+  },
 };
