@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { paginationQuery } from "../../utils/pagination";
+import { violations } from "./violation.request";
 
 const option = z.string().regex(/^[A-Z]$/, "Đáp án không hợp lệ");
 const questionNumber = z.string().regex(/^\d{1,4}$/);
@@ -18,6 +19,7 @@ export const saveSessionBody = z.object({
   current: z.number().int().min(0).max(1000),
   elapsedSec: z.number().int().min(0).max(24 * 3600),
   submitted: z.boolean().optional(),
+  violations: violations.optional(), // vắng = giữ nguyên cột (client cũ không gửi)
 });
 
 export const listSessionsQuery = paginationQuery.extend({

@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import type { Quiz } from "@/features/practice/hooks/useQuiz";
+import { MAX_VIOLATIONS } from "@/features/practice/types";
+import { canFullscreen } from "@/features/practice/hooks/useExamGuard";
 import { sessionApi, type SessionState } from "./session.api";
 
 const SAVE_DELAY_MS = 1200; // sau lần chọn đáp án cuối thì lưu
@@ -16,23 +18,26 @@ export function useSessionSync(quiz: Quiz) {
   const latest = useRef({
     sessionId,
     submitted,
+    guarded: false,
     state: null as SessionState | null,
   });
   latest.current = {
     sessionId,
     submitted,
+    guarded: mode === "exam" && canFullscreen,
     state: {
       answers: quiz.answers,
       checked: quiz.checked,
       flagged: quiz.flagged,
       current: quiz.current,
       elapsedSec: quiz.elapsed,
+      ...(mode === "exam" && { violations: quiz.violations.slice(0, MAX_VIOLATIONS) }),
     } as unknown as SessionState,
   };
 
   // Dấu của lần lưu thành công gần nhất (không tính thời gian): lần lưu theo thay đổi mà nội dung y hệt thì bỏ qua, đỡ gửi thừa
   const savedSig = useRef<string | null>(null);
-  const sigOf = (st: SessionState) => JSON.stringify([st.answers, st.checked, st.flagged, st.current]);
+  const sigOf = (st: SessionState) => JSON.stringify([st.answers, st.checked, st.flagged, st.current, st.violations]);
 
   const flush = useCallback((submit = false, keepalive = false, onlyIfChanged = false) => {
     const { sessionId: id, state } = latest.current;
@@ -85,7 +90,7 @@ export function useSessionSync(quiz: Quiz) {
     if (sessionId === null || submitted) return;
     const t = setTimeout(() => void flush(false, false, true), SAVE_DELAY_MS);
     return () => clearTimeout(t);
-  }, [sessionId, submitted, quiz.answers, quiz.checked, quiz.flagged, quiz.current, flush]);
+  }, [sessionId, submitted, quiz.answers, quiz.checked, quiz.flagged, quiz.current, quiz.violations, flush]);
 
   useEffect(() => {
     if (sessionId === null || submitted) return;
@@ -106,7 +111,12 @@ export function useSessionSync(quiz: Quiz) {
     const save = () => {
       if (!latest.current.submitted) void flush(false, true);
     };
-    const onVisibility = () => document.visibilityState === "hidden" && save();
+    const onVisibility = () => {
+      if (document.visibilityState !== "hidden") return;
+      save();
+      // Đang canh toàn màn hình: lưu thêm sau một nhịp, vì lần rời vừa ghi trong chính sự kiện này cần render xong mới có trong bản lưu
+      if (latest.current.guarded) setTimeout(save, 0);
+    };
     window.addEventListener("pagehide", save);
     document.addEventListener("visibilitychange", onVisibility);
     return () => {

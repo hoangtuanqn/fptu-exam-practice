@@ -3,6 +3,7 @@ import { examAttemptRepository } from "../repositories/exam-attempt.repository";
 import { examRepository } from "../repositories/exam.repository";
 import { AppError } from "../rules/error";
 import type { ListAttemptsQuery, SubmitAttemptBody } from "../rules/requests/attempt.request";
+import type { Violation } from "../rules/requests/violation.request";
 import { isMember, type Actor } from "../utils/actor";
 import { toMeta } from "../utils/pagination";
 import { examService } from "./exam.service";
@@ -37,6 +38,7 @@ export const attemptService = {
       skipped: grade.skipped,
       durationSec: body.durationSec,
       details: grade.items as unknown as object[],
+      violations: body.violations ?? [],
     });
 
     // Sổ câu sai và chuỗi ngày học: việc phụ, lỗi ở đây không được làm mất bài đã nộp
@@ -65,6 +67,6 @@ export const attemptService = {
   async getMine(userId: number, id: number) {
     const attempt = await examAttemptRepository.findOfUser(id, userId);
     if (!attempt) throw AppError.notFound("Không tìm thấy bài làm");
-    return { ...attempt, details: attempt.details as unknown as GradedQuestion[] };
+    return { ...attempt, details: attempt.details as unknown as GradedQuestion[], violations: attempt.violations as Violation[] };
   },
 };

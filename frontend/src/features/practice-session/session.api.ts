@@ -1,5 +1,6 @@
 import { http } from "@/shared/api/client";
 import { PAGE_SIZE } from "@/shared/api/pagination";
+import type { Violation } from "@/features/practice/types";
 
 export type SessionMode = "PRACTICE" | "EXAM";
 
@@ -10,6 +11,7 @@ export interface SessionState {
   flagged: Record<string, boolean>;
   current: number;
   elapsedSec: number;
+  violations?: Violation[]; // các lần rời bài thi (chế độ Thi); server cũ không có
 }
 
 export interface PracticeSession extends SessionState {

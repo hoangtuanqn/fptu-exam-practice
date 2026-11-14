@@ -14,3 +14,11 @@ export interface Question {
 export type Mode = "practice" | "exam";
 
 export type UserAnswers = Record<number, string[]>; // { số câu: các đáp án đã chọn }
+
+// Một lần rời khỏi bài thi (thi thử toàn màn hình): at = giây đã làm lúc rời, sec = số giây ở ngoài
+// Server nhận tối đa chừng này lần mỗi bài: gửi quá thì cả lần lưu bị từ chối, nên chỉ gửi các lần đầu
+export const MAX_VIOLATIONS = 200;
+export interface Violation {
+  at: number;
+  sec: number;
+}

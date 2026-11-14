@@ -5,6 +5,7 @@ import { historyApi } from "@/features/history/history.api";
 import { QuestionResultGrid } from "@/features/history/components/QuestionResultGrid";
 import { MAX_SCORE, PASS_SCORE } from "@/features/practice/config/scoring";
 import { getModeConfig } from "@/features/practice/config/modes";
+import { ViolationSummary } from "@/features/practice/components/ViolationSummary";
 import { formatDuration, formatScore } from "@/features/practice/utils/format";
 import { useApi } from "@/shared/hooks/useApi";
 import { Badge } from "@/shared/ui/Badge";
@@ -64,6 +65,7 @@ export default function AttemptDetailPage() {
             <RotateCcw size={16} /> Làm lại đề
           </Link>
         </div>
+        {data.mode === "EXAM" && data.violations && data.violations.length > 0 && <ViolationSummary violations={data.violations} className="mt-5" />}
       </Card>
 
       <Card>

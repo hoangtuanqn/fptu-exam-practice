@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ApiError } from "@/shared/api/client";
 import { historyApi } from "@/features/history/history.api";
@@ -12,6 +12,9 @@ import { useExamAnswersLive } from "@/features/practice/hooks/useExamAnswersLive
 import { useExamQuestionsLive } from "@/features/practice/hooks/useExamQuestionsLive";
 import { useToast } from "@/shared/context/ToastContext";
 import { useQuiz } from "@/features/practice/hooks/useQuiz";
+import { canFullscreen, useExamGuard } from "@/features/practice/hooks/useExamGuard";
+import { ExamGuardOverlay } from "@/features/practice/components/ExamGuardOverlay";
+import { MAX_VIOLATIONS } from "@/features/practice/types";
 import { useQuizShortcuts } from "@/features/practice/hooks/useQuizShortcuts";
 import { useGuestTrial } from "@/features/trial/useGuestTrial";
 import { useAuth } from "@/features/auth/AuthContext";
@@ -53,7 +56,15 @@ export default function PracticePage({ threadId }: Props) {
   const hasQuiz = quiz.questions.length > 0;
   // Bộ đề theo chương nhiều đề: ?next=<thread>,<thread> là các đề còn lại sẽ làm lần lượt sau đề này
   const nextQueue = (new URLSearchParams(location.search).get("next") ?? "").split(",").filter((s) => /^\d{1,18}$/.test(s));
-  const anyDialogOpen = !!dialog || !!quiz.pending || quiz.choosing || quiz.notFound || trialEnded || referencesOpen;
+  // Thi thử toàn màn hình: rời khỏi (Esc, chuyển tab, mất focus) là một lần vi phạm, đề bị gỡ khỏi trang cho tới khi quay lại
+  const guard = useExamGuard({
+    active: quiz.timing && quiz.mode === "exam" && !quiz.pending,
+    elapsed: quiz.elapsed,
+    count: quiz.violations.length,
+    onLeave: quiz.addViolation,
+    onBack: quiz.endViolation,
+  });
+  const anyDialogOpen = !!dialog || !!quiz.pending || quiz.choosing || quiz.notFound || trialEnded || referencesOpen || guard.away !== null;
 
   // Lưu tiến độ lên server để tải lại trang vẫn làm tiếp được (chỉ với đề của hệ thống)
   const { flush } = useSessionSync(quiz);
@@ -107,10 +118,10 @@ export default function PracticePage({ threadId }: Props) {
   }, [quiz.timing]);
 
   // Đang mở hộp thoại thì tắt phím tắt để tránh bấm nhầm đáp án
-  const requestSubmit = () => {
+  const requestSubmit = useCallback(() => {
     setZoomOpen(false);
     setDialog("confirm");
-  };
+  }, []);
   const canSubmit = !quiz.submitted && !quiz.answersPending && !quiz.loadingMore;
   useQuizShortcuts(quiz, hasQuiz && !anyDialogOpen, canSubmit ? requestSubmit : undefined);
 
@@ -125,6 +136,7 @@ export default function PracticePage({ threadId }: Props) {
   useEffect(() => {
     if (timeLeft === null || !quiz.timing || quiz.submitted) return;
     if (timeLeft <= 0) {
+      guard.finish(); // chốt lần rời đang mở cùng lần render với nộp bài, để bản lưu có đủ số giây
       quiz.submit();
       setZoomOpen(false);
       setDialog("result");
@@ -176,6 +188,7 @@ export default function PracticePage({ threadId }: Props) {
       answers: quiz.answers,
       ...(new URLSearchParams(location.search).has("t") && { only: quiz.questions.map((q) => q.number) }), // bộ đề theo chương: chỉ chấm các câu đang làm
       flagged: Object.keys(quiz.flagged).filter((n) => quiz.flagged[Number(n)]).map(Number),
+      ...(quiz.mode === "exam" && canFullscreen && { violations: quiz.violations.slice(0, MAX_VIOLATIONS) }),
     };
     if (!user) {
       pendingAttempt.save({ examId: quiz.examId, payload });
@@ -228,7 +241,7 @@ export default function PracticePage({ threadId }: Props) {
             return;
           }
           const m = mode === "exam" ? "exam" : "practice";
-          quiz.openExam(kept, `${exam.title} (${kept.length} câu theo chương)`, exam.id, saved && saved.examId === exam.id ? (saved.mode === "EXAM" ? "exam" : "practice") : m, exam.answerStatus, kept.length, saved && saved.examId === exam.id ? { sessionId: saved.id, answers: saved.answers, checked: saved.checked, flagged: saved.flagged, current: saved.current, elapsedSec: saved.elapsedSec, submitted: saved.status === "SUBMITTED" } : undefined);
+          quiz.openExam(kept, `${exam.title} (${kept.length} câu theo chương)`, exam.id, saved && saved.examId === exam.id ? (saved.mode === "EXAM" ? "exam" : "practice") : m, exam.answerStatus, kept.length, saved && saved.examId === exam.id ? { sessionId: saved.id, answers: saved.answers, checked: saved.checked, flagged: saved.flagged, current: saved.current, elapsedSec: saved.elapsedSec, violations: saved.violations, submitted: saved.status === "SUBMITTED" } : undefined);
           return;
         }
         if (saved && saved.examId === exam.id) {
@@ -239,6 +252,7 @@ export default function PracticePage({ threadId }: Props) {
             flagged: saved.flagged,
             current: saved.current,
             elapsedSec: saved.elapsedSec,
+            violations: saved.violations,
             submitted: saved.status === "SUBMITTED",
           });
         } else if (mode === "practice" || mode === "exam") quiz.openExam(exam.questions, exam.title, exam.id, mode, exam.answerStatus, exam.totalQuestions);
@@ -312,7 +326,7 @@ export default function PracticePage({ threadId }: Props) {
         onShowResult={() => setDialog("result")}
       />
 
-      <QuizDialogs quiz={quiz} topicSummary={topicSummary} dialog={dialog} onDialogChange={setDialog} onCloseZoom={() => setZoomOpen(false)} onCancelChoose={cancelChoosing} nextExam={nextQueue.length > 0 ? { remaining: nextQueue.length, onOpen: openNext } : undefined} />
+      <QuizDialogs quiz={quiz} topicSummary={topicSummary} dialog={dialog} onDialogChange={setDialog} onCloseZoom={() => setZoomOpen(false)} onCancelChoose={cancelChoosing} onBeforeSubmit={guard.finish} nextExam={nextQueue.length > 0 ? { remaining: nextQueue.length, onOpen: openNext } : undefined} />
       {leaveAsk && (
         <Modal onClose={() => setLeaveAsk(false)}>
           <ModalTitle icon={TriangleAlert}>Thoát và bỏ bài đang làm?</ModalTitle>
@@ -337,9 +351,10 @@ export default function PracticePage({ threadId }: Props) {
         </Modal>
       )}
       {trialEnded && <TrialEndedDialog onClose={() => setTrialEnded(false)} />}
-      {referencesOpen && quiz.references.length > 0 && <ReferenceDialog references={quiz.references} onClose={() => setReferencesOpen(false)} />}
+      {guard.away && <ExamGuardOverlay away={guard.away} count={quiz.violations.length} onResume={guard.resume} onSubmit={requestSubmit} onTamper={guard.tamper} />}
+      {referencesOpen && !guard.away && quiz.references.length > 0 && <ReferenceDialog references={quiz.references} onClose={() => setReferencesOpen(false)} />}
 
-      {hasQuiz ? (
+      {guard.away ? null : hasQuiz ? ( // đang ở ngoài bài thi: gỡ hẳn đề khỏi trang, mọi trạng thái bài làm vẫn nằm trong useQuiz
         <QuizWorkspace quiz={quiz} zoomOpen={zoomOpen} onZoomChange={setZoomOpen} onSubmit={requestSubmit} />
       ) : opening ? (
         <div className="flex flex-1 items-center justify-center bg-surface">

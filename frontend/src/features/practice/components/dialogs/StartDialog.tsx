@@ -2,6 +2,7 @@ import { Fragment, useState } from "react";
 import { Check, FileText, Play } from "lucide-react";
 import type { Mode } from "@/features/practice/types.ts";
 import { MODES } from "@/features/practice/config/modes";
+import { canFullscreen, enterFullscreen } from "@/features/practice/hooks/useExamGuard";
 import { TIME_LIMIT_MAX, TIME_LIMIT_MIN, TIME_LIMIT_OPTIONS } from "@/features/practice/utils/timeLimit";
 import { Button } from "@/shared/ui/Button";
 import { Modal, ModalActions } from "@/shared/ui/Modal";
@@ -124,6 +125,7 @@ export function StartDialog({ title, total, graded, answersPending, replacing, o
             <p className="md-body-small mt-1.5 text-error">Nhập số phút từ {TIME_LIMIT_MIN} đến {TIME_LIMIT_MAX}.</p>
           )}
           <p className="md-body-small mt-1.5 text-on-surface-variant">{effectiveLimit > 0 ? "Hết giờ, bài sẽ được tự nộp và chấm điểm." : "Đồng hồ chỉ để bạn theo dõi thời gian làm bài."}</p>
+          {canFullscreen && <p className="md-body-small mt-1.5 text-on-surface-variant">Bài thi chạy toàn màn hình. Rời khỏi màn hình (Esc, chuyển tab) sẽ bị ghi 1 lượt vi phạm, thi thử nên không giới hạn số lần.</p>}
         </div>
       )}
       <p className="md-body-small mt-3 text-on-surface-variant">{mode === null ? "Chọn một chế độ để bắt đầu. Đóng hộp thoại để quay lại." : "Không đổi được chế độ khi đang làm bài."}</p>
@@ -132,7 +134,11 @@ export function StartDialog({ title, total, graded, answersPending, replacing, o
         <Button variant="text" onClick={onCancel}>
           Hủy
         </Button>
-        <Button variant="filled" disabled={blocked} onClick={() => mode && onStart(mode, effectiveLimit > 0 ? effectiveLimit : null)}>
+        <Button variant="filled" disabled={blocked} onClick={() => {
+            if (!mode) return;
+            if (mode === "exam") enterFullscreen(); // phải gọi ngay trong lần bấm này, trình duyệt mới cho
+            onStart(mode, effectiveLimit > 0 ? effectiveLimit : null);
+          }}>
           <Play size={18} />
           <span className="sm:hidden">Bắt đầu</span>
           <span className="hidden sm:inline">Bắt đầu làm bài</span>

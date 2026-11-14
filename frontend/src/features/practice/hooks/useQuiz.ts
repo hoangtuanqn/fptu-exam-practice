@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { AnswerSource, Mode, Question, UserAnswers } from "@/features/practice/types.ts";
+import type { AnswerSource, Mode, Question, UserAnswers, Violation } from "@/features/practice/types.ts";
 import { parseFolder } from "@/features/practice/utils/parseFolder";
 import { grade } from "@/features/practice/utils/grade";
 import { useStopwatch } from "./useStopwatch";
@@ -27,6 +27,7 @@ export interface ResumeState {
   flagged: Record<number, boolean>;
   current: number;
   elapsedSec: number;
+  violations?: Violation[]; // các lần rời bài thi đã ghi (server cũ không trả về)
   submitted?: boolean; // lượt đã nộp: mở lại chỉ để xem kết quả, không tạo lượt mới và không lưu lịch sử lần nữa
 }
 
@@ -63,6 +64,7 @@ export function useQuiz() {
   const [sessionId, setSessionId] = useState<number | null>(null); // lượt làm lưu trên server (null = chưa tạo / đề mở từ thư mục)
   const [restoredSubmitted, setRestoredSubmitted] = useState(false); // bài đã nộp được mở lại sau khi tải lại trang
   const [resumedElapsed, setResumedElapsed] = useState(0); // số giây đã làm ở lượt được làm tiếp
+  const [violations, setViolations] = useState<Violation[]>([]); // các lần rời khỏi bài thi toàn màn hình (chế độ Thi)
   const [choosing, setChoosing] = useState(false); // đề đã mở sẵn phía sau nhưng người dùng chưa chọn chế độ: chưa tính giờ, chưa tạo lượt làm
 
   // Đồng hồ chỉ chạy khi có đáp án để làm: chờ AI phân tích xong mới bắt đầu tính, dừng khi nộp bài
@@ -75,6 +77,7 @@ export function useQuiz() {
     setAnswers({});
     setChecked({});
     setFlagged({});
+    setViolations([]);
     setSubmitted(false);
     setCurrent(0);
     setSessionId(null);
@@ -141,6 +144,7 @@ export function useQuiz() {
       setAnswers(resume.answers);
       setChecked(resume.checked);
       setFlagged(resume.flagged);
+      setViolations(resume.violations ?? []);
       setCurrent(Math.max(0, Math.min(resume.current, split.questions.length - 1)));
       setResumedElapsed(resume.elapsedSec);
       setSessionId(resume.sessionId);
@@ -318,6 +322,9 @@ export function useQuiz() {
     chooseMode,
     notFound,
     flagged,
+    violations,
+    addViolation: (at: number) => setViolations((prev) => [...prev, { at, sec: 0 }]),
+    endViolation: (index: number, sec: number) => setViolations((prev) => prev.map((v, i) => (i === index ? { ...v, sec } : v))),
     elapsed,
     timeLimitSec: timeLimitMin ? timeLimitMin * 60 : null,
     timing,

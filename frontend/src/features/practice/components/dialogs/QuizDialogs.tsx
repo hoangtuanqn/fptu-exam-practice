@@ -1,3 +1,4 @@
+import { canFullscreen } from "@/features/practice/hooks/useExamGuard";
 import type { Quiz } from "@/features/practice/hooks/useQuiz";
 import type { TopicSummary } from "@/features/history/types";
 import { ConfirmSubmitDialog } from "./ConfirmSubmitDialog";
@@ -14,11 +15,12 @@ interface Props {
   onDialogChange: (dialog: SubmitDialog) => void;
   onCloseZoom: () => void;
   onCancelChoose: () => void; // đóng hộp thoại chọn chế độ của đề đã mở sẵn
+  onBeforeSubmit?: () => void; // chạy ngay trước quiz.submit() (chốt lần rời bài thi đang mở)
   nextExam?: { remaining: number; onOpen: () => void }; // bộ đề theo chương nhiều đề: còn đề kế tiếp
 }
 
 // Quyết định hộp thoại nào đang hiện: bắt đầu / lỗi thư mục / xác nhận nộp / bảng điểm
-export function QuizDialogs({ quiz, topicSummary, dialog, onDialogChange, onCloseZoom, onCancelChoose, nextExam }: Props) {
+export function QuizDialogs({ quiz, topicSummary, dialog, onDialogChange, onCloseZoom, onCancelChoose, onBeforeSubmit, nextExam }: Props) {
   const { pending } = quiz;
 
   return (
@@ -71,6 +73,7 @@ export function QuizDialogs({ quiz, topicSummary, dialog, onDialogChange, onClos
           }}
           onCancel={() => onDialogChange(null)}
           onConfirm={() => {
+            onBeforeSubmit?.();
             quiz.submit();
             onDialogChange("result");
           }}
@@ -86,6 +89,7 @@ export function QuizDialogs({ quiz, topicSummary, dialog, onDialogChange, onClos
           savable={quiz.examId !== null}
           nextExam={nextExam}
           elapsed={quiz.elapsed}
+          violations={quiz.mode === "exam" && canFullscreen ? quiz.violations : undefined}
           onReview={() => onDialogChange(null)}
           onRetry={() => {
             quiz.reset();
