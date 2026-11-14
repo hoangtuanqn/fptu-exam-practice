@@ -2,7 +2,7 @@ import { useState } from "react";
 
 const KEY = "practice.imageScale";
 const STEPS = [0.75, 1, 1.25, 1.5, 1.75, 2, 2.5];
-const DEFAULT = 1; // ảnh rộng vừa khung; chữ trong đề to hơn nhiều so với co ảnh vừa cả chiều cao
+const DEFAULT = 1.25; // ảnh rộng hơn khung một chút để chữ trong đề đủ to; người dùng chỉnh được và máy nhớ lại
 
 const read = () => {
   try {
