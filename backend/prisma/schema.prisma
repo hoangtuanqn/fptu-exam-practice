@@ -104,6 +104,8 @@ model CourseraCourse {
   url       String?  @unique @db.VarChar(500)
   code      String?  @unique @db.VarChar(32)
   isActive  Boolean  @default(true) @map("is_active")
+  // false for courses added from a member-pasted link; hidden from the member catalog
+  listed    Boolean  @default(true)
   price     Int      @default(0)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
