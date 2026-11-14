@@ -5,14 +5,16 @@
 - Order creation snapshots the confirmed catalog price and charges the wallet in one transaction. A missing quote from an older client is accepted only for free courses.
 - Cancellation or rejection refunds the stored amount once, in the same transaction as the terminal status change. Completion does not refund. Existing orders retain a zero charged amount.
 - Price changes apply only to future orders. The catalog row is locked during checkout; a stale quote is rejected before charging.
-- Each order snapshots the course title and URL; catalog edits do not rewrite order history.
+- Each order snapshots the course title and URL; catalog edits do not rewrite order history. Courses without a URL snapshot an empty string.
+- Courses have an optional unique `code` and an optional URL (the FuOverflow catalog has no Coursera link). `scripts/import-coursera-courses.ts` upserts the catalog by code, using the FuOverflow point price 1:1 as wallet credits; re-imports change only title and price and never re-activate a paused course.
 - A per-user request UUID deduplicates retries, including concurrent submissions.
 - Status updates use a conditional write against the expected status. Members can cancel only their own pending orders.
-- Account passwords use authenticated encryption with a dedicated environment key. Lists and mutation responses explicitly exclude credentials.
+- Account passwords are stored as plaintext (owner decision, 2026-11). Risk: anyone with database or backup access can read active orders' Coursera passwords; exposure is limited by erasing them on terminal status and by never selecting them outside the reveal endpoint. Rows created before this change hold a `v1.` AES-256-GCM envelope and are still decrypted on reveal. Lists and mutation responses explicitly exclude credentials; passwords never appear in mails or admin notices.
 - Admins reveal credentials through a separate authenticated, rate-limited endpoint. The last viewer and view time are recorded.
-- Terminal status updates erase the encrypted password in the same write. Terminal orders cannot be reopened.
+- Terminal status updates erase the stored password in the same write. Terminal orders cannot be reopened.
 - Coursera responses use no-store; unexpected persistence failures return a sanitized error without logging account details.
-- Migrations 0073 and 0074 are additive (0074 adds pricing fields and wallet transaction enum values). Apply migrations and deploy the backend before the frontend. This pricing branch depends on the original Coursera feature branch.
-- Configure COURSERA_ENCRYPTION_KEY with a securely generated 32-byte key encoded as 64 hexadecimal characters. Keep it outside source control and retain it while active orders exist; replacing it makes existing credentials unreadable.
+- Migrations 0073, 0074 and 0075 are additive (0074 adds pricing fields and wallet transaction enum values; 0075 adds the course code and makes the course URL nullable). Apply migrations and deploy the backend before the frontend. This pricing branch depends on the original Coursera feature branch.
+- COURSERA_ENCRYPTION_KEY is no longer needed for new orders. Keep it configured only while legacy `v1.` rows remain on pending or processing orders; without it those credentials cannot be revealed.
+- New orders notify admins (`coursera.ordered`, important) and user cancellations add a `coursera.cancelled` notice. Members receive mails after commit for order receipt (amount, balance after) and admin status changes (processing, completed, rejected or cancelled with refund and balance after).
 - Admins must populate the course catalog and set each course price before members can place paid orders. Zero means free. No sample courses or prices are inserted into live data.
-- Catalog search uses bounded substring queries for the initial small catalog. Measure before introducing full-text search as it grows.
+- Catalog search uses bounded substring queries on title or code for the initial small catalog. Measure before introducing full-text search as it grows.
