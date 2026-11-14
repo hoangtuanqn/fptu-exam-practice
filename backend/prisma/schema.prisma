@@ -36,6 +36,8 @@ model User {
   reminderSentOn  DateTime? @map("reminder_sent_on") @db.Date // ngay gan nhat da gui thu nhac (toi da 1 thu moi ngay)
   studyGoalDays Int @default(3) @map("study_goal_days") // muc tieu so ngay hoc moi tuan (3, 5 hoac 7)
   marketingOptOut Boolean   @default(false) @map("marketing_opt_out") // tu choi thu marketing (huy qua lien ket trong thu hoac trong Ho so)
+  marketingMutedTopics Int       @default(0) @map("marketing_muted_topics") // bitmask loai thu da tat: review=1, offers=2, renewal=4, news=8
+  marketingMutedUntil  DateTime? @map("marketing_muted_until") // tam dung thu marketing toi luc nay (tru nhac het han Pro)
   lastActiveAt    DateTime? @map("last_active_at") // lan dang nhap/lam moi phien gan nhat (ghi toi da 1 lan/gio); null = chua hoat dong tu khi co cot nay
   emailVerifiedAt DateTime? @map("email_verified_at") // chÆ°a xĂ¡c minh email thĂ¬ chÆ°a dĂ¹ng Ä‘Æ°á»£c cĂ¡c dá»‹ch vá»¥ trá»« credit
   createdAt DateTime   @default(now()) @map("created_at")

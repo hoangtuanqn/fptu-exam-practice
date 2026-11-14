@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { env } from "../configs/env";
 import { isMailConfigured, mailer, mailFrom } from "../configs/mailer";
@@ -55,6 +56,13 @@ const send = async (to: string, subject: string, { html, text }: Rendered, heade
     // Ảnh bìa + logo nhúng thẳng vào thư (cid) nên hiển thị cả khi chạy local, không cần ảnh trên internet
     attachments: Object.values(MAIL_IMAGES).map(({ file, cid }) => ({ filename: file, path: path.join(MAIL_ASSETS_DIR, file), cid })),
   });
+};
+
+// Xem trước thư trên web (không có tệp đính kèm): thay ảnh cid bằng data URI của chính tệp đó. Đọc tệp một lần, giữ trong bộ nhớ.
+let inlineImages: [string, string][] | undefined;
+export const inlineMailImages = (html: string) => {
+  inlineImages ??= Object.values(MAIL_IMAGES).map(({ file, cid }) => [`cid:${cid}`, `data:image/png;base64,${readFileSync(path.join(MAIL_ASSETS_DIR, file)).toString("base64")}`]);
+  return inlineImages.reduce((h, [from, to]) => h.replaceAll(from, to), html);
 };
 
 // Tiêu đề: [Tên hệ thống] + nội dung chính + số tiền/mã giao dịch, để nhìn hộp thư là biết ngay đó là thư gì

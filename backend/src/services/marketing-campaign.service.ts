@@ -1,20 +1,17 @@
 import { env } from "../configs/env";
 import {
   CAMPAIGN_KEYS,
-  EXPIRY_STEP_DAYS,
-  MARKETING_MAX_PER_RUN,
-  MARKETING_MIN_GAP_DAYS,
+  CAMPAIGN_META,
+  DEFAULT_MARKETING_PARAMS,
   MARKETING_SEND_GAP_MS,
   STEP_CYCLE_FACTOR,
   UPSELL_EXAM_DAYS,
-  UPSELL_MIN_PURCHASES,
-  UPSELL_REPEAT_DAYS,
   UPSELL_SPEND_DAYS,
   WINBACK_CREDIT_EXPIRY_DAYS,
-  WINBACK_MAX_INACTIVE_DAYS,
   WINBACK_NEW_EXAMS_DAYS,
-  WINBACK_STEP_DAYS,
   type CampaignKey,
+  type MarketingParams,
+  type MarketingTopic,
 } from "../constants/marketing";
 import { renderExpiry, renderUpsell, renderWinback1, renderWinback2, renderWinback3, type MarketingMail } from "../mail/templates/marketing";
 import { audience, marketingRepository, type Recipient } from "../repositories/marketing.repository";
@@ -22,7 +19,7 @@ import { planSignalRepository } from "../repositories/plan-signal.repository";
 import { CLICK_PLACEHOLDER, signClickToken, withClickUrl } from "../utils/marketing-click";
 import { epochDay, signMarketingToken } from "../utils/marketing-token";
 import { sleep } from "../utils/sleep";
-import { DAY_MS, vnDate } from "../utils/time";
+import { DAY_MS, startOfVnDay, vnDate } from "../utils/time";
 import { mailService } from "./mail.service";
 import { marketingSettingService } from "./marketing-setting.service";
 import { planService } from "./plan.service";
@@ -44,7 +41,8 @@ const ahead = (now: Date, days: number) => new Date(now.getTime() + days * DAY_M
 const cycleStep = (cycle: number, step: number) => cycle * STEP_CYCLE_FACTOR + step;
 
 const token = (userId: number) => signMarketingToken(env.JWT_SECRET, userId);
-export const unsubscribePageUrl = (userId: number) => `${env.CLIENT_URL}/unsubscribe?t=${token(userId)}`;
+// `c` = loại thư (không nằm trong token; token chỉ xác thực người dùng) để trang huỷ đề nghị "chỉ tắt loại thư này"
+export const unsubscribePageUrl = (userId: number, topic?: MarketingTopic) => `${env.CLIENT_URL}/unsubscribe?t=${token(userId)}${topic ? `&c=${topic}` : ""}`;
 export const oneClickUrl = (userId: number) => `${env.API_URL || env.CLIENT_URL}/api/v1/marketing/unsubscribe?t=${token(userId)}`;
 const clickUrl = (logId: number) => `${env.API_URL || env.CLIENT_URL}/api/v1/marketing/click?t=${signClickToken(env.JWT_SECRET, logId)}`;
 
@@ -66,7 +64,7 @@ const planOffer = () => {
   };
 };
 
-const base = (u: Recipient) => ({ name: u.fullName, unsubscribeUrl: unsubscribePageUrl(u.id) });
+const base = (u: Recipient, key: CampaignKey) => ({ name: u.fullName, unsubscribeUrl: unsubscribePageUrl(u.id, CAMPAIGN_META[key].topic) });
 
 // ---- Dựng thư cho từng chiến dịch (một lô người nhận)
 
@@ -86,60 +84,64 @@ async function winbackMails(step: number, users: Recipient[], now: Date): Promis
     const target = step === 1 ? (n > 0 ? paths.review : paths.subject(code)) : step === 2 ? paths.subject(code) : paths.review;
     const mail =
       step === 1
-        ? renderWinback1({ ...base(u), due: n, subject: code, url })
+        ? renderWinback1({ ...base(u, "winback"), due: n, subject: code, url })
         : step === 2
-          ? renderWinback2({ ...base(u), subject: code, newExams: code ? (newExams.get(code) ?? 0) : 0, expiringCredit: credit.get(u.id) ?? null, url })
-          : renderWinback3({ ...base(u), url });
+          ? renderWinback2({ ...base(u, "winback"), subject: code, newExams: code ? (newExams.get(code) ?? 0) : 0, expiringCredit: credit.get(u.id) ?? null, url })
+          : renderWinback3({ ...base(u, "winback"), url });
     return { campaign: "winback" as const, step, target, to: u, mail };
   });
 }
 
-const builders: Record<CampaignKey, (now: Date, take: number) => Promise<CampaignJob[]>> = {
-  async winback(now, take) {
+const builders: Record<CampaignKey, (now: Date, take: number, p: MarketingParams) => Promise<CampaignJob[]>> = {
+  async winback(now, take, p) {
     const jobs: CampaignJob[] = [];
-    for (const [i, days] of WINBACK_STEP_DAYS.entries()) {
+    for (const [i, days] of p.winbackStepDays.entries()) {
       if (jobs.length >= take) break;
-      const upper = WINBACK_STEP_DAYS[i + 1] ?? WINBACK_MAX_INACTIVE_DAYS;
-      const users = await marketingRepository.pick(audience.winback(i + 1, ago(now, days), ago(now, upper), ago(now, MARKETING_MIN_GAP_DAYS)), take - jobs.length);
+      const users = await marketingRepository.pick(winbackAudience(now, p, i, days), take - jobs.length);
       jobs.push(...(await winbackMails(i + 1, users, now)));
     }
     return jobs;
   },
 
-  async pro_upsell(now, take) {
+  async pro_upsell(now, take, p) {
     const today = vnDate(now.getTime());
-    const users = await marketingRepository.pick(audience.proUpsell(upsellParams(now)), take);
+    const users = await marketingRepository.pick(audience.proUpsell(upsellParams(now, p)), take);
     if (users.length === 0) return [];
     const ids = users.map((u) => u.id);
     const [spent, exams] = await Promise.all([planSignalRepository.netSpendByUser(ids, ago(now, UPSELL_SPEND_DAYS)), marketingRepository.nextExamDates(ids, today, ahead(today, UPSELL_EXAM_DAYS))]);
     const offer = planOffer();
     return users.map((u) => {
       const exam = exams.get(u.id);
-      const mail = renderUpsell({ ...base(u), ...offer, spent: spent.get(u.id) ?? 0, spentDays: UPSELL_SPEND_DAYS, daysToExam: exam ? Math.round((exam.getTime() - today.getTime()) / DAY_MS) : null, url });
+      const mail = renderUpsell({ ...base(u, "pro_upsell"), ...offer, spent: spent.get(u.id) ?? 0, spentDays: UPSELL_SPEND_DAYS, daysToExam: exam ? Math.round((exam.getTime() - today.getTime()) / DAY_MS) : null, url });
       return { campaign: "pro_upsell" as const, step: cycleStep(epochDay(now), 1), target: paths.plan, to: u, mail };
     });
   },
 
-  async pro_expiry(now, take) {
+  async pro_expiry(now, take, p) {
     const jobs: CampaignJob[] = [];
-    for (const [i, days] of EXPIRY_STEP_DAYS.entries()) {
+    for (const [i, days] of p.expiryStepDays.entries()) {
       if (jobs.length >= take) break;
-      const lower = EXPIRY_STEP_DAYS[i + 1] ?? 0;
-      const users = await marketingRepository.pick(audience.proExpiry(i + 1, ahead(now, lower), ahead(now, days)), take - jobs.length);
+      const users = await marketingRepository.pick(expiryAudience(now, p, i, days), take - jobs.length);
       for (const u of users) {
         const expiresAt = u.proExpiresAt!;
         const daysLeft = Math.max(1, Math.ceil((expiresAt.getTime() - now.getTime()) / DAY_MS));
-        jobs.push({ campaign: "pro_expiry", step: cycleStep(epochDay(expiresAt), i + 1), target: paths.plan, to: u, mail: renderExpiry({ ...base(u), expiresAt, daysLeft, url }) });
+        jobs.push({ campaign: "pro_expiry", step: cycleStep(epochDay(expiresAt), i + 1), target: paths.plan, to: u, mail: renderExpiry({ ...base(u, "pro_expiry"), expiresAt, daysLeft, url }) });
       }
     }
     return jobs;
   },
 };
 
-const upsellParams = (now: Date) => {
+const upsellParams = (now: Date, p: MarketingParams) => {
   const today = vnDate(now.getTime());
-  return { now, quiet: ago(now, MARKETING_MIN_GAP_DAYS), repeatSince: ago(now, UPSELL_REPEAT_DAYS), spendSince: ago(now, UPSELL_SPEND_DAYS), minPurchases: UPSELL_MIN_PURCHASES, examFrom: today, examTo: ahead(today, UPSELL_EXAM_DAYS) };
+  return { now, quiet: ago(now, p.minGapDays), repeatSince: ago(now, p.upsellRepeatDays), spendSince: ago(now, UPSELL_SPEND_DAYS), minPurchases: p.upsellMinPurchases, examFrom: today, examTo: ahead(today, UPSELL_EXAM_DAYS) };
 };
+
+// Bước i của win-back: vắng trong (mốc bước sau, mốc bước này]; bước cuối tới winbackMaxInactiveDays
+const winbackAudience = (now: Date, p: MarketingParams, i: number, days: number) =>
+  audience.winback(i + 1, ago(now, days), ago(now, p.winbackStepDays[i + 1] ?? p.winbackMaxInactiveDays), ago(now, p.minGapDays), now);
+// Bước i của nhắc hết hạn: hết hạn trong (mốc bước sau, mốc bước này]
+const expiryAudience = (now: Date, p: MarketingParams, i: number, days: number) => audience.proExpiry(i + 1, ahead(now, p.expiryStepDays[i + 1] ?? 0), ahead(now, days));
 
 // Nhắc hết hạn Pro gần như thư giao dịch nên chạy trước; thư gửi trước được ghi log nên chiến dịch sau tự bỏ qua người vừa nhận
 const ORDER: CampaignKey[] = ["pro_expiry", "pro_upsell", "winback"];
@@ -147,22 +149,26 @@ const ORDER: CampaignKey[] = ["pro_expiry", "pro_upsell", "winback"];
 export const marketingCampaignService = {
   /** Số người đang đủ điều kiện mỗi chiến dịch (chưa tính trần thư mỗi lần chạy). */
   async eligibleCounts(now = new Date()) {
-    const quiet = ago(now, MARKETING_MIN_GAP_DAYS);
-    const winback = WINBACK_STEP_DAYS.map((d, i) => marketingRepository.count(audience.winback(i + 1, ago(now, d), ago(now, WINBACK_STEP_DAYS[i + 1] ?? WINBACK_MAX_INACTIVE_DAYS), quiet)));
-    const expiry = EXPIRY_STEP_DAYS.map((d, i) => marketingRepository.count(audience.proExpiry(i + 1, ahead(now, EXPIRY_STEP_DAYS[i + 1] ?? 0), ahead(now, d))));
-    const [w, u, e] = await Promise.all([Promise.all(winback), marketingRepository.count(audience.proUpsell(upsellParams(now))), Promise.all(expiry)]);
+    const p = await marketingSettingService.params();
+    const winback = p.winbackStepDays.map((d, i) => marketingRepository.count(winbackAudience(now, p, i, d)));
+    const expiry = p.expiryStepDays.map((d, i) => marketingRepository.count(expiryAudience(now, p, i, d)));
+    const [w, u, e] = await Promise.all([Promise.all(winback), marketingRepository.count(audience.proUpsell(upsellParams(now, p))), Promise.all(expiry)]);
     const sum = (a: number[]) => a.reduce((s, n) => s + n, 0);
     return { winback: sum(w), pro_upsell: u, pro_expiry: sum(e) };
   },
 
-  /** Chạy mỗi ngày: gửi các chiến dịch đang bật, tổng tối đa MARKETING_MAX_PER_RUN thư. Trả số thư đã gửi theo chiến dịch. */
+  /** Chạy mỗi ngày: gửi các chiến dịch đang bật, tổng tối đa `dailyCap` thư mỗi ngày (tính cả thư đã gửi hôm nay). Trả số thư đã gửi theo chiến dịch. */
   async run(now = new Date()) {
-    const flags = await marketingSettingService.flags();
+    const [flags, p, sentToday] = await Promise.all([
+      marketingSettingService.flags(),
+      marketingSettingService.params(),
+      marketingRepository.sentSince(CAMPAIGN_KEYS, startOfVnDay(now.getTime())),
+    ]);
     const sent = Object.fromEntries(CAMPAIGN_KEYS.map((k) => [k, 0])) as Record<CampaignKey, number>;
-    let left = MARKETING_MAX_PER_RUN;
+    let left = p.dailyCap - sentToday; // chạy lại trong ngày cũng không vượt hạn mức
     for (const key of ORDER) {
       if (!flags[key] || left <= 0) continue;
-      for (const job of await builders[key](now, left)) {
+      for (const job of await builders[key](now, left, p)) {
         if (left <= 0) break;
         if (await marketingSettingService.isPaused()) return sent; // kiểm tra trước mỗi thư: bấm tạm dừng giữa lượt chạy dừng ngay
         left--;
@@ -192,8 +198,8 @@ export const marketingCampaignService = {
   },
 
   /** Thư mẫu của một chiến dịch (mọi bước) với số liệu minh hoạ, dùng cho nút gửi thử của admin. */
-  samples(key: CampaignKey, to: Recipient, now = new Date()): MarketingMail[] {
-    const b = base(to);
+  samples(key: CampaignKey, to: Recipient, now = new Date(), p: MarketingParams = DEFAULT_MARKETING_PARAMS): MarketingMail[] {
+    const b = base(to, key);
     if (key === "winback")
       return [
         renderWinback1({ ...b, due: 12, subject: "PRO192", url: site(paths.review) }),
@@ -201,6 +207,6 @@ export const marketingCampaignService = {
         renderWinback3({ ...b, url: site(paths.review) }),
       ];
     if (key === "pro_upsell") return [renderUpsell({ ...b, ...planOffer(), spent: 25_000, spentDays: UPSELL_SPEND_DAYS, daysToExam: 12, url: site(paths.plan) })];
-    return EXPIRY_STEP_DAYS.map((d) => renderExpiry({ ...b, expiresAt: ahead(now, d), daysLeft: d, url: site(paths.plan) }));
+    return p.expiryStepDays.map((d) => renderExpiry({ ...b, expiresAt: ahead(now, d), daysLeft: d, url: site(paths.plan) }));
   },
 };

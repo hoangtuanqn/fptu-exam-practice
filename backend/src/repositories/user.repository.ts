@@ -17,6 +17,8 @@ export const publicUserSelect = {
   proExpiresAt: true,
   emailVerifiedAt: true,
   marketingOptOut: true,
+  marketingMutedTopics: true,
+  marketingMutedUntil: true,
   createdAt: true,
 } satisfies Prisma.UserSelect;
 
@@ -75,7 +77,13 @@ export const userRepository = {
   // Hủy nhận thư marketing từ liên kết trong thư (tài khoản đã xoá thì không làm gì)
   optOutMarketing: async (id: number) => fresh(id, await prisma.user.updateMany({ where: { id }, data: { marketingOptOut: true } })),
 
-  updateProfile: async (id: number, data: { fullName?: string; marketingOptOut?: boolean }) => fresh(id, await prisma.user.update({ where: { id }, data, select: publicUserSelect })),
+  // Từ liên kết trong thư: tạm dừng tới `until`, hoặc tắt thêm một loại thư (OR bit nguyên tử ở DB, không đọc rồi ghi)
+  pauseMarketing: async (id: number, until: Date) => fresh(id, await prisma.user.updateMany({ where: { id }, data: { marketingMutedUntil: until } })),
+  muteMarketingTopic: async (id: number, bit: number) =>
+    fresh(id, await prisma.$executeRaw`UPDATE users SET marketing_muted_topics = marketing_muted_topics | ${bit} WHERE id = ${id}`),
+
+  updateProfile: async (id: number, data: { fullName?: string; marketingOptOut?: boolean; marketingMutedTopics?: number; marketingMutedUntil?: Date | null }) =>
+    fresh(id, await prisma.user.update({ where: { id }, data, select: publicUserSelect })),
 
   // Xác minh email xong: đặt (hoặc đổi) email và đánh dấu đã xác minh
   markEmailVerified: async (db: Db, id: number, email: string) =>

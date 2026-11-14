@@ -17,6 +17,8 @@ export interface User {
   proExpiresAt: string | null; // còn hạn (sau thời điểm hiện tại) = đang dùng gói Pro
   emailVerifiedAt: string | null; // chưa xác minh thì chưa dùng được các dịch vụ trừ credit
   marketingOptOut?: boolean; // true = không nhận thư gợi ý/ưu đãi; thiếu (backend cũ) coi như false
+  marketingMutedTopics?: number; // bit đã tắt: review=1, offers=2, renewal=4, news=8
+  marketingMutedUntil?: string | null; // tạm dừng đến thời điểm này (đã qua = không tạm dừng)
   createdAt: string;
 }
 

@@ -1,5 +1,5 @@
 import { isMailConfigured } from "../configs/mailer";
-import { CAMPAIGN_KEYS, CONVERSION_DAYS, MARKETING_MAX_PER_RUN, MARKETING_RUN_HOUR, STATS_WINDOW_DAYS, type CampaignKey } from "../constants/marketing";
+import { CAMPAIGN_KEYS, CONVERSION_DAYS, MARKETING_RUN_HOUR, STATS_WINDOW_DAYS, type CampaignKey } from "../constants/marketing";
 import { marketingRepository } from "../repositories/marketing.repository";
 import { DAY_MS, startOfVnDay } from "../utils/time";
 import { marketingSettingService } from "./marketing-setting.service";
@@ -27,11 +27,12 @@ export const marketingStatsService = {
   async overview(now = new Date()) {
     const since = new Date(now.getTime() - STATS_WINDOW_DAYS * DAY_MS);
     const matured = new Date(now.getTime() - CONVERSION_DAYS * DAY_MS);
-    const [sentToday, optOut, paused, rows] = await Promise.all([
+    const [sentToday, optOut, paused, rows, params] = await Promise.all([
       marketingRepository.sentSince(CAMPAIGN_KEYS, startOfVnDay(now.getTime())),
       marketingRepository.optOutCounts(),
       marketingSettingService.isPaused(),
       marketingRepository.funnel(CAMPAIGN_KEYS, since, matured),
+      marketingSettingService.params(),
     ]);
     const funnel = Object.fromEntries(CAMPAIGN_KEYS.map((k) => [k, empty()])) as Record<CampaignKey, FunnelRow>;
     for (const r of rows) {
@@ -42,7 +43,7 @@ export const marketingStatsService = {
     return {
       status: {
         sentToday,
-        dailyCap: MARKETING_MAX_PER_RUN,
+        dailyCap: params.dailyCap,
         nextRun: nextRunAt(now).toISOString(),
         smtpConfigured: isMailConfigured,
         optOutRate: optOut.total > 0 ? Number((optOut.optedOut / optOut.total).toFixed(OPT_OUT_RATE_DECIMALS)) : 0,

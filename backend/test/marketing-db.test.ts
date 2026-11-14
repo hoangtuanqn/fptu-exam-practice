@@ -15,6 +15,8 @@ const loadModules = async () => ({
   stats: (await import("../src/services/marketing-stats.service")).marketingStatsService,
   mail: (await import("../src/services/mail.service")).mailService,
   env: (await import("../src/configs/env")).env,
+  users: (await import("../src/services/user.service")).userService,
+  defaults: (await import("../src/constants/marketing")).DEFAULT_MARKETING_PARAMS,
 });
 
 const DAY = 86_400_000;
@@ -69,7 +71,7 @@ describe("marketing audiences (MySQL)", { skip: DB_TESTS_ENABLED ? false : DB_SK
   });
 
   it("opts out with a valid token and rejects a bad one", async () => {
-    assert.deepEqual(await m.marketing.unsubscribe(m.token(m.env.JWT_SECRET, ids.examSoon!)), { ok: true });
+    assert.deepEqual(await m.marketing.unsubscribe(m.token(m.env.JWT_SECRET, ids.examSoon!)), { ok: true, mode: "all" });
     assert.equal((await m.campaigns.eligibleCounts()).pro_upsell, 0);
     await assert.rejects(m.marketing.unsubscribe(`${ids.examSoon}.${"0".repeat(32)}`));
   });
@@ -189,6 +191,117 @@ describe("marketing audiences (MySQL)", { skip: DB_TESTS_ENABLED ? false : DB_SK
       m.mail.sendMarketing = original;
       await m.settings.setPaused(false);
       await m.settings.setEnabled("pro_expiry", false);
+    }
+  });
+
+  // ---- Đợt 2: tham số, xem trước, tuỳ chọn thư
+
+  it("rejects params past the ceilings without storing anything", async () => {
+    const stored = () => m.prisma.setting.findUnique({ where: { key: "marketing.params" } });
+    const before = await stored();
+    await assert.rejects(m.settings.setParams({ dailyCap: 99999 }), (e: { status?: number }) => e.status === 400);
+    await assert.rejects(m.settings.setParams({ minGapDays: 0 }), (e: { status?: number }) => e.status === 400);
+    await assert.rejects(m.settings.setParams({ winbackMaxInactiveDays: 50 }), (e: { status?: number }) => e.status === 400); // <= bước cuối 60
+    assert.deepEqual(await stored(), before);
+    assert.deepEqual(await m.settings.params(), m.defaults);
+  });
+
+  it("uses stored params in audiences, the run and the overview", async () => {
+    await mk("inactive10", { lastActiveAt: daysAgo(10) });
+    try {
+      const base = (await m.campaigns.eligibleCounts()).winback;
+      await m.settings.setParams({ winbackStepDays: [7, 30, 60] });
+      assert.equal((await m.campaigns.eligibleCounts()).winback, base + 1);
+
+      const sentToday = (await m.stats.overview()).status.sentToday;
+      assert.ok((await m.campaigns.eligibleCounts()).pro_expiry >= 2);
+      await m.settings.setParams({ dailyCap: sentToday + 1 });
+      assert.equal((await m.stats.overview()).status.dailyCap, sentToday + 1);
+      await m.settings.setEnabled("pro_expiry", true);
+      const sent = await m.campaigns.run();
+      assert.equal(sent.pro_expiry, 1); // hạn mức ngày tính cả thư đã gửi hôm nay
+      assert.deepEqual(await m.campaigns.run(), { winback: 0, pro_upsell: 0, pro_expiry: 0 }); // chạy lại: đã hết hạn mức
+    } finally {
+      await m.settings.setEnabled("pro_expiry", false);
+      assert.deepEqual((await m.settings.resetParams()), m.defaults);
+    }
+  });
+
+  it("pause blocks win-back and upsell but not expiry; muting renewal blocks expiry", async () => {
+    const before = await m.campaigns.eligibleCounts();
+    // vắng 20 ngày (win-back 1), sắp thi (mời Pro), Pro còn 3 ngày (nhắc hết hạn); mời Pro cần chưa có Pro nên tách 2 người
+    await mk("prefWin", { lastActiveAt: daysAgo(20), proExpiresAt: new Date(Date.now() + 3 * DAY), marketingMutedUntil: new Date(Date.now() + 30 * DAY) });
+    await mk("prefUp", { lastActiveAt: new Date(), examDate: new Date(Date.now() + 10 * DAY), marketingMutedUntil: new Date(Date.now() + 30 * DAY) });
+    let now = await m.campaigns.eligibleCounts();
+    assert.deepEqual(now, { ...before, pro_expiry: before.pro_expiry + 1 });
+
+    await m.prisma.user.update({ where: { id: ids.prefWin! }, data: { marketingMutedTopics: 4 } }); // tắt "renewal"
+    assert.deepEqual(await m.campaigns.eligibleCounts(), before);
+
+    // Hết tạm dừng, chỉ tắt "review": nhận nhắc hết hạn nhưng không nhận win-back; prefUp hết tạm dừng nhận mời Pro
+    await m.prisma.user.update({ where: { id: ids.prefWin! }, data: { marketingMutedTopics: 1, marketingMutedUntil: daysAgo(1) } });
+    await m.prisma.user.update({ where: { id: ids.prefUp! }, data: { marketingMutedUntil: null } });
+    now = await m.campaigns.eligibleCounts();
+    assert.deepEqual(now, { winback: before.winback, pro_upsell: before.pro_upsell + 1, pro_expiry: before.pro_expiry + 1 });
+    await m.prisma.user.update({ where: { id: ids.prefUp! }, data: { marketingMutedTopics: 2 } }); // tắt "offers"
+    assert.equal((await m.campaigns.eligibleCounts()).pro_upsell, before.pro_upsell);
+  });
+
+  it("rechecks opt-out, topic and pause right before sending", async () => {
+    await mk("late", { lastActiveAt: daysAgo(20) });
+    const u = ids.late!;
+    const set = (data: Record<string, unknown>) => m.prisma.user.update({ where: { id: u }, data });
+    await set({ marketingMutedUntil: new Date(Date.now() + DAY) });
+    assert.equal(await m.repo.claim(u, "winback", 41, "/"), null);
+    const expiry = await m.repo.claim(u, "pro_expiry", 41, "/pro"); // tạm dừng không chặn nhắc hết hạn
+    assert.ok(expiry);
+    await m.repo.release(expiry);
+    await set({ marketingMutedUntil: null, marketingMutedTopics: 4 });
+    assert.equal(await m.repo.claim(u, "pro_expiry", 42, "/pro"), null);
+    assert.equal(await m.repo.claim(u, "pro_upsell", 42, "/pro") !== null, true);
+    await set({ marketingMutedTopics: 2 });
+    assert.equal(await m.repo.claim(u, "pro_upsell", 43, "/pro"), null);
+    await set({ marketingMutedTopics: 0, marketingOptOut: true });
+    assert.equal(await m.repo.claim(u, "pro_expiry", 44, "/pro"), null);
+  });
+
+  it("unsubscribes by mode from the mail link", async () => {
+    await mk("unsub", {});
+    const u = ids.unsub!;
+    const t = m.token(m.env.JWT_SECRET, u);
+    const get = () => m.prisma.user.findUniqueOrThrow({ where: { id: u } });
+    assert.deepEqual(await m.marketing.unsubscribe(t, "pause"), { ok: true, mode: "pause" });
+    const until = (await get()).marketingMutedUntil!.getTime();
+    assert.ok(Math.abs(until - (Date.now() + 30 * DAY)) < 60_000);
+    await m.marketing.unsubscribe(t, "topic", "offers");
+    await m.marketing.unsubscribe(t, "topic", "review");
+    await m.marketing.unsubscribe(t, "topic", "offers");
+    assert.equal((await get()).marketingMutedTopics, 3);
+    assert.equal((await get()).marketingOptOut, false);
+    assert.deepEqual(await m.marketing.unsubscribe(t), { ok: true, mode: "all" });
+    assert.equal((await get()).marketingOptOut, true);
+  });
+
+  it("profile sets topics and a 30-day pause and exposes them", async () => {
+    await mk("profile", {});
+    const u = ids.profile!;
+    const paused = await m.users.updateProfile(u, { pauseMarketingDays: 30, marketingMutedTopics: 5 });
+    assert.equal(paused.marketingMutedTopics, 5);
+    assert.ok(paused.marketingMutedUntil && paused.marketingMutedUntil.getTime() > Date.now() + 29 * DAY);
+    assert.equal((await m.users.updateProfile(u, { pauseMarketingDays: 0 })).marketingMutedUntil, null);
+  });
+
+  it("previews every step with sample data, no cid images and a topic on the unsubscribe link", async () => {
+    for (const [key, steps, topic] of [["winback", 3, "review"], ["pro_upsell", 1, "offers"], ["pro_expiry", 2, "renewal"]] as const) {
+      for (let step = 1; step <= steps; step++) {
+        const { subject, html } = await m.marketing.preview(key, step);
+        assert.ok(subject.length > 0);
+        assert.equal(html.includes("cid:"), false);
+        assert.ok(html.includes("data:image/png;base64,"));
+        assert.ok(html.includes(`&amp;c=${topic}`));
+        assert.equal(html.includes("@test.local"), false);
+      }
+      await assert.rejects(m.marketing.preview(key, steps + 1), (e: { status?: number }) => e.status === 404);
     }
   });
 });
