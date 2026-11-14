@@ -16,12 +16,14 @@ interface Props {
 // Luôn chiếm đúng một chỗ nên bố cục không bị giật khi nội dung đổi.
 export function AnswerStatus({ question, selected, revealed, canCheck, onCheck }: Props) {
   return (
-    <div className="flex h-10 min-w-44 items-center">
+    <div className="flex h-10 min-w-0 items-center lg:min-w-44">
       {canCheck ? (
         <Button variant="filled" size="sm" className="!h-10" onClick={onCheck}>
           <Check size={16} />
           Xác nhận
-          <Kbd>Enter</Kbd>
+          <span className="hidden lg:inline">
+            <Kbd>Enter</Kbd>
+          </span>
         </Button>
       ) : revealed ? (
         hasAnswer(question) ? (
