@@ -330,6 +330,7 @@ model ExamAttempt {
   skipped     Int
   durationSec Int         @map("duration_sec")
   details     Json
+  violations  Json        @default("[]") // EXAM mode: [{ at, sec }] each time the user left fullscreen/tab
   createdAt   DateTime    @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -356,6 +357,7 @@ model PracticeSession {
   answers    Json
   checked    Json
   flagged    Json
+  violations Json          @default("[]") // EXAM mode: [{ at, sec }] each time the user left fullscreen/tab
   current    Int           @default(0)
   elapsedSec Int           @default(0) @map("elapsed_sec")
   createdAt  DateTime      @default(now()) @map("created_at")
