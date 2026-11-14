@@ -1,3 +1,5 @@
+import { NO_QUESTIONS_MESSAGE } from "../constants/exam";
+import { examRepository } from "../repositories/exam.repository";
 import { practiceSessionRepository } from "../repositories/practice-session.repository";
 import { AppError } from "../rules/error";
 import type { CreateSessionBody, ListSessionsQuery, SaveSessionBody } from "../rules/requests/session.request";
@@ -44,6 +46,7 @@ export const practiceSessionService = {
   // Mỗi lần bấm làm bài là một lượt mới
   async create(actor: Actor, examId: number, body: CreateSessionBody) {
     await examService.assertAccess(actor, examId);
+    if ((await examRepository.countQuestions(examId)) === 0) throw new AppError(NO_QUESTIONS_MESSAGE);
     return toDto(await practiceSessionRepository.create(actor.owner, examId, body.mode));
   },
 

@@ -38,6 +38,7 @@ async function run(examId: number) {
   const exam = await examRepository.findForSolve(examId);
   if (!exam) return;
   if (exam.questions.length < exam.totalQuestions) return; // đề còn đang được lấy về, chưa đủ câu để giải
+  if (exam.questions.length === 0) return; // đề chỉ có tệp đính kèm: không có gì để giải
   const wasPending = exam.answerSource === "PENDING";
 
   const t0 = Date.now();
