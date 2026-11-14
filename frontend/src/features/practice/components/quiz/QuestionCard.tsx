@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { ChevronLeft, Maximize2, MessageSquareWarning, Sparkles, Tag } from "lucide-react";
+import { ChevronLeft, Maximize2, MessageSquareWarning, Sparkles, Tag, ZoomIn, ZoomOut } from "lucide-react";
+import { useQuestionImageScale } from "@/features/practice/hooks/useQuestionImageScale";
 import { Button } from "@/shared/ui/Button";
 import { AnswerOptions } from "./AnswerOptions";
 import { AnswerStatus } from "./AnswerStatus";
@@ -43,6 +44,7 @@ export function QuestionCard({
   onZoom,
 }: Props) {
   const { number, imageUrl } = question;
+  const size = useQuestionImageScale();
 
   return (
     <div className="flex min-h-[360px] w-full flex-1 sm:min-h-[480px] animate-fade-in flex-col gap-2">
@@ -83,6 +85,18 @@ export function QuestionCard({
                 <span className="hidden sm:inline">{reported ? "Đã báo cáo" : "Báo cáo"}</span>
               </button>
             )}
+            {/* Chỉnh cỡ chữ của đề ngay tại chỗ (nhớ cho lần sau), khỏi phải phóng to cả trình duyệt */}
+            <div className="inline-flex items-center rounded-md border border-slate-200 bg-surface-container-lowest" role="group" aria-label="Cỡ ảnh đề">
+              <button onClick={size.zoomOut} disabled={!size.canZoomOut} title="Thu nhỏ ảnh đề" aria-label="Thu nhỏ ảnh đề" className="flex h-9 w-9 items-center justify-center rounded-l-md text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 disabled:opacity-40 disabled:hover:bg-transparent sm:h-7 sm:w-7">
+                <ZoomOut size={15} />
+              </button>
+              <button onClick={size.reset} title="Về cỡ mặc định" aria-label={`Cỡ ảnh ${Math.round(size.scale * 100)}%, bấm để về mặc định`} className="hidden w-11 text-center text-xs tabular-nums text-slate-600 hover:bg-slate-100 sm:block">
+                {Math.round(size.scale * 100)}%
+              </button>
+              <button onClick={size.zoomIn} disabled={!size.canZoomIn} title="Phóng to ảnh đề" aria-label="Phóng to ảnh đề" className="flex h-9 w-9 items-center justify-center rounded-r-md text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 disabled:opacity-40 disabled:hover:bg-transparent sm:h-7 sm:w-7">
+                <ZoomIn size={15} />
+              </button>
+            </div>
             <button
               onClick={onZoom}
               title="Phóng to ảnh"
@@ -95,10 +109,17 @@ export function QuestionCard({
           </div>
         </div>
 
-        {/* Ảnh kéo giãn lấp đầy khung; bấm vào ảnh cũng mở cửa sổ phóng to */}
-        <button onClick={onZoom} className="relative min-h-0 w-full flex-1 cursor-zoom-in bg-slate-50" tabIndex={-1}>
-          <img src={imageUrl} alt={`Câu ${number}`} className="absolute inset-0 h-full w-full object-contain p-2" />
-        </button>
+        {/* Ảnh rộng hết khung (chữ to hơn nhiều so với co ảnh vừa cả chiều cao); đề dài thì cuộn trong khung. Bấm vào ảnh mở cửa sổ phóng to */}
+        <div className="min-h-0 w-full flex-1 overflow-auto bg-slate-50 p-2">
+          <img
+            src={imageUrl}
+            alt={`Câu ${number}`}
+            onClick={onZoom}
+            title="Bấm để mở cửa sổ phóng to"
+            className="block h-auto cursor-zoom-in"
+            style={{ width: `${size.scale * 100}%`, maxWidth: "none" }}
+          />
+        </div>
       </section>
 
       {nudge}
