@@ -1,7 +1,12 @@
-import { useState } from "react";
-import { ThumbsDown, ThumbsUp } from "lucide-react";
-import { adminApi } from "@/features/admin/api/admin.api";
+import { useEffect, useState } from "react";
+import { CheckCheck, ThumbsDown, ThumbsUp } from "lucide-react";
+import { adminApi, type ExplanationFeedbackAdmin, type ResolvedFilter } from "@/features/admin/api/admin.api";
+import { refreshReviewCounts } from "@/features/admin/review-counts.store";
+import { ResolvedBadge } from "@/features/admin/shared";
 import { FEEDBACK_REASONS } from "@/features/explanation/explanation.api";
+import { errorMessage } from "@/shared/api/errors";
+import { useToast } from "@/shared/context/ToastContext";
+import { Button } from "@/shared/ui/Button";
 import { Markdown } from "@/shared/ui/Markdown";
 import { useApi } from "@/shared/hooks/useApi";
 import { useClampPage } from "@/shared/hooks/useClampPage";
@@ -12,17 +17,45 @@ import { Segmented } from "@/shared/ui/Segmented";
 import { Pagination } from "@/shared/ui/Table";
 import { formatDateTime } from "@/shared/utils/formatters";
 
-type Filter = "up" | "down" | "";
+// down = chưa tốt và chưa giải quyết; resolved = chưa tốt đã giải quyết
+type Filter = "up" | "down" | "resolved" | "";
+
+const QUERY: Record<Filter, ["up" | "down" | "", ResolvedFilter]> = {
+  down: ["down", "false"],
+  resolved: ["down", "true"],
+  up: ["up", ""],
+  "": ["", ""],
+};
 
 const reasonLabel = (v: string | null) => FEEDBACK_REASONS.find((r) => r.value === v)?.label ?? null;
 
 // Đánh giá 👍/👎 của người dùng về lời giải AI: mặc định hiện các đánh giá chưa tốt, kèm lời giải để đọc ngay và sửa prompt
 export default function FeedbackPage() {
   const [url, setUrl] = useUrlState({ helpful: "down", page: "1" });
-  const filter = url.helpful as Filter;
+  const toast = useToast();
+  const filter = (Object.prototype.hasOwnProperty.call(QUERY, url.helpful) ? url.helpful : "down") as Filter;
   const page = toPage(url.page);
   const setPage = (p: number) => setUrl({ page: String(p) });
-  const { data, error, loading, reload } = useApi(() => adminApi.explanationFeedback(page, filter), [page, filter]);
+  const { data, error, loading, reload } = useApi(() => adminApi.explanationFeedback(page, ...QUERY[filter]), [page, filter]);
+  // Dòng vừa giải quyết hiện ngay kết quả server trả về; tải lại danh sách thì bỏ
+  const [patched, setPatched] = useState<Record<number, ExplanationFeedbackAdmin>>({});
+  useEffect(() => setPatched({}), [data]);
+  const [saving, setSaving] = useState<number | null>(null);
+  const items = data?.items.map((r) => patched[r.id] ?? r) ?? [];
+
+  const resolve = async (id: number) => {
+    setSaving(id);
+    try {
+      const row = await adminApi.resolveFeedback(id);
+      setPatched((p) => ({ ...p, [id]: row }));
+      toast.success("Đã đánh dấu đã giải quyết");
+      void refreshReviewCounts();
+    } catch (err) {
+      toast.error(errorMessage(err));
+    } finally {
+      setSaving(null);
+    }
+  };
   const summary = useApi(() => adminApi.explanationFeedbackSummary(), []);
   useClampPage(data?.meta, setPage);
   const [open, setOpen] = useState<number | null>(null);
@@ -44,7 +77,8 @@ export default function FeedbackPage() {
             value={filter}
             onChange={(v) => setUrl({ helpful: v, page: "1" })}
             options={[
-              { value: "down", label: "Chưa tốt" },
+              { value: "down", label: "Chưa xử lý" },
+              { value: "resolved", label: "Đã giải quyết" },
               { value: "up", label: "Hữu ích" },
               { value: "", label: "Tất cả" },
             ]}
@@ -55,26 +89,44 @@ export default function FeedbackPage() {
           <Loading />
         ) : error ? (
           <ErrorBox message={error} onRetry={reload} />
-        ) : data && data.items.length > 0 ? (
+        ) : data && items.length > 0 ? (
           <div className={loading ? "opacity-60 transition" : "transition"}>
             <ul className="divide-y divide-slate-100">
-              {data.items.map((r) => (
+              {items.map((r) => (
                 <li key={r.id} className="px-4 py-3">
-                  <button type="button" onClick={() => setOpen(open === r.id ? null : r.id)} aria-expanded={open === r.id} className="flex w-full items-start gap-3 text-left">
-                    <span className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${r.helpful ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
-                      {r.helpful ? <ThumbsUp size={14} /> : <ThumbsDown size={14} />}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-medium text-slate-900">
-                        {r.exam.title} · câu {r.questionNumber}
+                  <div className="flex items-start gap-2">
+                    <button type="button" onClick={() => setOpen(open === r.id ? null : r.id)} aria-expanded={open === r.id} className="flex min-w-0 flex-1 items-start gap-3 text-left">
+                      <span className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${r.helpful ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
+                        {r.helpful ? <ThumbsUp size={14} /> : <ThumbsDown size={14} />}
                       </span>
-                      <span className="block text-xs text-slate-500">
-                        {r.user.fullName} · {formatDateTime(r.updatedAt)}
-                        {reasonLabel(r.reason) && <> · {reasonLabel(r.reason)}</>}
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-medium text-slate-900">
+                          {r.exam.title} · câu {r.questionNumber}
+                        </span>
+                        <span className="block text-xs text-slate-500">
+                          {r.user.fullName} · {formatDateTime(r.updatedAt)}
+                          {reasonLabel(r.reason) && <> · {reasonLabel(r.reason)}</>}
+                        </span>
+                        {r.comment && <span className="mt-1 block text-sm text-slate-700">“{r.comment}”</span>}
+                        {r.resolvedAt && (
+                          <span className="mt-1 block">
+                            <ResolvedBadge at={r.resolvedAt} />
+                          </span>
+                        )}
                       </span>
-                      {r.comment && <span className="mt-1 block text-sm text-slate-700">“{r.comment}”</span>}
-                    </span>
-                  </button>
+                    </button>
+                    {!r.helpful && !r.resolvedAt && (
+                      <Button
+                        size="sm"
+                        onClick={() => void resolve(r.id)}
+                        disabled={saving !== null}
+                        aria-label={`Giải quyết đánh giá câu ${r.questionNumber}, ${r.exam.title}`}
+                        className="shrink-0"
+                      >
+                        <CheckCheck size={16} aria-hidden /> Giải quyết
+                      </Button>
+                    )}
+                  </div>
                   {open === r.id && (
                     <div className="mt-3 rounded-xl bg-slate-50 p-3">
                       <div className="mb-2 text-xs text-slate-500">Lời giải đang lưu{r.model ? ` (${r.model})` : ""}:</div>
@@ -87,7 +139,7 @@ export default function FeedbackPage() {
             <Pagination meta={data.meta} onPage={setPage} />
           </div>
         ) : (
-          <Empty icon={ThumbsDown} title={filter === "down" ? "Chưa có đánh giá chưa tốt nào" : "Chưa có đánh giá nào"} />
+          <Empty icon={ThumbsDown} title={filter === "down" ? "Không có đánh giá chưa tốt nào cần xử lý" : "Chưa có đánh giá nào"} />
         )}
       </Card>
     </>
