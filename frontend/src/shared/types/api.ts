@@ -225,6 +225,8 @@ export interface AnswerReportAdmin {
   reviewNote: string | null;
   createdAt: string;
   reviewedAt: string | null;
+  resolvedAt?: string | null; // có thể thiếu khi backend cũ
+  resolvedById?: number | null;
   imageUrl: string | null;
   exam: { title: string; threadId: string };
   user: { id: number; email: string; fullName: string };

@@ -21,6 +21,13 @@ const normalize = (answer: string) => [...new Set(answer.toUpperCase().replace(/
 
 const imageUrlOf = fileUrlOf;
 
+// Gắn ảnh câu hỏi cho các dòng của admin (một truy vấn cho cả trang, để admin xem đề khi duyệt)
+async function withImages<T extends { examId: number; questionNumber: number }>(items: T[]) {
+  const images = await answerReportRepository.questionImages(items.map((r) => ({ examId: r.examId, number: r.questionNumber })));
+  const imageOf = new Map(images.map((q) => [`${q.examId}:${q.number}`, imageUrlOf(q.imagePath)]));
+  return items.map((r) => ({ ...r, imageUrl: imageOf.get(`${r.examId}:${r.questionNumber}`) ?? null }));
+}
+
 export const answerReportService = {
   // ----- Thành viên
   async create(actor: Actor, userId: number, body: CreateReportBody) {
@@ -65,15 +72,20 @@ export const answerReportService = {
 
   // ----- Admin
   async list(query: ListReportsQuery) {
-    const { status, ...page } = query;
-    const { items, total } = await answerReportRepository.listAdmin(page, status);
-    const images = await answerReportRepository.questionImages(items.map((r) => ({ examId: r.examId, number: r.questionNumber })));
-    const imageOf = new Map(images.map((q) => [`${q.examId}:${q.number}`, imageUrlOf(q.imagePath)]));
-    return {
-      items: items.map((r) => ({ ...r, imageUrl: imageOf.get(`${r.examId}:${r.questionNumber}`) ?? null })),
-      meta: toMeta(page, total),
-    };
+    const { status, resolved, ...page } = query;
+    const { items, total } = await answerReportRepository.listAdmin(page, status, resolved ? resolved === "true" : undefined);
+    return { items: await withImages(items), meta: toMeta(page, total) };
   },
+
+  /** Admin đánh dấu đã giải quyết (bỏ khỏi badge). Gọi lại không đổi gì; trả về đúng dạng một dòng của danh sách. */
+  async resolve(adminId: number, id: number) {
+    await answerReportRepository.resolve(id, adminId);
+    const report = await answerReportRepository.findAdmin(id);
+    if (!report) throw AppError.notFound("Không tìm thấy báo cáo");
+    return (await withImages([report]))[0]!;
+  },
+
+  countPending: () => answerReportRepository.countPending(),
 
   /**
    * Duyệt đúng: chốt báo cáo (UPDATE có điều kiện), sửa đáp án của câu, thưởng credit cho người báo cáo. Cùng một transaction.

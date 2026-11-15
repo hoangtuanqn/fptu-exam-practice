@@ -33,6 +33,23 @@ export interface NavItem {
   end?: boolean;
   group?: string; // nhãn nhóm hiện phía trên mục đầu tiên của nhóm
   also?: string[]; // các trang con (hiện thành tab) cũng tô sáng mục này
+  badge?: { count: number; label: string }; // số việc cần xem (ẩn khi 0); label đọc cho trình đọc màn hình
+}
+
+// Badge số của M3 (large badge) gắn vào mục menu; số thật đọc qua chữ ẩn để tên của liên kết đủ nghĩa
+function NavBadge({ badge, className = "" }: { badge?: NavItem["badge"]; className?: string }) {
+  if (!badge || !(badge.count > 0)) return null;
+  return (
+    <>
+      <span
+        aria-hidden
+        className={`md-label-small flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full bg-error px-1 tabular-nums text-on-error ${className}`}
+      >
+        {badge.count > 99 ? "99+" : badge.count}
+      </span>
+      <span className="sr-only">, {badge.label}</span>
+    </>
+  );
 }
 
 // Nhóm có nhiều hơn chừng này mục mới xổ xuống/thu lại được; nhóm ít mục luôn hiện đủ cho gọn mắt
@@ -128,6 +145,10 @@ function DrawerContent({
                           {sec.items.length}
                         </span>
                       )}
+                      {!isOpen && (() => {
+                        const count = sec.items.reduce((n, i) => n + (i.badge?.count ?? 0), 0);
+                        return <NavBadge badge={{ count, label: `${count} mục chưa xử lý` }} />;
+                      })()}
                       <ChevronDown
                         size={18}
                         className={`md-motion transition-transform ${isOpen ? "rotate-180" : ""}`}
@@ -160,6 +181,7 @@ function DrawerContent({
                   >
                     <Icon size={20} className="shrink-0" />
                     <span className="truncate">{label}</span>
+                    <NavBadge badge={it.badge} className="ml-auto" />
                   </NavLink>
                   );
                 })}
@@ -236,9 +258,10 @@ function Rail({ title, items }: { title: string; items: NavItem[] }) {
               return (
               <>
                 <span
-                  className={`md-state md-motion flex h-8 w-14 items-center justify-center rounded-full ${isActive ? "bg-secondary-container text-on-secondary-container" : "text-on-surface-variant"}`}
+                  className={`md-state md-motion relative flex h-8 w-14 items-center justify-center rounded-full ${isActive ? "bg-secondary-container text-on-secondary-container" : "text-on-surface-variant"}`}
                 >
                   <Icon size={22} />
+                  <NavBadge badge={it.badge} className="absolute left-8 top-0" />
                 </span>
                 <span
                   className={`md-label-medium w-full break-words text-center leading-tight ${isActive ? "text-on-surface" : "text-on-surface-variant"}`}

@@ -1,6 +1,38 @@
 {
   "web": [
     {
+      "version": "1.11.0",
+      "date": "2026-11-15",
+      "title": "Đặt đơn Coursera bằng link và thanh bên rõ ràng hơn",
+      "highlights": [
+        "Dán link khóa Coursera, hệ thống tự hiện tên khóa để bạn xác nhận",
+        "Ví, Mã quà tặng và Giới thiệu bạn bè là các mục riêng ở thanh bên",
+        "Lời giải AI không còn hiện ký tự công thức khó đọc"
+      ],
+      "changes": [
+        {
+          "type": "new",
+          "text": "Đặt đơn Coursera chỉ cần dán link khóa học; hệ thống kiểm tra và hiện tên khóa trước khi bạn đặt"
+        },
+        {
+          "type": "new",
+          "text": "Nhận email khi đơn Coursera đổi trạng thái, được hoàn phí hoặc có ghi chú mới từ quản trị viên"
+        },
+        {
+          "type": "improved",
+          "text": "Thanh bên tách riêng Nạp credit, Lịch sử giao dịch, Mã quà tặng và Giới thiệu bạn bè cho dễ tìm"
+        },
+        {
+          "type": "improved",
+          "text": "Trang Coursera có giao diện giống các trang tài khoản khác, thanh trên cùng có lối vào Coursera"
+        },
+        {
+          "type": "fixed",
+          "text": "Lời giải AI viết công thức bằng ký hiệu thường (√, ∈, →, ≥) thay vì mã LaTeX khó đọc, kể cả các lời giải đã lưu"
+        }
+      ]
+    },
+    {
       "version": "1.10.0",
       "date": "2026-11-14",
       "title": "Thi thử toàn màn hình như phòng thi thật",

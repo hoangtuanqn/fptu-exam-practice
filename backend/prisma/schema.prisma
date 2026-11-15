@@ -562,12 +562,15 @@ model AnswerReport {
   reviewedById   Int?         @map("reviewed_by_id")
   reviewedAt     DateTime?    @map("reviewed_at")
   createdAt      DateTime     @default(now()) @map("created_at")
+  resolvedAt     DateTime?    @map("resolved_at") // admin marked it handled (drops out of the pending badge)
+  resolvedById   Int?         @map("resolved_by_id")
 
   exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, examId, questionNumber])
   @@index([status, createdAt])
+  @@index([status, resolvedAt])
   @@index([examId])
   @@map("answer_reports")
 }
@@ -1240,12 +1243,15 @@ model ExplanationFeedback {
   comment        String?  @db.VarChar(500)
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
+  resolvedAt     DateTime? @map("resolved_at") // admin marked it handled; reset when the member submits a new complaint
+  resolvedById   Int?      @map("resolved_by_id")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
 
   @@unique([userId, examId, questionNumber])
   @@index([helpful, updatedAt])
+  @@index([helpful, resolvedAt, updatedAt])
   @@index([examId, questionNumber])
   @@map("explanation_feedback")
 }

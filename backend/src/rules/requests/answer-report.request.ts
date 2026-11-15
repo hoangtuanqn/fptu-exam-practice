@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { paginationQuery } from "../../utils/pagination";
 
+// Lọc theo trạng thái "đã giải quyết" của admin: "true" | "false", rỗng = tất cả
+export const resolvedFilter = z.enum(["true", "false", ""]).optional();
+
 // Đáp án đề xuất: các chữ cái A-Z cách nhau dấu cách (A hoặc A C D). Gõ liền "ACD" cũng được chuẩn hóa.
 const proposedAnswer = z
   .string("Vui lòng chọn đáp án đúng")
@@ -17,6 +20,7 @@ export const createReportBody = z.object({
 
 export const listReportsQuery = paginationQuery.extend({
   status: z.enum(["PENDING", "APPROVED", "REJECTED"]).optional(),
+  resolved: resolvedFilter,
 });
 
 export const reviewReportBody = z.object({
