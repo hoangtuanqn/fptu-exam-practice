@@ -15,14 +15,14 @@ export const makeLimiter = ({ limit, windowMs = 60 * 1000, message = TOO_FAST, .
 export const forgotPasswordLimiter = makeLimiter({ windowMs: 15 * 60 * 1000, limit: 5, message: "Bạn yêu cầu quá nhiều lần, vui lòng thử lại sau ít phút" });
 
 // Làm mới phiên chạy ngầm mỗi khi access token hết hạn; nhiều người dùng chung một IP (mạng trường) nên nới hơn đăng nhập
-export const refreshLimiter = makeLimiter({ limit: 300, message: "Làm mới phiên quá nhanh, vui lòng thử lại sau giây lát" });
+export const refreshLimiter = makeLimiter({ limit: 1000, message: "Làm mới phiên quá nhanh, vui lòng thử lại sau giây lát" });
 
-// Chống dò mật khẩu: 30 lần / 15 phút / IP (nới hơn một chút vì nhiều sinh viên dùng chung IP wifi trường/ký túc xá)
-export const authLimiter = makeLimiter({ windowMs: 15 * 60 * 1000, limit: 30, message: "Thử quá nhiều lần, vui lòng quay lại sau" });
+// Chống bắn phá đăng ký/đặt lại mật khẩu/đăng nhập Google, GitHub: 300 lần / 15 phút / IP (rất nhiều sinh viên dùng chung IP wifi trường/ký túc xá)
+export const authLimiter = makeLimiter({ windowMs: 15 * 60 * 1000, limit: 300, message: "Thử quá nhiều lần, vui lòng quay lại sau" });
 
 // Đăng nhập: dò mật khẩu từng tài khoản đã có login-guard (captcha sau 3 lần sai, khoá sau 7 lần),
 // nên lớp theo IP này chỉ chặn bắn phá và được nới rộng (nhiều sinh viên dùng chung IP wifi trường)
-export const loginLimiter = makeLimiter({ windowMs: 15 * 60 * 1000, limit: 100, message: "Thử quá nhiều lần, vui lòng quay lại sau" });
+export const loginLimiter = makeLimiter({ windowMs: 15 * 60 * 1000, limit: 1000, message: "Thử quá nhiều lần, vui lòng quay lại sau" });
 
 // Chống dò giftcode: chỉ đếm các lần nhập SAI, 10 lần / 15 phút / tài khoản
 export const giftCodeLimiter = makeLimiter({
