@@ -24,7 +24,7 @@ export const CHAT_DEFAULTS: ChatConfig = {
   chatProvider: "anthropic",
   // Nguồn ngoài mặc định: chỉ cần nhập khoá API ở trang quản trị; địa chỉ, model và header là giá trị cố định (vẫn ghi đè được qua API cài đặt).
   chatBaseUrl: "https://api.xingchiapi.com/v1",
-  chatModel: "gpt-6.1-sol",
+  chatModel: "gpt-6-astra",
   chatApiKey: "",
   chatExtraHeader: "x-openai-actor-authorization: local-image-extension",
 };
