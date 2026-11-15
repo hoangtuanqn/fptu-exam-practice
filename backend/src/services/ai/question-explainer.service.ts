@@ -1,6 +1,7 @@
 import { EXPLAIN_EFFORT, EXPLAIN_MAX_OUTPUT_TOKENS, type AiConfig } from "../../constants/ai";
 import { buildSystem, resolveModuleKey } from "../../prompts";
 import { askClaudeText, type ClaudeContent } from "./claude.client";
+import { plainMath } from "../../utils/plain-math";
 import { loadImageForAi } from "./image";
 
 export interface ExplainInput {
@@ -37,7 +38,8 @@ export async function explainQuestion(config: AiConfig, input: ExplainInput): Pr
   if (input.commentsText) content.push({ type: "text", text: `<comments>\n${input.commentsText}\n</comments>` });
   content.push({ type: "text", text: "Explain this question following your instructions." });
 
-  return askClaudeText({
+  // Model đôi khi vẫn viết LaTeX dù prompt cấm: đổi sang chữ Unicode trước khi lưu và trả về
+  return plainMath(await askClaudeText({
     apiKey: config.anthropicApiKey,
     model: config.claudeModel,
     effort: EXPLAIN_EFFORT,
@@ -45,5 +47,5 @@ export async function explainQuestion(config: AiConfig, input: ExplainInput): Pr
     system: buildSystem("explain", resolveModuleKey("explain", { explicit: input.subjectCode, title: input.examTitle })),
     content,
     maxTokens: EXPLAIN_MAX_OUTPUT_TOKENS,
-  });
+  }));
 }
