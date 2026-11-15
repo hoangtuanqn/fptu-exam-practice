@@ -156,10 +156,23 @@ async function send<T>(method: string, path: string, body?: unknown, query?: Que
         if (result === "ok") return send<T>(method, path, body, query, keepalive, true);
       }
     }
-    const wait = Number(res.headers.get("Retry-After"));
-    throw new ApiError(json?.message ?? `Lỗi ${res.status}`, res.status, json?.errors, Number.isFinite(wait) && wait > 0 ? Math.ceil(wait) : undefined, json?.code);
+    throw toApiError(res, json);
   }
   return json;
+}
+
+// Số giây phải chờ: header Retry-After (giây hoặc ngày giờ), hoặc data.retryAfter nếu máy chủ gửi trong thân
+// (header khác domain chỉ đọc được khi máy chủ cho phép qua Access-Control-Expose-Headers)
+function retryAfterOf(res: Response, data: unknown): number | undefined {
+  const header = res.headers.get("Retry-After");
+  let s = Number(header);
+  if (header && !Number.isFinite(s)) s = (new Date(header).getTime() - Date.now()) / 1000;
+  if (!(s > 0) && data && typeof data === "object" && "retryAfter" in data) s = Number((data as { retryAfter: unknown }).retryAfter);
+  return Number.isFinite(s) && s > 0 ? Math.ceil(s) : undefined;
+}
+
+export function toApiError(res: Response, json: { message?: string; errors?: Record<string, string>; code?: string; data?: unknown } | null) {
+  return new ApiError(json?.message ?? `Lỗi ${res.status}`, res.status, json?.errors, retryAfterOf(res, json?.data), json?.code);
 }
 
 export const http = {
@@ -193,8 +206,7 @@ export async function sendForm<T>(method: string, path: string, form: FormData):
   } catch {
     throw new ApiError("Không kết nối được máy chủ", 0);
   }
-  interface Env { status: boolean; message: string; data?: T; errors?: Record<string, string> }
-  const json = (await res.json().catch(() => null)) as Env | null;
-  if (!res.ok || !json?.status) throw new ApiError(json?.message ?? `Lỗi ${res.status}`, res.status, json?.errors);
+  const json = (await res.json().catch(() => null)) as Envelope<T> | null;
+  if (!res.ok || !json?.status) throw toApiError(res, json);
   return json.data as T;
 }

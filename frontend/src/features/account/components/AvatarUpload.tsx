@@ -28,11 +28,11 @@ export function AvatarUpload() {
 
   const handleFile = async (file: File) => {
     if (!ALLOWED.includes(file.type)) {
-      toast.error("Chỉ chấp nhận ảnh JPG, PNG hoặc WebP");
+      toast.error("Ảnh phải là JPG, PNG hoặc WebP. Hãy chọn ảnh khác.");
       return;
     }
     if (file.size > MAX_BYTES) {
-      toast.error("Ảnh tối đa 5 MB");
+      toast.error("Ảnh quá lớn, tối đa 5 MB. Hãy chọn ảnh nhỏ hơn.");
       return;
     }
     removeTicket.current++; // đang chờ xoá ảnh cũ mà đổi ảnh mới: huỷ lệnh xoá, kẻo nó xoá luôn ảnh mới

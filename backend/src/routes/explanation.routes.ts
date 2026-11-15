@@ -14,7 +14,7 @@ const chatLimiter = makeLimiter({
   limit: CHAT_PER_MINUTE,
   keyGenerator: (req) => `user:${req.user?.id ?? "anon"}`,
   validate: { keyGeneratorIpFallback: false },
-  message: "Bạn hỏi quá nhanh, vui lòng chờ giây lát",
+  message: "Bạn đang hỏi AI về câu này quá nhanh.",
 });
 
 explanationRouter.use(authenticate);

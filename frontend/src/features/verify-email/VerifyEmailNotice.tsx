@@ -37,7 +37,7 @@ export function VerifyEmailNotice({ variant = "banner", message }: Props) {
       setWait(COOLDOWN_SEC);
     } catch (err) {
       toast.error(errorMessage(err, "Không gửi được thư xác minh"));
-      if (err instanceof ApiError && err.status === 429) setWait(COOLDOWN_SEC);
+      if (err instanceof ApiError && err.status === 429) setWait(err.retryAfter ?? COOLDOWN_SEC);
     } finally {
       setSending(false);
     }

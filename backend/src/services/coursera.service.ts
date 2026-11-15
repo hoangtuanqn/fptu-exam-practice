@@ -15,10 +15,10 @@ async function safe<T>(run: () => Promise<T>): Promise<T> {
   catch (error) {
     if (error instanceof AppError) throw error;
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2002") throw AppError.conflict("Dữ liệu này đã tồn tại");
+      if (error.code === "P2002") throw AppError.conflict("Yêu cầu này đã được ghi nhận trước đó. Hãy tải lại trang để xem kết quả mới nhất.");
       if (error.code === "P2025") throw AppError.notFound();
     }
-    throw new AppError("Không thể xử lý yêu cầu Coursera lúc này. Vui lòng thử lại.", 503);
+    throw new AppError("Hệ thống chưa xử lý được yêu cầu Coursera lúc này, không phải do bạn. Vui lòng thử lại sau ít phút; nếu vẫn lỗi hãy liên hệ hỗ trợ.", 503);
   }
 }
 

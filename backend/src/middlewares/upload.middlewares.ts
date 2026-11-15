@@ -47,7 +47,7 @@ export const uploadMaterialPdf: RequestHandler = (req, res, next) => {
   pdfUpload(req, res, (err: unknown) => {
     if (!err) return next();
     if (err instanceof multer.MulterError) {
-      return next(new AppError(err.code === "LIMIT_FILE_SIZE" ? `Tệp quá lớn, tối đa ${MATERIAL_MAX_FILE_MB} MB` : "Tệp tải lên không hợp lệ", 400));
+      return next(new AppError(err.code === "LIMIT_FILE_SIZE" ? `Tệp quá lớn, tối đa ${MATERIAL_MAX_FILE_MB} MB` : "Không đọc được tệp tải lên. Hãy chọn lại một tệp PDF rồi thử lại.", 400));
     }
     next(err);
   });

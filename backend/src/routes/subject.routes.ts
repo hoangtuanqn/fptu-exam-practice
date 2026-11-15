@@ -19,7 +19,7 @@ subjectRouter.get("/", async (_req, res) => {
 });
 
 // Bước chọn môn của Bộ đề theo chương: môn thiếu tên chương thì báo không làm được (và gửi báo cáo cho admin)
-subjectRouter.post("/:code/chapter-set-check", makeLimiter({ limit: 10 }), validate(subjectCodeParam, "params"), async (_req, res) => {
+subjectRouter.post("/:code/chapter-set-check", makeLimiter({ limit: 10, message: "Bạn kiểm tra bộ đề theo chương quá nhanh." }), validate(subjectCodeParam, "params"), async (_req, res) => {
   const { code } = getValidated<SubjectCodeParam>(res, "params");
   res.json(new ResponseClient({ data: await subjectService.chapterSetReady(code) }));
 });

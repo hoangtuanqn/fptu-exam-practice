@@ -1,6 +1,7 @@
 import { examAttemptRepository } from "../repositories/exam-attempt.repository";
 import { examAttachmentRepository } from "../repositories/exam-attachment.repository";
 import { examRepository } from "../repositories/exam.repository";
+import { EXAM_NOT_FOUND } from "../constants/exam";
 import { userExamRepository } from "../repositories/user-exam.repository";
 import type { Db } from "../repositories/wallet.repository";
 import { topicLabelerService } from "./ai/topic-labeler.service";
@@ -30,7 +31,7 @@ export const examService = {
   // Chỉ chủ kho (hoặc admin) được xem/làm đề; người khác nhận 404 như thể đề không tồn tại
   async assertAccess(actor: Actor, examId: number) {
     if (actor.isAdmin) return;
-    if (!(await userExamRepository.has(actor.owner, examId))) throw AppError.notFound("Không tìm thấy đề");
+    if (!(await userExamRepository.has(actor.owner, examId))) throw AppError.notFound(EXAM_NOT_FOUND);
   },
 
   async listMine(owner: Owner, query: PaginationQuery & { subject?: string }) {
@@ -61,7 +62,7 @@ export const examService = {
     await this.assertAccess(actor, id);
     await examSolveService.upgradeIfNeeded(id);
     const exam = await examRepository.findDetail(id);
-    if (!exam) throw AppError.notFound("Không tìm thấy đề");
+    if (!exam) throw AppError.notFound(EXAM_NOT_FOUND);
     void topicLabelerService.ensure(id); // đề còn câu chưa có chủ đề: gắn nền, kết quả về qua realtime
     return {
       id: exam.id,
@@ -102,7 +103,7 @@ export const examService = {
   async getAnswers(actor: Actor, id: number) {
     await this.assertAccess(actor, id);
     const exam = await examRepository.findAnswers(id);
-    if (!exam) throw AppError.notFound("Không tìm thấy đề");
+    if (!exam) throw AppError.notFound(EXAM_NOT_FOUND);
     return toAnswersPayload(exam);
   },
 
@@ -110,7 +111,7 @@ export const examService = {
   // Không có đề, hoặc có nhưng không nằm trong kho của người xem, đều trả cùng một lỗi 404.
   async getDetailByThread(actor: Actor, threadId: string) {
     const exam = await examRepository.findByThreadId(threadId);
-    if (!exam) throw AppError.notFound("Không tìm thấy đề");
+    if (!exam) throw AppError.notFound(EXAM_NOT_FOUND);
     return this.getDetail(actor, exam.id);
   },
 

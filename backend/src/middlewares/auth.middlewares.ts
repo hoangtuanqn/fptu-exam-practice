@@ -16,7 +16,7 @@ const loadUser = async (req: Request) => {
   const id = Number(sub);
   const user = await userCache.get(id, () => userRepository.findById(id));
   if (!user) throw AppError.unauthorized();
-  if (user.status === "BANNED") throw AppError.forbidden("Tài khoản đã bị khoá");
+  if (user.status === "BANNED") throw AppError.banned();
   req.user = user;
 };
 

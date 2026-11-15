@@ -19,7 +19,7 @@ export const chatBody = z.object({
     .array(
       z.object({
         role: z.enum(["user", "assistant"]),
-        content: z.string().transform((v) => v.normalize("NFC")).pipe(z.string().trim().min(1, "Vui lòng nhập câu hỏi").max(CHAT_MAX_INPUT_CHARS * 4, "Tin nhắn quá dài")), // chuẩn hoá Unicode về NFC: chữ có dấu gõ kiểu tổ hợp (NFD) vẫn khớp
+        content: z.string().transform((v) => v.normalize("NFC")).pipe(z.string().trim().min(1, "Vui lòng nhập câu hỏi").max(CHAT_MAX_INPUT_CHARS * 4, "Tin nhắn quá dài, hãy rút gọn rồi gửi lại")), // chuẩn hoá Unicode về NFC: chữ có dấu gõ kiểu tổ hợp (NFD) vẫn khớp
       }),
     )
     .min(1)

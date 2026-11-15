@@ -4,7 +4,7 @@ import { makeLimiter } from "../middlewares/rateLimit.middlewares";
 import { extensionService } from "../services/extension.service";
 
 // Chỉ người đã đăng nhập mới tải được tiện ích (không còn file zip công khai trên website)
-const limiter = makeLimiter({ windowMs: 60 * 60 * 1000, limit: 30, message: "Bạn tải quá nhiều lần, vui lòng thử lại sau" });
+const limiter = makeLimiter({ windowMs: 60 * 60 * 1000, limit: 30, message: "Bạn đã tải tiện ích quá nhiều lần trong thời gian ngắn." });
 
 const extensionRouter = Router();
 extensionRouter.use(authenticate);

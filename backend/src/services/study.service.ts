@@ -59,7 +59,7 @@ export const studyService = {
   },
 
   async setGoal(userId: number, goalDays: number) {
-    if (!(STUDY_GOAL_CHOICES as readonly number[]).includes(goalDays)) throw new AppError("Mục tiêu không hợp lệ");
+    if (!(STUDY_GOAL_CHOICES as readonly number[]).includes(goalDays)) throw new AppError("Hãy chọn một mục tiêu ôn tập trong danh sách");
     await prisma.user.update({ where: { id: userId }, data: { studyGoalDays: goalDays } });
     return this.stats(userId);
   },

@@ -23,7 +23,7 @@ export function useApi<T>(fetcher: () => Promise<T>, deps: unknown[]) {
       .then((data) => mine === ticket.current && setState({ data, error: null, loading: false }))
       .catch((err: unknown) => {
         if (mine !== ticket.current) return;
-        const message = errorMessage(err, "Đã có lỗi xảy ra");
+        const message = errorMessage(err, "Chưa tải được nội dung. Bạn bấm Thử lại nhé.");
         setState((s) => ({ ...s, error: message, loading: false }));
       });
   }, []);

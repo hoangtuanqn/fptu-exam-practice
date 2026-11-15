@@ -1,4 +1,4 @@
-import { BASE, ApiError, http, tokenStore } from "@/shared/api/client";
+import { BASE, ApiError, toApiError, http, tokenStore } from "@/shared/api/client";
 
 export interface PeDownloadRow {
   id: number;
@@ -32,8 +32,7 @@ export const peApi = {
       throw new ApiError("Không kết nối được máy chủ", 0);
     }
     if (!res.ok) {
-      const json = (await res.json().catch(() => null)) as { message?: string } | null;
-      throw new ApiError(json?.message ?? `Lỗi ${res.status}`, res.status);
+      throw toApiError(res, (await res.json().catch(() => null)) as { message?: string } | null);
     }
     const cd = res.headers.get("content-disposition") ?? "";
     const star = cd.match(/filename\*=UTF-8''([^;]+)/i)?.[1];

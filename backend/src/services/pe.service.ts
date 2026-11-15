@@ -1,4 +1,5 @@
 import { PRO_BENEFITS } from "../constants/plan";
+import { FUO_LINK_INVALID } from "../constants/crawler";
 import { adminNoticeService } from "./admin-notice.service";
 import { planService } from "./plan.service";
 import fs from "node:fs/promises";
@@ -12,7 +13,7 @@ import { AppError } from "../rules/error";
 import { parseThreadId, threadUrl } from "../utils/fuo-url";
 import { sanitizeName, uniqueName } from "../utils/filename";
 import { crawlerSettingService } from "./crawler-setting.service";
-import { createFuoClient, FuoAuthError, FUO_AUTH_MESSAGE, type FuoClient } from "./crawler/fuo-client";
+import { createFuoClient, FuoAuthError, FUO_AUTH_MESSAGE, FUO_UNAVAILABLE_MESSAGE, type FuoClient } from "./crawler/fuo-client";
 import { fuoSessionService, isFuoAuthFailure } from "./crawler/fuo-session.service";
 import { extractTitle } from "./crawler/thread-scraper.service";
 import { walletService } from "./wallet.service";
@@ -113,7 +114,7 @@ async function buildZip(threadId: string): Promise<{ title: string; file: string
     return await run();
   } catch (err) {
     if (isFuoAuthFailure(err) && (await fuoSessionService.login()).ok) return run(); // cookie hết hạn: đăng nhập lại một lần
-    if (isFuoAuthFailure(err)) throw new AppError(FUO_AUTH_MESSAGE, 502);
+    if (isFuoAuthFailure(err)) throw new AppError(FUO_UNAVAILABLE_MESSAGE, 502);
     throw err;
   }
 }
@@ -128,7 +129,7 @@ export const peService = {
 
   async quote(userId: number, url: string) {
     const threadId = parseThreadId(url);
-    if (!threadId) throw new AppError("Link không hợp lệ");
+    if (!threadId) throw new AppError(FUO_LINK_INVALID);
     const free = (PRO_BENEFITS.freePe && (await planService.isPro(userId))) || (await this.hasPaid(userId, threadId));
     return { price: PE_PRICE, fee: free ? 0 : PE_PRICE, free };
   },
@@ -139,7 +140,7 @@ export const peService = {
    */
   async download(userId: number, url: string) {
     const threadId = parseThreadId(url);
-    if (!threadId) throw new AppError("Link không hợp lệ");
+    if (!threadId) throw new AppError(FUO_LINK_INVALID);
 
     const pro = PRO_BENEFITS.freePe && (await planService.isPro(userId));
     const fee = pro || (await this.hasPaid(userId, threadId)) ? 0 : PE_PRICE; // đã trả tiền rồi thì tải lại miễn phí
@@ -154,7 +155,7 @@ export const peService = {
       adminNoticeService.push("pe.done", { title: `Tải đề PE: ${built.title.slice(0, 120)}`, body: fee > 0 ? `${fee.toLocaleString("vi-VN")} credit` : "Miễn phí", userId, link: "/admin/purchases" });
       return { file: built.file, filename: `${sanitizeName(built.title, threadId)}.zip` };
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Lỗi không xác định";
+      const message = err instanceof Error ? (err.message === FUO_UNAVAILABLE_MESSAGE ? FUO_AUTH_MESSAGE : err.message) : "Lỗi không xác định"; // admin cần biết lý do thật
       console.error(`[pe] thread ${threadId} lỗi: ${message}`);
       adminNoticeService.push("pe.failed", { title: `Tải đề PE lỗi: thread ${threadId}`, body: `${message}${fee > 0 ? ` (đã hoàn ${fee} credit)` : ""}`, userId, link: "/admin/purchases" });
       await prisma.$transaction(async (tx) => {

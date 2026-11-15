@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { AlertCircle, CheckCircle2, ClipboardPaste, Link2, Loader2 } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { ApiError } from "@/shared/api/client";
+import { errorMessage } from "@/shared/api/errors";
+import { depositLink } from "@/features/explanation/depositLink";
 import { isPro } from "@/shared/utils/pro";
 import { useToast } from "@/shared/context/ToastContext";
 import { SignUpCta } from "@/features/trial/SignUpCta";
@@ -70,6 +72,7 @@ export function LinkImport({ onImported, subject, compact = false }: Props) {
   const [quoting, setQuoting] = useState(false); // đang hỏi server phí thực tế của lần lấy này
   const [quotedFee, setQuotedFee] = useState<number | null>(null);
   const toast = useToast();
+  const location = useLocation();
   // Khách phải qua captcha mỗi lần lấy đề, ngay trong hộp xác nhận
   const guestCaptcha = !user && !!TURNSTILE_SITE_KEY;
 
@@ -89,7 +92,7 @@ export function LinkImport({ onImported, subject, compact = false }: Props) {
         .catch((err) => {
           if (cancelled) return;
           // 4xx (trừ 429) = backend không chấp nhận link; lỗi mạng/quá tải thì không chặn, để lúc bấm "Lấy đề" báo tiếp
-          if (err instanceof ApiError && err.status >= 400 && err.status < 500 && err.status !== 429) setRemote({ link, status: "error", message: err.message });
+          if (err instanceof ApiError && err.status >= 400 && err.status < 500 && err.status !== 429) setRemote({ link, status: "error", message: errorMessage(err, "Link này chưa dùng được để lấy đề") });
           else setRemote({ link, status: "ok" }); // không kiểm tra được (mạng/quá tải): không chặn, lúc bấm Lấy đề sẽ báo tiếp
         });
     }, 450);
@@ -157,8 +160,9 @@ export function LinkImport({ onImported, subject, compact = false }: Props) {
     } catch (err) {
       // Backend từ chối link (sai nhãn, không tồn tại...): báo lỗi, TUYỆT ĐỐI không gửi lấy đề. Lỗi khác (mạng...): vẫn hỏi xác nhận với mức phí mặc định, không tự trừ tiền.
       if (err instanceof ApiError && err.status >= 400 && err.status < 500 && err.status !== 429) {
-        setRemote({ link, status: "error", message: err.message });
-        toast.error(err.message);
+        const message = errorMessage(err, "Link này chưa dùng được để lấy đề");
+        setRemote({ link, status: "error", message });
+        toast.error(message);
       } else {
         setQuotedFee(fee);
         setConfirming(true);
@@ -350,6 +354,11 @@ export function LinkImport({ onImported, subject, compact = false }: Props) {
       {job.phase === "failed" && !limitReached && (
         <div className="mt-4 space-y-2">
           <FormError message={job.error} />
+          {job.errorStatus === 402 && (
+            <Link to={depositLink(0, location.pathname)} className="mr-4 text-xs font-medium text-brand-700 hover:underline">
+              Nạp thêm credit
+            </Link>
+          )}
           <button
             type="button"
             onClick={job.reset}

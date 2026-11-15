@@ -7,7 +7,8 @@ const USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo";
 const GOOGLE_TIMEOUT_MS = 8_000;
 
 
-const INVALID = "Không xác thực được tài khoản Google, vui lòng thử lại";
+const INVALID = "Google chưa xác nhận được phiên đăng nhập này (có thể đã hết hạn hoặc bị huỷ). Hãy bấm Đăng nhập bằng Google lại; nếu vẫn lỗi, hãy dùng email và mật khẩu.";
+const NO_EMAIL = "Tài khoản Google này chưa cho FEPass xem email đã xác minh. Hãy đăng nhập lại và cho phép quyền xem email, hoặc dùng tài khoản Google khác.";
 
 async function getJson<T>(url: string, init?: RequestInit): Promise<T | null> {
   try {
@@ -25,7 +26,7 @@ async function getJson<T>(url: string, init?: RequestInit): Promise<T | null> {
  */
 async function fetchProfile(accessToken: string): Promise<SocialProfile> {
   const clientId = env.GOOGLE_CLIENT_ID;
-  if (!clientId) throw new AppError("Đăng nhập bằng Google chưa được cấu hình", 503);
+  if (!clientId) throw new AppError("Đăng nhập bằng Google tạm thời chưa dùng được. Hãy đăng nhập bằng email và mật khẩu.", 503);
 
   const info = await getJson<{ aud?: string; azp?: string }>(`${TOKENINFO_URL}?access_token=${encodeURIComponent(accessToken)}`);
   if (!info || (info.aud !== clientId && info.azp !== clientId)) throw new AppError(INVALID, 401);
@@ -34,7 +35,8 @@ async function fetchProfile(accessToken: string): Promise<SocialProfile> {
     headers: { authorization: `Bearer ${accessToken}` },
   });
   const verified = profile?.email_verified === true || profile?.email_verified === "true";
-  if (!profile?.sub || !profile.email || !verified) throw new AppError(INVALID, 401);
+  if (!profile?.sub) throw new AppError(INVALID, 401);
+  if (!profile.email || !verified) throw new AppError(NO_EMAIL, 401);
   return { provider: "google", sub: profile.sub, email: profile.email.toLowerCase(), name: profile.name?.trim() || profile.email.split("@")[0]!, picture: profile.picture };
 }
 

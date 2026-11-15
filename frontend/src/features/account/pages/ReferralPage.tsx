@@ -20,7 +20,7 @@ import { formatCredit, formatDate } from "@/shared/utils/formatters";
 function ClaimCard({ claim, bonus, onDone }: { claim: { status: string; deadline: string | null }; bonus: number; onDone: () => void }) {
   const toast = useToast();
   const { refresh } = useAuth();
-  const { run, loading, error, fieldErrors } = useSubmit();
+  const { run, loading, error, fieldErrors } = useSubmit("Chưa nhập được mã giới thiệu, bạn thử lại nhé", ["code"]);
   const [code, setCode] = useState("");
 
   if (claim.status !== "open") return null;

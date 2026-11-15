@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { errorMessage } from "@/shared/api/errors";
 import { Link } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { examImportApi } from "@/features/exam-import/exam-import.api";
@@ -32,8 +33,8 @@ export function MyExams({ onOpen }: Props) {
     setOpeningId(id);
     try {
       onOpen(await examImportApi.exam(id));
-    } catch {
-      toast.error("Không mở được đề này");
+    } catch (err) {
+      toast.error(errorMessage(err, "Không mở được đề này"));
     } finally {
       setOpeningId(null);
     }

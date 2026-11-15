@@ -9,9 +9,9 @@ import { idParam } from "../rules/requests/admin.request";
 import { courseraCourseBody, courseraCoursesQuery, courseraLookupBody, courseraNoteBody, courseraOrderBody, courseraOrdersQuery, courseraStatusBody } from "../rules/requests/coursera.request";
 import { courseraNoStore } from "../middlewares/coursera.middlewares";
 
-const orderLimiter = makeLimiter({ limit: COURSERA.orderRate, keyGenerator: (req) => `user:${req.user!.id}`, validate: { keyGeneratorIpFallback: false } });
-const credentialLimiter = makeLimiter({ limit: COURSERA.credentialRate, keyGenerator: (req) => `user:${req.user!.id}`, validate: { keyGeneratorIpFallback: false } });
-const lookupLimiter = makeLimiter({ limit: COURSERA.lookupRate, keyGenerator: (req) => `user:${req.user!.id}`, validate: { keyGeneratorIpFallback: false } });
+const orderLimiter = makeLimiter({ limit: COURSERA.orderRate, message: "Bạn đặt đơn Coursera quá nhanh.", keyGenerator: (req) => `user:${req.user!.id}`, validate: { keyGeneratorIpFallback: false } });
+const credentialLimiter = makeLimiter({ limit: COURSERA.credentialRate, message: "Bạn mở thông tin đăng nhập quá nhanh.", keyGenerator: (req) => `user:${req.user!.id}`, validate: { keyGeneratorIpFallback: false } });
+const lookupLimiter = makeLimiter({ limit: COURSERA.lookupRate, message: "Bạn tra cứu khóa học Coursera quá nhanh.", keyGenerator: (req) => `user:${req.user!.id}`, validate: { keyGeneratorIpFallback: false } });
 export const courseraRouter = Router();
 courseraRouter.use(authenticate, courseraNoStore);
 courseraRouter.get("/courses", validate(courseraCoursesQuery, "query"), controller.courses);

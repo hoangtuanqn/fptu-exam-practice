@@ -1,6 +1,6 @@
 import { adminNoticeService } from "./admin-notice.service";
 import { examAttemptRepository } from "../repositories/exam-attempt.repository";
-import { NO_QUESTIONS_MESSAGE } from "../constants/exam";
+import { EXAM_NOT_FOUND, NO_QUESTIONS_MESSAGE } from "../constants/exam";
 import { examRepository } from "../repositories/exam.repository";
 import { AppError } from "../rules/error";
 import type { ListAttemptsQuery, SubmitAttemptBody } from "../rules/requests/attempt.request";
@@ -26,7 +26,7 @@ export const attemptService = {
     if (all.length === 0) throw new AppError(NO_QUESTIONS_MESSAGE);
     const only = body.only && body.only.length > 0 ? new Set(body.only) : null;
     const questions = only ? all.filter((q) => only.has(q.number)) : all;
-    if (questions.length === 0) throw AppError.notFound("Không tìm thấy đề");
+    if (questions.length === 0) throw AppError.notFound(EXAM_NOT_FOUND);
 
     const grade = gradeAttempt(questions, body.answers);
     const attempt = await examAttemptRepository.create({

@@ -1,7 +1,7 @@
 import { useRef, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { ApiError } from "@/shared/api/client";
-import { errorMessage } from "@/shared/api/errors";
+import { duplicatesVisibleField, errorMessage } from "@/shared/api/errors";
 import { Button } from "@/shared/ui/Button";
 import { Card, CardHeader } from "@/shared/ui/Card";
 import { Field, Input, PasswordInput, inputClass } from "@/shared/ui/Input";
@@ -60,7 +60,7 @@ export function OrderForm({ course, onBack, onCreated }: Props) {
       await refresh();
       onCreated(order);
     } catch (err) {
-      setError(errorMessage(err));
+      setError(duplicatesVisibleField(err, ["email", "password", "note"]) ? "" : errorMessage(err, "Chưa gửi được đơn, bạn thử lại nhé"));
       if (err instanceof ApiError) setErrors(err.errors ?? {});
     } finally {
       submitting.current = false;

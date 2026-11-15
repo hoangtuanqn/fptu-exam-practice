@@ -34,7 +34,7 @@ export const marketingService = {
    */
   async unsubscribe(token: string, mode: UnsubscribeMode = "all", topic?: MarketingTopic) {
     const userId = verifyMarketingToken(env.JWT_SECRET, token);
-    if (userId === null) throw new AppError("Liên kết không hợp lệ", 400);
+    if (userId === null) throw new AppError("Liên kết huỷ nhận thư đã hết hạn hoặc bị thiếu ký tự. Bạn có thể tắt thư ngay trong trang Hồ sơ sau khi đăng nhập.", 400);
     if (mode === "pause") await userRepository.pauseMarketing(userId, new Date(Date.now() + MARKETING_PAUSE_DAYS * DAY_MS));
     else if (mode === "topic" && topic) await userRepository.muteMarketingTopic(userId, TOPIC_BITS[topic]);
     else await userRepository.optOutMarketing(userId);

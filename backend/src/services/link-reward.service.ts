@@ -16,6 +16,7 @@ import { linkRewardSettingService, providerConfig } from "./link-reward-setting.
  */
 const hash = (token: string) => crypto.createHash("sha256").update(token).digest("hex");
 const TOKEN_FORMAT = /^[A-Za-z0-9_-]{20,64}$/;
+export const CLAIM_LINK_INVALID = "Liên kết nhận lượt không đúng hoặc bị thiếu ký tự. Hãy mở lại đúng liên kết hiện ra sau khi vượt link xong.";
 
 async function shorten(provider: LinkProvider, apiToken: string, destination: string): Promise<string> {
   const def = LINK_PROVIDERS[provider];
@@ -127,9 +128,9 @@ export const linkRewardService = {
 
   /** Nhận lượt sau khi vượt link xong. Gọi lại với cùng mã (tải lại trang) thì báo đã nhận, không cộng thêm. */
   async claim(userId: number, token: string) {
-    if (!TOKEN_FORMAT.test(token)) throw AppError.notFound("Liên kết nhận lượt không hợp lệ");
+    if (!TOKEN_FORMAT.test(token)) throw AppError.notFound(CLAIM_LINK_INVALID);
     const request = await prisma.linkRewardRequest.findUnique({ where: { tokenHash: hash(token) } });
-    if (!request || request.userId !== userId) throw AppError.notFound("Liên kết nhận lượt không hợp lệ hoặc không thuộc tài khoản này");
+    if (!request || request.userId !== userId) throw AppError.notFound("Liên kết nhận lượt không đúng hoặc được tạo bằng tài khoản khác. Hãy đăng nhập đúng tài khoản đã tạo liên kết, hoặc tạo liên kết mới.");
     if (request.status === "CLAIMED") return { granted: false, already: true, turns: 0, ...(await this.status(userId)) };
 
     const cfg = await linkRewardSettingService.get();

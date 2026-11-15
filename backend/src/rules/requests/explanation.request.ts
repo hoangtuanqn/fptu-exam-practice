@@ -16,7 +16,7 @@ export const unlockBody = z.object({ examId: z.number("Đề không hợp lệ")
 const chatMessage = z
   .object({
     role: z.enum(["user", "assistant"], "Vai trò tin nhắn không hợp lệ"),
-    content: z.string("Tin nhắn phải là văn bản").trim().min(1, "Tin nhắn trống").max(CHAT_ASSISTANT_MAX_CHARS, "Tin nhắn quá dài"),
+    content: z.string("Tin nhắn phải là văn bản").trim().min(1, "Tin nhắn trống").max(CHAT_ASSISTANT_MAX_CHARS, "Tin nhắn quá dài, hãy rút gọn rồi gửi lại"),
   })
   .strict()
   // Giới hạn ngắn chỉ áp cho tin của người học; lời AI trong lịch sử có thể dài hơn

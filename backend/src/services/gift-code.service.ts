@@ -26,7 +26,7 @@ const statusOf = (g: { active: boolean; expiresAt: Date | null; usedCount: numbe
 const prismaCode = (err: unknown) => (err instanceof Prisma.PrismaClientKnownRequestError ? err.code : null);
 
 // Thông báo chung cho mã sai hoặc đã tắt để không lộ mã nào đang tồn tại
-const INVALID = "Mã không hợp lệ hoặc không còn hiệu lực";
+const INVALID = "Mã không đúng hoặc không còn hiệu lực. Kiểm tra lại từng ký tự (chữ O và số 0, chữ I và số 1) rồi thử lại.";
 
 export const giftCodeService = {
   // ----- Admin
@@ -89,8 +89,8 @@ export const giftCodeService = {
       if (!gift) throw new AppError(INVALID);
       if (!(await giftCodeRepository.claimUse(tx, gift.id))) {
         // Mã có thật thì nói rõ lý do
-        if (gift.active && gift.expiresAt && gift.expiresAt <= new Date()) throw new AppError("Mã đã hết hạn");
-        if (gift.active) throw new AppError("Mã đã hết lượt sử dụng");
+        if (gift.active && gift.expiresAt && gift.expiresAt <= new Date()) throw new AppError("Mã này đã hết hạn sử dụng.");
+        if (gift.active) throw new AppError("Mã này đã hết lượt, những người nhập trước đã dùng hết.");
         throw new AppError(INVALID);
       }
       try {

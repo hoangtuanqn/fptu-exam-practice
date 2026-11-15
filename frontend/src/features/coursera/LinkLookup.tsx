@@ -34,7 +34,7 @@ export function LinkLookup({ onSelect }: { onSelect: (course: CourseraCourse) =>
           onSelect(course);
         }
       })
-      .catch((err) => !stale && setError(errorMessage(err)))
+      .catch((err) => !stale && setError(errorMessage(err, "Chưa kiểm tra được link khóa học, bạn thử lại nhé")))
       .finally(() => !stale && setBusy(false));
     return () => {
       stale = true;

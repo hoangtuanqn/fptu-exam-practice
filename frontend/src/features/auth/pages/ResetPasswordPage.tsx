@@ -8,12 +8,13 @@ import { buttonClass, Button } from "@/shared/ui/Button";
 import { FormError } from "@/shared/ui/Feedback";
 import { PasswordInput } from "@/shared/ui/Input";
 import { AuthLayout } from "./AuthLayout";
+import { waitText, withoutWait } from "@/shared/api/errors";
 
 export default function ResetPasswordPage() {
   const token = useSearchParams()[0].get("token") ?? "";
   const navigate = useNavigate();
   const toast = useToast();
-  const { run, loading, error, fieldErrors, setFieldErrors } = useSubmit();
+  const { run, loading, error, fieldErrors, setFieldErrors, retryIn } = useSubmit("Chưa đặt lại được mật khẩu, bạn thử lại nhé", ["password", "confirm"]);
   const [form, setForm] = useState({ password: "", confirm: "" });
   const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
@@ -48,7 +49,7 @@ export default function ResetPasswordPage() {
   return (
     <AuthLayout title="Đặt mật khẩu mới" subtitle="Chọn mật khẩu mới cho tài khoản của bạn.">
       <form onSubmit={onSubmit} className="space-y-4" noValidate>
-        <FormError message={error} />
+        <FormError message={retryIn > 0 ? withoutWait(error) : error} />
         <PasswordInput
           label="Mật khẩu mới"
           autoComplete="new-password"
@@ -65,9 +66,9 @@ export default function ResetPasswordPage() {
           onChange={set("confirm")}
           error={fieldErrors.confirm ?? (mismatch ? "Mật khẩu nhập lại không khớp" : undefined)}
         />
-        <Button variant="primary" type="submit" disabled={loading || !form.password || !form.confirm} className="w-full !py-2.5">
+        <Button variant="primary" type="submit" disabled={loading || retryIn > 0 || !form.password || !form.confirm} className="w-full !py-2.5">
           {loading && <Loader2 size={16} className="animate-spin" />}
-          Đặt lại mật khẩu
+          {retryIn > 0 ? `Thử lại sau ${waitText(retryIn)}` : "Đặt lại mật khẩu"}
         </Button>
       </form>
 

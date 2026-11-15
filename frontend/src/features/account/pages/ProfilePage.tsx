@@ -16,7 +16,7 @@ import { useSubmit } from "@/shared/hooks/useSubmit";
 function InfoForm() {
   const { user, setUser } = useAuth();
   const toast = useToast();
-  const { run, loading, error, fieldErrors } = useSubmit();
+  const { run, loading, error, fieldErrors } = useSubmit("Chưa lưu được hồ sơ, bạn thử lại nhé", ["fullName"]);
   const [fullName, setFullName] = useState(user?.fullName ?? "");
   const unchanged = fullName.trim() === user?.fullName;
 
@@ -45,7 +45,7 @@ function InfoForm() {
 
 function PasswordForm() {
   const toast = useToast();
-  const { run, loading, error, fieldErrors, setFieldErrors } = useSubmit();
+  const { run, loading, error, fieldErrors, setFieldErrors } = useSubmit("Chưa đổi được mật khẩu, bạn thử lại nhé", ["currentPassword", "newPassword", "confirm"]);
   const [form, setForm] = useState({ currentPassword: "", newPassword: "", confirm: "" });
   const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));

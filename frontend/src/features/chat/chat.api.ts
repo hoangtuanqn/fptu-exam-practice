@@ -1,4 +1,4 @@
-import { BASE, ApiError, http, refreshAccessToken, tokenStore } from "@/shared/api/client";
+import { BASE, ApiError, http, refreshAccessToken, toApiError, tokenStore } from "@/shared/api/client";
 import { getGuestId } from "@/shared/api/guest";
 
 export interface ChatMessage {
@@ -13,13 +13,12 @@ interface StreamHandlers {
   captchaToken?: string; // token Turnstile khi máy chủ báo hết một đợt tin nhắn trong ngày
 }
 
-// Người dùng không cần biết mã lỗi: đổi mọi lỗi kỹ thuật thành một câu dễ hiểu và biết phải làm gì
+// Người dùng không cần biết mã lỗi: đổi lỗi kỹ thuật thành một câu dễ hiểu và biết phải làm gì.
+// Lời nhắn tiếng Việt do máy chủ gửi (hỏi quá nhanh, hết lượt, chatbot đang tắt...) thì giữ nguyên, xem errorMessage.
 function friendly(status: number, serverMessage?: string): string {
   if (status === 0) return "Mất kết nối mạng, bạn kiểm tra internet rồi bấm Gửi lại nhé";
-  if (status === 429) return "Bạn gửi hơi nhanh, đợi vài giây rồi bấm Gửi lại nhé";
-  if (status === 401 || status === 403) return "Phiên đăng nhập đã hết hạn, bạn tải lại trang rồi thử lại nhé";
-  if (status === 503 && serverMessage) return serverMessage; // lời nhắn tiếng Việt do máy chủ chủ động gửi (chatbot đang tắt...)
-  return "Cóc Pass đang bận một chút, bạn bấm Gửi lại sau ít giây nhé";
+  if (status === 401) return "Phiên đăng nhập đã hết hạn, bạn tải lại trang rồi thử lại nhé";
+  return serverMessage || "Cóc Pass đang bận một chút, bạn bấm Gửi lại sau ít giây nhé";
 }
 
 // Gửi yêu cầu stream; token hết hạn (401) thì làm mới một lần rồi gửi lại, giống các API khác
@@ -52,8 +51,9 @@ export const chatApi = {
       throw new ApiError(friendly(0), 0);
     }
     if (!res.ok || !res.body) {
-      const json = (await res.json().catch(() => null)) as { message?: string; errors?: Record<string, string> } | null;
-      throw new ApiError(friendly(res.status, json?.message), res.status, json?.errors); // errors.captcha: hết một đợt tin nhắn, cần xác minh
+      const json = (await res.json().catch(() => null)) as { message?: string; errors?: Record<string, string>; code?: string; data?: unknown } | null;
+      // errors.captcha: hết một đợt tin nhắn, cần xác minh
+      throw res.status === 401 ? new ApiError(friendly(401), 401) : toApiError(res, json);
     }
 
     const reader = res.body.getReader();

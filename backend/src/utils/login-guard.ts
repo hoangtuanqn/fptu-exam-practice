@@ -15,6 +15,11 @@ const countOf = (key: string) => {
 
 export const loginGuard = {
   count: countOf,
+  // Còn bao lâu thì bộ đếm hết hạn (tính từ lần sai gần nhất); 0 = không bị đếm
+  retryAfterMs(key: string) {
+    const e = countOf(key) ? fails.get(key) : undefined;
+    return e ? Math.max(0, WINDOW_MS - (Date.now() - e.last)) : 0;
+  },
   fail(key: string) {
     if (fails.size > 5000) for (const k of fails.keys()) countOf(k); // dọn mục hết hạn, tránh phình bộ nhớ
     fails.set(key, { count: countOf(key) + 1, last: Date.now() });

@@ -7,6 +7,7 @@ import type { ImportedExam } from "@/features/exam-import/types";
 import { depositLink } from "@/features/explanation/depositLink";
 import { VerifyEmailNotice } from "@/features/verify-email/VerifyEmailNotice";
 import { ApiError } from "@/shared/api/client";
+import { errorMessage } from "@/shared/api/errors";
 import { Button, buttonClass } from "@/shared/ui/Button";
 import { ChargeSummary } from "@/shared/ui/ChargeSummary";
 import { Modal, ModalActions, ModalTitle } from "@/shared/ui/Modal";
@@ -82,7 +83,7 @@ export function MultiLinkImport({ subject, slots, pickedThreads, onImported }: P
           .quote(raw, subject)
           .then((quote) => alive.current && setQuotes((cur) => ({ ...cur, [raw]: { status: "ok", quote } })))
           .catch((err: unknown) => {
-            const message = err instanceof ApiError && err.status >= 400 && err.status < 500 && err.status !== 429 ? err.message : "Chưa kiểm tra được link này, bạn thử lại sau";
+            const message = err instanceof ApiError && err.status >= 400 && err.status < 500 && err.status !== 429 ? errorMessage(err, "Link này chưa dùng được để lấy đề") : "Chưa kiểm tra được link này, bạn thử lại sau";
             if (alive.current) setQuotes((cur) => ({ ...cur, [raw]: { status: "error", message } }));
           })
           .finally(() => inflight.current.delete(raw));

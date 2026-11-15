@@ -1,14 +1,16 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { Loader2, Sparkles, X } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useFakeProgress } from "@/shared/hooks/useFakeProgress";
 import { useResizableWidth } from "@/shared/hooks/useResizableWidth";
-import { Button } from "@/shared/ui/Button";
+import { Button, buttonClass } from "@/shared/ui/Button";
 import { Markdown } from "@/shared/ui/Markdown";
 import { explanationApi } from "./explanation.api";
 import { ExplainChat } from "./ExplainChat";
 import { ExplainFeedback } from "./ExplainFeedback";
-import { errorMessage } from "@/shared/api/errors";
+import { errorKind, errorMessage } from "@/shared/api/errors";
+import { depositLink } from "./depositLink";
 
 interface Props {
   examId: number;
@@ -43,6 +45,8 @@ export function ExplainPanel({ examId, questionNumber, useFreeTurn, firstTime, o
   const [content, setContent] = useState("");
   const [feedback, setFeedback] = useState<boolean | null>(null); // đánh giá đã gửi trước đó cho lời giải này
   const [error, setError] = useState<string | null>(null);
+  const [needCredit, setNeedCredit] = useState(false); // máy chủ báo thiếu credit (402): mời nạp thay vì thử lại
+  const location = useLocation();
   const alive = useRef(true);
   const started = useRef(false);
   const percent = useFakeProgress(firstTime && phase === "loading", phase === "done");
@@ -74,6 +78,7 @@ export function ExplainPanel({ examId, questionNumber, useFreeTurn, firstTime, o
     } catch (err) {
       if (!alive.current) return;
       setError(errorMessage(err, "Không tải được lời giải thích"));
+      setNeedCredit(errorKind(err) === "payment");
       setPhase("error");
     }
   }
@@ -141,9 +146,15 @@ export function ExplainPanel({ examId, questionNumber, useFreeTurn, firstTime, o
         {phase === "error" && (
           <div className="space-y-3">
             <p className="rounded-lg bg-rose-50 px-3.5 py-2.5 text-sm text-rose-700">{error}</p>
-            <Button variant="primary" onClick={() => void load()}>
-              Thử lại
-            </Button>
+            {needCredit ? (
+              <Link to={depositLink(0, location.pathname)} className={buttonClass({ variant: "primary" })}>
+                Nạp thêm credit
+              </Link>
+            ) : (
+              <Button variant="primary" onClick={() => void load()}>
+                Thử lại
+              </Button>
+            )}
           </div>
         )}
 

@@ -12,7 +12,7 @@ const saveLimiter = makeLimiter({
   limit: 90,
   keyGenerator: (req) => (req.user ? `u${req.user.id}` : `g${req.guestId ?? req.ip}`),
   validate: { keyGeneratorIpFallback: false },
-  message: "Lưu tiến độ quá nhanh, vui lòng thử lại sau giây lát",
+  message: "Tiến độ làm bài đang được lưu quá nhanh, các câu bạn đã chọn vẫn còn trên màn hình.",
 });
 
 const sessionRouter = Router();

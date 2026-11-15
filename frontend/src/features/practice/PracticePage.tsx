@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { errorMessage } from "@/shared/api/errors";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ApiError } from "@/shared/api/client";
 import { historyApi } from "@/features/history/history.api";
@@ -212,9 +213,9 @@ export default function PracticePage({ threadId }: Props) {
         } else toast.success("Đã lưu vào lịch sử làm bài");
         if (quiz.examId !== null) void loadBest(quiz.examId);
       })
-      .catch(() => {
+      .catch((err: unknown) => {
         setTopicSummary(null);
-        toast.error("Không lưu được lịch sử làm bài");
+        toast.error(errorMessage(err, "Không lưu được lịch sử làm bài"));
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quiz.submitted, quiz.answersPending]);
