@@ -22,10 +22,11 @@ export const CHAT_DEFAULTS: ChatConfig = {
   openaiApiKey: "",
   claudeModel: "claude-haiku-5-5",
   chatProvider: "anthropic",
-  chatBaseUrl: "",
-  chatModel: "",
+  // Nguồn ngoài mặc định: chỉ cần nhập khoá API ở trang quản trị; địa chỉ, model và header là giá trị cố định (vẫn ghi đè được qua API cài đặt).
+  chatBaseUrl: "https://api.xingchiapi.com/v1",
+  chatModel: "gpt-6.1-sol",
   chatApiKey: "",
-  chatExtraHeader: "",
+  chatExtraHeader: "x-openai-actor-authorization: local-image-extension",
 };
 
 /** Chatbot có nơi trả lời dùng được chưa: endpoint ngoài cần đủ địa chỉ, model và khoá; Claude dùng cấu hình AI chung. */

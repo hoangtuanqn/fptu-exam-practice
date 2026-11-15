@@ -18,7 +18,7 @@ const parse = (name: keyof ChatConfig, raw: string | undefined) => {
 
 export type ChatConfigInput = Partial<Omit<ChatConfig, "openaiApiKey" | "chatApiKey">> & { openaiApiKey?: string; clearOpenaiKey?: boolean; chatApiKey?: string; clearChatKey?: boolean };
 
-const REQUIRED_FOR_OPENAI = { chatBaseUrl: "Base URL", chatModel: "Model", chatApiKey: "Khóa API" } as const;
+const REQUIRED_FOR_OPENAI = { chatApiKey: "Khóa API" } as const;
 
 const preview = (key: string) => (key ? `••••${key.slice(-4)}` : "");
 
@@ -44,7 +44,7 @@ export const chatSettingService = {
     else if (clearOpenaiKey) entries[keyOf("openaiApiKey")] = "";
     if (chatApiKey) entries[keyOf("chatApiKey")] = chatApiKey;
     else if (clearChatKey) entries[keyOf("chatApiKey")] = "";
-    // Bật endpoint ngoài khi còn thiếu địa chỉ/model/khoá (sau khi gộp với cấu hình đã lưu) thì chatbot sẽ tắt ngầm: chặn ngay. Quay về Claude luôn được.
+    // Bật endpoint ngoài khi còn thiếu khoá API (địa chỉ và model đã có mặc định) (sau khi gộp với cấu hình đã lưu) thì chatbot sẽ tắt ngầm: chặn ngay. Quay về Claude luôn được.
     const current = await this.get();
     const changed = Object.fromEntries(Object.entries(rest).filter(([, v]) => v !== undefined)) as Partial<ChatConfig>;
     const next = { ...current, ...changed, chatApiKey: entries[keyOf("chatApiKey")] ?? current.chatApiKey };

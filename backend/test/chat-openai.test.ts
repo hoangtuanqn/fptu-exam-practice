@@ -120,7 +120,7 @@ describe("chat settings key handling", () => {
     assert.equal(s.hasChatKey, false);
     assert.equal(store["chat.chatApiKey"], "");
   });
-  it("refuses to switch to openai while base URL, model or key would be empty, but always allows anthropic", async () => {
+  it("refuses to switch to openai while the key would be empty (URL, model and header have defaults), but always allows anthropic", async () => {
     await assert.rejects(chatSettingService.update({ clearChatKey: true }), (err: Error & { status?: number; errors?: Record<string, string> }) => {
       assert.equal(err.status, 400);
       assert.match(err.message, /Khóa API trước khi bật nguồn này/);
@@ -129,7 +129,11 @@ describe("chat settings key handling", () => {
     });
     assert.equal(store["chat.chatApiKey"], KEY); // nothing saved
     store = {};
-    await assert.rejects(chatSettingService.update({ chatProvider: "openai", chatModel: "m" }), /Base URL, Khóa API/);
+    await assert.rejects(chatSettingService.update({ chatProvider: "openai", chatModel: "m" }), /Khóa API trước khi bật nguồn này/);
+    store = {};
+    await chatSettingService.update({ chatProvider: "openai", chatApiKey: KEY }); // only the key is needed
+    assert.equal((await chatSettingService.get()).chatModel, CHAT_DEFAULTS.chatModel);
+    store = {};
     await chatSettingService.update({ chatProvider: "openai", chatBaseUrl: OPENAI.chatBaseUrl, chatModel: "m", chatApiKey: KEY });
     assert.equal(store["chat.chatProvider"], "openai");
     await chatSettingService.update({ chatProvider: "anthropic", clearChatKey: true, chatBaseUrl: "" });
