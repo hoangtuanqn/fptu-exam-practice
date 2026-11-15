@@ -14,11 +14,12 @@ import { SocialLogin } from "@/features/auth/social/SocialLogin";
 import { GiftCard } from "@/features/auth/components/GiftCard";
 import { PasswordRules, passwordValid } from "@/features/auth/components/PasswordRules";
 import { AuthLayout } from "./AuthLayout";
+import { waitText, withoutWait } from "@/shared/api/errors";
 
 export default function RegisterPage() {
   const { signIn } = useAuth();
   const toast = useToast();
-  const { run, loading, error, fieldErrors } = useSubmit();
+  const { run, loading, error, fieldErrors, retryIn } = useSubmit("Chưa tạo được tài khoản, bạn thử lại nhé", ["fullName", "email", "password"]);
   const [form, setForm] = useState({ fullName: "", email: "", password: "" });
   const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
@@ -58,7 +59,7 @@ export default function RegisterPage() {
     <AuthLayout title="Tạo tài khoản" subtitle="Điền 3 ô là xong. Dùng email để đăng nhập sau này.">
       <SocialLogin verb="Đăng ký" />
       <form onSubmit={onSubmit} className="space-y-4" noValidate>
-        <FormError message={error} />
+        <FormError message={retryIn > 0 ? withoutWait(error) : error} />
         {invite && invite.bonus > 0 ? (
           <GiftCard eyebrow="Bạn bè mời bạn" amount={invite.bonus} caption="Đăng ký xong là nhận ngay, dùng để lấy đề đầu tiên." />
         ) : (
@@ -92,11 +93,11 @@ export default function RegisterPage() {
         <Button
           variant="primary"
           type="submit"
-          disabled={loading || !form.fullName || !form.email || !passwordValid(form.password)}
+          disabled={loading || retryIn > 0 || !form.fullName || !form.email || !passwordValid(form.password)}
           className="w-full !py-2.5"
         >
           {loading && <Loader2 size={16} className="animate-spin" />}
-          Đăng ký
+          {retryIn > 0 ? `Thử lại sau ${waitText(retryIn)}` : "Đăng ký"}
         </Button>
       </form>
 

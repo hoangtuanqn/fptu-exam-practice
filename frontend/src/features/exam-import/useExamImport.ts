@@ -54,8 +54,8 @@ export function useExamImport() {
       setExam(loaded);
       setPhase("done");
     } catch (err) {
-      if (err instanceof ApiError) fail(errorMessage(err), err.status);
-      else fail(errorMessage(err));
+      const message = errorMessage(err, "Chưa lấy được đề này, bạn thử lại nhé");
+      fail(message, err instanceof ApiError ? err.status : null);
     }
   }, []);
 

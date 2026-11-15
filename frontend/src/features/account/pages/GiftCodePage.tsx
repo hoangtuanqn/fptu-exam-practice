@@ -19,7 +19,7 @@ import { useClampPage } from "@/shared/hooks/useClampPage";
 export default function GiftCodePage() {
   const { refresh } = useAuth();
   const toast = useToast();
-  const { run, loading, error, fieldErrors } = useSubmit();
+  const { run, loading, error, fieldErrors } = useSubmit("Chưa nhập được mã quà tặng, bạn thử lại nhé", ["code"]);
   const [code, setCode] = useState("");
   const [result, setResult] = useState<RedeemResult | null>(null);
 

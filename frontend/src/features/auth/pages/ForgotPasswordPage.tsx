@@ -7,11 +7,12 @@ import { Button } from "@/shared/ui/Button";
 import { FormError } from "@/shared/ui/Feedback";
 import { Input } from "@/shared/ui/Input";
 import { AuthLayout } from "./AuthLayout";
+import { waitText, withoutWait } from "@/shared/api/errors";
 
 const RESEND_SECONDS = 60; // khớp với thời gian chờ tối thiểu giữa hai lần gửi ở server
 
 export default function ForgotPasswordPage() {
-  const { run, loading, error, fieldErrors } = useSubmit();
+  const { run, loading, error, fieldErrors, retryIn } = useSubmit("Chưa gửi được email đặt lại mật khẩu, bạn thử lại nhé", ["email"]);
   const [email, setEmail] = useState("");
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [wait, setWait] = useState(0);
@@ -45,11 +46,11 @@ export default function ForgotPasswordPage() {
           <p className="mt-2 text-xs text-slate-500">Không thấy thư? Kiểm tra cả mục Spam hoặc Quảng cáo.</p>
         </div>
 
-        <FormError message={error} />
+        <FormError message={retryIn > 0 ? withoutWait(error) : error} />
 
-        <Button className="mt-4 w-full" disabled={loading || wait > 0} onClick={() => void send()}>
+        <Button className="mt-4 w-full" disabled={loading || wait > 0 || retryIn > 0} onClick={() => void send()}>
           {loading && <Loader2 size={16} className="animate-spin" />}
-          {wait > 0 ? `Gửi lại sau ${wait}s` : "Gửi lại email"}
+          {retryIn > 0 ? `Thử lại sau ${waitText(retryIn)}` : wait > 0 ? `Gửi lại sau ${wait}s` : "Gửi lại email"}
         </Button>
 
         <p className="mt-6 text-center text-sm text-slate-500">
@@ -68,7 +69,7 @@ export default function ForgotPasswordPage() {
   return (
     <AuthLayout title="Quên mật khẩu?" subtitle="Nhập email đã đăng ký, chúng mình sẽ gửi liên kết để bạn đặt lại mật khẩu.">
       <form onSubmit={onSubmit} className="space-y-4" noValidate>
-        <FormError message={error} />
+        <FormError message={retryIn > 0 ? withoutWait(error) : error} />
         <Input
           label="Email"
           type="email"
@@ -79,9 +80,9 @@ export default function ForgotPasswordPage() {
           error={fieldErrors.email}
           placeholder="ban@example.com"
         />
-        <Button variant="primary" type="submit" disabled={loading || !email.trim()} className="w-full !py-2.5">
+        <Button variant="primary" type="submit" disabled={loading || retryIn > 0 || !email.trim()} className="w-full !py-2.5">
           {loading && <Loader2 size={16} className="animate-spin" />}
-          Gửi liên kết đặt lại
+          {retryIn > 0 ? `Thử lại sau ${waitText(retryIn)}` : "Gửi liên kết đặt lại"}
         </Button>
       </form>
 

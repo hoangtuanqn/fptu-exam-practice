@@ -15,7 +15,7 @@ import { Input, PasswordInput } from "@/shared/ui/Input";
 export function EmailSection() {
   const { user } = useAuth();
   const toast = useToast();
-  const { run, loading, error, fieldErrors } = useSubmit();
+  const { run, loading, error, fieldErrors } = useSubmit("Chưa đổi được email, bạn thử lại nhé", ["email", "password"]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [sentTo, setSentTo] = useState<string | null>(null);

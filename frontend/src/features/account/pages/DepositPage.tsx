@@ -37,7 +37,7 @@ export default function DepositPage() {
   const page = toPage(url.page);
   const setPage = (p: number) => setUrl({ page: String(p) });
   const [digits, setDigits] = useState(""); // chỉ giữ chữ số, hiển thị có dấu chấm ngăn cách
-  const { run, loading, error, fieldErrors } = useSubmit();
+  const { run, loading, error, fieldErrors } = useSubmit("Chưa tạo được lệnh nạp, bạn thử lại nhé", ["amount"]);
 
   // Người dùng được dẫn sang từ một hộp thoại thiếu credit: biết số còn thiếu và trang để quay lại làm bài (nhớ qua các bước nạp)
   const [search] = useSearchParams();

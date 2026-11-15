@@ -10,11 +10,12 @@ import { useSubmit } from "@/shared/hooks/useSubmit";
 import { CaptchaDialog } from "@/shared/ui/CaptchaDialog";
 import { TURNSTILE_SITE_KEY } from "@/shared/ui/Turnstile";
 import { SocialLogin } from "@/features/auth/social/SocialLogin";
+import { waitText, withoutWait } from "@/shared/api/errors";
 import { AuthLayout } from "./AuthLayout";
 
 export default function LoginPage() {
   const { signIn } = useAuth();
-  const { run, loading, error, fieldErrors } = useSubmit();
+  const { run, loading, error, fieldErrors, retryIn } = useSubmit("Không đăng nhập được, bạn thử lại nhé", ["email", "password"]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   // Máy chủ đòi captcha sau vài lần đăng nhập sai (lỗi có trường "captcha", nội dung vẫn là "sai email/mật khẩu"):
@@ -29,6 +30,7 @@ export default function LoginPage() {
   const login = (captchaToken?: string) => void run(async () => signIn(await authApi.login({ email, password, captchaToken })));
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
+    if (retryIn > 0) return;
     if (needCaptcha && TURNSTILE_SITE_KEY) setAsking(true);
     else login();
   };
@@ -37,7 +39,8 @@ export default function LoginPage() {
     <AuthLayout title="Đăng nhập" subtitle="Chào mừng quay lại. Nhập thông tin để tiếp tục.">
       <SocialLogin />
       <form onSubmit={onSubmit} className="space-y-4" noValidate>
-        <FormError message={error ?? fieldErrors.captcha ?? null} />
+        {/* Đang đếm ngược trên nút: bỏ mốc chờ cố định trong câu để khỏi lệch nhau */}
+        <FormError message={retryIn > 0 ? withoutWait(error) : (error ?? fieldErrors.captcha ?? null)} />
         <Input
           label="Email"
           type="email"
@@ -62,9 +65,9 @@ export default function LoginPage() {
             </Link>
           </div>
         </div>
-        <Button variant="primary" type="submit" disabled={loading || !email || !password} className="w-full !py-2.5">
+        <Button variant="primary" type="submit" disabled={loading || retryIn > 0 || !email || !password} className="w-full !py-2.5">
           {loading && <Loader2 size={16} className="animate-spin" />}
-          Đăng nhập
+          {retryIn > 0 ? `Thử lại sau ${waitText(retryIn)}` : "Đăng nhập"}
         </Button>
       </form>
 

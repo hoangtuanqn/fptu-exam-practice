@@ -57,7 +57,7 @@ export function useGithubLogin(onCode: (code: string) => void | Promise<void>, o
       if (!expected || result.state !== expected) return; // không phải lượt đăng nhập do trang này mở
       if (!result.code) {
         setBusy(false);
-        if (result.error && result.error !== "access_denied") handlers.current.onError("Không đăng nhập được bằng GitHub, vui lòng thử lại");
+        if (result.error && result.error !== "access_denied") handlers.current.onError("GitHub chưa xác nhận được tài khoản của bạn. Bạn thử lại, hoặc đăng nhập bằng email");
         return;
       }
       void Promise.resolve(handlers.current.onCode(result.code)).finally(() => setBusy(false));

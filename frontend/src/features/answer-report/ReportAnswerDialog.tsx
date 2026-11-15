@@ -22,7 +22,7 @@ interface Props {
 // Báo cáo đáp án sai: chọn đáp án đúng theo bạn và nêu lý do. Được admin xác nhận thì nhận credit.
 export function ReportAnswerDialog({ examId, questionNumber, currentAnswer, onClose, onSent }: Props) {
   const toast = useToast();
-  const { run, loading, error, fieldErrors } = useSubmit();
+  const { run, loading, error, fieldErrors } = useSubmit("Chưa gửi được báo lỗi đáp án, bạn thử lại nhé", ["proposedAnswer", "reason"]);
   const [picked, setPicked] = useState<string[]>([]);
   const [reason, setReason] = useState("");
 

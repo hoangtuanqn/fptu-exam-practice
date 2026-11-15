@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { errorMessage } from "@/shared/api/errors";
 import { gradeApi, type ExtensionGrades } from "./grade.api";
 
 // Cầu nối với tiện ích Chrome FePass (chrome-extension/site.js):
@@ -95,7 +96,7 @@ export function useGradeBridge(enabled: boolean | null) {
       gradeBridge.set({ error: null });
       uploadedListeners.forEach((l) => l());
     } catch (e) {
-      gradeBridge.set({ error: e instanceof Error ? e.message : "Chưa gửi được điểm lên tài khoản" });
+      gradeBridge.set({ error: errorMessage(e, "Chưa gửi được điểm lên tài khoản") });
     } finally {
       uploading = 0;
     }

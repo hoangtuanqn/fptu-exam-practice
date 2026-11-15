@@ -74,7 +74,7 @@ export function useGoogleLogin(onToken: (accessToken: string) => void | Promise<
           callback: (res) => {
             if (!res.access_token) {
               setBusy(false);
-              if (res.error && res.error !== "access_denied") handlers.current.onError("Không đăng nhập được bằng Google, vui lòng thử lại");
+              if (res.error && res.error !== "access_denied") handlers.current.onError("Google chưa xác nhận được tài khoản của bạn. Bạn thử lại, hoặc đăng nhập bằng email");
               return;
             }
             void Promise.resolve(handlers.current.onToken(res.access_token)).finally(() => setBusy(false));

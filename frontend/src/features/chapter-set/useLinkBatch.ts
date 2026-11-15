@@ -56,7 +56,7 @@ export function useLinkBatch(subject: string, onImported: (exam: ImportedExam) =
           imported.current(exam);
         } catch (err) {
           if (!alive.current) break;
-          patch(i, { status: "failed", stage: null, error: errorMessage(err) });
+          patch(i, { status: "failed", stage: null, error: errorMessage(err, "Chưa lấy được đề này, bạn thử lại nhé") });
         }
         each.current?.(); // cập nhật số dư sau mỗi đề
       }

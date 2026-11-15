@@ -35,7 +35,7 @@ type UploadErrors = { subject?: string; file?: string; form?: string };
 
 // Không để useSubmit xử lý lỗi: nó đẩy mọi `errors` thành lỗi theo trường và bỏ mất câu báo của máy chủ
 function uploadErrors(err: unknown): UploadErrors {
-  if (!(err instanceof ApiError)) return { form: errorMessage(err) };
+  if (!(err instanceof ApiError)) return { form: errorMessage(err, "Chưa tải lên được tài liệu, bạn thử lại nhé") };
   if (err.status === 413 || /^Lỗi 413\b/.test(err.message)) return { file: TOO_LARGE };
   if (err.status === 400 || err.status === 422) {
     const field = (k: string) => {
@@ -47,7 +47,7 @@ function uploadErrors(err: unknown): UploadErrors {
   }
   const text = humanize(err.message ?? "");
   if (SERVER_TEXT.includes(err.status) && text && !RAW_STATUS.test(text)) return { form: text };
-  return { form: errorMessage(err) };
+  return { form: errorMessage(err, "Chưa tải lên được tài liệu, bạn thử lại nhé") };
 }
 
 function QuotaBar({ quota }: { quota: MaterialQuota }) {

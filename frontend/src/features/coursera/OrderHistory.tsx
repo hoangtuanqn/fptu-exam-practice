@@ -80,7 +80,7 @@ export function OrderHistory({ revision = 0, admin = false }: { revision?: numbe
       await refresh();
       query.reload();
     } catch (err) {
-      setError(errorMessage(err));
+      setError(errorMessage(err, "Chưa hủy được đơn, bạn thử lại nhé"));
     } finally {
       setBusy(false);
     }
