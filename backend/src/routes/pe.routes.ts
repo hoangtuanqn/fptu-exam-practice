@@ -6,7 +6,7 @@ import { validate } from "../middlewares/validate.middlewares";
 import { isProUser } from "../utils/pro";
 import { peDownloadBody } from "../rules/requests/pe.request";
 
-const limiter = makeLimiter({ windowMs: 60 * 60 * 1000, limit: 20, skip: (req) => isProUser(req.user), message: "Bạn tải quá nhiều lần, vui lòng thử lại sau" });
+const limiter = makeLimiter({ windowMs: 60 * 60 * 1000, limit: 20, skip: (req) => isProUser(req.user), message: "Bạn đã tải đề PE quá nhiều lần trong thời gian ngắn." });
 
 const peRouter = Router();
 peRouter.get("/price", peController.price);

@@ -37,7 +37,7 @@ const toPayment = (config: SepayConfig, order: Pick<DepositOrder, "code" | "amou
 
 const requireConfigured = async () => {
   const config = await settingService.getSepay();
-  if (!config.accountNumber || !config.bankCode) throw new AppError("Chức năng nạp tiền chưa được cấu hình");
+  if (!config.accountNumber || !config.bankCode) throw new AppError("Nạp tiền đang tạm dừng, số dư của bạn không bị ảnh hưởng. Vui lòng quay lại sau hoặc liên hệ hỗ trợ.");
   return config;
 };
 
@@ -65,7 +65,7 @@ export const depositService = {
     const recent = await depositRepository.findRecentPending(userId, amount, new Date(Date.now() - 2 * 60_000));
     if (recent) return { order: recent, payment: toPayment(config, recent) };
     if ((await depositRepository.countPending(userId)) >= MAX_PENDING_PER_USER) {
-      throw new AppError("Bạn đang có quá nhiều lệnh nạp chưa thanh toán, vui lòng hoàn tất hoặc chờ hết hạn");
+      throw new AppError("Bạn đang có nhiều lệnh nạp chưa thanh toán. Hãy chuyển khoản cho một lệnh đang chờ (xem ở trang Nạp credit), hoặc chờ lệnh cũ hết hạn rồi tạo lệnh mới.");
     }
 
     const expiresAt = new Date(Date.now() + config.orderExpireMinutes * 60_000);

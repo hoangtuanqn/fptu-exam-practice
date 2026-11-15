@@ -171,7 +171,7 @@ ${facts}
     const { chatProvider } = config;
     const { maxInputChars } = CHAT_LIMITS[chatProvider];
     if (body.messages[body.messages.length - 1]!.content.length > maxInputChars) throw new AppError(`Câu hỏi tối đa ${maxInputChars} ký tự`, HTTP_STATUS.BAD_REQUEST);
-    if (body.messages.some((m) => m.content.length > maxInputChars * 4)) throw new AppError("Tin nhắn quá dài", HTTP_STATUS.BAD_REQUEST);
+    if (body.messages.some((m) => m.content.length > maxInputChars * 4)) throw new AppError("Tin nhắn quá dài, hãy rút gọn rồi gửi lại.", HTTP_STATUS.BAD_REQUEST);
 
     // Giới hạn theo ngày (lời chào ở trên miễn phí): hết một đợt tin thì cần captcha
     await chatQuotaService.check(owner, body.captchaToken, ip, chatProvider);

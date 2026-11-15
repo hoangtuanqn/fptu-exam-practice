@@ -59,7 +59,7 @@ export const socialAuthService = {
     const existing = bySub ?? byEmail;
 
     if (existing) {
-      if (existing.status === "BANNED") throw AppError.forbidden("Tài khoản đã bị khoá");
+      if (existing.status === "BANNED") throw AppError.banned();
       if (byEmail) {
         await userRepository.linkSocial(byEmail.id, profile.provider, profile.sub, byEmail.emailVerifiedAt ?? new Date());
       }

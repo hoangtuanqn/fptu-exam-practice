@@ -12,13 +12,13 @@ import { idParam, importExamBody } from "../rules/requests/crawl.request";
 // thành viên 10 lượt/giờ; khách 5 lượt/ngày (chặn việc xoá dữ liệu trình duyệt để đổi ID khách,
 // còn giới hạn 1 lượt/ngày chính xác theo ID khách nằm ở crawl-job.service)
 const limiter = (windowMs: number, limit: number, skip: (user: unknown) => boolean, who: string) =>
-  makeLimiter({ windowMs, limit, skip: (req) => skip(req.user), message: `${who} nhập đề quá nhiều lần, vui lòng thử lại sau` });
+  makeLimiter({ windowMs, limit, skip: (req) => skip(req.user), message: `${who} đã lấy đề quá nhiều lần trong thời gian ngắn.` });
 // Thành viên Pro không bị giới hạn lượt; thành viên thường 10 lượt/giờ
 const memberLimiter = limiter(60 * 60 * 1000, 10, (user) => !user || isProUser(user), "Bạn");
-const guestLimiter = limiter(24 * 60 * 60 * 1000, 5, (user) => !!user, "Khách");
+const guestLimiter = limiter(24 * 60 * 60 * 1000, 5, (user) => !!user, "Mạng bạn đang dùng");
 
 // Giao diện gọi /quote để kiểm tra link ngay khi người dùng gõ/dán (đã gộp bằng debounce), nên cho nhiều hơn lượt nhập đề
-const quoteLimiter = makeLimiter({ limit: 240, message: "Bạn kiểm tra link quá nhanh, vui lòng thử lại sau ít giây" });
+const quoteLimiter = makeLimiter({ limit: 240, message: "Bạn kiểm tra link đề quá nhanh." });
 
 // Khách (chưa đăng nhập) phải qua captcha trước khi lấy đề; thành viên không cần
 const guestCaptcha: RequestHandler = (req, _res, next) => {

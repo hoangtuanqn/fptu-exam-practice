@@ -10,7 +10,7 @@ export const reviewQueueQuery = z.object({
 export const reviewListQuery = paginationQuery.extend({ status: z.enum(["active", "mastered"]).default("active") });
 export const reviewAnswerBody = z.object({ chosen: z.array(z.string().regex(/^[A-Z]$/)).max(8) });
 export const studyGoalBody = z.object({
-  days: z.number().int().refine((d) => (STUDY_GOAL_CHOICES as readonly number[]).includes(d), "Mục tiêu không hợp lệ"),
+  days: z.number().int().refine((d) => (STUDY_GOAL_CHOICES as readonly number[]).includes(d), "Hãy chọn một mục tiêu ôn tập trong danh sách"),
 });
 
 export type ReviewQueueQuery = z.infer<typeof reviewQueueQuery>;

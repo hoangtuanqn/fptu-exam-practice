@@ -6,7 +6,7 @@ import { validate } from "../middlewares/validate.middlewares";
 import { chatBody } from "../rules/requests/chat.request";
 
 // Chặn dồn dập (ngoài giới hạn số câu mỗi ngày trong service): 12 câu / phút / IP
-const askLimiter = makeLimiter({ limit: 12, message: "Bạn hỏi quá nhanh, vui lòng chờ giây lát" });
+const askLimiter = makeLimiter({ limit: 12, message: "Bạn đang gửi câu hỏi cho Cóc Pass quá nhanh." });
 
 const chatRouter = Router();
 chatRouter.use(identify); // thành viên hoặc khách đều hỏi được

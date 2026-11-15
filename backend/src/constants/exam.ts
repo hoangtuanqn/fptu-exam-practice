@@ -11,4 +11,6 @@ export const EXAM_VIOLATIONS_MAX = 200;
 export const EXAM_VIOLATION_MAX_SEC = 24 * 3600;
 
 // Đề chỉ có tệp đính kèm (0 câu): không làm bài/giải được
+// Đề không có hoặc không thuộc kho của người dùng (không phân biệt để không lộ đề của người khác)
+export const EXAM_NOT_FOUND = "Không tìm thấy đề này. Có thể đề đã bị xoá hoặc chưa có trong kho của bạn; hãy mở lại từ Kho đề hoặc lấy đề bằng link.";
 export const NO_QUESTIONS_MESSAGE = "Đề này chỉ có tệp đính kèm, không có câu hỏi để làm bài.";

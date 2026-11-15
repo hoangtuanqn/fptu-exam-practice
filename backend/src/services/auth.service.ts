@@ -5,7 +5,7 @@ import { passwordResetRepository } from "../repositories/password-reset.reposito
 import { refreshTokenRepository } from "../repositories/refresh-token.repository";
 import { userRepository } from "../repositories/user.repository";
 import { AppError } from "../rules/error";
-import type { ForgotPasswordBody, LoginBody, RegisterBody, ResetPasswordBody } from "../rules/requests/auth.request";
+import { INVALID_RESET, type ForgotPasswordBody, type LoginBody, type RegisterBody, type ResetPasswordBody } from "../rules/requests/auth.request";
 import { signToken } from "../utils/jwt";
 import { comparePassword, hashPassword } from "../utils/password";
 import { accountSettingService } from "./account-setting.service";
@@ -16,9 +16,11 @@ import { adminNoticeService } from "./admin-notice.service";
 import { notificationService } from "./notification.service";
 import { captchaService } from "./captcha.service";
 import { CAPTCHA_AFTER, LOCK_AFTER, loginGuard } from "../utils/login-guard";
+import { waitText } from "../utils/format";
 
-const INVALID_LOGIN = "Email hoặc mật khẩu không đúng";
-const INVALID_RESET = "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn";
+// Không nói email có tồn tại hay không (chống dò email), nhưng luôn chỉ cách gỡ
+export const INVALID_LOGIN =
+  "Email hoặc mật khẩu không đúng. Kiểm tra lại, hoặc bấm Quên mật khẩu để đặt lại. Nếu bạn từng đăng nhập bằng Google hoặc GitHub, hãy dùng lại nút đó.";
 const RESET_COOLDOWN_MS = 60_000; // tối thiểu 60 giây giữa hai lần gửi thư cho cùng một tài khoản
 
 // Chỉ lưu băm của token: lộ DB cũng không dùng được để đặt lại mật khẩu
@@ -27,7 +29,8 @@ const hashToken = (token: string) => createHash("sha256").update(token).digest("
 export const authService = {
   async register({ email, fullName, password, referralCode }: RegisterBody) {
     if (await userRepository.existsByEmail(email)) {
-      throw AppError.conflict("Email đã được sử dụng", { email: "Email đã được sử dụng" });
+      const msg = "Email này đã có tài khoản. Hãy đăng nhập, hoặc bấm Quên mật khẩu nếu bạn không nhớ mật khẩu.";
+      throw AppError.conflict(msg, { email: msg });
     }
     const hashed = await hashPassword(password);
     const code = await referralService.uniqueCode(); // mã giới thiệu của chính người mới
@@ -53,7 +56,17 @@ export const authService = {
   async login({ email, password, captchaToken }: LoginBody, ip: string) {
     const key = `${ip}|${email}`;
     const failed = loginGuard.count(key);
-    if (failed >= LOCK_AFTER) throw new AppError("Bạn đã nhập sai quá nhiều lần, vui lòng thử lại sau 15 phút", 429);
+    if (failed >= LOCK_AFTER) {
+      const waitMs = loginGuard.retryAfterMs(key);
+      const wait = waitText(waitMs);
+      throw new AppError(
+        `Đăng nhập bằng email này đang tạm khoá vì nhập sai mật khẩu nhiều lần. Vui lòng thử lại sau ${wait}; nếu không nhớ mật khẩu, hãy dùng Quên mật khẩu trong lúc chờ.`,
+        429,
+        undefined,
+        "LOGIN_LOCKED",
+        { retryAfter: Math.max(1, Math.ceil(waitMs / 1000)) },
+      );
+    }
     if (failed >= CAPTCHA_AFTER) await captchaService.assert(captchaToken, ip);
 
     const found = await userRepository.findByEmailWithPassword(email);
@@ -61,10 +74,10 @@ export const authService = {
     if (!found || !(await comparePassword(password, found.password))) {
       loginGuard.fail(key);
       const needCaptcha = failed + 1 >= CAPTCHA_AFTER;
-      throw new AppError(INVALID_LOGIN, 401, needCaptcha ? { captcha: INVALID_LOGIN } : undefined);
+      throw new AppError(INVALID_LOGIN, 401, needCaptcha ? { captcha: INVALID_LOGIN } : undefined, "INVALID_CREDENTIALS");
     }
     loginGuard.clear(key);
-    if (found.status === "BANNED") throw AppError.forbidden("Tài khoản đã bị khoá");
+    if (found.status === "BANNED") throw AppError.banned();
 
     const user = await userRepository.findById(found.id);
     return { token: signToken(found.id), user };

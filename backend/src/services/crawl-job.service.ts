@@ -13,7 +13,7 @@ import { isMember, type Actor } from "../utils/actor";
 import { parseThreadId } from "../utils/fuo-url";
 import { subjectCodeFromTitle } from "../utils/subject-code";
 import { startOfVnDay } from "../utils/time";
-import { EXAM_REFRESH_RETRY_HOURS, EXAM_STALE_AFTER_DAYS } from "../constants/crawler";
+import { EXAM_REFRESH_RETRY_HOURS, EXAM_STALE_AFTER_DAYS, FUO_LINK_INVALID } from "../constants/crawler";
 import { crawlerSettingService } from "./crawler-setting.service";
 import { threadPreflight } from "./crawler/thread-preflight.service";
 import { toJobDto } from "./crawl-job.dto";
@@ -74,7 +74,7 @@ export const crawlJobService = {
   async quote(actor: Actor, { url, subject }: ImportExamBody) {
     const { owner } = actor;
     const threadId = parseThreadId(url);
-    if (!threadId) throw new AppError("Link không hợp lệ");
+    if (!threadId) throw new AppError(FUO_LINK_INVALID);
     const price = isMember(owner) ? (await crawlerSettingService.get()).fetchPrice : 0;
     const active = await crawlJobRepository.findActive(threadId, owner);
     const found = await examRepository.findByThreadId(threadId);
@@ -98,7 +98,7 @@ export const crawlJobService = {
   async submit(actor: Actor, { url, subject }: ImportExamBody) {
     const { owner } = actor;
     const threadId = parseThreadId(url);
-    if (!threadId) throw new AppError("Link không hợp lệ"); // đã được validate, giữ để thu hẹp kiểu
+    if (!threadId) throw new AppError(FUO_LINK_INVALID); // đã được validate, giữ để thu hẹp kiểu
 
     const active = await crawlJobRepository.findActive(threadId, owner);
     if (active) return { existed: false as const, job: toJobDto(active), charged: 0 };

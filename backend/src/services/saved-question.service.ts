@@ -1,4 +1,4 @@
-import { USABLE_ANSWER_SOURCES } from "../constants/exam";
+import { EXAM_NOT_FOUND, USABLE_ANSWER_SOURCES } from "../constants/exam";
 import { SAVED_QUESTIONS_MAX } from "../constants/saved-question";
 import { savedQuestionRepository } from "../repositories/saved-question.repository";
 import { userExamRepository } from "../repositories/user-exam.repository";
@@ -15,7 +15,7 @@ export const savedQuestionService = {
   /** Lưu một câu của đề trong kho của người dùng; lưu lại câu đã lưu không lỗi. `max` truyền vào được để test. */
   async save(userId: number, examId: number, questionNumber: number, max: number = SAVED_QUESTIONS_MAX) {
     // Đề ngoài kho của mình: 404 như mọi API đề khác (không lộ đề có tồn tại hay không)
-    if (!(await userExamRepository.has({ userId }, examId))) throw AppError.notFound("Không tìm thấy đề");
+    if (!(await userExamRepository.has({ userId }, examId))) throw AppError.notFound(EXAM_NOT_FOUND);
     if (!(await savedQuestionRepository.questionExists(examId, questionNumber))) throw AppError.notFound("Không tìm thấy câu hỏi");
     if (await savedQuestionRepository.isSaved(userId, examId, questionNumber)) return { saved: true };
     // shortcut: đếm rồi mới thêm nên hai yêu cầu song song có thể vượt trần vài câu; chỉ là chống lạm dụng nên chấp nhận

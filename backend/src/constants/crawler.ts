@@ -29,6 +29,8 @@ export const CRAWLER_DEFAULTS: CrawlerConfig = {
 export const CRAWLER_KEY_PREFIX = "crawler.";
 
 export const FUO_HOST = "fuoverflow.com";
+// Link đề sai dạng: chỉ rõ dạng đúng để người dùng tự sửa
+export const FUO_LINK_INVALID = "Link chưa đúng dạng link bài viết FuOverflow. Hãy mở bài đề trên FuOverflow rồi sao chép link trên thanh địa chỉ, ví dụ: https://fuoverflow.com/threads/ten-de.1234/";
 
 // Đáp án tạm cho mọi câu cho tới khi có logic xác định đáp án đúng từ bình luận
 

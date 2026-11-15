@@ -29,7 +29,7 @@ export function createMaterialRouter({ authenticate, controller }: MaterialRoute
     windowMs: 60 * 60 * 1000,
     limit: MATERIAL_UPLOADS_PER_HOUR,
     skipFailedRequests: true,
-    message: "Bạn đã tải lên nhiều tài liệu trong thời gian ngắn, vui lòng thử lại sau",
+    message: "Bạn đã tải lên nhiều tài liệu trong thời gian ngắn.",
     ...byUser,
   });
 

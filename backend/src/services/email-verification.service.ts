@@ -8,10 +8,12 @@ import { emailVerificationRepository } from "../repositories/email-verification.
 import { userRepository } from "../repositories/user.repository";
 import { AppError } from "../rules/error";
 import type { ChangeEmailBody } from "../rules/requests/user.request";
+import { INVALID_VERIFY } from "../rules/requests/auth.request";
+import { waitText } from "../utils/format";
 import { comparePassword } from "../utils/password";
 import { notificationService } from "./notification.service";
 
-const INVALID = "Liên kết xác minh không hợp lệ hoặc đã hết hạn";
+const INVALID = INVALID_VERIFY;
 
 // Chỉ lưu băm của token: lộ DB cũng không dùng được để xác minh
 const hashToken = (token: string) => createHash("sha256").update(token).digest("hex");
@@ -26,7 +28,7 @@ export const emailVerificationService = {
       const latest = await emailVerificationRepository.latestOf(userId);
       const wait = latest ? EMAIL_VERIFICATION_COOLDOWN_MS - (Date.now() - latest.createdAt.getTime()) : 0;
       if (wait > 0) {
-        throw new AppError(`Vui lòng đợi ${Math.ceil(wait / 1000)} giây rồi gửi lại`, HTTP_STATUS.TOO_MANY_REQUESTS);
+        throw new AppError(`Thư xác minh vừa được gửi. Hãy kiểm tra hộp thư (cả mục Spam), hoặc đợi ${waitText(wait)} rồi gửi lại.`, HTTP_STATUS.TOO_MANY_REQUESTS, undefined, undefined, { retryAfter: Math.ceil(wait / 1000) });
       }
     }
 
@@ -80,7 +82,7 @@ export const emailVerificationService = {
     if (!before) throw new AppError(INVALID);
     const changing = record.email !== before.email;
     if (changing && (await userRepository.existsByEmail(record.email))) {
-      throw AppError.conflict("Email này vừa được tài khoản khác sử dụng");
+      throw AppError.conflict("Email này vừa được một tài khoản khác sử dụng nên chưa đổi được. Hãy đổi sang email khác ở trang Hồ sơ.");
     }
 
     await prisma.$transaction(async (tx) => {

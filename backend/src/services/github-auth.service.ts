@@ -5,7 +5,7 @@ import { socialAuthService, type SocialProfile } from "./social-auth.service";
 const TOKEN_URL = "https://github.com/login/oauth/access_token";
 const API = "https://api.github.com";
 const TIMEOUT_MS = 8_000;
-const INVALID = "Không xác thực được tài khoản GitHub, vui lòng thử lại";
+const INVALID = "GitHub chưa xác nhận được phiên đăng nhập này (có thể đã hết hạn hoặc bị huỷ). Hãy bấm Đăng nhập bằng GitHub lại; nếu vẫn lỗi, hãy dùng email và mật khẩu.";
 
 /** Địa chỉ GitHub gọi lại sau khi người dùng đồng ý: một trang của giao diện web (phải khai báo y hệt ở GitHub OAuth App). */
 const redirectUri = () => `${env.CLIENT_URL.replace(/\/+$/, "")}/auth/github/callback`;
@@ -24,7 +24,7 @@ const apiHeaders = (token: string) => ({ authorization: `Bearer ${token}`, accep
 /** Đổi `code` (dùng một lần, do GitHub cấp cho ĐÚNG ứng dụng này) lấy access token, rồi đọc hồ sơ + email đã xác minh. */
 async function fetchProfile(code: string): Promise<SocialProfile> {
   const { GITHUB_CLIENT_ID: clientId, GITHUB_CLIENT_SECRET: secret } = env;
-  if (!clientId || !secret) throw new AppError("Đăng nhập bằng GitHub chưa được cấu hình", 503);
+  if (!clientId || !secret) throw new AppError("Đăng nhập bằng GitHub tạm thời chưa dùng được. Hãy đăng nhập bằng email và mật khẩu.", 503);
 
   const tok = await getJson<{ access_token?: string }>(TOKEN_URL, {
     method: "POST",
@@ -39,7 +39,7 @@ async function fetchProfile(code: string): Promise<SocialProfile> {
   ]);
   const email = (emails?.find((e) => e.primary && e.verified) ?? emails?.find((e) => e.verified))?.email;
   if (!user?.id || !user.login) throw new AppError(INVALID, 401);
-  if (!email) throw new AppError("Tài khoản GitHub chưa có email đã xác minh, hãy xác minh email trên GitHub rồi thử lại", 401);
+  if (!email) throw new AppError("Tài khoản GitHub này chưa có email đã xác minh (hoặc chưa cho FEPass xem email). Hãy xác minh email trong cài đặt GitHub rồi đăng nhập lại.", 401);
   return { provider: "github", sub: String(user.id), email: email.toLowerCase(), name: user.name?.trim() || user.login, picture: user.avatar_url };
 }
 

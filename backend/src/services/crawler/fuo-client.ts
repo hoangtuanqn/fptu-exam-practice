@@ -4,6 +4,8 @@ import { sleep } from "../../utils/sleep";
 // Cookie hết hạn / chưa đăng nhập: server FuOverflow trả trang đăng nhập thay cho ảnh
 export class FuoAuthError extends Error {}
 
+// Câu cho người dùng khi phiên FuOverflow của hệ thống hỏng (chi tiết kỹ thuật ở FUO_AUTH_MESSAGE chỉ dành cho admin)
+export const FUO_UNAVAILABLE_MESSAGE = "Hệ thống tạm thời chưa tải được dữ liệu từ FuOverflow, không phải do bạn. Quản trị viên đã được báo; vui lòng thử lại sau.";
 export const FUO_AUTH_MESSAGE =
   "Cookie FuOverflow đã hết hạn hoặc chưa đăng nhập. Admin hãy cập nhật ở Quản trị → Cấu hình lấy đề.";
 

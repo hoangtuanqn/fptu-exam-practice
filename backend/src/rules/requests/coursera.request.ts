@@ -24,13 +24,13 @@ export const courseraCourseBody = z.object({
   // Omitted on update keeps the current value; link-added courses start unlisted.
   listed: z.boolean().optional(),
 });
-export const courseraLookupBody = z.object({ url: z.string().trim().min(1).max(COURSERA.urlLength) });
+export const courseraLookupBody = z.object({ url: z.string("Vui lòng dán liên kết khóa học Coursera").trim().min(1, "Vui lòng dán liên kết khóa học Coursera").max(COURSERA.urlLength, "Liên kết quá dài, hãy sao chép lại đúng liên kết khóa học trên Coursera") });
 export const courseraOrderBody = z.object({
   requestKey: z.string().uuid(),
   courseId: z.number().int().positive(),
   // Older clients may submit only free orders; never charge an unconfirmed price.
   expectedPrice: z.number().int().min(0).max(COURSERA.maxPrice).default(0),
-  email: z.string().trim().email().max(COURSERA.emailLength),
+  email: z.string("Vui lòng nhập email tài khoản Coursera").trim().email("Email Coursera không đúng định dạng, ví dụ: ten@gmail.com").max(COURSERA.emailLength),
   password: z.string().min(1, "Vui lòng nhập mật khẩu Coursera").max(COURSERA.passwordLength),
   note: z.string().trim().max(COURSERA.noteLength).default(""),
 });

@@ -8,6 +8,7 @@ import { storageDir } from "../configs/env";
 import { aiReady } from "../constants/ai";
 import { activePromoEnd, promoExpired, type PromoConfig } from "../constants/promo";
 import { EXAM_STORAGE_DIR } from "../constants/crawler";
+import { EXAM_NOT_FOUND } from "../constants/exam";
 import { explanationRepository } from "../repositories/explanation.repository";
 import { examRepository } from "../repositories/exam.repository";
 import { subjectRepository } from "../repositories/subject.repository";
@@ -87,7 +88,7 @@ export const explanationService = {
   async unlock(actor: Actor, userId: number, examId: number, expectedPrice: number) {
     await examService.assertAccess(actor, examId);
     const exam = await prisma.exam.findUnique({ where: { id: examId }, select: { answerSource: true } });
-    if (!exam) throw AppError.notFound("Không tìm thấy đề");
+    if (!exam) throw AppError.notFound(EXAM_NOT_FOUND);
     if (exam.answerSource !== "AI" && exam.answerSource !== "MANUAL") throw new AppError("Đề chưa có đáp án chính thức nên chưa thể mở khóa giải thích");
     const [ai, promo] = await Promise.all([aiSettingService.get(), promoSettingService.get()]);
     const purchased = await explanationRepository.purchasedNumbers(userId, examId);

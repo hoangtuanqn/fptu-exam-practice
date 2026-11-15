@@ -36,7 +36,7 @@ reviewRouter.get("/summary", async (req: Request, res: Response) => {
 });
 reviewRouter.get("/queue", validate(reviewQueueQuery, "query"), async (req: Request, res: Response) => {
   const { all, subject, topic } = getValidated<ReviewQueueQuery>(res, "query");
-  if (topic && !subject) throw new AppError("Thiếu mã môn");
+  if (topic && !subject) throw new AppError("Hãy chọn môn học trước khi luyện theo chủ đề.");
   if (topic && !hasTopicReport(req.user)) throw AppError.forbidden("Luyện theo chủ đề là quyền lợi của gói Pro");
   const byTopic = topic && subject ? { subject: subject.toUpperCase(), topic } : undefined;
   res.json(new ResponseClient({ data: await reviewService.queue(req.user!.id, all === "1" || !!byTopic, undefined, byTopic) }));

@@ -9,7 +9,7 @@ import { gradeService } from "../services/grade.service";
 
 // Điểm FAP của chính sinh viên (cá nhân hoá gợi ý ôn thi). Mọi thứ chỉ hoạt động khi sinh viên tự bật đồng bộ.
 const gradeRouter = Router();
-gradeRouter.use(authenticate, makeLimiter({ limit: 60 }));
+gradeRouter.use(authenticate, makeLimiter({ limit: 60, message: "Bạn đồng bộ điểm quá nhanh." }));
 
 gradeRouter.get("/me", async (req: Request, res: Response) => {
   res.json(new ResponseClient({ data: await gradeService.overview(req.user!.id) }));
