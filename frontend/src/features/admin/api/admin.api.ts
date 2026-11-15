@@ -49,6 +49,15 @@ export interface AdminNotice {
   readAt: string | null;
 }
 
+// Số việc admin cần xem: báo cáo đáp án chờ duyệt và đánh giá "chưa tốt", đều chưa giải quyết
+export interface ReviewCounts {
+  reports: number;
+  feedback: number;
+}
+
+/** "true" | "false" lọc theo đã giải quyết, rỗng = tất cả */
+export type ResolvedFilter = "true" | "false" | "";
+
 export interface NoticeCounts {
   unread: number;
   importantUnread: number;
@@ -147,6 +156,8 @@ export interface ExplanationFeedbackAdmin {
   reason: string | null;
   comment: string | null;
   updatedAt: string;
+  resolvedAt?: string | null; // có thể thiếu khi backend cũ
+  resolvedById?: number | null;
   user: { fullName: string; email: string };
   exam: { title: string; threadId: string };
   explanation: string | null; // lời giải đang lưu (null nếu đã bị xóa)
@@ -431,15 +442,21 @@ export const adminApi = {
       limit: PAGE_SIZE,
     }),
 
-  explanationFeedback: (page: number, helpful: "up" | "down" | "") =>
-    http.list<ExplanationFeedbackAdmin>("/admin/explanation-feedback", { page, limit: PAGE_SIZE, helpful }),
+  explanationFeedback: (page: number, helpful: "up" | "down" | "", resolved: ResolvedFilter = "") =>
+    http.list<ExplanationFeedbackAdmin>("/admin/explanation-feedback", { page, limit: PAGE_SIZE, helpful, resolved }),
+  resolveFeedback: (id: number) =>
+    http.post<ExplanationFeedbackAdmin>(`/admin/explanation-feedback/${id}/resolve`),
+  reviewCounts: () => http.get<ReviewCounts>("/admin/review-counts"),
   explanationFeedbackSummary: () => http.get<{ up: number; down: number }>("/admin/explanation-feedback/summary"),
-  answerReports: (page: number, status: ReportStatus | "") =>
+  answerReports: (page: number, status: ReportStatus | "", resolved: ResolvedFilter = "") =>
     http.list<AnswerReportAdmin>("/admin/answer-reports", {
       page,
       limit: PAGE_SIZE,
       status,
+      resolved,
     }),
+  resolveReport: (id: number) =>
+    http.post<AnswerReportAdmin>(`/admin/answer-reports/${id}/resolve`),
   approveReport: (id: number, body: { note?: string }) =>
     http.post<unknown>(`/admin/answer-reports/${id}/approve`, body),
   rejectReport: (id: number, body: { note?: string }) =>

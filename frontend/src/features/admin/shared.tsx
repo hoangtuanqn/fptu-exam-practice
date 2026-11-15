@@ -1,5 +1,7 @@
 import { X } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Badge } from "@/shared/ui/Badge";
+import { formatDateTime } from "@/shared/utils/formatters";
 
 export interface UserRef {
   id: number;
@@ -30,5 +32,15 @@ export function UserFilterChip({ userId, label, onClear }: { userId: string; lab
       Thành viên: {label ?? `#${userId}`}
       <X size={14} />
     </button>
+  );
+}
+
+// Nhãn "Đã giải quyết" của báo cáo/đánh giá; rê chuột xem lúc giải quyết
+export function ResolvedBadge({ at }: { at?: string | null }) {
+  if (!at) return null;
+  return (
+    <span title={formatDateTime(at)}>
+      <Badge tone="success">Đã giải quyết</Badge>
+    </span>
   );
 }
