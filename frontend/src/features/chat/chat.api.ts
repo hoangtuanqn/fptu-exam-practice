@@ -37,7 +37,7 @@ async function open(messages: ChatMessage[], signal: AbortSignal | undefined, ca
 }
 
 export const chatApi = {
-  config: () => http.get<{ enabled: boolean }>("/chat/config"),
+  config: () => http.get<{ enabled: boolean; maxInputChars?: number; maxTurns?: number }>("/chat/config"), // giới hạn theo nguồn trả lời; máy chủ cũ không trả
 
   /**
    * Hỏi trợ lý và nhận câu trả lời dạng stream (SSE): từng đoạn chữ gọi onDelta ngay khi tới.

@@ -159,6 +159,13 @@ export interface ChatbotAdmin {
     claudeModel: string;
     hasOpenaiKey: boolean;
     openaiKeyPreview: string;
+    // máy chủ cũ không trả các trường nguồn trả lời
+    chatProvider?: ChatProvider;
+    chatBaseUrl?: string;
+    chatModel?: string;
+    chatExtraHeader?: string;
+    hasChatKey?: boolean;
+    chatKeyPreview?: string;
   };
   knowledge: { chunks: number; embedded: number; model: string };
   stats: {
@@ -176,10 +183,19 @@ export interface ChatbotAdmin {
   cache: { entries: number; today: number; total: number }; // câu trả lời lưu sẵn; today/total = số lượt hỏi đã trả lời từ cache (không tốn token)
 }
 
+export type ChatProvider = "anthropic" | "openai";
+
+// Mọi trường đều tuỳ chọn: máy chủ chỉ cập nhật trường được gửi
 export interface ChatbotForm {
-  enabled: boolean;
-  claudeModel: string;
+  enabled?: boolean;
+  claudeModel?: string;
   openaiApiKey?: string;
+  chatProvider?: ChatProvider;
+  chatBaseUrl?: string;
+  chatModel?: string;
+  chatApiKey?: string; // chỉ gửi khi admin nhập khoá mới
+  clearChatKey?: boolean;
+  chatExtraHeader?: string;
 }
 
 export interface UserSummary {

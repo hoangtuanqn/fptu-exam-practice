@@ -20,7 +20,10 @@ const readWide = () => {
 
 // Mặt con cóc (cắt từ hình mascot) làm ảnh đại diện trong khung chat
 const AVATAR_SVG = MASCOT_SVG.replace(/viewBox="[^"]*" width="\d+" height="\d+"/, 'viewBox="20 12 64 60" width="100%" height="100%"');
+// Mặc định khi máy chủ cũ không trả giới hạn trong /chat/config
 const MAX_CHARS = 800;
+const MAX_TURNS = 6;
+const positive = (v: unknown, fallback: number) => (typeof v === "number" && Number.isInteger(v) && v > 0 ? v : fallback);
 const SUGGESTIONS = ["Cách lấy đề từ FuOverflow?", "Nạp credit như thế nào?", "Cài tiện ích Chrome ra sao?", "Tải đề PE thế nào?"];
 const GREETING: ChatMessage = {
   role: "assistant",
@@ -50,6 +53,7 @@ const load = (): Msg[] => {
 export default function ChatWidget() {
   const { pathname } = useLocation();
   const [enabled, setEnabled] = useState(true); // chỉ ẩn khi máy chủ báo rõ là đã tắt (máy chủ chưa phản hồi thì vẫn hiện)
+  const [limits, setLimits] = useState({ chars: MAX_CHARS, turns: MAX_TURNS });
   const [tip, setTip] = useState(false);
   const [open, setOpen] = useState(false);
   const [wide, setWide] = useState(readWide); // khung to cho câu trả lời dài (bảng, danh sách); chỉ có ở màn hình rộng, điện thoại luôn toàn màn hình
@@ -80,6 +84,7 @@ export default function ChatWidget() {
       .then((c) => {
         if (!alive) return;
         setEnabled(c.enabled);
+        setLimits({ chars: positive(c.maxInputChars, MAX_CHARS), turns: positive(c.maxTurns, MAX_TURNS) });
       })
       .catch(() => undefined);
     return () => {
@@ -117,11 +122,11 @@ export default function ChatWidget() {
   if (!enabled || pathname.startsWith("/admin") || pathname.startsWith("/exam/") || pathname === "/pro" || pathname === "/features") return null; // /pro: thanh mua cố định ở đáy bị mascot che nút; /features: trang để chụp màn hình giới thiệu nên không để mascot vướng
 
   async function send(text: string, history: Msg[] = messages, captchaToken?: string) {
-    const content = text.trim().slice(0, MAX_CHARS);
+    const content = text.trim().slice(0, limits.chars);
     if (!content || busy) return;
     const base: Msg[] = [...history, { role: "user", content }];
     // Chỉ gửi các lượt hợp lệ (bỏ lời chào và thông báo lỗi), tin đầu phải là của người dùng
-    const payload = base.filter((m) => !m.failed).slice(-6).map(({ role, content }) => ({ role, content })); // chỉ gửi vài lượt gần nhất (máy chủ cũng cắt như vậy)
+    const payload = base.filter((m) => !m.failed).slice(-limits.turns).map(({ role, content }) => ({ role, content })); // chỉ gửi vài lượt gần nhất (máy chủ cũng cắt như vậy)
     while (payload[0] && payload[0].role !== "user") payload.shift();
 
     setMessages([...base, { role: "assistant", content: "" }]); // khung trả lời rỗng, chữ chảy vào dần
@@ -299,7 +304,7 @@ export default function ChatWidget() {
                 ref={inputRef}
                 value={input}
                 rows={1}
-                maxLength={MAX_CHARS}
+                maxLength={limits.chars}
                 disabled={busy}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {

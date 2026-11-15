@@ -1,17 +1,36 @@
 import path from "node:path";
+import { aiReady, type AiConfig } from "./ai";
 
 // Cấu hình chatbot hỗ trợ (admin chỉnh ở Quản trị → Chatbot hỗ trợ, lưu trong bảng settings với tiền tố "chat.")
 export interface ChatConfig {
   enabled: boolean;
   openaiApiKey: string; // khoá OpenAI, chỉ dùng để tạo embedding (tìm đoạn hướng dẫn và nội dung syllabus liên quan)
   claudeModel: string; // model trả lời; khoá Anthropic dùng chung với phần AI giải đề
+  // Nơi trả lời của Cóc Pass: "anthropic" (Claude, mặc định) hoặc "openai" (một endpoint tương thích OpenAI Responses API do admin nhập). Chỉ chatbot hỗ trợ đổi; giải đề, giải thích, embedding giữ nguyên.
+  chatProvider: ChatProvider;
+  chatBaseUrl: string; // gốc API kiểu .../v1 (chỉ https), gọi `${chatBaseUrl}/responses`
+  chatModel: string;
+  chatApiKey: string; // bí mật: không bao giờ trả về giao diện
+  chatExtraHeader: string; // tuỳ chọn, một header "Tên: giá trị" gửi kèm mọi lần gọi
 }
+
+export const CHAT_PROVIDERS = ["anthropic", "openai"] as const;
+export type ChatProvider = (typeof CHAT_PROVIDERS)[number];
 
 export const CHAT_DEFAULTS: ChatConfig = {
   enabled: true,
   openaiApiKey: "",
   claudeModel: "claude-haiku-5-5",
+  chatProvider: "anthropic",
+  // Nguồn ngoài mặc định: chỉ cần nhập khoá API ở trang quản trị; địa chỉ, model và header là giá trị cố định (vẫn ghi đè được qua API cài đặt).
+  chatBaseUrl: "https://api.xingchiapi.com/v1",
+  chatModel: "gpt-6-astra",
+  chatApiKey: "",
+  chatExtraHeader: "x-openai-actor-authorization: local-image-extension",
 };
+
+/** Chatbot có nơi trả lời dùng được chưa: endpoint ngoài cần đủ địa chỉ, model và khoá; Claude dùng cấu hình AI chung. */
+export const chatProviderReady = (c: ChatConfig, ai: AiConfig) => (c.chatProvider === "openai" ? !!(c.chatBaseUrl && c.chatModel && c.chatApiKey) : aiReady(ai));
 
 export const CHAT_KEY_PREFIX = "chat.";
 
@@ -25,18 +44,28 @@ export const RETRIEVE_TOP_K = 3;
 export const RETRIEVE_SCORE_BAND = 0.08; // chỉ giữ các đoạn có điểm không thấp hơn đoạn tốt nhất quá chừng này (bớt đoạn kém liên quan = bớt token)
 export const RETRIEVE_MIN_SCORE = 0.45; // dưới mức này coi như không có đoạn nào liên quan (cosine). Đo với text-embedding-3-small: câu liên quan 0,53 đến 0,72, câu lạc đề 0,30 đến 0,34
 
-export const CHAT_MAX_TURNS = 6; // chỉ gửi chừng này tin gần nhất cho Claude
-export const CHAT_OLD_REPLY_CHARS = 400; // câu trả lời cũ của Cóc Pass trong lịch sử được cắt còn chừng này ký tự (chỉ cần đủ ngữ cảnh)
-export const CHAT_MAX_INPUT_CHARS = 800;
-// Số tin mỗi đợt trong ngày (giờ Việt Nam, đặt lại 0h): hết đợt thì tin kế tiếp phải qua captcha, qua rồi mở đợt kế tiếp
-export const CHAT_GUEST_BATCH = 10;
-export const CHAT_MEMBER_BATCH = 20;
-// Trần token sinh ra MỖI LƯỢT GỌI, gồm cả token suy nghĩ (Haiku 5.5 mặc định có suy nghĩ thích ứng). Trước đây 700: suy nghĩ chiếm một phần,
-// câu trả lời dài (danh sách đề, các chương của môn) bị cắt giữa chừng mà không báo gì. Chạm trần thì máy chủ cho Claude viết tiếp một lần (xem chat.service).
-export const CHAT_MAX_OUTPUT_TOKENS = 4000;
+export interface ChatLimits {
+  maxTurns: number; // chỉ gửi chừng này tin gần nhất cho model
+  oldReplyChars: number; // câu trả lời cũ của Cóc Pass trong lịch sử được cắt còn chừng này ký tự (chỉ cần đủ ngữ cảnh)
+  maxInputChars: number; // câu hỏi mới nhất; tin cũ trong lịch sử tối đa gấp 4
+  // Số tin mỗi đợt trong ngày (giờ Việt Nam, đặt lại 0h): hết đợt thì tin kế tiếp phải qua captcha, qua rồi mở đợt kế tiếp
+  guestBatch: number;
+  memberBatch: number;
+  // Trần token sinh ra MỖI LƯỢT GỌI, gồm cả token suy nghĩ (Haiku 5.5 mặc định có suy nghĩ thích ứng). Trước đây 700: suy nghĩ chiếm một phần,
+  // câu trả lời dài (danh sách đề, các chương của môn) bị cắt giữa chừng mà không báo gì. Chạm trần thì máy chủ cho model viết tiếp một lần (xem chat.service).
+  maxOutputTokens: number;
+  maxToolTurns: number; // tối đa chừng này vòng "model gọi công cụ rồi viết tiếp" mỗi câu hỏi
+}
+
+// Trần theo nơi trả lời: Claude giữ mức cũ (tốn tiền thật); endpoint ngoài dư token nên nâng cao. Chặn lạm dụng còn captcha sau mỗi đợt và askLimiter ở route.
+export const CHAT_LIMITS: Record<ChatProvider, ChatLimits> = {
+  anthropic: { maxTurns: 6, oldReplyChars: 400, maxInputChars: 800, guestBatch: 10, memberBatch: 20, maxOutputTokens: 4000, maxToolTurns: 4 },
+  openai: { maxTurns: 20, oldReplyChars: 1500, maxInputChars: 4000, guestBatch: 100, memberBatch: 500, maxOutputTokens: 16000, maxToolTurns: 8 },
+};
+// Trần tĩnh của schema (lớn nhất trong các nơi trả lời); trần thật theo nơi trả lời kiểm ở chat.service
+export const CHAT_MAX_INPUT_CHARS = Math.max(...Object.values(CHAT_LIMITS).map((l) => l.maxInputChars));
 export const CHAT_EFFORT = "low" as const; // chatbot hướng dẫn: mức thấp là đủ, đỡ tốn token suy nghĩ và trả lời nhanh hơn
 export const CHAT_CONTINUE_PROMPT = "Your previous reply was cut off by the length limit. Continue exactly where you stopped, without repeating anything, and finish briefly."; // chỉ gửi khi bị cắt
-export const CHAT_MAX_TOOL_TURNS = 4; // tối đa chừng này vòng "Claude gọi công cụ rồi viết tiếp" mỗi câu hỏi
 
 // Prompt hệ thống viết bằng tiếng Anh (cùng nội dung, ít token hơn tiếng Việt chừng một nửa) và dặn trả lời tiếng Việt.
 // Chỉ chứa nội dung tĩnh; thông tin đổi theo lượt (đoạn hướng dẫn, giá, người dùng) nằm ở khối riêng bên dưới.

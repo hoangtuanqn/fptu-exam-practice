@@ -9,8 +9,8 @@ import { chatService } from "../services/chat.service";
 export const chatController = {
   // Công khai: giao diện hỏi trước xem chatbot có đang bật không
   async config(_req: Request, res: Response) {
-    const status = await chatService.status();
-    res.json(new ResponseClient({ data: { enabled: status.enabled } }));
+    const { enabled, maxInputChars, maxTurns } = await chatService.status();
+    res.json(new ResponseClient({ data: { enabled, maxInputChars, maxTurns } }));
   },
 
   // Trả lời dạng stream (Server-Sent Events): mỗi dòng "data: {json}" với t = delta | status | done | error

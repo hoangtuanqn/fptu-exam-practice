@@ -1,5 +1,5 @@
 import { prisma } from "../configs/prisma";
-import { CHAT_GUEST_BATCH, CHAT_MEMBER_BATCH } from "../constants/chat";
+import { CHAT_LIMITS, type ChatProvider } from "../constants/chat";
 import type { Owner } from "../utils/actor";
 import { needsCaptcha } from "../utils/chat-quota";
 import { startOfVnDay } from "../utils/time";
@@ -13,12 +13,13 @@ const defaults = {
 
 export const chatQuotaService = {
   /**
-   * Khách: 10 tin mỗi đợt, thành viên: 20 tin mỗi đợt, đặt lại 0h mỗi ngày. Hết một đợt thì tin kế tiếp cần captcha (ném lỗi errors.captcha
+   * Số tin mỗi đợt theo nơi trả lời (CHAT_LIMITS: guestBatch cho khách, memberBatch cho thành viên), đặt lại 0h mỗi ngày. Hết một đợt thì tin kế tiếp cần captcha (ném lỗi errors.captcha
    * để giao diện hiện hộp captcha rồi gửi lại kèm token); qua captcha là mở đợt kế tiếp.
    */
-  async check(owner: Owner, captchaToken: string | undefined, ip: string | undefined, deps: Partial<typeof defaults> = {}) {
+  async check(owner: Owner, captchaToken: string | undefined, ip: string | undefined, provider: ChatProvider = "anthropic", deps: Partial<typeof defaults> = {}) {
     const { count, assert } = { ...defaults, ...deps };
-    const batch = "userId" in owner ? CHAT_MEMBER_BATCH : CHAT_GUEST_BATCH;
+    const limits = CHAT_LIMITS[provider];
+    const batch = "userId" in owner ? limits.memberBatch : limits.guestBatch;
     if (needsCaptcha(await count(owner), batch)) await assert(captchaToken, ip);
   },
 };

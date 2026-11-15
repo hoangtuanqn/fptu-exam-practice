@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { BookOpenCheck, Loader2, RefreshCw, Trash2 } from "lucide-react";
-import { adminApi, type ChatbotAdmin } from "@/features/admin/api/admin.api";
+import { adminApi, type ChatbotAdmin, type ChatProvider } from "@/features/admin/api/admin.api";
 import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
 import { useSubmit } from "@/shared/hooks/useSubmit";
@@ -8,7 +8,7 @@ import { Badge } from "@/shared/ui/Badge";
 import { Button } from "@/shared/ui/Button";
 import { Card, CardHeader, PageHeader } from "@/shared/ui/Card";
 import { ErrorBox, FormError, Loading } from "@/shared/ui/Feedback";
-import { Input, PasswordInput } from "@/shared/ui/Input";
+import { Input, PasswordInput, Select } from "@/shared/ui/Input";
 import { Switch } from "@/shared/ui/Switch";
 import { formatDateTime } from "@/shared/utils/formatters";
 import { errorMessage } from "@/shared/api/errors";
@@ -16,25 +16,58 @@ import { useConfirm } from "@/shared/ui/ConfirmDialog";
 
 function Settings({ data, onSaved }: { data: ChatbotAdmin; onSaved: () => void }) {
   const toast = useToast();
-  const { run, loading, error, fieldErrors } = useSubmit();
+  const { run, loading, error, fieldErrors, setFieldErrors } = useSubmit();
   const s = data.settings;
   const [enabled, setEnabled] = useState(s.enabled);
   const [claudeModel, setClaudeModel] = useState(s.claudeModel);
   const [openaiApiKey, setKey] = useState("");
+  const [provider, setProvider] = useState<ChatProvider>(s.chatProvider ?? "anthropic");
+  const [chatApiKey, setChatKey] = useState("");
+  const { confirm, confirmDialog } = useConfirm();
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
+    if (provider === "openai") {
+      // Chặn sớm cấu hình thiếu (máy chủ cũng kiểm tra lại)
+      const missing: Record<string, string> = {};
+      if (!s.hasChatKey && !chatApiKey.trim()) missing.chatApiKey = "Nhập khoá API";
+      if (Object.keys(missing).length > 0) {
+        setFieldErrors(missing);
+        return;
+      }
+    }
     void run(async () => {
-      await adminApi.saveChatbot({ enabled, claudeModel, openaiApiKey: openaiApiKey || undefined });
+      await adminApi.saveChatbot({
+        enabled,
+        claudeModel,
+        openaiApiKey: openaiApiKey || undefined,
+        chatProvider: provider,
+        // trường của nguồn OpenAI chỉ gửi khi đang chọn nguồn đó, tránh lỗi ở ô đang ẩn
+        ...(provider === "openai" && { chatApiKey: chatApiKey || undefined }),
+      });
       setKey("");
+      setChatKey("");
       toast.success("Đã lưu cấu hình chatbot");
       onSaved();
     });
   };
 
+  async function clearKey() {
+    if (!(await confirm({ title: "Xoá khoá API?", message: "Khoá của nguồn trả lời sẽ bị xoá. Chatbot không trả lời được bằng nguồn này cho tới khi nhập khoá mới.", confirmLabel: "Xoá khoá", tone: "danger" }))) return;
+    void run(async () => {
+      await adminApi.saveChatbot({ clearChatKey: true });
+      toast.success("Đã xoá khoá API");
+      onSaved();
+    });
+  }
+
   return (
     <Card>
-      <CardHeader title="Cấu hình" description="Chatbot trả lời bằng Claude (dùng khoá Anthropic ở mục “AI giải đáp án”). Khoá OpenAI chỉ dùng để tạo embedding (tìm đoạn hướng dẫn và nội dung syllabus)." />
+      {confirmDialog}
+      <CardHeader
+        title="Cấu hình"
+        description="Chọn nguồn trả lời cho chatbot. Khoá OpenAI bên dưới chỉ dùng để tạo embedding (tìm đoạn hướng dẫn và nội dung syllabus), kể cả khi đổi nguồn. Giải và giải thích đề luôn dùng Claude."
+      />
       <form onSubmit={submit} className="space-y-5 p-5" noValidate>
         <FormError message={error} />
         <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 p-4">
@@ -52,7 +85,34 @@ function Settings({ data, onSaved }: { data: ChatbotAdmin; onSaved: () => void }
           error={fieldErrors.openaiApiKey}
           hint={s.hasOpenaiKey ? `Đã cấu hình (${s.openaiKeyPreview}). Để trống để giữ khoá hiện tại.` : "Chưa có khoá: chatbot vẫn chạy nhưng tìm bằng từ khoá, kém chính xác hơn. Lấy khoá ở platform.openai.com (mục API keys)."}
         />
-        <Input label="Model trả lời" value={claudeModel} onChange={(e) => setClaudeModel(e.target.value)} error={fieldErrors.claudeModel} hint="Nên dùng model nhỏ (Haiku) cho rẻ và nhanh." />
+        <Select label="Nguồn trả lời" value={provider} onChange={(e) => setProvider(e.target.value as ChatProvider)} error={fieldErrors.chatProvider}>
+          <option value="anthropic">Claude (mặc định)</option>
+          <option value="openai">API tương thích OpenAI (Responses)</option>
+        </Select>
+        {provider === "anthropic" ? (
+          <Input label="Model trả lời" value={claudeModel} onChange={(e) => setClaudeModel(e.target.value)} error={fieldErrors.claudeModel} hint="Nên dùng model nhỏ (Haiku) cho rẻ và nhanh." />
+        ) : (
+          <div className="space-y-5">
+            <p className="md-body-small rounded-m3-sm bg-tertiary-container px-4 py-3 text-on-tertiary-container">
+              Câu hỏi của người dùng và dữ liệu tài khoản của chính họ (khi chatbot tra cứu) được gửi tới endpoint này. Chỉ dùng endpoint tin cậy.
+            </p>
+            <div>
+              <PasswordInput
+                label="Khoá API"
+                autoComplete="off"
+                value={chatApiKey}
+                onChange={(e) => setChatKey(e.target.value)}
+                error={fieldErrors.chatApiKey}
+                hint={s.hasChatKey ? `Đã cấu hình (${s.chatKeyPreview ?? ""}). Để trống để giữ khoá hiện tại.` : "Chưa có khoá."}
+              />
+              {s.hasChatKey && (
+                <Button className="mt-2" size="sm" variant="secondary" type="button" onClick={() => void clearKey()} disabled={loading}>
+                  <Trash2 size={15} /> Xoá khoá
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
         <Button variant="primary" type="submit" disabled={loading}>
           {loading && <Loader2 size={16} className="animate-spin" />} Lưu cấu hình
         </Button>
@@ -123,7 +183,7 @@ export default function ChatbotPage() {
 
           {data.stats.usage && (
             <Card className="p-4">
-              <div className="text-xs text-slate-500">Token trung bình mỗi lượt gọi Claude (7 ngày, {data.stats.usage.calls7d} lượt)</div>
+              <div className="text-xs text-slate-500">Token trung bình mỗi lượt gọi AI (7 ngày, {data.stats.usage.calls7d} lượt)</div>
               <div className="mt-2 grid gap-3 sm:grid-cols-4">
                 {[
                   ["Đầu vào mới", data.stats.usage.avgInput],
@@ -154,7 +214,7 @@ export default function ChatbotPage() {
             </Button>
           </Card>
 
-          <Settings key={data.settings.openaiKeyPreview + String(data.settings.enabled)} data={data} onSaved={reload} />
+          <Settings key={[data.settings.openaiKeyPreview, data.settings.enabled, data.settings.chatProvider, data.settings.chatKeyPreview].join("|")} data={data} onSaved={reload} />
 
           <Card>
             <CardHeader title="Câu hỏi chưa có tài liệu" description="Người dùng hỏi nhưng không tìm thấy mục hướng dẫn nào khớp. Bổ sung các nội dung này vào hướng dẫn." />
