@@ -1,3 +1,4 @@
+import { Sparkles } from "lucide-react";
 import type { ImportedExam } from "@/features/exam-import/types";
 import type { PickFolder } from "@/features/practice/components/FolderInput";
 import { brand } from "@/shared/brand/brand";
@@ -20,6 +21,13 @@ interface Props {
 // Phong cách học thuật: nền giấy ấm, màu navy, một điểm nhấn vàng đồng, không chữ chuyển sắc hay hiệu ứng phát sáng.
 export function HeroSection({ onPick, onImported, userName }: Props) {
   const isGuest = !userName;
+  // Dòng nhấn mạnh trải nghiệm miễn phí: hiện cho cả khách và người đã đăng nhập
+  const freeNote = (
+    <p className="free-shine mx-auto mt-5 inline-flex max-w-full items-center justify-center gap-2 text-xl font-bold sm:text-2xl">
+      <Sparkles size={22} aria-hidden className="shrink-0" />
+      Được trải nghiệm miễn phí trước khi bạn trả tiền.
+    </p>
+  );
 
   return (
     <section className="relative isolate shrink-0 border-b border-outline-variant">
@@ -47,7 +55,7 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
           {isGuest && (
             <>
               <div aria-hidden className="mx-auto mt-4 h-px w-24 bg-primary/40" />
-              <p className="md-body-large mx-auto mt-3 max-w-xl text-on-surface-variant">Chọn môn, mở đề là làm ngay. Có đáp án, giải thích từng câu và chấm điểm thang 10.</p>
+              {freeNote}
               <ValueTrio />
             </>
           )}
