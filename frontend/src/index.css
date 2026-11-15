@@ -272,14 +272,19 @@ h3 {
   }
 }
 
-/* Dòng "trải nghiệm miễn phí" ở trang chủ: vệt sáng lướt qua lướt lại. Chỉ chạy khi người dùng không tắt chuyển động */
-.free-shine { position: relative; overflow: hidden; }
-.free-shine::after { content: ""; position: absolute; inset: 0 auto 0 0; width: 35%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent); transform: translateX(-130%) skewX(-18deg); pointer-events: none; }
-@keyframes free-shine { from { transform: translateX(-130%) skewX(-18deg); } to { transform: translateX(380%) skewX(-18deg); } }
-@keyframes free-glow { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--md-sys-color-primary) 45%, transparent); } 50% { box-shadow: 0 0 0 10px color-mix(in srgb, var(--md-sys-color-primary) 0%, transparent); } }
+/* Dòng "trải nghiệm miễn phí" ở trang chủ: chữ màu chủ đạo, không nền; vệt sáng lướt qua lướt lại ngay trên chữ.
+   Chỉ chạy khi người dùng không tắt chuyển động (còn lại là chữ màu chủ đạo đứng yên) */
+.free-shine { color: var(--md-sys-color-primary); }
+@keyframes free-shine { from { background-position: 100% 0; } to { background-position: 0 0; } }
 @media (prefers-reduced-motion: no-preference) {
-  .free-shine { animation: free-glow 2.4s ease-out infinite; }
-  .free-shine::after { animation: free-shine 2.6s ease-in-out infinite alternate; }
+  .free-shine {
+    background-image: linear-gradient(100deg, var(--md-sys-color-primary) 42%, #ffc61f 50%, var(--md-sys-color-primary) 58%);
+    background-size: 250% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    animation: free-shine 2.4s ease-in-out infinite alternate;
+  }
 }
 
 /* Thanh cuộn mảnh, kín đáo */
