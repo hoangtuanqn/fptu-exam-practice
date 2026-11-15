@@ -151,9 +151,12 @@ adminRouter.get("/gift-codes/:id/redemptions", validate(idParam, "params"), vali
 
 adminRouter.get("/explanation-feedback", validate(listFeedbackQuery, "query"), adminExplanationFeedbackController.list);
 adminRouter.get("/explanation-feedback/summary", adminExplanationFeedbackController.summary);
+adminRouter.post("/explanation-feedback/:id/resolve", validate(idParam, "params"), adminExplanationFeedbackController.resolve);
+adminRouter.get("/review-counts", adminAnswerReportController.reviewCounts);
 adminRouter.get("/answer-reports", validate(listReportsQuery, "query"), adminAnswerReportController.list);
 adminRouter.post("/answer-reports/:id/approve", validate(idParam, "params"), validate(reviewReportBody), adminAnswerReportController.approve);
 adminRouter.post("/answer-reports/:id/reject", validate(idParam, "params"), validate(reviewReportBody), adminAnswerReportController.reject);
+adminRouter.post("/answer-reports/:id/resolve", validate(idParam, "params"), adminAnswerReportController.resolve);
 
 
 adminRouter.get("/settings/referral", adminReferralController.getSettings);

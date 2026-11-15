@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { paginationQuery } from "../../utils/pagination";
+import { resolvedFilter } from "./answer-report.request";
 import { CHAT_ASSISTANT_MAX_CHARS, CHAT_MAX_MESSAGES, CHAT_MESSAGE_MAX_CHARS } from "../../constants/ai";
 
 export const explainBody = z.object({
@@ -45,7 +46,7 @@ export const explainFeedbackBody = z
   })
   .strict();
 
-export const listFeedbackQuery = paginationQuery.extend({ helpful: z.enum(["up", "down"]).optional() });
+export const listFeedbackQuery = paginationQuery.extend({ helpful: z.enum(["up", "down"]).optional(), resolved: resolvedFilter });
 
 export const examIdParam = z.object({ examId: z.coerce.number().int().positive() });
 
