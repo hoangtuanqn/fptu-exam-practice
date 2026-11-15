@@ -30,7 +30,8 @@ export const drainBeforeError: ErrorRequestHandler = (err, req, _res, next) => {
 
 /** handler cho express-rate-limit: giống handler mặc định (statusCode + message) nhưng đọc bỏ thân trước khi trả lời. */
 export const drainingLimitHandler = (req: Request, res: Response, _next: NextFunction, options: Options) => {
-  void drainRequest(req).then(() => {
-    if (!res.headersSent) res.status(options.statusCode).send(options.message);
+  void drainRequest(req).then(async () => {
+    const body = typeof options.message === "function" ? await options.message(req, res) : options.message; // makeLimiter dựng lời nhắn theo thời gian chờ
+    if (!res.headersSent) res.status(options.statusCode).send(body);
   });
 };
