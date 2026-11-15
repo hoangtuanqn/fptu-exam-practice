@@ -49,8 +49,8 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
             <>
               <div aria-hidden className="mx-auto mt-4 h-px w-24 bg-primary/40" />
               <p className="md-body-large mx-auto mt-3 max-w-xl text-on-surface-variant">Chọn môn, mở đề, làm luôn. Đáp án rõ ràng, giải thích từng câu, chấm điểm thang 10 ngay khi nộp bài.</p>
-              <p className="free-shine md-title-medium mx-auto mt-4 inline-flex items-center gap-2 rounded-full bg-primary-container px-5 py-2 text-on-primary-container">
-                <Sparkles size={18} aria-hidden className="shrink-0" />
+              <p className="free-shine mx-auto mt-5 inline-flex max-w-full items-center justify-center gap-3 rounded-3xl bg-primary px-6 py-3.5 text-lg font-bold text-on-primary shadow-m3-3 sm:text-xl">
+                <Sparkles size={22} aria-hidden className="shrink-0" />
                 Được trải nghiệm miễn phí trước khi bạn trả tiền.
               </p>
               <ValueTrio />

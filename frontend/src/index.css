@@ -276,7 +276,9 @@ h3 {
 .free-shine { position: relative; overflow: hidden; }
 .free-shine::after { content: ""; position: absolute; inset: 0 auto 0 0; width: 35%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent); transform: translateX(-130%) skewX(-18deg); pointer-events: none; }
 @keyframes free-shine { from { transform: translateX(-130%) skewX(-18deg); } to { transform: translateX(380%) skewX(-18deg); } }
+@keyframes free-glow { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--md-sys-color-primary) 45%, transparent); } 50% { box-shadow: 0 0 0 10px color-mix(in srgb, var(--md-sys-color-primary) 0%, transparent); } }
 @media (prefers-reduced-motion: no-preference) {
+  .free-shine { animation: free-glow 2.4s ease-out infinite; }
   .free-shine::after { animation: free-shine 2.6s ease-in-out infinite alternate; }
 }
 
