@@ -47,7 +47,7 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
           {isGuest && (
             <>
               <div aria-hidden className="mx-auto mt-4 h-px w-24 bg-primary/40" />
-              <p className="md-body-large mx-auto mt-3 max-w-xl text-on-surface-variant">Chọn môn, mở đề là làm ngay. Có đáp án, giải thích từng câu và chấm điểm thang 10.</p>
+              <p className="md-body-large mx-auto mt-3 max-w-xl text-on-surface-variant">Chọn môn, mở đề, làm luôn. Đáp án rõ ràng, giải thích từng câu, chấm điểm thang 10 ngay khi nộp bài.</p>
               <ValueTrio />
             </>
           )}
