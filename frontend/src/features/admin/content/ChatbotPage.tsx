@@ -22,10 +22,7 @@ function Settings({ data, onSaved }: { data: ChatbotAdmin; onSaved: () => void }
   const [claudeModel, setClaudeModel] = useState(s.claudeModel);
   const [openaiApiKey, setKey] = useState("");
   const [provider, setProvider] = useState<ChatProvider>(s.chatProvider ?? "anthropic");
-  const [chatBaseUrl, setBaseUrl] = useState(s.chatBaseUrl ?? "");
-  const [chatModel, setChatModel] = useState(s.chatModel ?? "");
   const [chatApiKey, setChatKey] = useState("");
-  const [chatExtraHeader, setExtraHeader] = useState(s.chatExtraHeader ?? "");
   const { confirm, confirmDialog } = useConfirm();
 
   const submit = (e: FormEvent) => {
@@ -33,8 +30,6 @@ function Settings({ data, onSaved }: { data: ChatbotAdmin; onSaved: () => void }
     if (provider === "openai") {
       // Chặn sớm cấu hình thiếu (máy chủ cũng kiểm tra lại)
       const missing: Record<string, string> = {};
-      if (!chatBaseUrl.trim()) missing.chatBaseUrl = "Nhập Base URL";
-      if (!chatModel.trim()) missing.chatModel = "Nhập tên model";
       if (!s.hasChatKey && !chatApiKey.trim()) missing.chatApiKey = "Nhập khoá API";
       if (Object.keys(missing).length > 0) {
         setFieldErrors(missing);
@@ -48,7 +43,7 @@ function Settings({ data, onSaved }: { data: ChatbotAdmin; onSaved: () => void }
         openaiApiKey: openaiApiKey || undefined,
         chatProvider: provider,
         // trường của nguồn OpenAI chỉ gửi khi đang chọn nguồn đó, tránh lỗi ở ô đang ẩn
-        ...(provider === "openai" && { chatBaseUrl, chatModel, chatExtraHeader, chatApiKey: chatApiKey || undefined }),
+        ...(provider === "openai" && { chatApiKey: chatApiKey || undefined }),
       });
       setKey("");
       setChatKey("");
@@ -101,8 +96,6 @@ function Settings({ data, onSaved }: { data: ChatbotAdmin; onSaved: () => void }
             <p className="md-body-small rounded-m3-sm bg-tertiary-container px-4 py-3 text-on-tertiary-container">
               Câu hỏi của người dùng và dữ liệu tài khoản của chính họ (khi chatbot tra cứu) được gửi tới endpoint này. Chỉ dùng endpoint tin cậy.
             </p>
-            <Input label="Base URL" type="url" inputMode="url" autoComplete="off" placeholder="https://.../v1" value={chatBaseUrl} onChange={(e) => setBaseUrl(e.target.value)} error={fieldErrors.chatBaseUrl} />
-            <Input label="Model" autoComplete="off" value={chatModel} onChange={(e) => setChatModel(e.target.value)} error={fieldErrors.chatModel} />
             <div>
               <PasswordInput
                 label="Khoá API"
@@ -118,7 +111,6 @@ function Settings({ data, onSaved }: { data: ChatbotAdmin; onSaved: () => void }
                 </Button>
               )}
             </div>
-            <Input label="Header bổ sung (không bắt buộc)" autoComplete="off" placeholder="Tên-header: giá-trị" value={chatExtraHeader} onChange={(e) => setExtraHeader(e.target.value)} error={fieldErrors.chatExtraHeader} hint="Không ghi khoá hay mật khẩu ở đây. Khoá API chỉ nhập ở ô Khoá API." />
           </div>
         )}
         <Button variant="primary" type="submit" disabled={loading}>
