@@ -43,7 +43,7 @@ export default defineConfig(({ mode }) => {
       for (const [route, seo] of pages) {
         const title = esc(fullTitle(route, seo as Parameters<typeof fullTitle>[1]));
         const desc = esc(seo.description);
-        const url = brand.siteUrl ? esc(brand.siteUrl + (route === "/" ? "/" : route)) : "";
+        const url = brand.siteUrl ? esc(brand.siteUrl + (route === "/" ? "/" : route + "/")) : "";
         let html = base;
         html = html.replace(/<title>[^<]*<\/title>/, () => `<title>${title}</title>`);
         html = setTag(html, /<meta name="description"[^>]*>/, `<meta name="description" content="${desc}" />`);
@@ -67,7 +67,7 @@ export default defineConfig(({ mode }) => {
         const xml = fs.readFileSync(sitemap, "utf8");
         const origin = xml.match(/<loc>(https?:\/\/[^/<]+)/)?.[1];
         if (origin && !xml.includes("/mon/")) {
-          const urls = SUBJECTS.map((s) => `  <url>\n    <loc>${origin}${subjectPath(s.code)}</loc>\n    <changefreq>monthly</changefreq>\n    <priority>0.5</priority>\n  </url>\n`).join("");
+          const urls = SUBJECTS.map((s) => `  <url>\n    <loc>${origin}${subjectPath(s.code)}/</loc>\n    <changefreq>monthly</changefreq>\n    <priority>0.5</priority>\n  </url>\n`).join("");
           fs.writeFileSync(sitemap, xml.replace("</urlset>", () => `${urls}</urlset>`));
         }
       }
