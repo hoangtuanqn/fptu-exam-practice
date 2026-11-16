@@ -22,7 +22,7 @@ export function PageMeta() {
   useEffect(() => {
     const seo = seoFor(pathname);
     const title = fullTitle(pathname, seo);
-    const url = brand.siteUrl ? brand.siteUrl + (pathname === "/" ? "/" : pathname.replace(/\/+$/, "")) : "";
+    const url = brand.siteUrl ? brand.siteUrl + (pathname.replace(/\/+$/, "") + "/") : "";
     document.title = title;
     metaByName("description", seo.description);
     metaByName("robots", seo.index ? "index, follow" : "noindex, nofollow");
