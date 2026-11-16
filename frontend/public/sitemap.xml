@@ -6,32 +6,32 @@
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://fepass.top/register</loc>
+    <loc>https://fepass.top/register/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://fepass.top/features</loc>
+    <loc>https://fepass.top/features/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://fepass.top/kho-de</loc>
+    <loc>https://fepass.top/kho-de/</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://fepass.top/pro</loc>
+    <loc>https://fepass.top/pro/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://fepass.top/changelog</loc>
+    <loc>https://fepass.top/changelog/</loc>
     <changefreq>weekly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://fepass.top/login</loc>
+    <loc>https://fepass.top/login/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
