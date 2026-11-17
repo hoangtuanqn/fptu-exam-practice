@@ -77,7 +77,7 @@ export function ImageViewer({
               onClick={zoom.toggleAt}
               onLoad={zoom.onImageLoad}
               title={zoom.zoom <= 1 ? "Bấm để phóng to" : "Bấm để thu nhỏ"}
-              className={`m-auto ${zoom.zoom <= 1 ? "cursor-zoom-in" : "cursor-zoom-out"}`}
+              className={`m-auto shrink-0 ${zoom.zoom <= 1 ? "cursor-zoom-in" : "cursor-zoom-out"}`}
               style={{ width: `${zoom.zoom * 100}%`, maxWidth: "none" }}
             />
           </div>
