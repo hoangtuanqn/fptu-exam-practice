@@ -40,6 +40,10 @@ export interface ExamAttachment {
 // Đề chỉ có tệp đính kèm, không có câu hỏi để làm trên web
 export const isFilesOnly = (e: ImportedExam) => e.totalQuestions === 0 && e.questions.length === 0 && (e.attachments?.length ?? 0) > 0;
 
+// Chỉ đề FE có từ chừng này ảnh câu hỏi mới luyện/thi được trên web; đề khác chỉ xem trước
+export const MIN_PLAYABLE_QUESTIONS = 20;
+export const canPractice = (kind: ExamKind | undefined, totalQuestions: number) => (kind ?? "FE") === "FE" && totalQuestions >= MIN_PLAYABLE_QUESTIONS;
+
 // Sự kiện realtime "exam:answers" (cũng là kết quả GET /exams/:id/answers, không có examId)
 export interface ExamAnswersPayload {
   examId: string;
