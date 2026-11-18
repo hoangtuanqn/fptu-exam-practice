@@ -12,15 +12,15 @@ import { ADMIN_ROOM, EVENTS, roomOf, type RoomKind } from "./events";
  */
 let io: Server | null = null;
 
-const hasListeners = (kind: RoomKind, id: number) => (io?.sockets.adapter.rooms.get(roomOf(kind, id))?.size ?? 0) > 0;
+const hasListeners = (kind: RoomKind, id: string | number) => (io?.sockets.adapter.rooms.get(roomOf(kind, id))?.size ?? 0) > 0;
 
-export const examPayload = async (examId: number) => {
+export const examPayload = async (examId: string) => {
   const exam = await examRepository.findAnswers(examId);
   return exam ? { examId, ...toAnswersPayload(exam) } : null;
 };
 
 // Các câu đã có ảnh của đề đang được lấy về (null nếu đề đã đủ câu hoặc không còn)
-export const questionsPayload = async (examId: number) => {
+export const questionsPayload = async (examId: string) => {
   const exam = await examRepository.findLoadedQuestions(examId);
   if (!exam) return null;
   return {
@@ -42,27 +42,27 @@ export const realtimeHub = {
   },
 
   // Đáp án của đề vừa đổi (AI xong, lỗi, hoặc bắt đầu giải lại)
-  async publishExam(examId: number) {
+  async publishExam(examId: string) {
     if (!io || !hasListeners("exam", examId)) return;
     const payload = await examPayload(examId).catch(() => null);
     if (payload) io.to(roomOf("exam", examId)).emit(EVENTS.examAnswers, payload);
   },
 
   // Có thêm câu vừa tải xong: gửi toàn bộ các câu đã có (giao diện gộp theo số câu nên nhận lặp cũng không sao)
-  async publishExamQuestions(examId: number) {
+  async publishExamQuestions(examId: string) {
     if (!io || !hasListeners("exam", examId)) return;
     const payload = await questionsPayload(examId).catch(() => null);
     if (payload) io.to(roomOf("exam", examId)).emit(EVENTS.examQuestions, payload);
   },
 
   // Gắn chủ đề chạy nền: "running" khi bắt đầu, "done" kèm các chủ đề vừa gắn khi xong (hoặc không gắn được)
-  publishExamTopics(examId: number, state: "running" | "done", topics: { number: number; topic: string }[] = []) {
+  publishExamTopics(examId: string, state: "running" | "done", topics: { number: number; topic: string }[] = []) {
     if (!io) return;
     io.to(roomOf("exam", examId)).emit(EVENTS.examTopics, { examId, state, topics });
   },
 
   // Lấy đề thất bại sau khi người dùng đã mở đề: báo để họ thoát ra
-  publishExamFailed(examId: number, message: string) {
+  publishExamFailed(examId: string, message: string) {
     if (!io) return;
     io.to(roomOf("exam", examId)).emit(EVENTS.examFailed, { examId, message });
   },

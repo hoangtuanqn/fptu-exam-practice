@@ -3,7 +3,7 @@
  * CHỈ ĐỌC (DB + thư mục storage), không sửa gì, chạy được cả trên VPS.
  *
  *   npm run audit:exams                 kiểm tra mọi đề, in bảng tổng hợp + danh sách vấn đề
- *   npm run audit:exams -- --exam 51    chỉ một đề (id trong DB)
+ *   npm run audit:exams -- --exam <uuid> chỉ một đề (id trong DB)
  *   npm run audit:exams -- --problems   chỉ in đề có vấn đề
  *   npm run audit:exams -- --json       in JSON (để lưu hoặc so sánh)
  *   npm run audit:exams -- --no-hash    bỏ bước so trùng ảnh (nhanh hơn)
@@ -30,7 +30,7 @@ interface Issue {
 
 const args = process.argv.slice(2);
 const flag = (name: string) => args.includes(`--${name}`);
-const onlyExam = Number(args[args.indexOf("--exam") + 1]) || 0;
+const onlyExam = args.includes("--exam") ? (args[args.indexOf("--exam") + 1] ?? "").toLowerCase() : ""; // id (UUID) của đề
 
 const ANSWER_FORMAT = /^[A-Z]( [A-Z]){0,7}$/; // "C" hoặc "A C D"; cho phép tối đa 8 đáp án
 const SOLVED = new Set(["AI", "MANUAL"]); // nguồn đáp án dùng được; DEFAULT/FAILED/PENDING là chưa có đáp án thật
@@ -88,11 +88,11 @@ async function main() {
     where: onlyExam ? { examId: onlyExam } : {},
     select: { examId: true, questionNumber: true, content: true },
   });
-  const explOf = new Map<number, { number: number; content: string }[]>();
+  const explOf = new Map<string, { number: number; content: string }[]>();
   for (const e of expl) (explOf.get(e.examId) ?? explOf.set(e.examId, []).get(e.examId)!).push({ number: e.questionNumber, content: e.content });
 
   const rows: Record<string, unknown>[] = [];
-  const report: { id: number; title: string; issues: Issue[] }[] = [];
+  const report: { id: string; title: string; issues: Issue[] }[] = [];
 
   for (const exam of exams) {
     const issues: Issue[] = [];

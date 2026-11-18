@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { paginationQuery } from "../../utils/pagination";
 import { violations } from "./violation.request";
+import { uuidSchema } from "./admin.request";
 
 const option = z.string().regex(/^[A-Z]$/, "Đáp án không hợp lệ");
 
@@ -19,10 +20,10 @@ export const submitAttemptBody = z.object({
 });
 
 export const listAttemptsQuery = paginationQuery.extend({
-  examId: z.coerce.number().int().positive().optional(),
+  examId: uuidSchema.optional(),
 });
 
-export const attemptSummaryQuery = z.object({ examId: z.coerce.number().int().positive() });
+export const attemptSummaryQuery = z.object({ examId: uuidSchema });
 
 export const threadParam = z.object({ threadId: z.string().regex(/^\d{1,18}$/, "Mã đề không hợp lệ") });
 

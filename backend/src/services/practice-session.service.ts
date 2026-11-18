@@ -44,19 +44,19 @@ export const practiceSessionService = {
   },
 
   // Mỗi lần bấm làm bài là một lượt mới
-  async create(actor: Actor, examId: number, body: CreateSessionBody) {
+  async create(actor: Actor, examId: string, body: CreateSessionBody) {
     await examService.assertAccess(actor, examId);
     if ((await examRepository.countQuestions(examId)) === 0) throw new AppError(NO_QUESTIONS_MESSAGE);
     return toDto(await practiceSessionRepository.create(actor.owner, examId, body.mode));
   },
 
-  async get(actor: Actor, id: number) {
+  async get(actor: Actor, id: string) {
     const s = await practiceSessionRepository.findOfOwner(actor.owner, id);
     if (!s) throw notFound();
     return toDto(s);
   },
 
-  async save(actor: Actor, id: number, body: SaveSessionBody) {
+  async save(actor: Actor, id: string, body: SaveSessionBody) {
     const { submitted, ...state } = body;
     // Trường hợp thường gặp: lượt còn đang làm -> một câu UPDATE là xong
     if ((await practiceSessionRepository.saveIfOpen(actor.owner, id, state, submitted === true)) > 0) {
@@ -74,7 +74,7 @@ export const practiceSessionService = {
     return { items: items.map(toDto), meta: toMeta(query, total) };
   },
 
-  async remove(actor: Actor, id: number) {
+  async remove(actor: Actor, id: string) {
     const s = await practiceSessionRepository.findOfOwner(actor.owner, id);
     if (!s) throw notFound();
     await practiceSessionRepository.remove(id);

@@ -5,7 +5,7 @@ import { assertSameDimensions, dotF32 } from "./vector";
 
 export interface ClusterRow {
   questionId: number;
-  examId: number;
+  examId: string;
   chapter: string | null; // ExamQuestion.topic
   vector: Float32Array; // đã chuẩn hoá độ dài 1 (cosine = tích vô hướng)
 }
@@ -56,9 +56,9 @@ interface Edge {
 /** Union-find giữ thêm tập đề của mỗi nhóm để chặn việc gộp hai câu cùng đề. */
 class ExamAwareUnionFind {
   private parent: number[];
-  private exams: Set<number>[];
+  private exams: Set<string>[];
 
-  constructor(examIds: readonly number[]) {
+  constructor(examIds: readonly string[]) {
     this.parent = examIds.map((_, i) => i);
     this.exams = examIds.map((e) => new Set([e]));
   }

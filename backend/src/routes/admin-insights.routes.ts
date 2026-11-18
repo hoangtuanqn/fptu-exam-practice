@@ -2,7 +2,7 @@ import { Router } from "express";
 import type { Request, Response } from "express";
 import { z } from "zod";
 import { getValidated, validate } from "../middlewares/validate.middlewares";
-import { idParam, type IdParam } from "../rules/requests/admin.request";
+import { uuidParam, type UuidParam } from "../rules/requests/admin.request";
 import { ResponseClient } from "../rules/response";
 import { adminInsightsService } from "../services/admin.insights.service";
 import { promptEventService } from "../services/prompt-event.service";
@@ -21,8 +21,8 @@ adminInsightsRouter.get("/prompts", validate(funnelQuery, "query"), async (_req:
 adminInsightsRouter.get("/exams", async (_req: Request, res: Response) => {
   res.json(new ResponseClient({ data: await adminInsightsService.examsToReview() }));
 });
-adminInsightsRouter.get("/exams/:id/questions", validate(idParam, "params"), async (_req: Request, res: Response) => {
-  res.json(new ResponseClient({ data: await adminInsightsService.examQuestions(getValidated<IdParam>(res, "params").id) }));
+adminInsightsRouter.get("/exams/:id/questions", validate(uuidParam, "params"), async (_req: Request, res: Response) => {
+  res.json(new ResponseClient({ data: await adminInsightsService.examQuestions(getValidated<UuidParam>(res, "params").id) }));
 });
 
 export default adminInsightsRouter;

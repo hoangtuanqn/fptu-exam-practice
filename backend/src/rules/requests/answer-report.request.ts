@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { paginationQuery } from "../../utils/pagination";
+import { uuidSchema } from "./admin.request";
 
 // Lọc theo trạng thái "đã giải quyết" của admin: "true" | "false", rỗng = tất cả
 export const resolvedFilter = z.enum(["true", "false", ""]).optional();
@@ -12,7 +13,7 @@ const proposedAnswer = z
   .regex(/^[A-Z]( ?[A-Z]){0,7}$/, "Đáp án không hợp lệ");
 
 export const createReportBody = z.object({
-  examId: z.number("Đề không hợp lệ").int().positive(),
+  examId: uuidSchema,
   questionNumber: z.number("Câu không hợp lệ").int().positive(),
   proposedAnswer,
   reason: z.string("Vui lòng nhập lý do").trim().min(10, "Lý do tối thiểu 10 ký tự").max(1000, "Lý do tối đa 1000 ký tự"),

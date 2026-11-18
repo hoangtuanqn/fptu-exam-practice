@@ -33,7 +33,7 @@ const STAGE_THROTTLE_MS = 400; // ghi tiến độ tối đa chừng này mỗi 
 
 export interface ImportHooks {
   /** Gọi một lần khi đã có ảnh đầu tiên: đưa đề vào kho người nhập để họ mở ngay. */
-  onReady: (examId: number) => Promise<void>;
+  onReady: (examId: string) => Promise<void>;
 }
 
 const removeDir = (dir: string) => fs.rm(dir, { recursive: true, force: true });
@@ -55,7 +55,7 @@ const removeStaleFiles = async (dir: string, keep: Set<string>) => {
  * files/<tên> là tệp đính kèm không phải ảnh (pdf, zip...), lưu nguyên bản. Thread chỉ có tệp thì thành đề 0 câu, không gọi AI.
  */
 export const examImportService = {
-  async run(job: CrawlJob, hooks: ImportHooks): Promise<{ examId: number }> {
+  async run(job: CrawlJob, hooks: ImportHooks): Promise<{ examId: string }> {
     let lastStageAt = 0;
     const stage = async (text: string, force = false) => {
       const now = Date.now();

@@ -3,12 +3,24 @@
 
 export interface ExamAggregate {
   count: number; // số đề dùng được của môn
-  idSum: number; // tổng id các đề đó (đổi khi có đề thêm/xoá, hoặc đề DEFAULT vừa được AI giải)
+  idSum: number; // tổng băm id các đề đó (đổi khi có đề thêm/xoá, hoặc đề DEFAULT vừa được AI giải)
   maxCreatedAt: Date | null;
   maxRefreshedAt: Date | null; // đề được làm mới (lấy lại ảnh, giải lại)
 }
 
 export const EMPTY_EXAM_AGGREGATE: ExamAggregate = { count: 0, idSum: 0, maxCreatedAt: null, maxRefreshedAt: null };
+
+// Băm số của id UUID: 8 chữ hex cuối (phần ngẫu nhiên của UUID v7). Tổng vài nghìn số 32 bit vẫn chính xác trong Number.
+const idHash = (id: string) => parseInt(id.slice(-8), 16) || 0;
+const later = (a: Date | null, b: Date | null) => (!a ? b : !b || a >= b ? a : b);
+
+/** Cộng một đề vào tổng của môn (không sửa `a`). */
+export const addToAggregate = (a: ExamAggregate, e: { id: string; createdAt: Date; refreshedAt: Date | null }): ExamAggregate => ({
+  count: a.count + 1,
+  idSum: a.idSum + idHash(e.id),
+  maxCreatedAt: later(a.maxCreatedAt, e.createdAt),
+  maxRefreshedAt: later(a.maxRefreshedAt, e.refreshedAt),
+});
 
 /** Chữ ký của tập đề dùng được của một môn: khác chữ ký của lần chạy trước nghĩa là đề đã đổi. */
 export const examSignature = (a: ExamAggregate) => `${a.count}:${a.idSum}:${a.maxCreatedAt?.getTime() ?? 0}:${a.maxRefreshedAt?.getTime() ?? 0}`;

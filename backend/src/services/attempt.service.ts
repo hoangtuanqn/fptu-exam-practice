@@ -15,7 +15,7 @@ import { topicsOfAttempt } from "./topic-stats.service";
 
 export const attemptService = {
   // Nhận đáp án người dùng chọn, chấm theo đáp án trong DB rồi lưu lịch sử
-  async submit(actor: Actor, examId: number, body: SubmitAttemptBody, perks: { unlimitedReview?: boolean; topicReport?: boolean } = {}) {
+  async submit(actor: Actor, examId: string, body: SubmitAttemptBody, perks: { unlimitedReview?: boolean; topicReport?: boolean } = {}) {
     if (!isMember(actor.owner)) throw AppError.unauthorized(); // lịch sử chỉ dành cho thành viên
     await examService.assertAccess(actor, examId);
     // AI chưa phân tích xong thì chưa chấm được: bắt giao diện chờ rồi gửi lại, không ghi điểm sai vào lịch sử
@@ -63,7 +63,7 @@ export const attemptService = {
     return { items, meta: toMeta(query, total) };
   },
 
-  summary: (userId: number, examId: number) => examAttemptRepository.summaryOfExam(userId, examId),
+  summary: (userId: number, examId: string) => examAttemptRepository.summaryOfExam(userId, examId),
 
   // Chỉ chủ bài làm được xem (admin cũng không xem bài của người khác)
   async getMine(userId: number, id: string) {

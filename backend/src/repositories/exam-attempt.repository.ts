@@ -5,7 +5,7 @@ import { newestFirst, toSkipTake, type PaginationQuery } from "../utils/paginati
 
 export interface NewAttempt {
   userId: number;
-  examId: number;
+  examId: string;
   mode: AttemptMode;
   score: number;
   totalGraded: number;
@@ -44,7 +44,7 @@ export const examAttemptRepository = {
   findOfUser: (id: string, userId: number) =>
     prisma.examAttempt.findFirst({ where: { id, userId }, include: withExam }),
 
-  async list(userId: number, query: PaginationQuery, examId?: number) {
+  async list(userId: number, query: PaginationQuery, examId?: string) {
     const where: Prisma.ExamAttemptWhereInput = { userId, examId };
     const [items, total] = await Promise.all([
       prisma.examAttempt.findMany({ where, select: listSelect, orderBy: [...newestFirst(true)], ...toSkipTake(query) }),
@@ -54,13 +54,13 @@ export const examAttemptRepository = {
   },
 
   // Số lần làm và điểm cao nhất của một đề (hiện ở màn làm bài)
-  async summaryOfExam(userId: number, examId: number) {
+  async summaryOfExam(userId: number, examId: string) {
     const r = await prisma.examAttempt.aggregate({ where: { userId, examId }, _count: { _all: true }, _max: { score: true } });
     return { attempts: r._count._all, bestScore: r._max.score };
   },
 
   // Số lần làm và điểm cao nhất theo từng đề, để hiện ở thư viện
-  statsByExam: (userId: number, examIds: number[]) =>
+  statsByExam: (userId: number, examIds: string[]) =>
     prisma.examAttempt.groupBy({
       by: ["examId"],
       where: { userId, examId: { in: examIds } },

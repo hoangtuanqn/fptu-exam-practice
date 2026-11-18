@@ -11,7 +11,7 @@ import { hammingWithin, hashImagesInBatches, toWords } from "../utils/question-h
 
 export interface FrequentItem {
   count: number; // số đề (khác nhau) có câu này
-  examId: number;
+  examId: string;
   threadId: string;
   examTitle: string;
   number: number;

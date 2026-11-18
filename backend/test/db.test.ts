@@ -56,7 +56,7 @@ describe("database (throwaway MySQL)", { skip: DB_TESTS_ENABLED ? false : DB_SKI
   let subjectId = 0;
   let userId = 0;
   const qid = new Map<string, number>(); // "exam:number" -> id
-  const examIds: number[] = [];
+  const examIds: string[] = [];
   const examIdOf = (i: number) => examIds[i]!;
   const actor = () => ({ owner: { userId }, isAdmin: false });
 

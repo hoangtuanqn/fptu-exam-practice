@@ -1,24 +1,21 @@
 import { prisma } from "../configs/prisma";
 import { USABLE_ANSWER_SOURCES } from "../constants/exam";
-import type { ExamAggregate } from "../utils/similarity-job";
+import { addToAggregate, EMPTY_EXAM_AGGREGATE, type ExamAggregate } from "../utils/similarity-job";
 import { subjectQuestions } from "./question-embedding.repository";
 
 // Truy vấn của việc chạy ban đêm (services/similarity-job.service)
 
 export const similarityJobRepository = {
-  /** Mỗi mã môn có đề dùng được: số đề, tổng id, lần tạo/làm mới gần nhất (một truy vấn GROUP BY theo chỉ mục subject_code, answer_source). */
+  /** Mỗi mã môn có đề dùng được: số đề, tổng băm id, lần tạo/làm mới gần nhất. Id là UUID nên không SUM trong SQL được: đọc 4 cột nhỏ của các đề dùng được (vài nghìn dòng, theo chỉ mục subject_code, answer_source) rồi gộp ở đây. */
   async usableExamAggregates(): Promise<Map<string, ExamAggregate>> {
-    const rows = await prisma.exam.groupBy({
-      by: ["subjectCode"],
+    const rows = await prisma.exam.findMany({
       where: { subjectCode: { not: null }, answerSource: { in: [...USABLE_ANSWER_SOURCES] } },
-      _count: { _all: true },
-      _sum: { id: true },
-      _max: { createdAt: true, refreshedAt: true },
+      select: { id: true, subjectCode: true, createdAt: true, refreshedAt: true },
     });
     const out = new Map<string, ExamAggregate>();
     for (const r of rows) {
       if (!r.subjectCode) continue;
-      out.set(r.subjectCode, { count: r._count._all, idSum: r._sum.id ?? 0, maxCreatedAt: r._max.createdAt, maxRefreshedAt: r._max.refreshedAt });
+      out.set(r.subjectCode, addToAggregate(out.get(r.subjectCode) ?? EMPTY_EXAM_AGGREGATE, r));
     }
     return out;
   },

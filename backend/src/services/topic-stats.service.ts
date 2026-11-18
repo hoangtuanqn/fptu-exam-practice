@@ -85,7 +85,7 @@ export interface AttemptTopic {
  * Kết quả theo chủ đề của CHÍNH bài vừa nộp (hiện ngay trong bảng điểm). Chủ đề có ít câu nhất cũng được hiện, vì đây là thống kê một bài chứ không phải kết luận dài hạn.
  * Gói thường chỉ nhận chủ đề yếu nhất (kèm số chủ đề còn lại để mời nâng cấp); Pro nhận đủ, xếp yếu nhất trước. Khóa ở máy chủ.
  */
-export async function topicsOfAttempt(examId: number, items: GradedQuestion[], full: boolean) {
+export async function topicsOfAttempt(examId: string, items: GradedQuestion[], full: boolean) {
   const questions = await prisma.examQuestion.findMany({ where: { examId, topic: { not: null }, isReference: false }, select: { number: true, topic: true } });
   if (questions.length === 0) return { topics: [] as AttemptTopic[], hidden: 0 };
   const topicOf = new Map(questions.map((q) => [q.number, q.topic!]));

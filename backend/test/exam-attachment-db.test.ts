@@ -20,7 +20,7 @@ const row = (name: string) => ({ name, filePath: `exams/9001/files/${name}`, mim
 describe("exam attachments (MySQL)", { skip: DB_TESTS_ENABLED ? false : DB_SKIP_REASON }, () => {
   let db: ThrowawayDb;
   let m: Awaited<ReturnType<typeof loadModules>>;
-  let examId: number, otherId: number, userId: number;
+  let examId: string, otherId: string, userId: number;
 
   before(async () => {
     db = await createThrowawayDb();

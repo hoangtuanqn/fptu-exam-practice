@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { paginationQuery } from "../../utils/pagination";
 import { violations } from "./violation.request";
+import { uuidSchema } from "./admin.request";
 
 const option = z.string().regex(/^[A-Z]$/, "Đáp án không hợp lệ");
 const questionNumber = z.string().regex(/^\d{1,4}$/);
@@ -23,7 +24,7 @@ export const saveSessionBody = z.object({
 });
 
 export const listSessionsQuery = paginationQuery.extend({
-  examId: z.coerce.number().int().positive().optional(),
+  examId: uuidSchema.optional(),
 });
 
 export type CreateSessionBody = z.infer<typeof createSessionBody>;

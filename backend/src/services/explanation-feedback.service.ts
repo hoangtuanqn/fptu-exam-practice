@@ -37,7 +37,7 @@ export const explanationFeedbackService = {
   },
 
   /** Đánh giá hiện tại của người dùng cho một câu (null = chưa đánh giá). */
-  async mine(userId: number, examId: number, questionNumber: number) {
+  async mine(userId: number, examId: string, questionNumber: number) {
     return (await explanationFeedbackRepository.find(userId, examId, questionNumber))?.helpful ?? null;
   },
 

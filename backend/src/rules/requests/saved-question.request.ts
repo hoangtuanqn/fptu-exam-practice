@@ -1,13 +1,14 @@
 import { z } from "zod";
 import { paginationQuery } from "../../utils/pagination";
 import { subjectCodeSchema } from "./subject.request";
+import { uuidSchema } from "./admin.request";
 
 const INT_MAX = 2_147_483_647; // ngoài khoảng này Prisma không nhét được vào cột INT (sẽ thành lỗi 500)
 const id = z.coerce.number().int().positive().max(INT_MAX);
 
-export const saveQuestionBody = z.object({ examId: z.number().int().positive().max(INT_MAX), questionNumber: z.number().int().positive().max(INT_MAX) });
-export const savedQuestionParams = z.object({ examId: id, number: id });
-export const savedExamParams = z.object({ examId: id });
+export const saveQuestionBody = z.object({ examId: uuidSchema, questionNumber: z.number().int().positive().max(INT_MAX) });
+export const savedQuestionParams = z.object({ examId: uuidSchema, number: id });
+export const savedExamParams = z.object({ examId: uuidSchema });
 export const savedListQuery = paginationQuery.extend({ subject: subjectCodeSchema.transform((s) => s.toUpperCase()).optional() });
 
 export type SaveQuestionBody = z.infer<typeof saveQuestionBody>;
