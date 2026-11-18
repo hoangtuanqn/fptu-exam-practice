@@ -1,6 +1,30 @@
 {
   "web": [
     {
+      "version": "1.12.0",
+      "date": "2026-11-18",
+      "title": "Xem trước đề và nhãn loại đề",
+      "highlights": [
+        "Mỗi đề có nhãn FE, PE, Quiz để phân biệt ngay",
+        "Trang xem trước hiện ảnh từng trang và tệp đính kèm của đề",
+        "Kho đề có thêm đề PE và Quiz"
+      ],
+      "changes": [
+        {
+          "type": "new",
+          "text": "Mở đề sẽ vào trang xem trước: xem ảnh từng trang đề và tệp đính kèm, đề FE có nút Luyện đề và Thi ngay bên cạnh"
+        },
+        {
+          "type": "new",
+          "text": "Kho đề có thêm nhiều đề PE, Quiz và các loại đề khác của từng môn"
+        },
+        {
+          "type": "improved",
+          "text": "Mỗi đề hiện nhãn loại (FE, PE, Quiz, Khác) ở danh sách và trang xem trước"
+        }
+      ]
+    },
+    {
       "version": "1.11.0",
       "date": "2026-11-15",
       "title": "Đặt đơn Coursera bằng link và thanh bên rõ ràng hơn",
