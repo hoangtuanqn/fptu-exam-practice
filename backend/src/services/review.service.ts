@@ -113,7 +113,7 @@ export const reviewService = {
       where: { userId, mastered: false, exam: USABLE_EXAM, ...(all ? {} : { nextReviewAt: { lte: now } }) },
       orderBy: [{ nextReviewAt: "asc" }, { id: "asc" }],
       take: byTopic ? 300 : limit, // lọc theo chủ đề thì lấy rộng rồi lọc, vì chủ đề nằm ở bảng câu hỏi
-      include: { exam: { select: { title: true, threadId: true } } },
+      include: { exam: { select: { title: true } } },
     });
     const qs = await questionsOf(found);
     const rows = byTopic
@@ -127,7 +127,6 @@ export const reviewService = {
           id: r.id,
           examId: r.examId,
           examTitle: r.exam.title,
-          threadId: r.exam.threadId,
           number: r.questionNumber,
           imageUrl: fileUrlOf(q.imagePath),
           correct: answersOf(q.answer),
@@ -167,7 +166,7 @@ export const reviewService = {
         where,
         orderBy: status === "active" ? [{ nextReviewAt: "asc" }, { id: "asc" }] : [{ updatedAt: "desc" }],
         ...toSkipTake(query),
-        include: { exam: { select: { title: true, threadId: true } } },
+        include: { exam: { select: { title: true } } },
       }),
       prisma.reviewItem.count({ where }),
     ]);
@@ -179,7 +178,6 @@ export const reviewService = {
         id: r.id,
         examId: r.examId,
         examTitle: r.exam.title,
-        threadId: r.exam.threadId,
         number: r.questionNumber,
         imageUrl: q ? fileUrlOf(q.imagePath) : null,
         box: r.box,

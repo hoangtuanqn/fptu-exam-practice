@@ -3,7 +3,7 @@ import { describe, it } from "node:test";
 import { pickExams, type ExamLite } from "../src/utils/recent-exams";
 
 const NOW = new Date("2026-11-13T05:00:00Z");
-const exam = (threadId: string, term: string | null, status: ExamLite["status"], extra: Partial<ExamLite> = {}): ExamLite => ({ threadId, title: `PRO192 ${term ?? "Practice"} FE`, postedAt: null, term, status, questions: null, ...extra });
+const exam = (examId: string, term: string | null, status: ExamLite["status"], extra: Partial<ExamLite> = {}): ExamLite => ({ examId, title: `PRO192 ${term ?? "Practice"} FE`, postedAt: null, term, status, questions: null, ...extra });
 const ITEMS: ExamLite[] = [exam("4", "FA26", "ready", { questions: 50, postedAt: new Date("2026-10-20T00:00:00Z") }), exam("3", "SU26", "fetch"), exam("2", "SP25", "owned"), exam("1", null, "fetch")];
 const base = { code: "PRO192", recent: true, limit: 10, offset: 0, now: NOW };
 

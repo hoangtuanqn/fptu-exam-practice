@@ -17,7 +17,7 @@ export interface NewAttempt {
   violations: Prisma.InputJsonValue;
 }
 
-const withExam = { exam: { select: { id: true, title: true, threadId: true, totalQuestions: true } } } satisfies Prisma.ExamAttemptInclude;
+const withExam = { exam: { select: { id: true, title: true, totalQuestions: true } } } satisfies Prisma.ExamAttemptInclude;
 
 // Danh sách không cần cột details (nặng), chỉ chi tiết mới lấy
 const listSelect = {

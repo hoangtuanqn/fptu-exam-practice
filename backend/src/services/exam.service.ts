@@ -66,9 +66,7 @@ export const examService = {
     void topicLabelerService.ensure(id); // đề còn câu chưa có chủ đề: gắn nền, kết quả về qua realtime
     return {
       id: exam.id,
-      threadId: exam.threadId,
       title: exam.title,
-      sourceUrl: exam.sourceUrl,
       totalQuestions: exam.totalQuestions, // lớn hơn số câu trả về = đề còn đang được lấy về, các câu sau đến qua socket
       answerStatus: exam.answerSource, // PENDING = AI đang phân tích, FAILED = AI lỗi: cả hai chỉ xem đề, chưa làm bài được
       answerError: failedMessage(exam.answerSource),
@@ -105,14 +103,6 @@ export const examService = {
     const exam = await examRepository.findAnswers(id);
     if (!exam) throw AppError.notFound(EXAM_NOT_FOUND);
     return toAnswersPayload(exam);
-  },
-
-  // Địa chỉ /exam/:threadId dùng mã thread (thông tin công khai trên FuOverflow) thay cho ID nội bộ tăng dần.
-  // Không có đề, hoặc có nhưng không nằm trong kho của người xem, đều trả cùng một lỗi 404.
-  async getDetailByThread(actor: Actor, threadId: string) {
-    const exam = await examRepository.findByThreadId(threadId);
-    if (!exam) throw AppError.notFound(EXAM_NOT_FOUND);
-    return this.getDetail(actor, exam.id);
   },
 
   // Vừa đăng ký/đăng nhập: đề khách đã lấy trên trình duyệt này chuyển về tài khoản

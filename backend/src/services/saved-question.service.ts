@@ -41,7 +41,6 @@ export const savedQuestionService = {
           id: r.id,
           examId: r.examId,
           examTitle: r.exam.title,
-          threadId: r.exam.threadId,
           subjectCode: r.exam.subjectCode,
           number: r.questionNumber,
           imageUrl: q ? fileUrlOf(q.imagePath) : null, // câu đã bị xoá khỏi đề (hiếm): vẫn hiện để bỏ lưu được

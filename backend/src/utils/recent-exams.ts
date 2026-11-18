@@ -1,7 +1,7 @@
 import { isRecentTerm } from "./term";
 
 export interface ExamLite {
-  threadId: string;
+  examId: string | null;
   title: string;
   postedAt: Date | null;
   term: string | null;
@@ -22,7 +22,7 @@ export function pickExams(items: ExamLite[], opts: { code: string; recent: boole
     list = items;
     note = "no_recent_exams";
   }
-  const link = (e: ExamLite) => (e.status === "fetch" ? `/account/exams?tab=subject&subject=${encodeURIComponent(opts.code)}` : `/exam/${e.threadId}`);
+  const link = (e: ExamLite) => (e.status === "fetch" ? `/account/exams?tab=subject&subject=${encodeURIComponent(opts.code)}` : `/exam/${e.examId}`);
   const rows = list.slice(opts.offset, opts.offset + opts.limit).map((e): ExamRow => [e.title, e.term, e.status, e.questions, e.postedAt ? e.postedAt.toISOString().slice(0, 10) : null, link(e)]);
   return { matched: list.length, ...(note && { note }), rows };
 }

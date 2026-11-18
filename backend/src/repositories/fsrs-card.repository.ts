@@ -102,7 +102,7 @@ export const fsrsCardRepository = {
         state: true,
         reps: true,
         lapses: true,
-        question: { select: { examId: true, number: true, imagePath: true, topic: true, exam: { select: { title: true, threadId: true } } } },
+        question: { select: { examId: true, number: true, imagePath: true, topic: true, exam: { select: { title: true } } } },
       },
     }),
 
