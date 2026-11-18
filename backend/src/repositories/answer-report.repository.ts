@@ -27,14 +27,14 @@ export const answerReportRepository = {
 
   countSince: (userId: number, since: Date) => prisma.answerReport.count({ where: { userId, createdAt: { gte: since } } }),
 
-  findPending: (db: Db, id: number) =>
+  findPending: (db: Db, id: string) =>
     db.answerReport.findFirst({
       where: { id, status: "PENDING" },
       select: { id: true, examId: true, questionNumber: true, userId: true, proposedAnswer: true, exam: { select: { title: true } } },
     }),
 
   /** Chốt báo cáo bằng UPDATE có điều kiện (chỉ khi còn PENDING): hai admin duyệt cùng lúc thì chỉ một người thắng. */
-  async review(db: Db, id: number, data: { status: Exclude<ReportStatus, "PENDING">; reward: number; reviewNote?: string; reviewedById: number }) {
+  async review(db: Db, id: string, data: { status: Exclude<ReportStatus, "PENDING">; reward: number; reviewNote?: string; reviewedById: number }) {
     const { count } = await db.answerReport.updateMany({
       where: { id, status: "PENDING" },
       data: { ...data, reviewedAt: new Date() },
@@ -52,10 +52,10 @@ export const answerReportRepository = {
     return { items, total };
   },
 
-  findAdmin: (id: number) => prisma.answerReport.findUnique({ where: { id }, select: adminSelect }),
+  findAdmin: (id: string) => prisma.answerReport.findUnique({ where: { id }, select: adminSelect }),
 
   /** Đánh dấu đã giải quyết; chỉ ghi lần đầu (giải quyết lại giữ nguyên người và thời điểm đầu tiên). Báo cáo đã duyệt/từ chối thì không đổi. */
-  resolve: (id: number, adminId: number) =>
+  resolve: (id: string, adminId: number) =>
     prisma.answerReport.updateMany({ where: { id, status: "PENDING", resolvedAt: null }, data: { resolvedAt: new Date(), resolvedById: adminId } }),
 
   // Badge sidebar: dùng index (status, resolved_at)

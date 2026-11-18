@@ -24,20 +24,20 @@ export const giftCodeRepository = {
   findByCode: (db: Db, code: string) =>
     db.giftCode.findUnique({ where: { code }, select: { id: true, code: true, amount: true, expiresAt: true, active: true, creditTtlMinutes: true } }),
 
-  setActive: (id: number, active: boolean) => prisma.giftCode.update({ where: { id }, data: { active }, select: listSelect }),
+  setActive: (id: string, active: boolean) => prisma.giftCode.update({ where: { id }, data: { active }, select: listSelect }),
 
   /**
    * Chiếm một lượt dùng bằng MỘT câu UPDATE có điều kiện (còn bật, còn lượt, chưa hết hạn): nhiều người nhập cùng lúc
    * cũng không thể vượt quá maxUses. Trả về true nếu chiếm được.
    */
-  async claimUse(db: Db, id: number) {
+  async claimUse(db: Db, id: string) {
     const rows = await db.$executeRaw`
       UPDATE gift_codes SET used_count = used_count + 1
       WHERE id = ${id} AND active = 1 AND used_count < max_uses AND (expires_at IS NULL OR expires_at > NOW(3))`;
     return rows === 1;
   },
 
-  createRedemption: (db: Db, data: { giftCodeId: number; userId: number; amount: number }) =>
+  createRedemption: (db: Db, data: { giftCodeId: string; userId: number; amount: number }) =>
     db.giftCodeRedemption.create({ data, select: { id: true } }),
 
   async list(query: PaginationQuery, filter: { q?: string; active?: boolean }) {
@@ -53,7 +53,7 @@ export const giftCodeRepository = {
   },
 
   // Ai đã dùng một mã (admin xem)
-  async listRedemptions(giftCodeId: number, query: PaginationQuery) {
+  async listRedemptions(giftCodeId: string, query: PaginationQuery) {
     const where = { giftCodeId };
     const [items, total] = await Promise.all([
       prisma.giftCodeRedemption.findMany({

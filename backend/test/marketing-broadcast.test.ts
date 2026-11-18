@@ -73,8 +73,8 @@ describe("broadcast mail", () => {
 describe("log filters", () => {
   const parse = (q: Record<string, string>) => listLogsQuery.safeParse(q);
   it("accepts campaign keys and broadcasts, rejects anything else", () => {
-    for (const campaign of ["winback", "pro_upsell", "pro_expiry", "broadcast", "broadcast:12"]) assert.equal(parse({ campaign }).success, true, campaign);
-    for (const campaign of ["broadcast:", "broadcast:x", "news", "winback' OR 1=1"]) assert.equal(parse({ campaign }).success, false, campaign);
+    for (const campaign of ["winback", "pro_upsell", "pro_expiry", "broadcast", "broadcast:0190a3c4-5b6d-7e8f-9a0b-1c2d3e4f5a6b"]) assert.equal(parse({ campaign }).success, true, campaign);
+    for (const campaign of ["broadcast:", "broadcast:x", "broadcast:12", "news", "winback' OR 1=1"]) assert.equal(parse({ campaign }).success, false, campaign);
   });
 
   it("reads Vietnam days and bounds the page size", () => {

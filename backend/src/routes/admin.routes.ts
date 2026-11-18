@@ -43,7 +43,7 @@ import { listReportsQuery, reviewReportBody } from "../rules/requests/answer-rep
 import { createGiftCodeBody, listGiftCodesQuery, updateGiftCodeBody } from "../rules/requests/gift-code.request";
 import { validate } from "../middlewares/validate.middlewares";
 import { paginationQuery } from "../utils/pagination";
-import { adjustBalanceBody, idParam, listUsersQuery, questionParam, renameExamBody, resetPasswordBody, updateExamQuestionsBody, updateUserBody } from "../rules/requests/admin.request";
+import { adjustBalanceBody, idParam, uuidParam, listUsersQuery, questionParam, renameExamBody, resetPasswordBody, updateExamQuestionsBody, updateUserBody } from "../rules/requests/admin.request";
 
 const adminRouter = Router();
 
@@ -80,7 +80,7 @@ adminRouter.get("/notices", validate(listNoticesQuery, "query"), adminNoticeCont
 adminRouter.get("/notices/counts", adminNoticeController.counts);
 adminRouter.post("/notices/read-all", validate(readAllNoticesBody), adminNoticeController.readAll);
 adminRouter.delete("/notices/read", adminNoticeController.deleteRead);
-adminRouter.patch("/notices/:id", validate(idParam, "params"), validate(setNoticeReadBody), adminNoticeController.setRead);
+adminRouter.patch("/notices/:id", validate(uuidParam, "params"), validate(setNoticeReadBody), adminNoticeController.setRead);
 adminRouter.get("/subjects", adminSubjectController.list);
 adminRouter.get("/subjects/:code", validate(subjectCodeOnlyParam, "params"), adminSubjectController.detail);
 adminRouter.patch("/subjects/:code", validate(subjectCodeOnlyParam, "params"), validate(updateSubjectBody), adminSubjectController.update);
@@ -100,11 +100,11 @@ adminRouter.get("/marketing/campaigns/:key/preview", validate(campaignKeyParam, 
 adminRouter.get("/marketing/logs", validate(listLogsQuery, "query"), adminMarketingController.logs);
 adminRouter.post("/marketing/broadcasts", validate(createBroadcastBody), adminMarketingController.createBroadcast);
 adminRouter.get("/marketing/broadcasts", validate(listBroadcastsQuery, "query"), adminMarketingController.broadcasts);
-adminRouter.get("/marketing/broadcasts/:id/estimate", validate(idParam, "params"), adminMarketingController.estimateBroadcast);
-adminRouter.get("/marketing/broadcasts/:id/preview", validate(idParam, "params"), adminMarketingController.previewBroadcast);
-adminRouter.post("/marketing/broadcasts/:id/test", validate(idParam, "params"), adminMarketingController.testBroadcast);
-adminRouter.post("/marketing/broadcasts/:id/start", validate(idParam, "params"), validate(startBroadcastBody), adminMarketingController.startBroadcast);
-adminRouter.post("/marketing/broadcasts/:id/cancel", validate(idParam, "params"), adminMarketingController.cancelBroadcast);
+adminRouter.get("/marketing/broadcasts/:id/estimate", validate(uuidParam, "params"), adminMarketingController.estimateBroadcast);
+adminRouter.get("/marketing/broadcasts/:id/preview", validate(uuidParam, "params"), adminMarketingController.previewBroadcast);
+adminRouter.post("/marketing/broadcasts/:id/test", validate(uuidParam, "params"), adminMarketingController.testBroadcast);
+adminRouter.post("/marketing/broadcasts/:id/start", validate(uuidParam, "params"), validate(startBroadcastBody), adminMarketingController.startBroadcast);
+adminRouter.post("/marketing/broadcasts/:id/cancel", validate(uuidParam, "params"), adminMarketingController.cancelBroadcast);
 adminRouter.get("/settings/account", adminAccountController.get);
 adminRouter.put("/settings/account", validate(updateAccountBody), adminAccountController.update);
 adminRouter.get("/settings/link-reward", adminLinkRewardController.get);
@@ -146,17 +146,17 @@ adminRouter.get("/exams/:id/download", validate(idParam, "params"), adminAiContr
 
 adminRouter.get("/gift-codes", validate(listGiftCodesQuery, "query"), adminGiftCodeController.list);
 adminRouter.post("/gift-codes", validate(createGiftCodeBody), adminGiftCodeController.create);
-adminRouter.patch("/gift-codes/:id", validate(idParam, "params"), validate(updateGiftCodeBody), adminGiftCodeController.setActive);
-adminRouter.get("/gift-codes/:id/redemptions", validate(idParam, "params"), validate(paginationQuery, "query"), adminGiftCodeController.redemptions);
+adminRouter.patch("/gift-codes/:id", validate(uuidParam, "params"), validate(updateGiftCodeBody), adminGiftCodeController.setActive);
+adminRouter.get("/gift-codes/:id/redemptions", validate(uuidParam, "params"), validate(paginationQuery, "query"), adminGiftCodeController.redemptions);
 
 adminRouter.get("/explanation-feedback", validate(listFeedbackQuery, "query"), adminExplanationFeedbackController.list);
 adminRouter.get("/explanation-feedback/summary", adminExplanationFeedbackController.summary);
-adminRouter.post("/explanation-feedback/:id/resolve", validate(idParam, "params"), adminExplanationFeedbackController.resolve);
+adminRouter.post("/explanation-feedback/:id/resolve", validate(uuidParam, "params"), adminExplanationFeedbackController.resolve);
 adminRouter.get("/review-counts", adminAnswerReportController.reviewCounts);
 adminRouter.get("/answer-reports", validate(listReportsQuery, "query"), adminAnswerReportController.list);
-adminRouter.post("/answer-reports/:id/approve", validate(idParam, "params"), validate(reviewReportBody), adminAnswerReportController.approve);
-adminRouter.post("/answer-reports/:id/reject", validate(idParam, "params"), validate(reviewReportBody), adminAnswerReportController.reject);
-adminRouter.post("/answer-reports/:id/resolve", validate(idParam, "params"), adminAnswerReportController.resolve);
+adminRouter.post("/answer-reports/:id/approve", validate(uuidParam, "params"), validate(reviewReportBody), adminAnswerReportController.approve);
+adminRouter.post("/answer-reports/:id/reject", validate(uuidParam, "params"), validate(reviewReportBody), adminAnswerReportController.reject);
+adminRouter.post("/answer-reports/:id/resolve", validate(uuidParam, "params"), adminAnswerReportController.resolve);
 
 
 adminRouter.get("/settings/referral", adminReferralController.getSettings);

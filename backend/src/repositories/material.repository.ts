@@ -48,10 +48,10 @@ export interface PageRow {
 export const materialRepository = {
   create: (data: NewUpload) => prisma.materialUpload.create({ data, select: UPLOAD_SELECT }),
 
-  findById: (id: number) => prisma.materialUpload.findUnique({ where: { id }, select: UPLOAD_SELECT }),
+  findById: (id: string) => prisma.materialUpload.findUnique({ where: { id }, select: UPLOAD_SELECT }),
 
   /** Chỉ trả khi đúng chủ và chưa hết hạn (người khác hỏi thì như không tồn tại). */
-  findOwned: (id: number, userId: number, now: Date) => prisma.materialUpload.findFirst({ where: { id, userId, expiresAt: { gt: now } }, select: UPLOAD_SELECT }),
+  findOwned: (id: string, userId: number, now: Date) => prisma.materialUpload.findFirst({ where: { id, userId, expiresAt: { gt: now } }, select: UPLOAD_SELECT }),
 
   listByUser: (userId: number, now: Date, take: number) =>
     prisma.materialUpload.findMany({ where: { userId, expiresAt: { gt: now } }, orderBy: [{ createdAt: "desc" }, { id: "desc" }], take, select: UPLOAD_SELECT }),
@@ -63,9 +63,9 @@ export const materialRepository = {
   countActive: (userId: number) => prisma.materialUpload.count({ where: { userId, status: { in: ["QUEUED", "RUNNING"] } } }),
 
   /** Xoá của đúng chủ (trang và chương xoá theo khoá ngoại). Trả số dòng đã xoá. */
-  deleteOwned: async (id: number, userId: number) => (await prisma.materialUpload.deleteMany({ where: { id, userId } })).count,
+  deleteOwned: async (id: string, userId: number) => (await prisma.materialUpload.deleteMany({ where: { id, userId } })).count,
 
-  exists: async (id: number) => !!(await prisma.materialUpload.findUnique({ where: { id }, select: { id: true } })),
+  exists: async (id: string) => !!(await prisma.materialUpload.findUnique({ where: { id }, select: { id: true } })),
 
   /** Nhận job QUEUED cũ nhất (đổi sang RUNNING có điều kiện để không ai nhận trùng). */
   async claimNext(): Promise<MaterialUploadRow | null> {
@@ -81,26 +81,26 @@ export const materialRepository = {
 
   activeIds: async () => (await prisma.materialUpload.findMany({ where: { status: { in: ["QUEUED", "RUNNING"] } }, select: { id: true } })).map((r) => r.id),
 
-  setProgress: (id: number, done: number, total: number) => prisma.materialUpload.updateMany({ where: { id }, data: { progressDone: done, progressTotal: total } }),
+  setProgress: (id: string, done: number, total: number) => prisma.materialUpload.updateMany({ where: { id }, data: { progressDone: done, progressTotal: total } }),
 
-  finish: (id: number, status: Extract<MaterialStatus, "DONE" | "FAILED">, error: string | null, now: Date) =>
+  finish: (id: string, status: Extract<MaterialStatus, "DONE" | "FAILED">, error: string | null, now: Date) =>
     prisma.materialUpload.updateMany({ where: { id }, data: { status, error, finishedAt: now } }),
 
   deleteExpired: async (now: Date) => (await prisma.materialUpload.deleteMany({ where: { expiresAt: { lte: now } } })).count,
 
   // ---- Trang ----
 
-  pages: (uploadId: number): Promise<PageRow[]> =>
+  pages: (uploadId: string): Promise<PageRow[]> =>
     prisma.materialPage.findMany({ where: { uploadId }, orderBy: { pageNo: "asc" }, select: { pageNo: true, kind: true, text: true, figure: true, assigned: true, chapterNumber: true } }),
 
   /** Ghi các trang đã tách; trang đã có (chạy lại sau khi khởi động lại) thì bỏ qua. */
-  savePages: (uploadId: number, pages: readonly PageInsert[]) => prisma.materialPage.createMany({ data: pages.map((p) => ({ uploadId, ...p })), skipDuplicates: true }),
+  savePages: (uploadId: string, pages: readonly PageInsert[]) => prisma.materialPage.createMany({ data: pages.map((p) => ({ uploadId, ...p })), skipDuplicates: true }),
 
-  saveFigure: (uploadId: number, pageNo: number, kind: string, figure: Prisma.InputJsonValue | null) =>
+  saveFigure: (uploadId: string, pageNo: number, kind: string, figure: Prisma.InputJsonValue | null) =>
     prisma.materialPage.updateMany({ where: { uploadId, pageNo }, data: { kind, ...(figure !== null && { figure }) } }),
 
   /** Ghi chương của một lô trang trong một giao dịch (gom theo chương: ít câu lệnh). */
-  saveAssignments: (uploadId: number, assignments: ReadonlyMap<number, number | null>) => {
+  saveAssignments: (uploadId: string, assignments: ReadonlyMap<number, number | null>) => {
     const byChapter = new Map<number | null, number[]>();
     for (const [pageNo, chapter] of assignments) byChapter.set(chapter, [...(byChapter.get(chapter) ?? []), pageNo]);
     return prisma.$transaction(
@@ -110,10 +110,10 @@ export const materialRepository = {
 
   // ---- Chương ----
 
-  chapters: (uploadId: number) =>
+  chapters: (uploadId: string) =>
     prisma.materialChapter.findMany({ where: { uploadId }, orderBy: { chapterNumber: "asc" }, select: { chapterNumber: true, summary: true, keyPoints: true } }),
 
-  saveChapter: (uploadId: number, chapterNumber: number, summary: string, keyPoints: Prisma.InputJsonValue) =>
+  saveChapter: (uploadId: string, chapterNumber: number, summary: string, keyPoints: Prisma.InputJsonValue) =>
     prisma.materialChapter.upsert({
       where: { uploadId_chapterNumber: { uploadId, chapterNumber } },
       create: { uploadId, chapterNumber, summary, keyPoints },

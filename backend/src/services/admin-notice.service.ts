@@ -109,7 +109,7 @@ export const adminNoticeService = {
     return { unread, importantUnread, categories };
   },
 
-  async setRead(id: number, read: boolean) {
+  async setRead(id: string, read: boolean) {
     const row = await prisma.adminNotice.findUnique({ where: { id } });
     if (!row) throw new AppError("Không tìm thấy thông báo", HTTP_STATUS.NOT_FOUND);
     const updated = await prisma.adminNotice.update({ where: { id }, data: { readAt: read ? (row.readAt ?? new Date()) : null } });

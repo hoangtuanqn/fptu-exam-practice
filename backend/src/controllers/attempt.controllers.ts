@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { getValidated } from "../middlewares/validate.middlewares";
-import type { IdParam } from "../rules/requests/admin.request";
+import type { UuidParam } from "../rules/requests/admin.request";
 import type { AttemptSummaryQuery, ListAttemptsQuery } from "../rules/requests/attempt.request";
 import { ResponseClient } from "../rules/response";
 import { attemptService } from "../services/attempt.service";
@@ -17,7 +17,7 @@ export const attemptController = {
   },
 
   async get(req: Request, res: Response) {
-    const { id } = getValidated<IdParam>(res, "params");
+    const { id } = getValidated<UuidParam>(res, "params");
     res.json(new ResponseClient({ data: await attemptService.getMine(req.user!.id, id) }));
   },
 };

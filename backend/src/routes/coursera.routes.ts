@@ -5,7 +5,7 @@ import { authenticate, requireAdmin, requireVerifiedMember } from "../middleware
 import { idempotent } from "../middlewares/idempotency.middlewares";
 import { makeLimiter } from "../middlewares/rateLimit.middlewares";
 import { validate } from "../middlewares/validate.middlewares";
-import { idParam } from "../rules/requests/admin.request";
+import { uuidParam } from "../rules/requests/admin.request";
 import { courseraCourseBody, courseraCoursesQuery, courseraLookupBody, courseraNoteBody, courseraOrderBody, courseraOrdersQuery, courseraStatusBody } from "../rules/requests/coursera.request";
 import { courseraNoStore } from "../middlewares/coursera.middlewares";
 
@@ -18,14 +18,14 @@ courseraRouter.get("/courses", validate(courseraCoursesQuery, "query"), controll
 courseraRouter.post("/lookup", requireVerifiedMember, lookupLimiter, validate(courseraLookupBody), controller.lookup);
 courseraRouter.get("/orders", validate(courseraOrdersQuery, "query"), controller.orders);
 courseraRouter.post("/orders", requireVerifiedMember, orderLimiter, validate(courseraOrderBody), idempotent, controller.createOrder);
-courseraRouter.post("/orders/:id/cancel", validate(idParam, "params"), controller.cancel);
+courseraRouter.post("/orders/:id/cancel", validate(uuidParam, "params"), controller.cancel);
 
 export const adminCourseraRouter = Router();
 adminCourseraRouter.use(authenticate, requireAdmin, courseraNoStore);
 adminCourseraRouter.get("/courses", validate(courseraCoursesQuery, "query"), controller.adminCourses);
 adminCourseraRouter.post("/courses", validate(courseraCourseBody), controller.createCourse);
-adminCourseraRouter.put("/courses/:id", validate(idParam, "params"), validate(courseraCourseBody), controller.updateCourse);
+adminCourseraRouter.put("/courses/:id", validate(uuidParam, "params"), validate(courseraCourseBody), controller.updateCourse);
 adminCourseraRouter.get("/orders", validate(courseraOrdersQuery, "query"), controller.adminOrders);
-adminCourseraRouter.patch("/orders/:id", validate(idParam, "params"), validate(courseraStatusBody), controller.updateStatus);
-adminCourseraRouter.post("/orders/:id/note", validate(idParam, "params"), validate(courseraNoteBody), controller.updateNote);
-adminCourseraRouter.post("/orders/:id/credentials", credentialLimiter, validate(idParam, "params"), controller.credentials);
+adminCourseraRouter.patch("/orders/:id", validate(uuidParam, "params"), validate(courseraStatusBody), controller.updateStatus);
+adminCourseraRouter.post("/orders/:id/note", validate(uuidParam, "params"), validate(courseraNoteBody), controller.updateNote);
+adminCourseraRouter.post("/orders/:id/credentials", credentialLimiter, validate(uuidParam, "params"), controller.credentials);

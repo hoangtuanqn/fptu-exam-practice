@@ -119,7 +119,7 @@ export const planService = {
    * Kích hoạt một vé: đánh dấu đã dùng và cộng thời hạn Pro trong một transaction. Dòng người dùng bị khóa trước
    * (như lúc mua) nên không đè lên một lần mua khác cùng lúc; bấm đúp thì lần thứ hai thấy vé đã dùng và báo lỗi.
    */
-  async activateTicket(userId: number, ticketId: number) {
+  async activateTicket(userId: number, ticketId: string) {
     const result = await prisma.$transaction(async (tx) => {
       await userRepository.incrementBalance(tx, userId, 0); // chỉ để khóa dòng người dùng
       const now = new Date();

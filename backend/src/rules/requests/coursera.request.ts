@@ -2,6 +2,7 @@ import { z } from "zod";
 import { COURSERA, COURSERA_STATUSES } from "../../constants/coursera";
 import { parseCourseraLink } from "../../utils/coursera-lookup";
 import { paginationQuery } from "../../utils/pagination";
+import { uuidSchema } from "./admin.request";
 
 export const courseraCoursesQuery = paginationQuery.extend({ q: z.string().trim().max(COURSERA.searchLength).default("") });
 export const courseraOrdersQuery = paginationQuery.extend({ status: z.enum(COURSERA_STATUSES).optional() });
@@ -27,7 +28,7 @@ export const courseraCourseBody = z.object({
 export const courseraLookupBody = z.object({ url: z.string("Vui lòng dán liên kết khóa học Coursera").trim().min(1, "Vui lòng dán liên kết khóa học Coursera").max(COURSERA.urlLength, "Liên kết quá dài, hãy sao chép lại đúng liên kết khóa học trên Coursera") });
 export const courseraOrderBody = z.object({
   requestKey: z.string().uuid(),
-  courseId: z.number().int().positive(),
+  courseId: uuidSchema,
   // Older clients may submit only free orders; never charge an unconfirmed price.
   expectedPrice: z.number().int().min(0).max(COURSERA.maxPrice).default(0),
   email: z.string("Vui lòng nhập email tài khoản Coursera").trim().email("Email Coursera không đúng định dạng, ví dụ: ten@gmail.com").max(COURSERA.emailLength),

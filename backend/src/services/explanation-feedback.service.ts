@@ -48,7 +48,7 @@ export const explanationFeedbackService = {
   },
 
   /** Admin đánh dấu đã giải quyết (bỏ khỏi badge). Gọi lại không đổi gì; trả về đúng dạng một dòng của danh sách. */
-  async adminResolve(adminId: number, id: number) {
+  async adminResolve(adminId: number, id: string) {
     await explanationFeedbackRepository.resolve(id, adminId);
     const row = await explanationFeedbackRepository.findAdmin(id);
     if (!row) throw AppError.notFound("Không tìm thấy đánh giá");

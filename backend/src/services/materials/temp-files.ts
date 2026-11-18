@@ -5,20 +5,21 @@ import { materialTempDir } from "../../configs/env";
 // Tệp PDF tạm của job phân tích slide: thư mục riêng ngoài thư mục ảnh công khai, chỉ tiến trình server đọc được.
 // Tệp bị xoá ngay khi job xong (thành công hay lỗi); cron hằng ngày dọn tệp mồ côi.
 
-const NAME = /^(\d+)\.pdf$/;
+// <uuid>.pdf; files named after the old int ids no longer match and are swept as orphans by the daily cleanup
+const NAME = /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.pdf$/;
 
 export interface MaterialTempFiles {
-  pathOf(uploadId: number): string;
-  write(uploadId: number, data: Uint8Array): Promise<void>;
-  read(uploadId: number): Promise<Uint8Array | null>; // null: không còn tệp
-  remove(uploadId: number): Promise<void>;
+  pathOf(uploadId: string): string;
+  write(uploadId: string, data: Uint8Array): Promise<void>;
+  read(uploadId: string): Promise<Uint8Array | null>; // null: không còn tệp
+  remove(uploadId: string): Promise<void>;
   /** Tệp trong thư mục: id (null nếu tên lạ) và giờ sửa cuối. */
-  list(): Promise<{ name: string; uploadId: number | null; mtimeMs: number }[]>;
+  list(): Promise<{ name: string; uploadId: string | null; mtimeMs: number }[]>;
   removeByName(name: string): Promise<void>;
 }
 
 export function createTempFiles(dir = materialTempDir): MaterialTempFiles {
-  const pathOf = (uploadId: number) => path.join(dir, `${uploadId}.pdf`);
+  const pathOf = (uploadId: string) => path.join(dir, `${uploadId}.pdf`);
   const ignoreMissing = (err: unknown) => {
     if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
   };
@@ -53,7 +54,7 @@ export function createTempFiles(dir = materialTempDir): MaterialTempFiles {
           const st = await fs.stat(path.join(dir, name));
           if (!st.isFile()) continue;
           const m = NAME.exec(name);
-          out.push({ name, uploadId: m ? Number(m[1]) : null, mtimeMs: st.mtimeMs });
+          out.push({ name, uploadId: m ? m[1]! : null, mtimeMs: st.mtimeMs });
         } catch (err) {
           ignoreMissing(err);
         }

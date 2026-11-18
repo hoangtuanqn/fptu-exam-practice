@@ -41,7 +41,7 @@ export const examAttemptRepository = {
     return attempt;
   },
 
-  findOfUser: (id: number, userId: number) =>
+  findOfUser: (id: string, userId: number) =>
     prisma.examAttempt.findFirst({ where: { id, userId }, include: withExam }),
 
   async list(userId: number, query: PaginationQuery, examId?: number) {

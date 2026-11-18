@@ -40,10 +40,10 @@ export const explanationFeedbackRepository = {
     return { items, total };
   },
 
-  findAdmin: (id: number) => prisma.explanationFeedback.findUnique({ where: { id }, select: adminSelect }),
+  findAdmin: (id: string) => prisma.explanationFeedback.findUnique({ where: { id }, select: adminSelect }),
 
   // Chỉ ghi lần đầu: giải quyết lại giữ nguyên người và thời điểm đầu tiên
-  resolve: (id: number, adminId: number) =>
+  resolve: (id: string, adminId: number) =>
     prisma.explanationFeedback.updateMany({ where: { id, resolvedAt: null }, data: { resolvedAt: new Date(), resolvedById: adminId } }),
 
   // Badge sidebar: lời chê chưa giải quyết, dùng index (helpful, resolved_at, updated_at)

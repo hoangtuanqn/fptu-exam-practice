@@ -145,7 +145,7 @@ describe("material analysis (throwaway MySQL)", { skip: DB_TESTS_ENABLED ? false
     await m.repo.finish(expired.id, "DONE", null, new Date());
     const active = await newUpload(userId, "e".repeat(64));
     await temp.write(active.id, Buffer.from("%PDF-1.4"));
-    await temp.write(999_999, Buffer.from("%PDF-1.4")); // không có job nào
+    await temp.write("0190a3c4-5b6d-7e8f-9a0b-1c2d3e4f5a6b", Buffer.from("%PDF-1.4")); // không có job nào
     await fs.writeFile(path.join(tmpDir, "stray.tmp"), "x");
 
     const later = new Date(Date.now() + 2 * 3600_000); // tệp đủ cũ để bị coi là mồ côi

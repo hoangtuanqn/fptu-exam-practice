@@ -75,16 +75,16 @@ export const quotaMessage = (at: Date | null) => (at ? MATERIAL_MESSAGES.quota(a
 
 /** Phần lưu trữ job cần (materialRepository đáp ứng; test dùng bản trong bộ nhớ). */
 export interface MaterialJobStore {
-  findById(id: number): Promise<Pick<MaterialUploadRow, "id" | "userId" | "subjectId" | "pageCount"> | null>;
-  exists(id: number): Promise<boolean>;
-  pages(id: number): Promise<PageRow[]>;
-  savePages(id: number, pages: readonly PageInsert[]): Promise<unknown>;
-  saveFigure(id: number, pageNo: number, kind: string, figure: Prisma.InputJsonValue | null): Promise<unknown>;
-  saveAssignments(id: number, assignments: ReadonlyMap<number, number | null>): Promise<unknown>;
-  chapters(id: number): Promise<{ chapterNumber: number }[]>;
-  saveChapter(id: number, chapterNumber: number, summary: string, keyPoints: Prisma.InputJsonValue): Promise<unknown>;
-  setProgress(id: number, done: number, total: number): Promise<unknown>;
-  finish(id: number, status: "DONE" | "FAILED", error: string | null, now: Date): Promise<unknown>;
+  findById(id: string): Promise<Pick<MaterialUploadRow, "id" | "userId" | "subjectId" | "pageCount"> | null>;
+  exists(id: string): Promise<boolean>;
+  pages(id: string): Promise<PageRow[]>;
+  savePages(id: string, pages: readonly PageInsert[]): Promise<unknown>;
+  saveFigure(id: string, pageNo: number, kind: string, figure: Prisma.InputJsonValue | null): Promise<unknown>;
+  saveAssignments(id: string, assignments: ReadonlyMap<number, number | null>): Promise<unknown>;
+  chapters(id: string): Promise<{ chapterNumber: number }[]>;
+  saveChapter(id: string, chapterNumber: number, summary: string, keyPoints: Prisma.InputJsonValue): Promise<unknown>;
+  setProgress(id: string, done: number, total: number): Promise<unknown>;
+  finish(id: string, status: "DONE" | "FAILED", error: string | null, now: Date): Promise<unknown>;
 }
 
 export interface MaterialJobDeps {
@@ -104,7 +104,7 @@ export type MaterialJobOutcome = "DONE" | "FAILED" | "CANCELLED" | "MISSING";
 export function createMaterialJob(deps: MaterialJobDeps) {
   const { store, ledger } = deps;
 
-  return async function processUpload(uploadId: number): Promise<MaterialJobOutcome> {
+  return async function processUpload(uploadId: string): Promise<MaterialJobOutcome> {
     const upload = await store.findById(uploadId);
     if (!upload) return "MISSING";
     let handle: PdfHandle | null = null;
