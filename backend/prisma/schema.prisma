@@ -1367,3 +1367,63 @@ model MarketingBroadcast {
 
   @@map("marketing_broadcasts")
 }
+
+enum FuoSourceStatus {
+  NEW
+  QUEUED
+  RUNNING
+  DONE
+  FAILED
+}
+
+enum FuoSourceResult {
+  IMPORTED // exam did not exist: imported through the normal import path
+  UPDATED // existing exam: new questions or attachments appended (comments refreshed)
+  UNCHANGED // existing exam: nothing new
+  ORDER_CHANGED // existing exam: thread images no longer match stored questions, questions left alone
+}
+
+enum FuoSourceRunStatus {
+  RUNNING
+  DONE
+  NEEDS_AUTH // stopped on a FuOverflow login failure; the next start resumes it
+}
+
+// FuOverflow exam threads pasted by admins. A "load new data" run imports missing exams and appends new data to existing ones.
+model FuoSourceUrl {
+  id          String           @id @default(uuid(7)) @db.Char(36)
+  threadId    String           @unique @map("thread_id") @db.VarChar(20) // same value as exams.thread_id
+  url         String           @db.VarChar(500) // link as pasted (trimmed)
+  status      FuoSourceStatus  @default(NEW)
+  result      FuoSourceResult? // outcome of the last successful processing
+  examId      String?          @map("exam_id") @db.Char(36) // soft reference to exams.id (no FK, exams table unchanged)
+  lastRunId   String?          @map("last_run_id") @db.Char(36)
+  lastError   String?          @map("last_error") @db.Text
+  processedAt DateTime?        @map("processed_at")
+  addedQuestions Int          @default(0) @map("added_questions") // questions appended by the last processing (0 otherwise)
+  commentsAt  DateTime?        @map("comments_refreshed_at") // last time a run re-fetched comments of this thread
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  @@index([status, updatedAt]) // claim next QUEUED, admin list filtered by status
+  @@index([updatedAt]) // admin list, newest change first
+  @@map("fuo_source_urls")
+}
+
+// One "load new data" run over every stored URL (background, one URL at a time)
+model FuoSourceRun {
+  id          String             @id @default(uuid(7)) @db.Char(36)
+  status      FuoSourceRunStatus @default(RUNNING)
+  activeLock  Boolean?           @unique @map("active_lock") // true only while RUNNING: at most one running run
+  total       Int                @default(0)
+  done        Int                @default(0) // processed without error
+  failed      Int                @default(0)
+  imported    Int                @default(0)
+  updated     Int                @default(0)
+  lastError   String?            @map("last_error") @db.Text
+  createdById String?            @map("created_by_id") @db.Char(36) // admin who started it (soft reference)
+  createdAt   DateTime           @default(now()) @map("created_at")
+  finishedAt  DateTime?          @map("finished_at")
+
+  @@map("fuo_source_runs")
+}
