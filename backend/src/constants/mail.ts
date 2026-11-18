@@ -14,11 +14,12 @@ export const MAIL_BRAND = {
   dark: "#3f2606",
 } as const;
 
-// Ảnh nhúng trong thư nằm cạnh mã nguồn (backend/assets/mail), đúng cả khi chạy từ src/ lẫn dist/
+// Ảnh banner nằm cạnh mã nguồn (backend/assets/mail), đúng cả khi chạy từ src/ lẫn dist/
 export const MAIL_ASSETS_DIR = path.resolve(__dirname, "../../assets/mail");
 
 // Ảnh nhúng thẳng vào thư bằng cid (hiện cả khi chạy local, không cần ảnh trên internet). Dùng chung cho MỌI loại thư.
-// Dựng lại logo bằng: npx tsx scripts/gen-brand-assets.ts
+// Dựng lại ảnh bìa bằng: npx tsx scripts/gen-brand-assets.ts
 export const MAIL_IMAGES = {
+  cover: { file: "cover.png", cid: "cover@fepass", alt: "FEPass - Hành trình đi đến điểm 10" },
   logo: { file: "logo.png", cid: "logo@fepass", alt: "FEPass" },
 } as const;
