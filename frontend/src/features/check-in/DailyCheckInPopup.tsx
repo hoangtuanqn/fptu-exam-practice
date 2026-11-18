@@ -5,7 +5,6 @@ import { useToast } from "@/shared/context/ToastContext";
 import { checkInApi, type CheckInResult, type CheckInStatus } from "./check-in.api";
 import { CheckInView } from "./CheckInView";
 import { errorMessage, isRetryable } from "@/shared/api/errors";
-import { isPracticePath } from "@/shared/utils/practicePath";
 
 // Menu tài khoản bắn sự kiện này để mở lại hộp điểm danh (khi người dùng lỡ đóng)
 export const OPEN_CHECKIN_EVENT = "fepass:open-checkin";
@@ -21,7 +20,7 @@ export function DailyCheckInPopup() {
   const { user, loading, refresh } = useAuth();
   const toast = useToast();
   const { pathname } = useLocation();
-  const inExam = isPracticePath(pathname); // đang làm đề thì không tự bật hộp thoại; vẫn điểm danh được từ menu tài khoản
+  const inExam = pathname.startsWith("/exam/"); // đang làm đề thì không tự bật hộp thoại; vẫn điểm danh được từ menu tài khoản
   const [status, setStatus] = useState<CheckInStatus | null>(null);
   const [result, setResult] = useState<CheckInResult | null>(null);
   const [open, setOpen] = useState(false);

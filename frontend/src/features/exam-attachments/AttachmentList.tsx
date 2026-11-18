@@ -17,7 +17,7 @@ const OPENABLE = new Set<ExamAttachment["kind"]>(["pdf", "text", "video", "audio
 
 const downloadUrl = (url: string) => `${url}${url.includes("?") ? "&" : "?"}download=1`;
 
-// Danh sách tệp đính kèm của đề: mỗi dòng là biểu tượng theo loại, tên, dung lượng, nút Xem (nếu xem được trên trình duyệt) và Tải về
+// Danh sách tệp đính kèm của đề: mỗi dòng là biểu tượng theo loại, tên, dung lượng, nút Mở (nếu xem được) và Tải về
 export function AttachmentList({ attachments }: { attachments: ExamAttachment[] }) {
   return (
     <ul className="divide-y divide-outline-variant overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest">
@@ -34,8 +34,8 @@ export function AttachmentList({ attachments }: { attachments: ExamAttachment[] 
             </div>
             <div className="flex shrink-0 items-center gap-1">
               {OPENABLE.has(a.kind) && (
-                <a href={a.url} target="_blank" rel="noopener noreferrer" aria-label={`Xem ${a.name}`} className={buttonClass({ size: "sm", variant: "text" })}>
-                  <ExternalLink size={15} /> Xem
+                <a href={a.url} target="_blank" rel="noopener noreferrer" aria-label={`Mở ${a.name}`} className={buttonClass({ size: "sm", variant: "text" })}>
+                  <ExternalLink size={15} /> Mở
                 </a>
               )}
               <a href={downloadUrl(a.url)} download={a.name} aria-label={`Tải về ${a.name}`} className={buttonClass({ size: "sm", variant: "tonal" })}>
