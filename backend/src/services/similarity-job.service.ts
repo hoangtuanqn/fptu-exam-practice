@@ -34,7 +34,7 @@ export interface SimilarityJobDeps {
   countWork(subject: SubjectRef, hashAfterId: number): Promise<SubjectWork>;
   hashMissing(subject: SubjectRef, afterId: number, limit: number): Promise<HashOutcome>;
   pipeline(subject: SubjectRef): Promise<{ embedded: number; groups: number }>;
-  saveRun(subjectId: number, signature: string, hashCursor: number): Promise<void>;
+  saveRun(subjectId: string, signature: string, hashCursor: number): Promise<void>;
   notifyFailures(failedCodes: readonly string[], eligible: number): void;
 }
 

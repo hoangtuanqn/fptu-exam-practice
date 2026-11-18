@@ -21,7 +21,7 @@ const CHAPTERS = [
 interface Upload {
   id: string;
   userId: string;
-  subjectId: number;
+  subjectId: string;
   pageCount: number;
   status: string;
   error: string | null;
@@ -29,7 +29,7 @@ interface Upload {
 }
 
 function memoryStore(pageCount: number) {
-  const upload: Upload = { id: UPLOAD_ID, userId: USER, subjectId: 3, pageCount, status: "RUNNING", error: null, progress: [0, 0] };
+  const upload: Upload = { id: UPLOAD_ID, userId: USER, subjectId: "0190a000-0000-7000-8000-000000000003", pageCount, status: "RUNNING", error: null, progress: [0, 0] };
   const pages = new Map<number, PageRow>();
   const chapters = new Map<number, { summary: string; keyPoints: unknown }>();
   let deleted = false;

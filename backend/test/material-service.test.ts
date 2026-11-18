@@ -14,7 +14,7 @@ const NOW = new Date("2026-11-11T12:00:00.000Z");
 const PRO = { id: "u1", role: "USER" as const };
 const FREE = { id: "u2", role: "USER" as const };
 const ADMIN = { id: "u3", role: "ADMIN" as const };
-const SUBJECT = { id: 10, code: "OSG202", name: "Operating Systems" };
+const SUBJECT = { id: "0190a000-0000-7000-8000-00000000000a", code: "OSG202", name: "Operating Systems" };
 const CHAPTERS = [
   { number: 1, title: "Processes", topics: ["1.1 Process"] },
   { number: 2, title: "Memory", topics: ["2.1 Paging"] },

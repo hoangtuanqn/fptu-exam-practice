@@ -28,7 +28,7 @@ describe("material analysis (throwaway MySQL)", { skip: DB_TESTS_ENABLED ? false
   let m: Mods;
   let userId = "";
   let otherId = "";
-  let subjectId = 0;
+  let subjectId = "";
   let tmpDir = "";
 
   before(

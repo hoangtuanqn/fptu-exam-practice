@@ -4,6 +4,10 @@ import { randomBytes } from "node:crypto";
 import path from "node:path";
 import { PrismaClient } from "@prisma/client";
 
+// Test khong bao gio duoc gui mail that qua SMTP trong .env cua may: tat SMTP truoc khi test nap configs/env (dotenv khong ghi de bien da co)
+process.env.SMTP_USER = "";
+process.env.SMTP_PASS = "";
+
 // Cơ sở dữ liệu dùng một lần cho test: tạo fepass_test_<giây unix>_<ngẫu nhiên> trên cùng máy chủ MySQL của DATABASE_URL,
 // chạy mọi migration bằng prisma migrate deploy, trỏ DATABASE_URL của tiến trình test sang đó, xong thì DROP.
 // Chỉ tạo/xoá database có tên khớp đúng mẫu NAME: không đọc hay ghi bảng nào của database thật. Không in URL (có mật khẩu).

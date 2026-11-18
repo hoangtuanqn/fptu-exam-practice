@@ -15,7 +15,7 @@ export interface RefreshOptions {
   now?: Date; // giờ ghi vào computed_at (test truyền giờ cố định)
 }
 
-async function subjectOrThrow(subjectId: number) {
+async function subjectOrThrow(subjectId: string) {
   const subject = await subjectRepository.findById(subjectId);
   if (!subject) throw AppError.notFound("Không tìm thấy môn học");
   return subject;
@@ -36,7 +36,7 @@ export const frequencyStatsService = {
   },
 
   /** Thống kê theo chương của môn (công khai). */
-  async chapterStats(subjectId: number) {
+  async chapterStats(subjectId: string) {
     const subject = await subjectOrThrow(subjectId);
     const rows = await frequencyStatsRepository.chapterStats(subject.id);
     return {
@@ -58,7 +58,7 @@ export const frequencyStatsService = {
   },
 
   /** Nhóm câu ra lại nhiều đề nhất. Gói thường chỉ nhận FREQUENT_FREE_LIMIT nhóm đầu (khoá ở máy chủ, giống "Câu hay ra"). */
-  async hotQuestions(subjectId: number, limit: number, user: unknown) {
+  async hotQuestions(subjectId: string, limit: number, user: unknown) {
     const subject = await subjectOrThrow(subjectId);
     const pro = PRO_BENEFITS.frequentQuestions && isProUser(user);
     const take = pro ? limit : Math.min(limit, FREQUENT_FREE_LIMIT);

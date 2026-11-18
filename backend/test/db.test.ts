@@ -53,7 +53,7 @@ const QUESTIONS: Q[] = [
 describe("database (throwaway MySQL)", { skip: DB_TESTS_ENABLED ? false : DB_SKIP_REASON }, () => {
   let db: ThrowawayDb | undefined;
   let m: Mods;
-  let subjectId = 0;
+  let subjectId = "";
   let userId = "";
   const qid = new Map<string, number>(); // "exam:number" -> id
   const examIds: string[] = [];

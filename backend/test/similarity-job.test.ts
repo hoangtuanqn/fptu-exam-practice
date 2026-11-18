@@ -50,19 +50,19 @@ describe("similarity job selection (pure)", () => {
 
   it("splits the hash budget: small subjects finish, the rest is shared, total never exceeded", () => {
     const needs = [
-      { id: 1, missing: 10 },
-      { id: 2, missing: 1000 },
-      { id: 3, missing: 0 },
-      { id: 4, missing: 1000 },
+      { id: "1", missing: 10 },
+      { id: "2", missing: 1000 },
+      { id: "3", missing: 0 },
+      { id: "4", missing: 1000 },
     ];
     const b = splitHashBudget(needs, 210);
-    assert.deepEqual([...b.entries()].sort((x, y) => x[0] - y[0]), [
-      [1, 10],
-      [2, 100],
-      [3, 0],
-      [4, 100],
+    assert.deepEqual([...b.entries()].sort((x, y) => x[0].localeCompare(y[0])), [
+      ["1", 10],
+      ["2", 100],
+      ["3", 0],
+      ["4", 100],
     ]);
-    const odd = splitHashBudget([{ id: 1, missing: 50 }, { id: 2, missing: 50 }, { id: 3, missing: 50 }], 100);
+    const odd = splitHashBudget([{ id: "1", missing: 50 }, { id: "2", missing: 50 }, { id: "3", missing: 50 }], 100);
     assert.equal([...odd.values()].reduce((s, v) => s + v, 0), 100);
     assert.deepEqual([...splitHashBudget(needs, 5000).values()], [10, 1000, 0, 1000]); // đủ chỗ thì môn nào cũng nhận đủ
     assert.deepEqual([...splitHashBudget(needs, 0).values()], [0, 0, 0, 0]);
@@ -81,7 +81,7 @@ interface FakeSubject {
 }
 
 function fakeDeps(subjects: FakeSubject[], unreadable = new Set<number>()) {
-  const saved: { subjectId: number; signature: string; hashCursor: number }[] = [];
+  const saved: { subjectId: string; signature: string; hashCursor: number }[] = [];
   const notices: { codes: readonly string[]; eligible: number }[] = [];
   const pipelineCalls: string[] = [];
   const hashLimits = new Map<string, number>();
@@ -120,7 +120,7 @@ function fakeDeps(subjects: FakeSubject[], unreadable = new Set<number>()) {
   return { deps, saved, notices, pipelineCalls, hashLimits };
 }
 
-const subj = (id: number, code: string): SubjectRef => ({ id, code, name: code });
+const subj = (id: number, code: string): SubjectRef => ({ id: `0190a000-0000-7000-8000-${String(id).padStart(12, "0")}`, code, name: code });
 const range = (from: number, n: number) => Array.from({ length: n }, (_, i) => from + i);
 
 describe("similarity job run (fake dependencies)", () => {
@@ -137,7 +137,7 @@ describe("similarity job run (fake dependencies)", () => {
     assert.equal(r.eligible, 3);
     assert.equal(r.processed, 2);
     assert.equal(r.failed, 1);
-    assert.deepEqual(f.saved.map((s) => s.subjectId), [1, 3]); // môn lỗi không ghi mốc: đêm sau thử lại
+    assert.deepEqual(f.saved.map((s) => s.subjectId), [subj(1, "").id, subj(3, "").id]); // môn lỗi không ghi mốc: đêm sau thử lại
     assert.deepEqual(f.notices, [{ codes: ["BBB"], eligible: 3 }]);
   });
 
@@ -155,7 +155,7 @@ describe("similarity job run (fake dependencies)", () => {
     assert.equal(n1.imagesHashed, 12);
     assert.equal(n1.imagesUnreadable, 1);
     assert.equal(n1.hashLimited, 1);
-    assert.equal(f.saved.find((s) => s.subjectId === 1)!.hashCursor, 109);
+    assert.equal(f.saved.find((s) => s.subjectId === subj(1, "").id)!.hashCursor, 109);
 
     const n2 = (await run({ maxHashes: 13 }))!;
     assert.equal(n2.eligible, 1); // chỉ BIG còn ảnh

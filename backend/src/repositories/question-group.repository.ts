@@ -3,7 +3,7 @@ import { GROUP_TX_TIMEOUT_MS } from "../constants/similarity";
 
 export const questionGroupRepository = {
   /** Xoá toàn bộ nhóm cũ của môn rồi ghi nhóm mới, tất cả trong MỘT giao dịch (lỗi giữa chừng thì giữ nguyên nhóm cũ). */
-  replaceForSubject: (subjectId: number, modelName: string, threshold: number, groups: readonly (readonly number[])[]) =>
+  replaceForSubject: (subjectId: string, modelName: string, threshold: number, groups: readonly (readonly number[])[]) =>
     prisma.$transaction(
       async (tx) => {
         const removed = await tx.questionGroup.deleteMany({ where: { subjectId } });
@@ -25,7 +25,7 @@ export const questionGroupRepository = {
     ),
 
   /** Nhóm của môn dạng danh sách questionId (để so sánh/kiểm tra), theo thứ tự cố định. */
-  membersOf: async (subjectId: number) => {
+  membersOf: async (subjectId: string) => {
     const rows = await prisma.questionGroupMember.findMany({ where: { subjectId }, select: { groupId: true, questionId: true }, orderBy: [{ questionId: "asc" }] });
     const byGroup = new Map<number, number[]>();
     for (const r of rows) (byGroup.get(r.groupId) ?? byGroup.set(r.groupId, []).get(r.groupId)!).push(r.questionId);

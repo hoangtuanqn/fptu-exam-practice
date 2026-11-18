@@ -4,7 +4,7 @@
  * Khi ghi thật, lệnh tự tính lại thống kê tần suất của môn ngay sau đó (như npm run stats:refresh), trừ khi có --no-stats.
  *
  *   npm run groups:build -- --subject=PRO192                 tạo vector còn thiếu rồi dựng lại nhóm
- *   npm run groups:build -- --subject=12 --dry-run           không ghi gì, in số nhóm và các cặp sát ngưỡng để chỉnh ngưỡng
+ *   npm run groups:build -- --subject=PRO192 --dry-run       không ghi gì, in số nhóm và các cặp sát ngưỡng để chỉnh ngưỡng
  *   npm run groups:build -- --all                            mọi môn
  * Tuỳ chọn: --threshold=0.99  --model=image-fingerprint-v1  --all-chapters (so cả câu khác chương)
  *           --allow-same-exam (cho hai câu cùng đề vào một nhóm)  --batch-size=200
@@ -27,7 +27,7 @@ const args = parseArgs();
 async function subjects(): Promise<SubjectRef[]> {
   if (args.has("all")) return subjectRepository.listAll();
   const ref = args.get("subject");
-  if (!ref) throw new Error("Missing --subject=<id or code> (or --all)");
+  if (!ref) throw new Error("Missing --subject=<code or uuid> (or --all)");
   const s = await subjectRepository.findByIdOrCode(ref);
   if (!s) throw new Error(`Subject not found: ${ref}`);
   return [s];
