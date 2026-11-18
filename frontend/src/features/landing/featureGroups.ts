@@ -1,4 +1,4 @@
-import { BarChart3, Bot, CalendarCheck, Crown, FileDown, GraduationCap, Link2, MessageCircleQuestion, Puzzle, Save, Sparkles, Timer, Wallet, type LucideIcon } from "lucide-react";
+import { BarChart3, BookOpen, Bot, CalendarCheck, Crown, GraduationCap, MessageCircleQuestion, Puzzle, Save, Sparkles, Timer, Wallet, type LucideIcon } from "lucide-react";
 
 export interface Feature {
   icon: LucideIcon;
@@ -16,11 +16,11 @@ export interface FeatureGroup {
 // Bảng tính năng chính của hệ thống (trang chủ + trang /features). Chỉ giữ những thứ quan trọng nhất, mỗi nhóm 3 mục.
 export const FEATURE_GROUPS: FeatureGroup[] = [
   {
-    icon: Link2,
+    icon: BookOpen,
     title: "Lấy đề và làm bài",
     tag: "Cốt lõi",
     features: [
-      { icon: Link2, title: "Lấy đề bằng một link", text: "Dán link FuOverflow, hệ thống tự lấy ảnh và lưu vào kho riêng của bạn.", pro: true },
+      { icon: BookOpen, title: "Kho đề theo môn", text: "Chọn môn rồi mở đề, đề đã lấy được lưu vào kho riêng của bạn.", pro: true },
       { icon: Timer, title: "Luyện tập và Thi thử", text: "Xem đúng sai từng câu, hoặc thi có đếm ngược và tự nộp khi hết giờ." },
       { icon: BarChart3, title: "Chấm điểm thang 10", text: "Điểm tính tự động, kèm lịch sử từng lần làm và điểm cao nhất." },
     ],
@@ -40,8 +40,7 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
     title: "Tiện ích và tài nguyên",
     tag: "Tiện lợi",
     features: [
-      { icon: Puzzle, title: "Tiện ích Chrome", text: "Nút làm đề ngay cạnh bài “Đề Thi FE” trên FuOverflow, bấm là mở sang FEPass. Bật đồng bộ điểm FAP để biết cần bao nhiêu điểm thi cuối kỳ." },
-      { icon: FileDown, title: "Tải đề PE trọn bộ", text: "Tải toàn bộ tài nguyên đề PE thành một file zip.", pro: true },
+      { icon: Puzzle, title: "Tiện ích Chrome", text: "Bật đồng bộ điểm FAP để biết cần bao nhiêu điểm thi cuối kỳ." },
       { icon: Save, title: "Làm dở, làm tiếp", text: "Bài đang làm được lưu lại, vào lại là tiếp tục đúng chỗ đã dừng." },
       { icon: GraduationCap, title: "Kết nối trực tiếp với FLM", text: "Syllabus của FPTU được tích hợp vào hệ thống: câu hỏi gắn theo chương và chủ đề của từng môn." },
     ],
@@ -53,7 +52,7 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
     features: [
       { icon: Wallet, title: "Nạp credit tự động", text: "Chuyển khoản qua mã QR, credit cộng tự động, nạp càng nhiều thưởng càng lớn." },
       { icon: CalendarCheck, title: "Điểm danh và giới thiệu", text: "Điểm danh mỗi ngày nhận credit, mời bạn bè cả hai cùng có thưởng." },
-      { icon: Crown, title: "Gói Pro 4 tháng", text: "99.000đ, không giới hạn lượt lấy đề, giải thích AI và tải đề PE." },
+      { icon: Crown, title: "Gói Pro 4 tháng", text: "99.000đ, không giới hạn lượt lấy đề và giải thích AI." },
     ],
   },
 ];

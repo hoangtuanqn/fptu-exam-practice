@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
-import { Bookmark, Crown, FileText, Flame, NotebookPen, Download, BookOpen, ListChecks, GraduationCap, LayoutDashboard, UserRound, Wallet, Receipt, Gift, UserPlus, ShoppingBag } from "lucide-react";
+import { Bookmark, Crown, FileText, Flame, NotebookPen, BookOpen, ListChecks, GraduationCap, LayoutDashboard, UserRound, Wallet, Receipt, Gift, UserPlus, ShoppingBag } from "lucide-react";
 import { PanelLayout, type NavItem } from "@/shared/layout/PanelLayout";
 import { Loading } from "@/shared/ui/Feedback";
 import LoginPage from "@/features/auth/pages/LoginPage";
@@ -51,7 +51,6 @@ const ReviewPracticePage = lazy(() => import("@/features/review/ReviewPracticePa
 const MyReportsPage = lazy(() => import("@/features/account/pages/MyReportsPage"));
 const ReferralPage = lazy(() => import("@/features/account/pages/ReferralPage"));
 const GiftCodePage = lazy(() => import("@/features/account/pages/GiftCodePage"));
-const PeDownloadPage = lazy(() => import("@/features/pe/PeDownloadPage"));
 const FeaturesPage = lazy(() => import("@/features/landing/FeaturesPage"));
 const ChangelogPage = lazy(() => import("@/features/changelog/ChangelogPage"));
 const PlanPage = lazy(() => import("@/features/plan/PlanPage"));
@@ -66,7 +65,6 @@ const AttemptDetailPage = lazy(() => import("@/features/history/pages/AttemptDet
 const ACCOUNT_NAV: NavItem[] = [
   { to: "/account", label: "Tổng quan", icon: LayoutDashboard, end: true },
   { to: "/account/exams", label: "Kho đề", icon: BookOpen, group: "Luyện đề" },
-  { to: "/account/pe", label: "Tải đề thi PE", icon: Download, group: "Luyện đề" },
   { to: "/account/review", label: "Sổ câu sai", icon: NotebookPen, group: "Ôn tập" },
   { to: "/account/saved", label: "Câu đã lưu", icon: Bookmark, group: "Ôn tập" },
   { to: "/account/frequent", label: "Câu hay ra", icon: Flame, group: "Ôn tập" },
@@ -152,7 +150,7 @@ export default function App() {
             <Route path="review" element={<ReviewPage />} />
             <Route path="review/practice" element={<ReviewPracticePage />} />
             <Route path="saved" element={<SavedPage />} />
-            <Route path="pe" element={<PeDownloadPage />} />
+            <Route path="pe" element={<Navigate to="/" replace />} />
             <Route path="reports" element={<MyReportsPage />} />
             <Route path="grades" element={<GradesPage />} />
             <Route path="referral" element={<ReferralPage />} />

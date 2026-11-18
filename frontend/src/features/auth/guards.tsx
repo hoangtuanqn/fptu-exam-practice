@@ -21,7 +21,7 @@ export function GuestOnly() {
   const from = (location.state as { from?: string } | null)?.from;
 
   if (loading) return <Loading />;
-  // Vừa đăng ký: vào thẳng trang chủ (ô dán link đề) để tới bài đầu tiên nhanh nhất; đăng nhập thường vẫn về Tài khoản
+  // Vừa đăng ký: vào thẳng trang chủ (ô chọn môn) để tới bài đầu tiên nhanh nhất; đăng nhập thường vẫn về Tài khoản
   const home = user?.role === "ADMIN" ? "/admin" : location.pathname === "/register" ? "/" : "/account";
   if (user) return <Navigate to={from ?? home} replace />;
   return <Outlet />;

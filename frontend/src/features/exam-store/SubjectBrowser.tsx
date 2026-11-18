@@ -51,7 +51,7 @@ function SubjectChooser({ onPick, compact }: { onPick: (code: string) => void; c
       onRetry={subjects.reload}
       onPick={onPick}
       mine={mine.data ?? []}
-      emptyHint="Thử mã môn khác, hoặc dán link FuOverflow ở trang chủ để lấy đề mới."
+      emptyHint="Thử mã môn khác."
     />
   );
 }
@@ -120,7 +120,7 @@ function ExamList({ code, onBack, compact }: { code: string; onBack: () => void;
           {(data) =>
             data.items.length === 0 ? (
               <Empty icon={BookOpen} title={data.total > 0 ? "Không có đề nào khớp" : "Chưa có đề nào của môn này"}>
-                {data.total > 0 ? "Thử bỏ bộ lọc hoặc đổi từ khoá." : "Danh mục đề của môn này chưa được cập nhật. Bạn vẫn có thể dán link FuOverflow ở trang chủ."}
+                {data.total > 0 ? "Thử bỏ bộ lọc hoặc đổi từ khoá." : "Danh mục đề của môn này chưa được cập nhật."}
               </Empty>
             ) : (
               <>

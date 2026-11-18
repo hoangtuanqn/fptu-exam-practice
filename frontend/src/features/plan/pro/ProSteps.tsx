@@ -5,12 +5,12 @@ import { Reveal } from "./Reveal";
 import { SectionTitle } from "@/shared/ui/SectionTitle";
 import { GOLD_GLOSS } from "@/shared/ui/gold";
 
-// Ba bước từ "chưa có gì" tới "dán link lấy đề": giảm cảm giác phức tạp trước khi mua
+// Ba bước từ "chưa có gì" tới "lấy đề": giảm cảm giác phức tạp trước khi mua
 export function ProSteps({ plan }: { plan: PlanInfo }) {
   const steps = [
     { title: "Đăng nhập, xác minh email", text: "Mất chưa tới một phút." },
     { title: `Trả ${vnd(plan.price)} bằng credit`, text: "Thiếu thì nạp thêm, xong quay lại ngay." },
-    { title: "Dán link và học", text: `Lấy đề, xem giải thích, không bị trừ credit suốt ${plan.months} tháng.` },
+    { title: "Chọn đề và học", text: `Lấy đề, xem giải thích, không bị trừ credit suốt ${plan.months} tháng.` },
   ];
   return (
     <section className="mx-auto max-w-4xl px-4 pt-20">

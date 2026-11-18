@@ -44,7 +44,7 @@ const STEPS: { title: string; body: React.ReactNode }[] = [
   },
   { title: "Bật “Chế độ cho nhà phát triển”", body: <p className="text-sm text-slate-600">Gạt công tắc Developer mode ở góc trên bên phải của trang đó.</p> },
   { title: "Bấm “Tải tiện ích đã giải nén”", body: <p className="text-sm text-slate-600">Nút Load unpacked ở góc trên bên trái, rồi chọn thư mục vừa giải nén ở bước 2.</p> },
-  { title: "Đăng nhập fepass.top và dùng thử", body: <p className="text-sm text-slate-600">Đăng nhập trang này, sau đó vào một chuyên mục FuOverflow: bài “Đề Thi FE” có nút “Làm đề”, bài “Đề Thi PE” có nút “Tải đề PE”.</p> },
+  { title: "Đăng nhập fepass.top và dùng thử", body: <p className="text-sm text-slate-600">Đăng nhập trang này, rồi bật Đồng bộ điểm FAP ở trang Điểm FAP.</p> },
 ];
 
 // Thanh nhỏ nằm trước mắt người dùng ở đầu trang chủ; bấm vào mở hộp hướng dẫn cài tiện ích Chrome
@@ -118,7 +118,7 @@ export function ExtensionBar() {
             </>
           ) : (
             <>
-              <b>Cài tiện ích Chrome</b> để làm đề ngay trên FuOverflow
+              <b>Cài tiện ích Chrome</b> để đồng bộ điểm FAP
             </>
           )}
         </span>
@@ -131,7 +131,7 @@ export function ExtensionBar() {
         <Modal wide onClose={() => setOpen(false)}>
           <ModalTitle icon={outdated ? RefreshCw : Puzzle}>{outdated ? `Cập nhật tiện ích lên ${latest}` : "Cài tiện ích FePass cho Chrome"}</ModalTitle>
           <p className="mt-2 text-sm text-slate-600">
-            Tích hợp thẳng vào FuOverflow: bài “Đề Thi FE” có nút <b>Làm đề</b>, bài “Đề Thi PE” có nút <b>Tải đề PE</b>. Thấy giá trước khi bấm, xác nhận mới bị trừ credit. Cài một lần, mất khoảng 1 phút.
+            Đồng bộ điểm và lịch thi trên FAP để biết cần bao nhiêu điểm ở bài thi cuối kỳ. Cài một lần, mất khoảng 1 phút.
           </p>
 
           <ol className="mt-5 space-y-4">
@@ -146,7 +146,7 @@ export function ExtensionBar() {
             ))}
           </ol>
 
-          <p className="mt-5 rounded-lg bg-slate-50 px-3.5 py-2.5 text-xs text-slate-500">Tiện ích chỉ chạy trên fuoverflow.com và không lưu mật khẩu của bạn. Chrome có thể nhắc “tắt tiện ích chế độ nhà phát triển” mỗi lần mở: cứ bấm bỏ qua.</p>
+          <p className="mt-5 rounded-lg bg-slate-50 px-3.5 py-2.5 text-xs text-slate-500">Tiện ích chỉ đọc điểm FAP khi bạn bật đồng bộ và không lưu mật khẩu của bạn. Chrome có thể nhắc “tắt tiện ích chế độ nhà phát triển” mỗi lần mở: cứ bấm bỏ qua.</p>
           <div className="mt-4 flex justify-end">
             <button onClick={() => setOpen(false)} className="rounded-xl border border-slate-200 px-5 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
               Đóng
