@@ -4,6 +4,7 @@ import { Badge } from "@/shared/ui/Badge";
 import { Empty, LinearProgress } from "@/shared/ui/Feedback";
 import { QueryBoundary } from "@/shared/ui/QueryBoundary";
 import { formatDate } from "@/shared/utils/formatters";
+import { isUuid } from "@/shared/utils/uuid";
 import { subjectApi } from "@/features/subject/subject.api";
 import { confidenceOf } from "./confidence";
 import { frequentApi, type ChapterStatItem } from "./frequent.api";
@@ -19,17 +20,17 @@ function NoStats() {
   );
 }
 
-// "Chương nào hay ra thi?": thống kê tần suất theo chương. Trang chỉ biết mã môn nên lấy id số của môn trước.
+// "Chương nào hay ra thi?": thống kê tần suất theo chương. Trang chỉ biết mã môn nên lấy id của môn trước.
 export function ChapterStats({ code }: { code: string }) {
   const info = useApi(() => subjectApi.info(code), [code]);
   return (
     <QueryBoundary query={info} loadingLabel="Đang tải thống kê…">
-      {(s) => (typeof s.id === "number" ? <ChapterList subjectId={s.id} /> : <NoStats />)}
+      {(s) => (isUuid(s.id) ? <ChapterList subjectId={s.id} /> : <NoStats />)}
     </QueryBoundary>
   );
 }
 
-function ChapterList({ subjectId }: { subjectId: number }) {
+function ChapterList({ subjectId }: { subjectId: string }) {
   const q = useApi(() => frequentApi.chapterStats(subjectId), [subjectId]);
   return (
     <QueryBoundary query={q} loadingLabel="Đang tải thống kê…">

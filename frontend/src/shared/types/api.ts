@@ -23,7 +23,7 @@ export interface User {
 }
 
 export interface WalletTransaction {
-  id: number;
+  id: string;
   type: TransactionType;
   amount: number; // âm = trừ credit
   balanceAfter: number;
@@ -32,7 +32,7 @@ export interface WalletTransaction {
 }
 
 export interface DepositOrder {
-  id: number;
+  id: string;
   code: string;
   amount: number;
   status: DepositStatus;
@@ -68,7 +68,7 @@ export interface BankTransaction {
   amountIn: number;
   transactionAt: string;
   status: BankTxStatus;
-  depositOrderId: number | null;
+  depositOrderId: string | null;
 }
 
 export interface SepayAdminConfig {
@@ -179,7 +179,7 @@ export interface GiftCode {
 
 // Một lượt dùng mã (admin xem ai đã dùng)
 export interface GiftCodeRedemption {
-  id: number;
+  id: string;
   amount: number;
   createdAt: string;
   user: { id: string; email: string; fullName: string };
@@ -187,7 +187,7 @@ export interface GiftCodeRedemption {
 
 // Mã mà chính thành viên đã nhập
 export interface MyGiftRedemption {
-  id: number;
+  id: string;
   code: string;
   amount: number;
   createdAt: string;
@@ -202,7 +202,7 @@ export interface RedeemResult {
 
 // Credit có thời hạn mà người dùng đang còn
 export interface MyCreditLot {
-  id: number;
+  id: string;
   amount: number;
   remaining: number;
   expiresAt: string;
