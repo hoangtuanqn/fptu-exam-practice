@@ -76,6 +76,7 @@ model User {
   materialUploads    MaterialUpload[]
   emailCampaignLogs  EmailCampaignLog[]
   savedQuestions     SavedQuestion[]
+  examComments       ExamComment[]
   referredBy         User?                @relation("Referral", fields: [referredById], references: [id], onDelete: SetNull)
   referrals          User[]               @relation("Referral")
   rewardsAsReferrer  ReferralReward[]     @relation("RewardReferrer")
@@ -275,6 +276,8 @@ model Exam {
   createdById    String?      @map("created_by_id") @db.Char(36)
   createdAt      DateTime  @default(now()) @map("created_at")
   subjectCode    String?   @map("subject_code") @db.VarChar(20) // subject code taken from the title (PRO192...); null = no code found. Set on import/rename, filled at boot for old rows
+  kind           ExamKind? // FE, PE, QUIZ or OTHER from the FuOverflow label/title, set on import; null = old row not classified yet (filled at boot)
+  description    String?   @db.Text // first post of the thread as plain text (truncated), shown on the exam detail page
   refreshedAt    DateTime? @map("refreshed_at") // láº§n lĂ m má»›i gáº§n nháº¥t (láº¥y láº¡i áº£nh, bĂ¬nh luáº­n, giáº£i láº¡i Ä‘Ă¡p Ă¡n); null = chÆ°a tá»«ng
 
   questions ExamQuestion[]
@@ -288,6 +291,7 @@ model Exam {
   reviewItems ReviewItem[]
   explanationUnlocks ExplanationUnlock[]
   savedQuestions SavedQuestion[]
+  comments       ExamComment[]
   attachments ExamAttachment[]
 
   @@index([subjectCode, answerSource])
@@ -854,10 +858,20 @@ model FuoThread {
   title       String    @db.VarChar(255)
   postedAt    DateTime? @map("posted_at")
   replies     Int       @default(0)
-  syncedAt    DateTime  @default(now()) @map("synced_at")
+  kind        ExamKind  @default(OTHER) // from the FuOverflow label, then title tokens
+  label       String?   @db.VarChar(60) // raw FuOverflow label text ("De Thi FE"...); null = no label
+  syncedAt    DateTime  @default(now()) @map("synced_at") // last insert or change (unchanged rows are not rewritten by the catalog run)
 
   @@index([subjectCode, postedAt])
+  @@index([kind])
   @@map("fuo_threads")
+}
+
+enum ExamKind {
+  FE
+  PE
+  QUIZ
+  OTHER
 }
 
 // Opt-in to sync FAP grades (off by default; turning it off deletes the synced grades)
@@ -1426,4 +1440,82 @@ model FuoSourceRun {
   finishedAt  DateTime?          @map("finished_at")
 
   @@map("fuo_source_runs")
+}
+
+enum ExamCommentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// Member comment on one question of an exam. Hidden from other users until an admin approves it.
+model ExamComment {
+  id             String            @id @default(uuid(7)) @db.Char(36)
+  examId         String            @map("exam_id") @db.Char(36)
+  questionNumber Int               @map("question_number") // ExamQuestion.number in this exam
+  userId         String            @map("user_id") @db.Char(36)
+  body           String            @db.Text // plain text, trimmed, never HTML
+  status         ExamCommentStatus @default(PENDING)
+  createdAt      DateTime          @default(now()) @map("created_at")
+  reviewedAt     DateTime?         @map("reviewed_at")
+  reviewedById   String?           @map("reviewed_by_id") @db.Char(36) // admin who reviewed it (soft reference, no FK)
+  reviewNote     String?           @map("review_note") @db.VarChar(255)
+
+  exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([examId, questionNumber, status, createdAt]) // public list of one question, counts per question
+  @@index([status, createdAt]) // admin queue
+  @@index([userId, createdAt]) // rate limit and duplicate check
+  @@map("exam_comments")
+}
+
+enum FuoCatalogRunStatus {
+  RUNNING
+  DONE
+  NEEDS_AUTH // stopped on a FuOverflow login/Cloudflare failure; the next start resumes it
+  FAILED // the subject index could not be read
+}
+
+enum FuoCatalogSubjectStatus {
+  QUEUED
+  RUNNING
+  DONE
+  FAILED
+}
+
+// One admin run over the whole FuOverflow catalog: every subject forum, every thread (metadata only)
+model FuoCatalogRun {
+  id             String              @id @default(uuid(7)) @db.Char(36)
+  status         FuoCatalogRunStatus @default(RUNNING)
+  activeLock     Boolean?            @unique @map("active_lock") // true only while RUNNING: at most one running run
+  subjectsTotal  Int                 @default(0) @map("subjects_total") // 0 = subject index not read yet
+  subjectsDone   Int                 @default(0) @map("subjects_done")
+  subjectsFailed Int                 @default(0) @map("subjects_failed")
+  threadsFound   Int                 @default(0) @map("threads_found")
+  threadsNew     Int                 @default(0) @map("threads_new")
+  threadsUpdated Int                 @default(0) @map("threads_updated")
+  lastError      String?             @map("last_error") @db.Text
+  createdById    String?             @map("created_by_id") @db.Char(36) // admin who started it (soft reference)
+  createdAt      DateTime            @default(now()) @map("created_at")
+  finishedAt     DateTime?           @map("finished_at")
+
+  @@map("fuo_catalog_runs")
+}
+
+// Subject forums found on the FuOverflow index and their crawl state in the latest run
+model FuoCatalogSubject {
+  id        String                  @id @default(uuid(7)) @db.Char(36)
+  code      String                  @unique @db.VarChar(20)
+  status    FuoCatalogSubjectStatus @default(QUEUED)
+  lastRunId String?                 @map("last_run_id") @db.Char(36)
+  pages     Int                     @default(0)
+  threads   Int                     @default(0)
+  lastError String?                 @map("last_error") @db.Text
+  crawledAt DateTime?               @map("crawled_at")
+  createdAt DateTime                @default(now()) @map("created_at")
+  updatedAt DateTime                @updatedAt @map("updated_at")
+
+  @@index([lastRunId, status])
+  @@map("fuo_catalog_subjects")
 }

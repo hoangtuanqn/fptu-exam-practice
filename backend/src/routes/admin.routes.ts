@@ -9,10 +9,13 @@ import { adminSettingController } from "../controllers/admin.setting.controllers
 import { adminAiController } from "../controllers/admin.ai.controllers";
 import { adminAnswerReportController } from "../controllers/admin.answer-report.controllers";
 import { adminExplanationFeedbackController } from "../controllers/admin.explanation-feedback.controllers";
+import { adminExamCommentController } from "../controllers/admin.exam-comment.controllers";
+import { bulkReviewCommentsBody, listAdminCommentsQuery, reviewCommentBody } from "../rules/requests/exam-comment.request";
 import { adminReferralController } from "../controllers/admin.referral.controllers";
 import { adminGiftCodeController } from "../controllers/admin.gift-code.controllers";
 import { adminCrawlerController } from "../controllers/admin.crawler.controllers";
 import { adminFuoSourceController } from "../controllers/admin.fuo-source.controllers";
+import { adminFuoCatalogController } from "../controllers/admin.fuo-catalog.controllers";
 import { addFuoSourcesBody, listFuoSourcesQuery } from "../rules/requests/fuo-source.request";
 import { adminHistoryController } from "../controllers/admin.history.controllers";
 import { adminAccountController } from "../controllers/admin.account.controllers";
@@ -139,6 +142,10 @@ adminRouter.post("/fuo-sources", validate(addFuoSourcesBody), adminFuoSourceCont
 adminRouter.get("/fuo-sources/status", adminFuoSourceController.status);
 adminRouter.post("/fuo-sources/runs", adminFuoSourceController.start);
 
+// Lượt quét toàn bộ danh mục FuOverflow (mọi môn, mọi bài; chạy nền, admin tự bấm)
+adminRouter.get("/fuo-catalog/status", adminFuoCatalogController.status);
+adminRouter.post("/fuo-catalog/runs", adminFuoCatalogController.start);
+
 adminRouter.get("/settings/ai", adminAiController.getSettings);
 adminRouter.put("/settings/ai", validate(updateAiBody), adminAiController.updateSettings);
 
@@ -165,6 +172,11 @@ adminRouter.get("/answer-reports", validate(listReportsQuery, "query"), adminAns
 adminRouter.post("/answer-reports/:id/approve", validate(uuidParam, "params"), validate(reviewReportBody), adminAnswerReportController.approve);
 adminRouter.post("/answer-reports/:id/reject", validate(uuidParam, "params"), validate(reviewReportBody), adminAnswerReportController.reject);
 adminRouter.post("/answer-reports/:id/resolve", validate(uuidParam, "params"), adminAnswerReportController.resolve);
+adminRouter.get("/exam-comments", validate(listAdminCommentsQuery, "query"), adminExamCommentController.list);
+adminRouter.get("/exam-comments/summary", adminExamCommentController.summary);
+adminRouter.post("/exam-comments/bulk", validate(bulkReviewCommentsBody), adminExamCommentController.bulkReview);
+adminRouter.patch("/exam-comments/:id", validate(uuidParam, "params"), validate(reviewCommentBody), adminExamCommentController.review);
+adminRouter.delete("/exam-comments/:id", validate(uuidParam, "params"), adminExamCommentController.remove);
 
 
 adminRouter.get("/settings/referral", adminReferralController.getSettings);

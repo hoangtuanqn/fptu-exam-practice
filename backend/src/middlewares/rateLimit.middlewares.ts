@@ -1,5 +1,6 @@
 import type { Request } from "express";
 import rateLimit, { type Options, type RateLimitInfo } from "express-rate-limit";
+import { EXAM_COMMENT_PER_MINUTE } from "../constants/exam-comment";
 import { waitText } from "../utils/format";
 
 export const TOO_FAST = "Bạn thao tác quá nhanh.";
@@ -77,4 +78,12 @@ export const giftCodeLimiter = makeLimiter({
   keyGenerator: (req) => `user:${req.user?.id ?? "anon"}`,
   validate: { keyGeneratorIpFallback: false },
   message: "Bạn đã nhập sai mã quá nhiều lần nên tạm thời chưa nhập được mã mới.",
+});
+
+// Gửi bình luận câu hỏi: theo tài khoản (dùng sau authenticate); giới hạn theo ngày đếm trong DB ở exam-comment.service
+export const examCommentLimiter = makeLimiter({
+  limit: EXAM_COMMENT_PER_MINUTE,
+  keyGenerator: (req) => `user:${req.user?.id ?? "anon"}`,
+  validate: { keyGeneratorIpFallback: false },
+  message: "Bạn gửi bình luận quá nhanh.",
 });

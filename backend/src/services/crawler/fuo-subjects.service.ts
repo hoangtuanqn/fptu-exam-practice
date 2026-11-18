@@ -1,16 +1,17 @@
 import * as cheerio from "cheerio";
 import { prisma } from "../../configs/prisma";
 import { FUO_HOST } from "../../constants/crawler";
+import { SUBJECT_CODE } from "./fuo-forum.service";
 
 /**
  * Kỳ học của từng môn, lấy từ mục "TÀI LIỆU CÁC MÔN HỌC" của FuOverflow (/categories/subjects/, trang công khai, không cần cookie).
  * Trang chia môn theo "Kỳ 0" đến "Kỳ 9" (/categories/semester-N/) và nhóm "Tổng hợp - Chưa rõ kỳ"; môn nằm trong nhóm sau thì chưa rõ kỳ.
  * Chỉ đọc đúng một trang, nhẹ và lịch sự (có User-Agent riêng). Kết quả ghi vào subjects.semester của các môn đã có trong hệ thống.
  */
-const URL_SUBJECTS = `https://${FUO_HOST}/categories/subjects/`;
+export const URL_SUBJECTS = `https://${FUO_HOST}/categories/subjects/`;
+export const MIN_SUBJECTS = 20; // đọc được ít môn hơn thế: trang đã đổi giao diện
 const UA = "Mozilla/5.0 (compatible; FEPassBot/1.0; +https://fepass.top)";
 const SEMESTER_HREF = /\/categories\/semester-(\d)\/?$/;
-const SUBJECT_CODE = /^[A-Za-z]{2,4}\d{3}[A-Za-z]?$/;
 
 export interface SubjectSemesters {
   semesters: Map<string, number>; // mã môn -> kỳ 0-9 (môn xuất hiện ở nhiều kỳ lấy kỳ nhỏ nhất)
@@ -48,7 +49,7 @@ export async function fetchSubjectSemesters(): Promise<SubjectSemesters> {
   if (!res.ok) throw new Error(`FuOverflow trả HTTP ${res.status}`);
   const data = parseSubjectSemesters(await res.text());
   // Trang đổi giao diện thì không đọc được gì: báo lỗi chứ không coi như "không có môn nào"
-  if (data.semesters.size < 20) throw new Error(`Chỉ đọc được ${data.semesters.size} môn, có thể FuOverflow đã đổi giao diện trang`);
+  if (data.semesters.size < MIN_SUBJECTS) throw new Error(`Chỉ đọc được ${data.semesters.size} môn, có thể FuOverflow đã đổi giao diện trang`);
   return data;
 }
 

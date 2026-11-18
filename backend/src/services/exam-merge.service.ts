@@ -45,6 +45,7 @@ async function settle<T>(tasks: Promise<T>[]): Promise<T[]> {
  * - Tệp đính kèm: tải và thêm tệp chưa có (so theo link gốc); tệp cũ và id của chúng giữ nguyên.
  * - Bình luận: chỉ lấy lại khi vừa thêm câu hoặc lần lấy trước cũ hơn FUO_SOURCE_COMMENT_REFRESH_DAYS (đỡ tải FuOverflow);
  *   chỉ thay mục của câu nào lấy được ít nhất một bình luận, ghi comments.txt một lần.
+ * - Loại đề (FE/PE/Quiz) và mô tả (bài đầu của thread): cập nhật theo thread hiện tại.
  * - Giữ nguyên: id đề và câu, tiêu đề, ảnh và đáp án câu cũ, lời giải thích, lượt làm, phiên, câu đã lưu, thẻ ôn, báo lỗi đáp án, refreshedAt.
  * Mọi request đi qua FuoClient với cùng concurrency/requestDelayMs của cấu hình lấy đề. Ghi DB chỉ sau khi tải xong hết.
  */
@@ -57,6 +58,8 @@ async function mergeLocked(threadId: string, commentsAt: Date | null): Promise<M
   const client = createFuoClient(config);
   const thread = await collectThread(client, threadUrl(threadId));
   if ((thread.threadId ?? threadId) !== threadId) throw new Error("Thread trả về không khớp với link đã nhập");
+  // Loại đề và mô tả theo thread hiện tại (đề cũ chưa có, hoặc nhãn/bài đầu đã đổi)
+  if (exam.kind !== thread.kind || exam.description !== thread.description) await examRepository.setThreadInfo(exam.id, { kind: thread.kind, description: thread.description });
 
   const storedQuestions = await examRepository.findQuestionSources(exam.id);
   const plan = planQuestionMerge(storedQuestions, thread.images);

@@ -1,8 +1,9 @@
-import { Prisma } from "@prisma/client";
+import { type ExamKind, Prisma } from "@prisma/client";
 import { prisma } from "../configs/prisma";
 import { parseSiteTime } from "../utils/html";
 import type { Db } from "./wallet.repository";
 import { toSkipTake, type PaginationQuery } from "../utils/pagination";
+import { classifyKind } from "../utils/exam-kind";
 import { subjectCodeFromTitle } from "../utils/subject-code";
 
 // PENDING = AI đang phân tích đáp án (đề đã dùng được, chỉ chưa chấm được)
@@ -17,6 +18,8 @@ export interface NewExam {
   createdById?: string;
   answerSource: AnswerSource;
   aiReport?: string;
+  kind?: ExamKind;
+  description?: string | null;
   questions: {
     number: number;
     name: string;
@@ -160,6 +163,8 @@ export const examRepository = {
         createdById: data.createdById,
         answerSource: data.answerSource,
         aiReport: data.aiReport,
+        kind: data.kind,
+        description: data.description,
       },
     }),
 
@@ -178,7 +183,7 @@ export const examRepository = {
   },
 
   // Làm mới xong phần lấy dữ liệu: cập nhật thông tin đề, bỏ các câu thừa (thread bớt ảnh) và lời giải thích cũ
-  finishRefresh: (examId: string, data: { title: string; sourceUrl: string; author?: string; postedAt?: string; total: number }) =>
+  finishRefresh: (examId: string, data: { title: string; sourceUrl: string; author?: string; postedAt?: string; total: number; kind: ExamKind; description: string | null }) =>
     prisma.$transaction([
       prisma.exam.update({
         where: { id: examId },
@@ -189,6 +194,8 @@ export const examRepository = {
           author: data.author,
           postedAt: parseSiteTime(data.postedAt),
           totalQuestions: data.total,
+          kind: data.kind,
+          description: data.description,
           refreshedAt: new Date(),
         },
       }),
@@ -207,6 +214,23 @@ export const examRepository = {
     for (const [code, ids] of byCode) await prisma.exam.updateMany({ where: { id: { in: ids } }, data: { subjectCode: code } });
     return [...byCode.values()].reduce((n, ids) => n + ids.length, 0);
   },
+
+  // Loại đề cho các đề cũ chưa có (chạy lúc khởi động, an toàn khi chạy lại). Đề cũ đều được lấy qua nhãn "Đề Thi FE",
+  // nên tên đề không nói rõ PE/Quiz thì là FE.
+  async backfillKinds() {
+    const rows = await prisma.exam.findMany({ where: { kind: null }, select: { id: true, title: true } });
+    const byKind = new Map<ExamKind, string[]>();
+    for (const r of rows) {
+      const found = classifyKind(null, r.title);
+      const kind = found === "OTHER" ? "FE" : found;
+      (byKind.get(kind) ?? byKind.set(kind, []).get(kind)!).push(r.id);
+    }
+    for (const [kind, ids] of byKind) await prisma.exam.updateMany({ where: { id: { in: ids } }, data: { kind } });
+    return rows.length;
+  },
+
+  // Nạp dữ liệu mới cho đề có sẵn: loại và mô tả theo thread hiện tại
+  setThreadInfo: (examId: string, data: { kind: ExamKind; description: string | null }) => prisma.exam.update({ where: { id: examId }, data, select: { id: true } }),
 
   countQuestions: (examId: string) => prisma.examQuestion.count({ where: { examId } }),
 
