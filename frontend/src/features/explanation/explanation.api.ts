@@ -62,10 +62,10 @@ export interface ExplainChatMessage {
 export const CHAT_QUOTA_EXCEEDED = "CHAT_QUOTA_EXCEEDED";
 
 export const explanationApi = {
-  feedback: (body: { examId: number; questionNumber: number; helpful: boolean; reason?: FeedbackReason; comment?: string }) => http.post<{ helpful: boolean }>("/explanations/feedback", body),
+  feedback: (body: { examId: string; questionNumber: number; helpful: boolean; reason?: FeedbackReason; comment?: string }) => http.post<{ helpful: boolean }>("/explanations/feedback", body),
   chatQuota: async () => (await http.get<{ quota: ChatQuota }>("/explanations/chat/quota")).quota,
-  chat: (examId: number, questionNumber: number, messages: ExplainChatMessage[]) => http.post<{ reply: string; quota?: ChatQuota }>("/explanations/chat", { examId, questionNumber, messages }),
-  info: (examId: number) => http.get<ExplanationInfo>(`/explanations/exams/${examId}`),
-  explain: (examId: number, questionNumber: number, useFreeTurn = false) => http.post<ExplanationResult>("/explanations", { examId, questionNumber, ...(useFreeTurn && { useFreeTurn: true }) }),
-  unlock: (examId: number, price: number) => http.post<UnlockResult>("/explanations/unlock", { examId, price }),
+  chat: (examId: string, questionNumber: number, messages: ExplainChatMessage[]) => http.post<{ reply: string; quota?: ChatQuota }>("/explanations/chat", { examId, questionNumber, messages }),
+  info: (examId: string) => http.get<ExplanationInfo>(`/explanations/exams/${examId}`),
+  explain: (examId: string, questionNumber: number, useFreeTurn = false) => http.post<ExplanationResult>("/explanations", { examId, questionNumber, ...(useFreeTurn && { useFreeTurn: true }) }),
+  unlock: (examId: string, price: number) => http.post<UnlockResult>("/explanations/unlock", { examId, price }),
 };

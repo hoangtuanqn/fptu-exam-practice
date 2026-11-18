@@ -54,7 +54,7 @@ function FullTextDialog({ title, text, loading, onClose }: { title: string; text
   );
 }
 
-function ReportDialog({ id, onClose }: { id: number; onClose: () => void }) {
+function ReportDialog({ id, onClose }: { id: string; onClose: () => void }) {
   const { data, error, loading } = useApi(() => adminApi.examReport(id), [id]);
   return <FullTextDialog title="Báo cáo của AI" loading={loading} text={error ? error : (data?.aiReport ?? "Chưa có báo cáo (đề này chưa được AI giải).")} onClose={onClose} />;
 }
@@ -67,10 +67,10 @@ export default function ExamsPage() {
   const page = toPage(url.page);
   const { data, error, loading, reload } = useApi(() => adminApi.exams(page), [page]);
   useClampPage(data?.meta, (p) => setUrl({ page: String(p) }));
-  const [report, setReport] = useState<number | null>(null);
+  const [report, setReport] = useState<string | null>(null);
   const [fullError, setFullError] = useState<{ title: string; text: string } | null>(null); // lỗi AI đang xem toàn văn
-  const [starting, setStarting] = useState<number | null>(null);
-  const [downloading, setDownloading] = useState<number | null>(null);
+  const [starting, setStarting] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState<string | null>(null);
 
   // Có đề đang được AI giải thì hỏi lại định kỳ để thấy khi xong
   const anySolving = data?.items.some((e) => e.solving) ?? false;
@@ -94,7 +94,7 @@ export default function ExamsPage() {
     }
   }
 
-  async function download(id: number) {
+  async function download(id: string) {
     setDownloading(id);
     try {
       await adminApi.downloadExam(id);

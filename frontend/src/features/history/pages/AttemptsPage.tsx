@@ -13,12 +13,13 @@ import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
 import { formatDateTime } from "@/shared/utils/formatters";
 import { useClampPage } from "@/shared/hooks/useClampPage";
+import { isUuid } from "@/shared/utils/uuid";
 
 export default function AttemptsPage() {
   const navigate = useNavigate();
   const [url, setUrl] = useUrlState({ page: "1", examId: "" });
   const page = toPage(url.page);
-  const examId = Number(url.examId) || undefined; // có thì chỉ hiện lịch sử của đề này
+  const examId = isUuid(url.examId) ? url.examId : undefined; // có thì chỉ hiện lịch sử của đề này (id cũ dạng số thì bỏ qua)
   const setPage = (p: number) => setUrl({ page: String(p) });
   const { data, error, loading, reload } = useApi(() => historyApi.list(page, undefined, examId), [page, examId]);
   useClampPage(data?.meta, setPage);

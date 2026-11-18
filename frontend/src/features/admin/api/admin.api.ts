@@ -150,7 +150,7 @@ export interface AiForm {
 
 export interface ExplanationFeedbackAdmin {
   id: string;
-  examId: number;
+  examId: string;
   questionNumber: number;
   helpful: boolean;
   reason: string | null;
@@ -240,7 +240,7 @@ export interface QuestionResolve {
 }
 
 export interface ExamAdminDetail {
-  id: number;
+  id: string;
   title: string;
   threadId: string;
   sourceUrl: string;
@@ -283,7 +283,7 @@ export interface AdminExplanationUnlock {
   questions: number;
   createdAt: string;
   user: PurchaseUser;
-  exam: { id: number; title: string };
+  exam: { id: string; title: string };
 }
 
 export interface AdminExplanationPurchase {
@@ -293,7 +293,7 @@ export interface AdminExplanationPurchase {
   isTrial: boolean;
   createdAt: string;
   user: PurchaseUser;
-  exam: { id: number; title: string };
+  exam: { id: string; title: string };
 }
 
 export interface QuestionChange {
@@ -498,11 +498,11 @@ export const adminApi = {
     http.put<AiAdminConfig>("/admin/settings/ai", body),
   exams: (page: number) =>
     http.list<AdminExam>("/admin/exams", { page, limit: PAGE_SIZE }),
-  renameExam: (id: number, title: string) =>
+  renameExam: (id: string, title: string) =>
     http.patch<ExamAdminDetail>(`/admin/exams/${id}`, { title }),
-  deleteExam: (id: number) => http.delete(`/admin/exams/${id}`),
+  deleteExam: (id: string) => http.delete(`/admin/exams/${id}`),
   // Tải đề dạng zip (ảnh + đáp án) rồi lưu xuống máy; trả về tên file đã lưu
-  async downloadExam(id: number): Promise<string> {
+  async downloadExam(id: string): Promise<string> {
     await http.get("/users/me").catch(() => undefined); // làm mới token nếu sắp hết hạn (fetch thô bên dưới không tự làm mới)
     let res: Response;
     try {
@@ -553,16 +553,16 @@ export const adminApi = {
       ...f,
       limit: PAGE_SIZE,
     }),
-  examDetail: (id: number) => http.get<ExamAdminDetail>(`/admin/exams/${id}`),
-  resolveQuestion: (id: number, number: number) =>
+  examDetail: (id: string) => http.get<ExamAdminDetail>(`/admin/exams/${id}`),
+  resolveQuestion: (id: string, number: number) =>
     http.post<QuestionResolve>(
       `/admin/exams/${id}/questions/${number}/resolve`,
     ),
-  saveExamQuestions: (id: number, changes: QuestionChange[]) =>
+  saveExamQuestions: (id: string, changes: QuestionChange[]) =>
     http.patch<ExamAdminDetail>(`/admin/exams/${id}/questions`, { changes }),
-  solveExam: (id: number) => http.post<null>(`/admin/exams/${id}/solve`),
-  examReport: (id: number) =>
-    http.get<{ id: number; title: string; aiReport: string | null }>(
+  solveExam: (id: string) => http.post<null>(`/admin/exams/${id}/solve`),
+  examReport: (id: string) =>
+    http.get<{ id: string; title: string; aiReport: string | null }>(
       `/admin/exams/${id}/report`,
     ),
   sepayStatus: () => http.get<SyncResult | null>("/admin/sepay/status"),

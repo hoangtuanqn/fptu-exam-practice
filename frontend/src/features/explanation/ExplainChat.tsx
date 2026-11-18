@@ -23,7 +23,7 @@ function untilReset(resetsAt: string | undefined): string | null {
 }
 
 interface Props {
-  examId: number;
+  examId: string;
   questionNumber: number;
 }
 

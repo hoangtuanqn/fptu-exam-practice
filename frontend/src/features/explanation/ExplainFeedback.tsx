@@ -6,7 +6,7 @@ import { Button } from "@/shared/ui/Button";
 import { explanationApi, FEEDBACK_REASONS, type FeedbackReason } from "./explanation.api";
 
 interface Props {
-  examId: number;
+  examId: string;
   questionNumber: number;
   initial: boolean | null; // đánh giá đã gửi trước đó (null = chưa)
 }

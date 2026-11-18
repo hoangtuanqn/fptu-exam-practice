@@ -31,6 +31,7 @@ import { Button } from "@/shared/ui/Button";
 import { Modal, ModalActions, ModalTitle } from "@/shared/ui/Modal";
 import { Loading } from "@/shared/ui/Feedback";
 import { QuizWorkspace } from "@/features/practice/components/quiz/QuizWorkspace";
+import { isUuid } from "@/shared/utils/uuid";
 
 interface Props {
   threadId?: string; // có khi đang ở địa chỉ /exam/:threadId (mã thread FuOverflow, công khai, không phải ID nội bộ)
@@ -53,7 +54,7 @@ export default function PracticePage({ threadId }: Props) {
   const [dialog, setDialog] = useState<SubmitDialog>(null);
   const [trialEnded, setTrialEnded] = useState(false);
   const [referencesOpen, setReferencesOpen] = useState(false); // đang xem tài liệu tham khảo của đề
-  const [attachments, setAttachments] = useState<{ examId: number; list: ExamAttachment[] } | null>(null); // tệp đính kèm của đề mở theo địa chỉ
+  const [attachments, setAttachments] = useState<{ examId: string; list: ExamAttachment[] } | null>(null); // tệp đính kèm của đề mở theo địa chỉ
   const [filesOnly, setFilesOnly] = useState<{ title: string; list: ExamAttachment[] } | null>(null); // đề chỉ có tệp: không mở bài làm
   const [bestScore, setBestScore] = useState<number | null>(null); // điểm cao nhất của người dùng ở đề đang mở
   const [topicSummary, setTopicSummary] = useState<TopicSummary>(null); // kết quả theo chủ đề của bài vừa nộp, hiện trong bảng điểm
@@ -104,7 +105,7 @@ export default function PracticePage({ threadId }: Props) {
   };
 
   // Điểm cao nhất ở đề này (chỉ thành viên, đề của hệ thống); nạp lại sau mỗi lần nộp được lưu
-  const loadBest = (examId: number) =>
+  const loadBest = (examId: string) =>
     historyApi
       .summary(examId)
       .then((s) => setBestScore(s.bestScore))
@@ -231,7 +232,8 @@ export default function PracticePage({ threadId }: Props) {
     setOpening(true);
     setFilesOnly(null);
     const params = new URLSearchParams(location.search);
-    const sessionId = Number(params.get("session")) || null; // có thì làm tiếp đúng lượt đó
+    const rawSession = params.get("session");
+    const sessionId = isUuid(rawSession) ? rawSession : null; // có thì làm tiếp đúng lượt đó (id cũ dạng số thì bỏ qua)
     Promise.all([examImportApi.examByThread(threadId), sessionId ? sessionApi.get(sessionId).catch(() => null) : Promise.resolve(null)])
       .then(([exam, saved]) => {
         if (stale) return;

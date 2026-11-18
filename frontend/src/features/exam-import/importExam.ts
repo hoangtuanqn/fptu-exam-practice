@@ -18,7 +18,7 @@ const stageText = (j: CrawlJob) =>
  */
 export async function importExam(url: string, subject: string | undefined, onStage: (stage: string) => void, signal: AbortSignal, captchaToken?: string): Promise<ImportedExam> {
   const result = await examImportApi.submit(url, subject, captchaToken);
-  let examId: number;
+  let examId: string;
 
   if (result.existed) {
     examId = result.examId;

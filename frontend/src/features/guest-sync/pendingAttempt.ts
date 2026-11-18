@@ -1,9 +1,10 @@
 import type { AttemptPayload } from "@/features/history/types";
+import { isUuid } from "@/shared/utils/uuid";
 
 const KEY = "pending_attempt";
 
 export interface PendingAttempt {
-  examId: number;
+  examId: string;
   payload: AttemptPayload;
 }
 
@@ -20,7 +21,8 @@ export const pendingAttempt = {
     try {
       const raw = localStorage.getItem(KEY);
       localStorage.removeItem(KEY);
-      return raw ? (JSON.parse(raw) as PendingAttempt) : null;
+      const value = raw ? (JSON.parse(raw) as PendingAttempt) : null;
+      return value && isUuid(value.examId) ? value : null; // bài lưu từ trước khi đổi id đề (id dạng số) thì bỏ
     } catch {
       return null;
     }

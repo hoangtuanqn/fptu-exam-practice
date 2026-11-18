@@ -5,7 +5,7 @@ export type Outcome = "correct" | "wrong" | "skipped" | "ungraded";
 
 export interface AttemptSummary {
   id: string;
-  examId: number;
+  examId: string;
   mode: AttemptMode;
   score: number; // thang 10
   totalGraded: number;
@@ -14,7 +14,7 @@ export interface AttemptSummary {
   skipped: number;
   durationSec: number;
   createdAt: string;
-  exam: { id: number; title: string; threadId: string; totalQuestions: number };
+  exam: { id: string; title: string; threadId: string; totalQuestions: number };
 }
 
 // Ảnh chụp từng câu lúc chấm: đã chọn gì, đáp án đúng lúc đó là gì

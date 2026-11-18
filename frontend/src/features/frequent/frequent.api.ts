@@ -2,7 +2,7 @@ import { http } from "@/shared/api/client";
 
 export interface FrequentItem {
   count: number; // số đề có câu này
-  examId: number;
+  examId: string;
   threadId: string;
   examTitle: string;
   number: number;

@@ -12,6 +12,7 @@ import { ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { Modal, ModalActions, ModalTitle } from "@/shared/ui/Modal";
 import { Segmented } from "@/shared/ui/Segmented";
 import { errorMessage } from "@/shared/api/errors";
+import { isUuid } from "@/shared/utils/uuid";
 import { useConfirm } from "@/shared/ui/ConfirmDialog";
 
 const SOURCE: Record<AnswerSource, [string, Tone]> = {
@@ -87,7 +88,7 @@ function PasteDialog({ numbers, onApply, onClose }: { numbers: number[]; onApply
 }
 
 // Tiêu đề đề thi, bấm bút chì để đổi tên
-function TitleEditor({ examId, title, onSaved }: { examId: number; title: string; onSaved: () => void }) {
+function TitleEditor({ examId, title, onSaved }: { examId: string; title: string; onSaved: () => void }) {
   const toast = useToast();
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(title);
@@ -314,7 +315,7 @@ function QuestionCard({ q, answer, isReference, dirty, disabled, solving, aiNote
 
 export default function ExamEditPage() {
   const { id } = useParams();
-  const examId = Number(id);
+  const examId = id ?? "";
   const toast = useToast();
   const { confirm, confirmDialog } = useConfirm();
   const { data, error, loading, reload } = useApi(() => adminApi.examDetail(examId), [examId]);
@@ -446,7 +447,7 @@ export default function ExamEditPage() {
     document.getElementById(`q-${n}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
-  if (!Number.isInteger(examId)) return <ErrorBox message="Đề không hợp lệ" />;
+  if (!isUuid(examId)) return <ErrorBox message="Đề không hợp lệ" />;
   if (loading && !data) return <Loading />;
   if (error || !data) return <ErrorBox message={error ?? "Không tải được đề"} onRetry={reload} />;
 

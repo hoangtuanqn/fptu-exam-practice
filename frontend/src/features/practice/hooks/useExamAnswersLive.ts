@@ -10,7 +10,7 @@ const FALLBACK_POLL_MS = 6000; // chỉ dùng khi mất kết nối realtime
  * Nhận kết quả AI giải đáp án của một đề qua socket, ngay khi xong hoặc lỗi.
  * Khi `enabled` là false thì không theo dõi gì. Mất kết nối thì tạm hỏi định kỳ (và dừng khi nối lại).
  */
-export function useExamAnswersLive(examId: number | null, enabled: boolean, onUpdate: (payload: ExamAnswersPayload) => void) {
+export function useExamAnswersLive(examId: string | null, enabled: boolean, onUpdate: (payload: ExamAnswersPayload) => void) {
   const handler = useRef(onUpdate);
   handler.current = onUpdate;
 

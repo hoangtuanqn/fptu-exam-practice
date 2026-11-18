@@ -4,7 +4,7 @@ import { PAGE_SIZE } from "@/shared/api/pagination";
 // Một câu trong "Câu đã lưu"; ảnh, đáp án và chủ đề luôn là bản mới nhất của đề
 export interface SavedQuestion {
   id: number;
-  examId: number;
+  examId: string;
   examTitle: string;
   threadId: string;
   subjectCode: string | null;
@@ -16,8 +16,8 @@ export interface SavedQuestion {
 }
 
 export const savedApi = {
-  save: (examId: number, questionNumber: number) => http.post<{ saved: boolean }>("/saved-questions", { examId, questionNumber }),
-  remove: (examId: number, number: number) => http.delete(`/saved-questions/${examId}/${number}`),
-  ofExam: (examId: number) => http.get<number[]>(`/saved-questions/exam/${examId}`),
+  save: (examId: string, questionNumber: number) => http.post<{ saved: boolean }>("/saved-questions", { examId, questionNumber }),
+  remove: (examId: string, number: number) => http.delete(`/saved-questions/${examId}/${number}`),
+  ofExam: (examId: string) => http.get<number[]>(`/saved-questions/exam/${examId}`),
   list: (page = 1, subject?: string, limit = PAGE_SIZE) => http.list<SavedQuestion>("/saved-questions", { page, limit, subject: subject || undefined }),
 };
