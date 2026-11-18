@@ -7,7 +7,6 @@ import type { TopicSummary } from "@/features/history/types";
 import { pendingAttempt } from "@/features/guest-sync/pendingAttempt";
 import { examImportApi } from "@/features/exam-import/exam-import.api";
 import { isFilesOnly, type ExamAttachment } from "@/features/exam-import/types";
-import { FilesOnlyExam } from "@/features/exam-attachments/FilesOnlyExam";
 import { sessionApi } from "@/features/practice-session/session.api";
 import { useSessionSync } from "@/features/practice-session/useSessionSync";
 import { useLeaveWarning } from "@/shared/hooks/useLeaveWarning";
@@ -32,13 +31,14 @@ import { Modal, ModalActions, ModalTitle } from "@/shared/ui/Modal";
 import { Loading } from "@/shared/ui/Feedback";
 import { QuizWorkspace } from "@/features/practice/components/quiz/QuizWorkspace";
 import { isUuid } from "@/shared/utils/uuid";
+import { TIME_LIMIT_MAX, TIME_LIMIT_MIN } from "@/features/practice/utils/timeLimit";
 
 interface Props {
-  examId?: string; // có khi đang ở địa chỉ /exam/:examId (ID đề, dạng UUID)
+  examId?: string; // có khi đang ở địa chỉ /exam/:examId/practice (ID đề, dạng UUID)
 }
 
-// Trang luyện đề. Địa chỉ phản ánh đề đang mở: "/" là trang chủ, "/exam/:examId" là đề của hệ thống,
-// "/exam/:examId?mode=exam" mở thẳng vào chế độ thi. Sao chép địa chỉ là gửi được đúng đề đó (người mở cần có đề trong kho).
+// Trang luyện đề. Địa chỉ phản ánh đề đang mở: "/" là trang chủ, "/exam/:examId/practice?mode=practice|exam" là đề của hệ thống
+// (chọn chế độ ở trang chi tiết đề /exam/:examId). Sao chép địa chỉ là gửi được đúng đề đó (người mở cần có đề trong kho).
 export default function PracticePage({ examId }: Props) {
   const quiz = useQuiz();
   const { user } = useAuth();
@@ -47,14 +47,12 @@ export default function PracticePage({ examId }: Props) {
   const navigate = useNavigate();
   const location = useLocation();
   const [opening, setOpening] = useState(false); // đang tải đề theo địa chỉ
-  const loadedFor = useRef<string | null>(null);
   const openedId = quiz.examId;
   const [zoomOpen, setZoomOpen] = useState(false);
   const [dialog, setDialog] = useState<SubmitDialog>(null);
   const [trialEnded, setTrialEnded] = useState(false);
   const [referencesOpen, setReferencesOpen] = useState(false); // đang xem tài liệu tham khảo của đề
   const [attachments, setAttachments] = useState<{ examId: string; list: ExamAttachment[] } | null>(null); // tệp đính kèm của đề mở theo địa chỉ
-  const [filesOnly, setFilesOnly] = useState<{ title: string; list: ExamAttachment[] } | null>(null); // đề chỉ có tệp: không mở bài làm
   const [bestScore, setBestScore] = useState<number | null>(null); // điểm cao nhất của người dùng ở đề đang mở
   const [topicSummary, setTopicSummary] = useState<TopicSummary>(null); // kết quả theo chủ đề của bài vừa nộp, hiện trong bảng điểm
 
@@ -70,7 +68,7 @@ export default function PracticePage({ examId }: Props) {
     onLeave: quiz.addViolation,
     onBack: quiz.endViolation,
   });
-  const anyDialogOpen = !!dialog || !!quiz.pending || quiz.choosing || quiz.notFound || trialEnded || referencesOpen || guard.away !== null;
+  const anyDialogOpen = !!dialog || !!quiz.pending || quiz.notFound || trialEnded || referencesOpen || guard.away !== null;
 
   // Lưu tiến độ lên server để tải lại trang vẫn làm tiếp được (chỉ với đề của hệ thống)
   const { flush } = useSessionSync(quiz);
@@ -92,7 +90,7 @@ export default function PracticePage({ examId }: Props) {
     void flush();
     setDialog(null);
     setTopicSummary(null);
-    navigate(`/exam/${first}?${qs.toString()}`);
+    navigate(`/exam/${first}/practice?${qs.toString()}`);
   };
   const goHome = () => {
     if (quiz.examId === null && !quiz.submitted && quiz.answeredCount > 0) {
@@ -220,31 +218,33 @@ export default function PracticePage({ examId }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quiz.submitted, quiz.answersPending]);
 
-  // Vào /exam/:examId thì tải đề đó: có ?mode=practice|exam thì làm bài luôn, không thì hỏi chọn chế độ
+  // Vào /exam/:examId/practice?mode=practice|exam thì tải đề đó và làm bài luôn; thiếu chế độ thì về trang chi tiết đề để chọn
   useEffect(() => {
-    if (!examId) {
-      loadedFor.current = null;
+    if (!examId) return;
+
+    const params = new URLSearchParams(location.search);
+    const mode = params.get("mode");
+    if (mode !== "practice" && mode !== "exam") {
+      navigate(`/exam/${examId}`, { replace: true });
       return;
     }
-
     let stale = false;
     setOpening(true);
-    setFilesOnly(null);
-    const params = new URLSearchParams(location.search);
     const rawSession = params.get("session");
     const sessionId = isUuid(rawSession) ? rawSession : null; // có thì làm tiếp đúng lượt đó (id cũ dạng số thì bỏ qua)
+    // ?limit=<phút>: giới hạn thời gian chọn ở trang chi tiết đề, chỉ dùng cho lượt Thi mới (làm tiếp thì đọc giới hạn đã lưu)
+    const rawLimit = Number(params.get("limit"));
+    const limit = Number.isInteger(rawLimit) && rawLimit >= TIME_LIMIT_MIN && rawLimit <= TIME_LIMIT_MAX ? rawLimit : null;
     Promise.all([examImportApi.exam(examId), sessionId ? sessionApi.get(sessionId).catch(() => null) : Promise.resolve(null)])
       .then(([exam, saved]) => {
         if (stale) return;
-        loadedFor.current = examId; // đã tải xong đề này
         setAttachments({ examId: exam.id, list: exam.attachments ?? [] });
-        // Đề chỉ có tệp: không có câu để làm, không tạo lượt làm bài
+        // Đề chỉ có tệp: không có câu để làm, không tạo lượt làm bài; trang chi tiết đề cho mở/tải tệp
         if (isFilesOnly(exam)) {
           quiz.closeExam(); // đang mở đề khác (đi tiếp từ bộ đề) thì gỡ đề đó ra
-          setFilesOnly({ title: exam.title, list: exam.attachments ?? [] });
+          navigate(`/exam/${exam.id}`, { replace: true });
           return;
         }
-        const mode = params.get("mode");
         // Bộ đề theo chương (?t=chương&t=chương): chỉ giữ các câu thuộc những chương đã chọn
         const chapters = new Set(params.getAll("t"));
         if (chapters.size > 0) {
@@ -254,8 +254,7 @@ export default function PracticePage({ examId }: Props) {
             navigate("/account/chapters", { replace: true });
             return;
           }
-          const m = mode === "exam" ? "exam" : "practice";
-          quiz.openExam(kept, `${exam.title} (${kept.length} câu theo chương)`, exam.id, saved && saved.examId === exam.id ? (saved.mode === "EXAM" ? "exam" : "practice") : m, exam.answerStatus, kept.length, saved && saved.examId === exam.id ? { sessionId: saved.id, answers: saved.answers, checked: saved.checked, flagged: saved.flagged, current: saved.current, elapsedSec: saved.elapsedSec, violations: saved.violations, submitted: saved.status === "SUBMITTED" } : undefined);
+          quiz.openExam(kept, `${exam.title} (${kept.length} câu theo chương)`, exam.id, saved && saved.examId === exam.id ? (saved.mode === "EXAM" ? "exam" : "practice") : mode, exam.answerStatus, kept.length, saved && saved.examId === exam.id ? { sessionId: saved.id, answers: saved.answers, checked: saved.checked, flagged: saved.flagged, current: saved.current, elapsedSec: saved.elapsedSec, violations: saved.violations, submitted: saved.status === "SUBMITTED" } : undefined, limit);
           return;
         }
         if (saved && saved.examId === exam.id) {
@@ -269,8 +268,7 @@ export default function PracticePage({ examId }: Props) {
             violations: saved.violations,
             submitted: saved.status === "SUBMITTED",
           });
-        } else if (mode === "practice" || mode === "exam") quiz.openExam(exam.questions, exam.title, exam.id, mode, exam.answerStatus, exam.totalQuestions);
-        else quiz.openForChoice(exam.questions, exam.title, exam.id, exam.answerStatus, exam.totalQuestions); // đề hiện sẵn phía sau, hộp thoại chọn chế độ nằm đè lên
+        } else quiz.openExam(exam.questions, exam.title, exam.id, mode, exam.answerStatus, exam.totalQuestions, undefined, limit);
       })
       .catch((err: unknown) => {
         if (stale) return;
@@ -288,29 +286,15 @@ export default function PracticePage({ examId }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [examId]);
 
-  // Địa chỉ luôn khớp với đề đang làm: đề hệ thống -> /exam/:examId?mode=..., đề mở từ thư mục -> "/"
+  // Địa chỉ luôn khớp với đề đang làm: đề hệ thống -> /exam/:examId/practice?mode=..., đề mở từ thư mục -> "/"
   useEffect(() => {
-    if (!hasQuiz || quiz.choosing) return; // chưa chọn chế độ thì địa chỉ chưa có ?mode
+    if (!hasQuiz) return;
     const chapterQs = new URLSearchParams(location.search).getAll("t").map((t) => `&t=${encodeURIComponent(t)}`).join(""); // giữ bộ đề theo chương khi tải lại
     const nextQs = nextQueue.length > 0 ? `&next=${encodeURIComponent(nextQueue.join(","))}` : ""; // giữ hàng đợi các đề còn lại khi tải lại
-    const target = openedId !== null ? `/exam/${openedId}?mode=${quiz.mode}${quiz.sessionId ? `&session=${quiz.sessionId}` : ""}${chapterQs}${nextQs}` : "/";
+    const target = openedId !== null ? `/exam/${openedId}/practice?mode=${quiz.mode}${quiz.sessionId ? `&session=${quiz.sessionId}` : ""}${chapterQs}${nextQs}` : "/";
     if (location.pathname + location.search !== target) navigate(target, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasQuiz, quiz.choosing, openedId, quiz.mode, quiz.sessionId]);
-
-  // Đang ở /exam/:examId mà huỷ hộp thoại chọn chế độ thì về trang chủ
-  useEffect(() => {
-    if (examId && !hasQuiz && !quiz.pending && !opening && loadedFor.current === examId) navigate("/", { replace: true });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [quiz.pending]);
-
-  // Đóng hộp thoại chọn chế độ: bỏ đề vừa mở và quay lại trang đã bấm (không có trang trước trong ứng dụng thì về trang chủ)
-  const cancelChoosing = () => {
-    quiz.closeExam();
-    const canGoBack = ((window.history.state as { idx?: number } | null)?.idx ?? 0) > 0;
-    if (canGoBack) navigate(-1);
-    else navigate("/", { replace: true });
-  };
+  }, [hasQuiz, openedId, quiz.mode, quiz.sessionId]);
 
   const pick: typeof quiz.loadFolder = (files, name) => {
     if (!user && trial.used) {
@@ -340,7 +324,7 @@ export default function PracticePage({ examId }: Props) {
         onShowResult={() => setDialog("result")}
       />
 
-      <QuizDialogs quiz={quiz} topicSummary={topicSummary} dialog={dialog} onDialogChange={setDialog} onCloseZoom={() => setZoomOpen(false)} onCancelChoose={cancelChoosing} onBeforeSubmit={guard.finish} nextExam={nextQueue.length > 0 ? { remaining: nextQueue.length, onOpen: openNext } : undefined} />
+      <QuizDialogs quiz={quiz} topicSummary={topicSummary} dialog={dialog} onDialogChange={setDialog} onCloseZoom={() => setZoomOpen(false)} onBeforeSubmit={guard.finish} nextExam={nextQueue.length > 0 ? { remaining: nextQueue.length, onOpen: openNext } : undefined} />
       {leaveAsk && (
         <Modal onClose={() => setLeaveAsk(false)}>
           <ModalTitle icon={TriangleAlert}>Thoát và bỏ bài đang làm?</ModalTitle>
@@ -370,8 +354,6 @@ export default function PracticePage({ examId }: Props) {
 
       {guard.away ? null : hasQuiz ? ( // đang ở ngoài bài thi: gỡ hẳn đề khỏi trang, mọi trạng thái bài làm vẫn nằm trong useQuiz
         <QuizWorkspace quiz={quiz} zoomOpen={zoomOpen} onZoomChange={setZoomOpen} onSubmit={requestSubmit} />
-      ) : filesOnly && examId ? (
-        <FilesOnlyExam title={filesOnly.title} attachments={filesOnly.list} />
       ) : opening ? (
         <div className="flex flex-1 items-center justify-center bg-surface">
           <Loading label="Đang mở đề…" />

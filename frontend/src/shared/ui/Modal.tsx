@@ -12,7 +12,7 @@ const FOCUSABLE = 'a[href], button:not(:disabled), input:not(:disabled), select:
  * Truy cập: role=dialog + aria-modal, nhốt phím Tab trong hộp, Esc để đóng, trả focus về nút đã mở hộp thoại khi đóng.
  */
 export function Modal({ children, onClose, wide = false, blur = false }: { children: ReactNode; onClose?: () => void; wide?: boolean; blur?: boolean }) {
-  // blur: nền phủ tối hơn và nhòe nội dung phía sau, để không đọc được (ví dụ hộp chọn chế độ nằm đè lên đề đã mở: chưa chọn chế độ thì chưa xem được đề)
+  // blur: nền phủ tối hơn và nhòe nội dung phía sau, để không đọc được (ví dụ hộp bắt đầu làm đề mở từ thư mục)
   const box = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

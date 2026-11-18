@@ -65,10 +65,9 @@ export function useQuiz() {
   const [restoredSubmitted, setRestoredSubmitted] = useState(false); // bài đã nộp được mở lại sau khi tải lại trang
   const [resumedElapsed, setResumedElapsed] = useState(0); // số giây đã làm ở lượt được làm tiếp
   const [violations, setViolations] = useState<Violation[]>([]); // các lần rời khỏi bài thi toàn màn hình (chế độ Thi)
-  const [choosing, setChoosing] = useState(false); // đề đã mở sẵn phía sau nhưng người dùng chưa chọn chế độ: chưa tính giờ, chưa tạo lượt làm
 
   // Đồng hồ chỉ chạy khi có đáp án để làm: chờ AI phân tích xong mới bắt đầu tính, dừng khi nộp bài
-  const timing = questions.length > 0 && !submitted && !answersPending && !choosing;
+  const timing = questions.length > 0 && !submitted && !answersPending;
   const elapsed = useStopwatch(timing, session, resumedElapsed);
 
   const last = questions.length - 1;
@@ -115,7 +114,7 @@ export function useQuiz() {
     });
   }
 
-  // Mở thẳng vào làm bài, bỏ qua bước xác nhận (khi liên kết đã nói rõ chế độ, ví dụ /exam/12?mode=exam)
+  // Mở thẳng vào làm bài, bỏ qua bước xác nhận (liên kết đã nói rõ chế độ, ví dụ /exam/<id>/practice?mode=exam)
   function openExam(
     examQuestions: Question[],
     examTitle: string,
@@ -124,6 +123,7 @@ export function useQuiz() {
     source: AnswerSource = "AI",
     examTotal = examQuestions.length,
     resume?: ResumeState, // có thì làm tiếp lượt dở dang thay vì bắt đầu mới
+    limitMin: number | null = null, // giới hạn thời gian (phút) của lượt Thi mới; làm tiếp thì đọc lại giới hạn đã lưu
   ) {
     setNotFound(false);
     setPending(null);
@@ -135,9 +135,9 @@ export function useQuiz() {
     setAnswerSource(source);
     setTotal(examTotal);
     setMode(chosenMode);
-    // Làm tiếp lượt thi dở: giữ đúng giới hạn thời gian đã chọn lúc bắt đầu; mở mới thì không có giới hạn
-    const limit = chosenMode === "exam" && resume ? readTimeLimit(id) : null;
-    if (!resume) saveTimeLimit(id, null);
+    // Làm tiếp lượt thi dở: giữ đúng giới hạn thời gian đã chọn lúc bắt đầu; mở mới thì dùng giới hạn vừa chọn
+    const limit = chosenMode !== "exam" ? null : resume ? readTimeLimit(id) : limitMin;
+    if (!resume) saveTimeLimit(id, limit);
     setTimeLimitMin(limit);
     clearProgress();
     if (resume) {
@@ -153,21 +153,6 @@ export function useQuiz() {
         setRestoredSubmitted(true);
       }
     }
-  }
-
-  // Mở đề ngay (màn hình làm bài hiện phía sau), chờ người dùng chọn chế độ ở hộp thoại; chưa chọn thì không tính giờ
-  function openForChoice(examQuestions: Question[], examTitle: string, id: string, source: AnswerSource = "AI", examTotal = examQuestions.length) {
-    openExam(examQuestions, examTitle, id, "practice", source, examTotal);
-    setChoosing(true);
-  }
-
-  // Người dùng chọn chế độ cho đề đã mở sẵn: từ lúc này mới tính giờ và tạo lượt làm
-  function chooseMode(chosenMode: Mode, limitMin: number | null = null) {
-    const limit = chosenMode === "exam" ? limitMin : null;
-    setMode(chosenMode);
-    setTimeLimitMin(limit);
-    saveTimeLimit(examId, limit);
-    setChoosing(false);
   }
 
   // Bước 2: người dùng xác nhận và chọn chế độ
@@ -199,7 +184,6 @@ export function useQuiz() {
 
   // Lấy đề thất bại giữa chừng: đề bị gỡ, thoát khỏi màn hình làm bài
   function closeExam() {
-    setChoosing(false);
     setPending(null);
     setQuestions([]);
     setReferences([]);
@@ -317,9 +301,6 @@ export function useQuiz() {
     waitForAnswers,
     mode,
     pending,
-    choosing,
-    openForChoice,
-    chooseMode,
     notFound,
     flagged,
     violations,
