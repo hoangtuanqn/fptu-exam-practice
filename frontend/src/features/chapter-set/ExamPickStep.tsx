@@ -36,7 +36,7 @@ export function ExamPickStep({ subject, picked, onChange, onNext, onBack }: Prop
 
   // Chọn thêm các đề trong kho chưa được chọn, tối đa MAX_PICK đề
   const selectAll = () => {
-    const extra = items.filter((i) => !ids.has(i.id)).map(({ id, threadId, title, totalQuestions }) => ({ id, threadId, title, totalQuestions }));
+    const extra = items.filter((i) => !ids.has(i.id)).map(({ id, title, totalQuestions }) => ({ id, title, totalQuestions }));
     onChange((cur) => [...cur, ...extra.filter((x) => !cur.some((p) => p.id === x.id))].slice(0, MAX_PICK));
   };
 
@@ -82,7 +82,7 @@ export function ExamPickStep({ subject, picked, onChange, onNext, onBack }: Prop
                     <li key={e.id}>
                       <label className={`md-state flex items-center gap-3 px-4 py-3 ${blocked ? "cursor-not-allowed opacity-50" : "cursor-pointer"} ${on ? "bg-primary-container/40" : ""}`}>
                         <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border ${on ? "border-primary bg-primary text-on-primary" : "border-outline"}`}>{on && <Check size={14} strokeWidth={3} />}</span>
-                        <input type="checkbox" checked={on} disabled={blocked} onChange={() => toggle({ id: e.id, threadId: e.threadId, title: e.title, totalQuestions: e.totalQuestions })} className="sr-only" />
+                        <input type="checkbox" checked={on} disabled={blocked} onChange={() => toggle({ id: e.id, title: e.title, totalQuestions: e.totalQuestions })} className="sr-only" />
                         <span className="min-w-0 flex-1">
                           <span className="md-body-medium block truncate text-on-surface">{e.title}</span>
                           {(e.answerSource === "PENDING" || e.answerSource === "FAILED" || e.answerSource === "DEFAULT") && (

@@ -35,8 +35,8 @@ const AttemptsCell = ({ e }: { e: LibraryExam }) =>
   );
 
 // Mở trang xem đề chỉ đọc (bấm tên đề vẫn là vào làm bài)
-const ViewLink = ({ threadId }: { threadId: string }) => (
-  <Link to={`/exam/${threadId}/view`} className={buttonClass({ size: "sm", variant: "text" })}>
+const ViewLink = ({ examId }: { examId: string }) => (
+  <Link to={`/exam/${examId}/view`} className={buttonClass({ size: "sm", variant: "text" })}>
     <Eye size={15} /> Xem đề
   </Link>
 );
@@ -64,7 +64,7 @@ export function MyExamsTab() {
             <ul className="divide-y divide-slate-100 md:hidden">
               {data.items.map((e) => (
                 <li key={e.id} className="flex items-center gap-1 pr-2">
-                  <Link to={`/exam/${e.threadId}`} className="block min-w-0 flex-1 px-4 py-3 transition active:bg-slate-50">
+                  <Link to={`/exam/${e.id}`} className="block min-w-0 flex-1 px-4 py-3 transition active:bg-slate-50">
                     <div className="truncate text-sm font-medium text-slate-900">{e.title}</div>
                     <div className="mt-0.5 text-xs text-slate-500">
                       {sizeText(e)} · {attemptsText(e)}
@@ -86,7 +86,7 @@ export function MyExamsTab() {
                       <span className="text-xs text-slate-400">Thêm {formatDate(e.addedAt)}</span>
                     </div>
                   </Link>
-                  <ViewLink threadId={e.threadId} />
+                  <ViewLink examId={e.id} />
                 </li>
               ))}
             </ul>
@@ -104,10 +104,10 @@ export function MyExamsTab() {
                     <Tr key={e.id}>
                       <Td>
                         <div className="flex items-center justify-between gap-2">
-                          <Link to={`/exam/${e.threadId}`} className="font-medium text-slate-900 hover:text-brand-700 hover:underline">
+                          <Link to={`/exam/${e.id}`} className="font-medium text-slate-900 hover:text-brand-700 hover:underline">
                             {e.title}
                           </Link>
-                          <ViewLink threadId={e.threadId} />
+                          <ViewLink examId={e.id} />
                         </div>
                       </Td>
                       <Td className="text-right tabular-nums">{e.totalQuestions === 0 && (e.attachments ?? 0) > 0 ? sizeText(e) : e.totalQuestions}</Td>

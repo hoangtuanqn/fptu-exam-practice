@@ -34,12 +34,12 @@ import { QuizWorkspace } from "@/features/practice/components/quiz/QuizWorkspace
 import { isUuid } from "@/shared/utils/uuid";
 
 interface Props {
-  threadId?: string; // có khi đang ở địa chỉ /exam/:threadId (mã thread FuOverflow, công khai, không phải ID nội bộ)
+  examId?: string; // có khi đang ở địa chỉ /exam/:examId (ID đề, dạng UUID)
 }
 
-// Trang luyện đề. Địa chỉ phản ánh đề đang mở: "/" là trang chủ, "/exam/:threadId" là đề của hệ thống,
-// "/exam/:threadId?mode=exam" mở thẳng vào chế độ thi. Sao chép địa chỉ là gửi được đúng đề đó (người mở cần có đề trong kho).
-export default function PracticePage({ threadId }: Props) {
+// Trang luyện đề. Địa chỉ phản ánh đề đang mở: "/" là trang chủ, "/exam/:examId" là đề của hệ thống,
+// "/exam/:examId?mode=exam" mở thẳng vào chế độ thi. Sao chép địa chỉ là gửi được đúng đề đó (người mở cần có đề trong kho).
+export default function PracticePage({ examId }: Props) {
   const quiz = useQuiz();
   const { user } = useAuth();
   const trial = useGuestTrial();
@@ -48,7 +48,6 @@ export default function PracticePage({ threadId }: Props) {
   const location = useLocation();
   const [opening, setOpening] = useState(false); // đang tải đề theo địa chỉ
   const loadedFor = useRef<string | null>(null);
-  const [openedThread, setOpenedThread] = useState<string | null>(null); // mã thread của đề đang làm
   const openedId = quiz.examId;
   const [zoomOpen, setZoomOpen] = useState(false);
   const [dialog, setDialog] = useState<SubmitDialog>(null);
@@ -61,8 +60,8 @@ export default function PracticePage({ threadId }: Props) {
 
   const hasQuiz = quiz.questions.length > 0;
   const examFiles = attachments && attachments.examId === quiz.examId ? attachments.list : [];
-  // Bộ đề theo chương nhiều đề: ?next=<thread>,<thread> là các đề còn lại sẽ làm lần lượt sau đề này
-  const nextQueue = (new URLSearchParams(location.search).get("next") ?? "").split(",").filter((s) => /^\d{1,18}$/.test(s));
+  // Bộ đề theo chương nhiều đề: ?next=<id>,<id> là các đề còn lại sẽ làm lần lượt sau đề này
+  const nextQueue = (new URLSearchParams(location.search).get("next") ?? "").split(",").filter(isUuid);
   // Thi thử toàn màn hình: rời khỏi (Esc, chuyển tab, mất focus) là một lần vi phạm, đề bị gỡ khỏi trang cho tới khi quay lại
   const guard = useExamGuard({
     active: quiz.timing && quiz.mode === "exam" && !quiz.pending,
@@ -221,9 +220,9 @@ export default function PracticePage({ threadId }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quiz.submitted, quiz.answersPending]);
 
-  // Vào /exam/:threadId thì tải đề đó: có ?mode=practice|exam thì làm bài luôn, không thì hỏi chọn chế độ
+  // Vào /exam/:examId thì tải đề đó: có ?mode=practice|exam thì làm bài luôn, không thì hỏi chọn chế độ
   useEffect(() => {
-    if (!threadId) {
+    if (!examId) {
       loadedFor.current = null;
       return;
     }
@@ -234,11 +233,10 @@ export default function PracticePage({ threadId }: Props) {
     const params = new URLSearchParams(location.search);
     const rawSession = params.get("session");
     const sessionId = isUuid(rawSession) ? rawSession : null; // có thì làm tiếp đúng lượt đó (id cũ dạng số thì bỏ qua)
-    Promise.all([examImportApi.examByThread(threadId), sessionId ? sessionApi.get(sessionId).catch(() => null) : Promise.resolve(null)])
+    Promise.all([examImportApi.exam(examId), sessionId ? sessionApi.get(sessionId).catch(() => null) : Promise.resolve(null)])
       .then(([exam, saved]) => {
         if (stale) return;
-        loadedFor.current = threadId; // đã tải xong đề này
-        setOpenedThread(exam.threadId);
+        loadedFor.current = examId; // đã tải xong đề này
         setAttachments({ examId: exam.id, list: exam.attachments ?? [] });
         // Đề chỉ có tệp: không có câu để làm, không tạo lượt làm bài
         if (isFilesOnly(exam)) {
@@ -288,21 +286,21 @@ export default function PracticePage({ threadId }: Props) {
       stale = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [threadId]);
+  }, [examId]);
 
-  // Địa chỉ luôn khớp với đề đang làm: đề hệ thống -> /exam/:threadId?mode=..., đề mở từ thư mục -> "/"
+  // Địa chỉ luôn khớp với đề đang làm: đề hệ thống -> /exam/:examId?mode=..., đề mở từ thư mục -> "/"
   useEffect(() => {
     if (!hasQuiz || quiz.choosing) return; // chưa chọn chế độ thì địa chỉ chưa có ?mode
     const chapterQs = new URLSearchParams(location.search).getAll("t").map((t) => `&t=${encodeURIComponent(t)}`).join(""); // giữ bộ đề theo chương khi tải lại
     const nextQs = nextQueue.length > 0 ? `&next=${encodeURIComponent(nextQueue.join(","))}` : ""; // giữ hàng đợi các đề còn lại khi tải lại
-    const target = openedId !== null && openedThread ? `/exam/${openedThread}?mode=${quiz.mode}${quiz.sessionId ? `&session=${quiz.sessionId}` : ""}${chapterQs}${nextQs}` : "/";
+    const target = openedId !== null ? `/exam/${openedId}?mode=${quiz.mode}${quiz.sessionId ? `&session=${quiz.sessionId}` : ""}${chapterQs}${nextQs}` : "/";
     if (location.pathname + location.search !== target) navigate(target, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasQuiz, quiz.choosing, openedId, openedThread, quiz.mode, quiz.sessionId]);
+  }, [hasQuiz, quiz.choosing, openedId, quiz.mode, quiz.sessionId]);
 
-  // Đang ở /exam/:threadId mà huỷ hộp thoại chọn chế độ thì về trang chủ
+  // Đang ở /exam/:examId mà huỷ hộp thoại chọn chế độ thì về trang chủ
   useEffect(() => {
-    if (threadId && !hasQuiz && !quiz.pending && !opening && loadedFor.current === threadId) navigate("/", { replace: true });
+    if (examId && !hasQuiz && !quiz.pending && !opening && loadedFor.current === examId) navigate("/", { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quiz.pending]);
 
@@ -372,14 +370,14 @@ export default function PracticePage({ threadId }: Props) {
 
       {guard.away ? null : hasQuiz ? ( // đang ở ngoài bài thi: gỡ hẳn đề khỏi trang, mọi trạng thái bài làm vẫn nằm trong useQuiz
         <QuizWorkspace quiz={quiz} zoomOpen={zoomOpen} onZoomChange={setZoomOpen} onSubmit={requestSubmit} />
-      ) : filesOnly && threadId ? (
+      ) : filesOnly && examId ? (
         <FilesOnlyExam title={filesOnly.title} attachments={filesOnly.list} />
       ) : opening ? (
         <div className="flex flex-1 items-center justify-center bg-surface">
           <Loading label="Đang mở đề…" />
         </div>
       ) : (
-        <Landing onPick={pick} onImported={(exam) => navigate(`/exam/${exam.threadId}`)} userName={user?.fullName} />
+        <Landing onPick={pick} onImported={(exam) => navigate(`/exam/${exam.id}`)} userName={user?.fullName} />
       )}
     </div>
   );

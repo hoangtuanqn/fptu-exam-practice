@@ -480,7 +480,7 @@ export default function ExamEditPage() {
               <a href={data.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-brand-700 hover:underline">
                 <ExternalLink size={13} /> Xem đề này trên FuOverflow
               </a>
-              <Link to={`/exam/${data.threadId}`} className="inline-flex items-center gap-1 text-brand-700 hover:underline">
+              <Link to={`/exam/${data.id}`} className="inline-flex items-center gap-1 text-brand-700 hover:underline">
                 <BookOpen size={13} /> Mở làm thử
               </Link>
             </div>

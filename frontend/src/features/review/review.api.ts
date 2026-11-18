@@ -14,7 +14,6 @@ export interface ReviewQuestion {
   id: number;
   examId: string;
   examTitle: string;
-  threadId: string;
   number: number;
   imageUrl: string;
   correct: string[];
@@ -27,7 +26,6 @@ export interface ReviewRow {
   id: number;
   examId: string;
   examTitle: string;
-  threadId: string;
   number: number;
   imageUrl: string | null;
   box: number;

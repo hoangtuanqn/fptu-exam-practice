@@ -13,6 +13,7 @@ export interface CatalogSubject {
 export type CatalogStatus = "owned" | "ready" | "fetch";
 
 export interface CatalogItem {
+  examId: string | null; // ID đề trong hệ thống; null = chưa có, phải lấy về
   threadId: string;
   title: string;
   postedAt: string | null;
