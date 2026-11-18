@@ -61,7 +61,7 @@ export default function AttemptDetailPage() {
             </div>
           </div>
 
-          <Link to={data.mode === "EXAM" ? `/exam/${data.exam.id}` : `/exam/${data.exam.id}/practice?mode=practice`} className={buttonClass({ variant: "primary" })}>
+          <Link to={`/exam/${data.exam.id}`} className={buttonClass({ variant: "primary" })}>
             <RotateCcw size={16} /> Làm lại đề
           </Link>
         </div>

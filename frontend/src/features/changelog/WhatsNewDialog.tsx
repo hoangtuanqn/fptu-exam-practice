@@ -5,7 +5,6 @@ import { Button, buttonClass } from "@/shared/ui/Button";
 import { Modal, ModalActions, ModalTitle } from "@/shared/ui/Modal";
 import { formatDate } from "@/shared/utils/formatters";
 import { APP_VERSION, CHANGELOG } from "./changelog";
-import { isPracticePath } from "@/shared/utils/practicePath";
 
 const KEY = "fepass.seenVersion";
 
@@ -14,7 +13,7 @@ const KEY = "fepass.seenVersion";
 export function WhatsNewDialog() {
   const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
-  const skip = isPracticePath(pathname) || pathname === "/changelog";
+  const skip = pathname.startsWith("/exam/") || pathname === "/changelog";
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
