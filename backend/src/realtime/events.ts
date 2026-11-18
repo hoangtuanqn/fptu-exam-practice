@@ -10,6 +10,7 @@ export const EVENTS = {
   examFailed: "exam:failed", // server -> client: lấy đề thất bại giữa chừng, đề bị gỡ
   jobUpdate: "job:update", // server -> client: tiến độ lấy đề
   adminNotice: "admin:notice", // server -> client (chỉ admin): có thông báo mới về hành vi người dùng
+  fuoCatalog: "admin:fuo-catalog", // server -> client (chỉ admin): tiến độ lượt quét danh mục FuOverflow, cùng dạng GET /admin/fuo-catalog/status
   fuoSources: "admin:fuo-sources", // server -> client (chỉ admin): tiến độ lượt nạp dữ liệu FuOverflow, cùng dạng GET /admin/fuo-sources/status
 } as const;
 

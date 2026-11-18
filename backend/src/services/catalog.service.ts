@@ -1,10 +1,13 @@
+import type { ExamKind } from "@prisma/client";
 import { prisma } from "../configs/prisma";
+import { EXAM_KINDS } from "../utils/exam-kind";
 import { toMeta, type PaginationQuery } from "../utils/pagination";
 import { subjectCodeFromTitle } from "../utils/subject-code";
 import { termOf, termRank } from "../utils/term";
 import { crawlerSettingService } from "./crawler-setting.service";
 
-// Kho đề theo môn: gộp danh mục đề FE trên FuOverflow (bảng fuo_threads, nhập từ tools/fuo-crawler) với các đề hệ thống đã có sẵn.
+// Kho đề theo môn: gộp danh mục FuOverflow (bảng fuo_threads: mọi bài FE, PE, Quiz, khác của từng môn, do lượt quét danh mục của admin ghi)
+// với các đề hệ thống đã có sẵn.
 // Mỗi đề có một trạng thái: "owned" (đã trong kho của bạn), "ready" (hệ thống đã có ảnh + đáp án, mở ngay), "fetch" (chưa lấy: lấy từ FuOverflow, có thể mất phí).
 // Chỉ trả thông tin mô tả (tên, ngày, số câu); ảnh câu hỏi chỉ xem được sau khi lấy đề.
 
@@ -18,6 +21,7 @@ interface UsableExam {
   questions: number;
   createdAt: Date;
   code: string | null;
+  kind: ExamKind | null;
 }
 
 export type CatalogStatus = "owned" | "ready" | "fetch";
@@ -31,6 +35,7 @@ export interface CatalogItem {
   term: string | null; // kỳ học suy ra từ tên đề, ví dụ SU26
   status: CatalogStatus;
   questions: number | null; // chỉ biết với đề hệ thống đã có
+  kind: ExamKind; // FE, PE, QUIZ, OTHER (theo nhãn FuOverflow, rồi tên đề)
 }
 
 let examCache: { at: number; exams: UsableExam[] } | null = null;
@@ -40,7 +45,7 @@ let fuoCache: { at: number; threads: { threadId: string; subjectCode: string }[]
 async function usableExams(): Promise<UsableExam[]> {
   if (examCache && Date.now() - examCache.at < CACHE_MS) return examCache.exams;
   const [exams, counts] = await Promise.all([
-    prisma.exam.findMany({ where: { answerSource: { in: ["AI", "MANUAL"] } }, select: { id: true, threadId: true, title: true, subjectCode: true, totalQuestions: true, createdAt: true } }),
+    prisma.exam.findMany({ where: { answerSource: { in: ["AI", "MANUAL"] } }, select: { id: true, threadId: true, title: true, subjectCode: true, totalQuestions: true, createdAt: true, kind: true } }),
     prisma.examQuestion.groupBy({ by: ["examId", "isReference"], _count: { _all: true } }),
   ]);
   const all = new Map<string, number>(); // tất cả ảnh đã lưu (gồm tài liệu tham khảo): so với totalQuestions để biết đã lấy đủ chưa
@@ -51,7 +56,7 @@ async function usableExams(): Promise<UsableExam[]> {
   }
   const list = exams
     .filter((e) => (real.get(e.id) ?? 0) > 0 && (all.get(e.id) ?? 0) >= e.totalQuestions)
-    .map((e) => ({ id: e.id, threadId: e.threadId, title: e.title, questions: real.get(e.id) ?? 0, createdAt: e.createdAt, code: e.subjectCode ?? subjectCodeFromTitle(e.title) }));
+    .map((e) => ({ id: e.id, threadId: e.threadId, title: e.title, questions: real.get(e.id) ?? 0, createdAt: e.createdAt, code: e.subjectCode ?? subjectCodeFromTitle(e.title), kind: e.kind }));
   examCache = { at: Date.now(), exams: list };
   return list;
 }
@@ -74,6 +79,7 @@ export interface LatestItem {
   title: string;
   postedAt: Date;
   term: string | null;
+  kind: ExamKind;
 }
 
 let overviewCache: { at: number; data: LibraryOverview } | null = null;
@@ -93,9 +99,9 @@ export const catalogService = {
       where: { postedAt: { not: null } },
       orderBy: { postedAt: "desc" },
       take: LATEST_COUNT,
-      select: { threadId: true, subjectCode: true, title: true, postedAt: true },
+      select: { threadId: true, subjectCode: true, title: true, postedAt: true, kind: true },
     });
-    const items = rows.map((r) => ({ threadId: r.threadId, subjectCode: r.subjectCode, title: r.title, postedAt: r.postedAt!, term: termOf(r.title) }));
+    const items = rows.map((r) => ({ threadId: r.threadId, subjectCode: r.subjectCode, title: r.title, postedAt: r.postedAt!, term: termOf(r.title), kind: r.kind }));
     latestCache = { at: Date.now(), items };
     return items;
   },
@@ -153,20 +159,21 @@ export const catalogService = {
     return codes;
   },
 
-  /** Đề của một môn: gộp danh mục FuOverflow với đề hệ thống, lọc theo từ khoá và kỳ, mới nhất trước, phân trang. */
-  async exams(code: string, query: PaginationQuery & { q?: string; term?: string }, userId: string | null) {
+  /** Đề của một môn: gộp danh mục FuOverflow với đề hệ thống, lọc theo loại, từ khoá và kỳ, mới nhất trước, phân trang. */
+  async exams(code: string, query: PaginationQuery & { q?: string; term?: string; kind?: ExamKind }, userId: string | null) {
     const subject = code.toUpperCase();
     const [fuo, ours] = await Promise.all([
-      prisma.fuoThread.findMany({ where: { subjectCode: subject }, select: { threadId: true, title: true, postedAt: true, replies: true } }),
+      prisma.fuoThread.findMany({ where: { subjectCode: subject }, select: { threadId: true, title: true, postedAt: true, replies: true, kind: true } }),
       usableExams().then((list) => list.filter((e) => e.code === subject)),
     ]);
     const mine = userId && ours.length ? new Set((await prisma.userExam.findMany({ where: { userId, examId: { in: ours.map((e) => e.id) } }, select: { examId: true } })).map((o) => o.examId)) : new Set<string>();
     const have = new Map(ours.map((e) => [e.threadId, e]));
 
     const merged = new Map<string, CatalogItem>();
-    for (const t of fuo) merged.set(t.threadId, { examId: null, threadId: t.threadId, title: t.title, postedAt: t.postedAt, replies: t.replies, term: termOf(t.title), status: "fetch", questions: null });
+    for (const t of fuo) merged.set(t.threadId, { examId: null, threadId: t.threadId, title: t.title, postedAt: t.postedAt, replies: t.replies, term: termOf(t.title), status: "fetch", questions: null, kind: t.kind });
     for (const e of ours) {
-      const base = merged.get(e.threadId) ?? { examId: null, threadId: e.threadId, title: e.title, postedAt: null, replies: 0, term: termOf(e.title), status: "fetch" as CatalogStatus, questions: null };
+      // Đề cũ chưa có loại (trước khi điền lúc khởi động) đều được lấy qua nhãn "Đề Thi FE"
+      const base = merged.get(e.threadId) ?? { examId: null, threadId: e.threadId, title: e.title, postedAt: null, replies: 0, term: termOf(e.title), status: "fetch" as CatalogStatus, questions: null, kind: e.kind ?? "FE" };
       merged.set(e.threadId, base);
     }
     for (const item of merged.values()) {
@@ -178,7 +185,10 @@ export const catalogService = {
       }
     }
 
-    const all = [...merged.values()];
+    const everything = [...merged.values()];
+    const kinds = Object.fromEntries(EXAM_KINDS.map((k) => [k, 0])) as Record<ExamKind, number>;
+    for (const i of everything) kinds[i.kind]++;
+    const all = query.kind ? everything.filter((i) => i.kind === query.kind) : everything; // số kỳ và trang theo loại đang lọc
     const terms = new Map<string, number>();
     for (const i of all) if (i.term) terms.set(i.term, (terms.get(i.term) ?? 0) + 1);
     const termList = [...terms.entries()].sort((a, b) => termRank(b[0]) - termRank(a[0])).map(([term, count]) => ({ term, count }));
@@ -195,7 +205,8 @@ export const catalogService = {
       items: filtered.slice(start, start + query.limit),
       meta: toMeta(query, filtered.length),
       terms: termList,
-      total: all.length,
+      total: everything.length,
+      kinds, // số đề theo loại của cả môn (cho các tab lọc)
       price: cfg.fetchPrice, // phí lấy một đề chưa có trong kho của bạn, để hiện trên nút mở đề
       subject: { code: subject, name: info?.name ?? null, semester: info?.semester ?? null },
     };

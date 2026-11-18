@@ -1,3 +1,5 @@
+import type { ExamKind } from "@prisma/client";
+
 export interface ImageRef {
   /** URL ảnh gốc (full size) */
   url: string;
@@ -22,6 +24,11 @@ export interface ScrapedComment {
 
 export interface ThreadData {
   title: string;
+  /** Nhãn của bài trên FuOverflow ("Đề Thi FE"...), null nếu không có */
+  label: string | null;
+  kind: ExamKind;
+  /** Nội dung bài đầu tiên, chữ thuần (đã cắt ngắn), null nếu trống */
+  description: string | null;
   /** Signature: ID thread, cố định dù URL có thêm params. VD "7094" */
   threadId: string | null;
   canonicalUrl: string | null;

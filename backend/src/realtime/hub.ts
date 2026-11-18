@@ -72,6 +72,11 @@ export const realtimeHub = {
     io?.to(ADMIN_ROOM).emit(EVENTS.adminNotice, notice);
   },
 
+  // Tiến độ lượt quét danh mục FuOverflow: đẩy cho các admin đang online
+  publishFuoCatalog(status: unknown) {
+    io?.to(ADMIN_ROOM).emit(EVENTS.fuoCatalog, status);
+  },
+
   // Tiến độ lượt nạp dữ liệu FuOverflow: đẩy cho các admin đang online
   publishFuoSources(status: unknown) {
     io?.to(ADMIN_ROOM).emit(EVENTS.fuoSources, status);

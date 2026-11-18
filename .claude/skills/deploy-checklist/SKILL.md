@@ -38,6 +38,8 @@ cd ~/app && bash deploy/backup-db.sh && bash deploy/deploy.sh
 
 `0082_fuo_source_urls` is NOT destructive (it only adds two tables), but it must be applied after 0081.
 
+`0083_fuo_catalog` is additive (new columns with defaults/NULL, one index, two new tables; no UPDATE/DELETE). Existing `exams.kind` is filled by the API at boot, so deploy the backend before the frontend that reads `kind`.
+
 ## Frontend
 
 1. On the local machine run `release.cmd` (builds and produces `release/fepass-web.zip`).
