@@ -10,19 +10,19 @@ export interface ReminderEmailInput {
 
 export function renderReminderEmail({ name, due, daysToExam, reviewLink, unsubscribeLink }: ReminderEmailInput) {
   const countdown = daysToExam === null ? "" : daysToExam === 0 ? "Hôm nay là ngày thi của bạn. " : `Còn ${daysToExam} ngày nữa là đến ngày thi của bạn. `;
-  const headline = `${countdown}Hôm nay có ${due} câu cần ôn.`;
+  const headline = `${countdown}Hôm nay bạn có ${due} câu cần ôn.`;
 
   const bodyHtml = [
-    p(`<strong>Xin chào ${esc(name)},</strong>`),
+    p(`Kính gửi <strong>${esc(name)}</strong>,`),
     p(esc(headline)),
-    p("Ôn vài phút mỗi ngày giúp nhớ lâu hơn nhiều so với ôn dồn. Bấm nút bên dưới để vào ôn ngay."),
-    button("Ôn ngay", reviewLink),
-    note(`Bạn nhận thư này vì đã bật nhắc ôn qua email, tối đa 1 thư mỗi ngày và chỉ khi hôm nay bạn chưa học. <a href="${esc(unsubscribeLink)}" style="color:inherit">Hủy nhận thư nhắc ôn</a>.`),
+    p("Ôn tập ngắn mỗi ngày giúp ghi nhớ lâu hơn so với ôn dồn. Nhấn nút bên dưới để bắt đầu."),
+    button("Ôn tập ngay", reviewLink),
+    note(`Bạn nhận email này vì đã bật nhắc ôn qua email. Chúng tôi gửi tối đa 1 email mỗi ngày và chỉ khi hôm nay bạn chưa học. Nếu không muốn nhận nữa, bạn có thể <a href="${esc(unsubscribeLink)}" style="color:inherit">hủy nhận email nhắc ôn</a> bất cứ lúc nào.`),
     signature(),
   ].join("");
 
   return {
-    html: renderLayout({ title: "Nhắc ôn hôm nay", preheader: headline, bodyHtml }),
-    text: [`Xin chào ${name},`, "", headline, "", `Vào ôn: ${reviewLink}`, "", `Hủy nhận thư nhắc ôn: ${unsubscribeLink}`].join("\n"),
+    html: renderLayout({ title: "Nhắc ôn tập hôm nay", preheader: headline, bodyHtml }),
+    text: [`Kính gửi ${name},`, "", headline, "", `Bắt đầu ôn tập: ${reviewLink}`, "", `Hủy nhận email nhắc ôn: ${unsubscribeLink}`].join("\n"),
   };
 }

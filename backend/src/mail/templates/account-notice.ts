@@ -1,6 +1,6 @@
 import { MAIL_BRAND } from "../../constants/mail";
 import { formatDateTimeVN, formatCredit } from "../../utils/format";
-import { button, details, esc, heading, list, note, p, renderLayout, signature, supportLine } from "../layout";
+import { button, esc, list, note, p, renderLayout, signature, supportLine } from "../layout";
 
 const { company, product } = MAIL_BRAND;
 
@@ -15,29 +15,29 @@ export interface WelcomeEmailInput {
 
 export function renderWelcomeEmail({ name, homeUrl }: WelcomeEmailInput) {
   const bodyHtml = [
-    p(`<strong>Xin chào ${esc(name)},</strong>`),
-    p(`Tài khoản <strong>${esc(product)}</strong> của bạn đã sẵn sàng. Bạn có thể bắt đầu luyện đề ngay:`),
+    p(`Kính gửi <strong>${esc(name)}</strong>,`),
+    p(`Chào mừng bạn đến với <strong>${esc(product)}</strong>. Tài khoản của bạn đã sẵn sàng và bạn có thể bắt đầu luyện đề ngay:`),
     list([
-      "Dán link đề FuOverflow để lấy đề về kho riêng của bạn.",
-      "Làm bài ở chế độ luyện tập hoặc thi, điểm tính theo thang 10.",
-      "Mỗi lần nộp bài đều được lưu lại để xem chi tiết từng câu.",
+      "Chọn môn học và mở đề thi để làm bài ở chế độ luyện tập hoặc thi, điểm tính theo thang 10.",
+      "Mỗi lần nộp bài đều được lưu lại để bạn xem chi tiết từng câu.",
+      "Câu làm sai được đưa vào sổ ôn tập để nhắc bạn ôn lại đúng lúc.",
     ]),
     button("Bắt đầu luyện đề", homeUrl),
-    note("Các đề bạn đã lấy khi chưa đăng ký sẽ tự động chuyển vào kho của tài khoản này."),
+    note("Các đề bạn đã mở khi chưa đăng ký sẽ tự động được chuyển vào kho của tài khoản này."),
     signature(),
   ].join("");
 
   return {
     html: renderLayout({
-      title: "Tài khoản đã sẵn sàng",
-      preheader: `Chào mừng ${name} đến với ${product}. Bắt đầu luyện đề ngay.`,
+      title: "Chào mừng bạn đến với " + product,
+      preheader: `Tài khoản ${product} của bạn đã sẵn sàng. Bắt đầu luyện đề ngay.`,
       bodyHtml,
     }),
     text: sign([
-      `Xin chào ${name},`,
+      `Kính gửi ${name},`,
       "",
-      `Tài khoản ${product} của bạn đã sẵn sàng.`,
-      "Dán link đề FuOverflow để lấy đề, làm bài và xem lịch sử từng lần làm.",
+      `Chào mừng bạn đến với ${product}. Tài khoản của bạn đã sẵn sàng.`,
+      "Chọn môn học, mở đề thi và làm bài; mỗi lần nộp bài đều được lưu lại để xem chi tiết từng câu.",
       `Bắt đầu: ${homeUrl}`,
     ]),
   };
@@ -54,28 +54,25 @@ export interface EmailChangedInput {
 
 export function renderEmailChangedEmail({ name, newEmail, at, forgotUrl }: EmailChangedInput) {
   const bodyHtml = [
-    p(`<strong>Xin chào ${esc(name)},</strong>`),
-    p("Email đăng nhập của tài khoản bạn vừa được đổi sang địa chỉ mới."),
-    details([
-      { label: "Email mới", value: esc(newEmail), strong: true },
-      { label: "Thời gian", value: esc(formatDateTimeVN(at)) },
-    ]),
-    note("Không phải bạn thực hiện? Hãy liên hệ chúng mình ngay qua fanpage để được hỗ trợ khôi phục tài khoản."),
+    p(`Kính gửi <strong>${esc(name)}</strong>,`),
+    p(`Chúng tôi xin thông báo email đăng nhập của tài khoản bạn đã được đổi sang địa chỉ mới <strong>${esc(newEmail)}</strong> vào lúc ${esc(formatDateTimeVN(at))}. Email này sẽ không còn nhận thông báo của tài khoản.`),
+    p("Nếu chính bạn thực hiện thay đổi này, bạn không cần làm gì thêm."),
+    note("Nếu bạn không thực hiện, hãy liên hệ chúng tôi ngay qua fanpage để được hỗ trợ khôi phục tài khoản. Bạn cũng có thể đặt lại mật khẩu để bảo vệ tài khoản trong lúc chờ hỗ trợ."),
     signature(),
   ].join("");
 
   return {
     html: renderLayout({
-      title: "Email đăng nhập đã đổi",
+      title: "Email đăng nhập đã được thay đổi",
       preheader: `Email tài khoản đã đổi sang ${newEmail}.`,
       bodyHtml,
     }),
     text: sign([
-      `Xin chào ${name},`,
+      `Kính gửi ${name},`,
       "",
-      `Email đăng nhập của tài khoản vừa được đổi sang ${newEmail} (${formatDateTimeVN(at)}).`,
-      "Không phải bạn thực hiện? Hãy liên hệ chúng mình qua fanpage ngay.",
-      `Quên mật khẩu: ${forgotUrl}`,
+      `Email đăng nhập của tài khoản vừa được đổi sang ${newEmail} lúc ${formatDateTimeVN(at)}. Nếu chính bạn thực hiện, bạn không cần làm gì thêm.`,
+      "Nếu bạn không thực hiện, hãy liên hệ chúng tôi qua fanpage ngay.",
+      `Đặt lại mật khẩu: ${forgotUrl}`,
     ]),
   };
 }
@@ -90,16 +87,12 @@ export interface PasswordChangedEmailInput {
 }
 
 export function renderPasswordChangedEmail({ name, at, via, forgotUrl }: PasswordChangedEmailInput) {
-  const how = via === "reset" ? "Đặt lại qua email" : "Đổi trong trang Hồ sơ";
+  const how = via === "reset" ? "đặt lại qua email" : "đổi trong trang Hồ sơ";
   const bodyHtml = [
-    p(`<strong>Xin chào ${esc(name)},</strong>`),
-    p("Mật khẩu tài khoản của bạn vừa được thay đổi."),
-    details([
-      { label: "Thời gian", value: esc(formatDateTimeVN(at)) },
-      { label: "Cách thực hiện", value: how },
-    ]),
-    heading("Không phải bạn thực hiện?"),
-    p("Hãy đặt lại mật khẩu ngay để lấy lại quyền kiểm soát tài khoản, rồi liên hệ chúng mình."),
+    p(`Kính gửi <strong>${esc(name)}</strong>,`),
+    p(`Chúng tôi xin thông báo mật khẩu tài khoản của bạn đã được thay đổi vào lúc ${esc(formatDateTimeVN(at))} (${how}). Từ giờ, bạn cần dùng mật khẩu mới để đăng nhập.`),
+    p("Nếu chính bạn thực hiện thay đổi này, bạn không cần làm gì thêm."),
+    p("<strong>Nếu bạn không thực hiện</strong>, hãy đặt lại mật khẩu ngay để lấy lại quyền kiểm soát tài khoản, sau đó liên hệ chúng tôi để được hỗ trợ."),
     button("Đặt lại mật khẩu", forgotUrl),
     supportLine(),
     signature(),
@@ -112,20 +105,20 @@ export function renderPasswordChangedEmail({ name, at, via, forgotUrl }: Passwor
       bodyHtml,
     }),
     text: sign([
-      `Xin chào ${name},`,
+      `Kính gửi ${name},`,
       "",
-      `Mật khẩu tài khoản ${product} của bạn vừa được thay đổi (${how}) lúc ${formatDateTimeVN(at)}.`,
-      `Không phải bạn? Đặt lại mật khẩu ngay: ${forgotUrl}`,
+      `Mật khẩu tài khoản ${product} của bạn đã được thay đổi (${how}) lúc ${formatDateTimeVN(at)}. Nếu chính bạn thực hiện, bạn không cần làm gì thêm.`,
+      `Nếu bạn không thực hiện, hãy đặt lại mật khẩu ngay: ${forgotUrl}`,
     ]),
   };
 }
 
-// ---------- Hoàn phí lấy đề
+// ---------- Hoàn phí mở đề
 
 export interface RefundEmailInput {
   name: string;
   examLabel: string;
-  examUrl: string;
+  examUrl: string; // không còn hiện trong thư (không dẫn người dùng ra ngoài hệ thống); giữ để không đổi nơi gọi
   amount: number;
   balanceAfter: number;
   at: Date;
@@ -134,33 +127,26 @@ export interface RefundEmailInput {
 
 export function renderRefundEmail(i: RefundEmailInput) {
   const bodyHtml = [
-    p(`<strong>Xin chào ${esc(i.name)},</strong>`),
-    p("Lần lấy đề của bạn không thành công, chúng mình đã hoàn lại phí vào ví."),
-    details([
-      { label: "Đề", value: `<a href="${esc(i.examUrl)}" target="_blank" style="color:#0066ff">${esc(i.examLabel)}</a>` },
-      { label: "Thời gian", value: esc(formatDateTimeVN(i.at)) },
-      { label: "Đã hoàn", value: `+${esc(formatCredit(i.amount))}`, strong: true },
-      { label: "Số dư hiện tại", value: esc(formatCredit(i.balanceAfter)) },
-    ]),
+    p(`Kính gửi <strong>${esc(i.name)}</strong>,`),
+    p(`Việc mở đề <strong>${esc(i.examLabel)}</strong> của bạn không thành công. Chúng tôi đã hoàn lại <strong>+${esc(formatCredit(i.amount))}</strong> vào ví của bạn lúc ${esc(formatDateTimeVN(i.at))}.`),
+    p(`Số dư khả dụng hiện tại: <strong>${esc(formatCredit(i.balanceAfter))}</strong>.`),
     button("Xem lịch sử giao dịch", i.walletUrl),
-    note("Bạn có thể thử lấy lại đề này sau ít phút. Nếu lỗi lặp lại, hãy liên hệ chúng mình qua fanpage."),
+    note("Bạn có thể thử mở lại đề sau ít phút. Nếu lỗi lặp lại, hãy liên hệ chúng tôi qua fanpage để được hỗ trợ."),
     signature(),
   ].join("");
 
   return {
     html: renderLayout({
-      title: "Đã hoàn phí lấy đề",
-      preheader: `Đã hoàn ${formatCredit(i.amount)} vào ví. Số dư hiện tại: ${formatCredit(i.balanceAfter)}.`,
+      title: "Thông báo hoàn phí mở đề",
+      preheader: `Đã hoàn ${formatCredit(i.amount)} vào ví. Số dư khả dụng: ${formatCredit(i.balanceAfter)}.`,
       bodyHtml,
     }),
     text: sign([
-      `Xin chào ${i.name},`,
+      `Kính gửi ${i.name},`,
       "",
-      "Lần lấy đề không thành công, phí đã được hoàn vào ví.",
-      `Đề: ${i.examLabel} (${i.examUrl})`,
-      `Đã hoàn: +${formatCredit(i.amount)}`,
-      `Số dư hiện tại: ${formatCredit(i.balanceAfter)}`,
-      `Xem lịch sử: ${i.walletUrl}`,
+      `Việc mở đề ${i.examLabel} không thành công. Chúng tôi đã hoàn lại +${formatCredit(i.amount)} vào ví của bạn lúc ${formatDateTimeVN(i.at)}.`,
+      `Số dư khả dụng hiện tại: ${formatCredit(i.balanceAfter)}`,
+      `Xem lịch sử giao dịch: ${i.walletUrl}`,
     ]),
   };
 }
@@ -180,32 +166,27 @@ export function renderAdjustEmail(i: AdjustEmailInput) {
   const plus = i.amount >= 0;
   const money = `${plus ? "+" : "−"}${formatCredit(Math.abs(i.amount))}`;
   const bodyHtml = [
-    p(`<strong>Xin chào ${esc(i.name)},</strong>`),
-    p(`Quản trị viên vừa ${plus ? "cộng credit vào" : "trừ credit từ"} ví của bạn.`),
-    details([
-      { label: "Thời gian", value: esc(formatDateTimeVN(i.at)) },
-      ...(i.note ? [{ label: "Lý do", value: esc(i.note) }] : []),
-      { label: plus ? "Số tiền cộng" : "Số tiền trừ", value: esc(money), strong: true },
-      { label: "Số dư hiện tại", value: esc(formatCredit(i.balanceAfter)) },
-    ]),
+    p(`Kính gửi <strong>${esc(i.name)}</strong>,`),
+    p(`Quản trị viên đã ${plus ? "cộng" : "trừ"} <strong>${esc(money)}</strong> ${plus ? "vào" : "từ"} ví của bạn lúc ${esc(formatDateTimeVN(i.at))}.${i.note ? ` Lý do: ${esc(i.note)}.` : ""}`),
+    p(`Số dư khả dụng hiện tại: <strong>${esc(formatCredit(i.balanceAfter))}</strong>.`),
     button("Xem lịch sử giao dịch", i.walletUrl),
-    note("Thắc mắc về giao dịch này? Hãy liên hệ chúng mình qua fanpage."),
+    note("Nếu bạn có thắc mắc về giao dịch này, hãy liên hệ chúng tôi qua fanpage để được giải đáp."),
     signature(),
   ].join("");
 
   return {
     html: renderLayout({
-      title: "Số dư ví được điều chỉnh",
-      preheader: `${money} · Số dư hiện tại: ${formatCredit(i.balanceAfter)}.`,
+      title: "Thông báo điều chỉnh số dư ví",
+      preheader: `${money} · Số dư khả dụng: ${formatCredit(i.balanceAfter)}.`,
       bodyHtml,
     }),
     text: sign([
-      `Xin chào ${i.name},`,
+      `Kính gửi ${i.name},`,
       "",
-      `Quản trị viên vừa ${plus ? "cộng credit vào" : "trừ credit từ"} ví của bạn: ${money}.`,
+      `Quản trị viên đã ${plus ? "cộng" : "trừ"} ${money} ${plus ? "vào" : "từ"} ví của bạn lúc ${formatDateTimeVN(i.at)}.`,
       i.note ? `Lý do: ${i.note}` : "",
-      `Số dư hiện tại: ${formatCredit(i.balanceAfter)}`,
-      `Xem lịch sử: ${i.walletUrl}`,
+      `Số dư khả dụng hiện tại: ${formatCredit(i.balanceAfter)}`,
+      `Xem lịch sử giao dịch: ${i.walletUrl}`,
     ].filter(Boolean)),
   };
 }
@@ -215,26 +196,26 @@ export function renderAdjustEmail(i: AdjustEmailInput) {
 export function renderAccountStatusEmail(i: { name: string; banned: boolean; supportUrl: string }) {
   const bodyHtml = i.banned
     ? [
-        p(`<strong>Xin chào ${esc(i.name)},</strong>`),
-        p("Tài khoản của bạn đã bị <strong>khóa</strong> bởi quản trị viên, bạn không thể đăng nhập và sử dụng hệ thống."),
-        p("Nếu bạn cho rằng đây là nhầm lẫn, hãy liên hệ chúng mình để được xem xét lại."),
+        p(`Kính gửi <strong>${esc(i.name)}</strong>,`),
+        p("Chúng tôi xin thông báo tài khoản của bạn đã bị <strong>khóa</strong> bởi quản trị viên. Trong thời gian này, bạn không thể đăng nhập và sử dụng hệ thống."),
+        p("Nếu bạn cho rằng đây là sự nhầm lẫn, hãy liên hệ chúng tôi để được xem xét lại."),
         button("Liên hệ hỗ trợ", i.supportUrl),
         signature(),
       ]
     : [
-        p(`<strong>Xin chào ${esc(i.name)},</strong>`),
-        p("Tài khoản của bạn đã được <strong>mở khóa</strong>. Bạn có thể đăng nhập và tiếp tục sử dụng bình thường."),
+        p(`Kính gửi <strong>${esc(i.name)}</strong>,`),
+        p("Chúng tôi xin thông báo tài khoản của bạn đã được <strong>mở khóa</strong>. Bạn có thể đăng nhập và tiếp tục sử dụng hệ thống bình thường."),
         signature(),
       ];
 
   return {
     html: renderLayout({
-      title: i.banned ? "Tài khoản đã bị khóa" : "Tài khoản đã được mở khóa",
+      title: i.banned ? "Thông báo khóa tài khoản" : "Thông báo mở khóa tài khoản",
       preheader: i.banned ? "Tài khoản của bạn đã bị khóa bởi quản trị viên." : "Tài khoản của bạn đã được mở khóa.",
       bodyHtml: bodyHtml.join(""),
     }),
     text: sign([
-      `Xin chào ${i.name},`,
+      `Kính gửi ${i.name},`,
       "",
       i.banned ? "Tài khoản của bạn đã bị khóa bởi quản trị viên." : "Tài khoản của bạn đã được mở khóa.",
       i.banned ? `Liên hệ hỗ trợ: ${i.supportUrl}` : "",
