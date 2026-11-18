@@ -11,27 +11,29 @@ export function renderResetPasswordEmail({ name, link, expiresMin }: ResetEmailI
   const { company, deep } = MAIL_BRAND;
 
   const bodyHtml = [
-    p(`<strong>Xin chào ${esc(name)},</strong>`),
-    p("Bạn vừa yêu cầu đặt lại mật khẩu. Nhấn nút bên dưới để tạo mật khẩu mới."),
+    p(`Kính gửi <strong>${esc(name)}</strong>,`),
+    p("Chúng tôi đã nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn. Nhấn nút bên dưới để tạo mật khẩu mới."),
     button("Đặt lại mật khẩu", link),
-    note(`Liên kết có hiệu lực <strong>${expiresMin} phút</strong> và chỉ dùng được một lần. Nếu nút không bấm được, mở: <a href="${esc(link)}" target="_blank" style="color:${deep};word-break:break-all">${esc(link)}</a>`),
-    note("Không phải bạn yêu cầu? Hãy bỏ qua email này, mật khẩu hiện tại vẫn an toàn."),
+    note(`Liên kết có hiệu lực <strong>${expiresMin} phút</strong> và chỉ dùng được một lần. Hết hạn thì bạn có thể yêu cầu liên kết mới ở trang Quên mật khẩu. Sau khi đặt lại, mọi thiết bị đang đăng nhập sẽ cần đăng nhập lại.`),
+    note("Nếu bạn không yêu cầu đặt lại mật khẩu, không cần làm gì thêm: mật khẩu hiện tại vẫn được giữ nguyên và an toàn. Nếu bạn nhận được nhiều email như vậy mà không do bạn thực hiện, hãy liên hệ chúng tôi qua fanpage để được hỗ trợ."),
+    note(`Nếu nút không bấm được, mở liên kết: <a href="${esc(link)}" target="_blank" style="color:${deep};word-break:break-all">${esc(link)}</a>`),
     signature(),
   ].join("");
 
   const html = renderLayout({
-    title: "Đặt lại mật khẩu",
+    title: "Yêu cầu đặt lại mật khẩu",
     preheader: `Liên kết đặt lại mật khẩu có hiệu lực ${expiresMin} phút.`,
     bodyHtml,
   });
 
   const text = [
-    `Xin chào ${name},`,
+    `Kính gửi ${name},`,
     "",
-    "Bạn vừa yêu cầu đặt lại mật khẩu. Mở liên kết sau để tạo mật khẩu mới:",
+    "Chúng tôi đã nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn. Mở liên kết sau để tạo mật khẩu mới:",
     link,
     "",
-    `Liên kết có hiệu lực ${expiresMin} phút, dùng một lần. Không phải bạn yêu cầu? Hãy bỏ qua email này.`,
+    `Liên kết có hiệu lực ${expiresMin} phút và chỉ dùng được một lần. Sau khi đặt lại, mọi thiết bị đang đăng nhập sẽ cần đăng nhập lại.`,
+    "Nếu bạn không yêu cầu đặt lại mật khẩu, không cần làm gì thêm: mật khẩu hiện tại vẫn được giữ nguyên và an toàn.",
     "",
     "Trân trọng,",
     company,
