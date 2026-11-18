@@ -46,7 +46,7 @@ export function ImageViewer({
     <div className="fixed inset-0 z-50 flex flex-col bg-scrim/90 backdrop-blur-sm lg:flex-row">
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       {/* Thanh công cụ */}
-      <div className="flex h-14 shrink-0 items-center justify-between gap-3 px-5 text-white">
+      <div className="relative z-10 flex h-14 shrink-0 items-center justify-between gap-3 px-5 text-white">
         <div className="font-serif text-lg font-semibold">
           Câu {question.number} <span className="font-sans text-sm font-normal text-slate-400">/ {total}</span>
         </div>
@@ -67,7 +67,7 @@ export function ImageViewer({
 
       <div className="flex min-h-0 flex-1 flex-col gap-3 px-3 pb-3 sm:px-5 sm:pb-5">
         {/* Ảnh */}
-        <div ref={zoom.scrollRef} onScroll={zoom.onScroll} className="min-h-0 flex-1 overflow-auto rounded-xl bg-surface-container-lowest p-4">
+        <div ref={zoom.scrollRef} onScroll={zoom.onScroll} className="relative isolate z-0 min-h-0 flex-1 overflow-auto rounded-xl bg-surface-container-lowest p-4">
           {/* m-auto thay cho justify-center: ảnh nhỏ thì nằm giữa, ảnh tràn khung thì vẫn cuộn tới được mọi phía */}
           <div className="flex min-h-full min-w-full">
             <img
