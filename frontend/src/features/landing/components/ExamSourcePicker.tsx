@@ -1,7 +1,7 @@
 import { MyExams } from "@/features/exam-store/MyExams";
 import type { PickFolder } from "@/features/practice/components/FolderInput";
 import type { ImportedExam } from "@/features/exam-import/types";
-import { LatestExamsStrip } from "./LatestExamsStrip";
+import { LatestExamsStrip, PICK_SECTION_ID } from "./LatestExamsStrip";
 import { PickExamTab } from "./PickExamTab";
 
 interface Props {
@@ -13,7 +13,7 @@ interface Props {
 export function ExamSourcePicker({ onImported }: Props) {
   return (
     <div className="mt-7 text-left">
-      <section aria-label="Chọn môn và đề">
+      <section id={PICK_SECTION_ID} aria-label="Chọn môn và đề" className="scroll-mt-4">
         <PickExamTab />
       </section>
 
