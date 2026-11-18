@@ -48,7 +48,7 @@ export function renderCourseraOrderEmail(i: CourseraOrderEmailInput) {
     `Khóa học: ${i.courseTitle}`,
     ...(showAmount ? [`Số ${c.amountLabel}: ${amountText}`] : []),
     ...(showAmount && i.balanceAfter !== null ? [`Số dư khả dụng hiện tại: ${formatCredit(i.balanceAfter)}`] : []),
-    ...(i.adminNote ? [`Ghi chú từ quản trị viên: ${i.adminNote}`] : []),
+    ...(i.adminNote ? [`Ghi chú: ${i.adminNote}`] : []),
     `Thời gian: ${formatDateTimeVN(i.at)}`,
     "",
     `Xem đơn của bạn: ${i.ordersUrl}`,

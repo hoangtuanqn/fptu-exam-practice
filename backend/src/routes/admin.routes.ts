@@ -9,6 +9,8 @@ import { adminSettingController } from "../controllers/admin.setting.controllers
 import { adminAiController } from "../controllers/admin.ai.controllers";
 import { adminAnswerReportController } from "../controllers/admin.answer-report.controllers";
 import { adminExplanationFeedbackController } from "../controllers/admin.explanation-feedback.controllers";
+import { adminExamCommentController } from "../controllers/admin.exam-comment.controllers";
+import { bulkReviewCommentsBody, listAdminCommentsQuery, reviewCommentBody } from "../rules/requests/exam-comment.request";
 import { adminReferralController } from "../controllers/admin.referral.controllers";
 import { adminGiftCodeController } from "../controllers/admin.gift-code.controllers";
 import { adminCrawlerController } from "../controllers/admin.crawler.controllers";
@@ -170,6 +172,11 @@ adminRouter.get("/answer-reports", validate(listReportsQuery, "query"), adminAns
 adminRouter.post("/answer-reports/:id/approve", validate(uuidParam, "params"), validate(reviewReportBody), adminAnswerReportController.approve);
 adminRouter.post("/answer-reports/:id/reject", validate(uuidParam, "params"), validate(reviewReportBody), adminAnswerReportController.reject);
 adminRouter.post("/answer-reports/:id/resolve", validate(uuidParam, "params"), adminAnswerReportController.resolve);
+adminRouter.get("/exam-comments", validate(listAdminCommentsQuery, "query"), adminExamCommentController.list);
+adminRouter.get("/exam-comments/summary", adminExamCommentController.summary);
+adminRouter.post("/exam-comments/bulk", validate(bulkReviewCommentsBody), adminExamCommentController.bulkReview);
+adminRouter.patch("/exam-comments/:id", validate(uuidParam, "params"), validate(reviewCommentBody), adminExamCommentController.review);
+adminRouter.delete("/exam-comments/:id", validate(uuidParam, "params"), adminExamCommentController.remove);
 
 
 adminRouter.get("/settings/referral", adminReferralController.getSettings);

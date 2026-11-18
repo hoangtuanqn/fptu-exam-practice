@@ -39,7 +39,7 @@ async function adoptPicture(userId: string, provider: SocialProvider, picture?: 
     if (!res.ok) return;
     const buf = Buffer.from(await res.arrayBuffer());
     if (buf.length === 0 || buf.length > MAX_PICTURE_BYTES) return;
-    const avatarPath = await avatarService.upload(userId, buf);
+    const avatarPath = await avatarService.upload(buf);
     await userRepository.update(userId, { avatarPath });
   } catch (err) {
     console.error(`[${provider}] không lấy được ảnh đại diện: ${err instanceof Error ? err.message : err}`);

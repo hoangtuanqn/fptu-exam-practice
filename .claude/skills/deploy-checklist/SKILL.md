@@ -37,6 +37,7 @@ cd ~/app && bash deploy/backup-db.sh && bash deploy/deploy.sh
 5. If it fails half-way, do not re-run: restore the dump, follow the rollback notes in the header, redeploy the previous backend and frontend builds.
 
 `0082_fuo_source_urls` is NOT destructive (it only adds two tables), but it must be applied after 0081.
+`0084_exam_comments` is NOT destructive (it only adds the `exam_comments` table) and applies after 0083.
 
 `0083_fuo_catalog` is additive (new columns with defaults/NULL, one index, two new tables; no UPDATE/DELETE). Existing `exams.kind` is filled by the API at boot, so deploy the backend before the frontend that reads `kind`.
 
