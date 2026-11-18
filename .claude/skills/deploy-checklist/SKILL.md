@@ -36,6 +36,8 @@ cd ~/app && bash deploy/backup-db.sh && bash deploy/deploy.sh
 4. Ship the frontend zip right after the backend: the old frontend gets 422 from the new backend until it is replaced.
 5. If it fails half-way, do not re-run: restore the dump, follow the rollback notes in the header, redeploy the previous backend and frontend builds.
 
+`0082_fuo_source_urls` is NOT destructive (it only adds two tables), but it must be applied after 0081.
+
 ## Frontend
 
 1. On the local machine run `release.cmd` (builds and produces `release/fepass-web.zip`).

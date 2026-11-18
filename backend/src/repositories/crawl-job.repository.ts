@@ -78,6 +78,11 @@ export const crawlJobRepository = {
     return count === 1;
   },
 
+  // Có job lấy đề (người dùng hoặc làm mới) đang chờ/đang chạy: lượt nạp của admin nhường FuOverflow cho họ
+  async hasActive() {
+    return !!(await prisma.crawlJob.findFirst({ where: { status: { in: ["QUEUED", "RUNNING"] } }, select: { id: true } }));
+  },
+
   // Server tắt giữa chừng: job đang chạy dở được xếp lại hàng
   requeueRunning: () =>
     prisma.crawlJob.updateMany({ where: { status: "RUNNING" }, data: { status: "QUEUED", stage: null } }),

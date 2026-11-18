@@ -4,7 +4,7 @@ import { crawlJobRepository } from "../repositories/crawl-job.repository";
 import { crawlJobService } from "../services/crawl-job.service";
 import { examService } from "../services/exam.service";
 import { examImportService } from "../services/exam-import.service";
-import { fuoSessionService, isFuoAuthFailure } from "../services/crawler/fuo-session.service";
+import { fuoSessionService } from "../services/crawler/fuo-session.service";
 
 let draining = false;
 
@@ -30,17 +30,12 @@ const drain = async () => {
             await crawlJobRepository.setExam(job.id, readyExamId);
             void realtimeHub.publishJob(job.id);
           },
+          onStage: async (text: string) => {
+            await crawlJobRepository.setStage(job.id, text);
+            void realtimeHub.publishJob(job.id); // người đang chờ thấy bước mới ngay
+          },
         };
-        // Chưa có cookie mà đã lưu tài khoản: tự đăng nhập trước. Phiên hết hạn giữa chừng: đăng nhập lại rồi chạy lại một lần.
-        await fuoSessionService.ensureCookie();
-        let result;
-        try {
-          result = await examImportService.run(job, hooks);
-        } catch (err) {
-          if (!isFuoAuthFailure(err) || !(await fuoSessionService.login()).ok) throw err;
-          result = await examImportService.run(job, hooks);
-        }
-        const { examId } = result;
+        const { examId } = await fuoSessionService.withSession(() => examImportService.run(job, hooks));
         // Đề vào kho TRƯỚC khi báo DONE để người dùng mở được ngay khi thấy xong
         const before = await ownerOf();
         await examService.addToLibrary(before, examId);

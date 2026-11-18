@@ -11,6 +11,8 @@ export async function downloadImage(
   client: FuoClient,
   image: ImageRef,
   dir: string,
+  // exclusive: không bao giờ ghi đè tệp đã có (nạp thêm câu cho đề có sẵn); tệp đã tồn tại thì báo lỗi
+  { exclusive = false }: { exclusive?: boolean } = {},
 ): Promise<DownloadedImage> {
   // 1. Tải
   let input: Buffer;
@@ -45,7 +47,10 @@ export async function downloadImage(
   const tmp = `${target}.tmp`;
   try {
     await fs.writeFile(tmp, output);
-    await fs.rename(tmp, target);
+    if (exclusive) {
+      await fs.copyFile(tmp, target, fs.constants.COPYFILE_EXCL); // EEXIST nếu tên đã có: không đè ảnh cũ
+      await fs.rm(tmp, { force: true });
+    } else await fs.rename(tmp, target);
   } catch (err) {
     await fs.rm(tmp, { force: true });
     throw new Error(`Không ghi được ${file}: ${errMsg(err)}`, { cause: err });

@@ -210,6 +210,17 @@ export const examRepository = {
 
   countQuestions: (examId: string) => prisma.examQuestion.count({ where: { examId } }),
 
+  // Nạp dữ liệu mới cho đề có sẵn: ảnh gốc từng câu để so với thread hiện tại (theo số câu)
+  findQuestionSources: (examId: string) =>
+    prisma.examQuestion.findMany({ where: { examId }, orderBy: { number: "asc" }, select: { number: true, name: true, sourceImage: true, mediaUrl: true } }),
+
+  // Thêm các câu mới ở cuối đề và nâng tổng số câu, cùng một transaction. Không đụng câu đã có (đáp án, lời giải thích giữ nguyên).
+  appendQuestions: (examId: string, questions: NewExam["questions"], total: number) =>
+    prisma.$transaction([
+      prisma.examQuestion.createMany({ data: questions.map((q) => ({ ...q, examId })), skipDuplicates: true }),
+      prisma.exam.updateMany({ where: { id: examId, totalQuestions: { lt: total } }, data: { totalQuestions: total } }),
+    ]),
+
   // Đề chỉ có tệp (0 câu) coi là xong khi đã ghi tệp đính kèm (ghi một lần ở cuối lượt lấy đề)
   isComplete: async (exam: { id: string; totalQuestions: number }) =>
     (await prisma.examQuestion.count({ where: { examId: exam.id } })) >= exam.totalQuestions &&

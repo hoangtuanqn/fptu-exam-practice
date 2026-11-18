@@ -1,6 +1,6 @@
 import { lazy } from "react";
 import { Navigate, Route } from "react-router-dom";
-import { BookMarked, Link2, MailPlus, Activity, ShieldCheck as QualityIcon, MessagesSquare, ShoppingBag, Megaphone, Bot, ClipboardList, DatabaseZap, FileText, History, SlidersHorizontal, Wallet, Gift, MessageSquareWarning, UserPlus, Landmark, LayoutDashboard, Receipt, Settings, ThumbsUp, Users } from "lucide-react";
+import { BookMarked, Link2, MailPlus, Activity, ShieldCheck as QualityIcon, MessagesSquare, ShoppingBag, Megaphone, Bot, ClipboardList, DatabaseZap, ListPlus, FileText, History, SlidersHorizontal, Wallet, Gift, MessageSquareWarning, UserPlus, Landmark, LayoutDashboard, Receipt, Settings, ThumbsUp, Users } from "lucide-react";
 import type { NavItem } from "@/shared/layout/PanelLayout";
 
 /**
@@ -30,6 +30,7 @@ const SepayPage = lazy(() => import("./finance/SepayPage"));
 const ExamsPage = lazy(() => import("./content/ExamsPage"));
 const ExamEditPage = lazy(() => import("./content/ExamEditPage"));
 const CrawlerPage = lazy(() => import("./content/CrawlerPage"));
+const FuoSourcesPage = lazy(() => import("./fuo-sources/FuoSourcesPage"));
 const ReportsPage = lazy(() => import("./content/ReportsPage"));
 const FeedbackPage = lazy(() => import("./content/FeedbackPage"));
 const ChatbotPage = lazy(() => import("./content/ChatbotPage"));
@@ -62,6 +63,7 @@ export const ADMIN_NAV: NavItem[] = [
   { to: "/admin/link-rewards", label: "Vượt link", icon: Link2, group: "Nội dung & AI" },
   { to: "/admin/subjects", label: "Quản lý môn học", icon: BookMarked, group: "Nội dung & AI" },
   { to: "/admin/crawler", label: "Cấu hình lấy đề", icon: DatabaseZap, group: "Nội dung & AI" },
+  { to: "/admin/fuo-sources", label: "Nguồn đề", icon: ListPlus, group: "Nội dung & AI" },
   { to: "/admin/ai", label: "AI giải đáp án", icon: Bot, group: "Nội dung & AI" },
   { to: "/admin/chatbot", label: "Chatbot hỗ trợ", icon: MessagesSquare, group: "Nội dung & AI" },
   { to: "/admin/funnel", label: "Phễu người dùng", icon: Activity, group: "Phân tích" },
@@ -95,6 +97,7 @@ export const adminRoutes = (
     <Route path="reports" element={<ReportsPage />} />
     <Route path="explanation-feedback" element={<FeedbackPage />} />
     <Route path="crawler" element={<CrawlerPage />} />
+    <Route path="fuo-sources" element={<FuoSourcesPage />} />
     <Route path="ai" element={<AiPage />} />
     <Route path="chatbot" element={<ChatbotPage />} />
     <Route path="funnel" element={<FunnelPage />} />

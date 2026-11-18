@@ -4,11 +4,12 @@ import path from "node:path";
 import { storageDir } from "../configs/env";
 import { EXAM_FILES_DIR, EXAM_IMAGES_DIR, EXAM_STORAGE_DIR } from "../constants/crawler";
 import { AI_REPORT_FAILED_PREFIX, aiReady } from "../constants/ai";
-import { crawlJobRepository } from "../repositories/crawl-job.repository";
+import { FUO_SOURCE_WAIT_STAGE } from "../constants/fuo-source";
 import { examAttachmentRepository } from "../repositories/exam-attachment.repository";
 import { examRepository, isDuplicateThread } from "../repositories/exam.repository";
 import { attachmentFileName } from "../utils/attachment";
 import { threadUrl } from "../utils/fuo-url";
+import { createKeyLock } from "../utils/key-lock";
 import { createLimiter } from "../utils/limiter";
 import { sleep } from "../utils/sleep";
 import { realtimeHub } from "../realtime/hub";
@@ -24,8 +25,8 @@ import type { DownloadedImage, QuestionComments } from "./crawler/types";
 import { crawlerSettingService } from "./crawler-setting.service";
 
 // Đường dẫn ảnh lưu trong DB, tương đối so với STORAGE_DIR (luôn dùng "/"): exams/<threadId>/images/<tên>.webp
-const imagePathOf = (threadId: string, file: string) => `${EXAM_STORAGE_DIR}/${threadId}/${EXAM_IMAGES_DIR}/${file}`;
-const filePathOf = (threadId: string, file: string) => `${EXAM_STORAGE_DIR}/${threadId}/${EXAM_FILES_DIR}/${file}`;
+export const imagePathOf = (threadId: string, file: string) => `${EXAM_STORAGE_DIR}/${threadId}/${EXAM_IMAGES_DIR}/${file}`;
+export const filePathOf = (threadId: string, file: string) => `${EXAM_STORAGE_DIR}/${threadId}/${EXAM_FILES_DIR}/${file}`;
 
 // Có chừng này ảnh đầu tiên là người dùng được mở đề ngay (các câu sau hiện dần)
 const FIRST_READY = 2;
@@ -34,7 +35,15 @@ const STAGE_THROTTLE_MS = 400; // ghi tiến độ tối đa chừng này mỗi 
 export interface ImportHooks {
   /** Gọi một lần khi đã có ảnh đầu tiên: đưa đề vào kho người nhập để họ mở ngay. */
   onReady: (examId: string) => Promise<void>;
+  /** Bước đang chạy (đã giãn nhịp): job lấy đề ghi lại và báo qua socket. */
+  onStage: (text: string) => Promise<void>;
 }
+
+// Đề cần lấy: job lấy đề (crawl_jobs) hoặc lượt nạp dữ liệu mới của admin (fuo_source_urls)
+export type ImportTarget = Pick<CrawlJob, "threadId" | "refresh" | "userId">;
+
+// Mọi lượt lấy/cập nhật cùng một thread chạy lần lượt (job người dùng, lượt nạp của admin), không xoá hay ghi đè đề của nhau
+export const withThreadLock = createKeyLock();
 
 const removeDir = (dir: string) => fs.rm(dir, { recursive: true, force: true });
 
@@ -54,15 +63,14 @@ const removeStaleFiles = async (dir: string, keep: Set<string>) => {
  * Thư mục của đề: storage/exams/<threadId>/ gồm  images/Q1.webp...  và  comments.txt  (cùng ans.txt, ai-report.md khi AI giải xong),
  * files/<tên> là tệp đính kèm không phải ảnh (pdf, zip...), lưu nguyên bản. Thread chỉ có tệp thì thành đề 0 câu, không gọi AI.
  */
-export const examImportService = {
-  async run(job: CrawlJob, hooks: ImportHooks): Promise<{ examId: string }> {
+const importer = {
+  async run(job: ImportTarget, hooks: ImportHooks): Promise<{ examId: string }> {
     let lastStageAt = 0;
     const stage = async (text: string, force = false) => {
       const now = Date.now();
       if (!force && now - lastStageAt < STAGE_THROTTLE_MS) return;
       lastStageAt = now;
-      await crawlJobRepository.setStage(job.id, text);
-      void realtimeHub.publishJob(job.id); // người đang chờ thấy bước mới ngay
+      await hooks.onStage(text);
     };
 
     const existing = await examRepository.findByThreadId(job.threadId);
@@ -271,5 +279,13 @@ export const examImportService = {
       await removeDir(dir);
       throw err;
     }
+  },
+};
+
+export const examImportService = {
+  async run(job: ImportTarget, hooks: ImportHooks) {
+    // Lượt nạp của admin đang cập nhật đúng thread này: báo cho người đang chờ thay vì đứng yên ở bước cũ
+    if (withThreadLock.isBusy(job.threadId)) await hooks.onStage(FUO_SOURCE_WAIT_STAGE);
+    return withThreadLock(job.threadId, () => importer.run(job, hooks));
   },
 };

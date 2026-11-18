@@ -18,4 +18,11 @@ export const examAttachmentRepository = {
       prisma.examAttachment.deleteMany({ where: { examId } }),
       prisma.examAttachment.createMany({ data: rows.map((r) => ({ ...r, examId })) }),
     ]),
+
+  // Nạp dữ liệu mới: tệp đã có của đề (để chỉ tải tệp mới, không trùng tên trên đĩa)
+  listByExam: (examId: string) => prisma.examAttachment.findMany({ where: { examId }, select: { filePath: true, sourceUrl: true } }),
+
+  // Thêm tệp mới, giữ nguyên các tệp cũ (id không đổi)
+  add: (examId: string, rows: NewAttachment[]) =>
+    prisma.examAttachment.createMany({ data: rows.map((r) => ({ ...r, examId })), skipDuplicates: true }),
 };
