@@ -120,7 +120,7 @@ export default function ChatWidget() {
   }, [open]);
 
   // Không hiện ở khu quản trị và ở màn hình làm bài/luyện tập (tránh gây xao nhãng)
-  if (!enabled || pathname.startsWith("/admin") || isPracticePath(pathname) || pathname === "/pro" || pathname === "/features") return null; // /pro: thanh mua cố định ở đáy bị mascot che nút; /features: trang để chụp màn hình giới thiệu nên không để mascot vướng
+  if (!enabled || pathname.startsWith("/admin") || isPracticePath(pathname) || /^\/exam\/[^/]+$/.test(pathname) || pathname === "/pro" || pathname === "/features") return null; // /pro và trang xem đề /exam/:id: thanh nút cố định ở đáy (và ô bình luận góc phải) bị mascot che; /features: trang để chụp màn hình giới thiệu nên không để mascot vướng
 
   async function send(text: string, history: Msg[] = messages, captchaToken?: string) {
     const content = text.trim().slice(0, limits.chars);
