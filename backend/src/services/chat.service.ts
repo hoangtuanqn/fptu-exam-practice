@@ -2,7 +2,6 @@ import Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "../configs/prisma";
 import { CHAT_CANNED, CHAT_CONTINUE_PROMPT, CHAT_EFFORT, CHAT_LIMITS, CHAT_MONEY_HINT, CHAT_SYSTEM_PROMPT, chatProviderReady, type ChatConfig } from "../constants/chat";
 import { HTTP_STATUS } from "../constants/httpStatus";
-import { PE_PRICE } from "../constants/pe";
 import { PRO_PLAN, SPRINT_PLAN, TICKET_MAX_OPEN, TICKET_VALID_DAYS } from "../constants/plan";
 import { activePromoEnd, promoExpired } from "../constants/promo";
 import { ANSWER_REPORT_REWARD } from "../constants/report";
@@ -38,10 +37,9 @@ async function liveFacts() {
   ]);
   const ends = activePromoEnd(promo);
   const lines = [
-    `Phí lấy một đề từ FuOverflow (thành viên): ${crawler.fetchPrice > 0 ? `${nf.format(crawler.fetchPrice)} credit` : "miễn phí"}.`,
+    `Phí mở một đề chưa có trong kho (thành viên): ${crawler.fetchPrice > 0 ? `${nf.format(crawler.fetchPrice)} credit` : "miễn phí"}.`,
     `Giải thích AI một câu: ${ai.explainPrice > 0 ? `${nf.format(ai.explainPrice)} credit` : "miễn phí"}; mỗi tài khoản có ${ai.explainPrice > 0 ? promo.freeTrials : 0} lượt xem thử miễn phí.`,
     `Gói mở khóa toàn bộ lời giải một đề: giảm ${promoExpired(promo) ? 0 : promo.bundleDiscountPercent}% so với mua lẻ${ends ? ` (ưu đãi đến ${ends.toLocaleDateString("vi-VN")})` : ""}.`,
-    `Tải đề PE: ${nf.format(PE_PRICE)} credit mỗi đề, trả một lần, tải lại miễn phí.`,
     `Mức nạp tối thiểu: ${nf.format(sepay.minDeposit)} ₫ (1 ₫ = 1 credit).`,
     promo.depositBonusTiers.length ? `Thưởng khi nạp: ${promo.depositBonusTiers.map((t) => `từ ${nf.format(t.min)} ₫ thưởng thêm ${t.percent}%`).join("; ")}.` : "Hiện không có thưởng khi nạp.",
     account.signupCredit > 0 ? `Tặng ${nf.format(account.signupCredit)} credit khi đăng ký tài khoản mới.` : "Không tặng credit khi đăng ký.",
