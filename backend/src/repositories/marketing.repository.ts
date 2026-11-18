@@ -17,7 +17,7 @@ import {
 import { DAY_MS } from "../utils/time";
 
 export interface Recipient {
-  id: number;
+  id: string;
   email: string;
   fullName: string;
   proExpiresAt: Date | null;
@@ -149,7 +149,7 @@ export const marketingRepository = {
   },
 
   /** Giữ chỗ trước khi gửi: trùng (đã gửi bước này) thì trả null, không gửi lại. `target` = đường dẫn nội bộ của nút trong thư. */
-  async claim(userId: number, campaign: LogCampaign, step: number, target: string) {
+  async claim(userId: string, campaign: LogCampaign, step: number, target: string) {
     // Hủy, tắt loại thư hoặc tạm dừng giữa lúc dựng danh sách và lúc gửi (tối đa vài phút) vẫn phải được tôn trọng
     const now = new Date();
     const pause = pauseApplies(campaign) ? { OR: [{ marketingMutedUntil: null }, { marketingMutedUntil: { lte: now } }] } : {};
@@ -179,7 +179,7 @@ export const marketingRepository = {
   },
 
   // Người dùng vừa hoạt động: đánh dấu "quay lại" cho các thư của họ trong CONVERSION_DAYS ngày qua chưa được đánh dấu (chỉ số user_id, sent_at)
-  markReturned: (userId: number, now: Date) =>
+  markReturned: (userId: string, now: Date) =>
     prisma.emailCampaignLog
       .updateMany({ where: { userId, returnedAt: null, sentAt: { gte: new Date(now.getTime() - CONVERSION_DAYS * DAY_MS), lte: now } }, data: { returnedAt: now } })
       .then(() => undefined),
@@ -262,10 +262,10 @@ export const marketingRepository = {
   // ---- Dữ liệu thật cho nội dung thư, lấy theo lô (không hỏi riêng từng người)
 
   // Môn của lần làm bài gần nhất: userId -> mã môn
-  async lastSubjects(userIds: number[]) {
+  async lastSubjects(userIds: string[]) {
     const last = await prisma.examAttempt.groupBy({ by: ["userId"], where: { userId: { in: userIds } }, _max: { id: true } });
     const ids = last.map((r) => r._max.id).filter((id): id is string => id !== null);
-    if (ids.length === 0) return new Map<number, string>();
+    if (ids.length === 0) return new Map<string, string>();
     const rows = await prisma.examAttempt.findMany({ where: { id: { in: ids } }, select: { userId: true, exam: { select: { subjectCode: true } } } });
     return new Map(rows.filter((r) => r.exam.subjectCode).map((r) => [r.userId, r.exam.subjectCode!]));
   },
@@ -277,7 +277,7 @@ export const marketingRepository = {
   },
 
   // Credit tặng sắp hết hạn: userId -> { tổng còn lại, hạn sớm nhất }
-  async expiringCredit(userIds: number[], now: Date, until: Date) {
+  async expiringCredit(userIds: string[], now: Date, until: Date) {
     const rows = await prisma.creditLot.groupBy({
       by: ["userId"],
       where: { userId: { in: userIds }, remaining: { gt: 0 }, expiresAt: { gt: now, lte: until } },
@@ -288,12 +288,12 @@ export const marketingRepository = {
   },
 
   // Ngày thi gần nhất trong [from, to] (lịch FAP hoặc ngày tự đặt): userId -> ngày
-  async nextExamDates(userIds: number[], from: Date, to: Date) {
+  async nextExamDates(userIds: string[], from: Date, to: Date) {
     const [slots, users] = await Promise.all([
       prisma.userExamSlot.findMany({ where: { userId: { in: userIds }, examDate: { gte: from, lte: to } }, select: { userId: true, examDate: true } }),
       prisma.user.findMany({ where: { id: { in: userIds }, examDate: { gte: from, lte: to } }, select: { id: true, examDate: true } }),
     ]);
-    const result = new Map<number, Date>();
+    const result = new Map<string, Date>();
     for (const { userId, examDate } of [...slots, ...users.map((u) => ({ userId: u.id, examDate: u.examDate! }))]) {
       const cur = result.get(userId);
       if (!cur || examDate < cur) result.set(userId, examDate);

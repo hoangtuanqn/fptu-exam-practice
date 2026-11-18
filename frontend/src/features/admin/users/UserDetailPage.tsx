@@ -9,6 +9,7 @@ import { useApi } from "@/shared/hooks/useApi";
 import { useSubmit } from "@/shared/hooks/useSubmit";
 import type { Role, User, UserStatus } from "@/shared/types/api";
 import { isPro } from "@/shared/utils/pro";
+import { isUuid } from "@/shared/utils/uuid";
 import { formatCredit, formatDate, formatDateTime, initials } from "@/shared/utils/formatters";
 import { Badge } from "@/shared/ui/Badge";
 import { Button } from "@/shared/ui/Button";
@@ -70,9 +71,9 @@ function Panel({ icon, title, desc, children }: { icon: ReactNode; title: string
 
 export default function UserDetailPage() {
   const { id } = useParams();
-  const userId = Number(id);
+  const userId = id ?? "";
   const { data, error, loading, reload } = useApi(() => adminApi.user(userId), [userId]);
-  if (!Number.isInteger(userId)) return <ErrorBox message="Thành viên không hợp lệ" />;
+  if (!isUuid(userId)) return <ErrorBox message="Thành viên không hợp lệ" />;
   if (loading && !data) return <Loading />;
   if (error || !data) return <ErrorBox message={error ?? "Không tải được thành viên"} onRetry={reload} />;
   return <UserDetail key={data.id} initial={data} />;

@@ -29,7 +29,7 @@ const PICTURE_HOSTS: Record<SocialProvider, RegExp> = {
 };
 
 /** Lấy ảnh đại diện làm avatar. Lỗi gì cũng bỏ qua (không được làm hỏng đăng nhập). */
-async function adoptPicture(userId: number, provider: SocialProvider, picture?: string) {
+async function adoptPicture(userId: string, provider: SocialProvider, picture?: string) {
   try {
     if (!picture) return;
     const url = new URL(picture);

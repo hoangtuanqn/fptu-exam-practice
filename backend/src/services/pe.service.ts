@@ -123,11 +123,11 @@ export const peService = {
   price: () => ({ price: PE_PRICE }),
 
   // Đã trả phí tải đề này thành công một lần thì các lần sau miễn phí
-  async hasPaid(userId: number, threadId: string) {
+  async hasPaid(userId: string, threadId: string) {
     return !!(await prisma.peDownload.findFirst({ where: { userId, threadId, status: "DONE", price: { gt: 0 } }, select: { id: true } }));
   },
 
-  async quote(userId: number, url: string) {
+  async quote(userId: string, url: string) {
     const threadId = parseThreadId(url);
     if (!threadId) throw new AppError(FUO_LINK_INVALID);
     const free = (PRO_BENEFITS.freePe && (await planService.isPro(userId))) || (await this.hasPaid(userId, threadId));
@@ -138,7 +138,7 @@ export const peService = {
    * Tải bộ tài nguyên đề PE: trừ PE_PRICE credit mỗi lần, ghi lịch sử. Không dựng được zip thì hoàn phí đúng số đã trừ.
    * Trả đường dẫn file zip để controller gửi về.
    */
-  async download(userId: number, url: string) {
+  async download(userId: string, url: string) {
     const threadId = parseThreadId(url);
     if (!threadId) throw new AppError(FUO_LINK_INVALID);
 
@@ -166,7 +166,7 @@ export const peService = {
     }
   },
 
-  async history(userId: number) {
+  async history(userId: string) {
     const items = await prisma.peDownload.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 100 });
     return { items };
   },

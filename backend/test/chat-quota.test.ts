@@ -39,9 +39,9 @@ describe("chatQuotaService.check", () => {
   });
   it("gives a signed-in member 20 messages before the captcha", async () => {
     calls.length = 0;
-    await chatQuotaService.check({ userId: 5 }, undefined, "1.1.1.1", "anthropic", deps(10));
+    await chatQuotaService.check({ userId: "u5" }, undefined, "1.1.1.1", "anthropic", deps(10));
     assert.equal(calls.length, 0);
-    await chatQuotaService.check({ userId: 5 }, "tok", "1.1.1.1", "anthropic", deps(20));
+    await chatQuotaService.check({ userId: "u5" }, "tok", "1.1.1.1", "anthropic", deps(20));
     assert.equal(calls.length, 1);
   });
   it("defaults to the anthropic batches", async () => {
@@ -52,10 +52,10 @@ describe("chatQuotaService.check", () => {
   it("uses the raised batches for the openai provider (guest 100, member 500)", async () => {
     calls.length = 0;
     await chatQuotaService.check({ guestId: "g1" }, undefined, undefined, "openai", deps(99));
-    await chatQuotaService.check({ userId: 5 }, undefined, undefined, "openai", deps(499));
+    await chatQuotaService.check({ userId: "u5" }, undefined, undefined, "openai", deps(499));
     assert.equal(calls.length, 0);
     await chatQuotaService.check({ guestId: "g1" }, "tok", undefined, "openai", deps(100));
-    await chatQuotaService.check({ userId: 5 }, "tok", undefined, "openai", deps(500));
+    await chatQuotaService.check({ userId: "u5" }, "tok", undefined, "openai", deps(500));
     assert.equal(calls.length, 2);
   });
   it("rejects when the captcha fails", async () => {

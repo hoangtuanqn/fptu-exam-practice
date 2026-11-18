@@ -40,7 +40,7 @@ const view = (b: MarketingBroadcast, counts?: { sent: number; clicked: number })
 });
 
 export const marketingBroadcastService = {
-  async create(input: CreateBroadcastBody, adminId: number) {
+  async create(input: CreateBroadcastBody, adminId: string) {
     const b = await broadcastRepository.create({ ...input, segmentDays: input.segment === "inactive" ? (input.segmentDays ?? null) : null, createdById: adminId });
     return view(b);
   },

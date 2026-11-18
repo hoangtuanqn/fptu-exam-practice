@@ -22,7 +22,7 @@ const UPLOAD_SELECT = {
 export type MaterialUploadRow = Prisma.MaterialUploadGetPayload<{ select: typeof UPLOAD_SELECT }>;
 
 export interface NewUpload {
-  userId: number;
+  userId: string;
   subjectId: number;
   title: string;
   fileHash: string;
@@ -51,19 +51,19 @@ export const materialRepository = {
   findById: (id: string) => prisma.materialUpload.findUnique({ where: { id }, select: UPLOAD_SELECT }),
 
   /** Chỉ trả khi đúng chủ và chưa hết hạn (người khác hỏi thì như không tồn tại). */
-  findOwned: (id: string, userId: number, now: Date) => prisma.materialUpload.findFirst({ where: { id, userId, expiresAt: { gt: now } }, select: UPLOAD_SELECT }),
+  findOwned: (id: string, userId: string, now: Date) => prisma.materialUpload.findFirst({ where: { id, userId, expiresAt: { gt: now } }, select: UPLOAD_SELECT }),
 
-  listByUser: (userId: number, now: Date, take: number) =>
+  listByUser: (userId: string, now: Date, take: number) =>
     prisma.materialUpload.findMany({ where: { userId, expiresAt: { gt: now } }, orderBy: [{ createdAt: "desc" }, { id: "desc" }], take, select: UPLOAD_SELECT }),
 
   /** Cùng người, cùng tệp (sha256), cùng môn, chưa hết hạn và không lỗi: dùng lại thay vì phân tích lại. */
-  findDuplicate: (userId: number, subjectId: number, fileHash: string, now: Date) =>
+  findDuplicate: (userId: string, subjectId: number, fileHash: string, now: Date) =>
     prisma.materialUpload.findFirst({ where: { userId, fileHash, subjectId, status: { not: "FAILED" }, expiresAt: { gt: now } }, orderBy: { id: "desc" }, select: UPLOAD_SELECT }),
 
-  countActive: (userId: number) => prisma.materialUpload.count({ where: { userId, status: { in: ["QUEUED", "RUNNING"] } } }),
+  countActive: (userId: string) => prisma.materialUpload.count({ where: { userId, status: { in: ["QUEUED", "RUNNING"] } } }),
 
   /** Xoá của đúng chủ (trang và chương xoá theo khoá ngoại). Trả số dòng đã xoá. */
-  deleteOwned: async (id: string, userId: number) => (await prisma.materialUpload.deleteMany({ where: { id, userId } })).count,
+  deleteOwned: async (id: string, userId: string) => (await prisma.materialUpload.deleteMany({ where: { id, userId } })).count,
 
   exists: async (id: string) => !!(await prisma.materialUpload.findUnique({ where: { id }, select: { id: true } })),
 

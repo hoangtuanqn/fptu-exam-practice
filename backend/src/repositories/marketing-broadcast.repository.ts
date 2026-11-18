@@ -9,7 +9,7 @@ export interface BroadcastInput {
   ctaPath: string;
   segment: BroadcastSegment;
   segmentDays: number | null;
-  createdById: number;
+  createdById: string;
 }
 
 const isUniqueViolation = (err: unknown) => err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002";

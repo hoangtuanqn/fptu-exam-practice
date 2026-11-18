@@ -14,7 +14,7 @@ const rewardOf = (cycleDay: number) => CHECKIN_DAILY + (cycleDay === CHECKIN_CYC
  * - streak: số ngày liên tiếp đã điểm danh (gồm cả hôm nay nếu đã nhận). Bỏ lỡ một ngày thì về 0.
  * - cycleDay: hôm nay là ngày thứ mấy (1..7) trong vòng 7 ngày.
  */
-async function snapshot(userId: number, db: Db = prisma) {
+async function snapshot(userId: string, db: Db = prisma) {
   const today = vnDate();
   const last = await db.dailyCheckIn.findFirst({ where: { userId }, orderBy: { day: "desc" }, select: { day: true, streak: true } });
   const claimedToday = !!last && last.day.getTime() === today.getTime();
@@ -27,7 +27,7 @@ async function snapshot(userId: number, db: Db = prisma) {
 
 export const checkInService = {
   /** Giao diện hỏi lúc đăng nhập để biết có hiện hộp điểm danh không. Chưa xác minh email thì chưa nhận được (chống tạo nhiều tài khoản để lấy thưởng). */
-  async status(userId: number, verified: boolean) {
+  async status(userId: string, verified: boolean) {
     const { claimedToday, streak, cycleDay } = await snapshot(userId);
     return {
       canClaim: verified && !claimedToday,
@@ -44,7 +44,7 @@ export const checkInService = {
   },
 
   /** Nhận thưởng hôm nay. Mỗi ngày một lần (ràng buộc duy nhất userId + ngày chặn cả khi bấm hai lần cùng lúc). */
-  async claim(userId: number) {
+  async claim(userId: string) {
     try {
       return await prisma.$transaction(async (tx) => {
         const { today, claimedToday, streak, cycleDay } = await snapshot(userId, tx);

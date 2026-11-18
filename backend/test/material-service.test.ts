@@ -11,9 +11,9 @@ import { buildPdf } from "./helpers/pdf";
 // API của Phân tích slide với kho trong bộ nhớ: khoá Pro, kiểm tra PDF, trùng tệp, quyền chủ sở hữu (404), giới hạn token.
 
 const NOW = new Date("2026-11-11T12:00:00.000Z");
-const PRO = { id: 1, role: "USER" as const };
-const FREE = { id: 2, role: "USER" as const };
-const ADMIN = { id: 3, role: "ADMIN" as const };
+const PRO = { id: "u1", role: "USER" as const };
+const FREE = { id: "u2", role: "USER" as const };
+const ADMIN = { id: "u3", role: "ADMIN" as const };
 const SUBJECT = { id: 10, code: "OSG202", name: "Operating Systems" };
 const CHAPTERS = [
   { number: 1, title: "Processes", topics: ["1.1 Process"] },

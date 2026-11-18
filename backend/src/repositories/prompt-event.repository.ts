@@ -1,7 +1,7 @@
 import { prisma } from "../configs/prisma";
 
 export const promptEventRepository = {
-  create: (userId: number, surface: string, event: string) => prisma.promptEvent.create({ data: { userId, surface, event }, select: { id: true } }),
+  create: (userId: string, surface: string, event: string) => prisma.promptEvent.create({ data: { userId, surface, event }, select: { id: true } }),
 
   // Number of events per prompt and event name since a date
   countSince: (since: Date) =>

@@ -18,7 +18,7 @@ enum UserStatus {
 }
 
 model User {
-  id        Int        @id @default(autoincrement())
+  id        String        @id @default(uuid(7)) @db.Char(36)
   email     String     @unique
   fullName  String     @map("full_name")
   password  String
@@ -26,7 +26,7 @@ model User {
   status    UserStatus @default(ACTIVE)
   balance   Int        @default(0)
   referralCode String?   @unique @map("referral_code") @db.VarChar(12) // mĂ£ giá»›i thiá»‡u cá»§a chĂ­nh ngÆ°á»i nĂ y
-  referredById Int?      @map("referred_by_id") // ngÆ°á»i Ä‘Ă£ giá»›i thiá»‡u
+  referredById String?      @map("referred_by_id") @db.Char(36) // ngÆ°á»i Ä‘Ă£ giá»›i thiá»‡u
   googleSub    String?   @unique @map("google_sub") @db.VarChar(64) // tĂ i khoáº£n Google Ä‘Ă£ liĂªn káº¿t
   githubId     String?   @unique @map("github_id") @db.VarChar(32) // tai khoan GitHub da lien ket (id so)
   avatarPath   String?   @map("avatar_path") @db.VarChar(120) // null = dung mascot mac dinh
@@ -118,7 +118,7 @@ model CourseraCourse {
 
 model CourseraOrder {
   id                 String @id @default(uuid(7)) @db.Char(36)
-  userId             Int                 @map("user_id")
+  userId             String                 @map("user_id") @db.Char(36)
   courseId           String              @map("course_id") @db.Char(36)
   requestKey         String              @map("request_key") @db.VarChar(36)
   courseTitle        String              @map("course_title") @db.VarChar(255)
@@ -131,7 +131,7 @@ model CourseraOrder {
   note               String              @db.Text
   status             CourseraOrderStatus @default(PENDING)
   adminNote          String              @default("") @map("admin_note") @db.VarChar(2000)
-  credentialViewedBy Int?                @map("credential_viewed_by")
+  credentialViewedBy String?                @map("credential_viewed_by") @db.Char(36)
   credentialViewedAt DateTime?           @map("credential_viewed_at")
   createdAt          DateTime            @default(now()) @map("created_at")
   updatedAt          DateTime            @updatedAt @map("updated_at")
@@ -154,7 +154,7 @@ enum DepositStatus {
 // Lá»‡nh náº¡p tiá»n: ngÆ°á»i dĂ¹ng chuyá»ƒn khoáº£n kĂ¨m `code` trong ná»™i dung Ä‘á»ƒ há»‡ thá»‘ng Ä‘á»‘i soĂ¡t
 model DepositOrder {
   id        Int           @id @default(autoincrement())
-  userId    Int           @map("user_id")
+  userId    String           @map("user_id") @db.Char(36)
   code      String        @unique @db.VarChar(30)
   amount    Int
   status    DepositStatus @default(PENDING)
@@ -231,7 +231,7 @@ enum TransactionType {
 // Sá»• cĂ¡i vĂ­: má»—i láº§n sá»‘ dÆ° Ä‘á»•i lĂ  má»™t dĂ²ng (amount Ă¢m = trá»« tiá»n)
 model WalletTransaction {
   id           Int             @id @default(autoincrement())
-  userId       Int             @map("user_id")
+  userId       String             @map("user_id") @db.Char(36)
   type         TransactionType
   amount       Int
   balanceAfter Int             @map("balance_after")
@@ -248,7 +248,7 @@ model WalletTransaction {
 // Điểm danh hằng ngày: mỗi người một dòng mỗi ngày (theo giờ Việt Nam). `day` là ngày dạng DATE; `streak` là số ngày liên tiếp tính đến ngày đó
 model DailyCheckIn {
   id        Int      @id @default(autoincrement())
-  userId    Int      @map("user_id")
+  userId    String      @map("user_id") @db.Char(36)
   day       DateTime @db.Date
   streak    Int
   amount    Int // credit đã nhận (gồm thưởng đủ 7 ngày)
@@ -272,7 +272,7 @@ model Exam {
   // Nguá»“n Ä‘Ă¡p Ă¡n: DEFAULT (táº¡m lĂ  A), AI (Claude giáº£i), MANUAL (chá»‰nh tay). aiReport lĂ  bĂ¡o cĂ¡o cá»§a AI (cĂ¢u nghi ngá»...)
   answerSource   String    @default("DEFAULT") @map("answer_source") @db.VarChar(10)
   aiReport       String?   @map("ai_report") @db.Text
-  createdById    Int?      @map("created_by_id")
+  createdById    String?      @map("created_by_id") @db.Char(36)
   createdAt      DateTime  @default(now()) @map("created_at")
   subjectCode    String?   @map("subject_code") @db.VarChar(20) // subject code taken from the title (PRO192...); null = no code found. Set on import/rename, filled at boot for old rows
   refreshedAt    DateTime? @map("refreshed_at") // láº§n lĂ m má»›i gáº§n nháº¥t (láº¥y láº¡i áº£nh, bĂ¬nh luáº­n, giáº£i láº¡i Ä‘Ă¡p Ă¡n); null = chÆ°a tá»«ng
@@ -349,7 +349,7 @@ enum CrawlJobStatus {
 model CrawlJob {
   id            Int            @id @default(autoincrement())
   threadId      String         @map("thread_id") @db.VarChar(20)
-  userId        Int?           @map("user_id") // khĂ¡ch chÆ°a Ä‘Äƒng nháº­p thĂ¬ null, dĂ¹ng guestId
+  userId        String?           @map("user_id") @db.Char(36) // khĂ¡ch chÆ°a Ä‘Äƒng nháº­p thĂ¬ null, dĂ¹ng guestId
   guestId       String?        @map("guest_id") @db.VarChar(64)
   status        CrawlJobStatus @default(QUEUED)
   stage         String?        @db.VarChar(120)
@@ -373,7 +373,7 @@ model CrawlJob {
 // ThÆ° viá»‡n Ä‘á» cá»§a tá»«ng ngÆ°á»i: nháº­p link xong lĂ  Ä‘á» náº±m trong Ä‘Ă¢y (Ä‘á» dĂ¹ng chung, chá»‰ lÆ°u liĂªn káº¿t)
 model UserExam {
   id        Int      @id @default(autoincrement())
-  userId    Int?     @map("user_id")
+  userId    String?     @map("user_id") @db.Char(36)
   guestId   String?  @map("guest_id") @db.VarChar(64) // khĂ¡ch chÆ°a Ä‘Äƒng nháº­p: kho riĂªng theo trĂ¬nh duyá»‡t, nháº­n vá» tĂ i khoáº£n khi Ä‘Äƒng kĂ½
   examId    String   @map("exam_id") @db.Char(36)
   createdAt DateTime @default(now()) @map("created_at")
@@ -397,7 +397,7 @@ enum AttemptMode {
 // dĂ¹ sau nĂ y Ä‘Ă¡p Ă¡n cá»§a Ä‘á» Ä‘Æ°á»£c sá»­a
 model ExamAttempt {
   id          String @id @default(uuid(7)) @db.Char(36)
-  userId      Int         @map("user_id")
+  userId      String         @map("user_id") @db.Char(36)
   examId      String      @map("exam_id") @db.Char(36)
   mode        AttemptMode
   score       Float
@@ -426,7 +426,7 @@ enum SessionStatus {
 // Má»™t láº§n báº¥m "lĂ m bĂ i" tá»« kho Ä‘á». ÄĂ¡p Ă¡n, cĂ¢u Ä‘Ă£ chá»‘t, cĂ¢u Ä‘Ă¡nh dáº¥u vĂ  vá»‹ trĂ­ Ä‘Æ°á»£c lÆ°u liĂªn tá»¥c Ä‘á»ƒ táº£i láº¡i trang váº«n lĂ m tiáº¿p Ä‘Æ°á»£c
 model PracticeSession {
   id         String        @id @default(uuid(7)) @db.Char(36)
-  userId     Int?          @map("user_id")
+  userId     String?          @map("user_id") @db.Char(36)
   guestId    String?       @map("guest_id") @db.VarChar(64)
   examId     String        @map("exam_id") @db.Char(36)
   mode       AttemptMode
@@ -453,7 +453,7 @@ model PracticeSession {
 // Token Ä‘áº·t láº¡i máº­t kháº©u gá»­i qua email. Chá»‰ lÆ°u bÄƒm SHA-256 cá»§a token (lá»™ DB cÅ©ng khĂ´ng dĂ¹ng Ä‘Æ°á»£c), dĂ¹ng má»™t láº§n, cĂ³ háº¡n
 model PasswordResetToken {
   id        Int       @id @default(autoincrement())
-  userId    Int       @map("user_id")
+  userId    String       @map("user_id") @db.Char(36)
   tokenHash String    @unique @map("token_hash") @db.VarChar(64)
   expiresAt DateTime  @map("expires_at")
   usedAt    DateTime? @map("used_at")
@@ -470,7 +470,7 @@ model PasswordResetToken {
 // (dáº¥u hiá»‡u bá»‹ Ä‘Ă¡nh cáº¯p) thĂ¬ thu há»“i cáº£ há» `familyId`, buá»™c Ä‘Äƒng nháº­p láº¡i.
 model RefreshToken {
   id         Int       @id @default(autoincrement())
-  userId     Int       @map("user_id")
+  userId     String       @map("user_id") @db.Char(36)
   tokenHash  String    @unique @map("token_hash") @db.VarChar(64)
   familyId   String    @map("family_id") @db.VarChar(36)
   expiresAt  DateTime  @map("expires_at")
@@ -509,7 +509,7 @@ model GiftCode {
 model GiftCodeRedemption {
   id         Int      @id @default(autoincrement())
   giftCodeId String   @map("gift_code_id") @db.Char(36)
-  userId     Int      @map("user_id")
+  userId     String      @map("user_id") @db.Char(36)
   amount     Int
   createdAt  DateTime @default(now()) @map("created_at")
 
@@ -525,7 +525,7 @@ model GiftCodeRedemption {
 // Debits consume lots first (earliest expiry first); unused credit of an expired lot is removed by the expiry job.
 model CreditLot {
   id         Int      @id @default(autoincrement())
-  userId     Int      @map("user_id")
+  userId     String      @map("user_id") @db.Char(36)
   source     String   @db.VarChar(20) // GIFT_CODE
   amount     Int // credit granted
   remaining  Int // credit not yet spent or expired
@@ -552,18 +552,18 @@ model AnswerReport {
   id             String @id @default(uuid(7)) @db.Char(36)
   examId         String       @map("exam_id") @db.Char(36)
   questionNumber Int          @map("question_number")
-  userId         Int          @map("user_id")
+  userId         String          @map("user_id") @db.Char(36)
   currentAnswer  String       @map("current_answer") @db.VarChar(20) // Ä‘Ă¡p Ă¡n Ä‘ang cĂ³ lĂºc bĂ¡o cĂ¡o
   proposedAnswer String       @map("proposed_answer") @db.VarChar(20)
   reason         String       @db.VarChar(1000)
   status         ReportStatus @default(PENDING)
   reward         Int          @default(0) // credit Ä‘Ă£ thÆ°á»Ÿng (khi Ä‘Æ°á»£c duyá»‡t)
   reviewNote     String?      @map("review_note") @db.VarChar(300)
-  reviewedById   Int?         @map("reviewed_by_id")
+  reviewedById   String?         @map("reviewed_by_id") @db.Char(36)
   reviewedAt     DateTime?    @map("reviewed_at")
   createdAt      DateTime     @default(now()) @map("created_at")
   resolvedAt     DateTime?    @map("resolved_at") // admin marked it handled (drops out of the pending badge)
-  resolvedById   Int?         @map("resolved_by_id")
+  resolvedById   String?         @map("resolved_by_id") @db.Char(36)
 
   exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -593,7 +593,7 @@ model QuestionExplanation {
 // Ai Ä‘Ă£ tráº£ phĂ­ xem lá»i giáº£i thĂ­ch cĂ¢u nĂ o: mua rá»“i thĂ¬ xem láº¡i miá»…n phĂ­
 model ExplanationPurchase {
   id             Int      @id @default(autoincrement())
-  userId         Int      @map("user_id")
+  userId         String      @map("user_id") @db.Char(36)
   examId         String   @map("exam_id") @db.Char(36)
   questionNumber Int      @map("question_number")
   price          Int
@@ -611,7 +611,7 @@ model ExplanationPurchase {
 // Má»Ÿ khĂ³a Má»˜T Láº¦N toĂ n bá»™ lá»i giáº£i thĂ­ch cá»§a má»™t Ä‘á» (giĂ¡ gĂ³i, ráº» hÆ¡n mua láº»): xem má»i cĂ¢u miá»…n phĂ­ vá» sau
 model ExplanationUnlock {
   id        Int      @id @default(autoincrement())
-  userId    Int      @map("user_id")
+  userId    String      @map("user_id") @db.Char(36)
   examId    String   @map("exam_id") @db.Char(36)
   price     Int // credit Ä‘Ă£ tráº£ cho gĂ³i
   questions Int // sá»‘ cĂ¢u Ä‘Æ°á»£c má»Ÿ khĂ³a táº¡i thá»i Ä‘iá»ƒm mua
@@ -628,7 +628,7 @@ model ExplanationUnlock {
 // Má»—i láº§n táº£i bá»™ tĂ i nguyĂªn Ä‘á» thi PE (zip) lĂ  má»™t dĂ²ng: lá»‹ch sá»­ táº£i vĂ  sá»‘ credit Ä‘Ă£ tráº£
 model PeDownload {
   id        Int      @id @default(autoincrement())
-  userId    Int      @map("user_id")
+  userId    String      @map("user_id") @db.Char(36)
   threadId  String   @map("thread_id") @db.VarChar(20)
   title     String   @db.VarChar(255)
   price     Int
@@ -654,8 +654,8 @@ enum ReferralRewardType {
 // Sá»• thÆ°á»Ÿng giá»›i thiá»‡u: má»—i dĂ²ng lĂ  má»™t khoáº£n Ä‘Ă£ cá»™ng. depositOrderId duy nháº¥t Ä‘á»ƒ má»™t lá»‡nh náº¡p chá»‰ sinh hoa há»“ng má»™t láº§n.
 model ReferralReward {
   id             Int                @id @default(autoincrement())
-  referrerId     Int                @map("referrer_id")
-  referredId     Int                @map("referred_id")
+  referrerId     String                @map("referrer_id") @db.Char(36)
+  referredId     String                @map("referred_id") @db.Char(36)
   type           ReferralRewardType
   amount         Int
   depositOrderId Int?               @unique @map("deposit_order_id")
@@ -673,7 +673,7 @@ model ReferralReward {
 // Chá»‰ lÆ°u bÄƒm cá»§a token. Email chá»‰ Ä‘Æ°á»£c Ä‘á»•i khi ngÆ°á»i dĂ¹ng báº¥m liĂªn káº¿t gá»­i tá»›i Ä‘á»‹a chá»‰ Má»I.
 model EmailVerificationToken {
   id        Int       @id @default(autoincrement())
-  userId    Int       @map("user_id")
+  userId    String       @map("user_id") @db.Char(36)
   email     String    @db.VarChar(191)
   tokenHash String    @unique @map("token_hash") @db.VarChar(64)
   expiresAt DateTime  @map("expires_at")
@@ -703,7 +703,7 @@ model KbChunk {
 // Má»—i cĂ¢u há»i gá»­i chatbot: Ä‘á»ƒ giá»›i háº¡n sá»‘ cĂ¢u má»—i ngĂ y vĂ  Ä‘á»ƒ admin biáº¿t ngÆ°á»i dĂ¹ng hay há»i gĂ¬
 model ChatLog {
   id        Int      @id @default(autoincrement())
-  userId    Int?     @map("user_id")
+  userId    String?     @map("user_id") @db.Char(36)
   guestId   String?  @map("guest_id") @db.VarChar(64)
   ip        String?  @db.VarChar(64)
   question  String   @db.VarChar(500)
@@ -740,7 +740,7 @@ model ChatAnswerCache {
 // Lich su mua goi Pro (mua khi con han thi cong don: startsAt = ngay het han cu)
 model PlanPurchase {
   id        Int      @id @default(autoincrement())
-  userId    Int      @map("user_id")
+  userId    String      @map("user_id") @db.Char(36)
   plan      String   @db.VarChar(20)
   months    Int
   price     Int
@@ -758,7 +758,7 @@ model PlanPurchase {
 // dung thi len hop tiep theo (3, 7, 14, 30 ngay); dung o hop cuoi thi "tot nghiep" (mastered).
 model ReviewItem {
   id             Int       @id @default(autoincrement())
-  userId         Int       @map("user_id")
+  userId         String       @map("user_id") @db.Char(36)
   examId         String    @map("exam_id") @db.Char(36)
   questionNumber Int       @map("question_number")
   box            Int       @default(1)
@@ -781,7 +781,7 @@ model ReviewItem {
 // Cau nguoi dung tu luu de xem lai (khong lich on, khong cham diem). Tham chieu (exam_id, question_number) nen luon lay anh/dap an moi nhat
 model SavedQuestion {
   id             Int      @id @default(autoincrement())
-  userId         Int      @map("user_id")
+  userId         String      @map("user_id") @db.Char(36)
   examId         String   @map("exam_id") @db.Char(36)
   questionNumber Int      @map("question_number")
   createdAt      DateTime @default(now()) @map("created_at")
@@ -797,7 +797,7 @@ model SavedQuestion {
 // Ngay co hoc that (theo gio Viet Nam): co nop bai hoac on xong cau trong so cau sai. Dung de tinh chuoi ngay hoc va muc tieu tuan
 model StudyDay {
   id       Int      @id @default(autoincrement())
-  userId   Int      @map("user_id")
+  userId   String      @map("user_id") @db.Char(36)
   day      DateTime @db.Date
   attempts Int      @default(0)
   reviews  Int      @default(0)
@@ -862,7 +862,7 @@ model FuoThread {
 
 // Opt-in to sync FAP grades (off by default; turning it off deletes the synced grades)
 model UserGradeSetting {
-  userId   Int       @id @map("user_id")
+  userId   String       @id @map("user_id") @db.Char(36)
   enabled  Boolean   @default(false)
   syncedAt DateTime? @map("synced_at")
 
@@ -874,7 +874,7 @@ model UserGradeSetting {
 // One course of one student as shown on the FAP grade report; components keeps the rows of the mark sheet
 model UserGrade {
   id          Int      @id @default(autoincrement())
-  userId      Int      @map("user_id")
+  userId      String      @map("user_id") @db.Char(36)
   courseId    String   @map("course_id") @db.VarChar(40) // FAP course id
   subjectCode String   @map("subject_code") @db.VarChar(20)
   subjectName String   @map("subject_name") @db.VarChar(200)
@@ -895,7 +895,7 @@ model UserGrade {
 // One exam sitting from the student's FAP exam schedule (replaced as a whole on every sync, deleted with the grades)
 model UserExamSlot {
   id          Int       @id @default(autoincrement())
-  userId      Int       @map("user_id")
+  userId      String       @map("user_id") @db.Char(36)
   examDate    DateTime  @map("exam_date") @db.Date
   startTime   String    @map("start_time") @db.VarChar(5)
   endTime     String    @map("end_time") @db.VarChar(5)
@@ -916,7 +916,7 @@ model UserExamSlot {
 // Vuot link (Link4M) de nhan luot giai thich AI mien phi. Moi yeu cau co ma dung mot lan gan voi tai khoan.
 model LinkRewardRequest {
   id        Int       @id @default(autoincrement())
-  userId    Int       @map("user_id")
+  userId    String       @map("user_id") @db.Char(36)
   tokenHash String    @unique @map("token_hash") @db.Char(64) // SHA-256 cua ma trong link dich; ma goc khong luu
   shortUrl  String    @map("short_url") @db.VarChar(255)
   status    String    @default("PENDING") @db.VarChar(10) // PENDING | CLAIMED
@@ -935,7 +935,7 @@ model LinkRewardRequest {
 // Mot luot giai thich mien phi (het han sau so ngay admin dat). Dung theo thu tu sap het han truoc.
 model FreeExplainTurn {
   id                 Int       @id @default(autoincrement())
-  userId             Int       @map("user_id")
+  userId             String       @map("user_id") @db.Char(36)
   requestId          Int?      @map("request_id")
   grantedAt          DateTime  @default(now()) @map("granted_at")
   expiresAt          DateTime  @map("expires_at")
@@ -972,7 +972,7 @@ model AdminNotice {
   important Boolean   @default(false)
   title     String    @db.VarChar(200)
   body      String?   @db.VarChar(500)
-  userId    Int?      @map("user_id") // nguoi gay ra su kien (khong rang buoc khoa ngoai de giu thong bao khi xoa user)
+  userId    String?      @map("user_id") @db.Char(36) // nguoi gay ra su kien (khong rang buoc khoa ngoai de giu thong bao khi xoa user)
   link      String?   @db.VarChar(200) // trang admin lien quan
   createdAt DateTime  @default(now()) @map("created_at")
   readAt    DateTime? @map("read_at")
@@ -1016,7 +1016,7 @@ model SubjectChunk {
 // Upgrade/top-up prompt events (shown, click, dismiss) to measure prompts and A/B tests. First-party, no third party.
 model PromptEvent {
   id        Int      @id @default(autoincrement())
-  userId    Int      @map("user_id")
+  userId    String      @map("user_id") @db.Char(36)
   surface   String   @db.VarChar(40)
   event     String   @db.VarChar(12)
   createdAt DateTime @default(now()) @map("created_at")
@@ -1032,7 +1032,7 @@ model PromptEvent {
 // An unused ticket can no longer be activated after expiresAt (the buyer is told the date when buying).
 model ProTicket {
   id          String @id @default(uuid(7)) @db.Char(36)
-  userId      Int       @map("user_id")
+  userId      String       @map("user_id") @db.Char(36)
   plan        String    @db.VarChar(20) // PRO | SPRINT
   price       Int
   expiresAt   DateTime  @map("expires_at") // last moment the ticket can be activated
@@ -1139,7 +1139,7 @@ model QuestionGroupStat {
 // FSRS card (ts-fsrs) of a user for one question. Separate from the Leitner ReviewItem. state: 0 New, 1 Learning, 2 Review, 3 Relearning
 model UserQuestionCard {
   id            Int       @id @default(autoincrement())
-  userId        Int       @map("user_id")
+  userId        String       @map("user_id") @db.Char(36)
   questionId    Int       @map("question_id")
   due           DateTime
   stability     Float
@@ -1166,7 +1166,7 @@ model UserQuestionCard {
 // One FSRS review (the log returned by ts-fsrs). rating: 1 Again, 2 Hard, 3 Good, 4 Easy
 model UserReviewLog {
   id              Int      @id @default(autoincrement())
-  userId          Int      @map("user_id")
+  userId          String      @map("user_id") @db.Char(36)
   questionId      Int      @map("question_id")
   rating          Int      @db.TinyInt
   state           Int      @db.TinyInt
@@ -1205,7 +1205,7 @@ model SimilarityJobRun {
 // input_tokens includes cache creation tokens; total_tokens = input_tokens + output_tokens.
 model AiTokenUsage {
   id           Int      @id @default(autoincrement())
-  userId       Int      @map("user_id")
+  userId       String      @map("user_id") @db.Char(36)
   feature      String   @db.VarChar(30)
   inputTokens  Int      @map("input_tokens")
   outputTokens Int      @map("output_tokens")
@@ -1221,7 +1221,7 @@ model AiTokenUsage {
 // AI chat about an explained question: messages sent per user per Vietnam calendar day (day = DATE, see utils/time vnDate).
 // Incremented atomically before the AI call, decremented when the call fails.
 model ExplainChatUsage {
-  userId Int      @map("user_id")
+  userId String      @map("user_id") @db.Char(36)
   day    DateTime @db.Date
   count  Int      @default(0)
 
@@ -1235,7 +1235,7 @@ model ExplainChatUsage {
 // reason (WRONG | UNCLEAR | WRONG_SUBJECT | OTHER) và comment chỉ có khi không hữu ích; dùng để cải thiện prompt.
 model ExplanationFeedback {
   id             String @id @default(uuid(7)) @db.Char(36)
-  userId         Int      @map("user_id")
+  userId         String      @map("user_id") @db.Char(36)
   examId         String   @map("exam_id") @db.Char(36)
   questionNumber Int      @map("question_number")
   helpful        Boolean
@@ -1244,7 +1244,7 @@ model ExplanationFeedback {
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
   resolvedAt     DateTime? @map("resolved_at") // admin marked it handled; reset when the member submits a new complaint
-  resolvedById   Int?      @map("resolved_by_id")
+  resolvedById   String?      @map("resolved_by_id") @db.Char(36)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
@@ -1268,7 +1268,7 @@ enum MaterialStatus {
 // (subjects are never deleted in practice; a missing subject just hides the stats).
 model MaterialUpload {
   id            String @id @default(uuid(7)) @db.Char(36)
-  userId        Int            @map("user_id")
+  userId        String            @map("user_id") @db.Char(36)
   subjectId     Int            @map("subject_id")
   title         String         @db.VarChar(200)
   fileHash      String         @map("file_hash") @db.Char(64) // sha256 hex of the PDF, dedupe within the same user only
@@ -1326,7 +1326,7 @@ model MaterialChapter {
 // step: winback = 1..3; chien dich lap lai (pro_upsell, pro_expiry) = cycle * 10 + buoc, cycle = so ngay UTC tu 1970 (ngay gui / ngay het han Pro)
 model EmailCampaignLog {
   id         Int       @id @default(autoincrement())
-  userId     Int       @map("user_id")
+  userId     String       @map("user_id") @db.Char(36)
   campaign   String    @db.VarChar(48) // campaign key or broadcast:<uuid> (10 + 36 chars)
   step       Int
   sentAt     DateTime  @default(now()) @map("sent_at")
@@ -1362,7 +1362,7 @@ model MarketingBroadcast {
   segmentDays Int?            @map("segment_days") // inactive: days without activity (7..180)
   status      BroadcastStatus @default(DRAFT)
   sendingLock Boolean?        @unique @map("sending_lock") // true only while SENDING: at most one SENDING broadcast
-  createdById Int             @map("created_by_id")
+  createdById String             @map("created_by_id") @db.Char(36)
   createdAt   DateTime        @default(now()) @map("created_at")
 
   @@map("marketing_broadcasts")

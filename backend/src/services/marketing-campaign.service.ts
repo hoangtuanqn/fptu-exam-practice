@@ -47,10 +47,10 @@ const ago = (now: Date, days: number) => new Date(now.getTime() - days * DAY_MS)
 const ahead = (now: Date, days: number) => new Date(now.getTime() + days * DAY_MS);
 const cycleStep = (cycle: number, step: number) => cycle * STEP_CYCLE_FACTOR + step;
 
-const token = (userId: number) => signMarketingToken(env.JWT_SECRET, userId);
+const token = (userId: string) => signMarketingToken(env.JWT_SECRET, userId);
 // `c` = loại thư (không nằm trong token; token chỉ xác thực người dùng) để trang huỷ đề nghị "chỉ tắt loại thư này"
-export const unsubscribePageUrl = (userId: number, topic?: MarketingTopic) => `${env.CLIENT_URL}/unsubscribe?t=${token(userId)}${topic ? `&c=${topic}` : ""}`;
-export const oneClickUrl = (userId: number) => `${env.API_URL || env.CLIENT_URL}/api/v1/marketing/unsubscribe?t=${token(userId)}`;
+export const unsubscribePageUrl = (userId: string, topic?: MarketingTopic) => `${env.CLIENT_URL}/unsubscribe?t=${token(userId)}${topic ? `&c=${topic}` : ""}`;
+export const oneClickUrl = (userId: string) => `${env.API_URL || env.CLIENT_URL}/api/v1/marketing/unsubscribe?t=${token(userId)}`;
 const clickUrl = (logId: number) => `${env.API_URL || env.CLIENT_URL}/api/v1/marketing/click?t=${signClickToken(env.JWT_SECRET, logId)}`;
 
 // Đích của nút trong thư (đường dẫn nội bộ, lưu vào log); thư mẫu gửi thử dùng link thẳng `site(path)`
@@ -78,12 +78,12 @@ const base = (u: Recipient, key: CampaignKey) => ({ name: u.fullName, unsubscrib
 async function winbackMails(step: number, users: Recipient[], now: Date): Promise<CampaignJob[]> {
   if (users.length === 0) return [];
   const ids = users.map((u) => u.id);
-  const subjects = step < 3 ? await marketingRepository.lastSubjects(ids) : new Map<number, string>();
+  const subjects = step < 3 ? await marketingRepository.lastSubjects(ids) : new Map<string, string>();
   const codes = [...new Set(subjects.values())];
   const [due, newExams, credit] = await Promise.all([
-    step === 1 ? reminderService.collectDue(ids, now.getTime()) : new Map<number, number>(),
+    step === 1 ? reminderService.collectDue(ids, now.getTime()) : new Map<string, number>(),
     step === 2 && codes.length ? marketingRepository.newExamCounts(codes, ago(now, WINBACK_NEW_EXAMS_DAYS)) : new Map<string, number>(),
-    step === 2 ? marketingRepository.expiringCredit(ids, now, ahead(now, WINBACK_CREDIT_EXPIRY_DAYS)) : new Map<number, { amount: number; expiresAt: Date }>(),
+    step === 2 ? marketingRepository.expiringCredit(ids, now, ahead(now, WINBACK_CREDIT_EXPIRY_DAYS)) : new Map<string, { amount: number; expiresAt: Date }>(),
   ]);
   return users.map((u) => {
     const code = subjects.get(u.id) ?? null;

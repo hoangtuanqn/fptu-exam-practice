@@ -131,7 +131,7 @@ export const adminExamService = {
   },
 
   // Tải đề dạng .zip: images/NN.ext + dap-an/dap-an.txt. Ảnh thiếu thì bỏ qua, không làm hỏng cả file
-  async download(adminId: number, id: string) {
+  async download(adminId: string, id: string) {
     const exam = await examRepository.findForExport(id);
     if (!exam) throw AppError.notFound("Không tìm thấy đề");
     const tooLarge = new AppError("Đề quá lớn để tải về", HTTP_STATUS.PAYLOAD_TOO_LARGE);
@@ -151,7 +151,7 @@ export const adminExamService = {
    * Câu nào đổi đáp án thì xoá lời giải AI cũ của câu đó (đã viết theo đáp án cũ).
    * Đề chuyển sang nguồn "Chỉnh tay" để không bị AI ghi đè nhầm khi chưa chủ ý.
    */
-  async saveQuestions(adminId: number, id: string, { changes }: UpdateExamQuestionsBody) {
+  async saveQuestions(adminId: string, id: string, { changes }: UpdateExamQuestionsBody) {
     if (examSolveService.isBusy(id)) throw AppError.conflict("AI đang giải đề này, hãy chờ AI xong rồi sửa");
     const exam = await examRepository.findAdminDetail(id);
     if (!exam) throw AppError.notFound("Không tìm thấy đề");
@@ -179,7 +179,7 @@ export const adminExamService = {
     return this.detail(id);
   },
 
-  async rename(adminId: number, id: string, { title }: RenameExamBody) {
+  async rename(adminId: string, id: string, { title }: RenameExamBody) {
     if (!(await examRepository.findByThreadIdOfId(id))) throw AppError.notFound("Không tìm thấy đề");
     await prisma.exam.update({ where: { id }, data: { title, subjectCode: subjectCodeFromTitle(title) } });
     console.log(`[admin] #${adminId} đổi tên đề #${id}`);
@@ -190,7 +190,7 @@ export const adminExamService = {
    * Xoá hẳn một đề: câu hỏi, kho của người dùng, bài làm, lời giải thích đã mua đều bị xoá theo (khoá ngoại CASCADE).
    * Lượt lấy đề cũ giữ lại nhưng không còn gắn với đề. Xoá luôn thư mục ảnh; thread đó có thể được lấy lại từ đầu.
    */
-  async remove(adminId: number, id: string) {
+  async remove(adminId: string, id: string) {
     if (examSolveService.isBusy(id)) throw AppError.conflict("AI đang giải đề này, hãy chờ AI xong rồi xoá");
     const exam = await prisma.exam.findUnique({ where: { id }, select: { threadId: true } });
     if (!exam) throw AppError.notFound("Không tìm thấy đề");

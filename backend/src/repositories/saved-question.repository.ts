@@ -1,27 +1,27 @@
 import { prisma } from "../configs/prisma";
 import { newestFirst, toSkipTake, type PaginationQuery } from "../utils/pagination";
 
-const key = (userId: number, examId: string, questionNumber: number) => ({ userId_examId_questionNumber: { userId, examId, questionNumber } });
+const key = (userId: string, examId: string, questionNumber: number) => ({ userId_examId_questionNumber: { userId, examId, questionNumber } });
 
 export const savedQuestionRepository = {
   questionExists: async (examId: string, number: number) =>
     !!(await prisma.examQuestion.findFirst({ where: { examId, number, isReference: false }, select: { id: true } })),
 
-  isSaved: async (userId: number, examId: string, questionNumber: number) =>
+  isSaved: async (userId: string, examId: string, questionNumber: number) =>
     !!(await prisma.savedQuestion.findUnique({ where: key(userId, examId, questionNumber), select: { id: true } })),
 
-  count: (userId: number) => prisma.savedQuestion.count({ where: { userId } }),
+  count: (userId: string) => prisma.savedQuestion.count({ where: { userId } }),
 
   // Đã có thì bỏ qua (lưu lại cùng câu không lỗi, kể cả hai yêu cầu song song)
-  add: (userId: number, examId: string, questionNumber: number) =>
+  add: (userId: string, examId: string, questionNumber: number) =>
     prisma.savedQuestion.createMany({ data: [{ userId, examId, questionNumber }], skipDuplicates: true }),
 
-  remove: (userId: number, examId: string, questionNumber: number) => prisma.savedQuestion.deleteMany({ where: { userId, examId, questionNumber } }),
+  remove: (userId: string, examId: string, questionNumber: number) => prisma.savedQuestion.deleteMany({ where: { userId, examId, questionNumber } }),
 
-  numbersOfExam: async (userId: number, examId: string) =>
+  numbersOfExam: async (userId: string, examId: string) =>
     (await prisma.savedQuestion.findMany({ where: { userId, examId }, select: { questionNumber: true }, orderBy: { questionNumber: "asc" } })).map((r) => r.questionNumber),
 
-  async list(userId: number, query: PaginationQuery & { subject?: string }) {
+  async list(userId: string, query: PaginationQuery & { subject?: string }) {
     const where = { userId, ...(query.subject && { exam: { subjectCode: query.subject } }) };
     const [rows, total] = await Promise.all([
       prisma.savedQuestion.findMany({

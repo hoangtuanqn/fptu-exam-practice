@@ -58,15 +58,15 @@ export const attemptService = {
     return { ...attempt, review, topics: topics.topics, topicsHidden: topics.hidden };
   },
 
-  async listMine(userId: number, query: ListAttemptsQuery) {
+  async listMine(userId: string, query: ListAttemptsQuery) {
     const { items, total } = await examAttemptRepository.list(userId, query, query.examId);
     return { items, meta: toMeta(query, total) };
   },
 
-  summary: (userId: number, examId: string) => examAttemptRepository.summaryOfExam(userId, examId),
+  summary: (userId: string, examId: string) => examAttemptRepository.summaryOfExam(userId, examId),
 
   // Chỉ chủ bài làm được xem (admin cũng không xem bài của người khác)
-  async getMine(userId: number, id: string) {
+  async getMine(userId: string, id: string) {
     const attempt = await examAttemptRepository.findOfUser(id, userId);
     if (!attempt) throw AppError.notFound("Không tìm thấy bài làm");
     return { ...attempt, details: attempt.details as unknown as GradedQuestion[], violations: attempt.violations as Violation[] };

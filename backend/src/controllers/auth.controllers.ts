@@ -17,7 +17,7 @@ import { ResponseClient } from "../rules/response";
 const clientContext = (req: Request): ClientContext => ({ ip: req.ip, userAgent: req.get("user-agent") });
 
 // Đăng nhập/đăng ký xong thì mở phiên dài hạn: refresh token nằm trong cookie httpOnly, không đưa cho JavaScript
-const startSession = async (req: Request, res: Response, user: { id: number } | null) => {
+const startSession = async (req: Request, res: Response, user: { id: string } | null) => {
   if (!user) return;
   setRefreshCookie(res, (await refreshTokenService.issue(user.id, clientContext(req))).token);
 };

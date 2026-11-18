@@ -8,7 +8,7 @@ const listSelect = { id: true, code: true, amount: true, status: true, expiresAt
 const userSelect = { user: { select: { id: true, email: true, fullName: true } } } satisfies Prisma.DepositOrderSelect;
 
 export const depositRepository = {
-  create: (data: { userId: number; code: string; amount: number; expiresAt: Date }) =>
+  create: (data: { userId: string; code: string; amount: number; expiresAt: Date }) =>
     prisma.depositOrder.create({ data }),
 
   countByStatus: () => prisma.depositOrder.groupBy({ by: ["status"], _count: { _all: true } }),
@@ -33,15 +33,15 @@ export const depositRepository = {
   },
 
   // Tra theo mã nạp và luôn kèm userId: người khác biết mã cũng không xem được lệnh của bạn
-  findByCodeOfUser: (code: string, userId: number) => prisma.depositOrder.findFirst({ where: { code, userId } }),
+  findByCodeOfUser: (code: string, userId: string) => prisma.depositOrder.findFirst({ where: { code, userId } }),
 
   // Lệnh chưa thanh toán, còn hạn, cùng số tiền, tạo trong khoảng gần đây: dùng lại thay vì tạo lệnh thứ hai
-  findRecentPending: (userId: number, amount: number, since: Date) =>
+  findRecentPending: (userId: string, amount: number, since: Date) =>
     prisma.depositOrder.findFirst({ where: { userId, amount, status: "PENDING", expiresAt: { gt: new Date() }, createdAt: { gte: since } }, orderBy: { id: "desc" } }),
 
-  countPending: (userId: number) => prisma.depositOrder.count({ where: { userId, status: "PENDING" } }),
+  countPending: (userId: string) => prisma.depositOrder.count({ where: { userId, status: "PENDING" } }),
 
-  async list(query: PaginationQuery, filter: { userId?: number; status?: DepositStatus }, withUser = false) {
+  async list(query: PaginationQuery, filter: { userId?: string; status?: DepositStatus }, withUser = false) {
     const where: Prisma.DepositOrderWhereInput = { userId: filter.userId, status: filter.status };
     const [items, total] = await Promise.all([
       prisma.depositOrder.findMany({

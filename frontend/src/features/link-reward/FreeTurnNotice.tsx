@@ -14,7 +14,7 @@ export function FreeTurnNotice() {
   const { user } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
-  const doneFor = useRef<number | null>(null);
+  const doneFor = useRef<string | null>(null);
 
   useEffect(() => {
     if (!user || doneFor.current === user.id) return;

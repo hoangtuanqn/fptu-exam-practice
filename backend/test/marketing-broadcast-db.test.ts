@@ -23,10 +23,10 @@ const draft = (patch: Partial<Draft> = {}): Draft => ({ subject: "Tin mới", bo
 describe("marketing broadcasts and log (MySQL)", { skip: DB_TESTS_ENABLED ? false : DB_SKIP_REASON }, () => {
   let db: ThrowawayDb;
   let m: Awaited<ReturnType<typeof loadModules>>;
-  const ids: Record<string, number> = {};
+  const ids: Record<string, string> = {};
   const outbox: { to: string; subject: string; html: string }[] = [];
-  let mk: (key: string, data?: Record<string, unknown>) => Promise<number>;
-  let admin: { id: number; email: string; fullName: string; proExpiresAt: Date | null };
+  let mk: (key: string, data?: Record<string, unknown>) => Promise<string>;
+  let admin: { id: string; email: string; fullName: string; proExpiresAt: Date | null };
   const logs = () => m.prisma.emailCampaignLog.count();
 
   before(async () => {

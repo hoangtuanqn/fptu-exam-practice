@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import { env } from "../configs/env";
 import { prisma } from "../configs/prisma";
 import { REMINDER_EXAM_WINDOW_DAYS, REMINDER_MAX_PER_RUN, REMINDER_SEND_GAP_MS } from "../constants/reminder";
+import { userRepository } from "../repositories/user.repository";
 import { AppError } from "../rules/error";
 import { DAY_MS, vnDate } from "../utils/time";
 import { mailService } from "./mail.service";
@@ -9,28 +10,28 @@ import { mailService } from "./mail.service";
 // Email nhắc ôn: mặc định TẮT, người dùng tự bật; tối đa 1 thư mỗi ngày; thư nào cũng có liên kết hủy (không cần đăng nhập).
 // Mọi thư đều dùng chung hộp gửi với thư xác minh và đặt lại mật khẩu, nên gửi ít và đúng người để không bị đánh dấu spam.
 
-const sign = (userId: number) => crypto.createHmac("sha256", env.JWT_SECRET).update(`reminder-unsubscribe:${userId}`).digest("hex").slice(0, 32);
+const sign = (userId: string) => crypto.createHmac("sha256", env.JWT_SECRET).update(`reminder-unsubscribe:${userId}`).digest("hex").slice(0, 32);
 
-export const unsubscribeToken = (userId: number) => sign(userId);
+export const unsubscribeToken = (userId: string) => sign(userId);
 
-export const verifyUnsubscribe = (userId: number, token: string) => {
+export const verifyUnsubscribe = (userId: string, token: string) => {
   const expected = Buffer.from(sign(userId));
   const given = Buffer.from(token);
   return expected.length === given.length && crypto.timingSafeEqual(expected, given);
 };
 
-const unsubscribeLink = (userId: number) => `${env.API_URL || env.CLIENT_URL}/api/v1/public/reminder/unsubscribe?u=${userId}&t=${sign(userId)}`;
+const unsubscribeLink = (userId: string) => `${env.API_URL || env.CLIENT_URL}/api/v1/public/reminder/unsubscribe?u=${userId}&t=${sign(userId)}`;
 const dateOnly = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : null);
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export const reminderService = {
-  async get(userId: number) {
+  async get(userId: string) {
     const u = await prisma.user.findUnique({ where: { id: userId }, select: { reminderEnabled: true, examDate: true, emailVerifiedAt: true } });
     return { enabled: !!u?.reminderEnabled, examDate: dateOnly(u?.examDate ?? null), emailVerified: !!u?.emailVerifiedAt };
   },
 
-  async update(userId: number, input: { enabled: boolean; examDate: string | null }) {
+  async update(userId: string, input: { enabled: boolean; examDate: string | null }) {
     const u = await prisma.user.findUnique({ where: { id: userId }, select: { emailVerifiedAt: true } });
     if (!u) throw AppError.notFound("Không tìm thấy tài khoản");
     if (input.enabled && !u.emailVerifiedAt) throw new AppError("Bạn cần xác minh email trước khi bật nhắc ôn qua email");
@@ -39,9 +40,12 @@ export const reminderService = {
   },
 
   // Liên kết hủy trong thư: không cần đăng nhập, chỉ cần đúng chữ ký của chính người đó
-  async unsubscribe(userId: number, token: string) {
+  async unsubscribe(userId: string, token: string) {
     if (!verifyUnsubscribe(userId, token)) return false;
-    await prisma.user.updateMany({ where: { id: userId }, data: { reminderEnabled: false } });
+    // Mails sent before migration 0080 carry the old numeric user id
+    const id = /^\d+$/.test(userId) ? await userRepository.findIdByLegacyId(Number(userId)) : userId;
+    if (!id) return false;
+    await prisma.user.updateMany({ where: { id }, data: { reminderEnabled: false } });
     return true;
   },
 
@@ -49,9 +53,9 @@ export const reminderService = {
    * Trong số `userIds`, ai có câu đến hạn ôn và hôm nay chưa học. Trả map userId -> số câu đến hạn.
    * Gom theo lô (2 truy vấn cho mỗi 500 người) thay vì hỏi riêng từng người.
    */
-  async collectDue(userIds: number[], now = Date.now()) {
+  async collectDue(userIds: string[], now = Date.now()) {
     const today = vnDate(now);
-    const result = new Map<number, number>();
+    const result = new Map<string, number>();
     for (let i = 0; i < userIds.length; i += 500) {
       const ids = userIds.slice(i, i + 500);
       const [due, studied] = await Promise.all([

@@ -9,7 +9,7 @@ const load = async () => ({
   notices: (await import("../src/services/admin-notice.service")).adminNoticeService,
   mail: (await import("../src/services/mail.service")).mailService,
 });
-type Push = { kind: string; title: string; body?: string | null; userId?: number | null };
+type Push = { kind: string; title: string; body?: string | null; userId?: string | null };
 type Mail = { to: string; event: string; amount: number; balanceAfter: number | null; text: string; html: string };
 const page = { page: 1, limit: 20 };
 const hasStatus = (status: number) => (error: unknown) => (error as { status?: number }).status === status;
@@ -17,7 +17,7 @@ const hasStatus = (status: number) => (error: unknown) => (error as { status?: n
 describe("Coursera orders (throwaway MySQL)", { skip: DB_TESTS_ENABLED ? false : DB_SKIP_REASON }, () => {
   let db: ThrowawayDb;
   let m: Awaited<ReturnType<typeof load>>;
-  let userId: number, otherId: number, courseId: string;
+  let userId: string, otherId: string, courseId: string;
   const pushes: Push[] = [];
   const mails: Mail[] = [];
   const settle = () => new Promise((resolve) => setTimeout(resolve, 50)); // mails resolve the user before sending

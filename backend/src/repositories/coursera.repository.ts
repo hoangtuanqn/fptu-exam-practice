@@ -34,7 +34,7 @@ export const courseraRepository = {
   createLinkCourse(data: { url: string; title: string; price: number }) {
     return prisma.courseraCourse.create({ data: { ...data, code: null, isActive: true, listed: false } });
   },
-  async orders(query: CourseraOrdersQuery, userId?: number) {
+  async orders(query: CourseraOrdersQuery, userId?: string) {
     const where = { userId, status: query.status };
     const [items, total] = await Promise.all([
       prisma.courseraOrder.findMany({ where, select: orderSelect, orderBy: { id: "desc" }, ...toSkipTake(query) }),
@@ -42,10 +42,10 @@ export const courseraRepository = {
     ]);
     return { items, meta: toMeta(query, total) };
   },
-  findRequest(userId: number, requestKey: string) {
+  findRequest(userId: string, requestKey: string) {
     return prisma.courseraOrder.findUnique({ where: { userId_requestKey: { userId, requestKey } }, select: orderSelect });
   },
-  async createOrder(tx: Prisma.TransactionClient, data: { userId: number; courseId: string; requestKey: string; email: string; password: string; note: string; expectedPrice: number }) {
+  async createOrder(tx: Prisma.TransactionClient, data: { userId: string; courseId: string; requestKey: string; email: string; password: string; note: string; expectedPrice: number }) {
     const { expectedPrice, ...order } = data;
     // Serialize catalog edits with checkout so the accepted price and availability stay consistent.
     await tx.$queryRaw`SELECT id FROM coursera_courses WHERE id = ${data.courseId} FOR UPDATE`;
@@ -54,7 +54,7 @@ export const courseraRepository = {
     if (course.price !== expectedPrice) throw AppError.conflict("Giá khóa học đã thay đổi. Vui lòng chọn lại khóa học và xác nhận giá mới.");
     return tx.courseraOrder.create({ data: { ...order, amount: course.price, courseTitle: course.title, courseUrl: course.url ?? "" }, select: orderSelect });
   },
-  async updateStatus(tx: Prisma.TransactionClient, id: string, data: CourseraStatusBody, userId?: number) {
+  async updateStatus(tx: Prisma.TransactionClient, id: string, data: CourseraStatusBody, userId?: string) {
     const result = await tx.courseraOrder.updateMany({
       where: { id, userId, status: data.expectedStatus },
       data: {
@@ -76,7 +76,7 @@ export const courseraRepository = {
   markRefunded(tx: Prisma.TransactionClient, id: string) {
     return tx.courseraOrder.update({ where: { id }, data: { refundedAt: new Date() }, select: orderSelect });
   },
-  async credentials(id: string, adminId: number) {
+  async credentials(id: string, adminId: string) {
     return prisma.$transaction(async (tx) => {
       const result = await tx.courseraOrder.updateMany({
         where: { id, status: { in: ["PENDING", "PROCESSING"] }, password: { not: null } },

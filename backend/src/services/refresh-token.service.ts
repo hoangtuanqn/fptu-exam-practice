@@ -11,8 +11,8 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const REUSE_GRACE_MS = 10_000;
 // Ghi lần hoạt động gần nhất (đăng nhập, làm mới phiên) tối đa 1 lần mỗi giờ mỗi người; nhớ trong bộ nhớ nên không tốn thêm truy vấn để kiểm tra
 const ACTIVE_TOUCH_MS = 60 * 60 * 1000;
-const touched = new TtlCache<number, true>(ACTIVE_TOUCH_MS, 20_000);
-const touchActive = (userId: number) => {
+const touched = new TtlCache<string, true>(ACTIVE_TOUCH_MS, 20_000);
+const touchActive = (userId: string) => {
   if (touched.get(userId)) return;
   touched.set(userId, true);
   const now = new Date();
@@ -36,7 +36,7 @@ const hashToken = (token: string) => createHash("sha256").update(token).digest("
  */
 export const refreshTokenService = {
   // Gọi khi đăng nhập (mọi cách) và khi xoay vòng token, nên cũng là chỗ ghi lần hoạt động gần nhất
-  async issue(userId: number, ctx: ClientContext, familyId: string = randomUUID()) {
+  async issue(userId: string, ctx: ClientContext, familyId: string = randomUUID()) {
     touchActive(userId);
     const token = randomBytes(48).toString("base64url");
     const expiresAt = new Date(Date.now() + env.REFRESH_TOKEN_DAYS * DAY_MS);
@@ -52,7 +52,7 @@ export const refreshTokenService = {
   },
 
   /** Đổi refresh token lấy phiên mới. `refreshToken` là null khi chỉ cấp lại access token (cookie đã được tab khác thay). */
-  async rotate(raw: string, ctx: ClientContext): Promise<{ userId: number; refreshToken: string | null }> {
+  async rotate(raw: string, ctx: ClientContext): Promise<{ userId: string; refreshToken: string | null }> {
     const record = await refreshTokenRepository.findByHash(hashToken(raw));
     if (!record || record.expiresAt <= new Date()) throw AppError.unauthorized();
 
@@ -75,7 +75,7 @@ export const refreshTokenService = {
     if (record) await refreshTokenRepository.deleteFamily(record.familyId);
   },
 
-  revokeAllOfUser: (userId: number) => refreshTokenRepository.deleteAllOfUser(userId),
+  revokeAllOfUser: (userId: string) => refreshTokenRepository.deleteAllOfUser(userId),
 
   cleanup: () => refreshTokenRepository.deleteExpired(),
 };

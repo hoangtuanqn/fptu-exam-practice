@@ -11,7 +11,7 @@ const ensureDir = () => (dirReady ??= fs.mkdir(AVATARS_DIR, { recursive: true })
 
 export const avatarService = {
   // Nhận buffer ảnh thô, nén + chuyển WebP 256×256, lưu vào storage, trả về đường dẫn tương đối
-  async upload(userId: number, buffer: Buffer): Promise<string> {
+  async upload(userId: string, buffer: Buffer): Promise<string> {
     await ensureDir();
     // Tên file khác nhau mỗi lần tải: file tĩnh được cache 7 ngày (immutable), dùng chung một tên thì trình duyệt cứ hiện ảnh cũ sau khi đổi
     const relativePath = `avatars/${userId}-${Date.now().toString(36)}.webp`;

@@ -289,7 +289,7 @@ ${facts}
    */
   async streamOpenai(
     logId: number,
-    userId: number | null,
+    userId: string | null,
     matched: boolean,
     req: { upstream: ChatUpstream; instructions: string; messages: { role: "user" | "assistant"; content: string }[] },
     h: { onStart: () => void; onDelta: (text: string) => void; onStatus: (text: string) => void; signal: AbortSignal },

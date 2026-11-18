@@ -1,10 +1,10 @@
 import type { Request, Response } from "express";
 import { getValidated } from "../middlewares/validate.middlewares";
-import type { AdjustBalanceBody, IdParam, ListUsersQuery, ResetPasswordByAdminBody, UpdateUserBody } from "../rules/requests/admin.request";
+import type { AdjustBalanceBody, UuidParam, ListUsersQuery, ResetPasswordByAdminBody, UpdateUserBody } from "../rules/requests/admin.request";
 import { ResponseClient } from "../rules/response";
 import { adminUserService } from "../services/admin.user.service";
 
-const idOf = (res: Response) => getValidated<IdParam>(res, "params").id;
+const idOf = (res: Response) => getValidated<UuidParam>(res, "params").id;
 
 export const adminUserController = {
   async list(_req: Request, res: Response) {

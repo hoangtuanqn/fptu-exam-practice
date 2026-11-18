@@ -16,7 +16,7 @@ const status = (code: number) => (err: unknown) => (err as { status?: number }).
 describe("saved questions (MySQL)", { skip: DB_TESTS_ENABLED ? false : DB_SKIP_REASON }, () => {
   let db: ThrowawayDb;
   let m: Awaited<ReturnType<typeof loadModules>>;
-  let me: number, other: number, aiExam: string, defaultExam: string, notMine: string;
+  let me: string, other: string, aiExam: string, defaultExam: string, notMine: string;
 
   before(async () => {
     db = await createThrowawayDb();

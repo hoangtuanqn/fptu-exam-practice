@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { paginationQuery } from "../../utils/pagination";
+import { uuidSchema } from "./admin.request";
 
-const userId = z.coerce.number().int().positive().optional();
+const userId = uuidSchema.optional();
 const search = z.string().trim().max(100).optional(); // email hoặc tên
 
 export const listWalletQuery = paginationQuery.extend({

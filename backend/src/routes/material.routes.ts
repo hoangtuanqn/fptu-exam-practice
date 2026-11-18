@@ -12,7 +12,7 @@ import { materialIdParam, materialUploadBody } from "../rules/requests/material.
 // Mọi lần từ chối sớm (401, 403/503 ở gate, 429 của hai bộ giới hạn, lỗi multer) đọc bỏ thân yêu cầu trước khi trả lời:
 // không thì Node đóng kết nối khi thân chưa đọc hết và Nginx trả 502 thay cho lời báo lỗi.
 const byUser = {
-  keyGenerator: (req: { user?: { id: number } }) => `user:${req.user?.id ?? "anon"}`,
+  keyGenerator: (req: { user?: { id: string } }) => `user:${req.user?.id ?? "anon"}`,
   validate: { keyGeneratorIpFallback: false },
   handler: drainingLimitHandler,
 };

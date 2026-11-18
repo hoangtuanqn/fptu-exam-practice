@@ -10,9 +10,9 @@ const page = (title: string, body: string) =>
   `<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${title}</title></head><body style="font-family:sans-serif;max-width:420px;margin:15vh auto;padding:0 20px;text-align:center;color:#333"><h1 style="font-size:20px">${title}</h1><p>${body}</p></body></html>`;
 
 reminderPublicRouter.get("/unsubscribe", limiter, async (req, res) => {
-  const userId = Number(req.query.u);
+  const userId = typeof req.query.u === "string" ? req.query.u : "";
   const token = typeof req.query.t === "string" ? req.query.t : "";
-  const ok = Number.isInteger(userId) && userId > 0 && (await reminderService.unsubscribe(userId, token));
+  const ok = !!userId && (await reminderService.unsubscribe(userId, token));
   res
     .status(ok ? 200 : 400)
     .type("html")

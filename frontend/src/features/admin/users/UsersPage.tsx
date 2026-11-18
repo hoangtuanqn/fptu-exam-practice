@@ -25,7 +25,7 @@ export default function UsersPage() {
   const setRole = (v: Role | "") => setUrl({ role: v, page: "1" });
   const setStatus = (v: UserStatus | "") => setUrl({ status: v, page: "1" });
   const navigate = useNavigate();
-  const open = (id: number) => navigate(`/admin/users/${id}`);
+  const open = (id: string) => navigate(`/admin/users/${id}`);
 
   // Ô tìm kiếm gõ trực tiếp, sau khi ngừng gõ mới đưa lên URL (và về trang 1)
   const [search, setSearch, q] = useUrlSearch(url.q, setUrl);

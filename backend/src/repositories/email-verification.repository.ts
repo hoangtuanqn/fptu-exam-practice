@@ -2,10 +2,10 @@ import { prisma } from "../configs/prisma";
 import type { Db } from "./wallet.repository";
 
 export const emailVerificationRepository = {
-  create: (data: { userId: number; email: string; tokenHash: string; expiresAt: Date }) => prisma.emailVerificationToken.create({ data, select: { id: true } }),
+  create: (data: { userId: string; email: string; tokenHash: string; expiresAt: Date }) => prisma.emailVerificationToken.create({ data, select: { id: true } }),
 
   // Token mới nhất của người này, để chặn gửi thư dồn dập
-  latestOf: (userId: number) => prisma.emailVerificationToken.findFirst({ where: { userId }, orderBy: { id: "desc" }, select: { createdAt: true } }),
+  latestOf: (userId: string) => prisma.emailVerificationToken.findFirst({ where: { userId }, orderBy: { id: "desc" }, select: { createdAt: true } }),
 
   findByHash: (tokenHash: string) =>
     prisma.emailVerificationToken.findUnique({ where: { tokenHash }, select: { userId: true, email: true, usedAt: true, expiresAt: true } }),
@@ -20,7 +20,7 @@ export const emailVerificationRepository = {
   },
 
   // Gửi thư mới (hoặc xác minh xong) thì các token cũ chưa dùng của người này không còn hiệu lực
-  invalidateAll: (db: Db, userId: number) => db.emailVerificationToken.updateMany({ where: { userId, usedAt: null }, data: { usedAt: new Date() } }),
+  invalidateAll: (db: Db, userId: string) => db.emailVerificationToken.updateMany({ where: { userId, usedAt: null }, data: { usedAt: new Date() } }),
 
   // Token đã hết hạn hơn 24 giờ thì không còn dùng được và không cần giữ
   deleteExpired: async () => (await prisma.emailVerificationToken.deleteMany({ where: { expiresAt: { lt: new Date(Date.now() - 24 * 3600 * 1000) } } })).count,

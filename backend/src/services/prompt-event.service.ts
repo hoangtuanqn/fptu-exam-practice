@@ -4,7 +4,7 @@ import type { PromptEventBody } from "../rules/requests/prompt-event.request";
 import { DAY_MS } from "../utils/time";
 
 export const promptEventService = {
-  async record(userId: number, body: PromptEventBody) {
+  async record(userId: string, body: PromptEventBody) {
     await promptEventRepository.create(userId, body.surface, body.event);
   },
 

@@ -22,7 +22,7 @@ async function withExplanations(items: AdminRow[]) {
 
 // 👍/👎 cho lời giải AI của một câu: chỉ người đã được xem lời giải đó mới đánh giá được (không ai đánh giá thứ mình chưa đọc)
 export const explanationFeedbackService = {
-  async submit(actor: Actor, userId: number, { examId, questionNumber, helpful, reason, comment }: ExplainFeedbackBody) {
+  async submit(actor: Actor, userId: string, { examId, questionNumber, helpful, reason, comment }: ExplainFeedbackBody) {
     await examService.assertAccess(actor, examId);
     const entitled =
       (PRO_BENEFITS.freeExplain && (await planService.isPro(userId))) || (await explanationRepository.hasUnlocked(userId, examId)) || (await explanationRepository.hasPurchased(userId, examId, questionNumber));
@@ -37,7 +37,7 @@ export const explanationFeedbackService = {
   },
 
   /** Đánh giá hiện tại của người dùng cho một câu (null = chưa đánh giá). */
-  async mine(userId: number, examId: string, questionNumber: number) {
+  async mine(userId: string, examId: string, questionNumber: number) {
     return (await explanationFeedbackRepository.find(userId, examId, questionNumber))?.helpful ?? null;
   },
 
@@ -48,7 +48,7 @@ export const explanationFeedbackService = {
   },
 
   /** Admin đánh dấu đã giải quyết (bỏ khỏi badge). Gọi lại không đổi gì; trả về đúng dạng một dòng của danh sách. */
-  async adminResolve(adminId: number, id: string) {
+  async adminResolve(adminId: string, id: string) {
     await explanationFeedbackRepository.resolve(id, adminId);
     const row = await explanationFeedbackRepository.findAdmin(id);
     if (!row) throw AppError.notFound("Không tìm thấy đánh giá");

@@ -43,7 +43,7 @@ import { listReportsQuery, reviewReportBody } from "../rules/requests/answer-rep
 import { createGiftCodeBody, listGiftCodesQuery, updateGiftCodeBody } from "../rules/requests/gift-code.request";
 import { validate } from "../middlewares/validate.middlewares";
 import { paginationQuery } from "../utils/pagination";
-import { adjustBalanceBody, idParam, uuidParam, listUsersQuery, questionParam, renameExamBody, resetPasswordBody, updateExamQuestionsBody, updateUserBody } from "../rules/requests/admin.request";
+import { adjustBalanceBody, uuidParam, listUsersQuery, questionParam, renameExamBody, resetPasswordBody, updateExamQuestionsBody, updateUserBody } from "../rules/requests/admin.request";
 
 const adminRouter = Router();
 
@@ -54,20 +54,20 @@ adminRouter.get("/dashboard", adminDashboardController.overview);
 adminRouter.use("/insights", adminInsightsRouter);
 
 adminRouter.get("/users",validate(listUsersQuery, "query"), adminUserController.list);
-adminRouter.get("/users/:id", validate(idParam, "params"), adminUserController.get);
-adminRouter.patch("/users/:id", validate(idParam, "params"), validate(updateUserBody), adminUserController.update);
+adminRouter.get("/users/:id", validate(uuidParam, "params"), adminUserController.get);
+adminRouter.patch("/users/:id", validate(uuidParam, "params"), validate(updateUserBody), adminUserController.update);
 adminRouter.post(
   "/users/:id/balance",
-  validate(idParam, "params"),
+  validate(uuidParam, "params"),
   validate(adjustBalanceBody),
   adminUserController.adjustBalance,
 );
 
-adminRouter.get("/users/:id/summary", validate(idParam, "params"), adminUserController.summary);
-adminRouter.post("/users/:id/reset-password", validate(idParam, "params"), validate(resetPasswordBody), adminUserController.resetPassword);
-adminRouter.post("/users/:id/send-reset-link", validate(idParam, "params"), adminUserController.sendResetLink);
-adminRouter.post("/users/:id/revoke-sessions", validate(idParam, "params"), adminUserController.revokeSessions);
-adminRouter.post("/users/:id/impersonate", validate(idParam, "params"), adminUserController.impersonate);
+adminRouter.get("/users/:id/summary", validate(uuidParam, "params"), adminUserController.summary);
+adminRouter.post("/users/:id/reset-password", validate(uuidParam, "params"), validate(resetPasswordBody), adminUserController.resetPassword);
+adminRouter.post("/users/:id/send-reset-link", validate(uuidParam, "params"), adminUserController.sendResetLink);
+adminRouter.post("/users/:id/revoke-sessions", validate(uuidParam, "params"), adminUserController.revokeSessions);
+adminRouter.post("/users/:id/impersonate", validate(uuidParam, "params"), adminUserController.impersonate);
 
 adminRouter.get("/settings/chat", adminChatController.get);
 adminRouter.put("/settings/chat", validate(updateChatSettingsBody), adminChatController.update);

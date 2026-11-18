@@ -13,7 +13,7 @@ export const adminHistoryService = {
   async crawlJobs(query: ListCrawlJobsQuery) {
     const userIds = query.userId || query.search ? await adminHistoryRepository.matchUserIds(query.userId, query.search) : undefined;
     const { rows, total } = await adminHistoryRepository.crawlJobs(query, userIds);
-    const ids = [...new Set(rows.map((r) => r.userId).filter((v): v is number => v != null))];
+    const ids = [...new Set(rows.map((r) => r.userId).filter((v): v is string => v != null))];
     const byId = new Map((await adminHistoryRepository.usersByIds(ids)).map((u) => [u.id, u]));
     return {
       items: rows.map(({ guestId, userId, ...r }) => ({ ...r, guest: guestId !== null && userId === null, user: userId ? (byId.get(userId) ?? null) : null })),

@@ -36,12 +36,12 @@ const quotaOf = (used: number, pro: boolean, now = Date.now()): ChatQuota => ({
 
 // Hỏi AI về một câu đã xem lời giải: không tính thêm credit (thuộc lời giải đã trả), giới hạn số tin mỗi ngày
 export const explainChatService = {
-  async quota(userId: number): Promise<ChatQuota> {
+  async quota(userId: string): Promise<ChatQuota> {
     const [pro, used] = await Promise.all([planService.isPro(userId), explainChatUsageRepository.used(userId, vnDate())]);
     return quotaOf(used, pro);
   },
 
-  async chat(actor: Actor, userId: number, examId: string, questionNumber: number, messages: ChatMessage[]) {
+  async chat(actor: Actor, userId: string, examId: string, questionNumber: number, messages: ChatMessage[]) {
     await examService.assertAccess(actor, examId);
     const question = await examRepository.findQuestionForExplain(examId, questionNumber);
     if (!question) throw AppError.notFound("Không tìm thấy câu hỏi");

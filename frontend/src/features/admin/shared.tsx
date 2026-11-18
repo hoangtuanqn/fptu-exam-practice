@@ -4,7 +4,7 @@ import { Badge } from "@/shared/ui/Badge";
 import { formatDateTime } from "@/shared/utils/formatters";
 
 export interface UserRef {
-  id: number;
+  id: string;
   email: string;
   fullName: string;
 }

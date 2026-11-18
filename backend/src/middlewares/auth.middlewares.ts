@@ -13,8 +13,7 @@ const loadUser = async (req: Request) => {
   if (scheme !== "Bearer" || !token) throw AppError.unauthorized();
 
   const { sub } = verifyToken(token);
-  const id = Number(sub);
-  const user = await userCache.get(id, () => userRepository.findById(id));
+  const user = await userCache.get(sub, () => userRepository.findById(sub));
   if (!user) throw AppError.unauthorized();
   if (user.status === "BANNED") throw AppError.banned();
   req.user = user;

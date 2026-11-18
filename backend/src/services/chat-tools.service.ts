@@ -52,7 +52,7 @@ const RECENT_EXAMS_TOOL: Anthropic.Tool = {
 };
 
 /** Công cụ theo người đang chat: thành viên có tra cứu dữ liệu của mình + tra đề, khách chỉ tra đề gần đây. */
-export const chatToolsFor = (userId: number | null): Anthropic.Tool[] => (userId === null ? [RECENT_EXAMS_TOOL] : [...ACCOUNT_TOOLS, RECENT_EXAMS_TOOL]);
+export const chatToolsFor = (userId: string | null): Anthropic.Tool[] => (userId === null ? [RECENT_EXAMS_TOOL] : [...ACCOUNT_TOOLS, RECENT_EXAMS_TOOL]);
 
 // Câu "đang làm gì" hiện cho người dùng trong lúc công cụ chạy
 const STATUS: Record<string, string> = {
@@ -97,7 +97,7 @@ const take = (input: Record<string, unknown>) => {
 };
 const iso = (d: Date | null | undefined) => (d ? d.toISOString() : null);
 
-type Runner = (userId: number, input: Record<string, unknown>) => Promise<unknown>;
+type Runner = (userId: string, input: Record<string, unknown>) => Promise<unknown>;
 
 const RUNNERS: Record<string, Runner> = {
   async get_account_summary(userId) {
@@ -234,7 +234,7 @@ const RUNNERS: Record<string, Runner> = {
 // catalogService.exams xếp và lọc toàn bộ đề trong bộ nhớ rồi mới cắt theo limit: xin cửa sổ lớn để bộ lọc kỳ/phân trang của công cụ thấy đủ đề, không bị mất đề cũ
 const EXAMS_WINDOW = 1000;
 
-async function recentExams(input: Record<string, unknown>, userId: number | null) {
+async function recentExams(input: Record<string, unknown>, userId: string | null) {
   const subject = normalizeSubjectCode(String(input.subject ?? ""));
   if (!subject) return { error: "Mã môn không hợp lệ (ví dụ PRO192)" };
   const data = await catalogService.exams(subject, { page: 1, limit: EXAMS_WINDOW }, userId);
@@ -253,7 +253,7 @@ async function recentExams(input: Record<string, unknown>, userId: number | null
 }
 
 /** Chạy một công cụ. Lỗi hay tên lạ trả về thông báo ngắn để Claude nói lại với người dùng, không làm hỏng cuộc trò chuyện. */
-export async function runChatTool(userId: number | null, name: string, input: unknown): Promise<string> {
+export async function runChatTool(userId: string | null, name: string, input: unknown): Promise<string> {
   const args = input && typeof input === "object" ? (input as Record<string, unknown>) : {};
   try {
     if (name === "recent_exams") return JSON.stringify(await recentExams(args, userId));

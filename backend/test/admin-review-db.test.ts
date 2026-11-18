@@ -17,7 +17,7 @@ const hasStatus = (status: number) => (error: unknown) => (error as { status?: n
 describe("admin review badges (throwaway MySQL)", { skip: DB_TESTS_ENABLED ? false : DB_SKIP_REASON }, () => {
   let db: ThrowawayDb;
   let m: Awaited<ReturnType<typeof load>>;
-  let admin: number, member: number, examId: string;
+  let admin: string, member: string, examId: string;
   const counts = async () => ({ reports: await m.reports.countPending(), feedback: await m.feedback.countPending() });
   const actor = () => ({ owner: { userId: member }, isAdmin: true });
 
