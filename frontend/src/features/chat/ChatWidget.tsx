@@ -24,7 +24,7 @@ const AVATAR_SVG = MASCOT_SVG.replace(/viewBox="[^"]*" width="\d+" height="\d+"/
 const MAX_CHARS = 800;
 const MAX_TURNS = 6;
 const positive = (v: unknown, fallback: number) => (typeof v === "number" && Number.isInteger(v) && v > 0 ? v : fallback);
-const SUGGESTIONS = ["Cách lấy đề từ FuOverflow?", "Nạp credit như thế nào?", "Cài tiện ích Chrome ra sao?"];
+const SUGGESTIONS = ["Mở đề để làm bài như thế nào?", "Nạp credit như thế nào?", "Cài tiện ích Chrome ra sao?"];
 const GREETING: ChatMessage = {
   role: "assistant",
   content: "Chào bạn, mình là Cóc Pass của FEPass đây. Bạn đang vướng chỗ nào khi dùng web thì cứ hỏi mình nhé: lấy đề, làm bài, nạp credit, cài tiện ích…",
