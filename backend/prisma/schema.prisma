@@ -76,6 +76,7 @@ model User {
   materialUploads    MaterialUpload[]
   emailCampaignLogs  EmailCampaignLog[]
   savedQuestions     SavedQuestion[]
+  examComments       ExamComment[]
   referredBy         User?                @relation("Referral", fields: [referredById], references: [id], onDelete: SetNull)
   referrals          User[]               @relation("Referral")
   rewardsAsReferrer  ReferralReward[]     @relation("RewardReferrer")
@@ -288,6 +289,7 @@ model Exam {
   reviewItems ReviewItem[]
   explanationUnlocks ExplanationUnlock[]
   savedQuestions SavedQuestion[]
+  comments       ExamComment[]
   attachments ExamAttachment[]
 
   @@index([subjectCode, answerSource])
@@ -1426,4 +1428,32 @@ model FuoSourceRun {
   finishedAt  DateTime?          @map("finished_at")
 
   @@map("fuo_source_runs")
+}
+
+enum ExamCommentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// Member comment on one question of an exam. Hidden from other users until an admin approves it.
+model ExamComment {
+  id             String            @id @default(uuid(7)) @db.Char(36)
+  examId         String            @map("exam_id") @db.Char(36)
+  questionNumber Int               @map("question_number") // ExamQuestion.number in this exam
+  userId         String            @map("user_id") @db.Char(36)
+  body           String            @db.Text // plain text, trimmed, never HTML
+  status         ExamCommentStatus @default(PENDING)
+  createdAt      DateTime          @default(now()) @map("created_at")
+  reviewedAt     DateTime?         @map("reviewed_at")
+  reviewedById   String?           @map("reviewed_by_id") @db.Char(36) // admin who reviewed it (soft reference, no FK)
+  reviewNote     String?           @map("review_note") @db.VarChar(255)
+
+  exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([examId, questionNumber, status, createdAt]) // public list of one question, counts per question
+  @@index([status, createdAt]) // admin queue
+  @@index([userId, createdAt]) // rate limit and duplicate check
+  @@map("exam_comments")
 }
