@@ -262,7 +262,7 @@ model DailyCheckIn {
 
 // Äá» thi láº¥y tá»« FuOverflow. `threadId` lĂ  chá»¯ kĂ½ cá»§a Ä‘á»: nháº­p láº¡i cĂ¹ng thread (dĂ¹ link khĂ¡c) khĂ´ng táº¡o báº£n má»›i
 model Exam {
-  id             Int       @id @default(autoincrement())
+  id             String    @id @default(uuid(7)) @db.Char(36)
   threadId       String    @unique @map("thread_id") @db.VarChar(20)
   title          String    @db.VarChar(255)
   sourceUrl      String    @map("source_url") @db.VarChar(500)
@@ -298,7 +298,7 @@ model Exam {
 // Má»—i áº£nh lĂ  má»™t cĂ¢u há»i. `answer` táº¡m lĂ  "A" cho Ä‘áº¿n khi cĂ³ logic xĂ¡c Ä‘á»‹nh Ä‘Ă¡p Ă¡n Ä‘Ăºng
 model ExamQuestion {
   id          Int     @id @default(autoincrement())
-  examId      Int     @map("exam_id")
+  examId      String  @map("exam_id") @db.Char(36)
   number      Int
   name        String  @db.VarChar(100)
   imagePath   String  @map("image_path") @db.VarChar(255)
@@ -324,7 +324,7 @@ model ExamQuestion {
 // Non-image attachment of the thread (pdf, zip, video...), stored as-is under exams/<threadId>/files/
 model ExamAttachment {
   id        Int      @id @default(autoincrement())
-  examId    Int      @map("exam_id")
+  examId    String   @map("exam_id") @db.Char(36)
   name      String   @db.VarChar(255) // display name from the thread
   filePath  String   @map("file_path") @db.VarChar(255) // relative to STORAGE_DIR, like imagePath
   mime      String   @db.VarChar(100)
@@ -354,7 +354,7 @@ model CrawlJob {
   status        CrawlJobStatus @default(QUEUED)
   stage         String?        @db.VarChar(120)
   error         String?        @db.Text
-  examId        Int?           @map("exam_id")
+  examId        String?        @map("exam_id") @db.Char(36)
   chargedAmount Int            @default(0) @map("charged_amount") // phĂ­ Ä‘Ă£ trá»«, Ä‘á»ƒ hoĂ n Ä‘Ăºng sá»‘ tiá»n náº¿u job lá»—i
   refresh       Boolean        @default(false) // lÆ°á»£t lĂ m má»›i Ä‘á» cÅ© cĂ³ sáºµn trong há»‡ thá»‘ng (cháº¡y ná»n, khĂ´ng tĂ­nh phĂ­)
   createdAt     DateTime       @default(now()) @map("created_at")
@@ -375,7 +375,7 @@ model UserExam {
   id        Int      @id @default(autoincrement())
   userId    Int?     @map("user_id")
   guestId   String?  @map("guest_id") @db.VarChar(64) // khĂ¡ch chÆ°a Ä‘Äƒng nháº­p: kho riĂªng theo trĂ¬nh duyá»‡t, nháº­n vá» tĂ i khoáº£n khi Ä‘Äƒng kĂ½
-  examId    Int      @map("exam_id")
+  examId    String   @map("exam_id") @db.Char(36)
   createdAt DateTime @default(now()) @map("created_at")
 
   user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -398,7 +398,7 @@ enum AttemptMode {
 model ExamAttempt {
   id          String @id @default(uuid(7)) @db.Char(36)
   userId      Int         @map("user_id")
-  examId      Int         @map("exam_id")
+  examId      String      @map("exam_id") @db.Char(36)
   mode        AttemptMode
   score       Float
   totalGraded Int         @map("total_graded")
@@ -425,10 +425,10 @@ enum SessionStatus {
 
 // Má»™t láº§n báº¥m "lĂ m bĂ i" tá»« kho Ä‘á». ÄĂ¡p Ă¡n, cĂ¢u Ä‘Ă£ chá»‘t, cĂ¢u Ä‘Ă¡nh dáº¥u vĂ  vá»‹ trĂ­ Ä‘Æ°á»£c lÆ°u liĂªn tá»¥c Ä‘á»ƒ táº£i láº¡i trang váº«n lĂ m tiáº¿p Ä‘Æ°á»£c
 model PracticeSession {
-  id         Int           @id @default(autoincrement())
+  id         String        @id @default(uuid(7)) @db.Char(36)
   userId     Int?          @map("user_id")
   guestId    String?       @map("guest_id") @db.VarChar(64)
-  examId     Int           @map("exam_id")
+  examId     String        @map("exam_id") @db.Char(36)
   mode       AttemptMode
   status     SessionStatus @default(IN_PROGRESS)
   answers    Json
@@ -550,7 +550,7 @@ enum ReportStatus {
 // Má»—i ngÆ°á»i chá»‰ bĂ¡o cĂ¡o má»™t láº§n cho má»—i cĂ¢u (chá»‘ng láº¡m dá»¥ng).
 model AnswerReport {
   id             String @id @default(uuid(7)) @db.Char(36)
-  examId         Int          @map("exam_id")
+  examId         String       @map("exam_id") @db.Char(36)
   questionNumber Int          @map("question_number")
   userId         Int          @map("user_id")
   currentAnswer  String       @map("current_answer") @db.VarChar(20) // Ä‘Ă¡p Ă¡n Ä‘ang cĂ³ lĂºc bĂ¡o cĂ¡o
@@ -578,7 +578,7 @@ model AnswerReport {
 // Lá»i giáº£i thĂ­ch AI cá»§a má»™t cĂ¢u, lÆ°u láº¡i dĂ¹ng chung: ngÆ°á»i sau mua váº«n tráº£ phĂ­ nhÆ°ng khĂ´ng tá»‘n thĂªm lÆ°á»£t gá»i AI
 model QuestionExplanation {
   id             Int      @id @default(autoincrement())
-  examId         Int      @map("exam_id")
+  examId         String   @map("exam_id") @db.Char(36)
   questionNumber Int      @map("question_number")
   content        String   @db.Text
   model          String   @db.VarChar(60)
@@ -594,7 +594,7 @@ model QuestionExplanation {
 model ExplanationPurchase {
   id             Int      @id @default(autoincrement())
   userId         Int      @map("user_id")
-  examId         Int      @map("exam_id")
+  examId         String   @map("exam_id") @db.Char(36)
   questionNumber Int      @map("question_number")
   price          Int
   isTrial        Boolean  @default(false) @map("is_trial") // lÆ°á»£t xem thá»­ miá»…n phĂ­ (khĂ´ng trá»« credit)
@@ -612,7 +612,7 @@ model ExplanationPurchase {
 model ExplanationUnlock {
   id        Int      @id @default(autoincrement())
   userId    Int      @map("user_id")
-  examId    Int      @map("exam_id")
+  examId    String   @map("exam_id") @db.Char(36)
   price     Int // credit Ä‘Ă£ tráº£ cho gĂ³i
   questions Int // sá»‘ cĂ¢u Ä‘Æ°á»£c má»Ÿ khĂ³a táº¡i thá»i Ä‘iá»ƒm mua
   createdAt DateTime @default(now()) @map("created_at")
@@ -759,7 +759,7 @@ model PlanPurchase {
 model ReviewItem {
   id             Int       @id @default(autoincrement())
   userId         Int       @map("user_id")
-  examId         Int       @map("exam_id")
+  examId         String    @map("exam_id") @db.Char(36)
   questionNumber Int       @map("question_number")
   box            Int       @default(1)
   nextReviewAt   DateTime  @map("next_review_at")
@@ -782,7 +782,7 @@ model ReviewItem {
 model SavedQuestion {
   id             Int      @id @default(autoincrement())
   userId         Int      @map("user_id")
-  examId         Int      @map("exam_id")
+  examId         String   @map("exam_id") @db.Char(36)
   questionNumber Int      @map("question_number")
   createdAt      DateTime @default(now()) @map("created_at")
 
@@ -940,7 +940,7 @@ model FreeExplainTurn {
   grantedAt          DateTime  @default(now()) @map("granted_at")
   expiresAt          DateTime  @map("expires_at")
   usedAt             DateTime? @map("used_at")
-  usedExamId         Int?      @map("used_exam_id")
+  usedExamId         String?   @map("used_exam_id") @db.Char(36)
   usedQuestionNumber Int?      @map("used_question_number")
 
   user    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -1122,7 +1122,7 @@ model QuestionGroupStat {
   chapter                  String?   @db.VarChar(255)
   examsWithGroup           Int       @map("exams_with_group")
   totalExams               Int       @map("total_exams")
-  lastSeenExamId           Int?      @map("last_seen_exam_id")
+  lastSeenExamId           String?   @map("last_seen_exam_id") @db.Char(36)
   lastSeenAt               DateTime? @map("last_seen_at")
   representativeQuestionId Int?      @map("representative_question_id") // member in the newest exam
   recencyScore             Float     @map("recency_score")
@@ -1236,7 +1236,7 @@ model ExplainChatUsage {
 model ExplanationFeedback {
   id             String @id @default(uuid(7)) @db.Char(36)
   userId         Int      @map("user_id")
-  examId         Int      @map("exam_id")
+  examId         String   @map("exam_id") @db.Char(36)
   questionNumber Int      @map("question_number")
   helpful        Boolean
   reason         String?  @db.VarChar(20)
