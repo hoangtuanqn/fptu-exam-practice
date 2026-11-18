@@ -21,7 +21,14 @@ export interface ImportedExam {
   totalQuestions: number; // lớn hơn questions.length = đề còn đang được lấy về, các câu sau đến qua socket
   questions: Question[];
   attachments?: ExamAttachment[]; // tệp không phải ảnh (pdf, zip...); máy chủ cũ không trả về. Đề chỉ có tệp thì questions rỗng
+  // Máy chủ cũ không trả về các trường dưới: thiếu kind thì đề chỉ có tệp coi là PE, còn lại là FE (xem examKind)
+  kind?: ExamKind;
+  description?: string | null; // nội dung bài đăng gốc (văn bản thuần)
+  subjectCode?: string | null;
+  postedAt?: string | null;
 }
+
+export type ExamKind = "FE" | "PE" | "QUIZ" | "OTHER";
 
 // Tệp đính kèm của đề. url công khai, mở thẳng bằng <a href>; thêm download=1 để tải về
 export interface ExamAttachment {
@@ -35,6 +42,8 @@ export interface ExamAttachment {
 
 // Đề chỉ có tệp đính kèm, không có câu hỏi để làm trên web
 export const isFilesOnly = (e: ImportedExam) => e.totalQuestions === 0 && e.questions.length === 0 && (e.attachments?.length ?? 0) > 0;
+
+export const examKind = (e: ImportedExam): ExamKind => e.kind ?? (isFilesOnly(e) ? "PE" : "FE");
 
 // Sự kiện realtime "exam:answers" (cũng là kết quả GET /exams/:id/answers, không có examId)
 export interface ExamAnswersPayload {

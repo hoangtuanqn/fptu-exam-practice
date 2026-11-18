@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { BookOpen, Crown, Menu, ShoppingBag } from "lucide-react";
 import { IconButton } from "@/shared/ui/Button";
+import { isPracticePath } from "@/shared/utils/practicePath";
 
 // Điều hướng chính dùng chung cho header trang chủ, /features, /kho-de, /pro. Từ màn hình vừa trở lên hiện thành hàng; điện thoại gom vào nút menu.
 export function SiteNav() {
@@ -13,8 +14,8 @@ export function SiteNav() {
   return (
     <>
     <div className="relative md:hidden">
-      {/* Trang làm đề (/exam/) giữ thanh trên gọn, không thêm nút */}
-      {!pathname.startsWith("/exam/") && (
+      {/* Màn hình làm bài (/exam/:id/practice) giữ thanh trên gọn, không thêm nút */}
+      {!isPracticePath(pathname) && (
         <IconButton label="Mở menu điều hướng" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
           <Menu size={22} />
         </IconButton>

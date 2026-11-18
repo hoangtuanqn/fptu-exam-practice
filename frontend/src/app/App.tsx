@@ -20,7 +20,7 @@ import { FreeTurnNotice } from "@/features/link-reward/FreeTurnNotice";
 import { WhatsNewDialog } from "@/features/changelog/WhatsNewDialog";
 import PracticePage from "@/features/practice/PracticePage";
 
-// "/" và "/exam/:examId" dùng chung một thể hiện của trang để đổi địa chỉ không làm mất bài đang làm
+// "/" và "/exam/:examId/practice" dùng chung một thể hiện của trang để đổi địa chỉ không làm mất bài đang làm
 function PracticeRoute() {
   const examId = useParams().examId;
   return <PracticePage examId={isUuid(examId) ? examId : undefined} />;
@@ -42,7 +42,7 @@ const TransactionsPage = lazy(() => import("@/features/account/pages/Transaction
 const ExamStorePage = lazy(() => import("@/features/exam-store/ExamStorePage"));
 const ReviewPage = lazy(() => import("@/features/review/ReviewPage"));
 const SavedPage = lazy(() => import("@/features/saved/SavedPage"));
-const ExamViewPage = lazy(() => import("@/features/exam-view/ExamViewPage"));
+const ExamDetailPage = lazy(() => import("@/features/exam-view/ExamDetailPage"));
 const SubjectPage = lazy(() => import("@/features/landing/SubjectPage"));
 const PublicCatalogPage = lazy(() => import("@/features/exam-store/PublicCatalogPage"));
 const FrequentPage = lazy(() => import("@/features/frequent/FrequentPage"));
@@ -101,9 +101,9 @@ export default function App() {
       <ChatWidget />
       <Routes>
         <Route path="/" element={<PracticeRoute />} />
-        <Route path="/exam/:examId" element={<PracticeRoute />} />
-        {/* Xem đề chỉ đọc: công khai như trang làm đề (người xem cần có đề trong kho) */}
-        <Route path="/exam/:examId/view" element={<ExamViewPage />} />
+        {/* Chi tiết đề: công khai như trang làm đề (người xem cần có đề trong kho); chọn Luyện tập/Thi ở đây */}
+        <Route path="/exam/:examId" element={<ExamDetailPage />} />
+        <Route path="/exam/:examId/practice" element={<PracticeRoute />} />
         {M3Gallery && <Route path="/dev/m3" element={<Suspense fallback={null}><M3Gallery /></Suspense>} />}
 
         {/* Bảng tính năng của hệ thống (để giới thiệu/chụp màn hình): công khai */}

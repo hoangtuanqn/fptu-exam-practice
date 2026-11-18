@@ -22,7 +22,8 @@ export function JumpNav({ numbers, onJump }: { numbers: number[]; onJump: (n: nu
         </div>
       </nav>
 
-      <Fab label="Câu" extended className="fixed bottom-4 right-4 z-20 md:hidden" onClick={() => setOpen(true)}>
+      {/* Bên trái: góc phải là nút trợ lý chat */}
+      <Fab label="Câu" extended className="fixed bottom-4 left-4 z-20 md:hidden" onClick={() => setOpen(true)}>
         <ListOrdered size={20} />
       </Fab>
       {open && (
