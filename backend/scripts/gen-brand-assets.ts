@@ -4,7 +4,7 @@
  *  - favicon.ico, favicon-32.png, icon-192.png, icon-512.png, apple-touch-icon.png, og-cover.jpg (ảnh chia sẻ link)
  *  - chrome-extension/icons/icon{16,32,48,128}.png
  *  - backend/assets/mail/logo.png (logo ở chữ ký email) + cover.png (ảnh bìa email)
- * Chạy:  npx tsx scripts/gen-brand-assets.ts      (phông Inter: assets/fonts/Inter-*.ttf; logo MST cũ giữ ở public/brand/mst-logo-*.png)
+ * Chạy:  npx tsx scripts/gen-brand-assets.ts      (phông Inter: assets/fonts/Inter-*.ttf)
  */
 import fs from "node:fs/promises";
 import path from "node:path";
