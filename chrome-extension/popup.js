@@ -263,14 +263,10 @@ async function load() {
   showUpdate();
   const s = await fepassGetSettings();
   $("ver").textContent = `Phiên bản ${chrome.runtime.getManifest().version}`;
-  $("enabled").checked = s.enabled;
   $("siteUrl").value = s.siteUrl;
-  $("apiUrl").value = s.apiUrl;
   await render();
 }
 
-// Công tắc lưu ngay
-$("enabled").addEventListener("change", () => chrome.storage.sync.set({ enabled: $("enabled").checked }));
 $("syncToggle").addEventListener("change", () => {
   if ($("syncToggle").checked) return void changeSync(true);
   $("syncToggle").checked = true; // tắt thì xoá dữ liệu: hỏi xác nhận trước
@@ -281,17 +277,14 @@ $("welcomeOk").addEventListener("click", () => chrome.storage.local.set({ onboar
 
 $("save").addEventListener("click", async () => {
   const site = fepassSanitizeUrl($("siteUrl").value, null);
-  const api = fepassSanitizeUrl($("apiUrl").value, null);
-  if (!site || !api) return msg("Địa chỉ phải bắt đầu bằng https:// (hoặc http://localhost khi chạy thử).", true);
-  await chrome.storage.sync.set({ siteUrl: site, apiUrl: api });
-  await chrome.storage.local.remove("prices"); // đổi API thì bỏ giá đã nhớ
+  if (!site) return msg("Địa chỉ phải bắt đầu bằng https:// (hoặc http://localhost khi chạy thử).", true);
+  await chrome.storage.sync.set({ siteUrl: site });
   await render();
   msg("Đã lưu.");
 });
 
 $("reset").addEventListener("click", async () => {
-  await chrome.storage.sync.set({ siteUrl: FEPASS_DEFAULTS.siteUrl, apiUrl: FEPASS_DEFAULTS.apiUrl });
-  await chrome.storage.local.remove("prices");
+  await chrome.storage.sync.set({ siteUrl: FEPASS_DEFAULTS.siteUrl });
   await load();
   msg("Đã về mặc định.");
 });

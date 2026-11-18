@@ -420,6 +420,24 @@
   ],
   "extension": [
     {
+      "version": "1.6.0",
+      "date": "2026-11-18",
+      "title": "Tiện ích gọn hơn, tập trung vào điểm FAP",
+      "highlights": [
+        "Tiện ích chỉ còn đồng bộ điểm và lịch thi FAP khi bạn bật"
+      ],
+      "changes": [
+        {
+          "type": "improved",
+          "text": "Bỏ nút “Làm đề” và “Tải đề PE” trên FuOverflow"
+        },
+        {
+          "type": "improved",
+          "text": "Tiện ích chỉ đồng bộ điểm và lịch thi trên FAP khi bạn bật đồng bộ"
+        }
+      ]
+    },
+    {
       "version": "1.5.0",
       "date": "2026-11-10",
       "title": "Popup mới, đồng bộ điểm FAP ngay trong tiện ích",
