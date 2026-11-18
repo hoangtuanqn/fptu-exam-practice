@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { BookOpen, FileSearch, Timer, X } from "lucide-react";
 import { examImportApi } from "@/features/exam-import/exam-import.api";
-import type { ExamAttachment, ExamQuestionsPayload, ImportedExam } from "@/features/exam-import/types";
+import { canPractice, type ExamAttachment, type ExamQuestionsPayload, type ImportedExam } from "@/features/exam-import/types";
 import { downloadUrl, ICONS, OPENABLE } from "@/features/exam-attachments/AttachmentList";
 import { ExamKindBadge } from "@/features/exam-store/ExamKindBadge";
 import { NewExamBadge } from "@/features/exam-store/NewExamBadge";
@@ -75,8 +75,7 @@ function Preview({ exam }: { exam: ImportedExam }) {
   const kind = exam.kind ?? "FE";
   const term = exam.title.match(/\b(?:SP|SU|FA)\d{2}\b/i)?.[0].toUpperCase() ?? null;
   const items = questions.filter((q) => !q.isReference).length;
-  // FE: làm được khi có câu; Quiz/Khác: chỉ khi có câu có đáp án; PE: không làm trên web
-  const playable = kind === "FE" ? items > 0 || fetching : kind !== "PE" && questions.some((q) => !q.isReference && q.correct.length > 0);
+  const playable = canPractice(kind, total);
 
   // Đề vừa lấy về có thể còn đang tải ảnh: các trang mới hiện dần
   useExamQuestionsLive(

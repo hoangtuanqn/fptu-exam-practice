@@ -6,7 +6,7 @@ import { historyApi } from "@/features/history/history.api";
 import type { TopicSummary } from "@/features/history/types";
 import { pendingAttempt } from "@/features/guest-sync/pendingAttempt";
 import { examImportApi } from "@/features/exam-import/exam-import.api";
-import { isFilesOnly, type ExamAttachment } from "@/features/exam-import/types";
+import { canPractice, isFilesOnly, type ExamAttachment } from "@/features/exam-import/types";
 import { FilesOnlyExam } from "@/features/exam-attachments/FilesOnlyExam";
 import { sessionApi } from "@/features/practice-session/session.api";
 import { useSessionSync } from "@/features/practice-session/useSessionSync";
@@ -238,6 +238,12 @@ export default function PracticePage({ examId }: Props) {
         if (stale) return;
         loadedFor.current = examId; // đã tải xong đề này
         setAttachments({ examId: exam.id, list: exam.attachments ?? [] });
+        // Không phải đề FE đủ câu: chỉ xem trước, không hỏi chế độ
+        if (!canPractice(exam.kind, exam.totalQuestions)) {
+          quiz.closeExam();
+          navigate(`/exam/${exam.id}/preview`, { replace: true });
+          return;
+        }
         // Đề chỉ có tệp: không có câu để làm, không tạo lượt làm bài
         if (isFilesOnly(exam)) {
           quiz.closeExam(); // đang mở đề khác (đi tiếp từ bộ đề) thì gỡ đề đó ra
