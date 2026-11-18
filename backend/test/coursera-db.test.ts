@@ -17,7 +17,7 @@ const hasStatus = (status: number) => (error: unknown) => (error as { status?: n
 describe("Coursera orders (throwaway MySQL)", { skip: DB_TESTS_ENABLED ? false : DB_SKIP_REASON }, () => {
   let db: ThrowawayDb;
   let m: Awaited<ReturnType<typeof load>>;
-  let userId: number, otherId: number, courseId: number;
+  let userId: number, otherId: number, courseId: string;
   const pushes: Push[] = [];
   const mails: Mail[] = [];
   const settle = () => new Promise((resolve) => setTimeout(resolve, 50)); // mails resolve the user before sending
@@ -225,6 +225,6 @@ describe("Coursera orders (throwaway MySQL)", { skip: DB_TESTS_ENABLED ? false :
     assert.equal((await m.prisma.user.findUniqueOrThrow({ where: { id: buyer.id } })).balance, 100);
     await settle();
     assert.equal(noteMails().length, 2);
-    await assert.rejects(m.service.updateNote(2147483647, { adminNote: "x" }), hasStatus(404));
+    await assert.rejects(m.service.updateNote("00000000-0000-7000-8000-000000000000", { adminNote: "x" }), hasStatus(404));
   });
 });

@@ -66,7 +66,7 @@ export const attemptService = {
   summary: (userId: number, examId: number) => examAttemptRepository.summaryOfExam(userId, examId),
 
   // Chỉ chủ bài làm được xem (admin cũng không xem bài của người khác)
-  async getMine(userId: number, id: number) {
+  async getMine(userId: number, id: string) {
     const attempt = await examAttemptRepository.findOfUser(id, userId);
     if (!attempt) throw AppError.notFound("Không tìm thấy bài làm");
     return { ...attempt, details: attempt.details as unknown as GradedQuestion[], violations: attempt.violations as Violation[] };

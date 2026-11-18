@@ -24,14 +24,14 @@ describe("Coursera validation", () => {
       assert.equal(courseraCourseBody.safeParse({ ...course, price }).success, false);
     }
     assert.equal(courseraCourseBody.parse({ ...course, price: 25000 }).price, 25000);
-    const order = { courseId: 1, requestKey: "d04d43e4-aeac-4ccb-9ec3-34ea25be01ab", email: "test@example.invalid", password: "test" };
+    const order = { courseId: "0190a3c4-5b6d-7e8f-9a0b-1c2d3e4f5a6b", requestKey: "d04d43e4-aeac-4ccb-9ec3-34ea25be01ab", email: "test@example.invalid", password: "test" };
     assert.equal(courseraOrderBody.parse(order).expectedPrice, 0);
     assert.equal(courseraOrderBody.safeParse({ ...order, expectedPrice: -1 }).success, false);
   });
   it("validates order fields without trimming the account password", () => {
-    const body = { courseId: 1, requestKey: "d04d43e4-aeac-4ccb-9ec3-34ea25be01ab", email: "test@example.invalid", password: " secret ", note: " Note " };
+    const body = { courseId: "0190a3c4-5b6d-7e8f-9a0b-1c2d3e4f5a6b", requestKey: "d04d43e4-aeac-4ccb-9ec3-34ea25be01ab", email: "test@example.invalid", password: " secret ", note: " Note " };
     assert.equal(courseraOrderBody.parse(body).password, " secret ");
-    for (const invalid of [{ password: "" }, { email: "invalid" }, { courseId: -1 }, { requestKey: "invalid" }, { note: "x".repeat(2001) }]) {
+    for (const invalid of [{ password: "" }, { email: "invalid" }, { courseId: 1 }, { courseId: "x" }, { requestKey: "invalid" }, { note: "x".repeat(2001) }]) {
       assert.equal(courseraOrderBody.safeParse({ ...body, ...invalid }).success, false);
     }
   });

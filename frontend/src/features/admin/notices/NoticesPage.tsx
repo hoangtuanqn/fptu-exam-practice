@@ -105,7 +105,7 @@ export default function NoticesPage() {
   const counts = useNoticeCounts();
   const arrived = useNoticeVersion();
   const [url, setUrl] = useUrlState({ tab: "unread", cat: "all", page: "1" });
-  const [busy, setBusy] = useState<number | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
 
   const tab: Tab =
     url.tab === "important" || url.tab === "all" ? url.tab : "unread";

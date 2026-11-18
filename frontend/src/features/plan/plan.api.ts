@@ -24,7 +24,7 @@ export interface PurchaseResult {
 
 // Vé Pro chưa kích hoạt
 export interface ProTicket {
-  id: number;
+  id: string;
   plan: string; // PRO | SPRINT
   name: string;
   duration: string; // "4 tháng" | "14 ngày"
@@ -34,7 +34,7 @@ export interface ProTicket {
 }
 
 export interface TicketPurchaseResult {
-  ticket: { id: number; plan: string; expiresAt: string };
+  ticket: { id: string; plan: string; expiresAt: string };
   balanceAfter: number;
   user: User;
 }
@@ -57,5 +57,5 @@ export const planApi = {
   signals: () => http.get<PlanSignals>("/plan/signals"),
   tickets: () => http.get<ProTicket[]>("/plan/tickets"),
   buyTicket: (plan: "PRO" | "SPRINT" = "PRO") => http.post<TicketPurchaseResult>("/plan/tickets", { plan }),
-  activateTicket: (id: number) => http.post<ActivateResult>(`/plan/tickets/${id}/activate`, {}),
+  activateTicket: (id: string) => http.post<ActivateResult>(`/plan/tickets/${id}/activate`, {}),
 };

@@ -4,7 +4,7 @@ export type AttemptMode = "PRACTICE" | "EXAM";
 export type Outcome = "correct" | "wrong" | "skipped" | "ungraded";
 
 export interface AttemptSummary {
-  id: number;
+  id: string;
   examId: number;
   mode: AttemptMode;
   score: number; // thang 10

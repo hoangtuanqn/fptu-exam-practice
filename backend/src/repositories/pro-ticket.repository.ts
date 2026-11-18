@@ -20,7 +20,7 @@ export const proTicketRepository = {
    * Đánh dấu vé đã dùng. Chỉ thành công khi vé là của đúng người này, chưa dùng và chưa hết hạn; trả về số dòng đổi
    * (0 = không hợp lệ hoặc đã dùng). Một câu UPDATE có điều kiện nên hai lần bấm cùng lúc chỉ một lần được tính.
    */
-  claim: (db: Db, id: number, userId: number, now: Date) => db.proTicket.updateMany({ where: { id, userId, activatedAt: null, expiresAt: { gt: now } }, data: { activatedAt: now } }),
+  claim: (db: Db, id: string, userId: number, now: Date) => db.proTicket.updateMany({ where: { id, userId, activatedAt: null, expiresAt: { gt: now } }, data: { activatedAt: now } }),
 
-  findPlan: (db: Db, id: number) => db.proTicket.findUnique({ where: { id }, select: { plan: true, price: true } }),
+  findPlan: (db: Db, id: string) => db.proTicket.findUnique({ where: { id }, select: { plan: true, price: true } }),
 };

@@ -78,7 +78,7 @@ export const answerReportService = {
   },
 
   /** Admin đánh dấu đã giải quyết (bỏ khỏi badge). Gọi lại không đổi gì; trả về đúng dạng một dòng của danh sách. */
-  async resolve(adminId: number, id: number) {
+  async resolve(adminId: number, id: string) {
     await answerReportRepository.resolve(id, adminId);
     const report = await answerReportRepository.findAdmin(id);
     if (!report) throw AppError.notFound("Không tìm thấy báo cáo");
@@ -90,7 +90,7 @@ export const answerReportService = {
   /**
    * Duyệt đúng: chốt báo cáo (UPDATE có điều kiện), sửa đáp án của câu, thưởng credit cho người báo cáo. Cùng một transaction.
    */
-  async approve(adminId: number, id: number, { note }: ReviewReportBody) {
+  async approve(adminId: number, id: string, { note }: ReviewReportBody) {
     const result = await prisma.$transaction(async (tx) => {
       const report = await answerReportRepository.findPending(tx, id);
       if (!report) throw AppError.conflict("Báo cáo không còn ở trạng thái chờ duyệt");
@@ -119,7 +119,7 @@ export const answerReportService = {
     return { id, status: "APPROVED" as const, reward: ANSWER_REPORT_REWARD };
   },
 
-  async reject(adminId: number, id: number, { note }: ReviewReportBody) {
+  async reject(adminId: number, id: string, { note }: ReviewReportBody) {
     const done = await prisma.$transaction(async (tx) => {
       if (!(await answerReportRepository.findPending(tx, id))) return false;
       return answerReportRepository.review(tx, id, { status: "REJECTED", reward: 0, reviewNote: note, reviewedById: adminId });

@@ -11,6 +11,7 @@ import { PdfRenderUnavailableError, type PdfEngine } from "../src/services/mater
 
 const NOW = new Date("2026-11-11T12:00:00.000Z");
 const USER = 7;
+const UPLOAD_ID = "0190a3c4-5b6d-7e8f-9a0b-1c2d3e4f5a6b";
 const CHAPTERS = [
   { number: 0, title: "Khác" },
   { number: 1, title: "Processes" },
@@ -18,7 +19,7 @@ const CHAPTERS = [
 ];
 
 interface Upload {
-  id: number;
+  id: string;
   userId: number;
   subjectId: number;
   pageCount: number;
@@ -28,7 +29,7 @@ interface Upload {
 }
 
 function memoryStore(pageCount: number) {
-  const upload: Upload = { id: 1, userId: USER, subjectId: 3, pageCount, status: "RUNNING", error: null, progress: [0, 0] };
+  const upload: Upload = { id: UPLOAD_ID, userId: USER, subjectId: 3, pageCount, status: "RUNNING", error: null, progress: [0, 0] };
   const pages = new Map<number, PageRow>();
   const chapters = new Map<number, { summary: string; keyPoints: unknown }>();
   let deleted = false;
@@ -172,7 +173,7 @@ function setup({ kinds, respond, limit = 1_000_000, priorUsage = 0 }: { kinds: P
 describe("material job state machine", () => {
   it("success: extracts, describes figure pages, assigns, summarises, marks DONE and deletes the PDF", async () => {
     const t = setup({ kinds: ["text", "figure", "text", "scanned", "text"], respond: defaultResponder() });
-    assert.equal(await t.run(1), "DONE");
+    assert.equal(await t.run(UPLOAD_ID), "DONE");
     assert.equal(t.mem.upload.status, "DONE");
     assert.equal(t.mem.upload.error, null);
     assert.equal(t.pdf.stats.rendered, 2); // chỉ trang hình và trang scan
@@ -201,7 +202,7 @@ describe("material job state machine", () => {
       kinds: ["figure", "text"],
       respond: defaultResponder((req) => (req.model === MATERIAL_VISION_MODEL ? figureJson("medium", ["label on arrow"]) : figureJson("high"))),
     });
-    assert.equal(await t.run(1), "DONE");
+    assert.equal(await t.run(UPLOAD_ID), "DONE");
     const figureModels = t.ai.requests.filter((r) => kindOf(r) === "figure").map((r) => r.model);
     assert.deepEqual(figureModels, [MATERIAL_VISION_MODEL, MATERIAL_FALLBACK_MODEL]);
     assert.equal((t.mem.pages.get(1)!.figure as { model: string; confidence: string }).model, MATERIAL_FALLBACK_MODEL);
@@ -210,7 +211,7 @@ describe("material job state machine", () => {
 
   it("does not fall back when Haiku is confident", async () => {
     const t = setup({ kinds: ["figure"], respond: defaultResponder(() => figureJson("medium")) });
-    assert.equal(await t.run(1), "DONE");
+    assert.equal(await t.run(UPLOAD_ID), "DONE");
     assert.deepEqual(t.ai.requests.filter((r) => kindOf(r) === "figure").map((r) => r.model), [MATERIAL_VISION_MODEL]);
   });
 
@@ -218,7 +219,7 @@ describe("material job state machine", () => {
     // Giới hạn đủ qua bước ước lượng (21.6k) nhưng hết sau vài lần gọi hình (mỗi lần tốn 6000 token)
     const kinds: PageKind[] = ["figure", "figure", "figure", "figure", "figure", "figure"];
     const t = setup({ kinds, limit: 22_000, respond: (req) => (kindOf(req) === "figure" ? { text: figureJson("high"), input: 5000, output: 1000 } : defaultResponder()(req)) });
-    assert.equal(await t.run(1), "FAILED");
+    assert.equal(await t.run(UPLOAD_ID), "FAILED");
     assert.equal(t.mem.upload.status, "FAILED");
     assert.match(t.mem.upload.error!, /^Bạn đã dùng hết lượt phân tích slide hiện có\. Thử lại sau \d{2}:\d{2} ngày \d{2}\/\d{2}\.$/);
     const spent = t.usage.reduce((s, u) => s + u.totalTokens, 0);
@@ -230,7 +231,7 @@ describe("material job state machine", () => {
 
   it("refuses before spending anything when the full estimate does not fit", async () => {
     const t = setup({ kinds: ["figure", "figure"], limit: 1_000_000, priorUsage: 995_000, respond: defaultResponder() });
-    assert.equal(await t.run(1), "FAILED");
+    assert.equal(await t.run(UPLOAD_ID), "FAILED");
     assert.equal(t.ai.requests.length, 0);
     assert.match(t.mem.upload.error!, /Thử lại sau/);
     assert.equal(t.files.present, false);
@@ -238,7 +239,7 @@ describe("material job state machine", () => {
 
   it("any other error: FAILED with a short message (no internals) and the PDF is deleted", async () => {
     const t = setup({ kinds: ["figure", "text"], respond: () => new Error("Anthropic 500: InternalServerError sk-ant-secret") });
-    assert.equal(await t.run(1), "FAILED");
+    assert.equal(await t.run(UPLOAD_ID), "FAILED");
     assert.equal(t.mem.upload.error, MATERIAL_MESSAGES.generic);
     assert.ok(!t.mem.upload.error!.includes("Anthropic"));
     assert.equal(t.files.present, false);
@@ -253,7 +254,7 @@ describe("material job state machine", () => {
         return { ...h, pageCount: h.pageCount, renderPng: async () => Promise.reject(new PdfRenderUnavailableError("@napi-rs/canvas: Cannot find module")) };
       },
     };
-    assert.equal(await createMaterialJob(t.deps)(1), "FAILED");
+    assert.equal(await createMaterialJob(t.deps)(UPLOAD_ID), "FAILED");
     assert.equal(t.mem.upload.error, MATERIAL_MESSAGES.renderUnavailable);
     assert.ok(t.logs.some((l) => l.includes("@napi-rs/canvas")));
     assert.equal(t.ai.requests.length, 0);
@@ -263,7 +264,7 @@ describe("material job state machine", () => {
   it("AI disabled in admin config: FAILED with a clean message, no calls", async () => {
     const t = setup({ kinds: ["text"], respond: defaultResponder() });
     t.deps.client = async () => null;
-    assert.equal(await createMaterialJob(t.deps)(1), "FAILED");
+    assert.equal(await createMaterialJob(t.deps)(UPLOAD_ID), "FAILED");
     assert.equal(t.mem.upload.error, MATERIAL_MESSAGES.aiOff);
     assert.equal(t.files.present, false);
   });
@@ -272,7 +273,7 @@ describe("material job state machine", () => {
     // Lần 1: hình được mô tả rồi hết token ngay trước bước gán chương
     const kinds: PageKind[] = ["figure", "text", "text"];
     const t = setup({ kinds, limit: 30_000, respond: (req) => (kindOf(req) === "figure" ? { text: figureJson("high"), input: 24_000, output: 1000 } : defaultResponder()(req)) });
-    assert.equal(await t.run(1), "FAILED");
+    assert.equal(await t.run(UPLOAD_ID), "FAILED");
     assert.deepEqual(t.ai.requests.map(kindOf), ["figure"]);
     assert.notEqual(t.mem.pages.get(1)!.figure, null);
 
@@ -281,7 +282,7 @@ describe("material job state machine", () => {
     t.usage.length = 0;
     t.ai.requests.length = 0;
     const savePagesBefore = t.mem.calls.savePages;
-    assert.equal(await t.run(1), "DONE");
+    assert.equal(await t.run(UPLOAD_ID), "DONE");
     assert.equal(t.mem.calls.savePages, savePagesBefore);
     assert.deepEqual(t.ai.requests.map(kindOf), ["assign", "chapter", "chapter"]); // hình đã có: không gọi lại
     assert.equal(t.mem.upload.status, "DONE");
@@ -296,14 +297,14 @@ describe("material job state machine", () => {
         return defaultResponder()(req);
       },
     });
-    assert.equal(await t.run(1), "CANCELLED");
+    assert.equal(await t.run(UPLOAD_ID), "CANCELLED");
     assert.equal(t.ai.requests.length, 1);
     assert.equal(t.files.present, false);
   });
 
   it("unparsable figure output from both models: the page is kept as text, the job still finishes", async () => {
     const t = setup({ kinds: ["figure", "text"], respond: defaultResponder(() => '{"figure_type": "diag') });
-    assert.equal(await t.run(1), "DONE");
+    assert.equal(await t.run(UPLOAD_ID), "DONE");
     assert.equal(t.mem.pages.get(1)!.kind, "text");
     assert.equal(t.mem.pages.get(1)!.figure, null);
   });

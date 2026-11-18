@@ -55,7 +55,7 @@ export const giftCodeService = {
     return { items: items.map((g) => ({ ...g, status: statusOf(g) })), meta: toMeta(query, total) };
   },
 
-  async setActive(id: number, active: boolean) {
+  async setActive(id: string, active: boolean) {
     try {
       const updated = await giftCodeRepository.setActive(id, active);
       return { ...updated, status: statusOf(updated) };
@@ -65,7 +65,7 @@ export const giftCodeService = {
     }
   },
 
-  async redemptions(id: number, query: PaginationQuery) {
+  async redemptions(id: string, query: PaginationQuery) {
     const { items, total } = await giftCodeRepository.listRedemptions(id, query);
     return { items, meta: toMeta(query, total) };
   },

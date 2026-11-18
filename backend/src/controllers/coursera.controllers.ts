@@ -1,11 +1,11 @@
 import type { Request, Response } from "express";
 import { getValidated } from "../middlewares/validate.middlewares";
-import type { IdParam } from "../rules/requests/admin.request";
+import type { UuidParam } from "../rules/requests/admin.request";
 import type { CourseraCourseBody, CourseraCoursesQuery, CourseraLookupBody, CourseraNoteBody, CourseraOrderBody, CourseraOrdersQuery, CourseraStatusBody } from "../rules/requests/coursera.request";
 import { ResponseClient } from "../rules/response";
 import { courseraService } from "../services/coursera.service";
 
-const idOf = (res: Response) => getValidated<IdParam>(res, "params").id;
+const idOf = (res: Response) => getValidated<UuidParam>(res, "params").id;
 export const courseraController = {
   async courses(_req: Request, res: Response) {
     const { items, meta } = await courseraService.courses(getValidated<CourseraCoursesQuery>(res, "query"));

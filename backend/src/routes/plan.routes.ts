@@ -6,7 +6,7 @@ import { idempotent } from "../middlewares/idempotency.middlewares";
 import { z } from "zod";
 import { PLAN_CODES, TICKET_VALID_DAYS } from "../constants/plan";
 import { getValidated, validate } from "../middlewares/validate.middlewares";
-import { idParam } from "../rules/requests/admin.request";
+import { uuidParam } from "../rules/requests/admin.request";
 import { ResponseClient } from "../rules/response";
 import { planService } from "../services/plan.service";
 
@@ -43,8 +43,8 @@ planRouter.post("/tickets", authenticate, requireVerifiedMember, idempotent, lim
   res.json(new ResponseClient({ message: `Đã mua vé. Hãy kích hoạt trong vòng ${TICKET_VALID_DAYS} ngày kể từ hôm nay`, data }));
 });
 
-planRouter.post("/tickets/:id/activate", authenticate, idempotent, limiter, validate(idParam, "params"), async (req: Request, res: Response) => {
-  const data = await planService.activateTicket(req.user!.id, getValidated<z.infer<typeof idParam>>(res, "params").id);
+planRouter.post("/tickets/:id/activate", authenticate, idempotent, limiter, validate(uuidParam, "params"), async (req: Request, res: Response) => {
+  const data = await planService.activateTicket(req.user!.id, getValidated<z.infer<typeof uuidParam>>(res, "params").id);
   res.json(new ResponseClient({ message: data.renewed ? "Đã kích hoạt vé và cộng thêm thời hạn Pro" : "Đã kích hoạt gói Pro", data }));
 });
 

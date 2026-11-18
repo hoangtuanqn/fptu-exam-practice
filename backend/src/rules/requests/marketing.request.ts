@@ -77,7 +77,7 @@ const vnDay = z
   .transform((s) => new Date(`${s}T00:00:00+07:00`));
 
 export const listLogsQuery = paginationQuery.extend({
-  campaign: z.union([z.enum(CAMPAIGN_KEYS), z.literal("broadcast"), z.string().regex(/^broadcast:\d{1,10}$/)]).optional(),
+  campaign: z.union([z.enum(CAMPAIGN_KEYS), z.literal("broadcast"), z.string().regex(/^broadcast:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/)]).optional(),
   from: vnDay.optional(),
   to: vnDay.optional(), // gồm cả ngày này
   email: z.string().trim().min(1).max(100).optional(),

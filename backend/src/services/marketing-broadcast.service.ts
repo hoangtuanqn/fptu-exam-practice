@@ -18,7 +18,7 @@ import { marketingSettingService } from "./marketing-setting.service";
 // Bàn phím tiếng Việt có thể gửi dấu dạng tổ hợp nên chuẩn hoá Unicode trước khi so
 export const isBroadcastConfirm = (v: unknown) => typeof v === "string" && v.normalize("NFC").trim() === BROADCAST_CONFIRM.normalize("NFC");
 
-const get = async (id: number) => {
+const get = async (id: string) => {
   const b = await broadcastRepository.find(id);
   if (!b) throw AppError.notFound("Không tìm thấy thư gửi thủ công");
   return b;
@@ -53,21 +53,21 @@ export const marketingBroadcastService = {
   },
 
   /** Ước tính: người trong nhóm chưa nhận thư này (chưa trừ người đang trong khoảng cách giữa hai thư) và số ngày gửi hết theo hạn mức ngày. */
-  async estimate(id: number, now = new Date()) {
+  async estimate(id: string, now = new Date()) {
     const [b, p] = await Promise.all([get(id), marketingSettingService.params()]);
     const recipients = await marketingRepository.count(broadcastAudience(b, now, null));
     return { recipients, days: Math.ceil(recipients / p.dailyCap) };
   },
 
   /** Xem trước với người nhận giả (không dữ liệu của ai); ảnh cid thay bằng data URI như xem trước chiến dịch. */
-  async preview(id: number) {
+  async preview(id: string) {
     const b = await get(id);
     const mail = broadcastMail(b, PREVIEW_RECIPIENT, broadcastPreviewUrl(b.ctaPath));
     return { subject: mail.subject, html: inlineMailImages(mail.html) };
   },
 
   /** Gửi thư mẫu CHỈ tới email của admin đang bấm, link nút trỏ thẳng tới trang; không ghi log nên không tính vào hạn mức hay giới hạn gửi. */
-  async sendTest(id: number, admin: PublicUser) {
+  async sendTest(id: string, admin: PublicUser) {
     const b = await get(id);
     const to = { id: admin.id, email: admin.email, fullName: admin.fullName, proExpiresAt: admin.proExpiresAt };
     const mail = broadcastMail(b, to, broadcastPreviewUrl(b.ctaPath));
@@ -76,7 +76,7 @@ export const marketingBroadcastService = {
   },
 
   /** DRAFT -> SENDING khi admin gõ đúng "GỬI" (không thì 400); thư bắt đầu đi ở lượt chạy kế tiếp. Chỉ một đợt được gửi cùng lúc. */
-  async start(id: number, confirm: unknown) {
+  async start(id: string, confirm: unknown) {
     if (!isBroadcastConfirm(confirm)) throw new AppError(`Gõ ${BROADCAST_CONFIRM} để xác nhận gửi`, HTTP_STATUS.BAD_REQUEST);
     const b = await get(id);
     if (b.status !== "DRAFT") throw AppError.conflict("Chỉ bắt đầu được bản nháp");
@@ -87,7 +87,7 @@ export const marketingBroadcastService = {
   },
 
   /** Dừng bất cứ lúc nào (bản nháp hoặc đang gửi); thư còn lại trong lượt đang chạy cũng không gửi (claim kiểm tra lại). */
-  async cancel(id: number) {
+  async cancel(id: string) {
     await get(id);
     if (!(await broadcastRepository.cancel(id))) throw AppError.conflict("Đợt này đã xong hoặc đã dừng");
     return view(await get(id));

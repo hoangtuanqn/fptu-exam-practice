@@ -8,7 +8,7 @@ const { company } = MAIL_BRAND;
 // Never put account credentials (the Coursera email's password) in these mails.
 export interface CourseraOrderEmailInput {
   name: string;
-  orderId: number;
+  orderId: string;
   courseTitle: string;
   event: "received" | "note" | Exclude<CourseraStatus, "PENDING">;
   amount: number; // charged for "received", refunded for REJECTED/CANCELLED, 0 otherwise (never shown for "note")

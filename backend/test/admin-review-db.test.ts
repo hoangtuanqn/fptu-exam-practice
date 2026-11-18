@@ -59,7 +59,7 @@ describe("admin review badges (throwaway MySQL)", { skip: DB_TESTS_ENABLED ? fal
     assert.equal(again.resolvedAt!.getTime(), first.resolvedAt!.getTime());
     assert.equal(again.resolvedById, admin);
     assert.equal((await counts()).reports, 2);
-    await assert.rejects(m.reports.resolve(admin, 999_999), hasStatus(404));
+    await assert.rejects(m.reports.resolve(admin, "00000000-0000-7000-8000-000000000000"), hasStatus(404));
 
     const page = { page: 1, limit: 20 };
     assert.deepEqual((await m.reports.list({ ...page, resolved: "true" })).items.map((r) => r.id), [r1.id]);
@@ -87,7 +87,7 @@ describe("admin review badges (throwaway MySQL)", { skip: DB_TESTS_ENABLED ? fal
     assert.equal(first.explanation, "giai 1");
     assert.equal((await m.feedback.adminResolve(admin + 999, id)).resolvedAt, first.resolvedAt);
     assert.equal((await counts()).feedback, 0);
-    await assert.rejects(m.feedback.adminResolve(admin, 999_999), hasStatus(404));
+    await assert.rejects(m.feedback.adminResolve(admin, "00000000-0000-7000-8000-000000000000"), hasStatus(404));
 
     const page = { page: 1, limit: 20 };
     assert.deepEqual((await m.feedback.adminList({ ...page, resolved: "true" })).items.map((r) => r.id), [id]);

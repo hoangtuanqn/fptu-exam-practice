@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { getValidated } from "../middlewares/validate.middlewares";
-import type { IdParam } from "../rules/requests/admin.request";
+import type { UuidParam } from "../rules/requests/admin.request";
 import type { ListNoticesQuery, ReadAllNoticesBody, SetNoticeReadBody } from "../rules/requests/admin-notice.request";
 import { ResponseClient } from "../rules/response";
 import { adminNoticeService } from "../services/admin-notice.service";
@@ -18,7 +18,7 @@ export const adminNoticeController = {
   },
 
   async setRead(_req: Request, res: Response) {
-    const { id } = getValidated<IdParam>(res, "params");
+    const { id } = getValidated<UuidParam>(res, "params");
     const { read } = getValidated<SetNoticeReadBody>(res);
     res.json(new ResponseClient({ data: await adminNoticeService.setRead(id, read) }));
   },

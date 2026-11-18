@@ -22,11 +22,11 @@ const CHAPTERS = [
 
 function setup({ pages = 3, aiOn = true, usedTokens = 0, chapters = CHAPTERS, adminOnly = false }: { pages?: number; aiOn?: boolean; usedTokens?: number; chapters?: typeof CHAPTERS; adminOnly?: boolean } = {}) {
   const rows: MaterialUploadRow[] = [];
-  const written = new Map<number, number>();
+  const written = new Map<string, number>();
   let notified = 0;
   const repo: MaterialServiceStore = {
     async create(d: NewUpload) {
-      const row: MaterialUploadRow = { id: rows.length + 1, ...d, status: "QUEUED", error: null, progressDone: 0, progressTotal: 0, createdAt: NOW, finishedAt: null };
+      const row: MaterialUploadRow = { id: `00000000-0000-7000-8000-${String(rows.length + 1).padStart(12, "0")}`, ...d, status: "QUEUED", error: null, progressDone: 0, progressTotal: 0, createdAt: NOW, finishedAt: null };
       rows.push(row);
       return row;
     },
@@ -89,7 +89,7 @@ describe("material service", () => {
     await rejectsWith(t.service.create(FREE, file(), SUBJECT.code), 403, /PRO/);
     assert.equal(t.rows.length, 0);
     const a = await t.service.create(PRO, file(), SUBJECT.code);
-    assert.deepEqual(a, { id: 1, status: "QUEUED", duplicate: false });
+    assert.deepEqual(a, { id: "00000000-0000-7000-8000-000000000001", status: "QUEUED", duplicate: false });
     const b = await t.service.create(ADMIN, file(), SUBJECT.code);
     assert.equal(b.duplicate, false);
     assert.equal(t.written.size, 2); // tệp tạm cho job

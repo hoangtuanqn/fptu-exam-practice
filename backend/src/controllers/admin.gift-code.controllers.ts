@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { HTTP_STATUS } from "../constants/httpStatus";
 import { getValidated } from "../middlewares/validate.middlewares";
-import type { IdParam } from "../rules/requests/admin.request";
+import type { UuidParam } from "../rules/requests/admin.request";
 import type { CreateGiftCodeBody, ListGiftCodesQuery, UpdateGiftCodeBody } from "../rules/requests/gift-code.request";
 import { ResponseClient } from "../rules/response";
 import { giftCodeService } from "../services/gift-code.service";
@@ -20,13 +20,13 @@ export const adminGiftCodeController = {
   },
 
   async setActive(_req: Request, res: Response) {
-    const { id } = getValidated<IdParam>(res, "params");
+    const { id } = getValidated<UuidParam>(res, "params");
     const { active } = getValidated<UpdateGiftCodeBody>(res);
     res.json(new ResponseClient({ data: await giftCodeService.setActive(id, active) }));
   },
 
   async redemptions(_req: Request, res: Response) {
-    const { id } = getValidated<IdParam>(res, "params");
+    const { id } = getValidated<UuidParam>(res, "params");
     const { items, meta } = await giftCodeService.redemptions(id, getValidated<PaginationQuery>(res, "query"));
     res.json(new ResponseClient({ data: items, meta }));
   },

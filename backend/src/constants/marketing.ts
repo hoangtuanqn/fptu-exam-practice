@@ -85,9 +85,9 @@ export const BROADCAST_EXAM_DAYS = 30; // nhóm "có buổi thi trong chừng n�
 export const BROADCAST_LIMITS = { subject: 120, body: 5000, ctaLabel: 40, ctaPath: 120 } as const; // khớp độ dài cột
 export const BROADCAST_CONFIRM = "GỬI"; // admin phải gõ đúng chữ này mới bắt đầu gửi
 
-/** Tên chiến dịch ghi trong log: một trong CAMPAIGN_KEYS hoặc broadcast:<id>. */
-export type LogCampaign = CampaignKey | `broadcast:${number}`;
-export const broadcastCampaign = (id: number): LogCampaign => `${BROADCAST_PREFIX}${id}` as LogCampaign;
+/** Tên chiến dịch ghi trong log: một trong CAMPAIGN_KEYS hoặc broadcast:<uuid>. */
+export type LogCampaign = CampaignKey | `broadcast:${string}`;
+export const broadcastCampaign = (id: string): LogCampaign => `${BROADCAST_PREFIX}${id}` as LogCampaign;
 export const isBroadcast = (c: string) => c.startsWith(BROADCAST_PREFIX);
 
 // Chiến dịch lặp lại ghi step = cycle * 10 + bước (cycle = số ngày UTC từ 1970), để unique (user, campaign, step) không chặn chu kỳ sau

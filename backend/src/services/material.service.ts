@@ -40,13 +40,13 @@ interface ChapterStatRow {
 /** Phần lưu trữ service cần (materialRepository đáp ứng; test dùng bản trong bộ nhớ). */
 export interface MaterialServiceStore {
   create(data: NewUpload): Promise<MaterialUploadRow>;
-  findOwned(id: number, userId: number, now: Date): Promise<MaterialUploadRow | null>;
+  findOwned(id: string, userId: number, now: Date): Promise<MaterialUploadRow | null>;
   listByUser(userId: number, now: Date, take: number): Promise<MaterialUploadRow[]>;
   findDuplicate(userId: number, subjectId: number, fileHash: string, now: Date): Promise<MaterialUploadRow | null>;
   countActive(userId: number): Promise<number>;
-  deleteOwned(id: number, userId: number): Promise<number>;
-  pages(uploadId: number): Promise<PageRow[]>;
-  chapters(uploadId: number): Promise<{ chapterNumber: number; summary: string; keyPoints: unknown }[]>;
+  deleteOwned(id: string, userId: number): Promise<number>;
+  pages(uploadId: string): Promise<PageRow[]>;
+  chapters(uploadId: string): Promise<{ chapterNumber: number; summary: string; keyPoints: unknown }[]>;
 }
 
 export interface MaterialServiceDeps {
@@ -177,7 +177,7 @@ export function createMaterialService(deps: MaterialServiceDeps) {
     },
 
     /** Chỉ chủ tài liệu xem được; người khác nhận 404 (không lộ là tài liệu có tồn tại). */
-    async get(actor: MaterialActor, id: number) {
+    async get(actor: MaterialActor, id: string) {
       const upload = await deps.repo.findOwned(id, actor.id, deps.now());
       if (!upload) throw AppError.notFound(MSG.notFound);
       const subject = (await subjectMap([upload.subjectId])).get(upload.subjectId);
@@ -193,7 +193,7 @@ export function createMaterialService(deps: MaterialServiceDeps) {
       return { ...base, ...buildResult(pages, rows, subjectChapters, stats) };
     },
 
-    async remove(actor: MaterialActor, id: number) {
+    async remove(actor: MaterialActor, id: string) {
       if ((await deps.repo.deleteOwned(id, actor.id)) === 0) throw AppError.notFound(MSG.notFound);
       await deps.files.remove(id); // job đang chạy sẽ tự dừng ở lần kiểm tra kế tiếp
     },

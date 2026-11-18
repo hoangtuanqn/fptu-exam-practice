@@ -15,13 +15,13 @@ export interface BroadcastInput {
 const isUniqueViolation = (err: unknown) => err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002";
 
 // Chuyển trạng thái có điều kiện (chỉ từ các trạng thái `from`): trả false nếu trạng thái đã đổi trước đó
-const move = async (id: number, from: BroadcastStatus[], to: BroadcastStatus) =>
+const move = async (id: string, from: BroadcastStatus[], to: BroadcastStatus) =>
   (await prisma.marketingBroadcast.updateMany({ where: { id, status: { in: from } }, data: { status: to, sendingLock: to === "SENDING" ? true : null } })).count === 1;
 
 export const broadcastRepository = {
   create: (data: BroadcastInput) => prisma.marketingBroadcast.create({ data }),
 
-  find: (id: number) => prisma.marketingBroadcast.findUnique({ where: { id } }),
+  find: (id: string) => prisma.marketingBroadcast.findUnique({ where: { id } }),
 
   // Đợt đang gửi (tối đa một: unique sending_lock)
   sending: () => prisma.marketingBroadcast.findUnique({ where: { sendingLock: true } }),
@@ -32,7 +32,7 @@ export const broadcastRepository = {
   },
 
   /** DRAFT -> SENDING. "busy" khi đã có đợt khác đang gửi (unique sending_lock chặn cả hai yêu cầu cùng lúc), "state" khi không còn là DRAFT. */
-  async start(id: number): Promise<"ok" | "busy" | "state"> {
+  async start(id: string): Promise<"ok" | "busy" | "state"> {
     try {
       return (await move(id, ["DRAFT"], "SENDING")) ? "ok" : "state";
     } catch (err) {
@@ -41,6 +41,6 @@ export const broadcastRepository = {
     }
   },
 
-  cancel: (id: number) => move(id, ["DRAFT", "SENDING"], "CANCELLED"),
-  finish: (id: number) => move(id, ["SENDING"], "DONE"),
+  cancel: (id: string) => move(id, ["DRAFT", "SENDING"], "CANCELLED"),
+  finish: (id: string) => move(id, ["SENDING"], "DONE"),
 };

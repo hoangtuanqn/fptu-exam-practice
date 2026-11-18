@@ -65,7 +65,7 @@ const BOUGHT = Prisma.sql`EXISTS (
 )`;
 
 export interface BroadcastAudience {
-  id: number;
+  id: string;
   segment: BroadcastSegment;
   segmentDays: number | null;
 }
@@ -156,7 +156,7 @@ export const marketingRepository = {
     const user = await prisma.user.findFirst({ where: { id: userId, marketingOptOut: false, ...pause }, select: { marketingMutedTopics: true } });
     if (!user || (user.marketingMutedTopics & TOPIC_BITS[topicOf(campaign)]) !== 0) return null;
     // Gửi thủ công bị dừng giữa lượt chạy: các thư còn lại trong lô không gửi
-    const broadcastId = isBroadcast(campaign) ? Number(campaign.slice(BROADCAST_PREFIX.length)) : null;
+    const broadcastId = isBroadcast(campaign) ? campaign.slice(BROADCAST_PREFIX.length) : null;
     if (broadcastId !== null && !(await prisma.marketingBroadcast.findFirst({ where: { id: broadcastId, status: "SENDING" }, select: { id: true } }))) return null;
     try {
       return (await prisma.emailCampaignLog.create({ data: { userId, campaign, step, target }, select: { id: true } })).id;
@@ -214,12 +214,12 @@ export const marketingRepository = {
       GROUP BY l.campaign`,
 
   // Số thư đã gửi và đã bấm của từng thư gửi thủ công (chỉ số campaign, sent_at)
-  async broadcastCounts(ids: number[]) {
-    if (ids.length === 0) return new Map<number, { sent: number; clicked: number }>();
+  async broadcastCounts(ids: string[]) {
+    if (ids.length === 0) return new Map<string, { sent: number; clicked: number }>();
     const rows = await prisma.$queryRaw<{ campaign: string; sent: bigint; clicked: unknown }[]>`
       SELECT campaign, COUNT(*) AS sent, SUM(clicked_at IS NOT NULL) AS clicked FROM email_campaign_logs
       WHERE campaign IN (${Prisma.join(ids.map(broadcastCampaign))}) GROUP BY campaign`;
-    return new Map(rows.map((r) => [Number(r.campaign.slice(BROADCAST_PREFIX.length)), { sent: Number(r.sent), clicked: Number(r.clicked ?? 0) }]));
+    return new Map(rows.map((r) => [r.campaign.slice(BROADCAST_PREFIX.length), { sent: Number(r.sent), clicked: Number(r.clicked ?? 0) }]));
   },
 
   /**
@@ -264,7 +264,7 @@ export const marketingRepository = {
   // Môn của lần làm bài gần nhất: userId -> mã môn
   async lastSubjects(userIds: number[]) {
     const last = await prisma.examAttempt.groupBy({ by: ["userId"], where: { userId: { in: userIds } }, _max: { id: true } });
-    const ids = last.map((r) => r._max.id).filter((id): id is number => id !== null);
+    const ids = last.map((r) => r._max.id).filter((id): id is string => id !== null);
     if (ids.length === 0) return new Map<number, string>();
     const rows = await prisma.examAttempt.findMany({ where: { id: { in: ids } }, select: { userId: true, exam: { select: { subjectCode: true } } } });
     return new Map(rows.filter((r) => r.exam.subjectCode).map((r) => [r.userId, r.exam.subjectCode!]));

@@ -97,11 +97,11 @@ describe("marketing broadcasts and log (MySQL)", { skip: DB_TESTS_ENABLED ? fals
     assert.ok(html.includes("&amp;c=news"));
     assert.equal(/@test\.local|Boss/.test(html), false); // không có dữ liệu của người thật
     assert.equal(await logs(), before);
-    await assert.rejects(m.broadcasts.preview(999_999), status(404));
+    await assert.rejects(m.broadcasts.preview("00000000-0000-7000-8000-000000000000"), status(404));
     await m.broadcasts.cancel(b.id);
   });
 
-  let main: number;
+  let main: string;
 
   it("starts only with the confirm word, only from DRAFT, one SENDING at a time", async () => {
     main = (await m.broadcasts.create(draft(), admin.id)).id;
@@ -115,7 +115,7 @@ describe("marketing broadcasts and log (MySQL)", { skip: DB_TESTS_ENABLED ? fals
     await assert.rejects(m.broadcasts.start(main, "GỬI"), status(409)); // không còn là bản nháp
     const cancelled = (await m.broadcasts.list({ page: 1, limit: 50 })).items.find((b) => b.status === "CANCELLED")!;
     await assert.rejects(m.broadcasts.start(cancelled.id, "GỬI"), status(409));
-    await assert.rejects(m.broadcasts.start(999_999, "GỬI"), status(404));
+    await assert.rejects(m.broadcasts.start("00000000-0000-7000-8000-000000000000", "GỬI"), status(404));
     await m.broadcasts.cancel(other);
   });
 

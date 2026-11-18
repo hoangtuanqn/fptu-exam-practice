@@ -25,7 +25,7 @@ async function safe<T>(run: () => Promise<T>): Promise<T> {
 type Order = Awaited<ReturnType<typeof courseraRepository.updateStatus>>;
 const ADMIN_LINK = "/admin/coursera";
 
-function changeStatus(id: number, data: CourseraStatusBody, userId?: number) {
+function changeStatus(id: string, data: CourseraStatusBody, userId?: number) {
   return courseraRepository.transaction(async (tx) => {
     const order = await courseraRepository.updateStatus(tx, id, data, userId);
     if ((data.status === "CANCELLED" || data.status === "REJECTED") && order.amount > 0 && !order.refundedAt) {
@@ -42,7 +42,7 @@ const mailOrder = (order: Order, event: Parameters<typeof notificationService.co
 
 export const courseraService = {
   courses: (query: CourseraCoursesQuery, admin = false) => safe(() => courseraRepository.courses(query, admin)),
-  saveCourse: (data: CourseraCourseBody, id?: number) => safe(() => courseraRepository.saveCourse(data, id)),
+  saveCourse: (data: CourseraCourseBody, id?: string) => safe(() => courseraRepository.saveCourse(data, id)),
   // Verifies a member-pasted link on Coursera and returns the matching catalog row, creating an unlisted one on first use.
   lookup: (raw: string, fetcher: typeof fetch = fetch) => safe(async () => {
     const link = parseCourseraLink(raw);
@@ -85,24 +85,24 @@ export const courseraService = {
       throw error;
     }
   }),
-  updateStatus: (id: number, data: CourseraStatusBody) => safe(async () => {
+  updateStatus: (id: string, data: CourseraStatusBody) => safe(async () => {
     if (!COURSERA_TRANSITIONS[data.expectedStatus].includes(data.status)) throw AppError.conflict("Không thể chuyển đơn sang trạng thái này");
     const { order, refunded, balanceAfter } = await changeStatus(id, data);
     if (order.status !== "PENDING") mailOrder(order, order.status, refunded, balanceAfter);
     return order;
   }),
-  updateNote: (id: number, data: CourseraNoteBody) => safe(async () => {
+  updateNote: (id: string, data: CourseraNoteBody) => safe(async () => {
     const { order, changed } = await courseraRepository.updateNote(id, data.adminNote);
     if (changed) mailOrder(order, "note", 0);
     return order;
   }),
-  cancel: (id: number, userId: number) => safe(async () => {
+  cancel: (id: string, userId: number) => safe(async () => {
     const { order, refunded, balanceAfter } = await changeStatus(id, { expectedStatus: "PENDING", status: "CANCELLED", adminNote: "" }, userId);
     adminNoticeService.push("coursera.cancelled", { title: `Đơn Coursera #${order.id} bị người dùng hủy`, body: `${order.courseTitle}${refunded ? ` · đã hoàn ${formatCredit(refunded)}` : ""}`, userId, link: ADMIN_LINK });
     mailOrder(order, "CANCELLED", refunded, balanceAfter);
     return order;
   }),
-  credentials: (id: number, adminId: number) => safe(async () => {
+  credentials: (id: string, adminId: number) => safe(async () => {
     const row = await courseraRepository.credentials(id, adminId);
     return { email: row.email, password: row.password! };
   }),

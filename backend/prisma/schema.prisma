@@ -98,7 +98,7 @@ enum CourseraOrderStatus {
 }
 
 model CourseraCourse {
-  id        Int      @id @default(autoincrement())
+  id        String @id @default(uuid(7)) @db.Char(36)
   title     String   @db.VarChar(255)
   // Optional: the FuOverflow catalog has no Coursera link; many NULLs are allowed under the unique index
   url       String?  @unique @db.VarChar(500)
@@ -117,9 +117,9 @@ model CourseraCourse {
 }
 
 model CourseraOrder {
-  id                 Int                 @id @default(autoincrement())
+  id                 String @id @default(uuid(7)) @db.Char(36)
   userId             Int                 @map("user_id")
-  courseId           Int                 @map("course_id")
+  courseId           String              @map("course_id") @db.Char(36)
   requestKey         String              @map("request_key") @db.VarChar(36)
   courseTitle        String              @map("course_title") @db.VarChar(255)
   courseUrl          String              @map("course_url") @db.VarChar(500)
@@ -396,7 +396,7 @@ enum AttemptMode {
 // Má»™t láº§n ná»™p bĂ i. `details` lĂ  áº£nh chá»¥p tá»«ng cĂ¢u (Ä‘Ă£ chá»n, Ä‘Ă¡p Ă¡n Ä‘Ăºng lĂºc cháº¥m) nĂªn xem láº¡i váº«n Ä‘Ăºng
 // dĂ¹ sau nĂ y Ä‘Ă¡p Ă¡n cá»§a Ä‘á» Ä‘Æ°á»£c sá»­a
 model ExamAttempt {
-  id          Int         @id @default(autoincrement())
+  id          String @id @default(uuid(7)) @db.Char(36)
   userId      Int         @map("user_id")
   examId      Int         @map("exam_id")
   mode        AttemptMode
@@ -489,7 +489,7 @@ model RefreshToken {
 
 // Giftcode: admin táº¡o mĂ£, thĂ nh viĂªn nháº­p mĂ£ Ä‘á»ƒ nháº­n credit. Má»—i thĂ nh viĂªn dĂ¹ng má»™t mĂ£ tá»‘i Ä‘a má»™t láº§n.
 model GiftCode {
-  id        Int       @id @default(autoincrement())
+  id        String @id @default(uuid(7)) @db.Char(36)
   code      String    @unique @db.VarChar(32)
   amount    Int // credit cá»™ng cho má»—i lÆ°á»£t dĂ¹ng
   maxUses   Int       @map("max_uses")
@@ -508,7 +508,7 @@ model GiftCode {
 
 model GiftCodeRedemption {
   id         Int      @id @default(autoincrement())
-  giftCodeId Int      @map("gift_code_id")
+  giftCodeId String   @map("gift_code_id") @db.Char(36)
   userId     Int      @map("user_id")
   amount     Int
   createdAt  DateTime @default(now()) @map("created_at")
@@ -549,7 +549,7 @@ enum ReportStatus {
 // NgÆ°á»i dĂ¹ng bĂ¡o cĂ¡o Ä‘Ă¡p Ă¡n sai vĂ  Ä‘á» xuáº¥t Ä‘Ă¡p Ă¡n Ä‘Ăºng. Admin duyá»‡t: Ä‘Ăºng thĂ¬ sá»­a Ä‘Ă¡p Ă¡n vĂ  thÆ°á»Ÿng credit cho ngÆ°á»i bĂ¡o cĂ¡o.
 // Má»—i ngÆ°á»i chá»‰ bĂ¡o cĂ¡o má»™t láº§n cho má»—i cĂ¢u (chá»‘ng láº¡m dá»¥ng).
 model AnswerReport {
-  id             Int          @id @default(autoincrement())
+  id             String @id @default(uuid(7)) @db.Char(36)
   examId         Int          @map("exam_id")
   questionNumber Int          @map("question_number")
   userId         Int          @map("user_id")
@@ -966,7 +966,7 @@ model SubjectIssue {
 
 // Thong bao cho admin ve hanh vi cua nguoi dung (dang ky, lay de, nap tien, loi...). read_at null = chua doc. important = hien o muc Quan trong.
 model AdminNotice {
-  id        Int       @id @default(autoincrement())
+  id        String @id @default(uuid(7)) @db.Char(36)
   kind      String    @db.VarChar(40) // user.registered, deposit.success, fetch.failed...
   level     String    @db.VarChar(10) // info | success | warning | error
   important Boolean   @default(false)
@@ -1031,7 +1031,7 @@ model PromptEvent {
 // Pro ticket: paid now, activated later by the user. activatedAt null = still unused.
 // An unused ticket can no longer be activated after expiresAt (the buyer is told the date when buying).
 model ProTicket {
-  id          Int       @id @default(autoincrement())
+  id          String @id @default(uuid(7)) @db.Char(36)
   userId      Int       @map("user_id")
   plan        String    @db.VarChar(20) // PRO | SPRINT
   price       Int
@@ -1234,7 +1234,7 @@ model ExplainChatUsage {
 // Đánh giá 👍/👎 của người dùng cho lời giải thích AI của một câu: mỗi người một đánh giá cho mỗi câu, đổi ý thì ghi đè.
 // reason (WRONG | UNCLEAR | WRONG_SUBJECT | OTHER) và comment chỉ có khi không hữu ích; dùng để cải thiện prompt.
 model ExplanationFeedback {
-  id             Int      @id @default(autoincrement())
+  id             String @id @default(uuid(7)) @db.Char(36)
   userId         Int      @map("user_id")
   examId         Int      @map("exam_id")
   questionNumber Int      @map("question_number")
@@ -1267,7 +1267,7 @@ enum MaterialStatus {
 // the row and its pages/chapters are deleted by the daily cleanup after expires_at. subject_id has no FK on purpose
 // (subjects are never deleted in practice; a missing subject just hides the stats).
 model MaterialUpload {
-  id            Int            @id @default(autoincrement())
+  id            String @id @default(uuid(7)) @db.Char(36)
   userId        Int            @map("user_id")
   subjectId     Int            @map("subject_id")
   title         String         @db.VarChar(200)
@@ -1295,7 +1295,7 @@ model MaterialUpload {
 // One page of an uploaded PDF. kind = text | figure | scanned. figure = vision result (null until described).
 // assigned = chapter assignment done (chapter_number null + assigned = page matched no chapter).
 model MaterialPage {
-  uploadId      Int     @map("upload_id")
+  uploadId      String  @map("upload_id") @db.Char(36)
   pageNo        Int     @map("page_no")
   kind          String  @db.VarChar(10)
   text          String  @db.Text
@@ -1311,7 +1311,7 @@ model MaterialPage {
 
 // Summary of one chapter built only from the pages assigned to it. key_points = [{text, pages[]}]
 model MaterialChapter {
-  uploadId      Int    @map("upload_id")
+  uploadId      String @map("upload_id") @db.Char(36)
   chapterNumber Int    @map("chapter_number")
   summary       String @db.Text
   keyPoints     Json   @map("key_points")
@@ -1327,7 +1327,7 @@ model MaterialChapter {
 model EmailCampaignLog {
   id         Int       @id @default(autoincrement())
   userId     Int       @map("user_id")
-  campaign   String    @db.VarChar(40) // campaign key or broadcast:<id>
+  campaign   String    @db.VarChar(48) // campaign key or broadcast:<uuid> (10 + 36 chars)
   step       Int
   sentAt     DateTime  @default(now()) @map("sent_at")
   target     String?   @db.VarChar(120) // internal path the mail button leads to (click redirect never reads it from the URL)
@@ -1353,7 +1353,7 @@ enum BroadcastStatus {
 // Thu gui thu cong (admin soan, chu de "news"). Gui qua dung luot chay marketing hang ngay, log campaign = broadcast:<id>, step 1.
 // Nguoi nhan tinh lai moi ngay theo segment (khong chup san).
 model MarketingBroadcast {
-  id          Int             @id @default(autoincrement())
+  id          String @id @default(uuid(7)) @db.Char(36)
   subject     String          @db.VarChar(120)
   body        String          @db.Text // plain text, escaped when rendered
   ctaLabel    String          @map("cta_label") @db.VarChar(40)

@@ -25,7 +25,7 @@ export const courseraRepository = {
     ]);
     return { items, meta: toMeta(query, total) };
   },
-  saveCourse(data: CourseraCourseBody, id?: number) {
+  saveCourse(data: CourseraCourseBody, id?: string) {
     return id ? prisma.courseraCourse.update({ where: { id }, data }) : prisma.courseraCourse.create({ data });
   },
   findCourseByUrl(url: string) {
@@ -45,7 +45,7 @@ export const courseraRepository = {
   findRequest(userId: number, requestKey: string) {
     return prisma.courseraOrder.findUnique({ where: { userId_requestKey: { userId, requestKey } }, select: orderSelect });
   },
-  async createOrder(tx: Prisma.TransactionClient, data: { userId: number; courseId: number; requestKey: string; email: string; password: string; note: string; expectedPrice: number }) {
+  async createOrder(tx: Prisma.TransactionClient, data: { userId: number; courseId: string; requestKey: string; email: string; password: string; note: string; expectedPrice: number }) {
     const { expectedPrice, ...order } = data;
     // Serialize catalog edits with checkout so the accepted price and availability stay consistent.
     await tx.$queryRaw`SELECT id FROM coursera_courses WHERE id = ${data.courseId} FOR UPDATE`;
@@ -54,7 +54,7 @@ export const courseraRepository = {
     if (course.price !== expectedPrice) throw AppError.conflict("Giá khóa học đã thay đổi. Vui lòng chọn lại khóa học và xác nhận giá mới.");
     return tx.courseraOrder.create({ data: { ...order, amount: course.price, courseTitle: course.title, courseUrl: course.url ?? "" }, select: orderSelect });
   },
-  async updateStatus(tx: Prisma.TransactionClient, id: number, data: CourseraStatusBody, userId?: number) {
+  async updateStatus(tx: Prisma.TransactionClient, id: string, data: CourseraStatusBody, userId?: number) {
     const result = await tx.courseraOrder.updateMany({
       where: { id, userId, status: data.expectedStatus },
       data: {
@@ -67,16 +67,16 @@ export const courseraRepository = {
     return tx.courseraOrder.findUniqueOrThrow({ where: { id }, select: orderSelect });
   },
   // Note-only edit in any status: never touches status, amount, refund or password. Compared in JS because the column collation is case-insensitive.
-  async updateNote(id: number, adminNote: string) {
+  async updateNote(id: string, adminNote: string) {
     const current = await prisma.courseraOrder.findUnique({ where: { id }, select: orderSelect });
     if (!current) throw AppError.notFound();
     if (current.adminNote === adminNote) return { order: current, changed: false };
     return { order: await prisma.courseraOrder.update({ where: { id }, data: { adminNote }, select: orderSelect }), changed: true };
   },
-  markRefunded(tx: Prisma.TransactionClient, id: number) {
+  markRefunded(tx: Prisma.TransactionClient, id: string) {
     return tx.courseraOrder.update({ where: { id }, data: { refundedAt: new Date() }, select: orderSelect });
   },
-  async credentials(id: number, adminId: number) {
+  async credentials(id: string, adminId: number) {
     return prisma.$transaction(async (tx) => {
       const result = await tx.courseraOrder.updateMany({
         where: { id, status: { in: ["PENDING", "PROCESSING"] }, password: { not: null } },

@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { HTTP_STATUS } from "../constants/httpStatus";
 import { getValidated } from "../middlewares/validate.middlewares";
-import type { IdParam } from "../rules/requests/admin.request";
+import type { UuidParam } from "../rules/requests/admin.request";
 import type {
   CampaignKeyParam,
   CreateBroadcastBody,
@@ -21,7 +21,7 @@ import { marketingStatsService } from "../services/marketing-stats.service";
 import { toMeta } from "../utils/pagination";
 
 const keyOf = (res: Response) => getValidated<CampaignKeyParam>(res, "params").key;
-const idOf = (res: Response) => getValidated<IdParam>(res, "params").id;
+const idOf = (res: Response) => getValidated<UuidParam>(res, "params").id;
 
 export const adminMarketingController = {
   async campaigns(_req: Request, res: Response) {

@@ -209,7 +209,7 @@ export const notificationService = {
   },
 
   // Đơn Coursera vừa tạo hoặc được admin đổi trạng thái (gọi SAU khi transaction đã commit). Không bao giờ kèm mật khẩu.
-  courseraOrder(n: { userId: number; event: CourseraOrderEmailInput["event"]; orderId: number; courseTitle: string; amount: number; balanceAfter?: number; adminNote: string }) {
+  courseraOrder(n: { userId: number; event: CourseraOrderEmailInput["event"]; orderId: string; courseTitle: string; amount: number; balanceAfter?: number; adminNote: string }) {
     notify("đơn Coursera", async () => {
       const user = await userRepository.findById(n.userId);
       if (!user) return;
