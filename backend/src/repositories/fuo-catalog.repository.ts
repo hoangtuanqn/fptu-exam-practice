@@ -31,8 +31,8 @@ export const fuoCatalogRepository = {
   findLatestRun: () => prisma.fuoCatalogRun.findFirst({ orderBy: { id: "desc" } }), // UUID v7: id tăng theo thời gian tạo
 
   // active_lock unique: hai lần bấm cùng lúc chỉ một lần tạo được, lần kia nhận null
-  createRun: (createdById: string) =>
-    prisma.fuoCatalogRun.create({ data: { activeLock: true, createdById } }).catch((err: unknown) => {
+  createRun: (createdById: string, autoImport = false) =>
+    prisma.fuoCatalogRun.create({ data: { activeLock: true, createdById, autoImport } }).catch((err: unknown) => {
       if (isUniqueViolation(err)) return null;
       throw err;
     }),

@@ -25,3 +25,9 @@ export function diffCatalogRows<T extends ThreadRow>(stored: ThreadRow[], incomi
   }
   return { added, changed };
 }
+
+/** Quét tăng dần: danh sách bài xếp theo hoạt động mới nhất, nên trang không có bài mới hay đã đổi thì các trang sau cũng không có: dừng ở đây. */
+export const pageHasNews = (stored: ThreadRow[], page: ThreadRow[]) => {
+  const { added, changed } = diffCatalogRows(stored, page);
+  return added.length + changed.length > 0;
+};

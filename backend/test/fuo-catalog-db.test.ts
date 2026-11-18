@@ -137,6 +137,32 @@ describe("FuOverflow catalog runs (MySQL)", { skip: DB_TESTS_ENABLED ? false : D
     assert.equal(await m.prisma.fuoThread.count(), 4);
   });
 
+  it("'Load new data' scans incrementally, then queues a source run with only new FE threads", async () => {
+    const { fuoSourceService } = await import("../src/services/fuo-source.service");
+    const { fuoSourceRepository } = await import("../src/repositories/fuo-source.repository");
+    site.requests.length = 0;
+    // TST101 không đổi từ lượt trước: chỉ đọc trang 1. TST105 chưa có bài nào: đọc hết 3 trang.
+    site.pages.set("https://fuoverflow.com/forums/TST105/", forum([row("50", "TST105 - SU26 - FE", "Đề Thi FE")], 3));
+    site.pages.set("https://fuoverflow.com/forums/TST105/page-2", forum([row("51", "TST105 - SP26 - FE", "Đề Thi FE")]));
+    site.pages.set("https://fuoverflow.com/forums/TST105/page-3", forum([row("52", "TST105 PE", "Đề Thi PE")]));
+    await m.prisma.exam.create({ data: { threadId: "51", title: "TST105 - SP26 - FE", sourceUrl: "https://fuoverflow.com/threads/51/", totalQuestions: 1, answerSource: "AI" } });
+
+    const started = await fuoSourceService.start(admin);
+    assert.equal(started.started, true);
+    await waitFor(async () => (await fuoSourceRepository.findActiveRun()) !== null); // worker nạp chưa đăng ký: lượt nằm ở RUNNING
+    assert.equal(site.requests.includes("https://fuoverflow.com/forums/TST101/page-2"), false);
+    assert.equal(site.requests.includes("https://fuoverflow.com/forums/TST105/page-3"), true);
+    const latest = await m.repo.findLatestRun();
+    assert.deepEqual({ status: latest?.status, autoImport: latest?.autoImport, added: latest?.threadsNew }, { status: "DONE", autoImport: true, added: 3 });
+
+    const s = await fuoSourceService.status();
+    assert.equal(s.scan, null);
+    const links = await m.prisma.fuoSourceUrl.findMany({ orderBy: { threadId: "asc" }, select: { threadId: true, status: true } });
+    assert.deepEqual(links.map((l) => [l.threadId, l.status]), [["1", "QUEUED"], ["50", "QUEUED"], ["51", "DONE"]]);
+    assert.equal(s.run?.total, 2);
+    await fuoSourceRepository.finishRun(s.run!.id, "DONE"); // các test sau cần FuOverflow rảnh
+  });
+
   it("RUNNING subjects left by a restart are queued again; busy() sees queued user jobs", async () => {
     await m.prisma.fuoCatalogSubject.updateMany({ where: { code: "TST101" }, data: { status: "RUNNING" } });
     assert.equal((await m.repo.requeueRunning()).count, 1);
