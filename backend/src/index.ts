@@ -4,6 +4,7 @@ import { env } from "./configs/env";
 import { prisma } from "./configs/prisma";
 import { startCrawlWorker } from "./jobs/crawl.worker";
 import { startFuoSourceWorker } from "./jobs/fuo-source.worker";
+import { startFuoCatalogWorker } from "./jobs/fuo-catalog.worker";
 import { knowledgeService } from "./services/knowledge.service";
 import { examSolveService } from "./services/exam-solve.service";
 import { examRepository } from "./repositories/exam.repository";
@@ -25,6 +26,8 @@ server.listen(env.PORT, () => {
   startSepayCron().catch((err) => console.error("Không khởi động được sepay cron:", err.message));
   // Đề cũ chưa có mã môn (cột thêm sau): điền một lần, các lần khởi động sau không còn gì để làm
   examRepository.backfillSubjectCodes().then((n) => n > 0 && console.log(`[db] đã điền mã môn cho ${n} đề`)).catch((err) => console.error("Không điền được mã môn:", err.message));
+  // Đề cũ chưa có loại (cột thêm ở 0083): điền một lần theo tên đề
+  examRepository.backfillKinds().then((n) => n > 0 && console.log(`[db] đã điền loại đề cho ${n} đề`)).catch((err) => console.error("Không điền được loại đề:", err.message));
   startSessionCleanup();
   startCreditExpiry();
   startReminderCron();
@@ -36,6 +39,7 @@ server.listen(env.PORT, () => {
   knowledgeService.reindex().then((r) => console.log(`[chat] tri thức: ${r.total} mục, ${r.embedded} có embedding${r.warning ? ` (${r.warning})` : ""}`)).catch((err) => console.error("[chat] không nạp được tri thức:", err.message));
   startCrawlWorker().catch((err) => console.error("Không khởi động được crawl worker:", err.message));
   startFuoSourceWorker(); // chạy tiếp lượt nạp dữ liệu FuOverflow dở dang (lỗi DB được bắt bên trong)
+  startFuoCatalogWorker(); // chạy tiếp lượt quét danh mục FuOverflow dở dang (lỗi DB được bắt bên trong)
   examSolveService
     .recoverPending()
     .then((n) => n > 0 && console.log(`[ai] xếp lại ${n} đề đang chờ AI giải`))

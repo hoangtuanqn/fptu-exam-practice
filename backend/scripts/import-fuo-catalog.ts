@@ -74,11 +74,13 @@ function readInput(file: string) {
 }
 
 async function upsertBatch(batch: Row[]) {
-  const values = batch.map((r) => Prisma.sql`(${r.threadId}, ${r.subjectCode}, ${r.title}, ${r.postedAt}, ${r.replies}, NOW(3))`);
+  // Chỉ bài nhãn "Đề Thi FE" được nhập nên loại luôn là FE
+  const values = batch.map((r) => Prisma.sql`(${r.threadId}, ${r.subjectCode}, ${r.title}, ${r.postedAt}, ${r.replies}, 'FE', ${REQUIRED_LABEL}, NOW(3))`);
   await prisma.$executeRaw`
-    INSERT INTO fuo_threads (thread_id, subject_code, title, posted_at, replies, synced_at)
+    INSERT INTO fuo_threads (thread_id, subject_code, title, posted_at, replies, kind, label, synced_at)
     VALUES ${Prisma.join(values)}
-    ON DUPLICATE KEY UPDATE subject_code = VALUES(subject_code), title = VALUES(title), posted_at = VALUES(posted_at), replies = VALUES(replies), synced_at = VALUES(synced_at)`;
+    ON DUPLICATE KEY UPDATE subject_code = VALUES(subject_code), title = VALUES(title), posted_at = VALUES(posted_at), replies = VALUES(replies),
+      kind = VALUES(kind), label = VALUES(label), synced_at = VALUES(synced_at)`;
 }
 
 (async () => {

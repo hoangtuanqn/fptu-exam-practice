@@ -31,6 +31,9 @@ export const filePathOf = (threadId: string, file: string) => `${EXAM_STORAGE_DI
 // Có chừng này ảnh đầu tiên là người dùng được mở đề ngay (các câu sau hiện dần)
 const FIRST_READY = 2;
 const STAGE_THROTTLE_MS = 400; // ghi tiến độ tối đa chừng này mỗi lần để không dồn DB/socket
+const AI_OFF_REPORT = `${AI_REPORT_FAILED_PREFIX}AI chưa được bật hoặc chưa có khóa Anthropic`;
+// Đề PE (thực hành): ảnh là đề bài, không phải câu trắc nghiệm nên không nhờ AI giải (chỉ xem; admin vẫn giải lại được nếu muốn)
+const PE_REPORT = `${AI_REPORT_FAILED_PREFIX}Đề PE (thực hành) không có đáp án trắc nghiệm để giải`;
 
 export interface ImportHooks {
   /** Gọi một lần khi đã có ảnh đầu tiên: đưa đề vào kho người nhập để họ mở ngay. */
@@ -109,6 +112,7 @@ const importer = {
       return fileName ? [{ file, fileName }] : [];
     });
     const filesOnly = total === 0; // không có câu hỏi: không AI, không bình luận
+    const practical = thread.kind === "PE";
 
     // Không có đáp án giả: AI chưa dùng được thì đề ở trạng thái FAILED (chỉ xem), có thể giải lại sau.
     const useAi = aiReady(await aiSettingService.get());
@@ -125,8 +129,10 @@ const importer = {
         createdById: job.userId ?? undefined,
         totalQuestions: total,
         // Đề chỉ có tệp: MANUAL để không bao giờ chờ/gọi AI (không có câu nào để chấm nên không ảnh hưởng thống kê)
-        answerSource: filesOnly ? "MANUAL" : useAi ? "PENDING" : "FAILED",
-        aiReport: useAi || filesOnly ? undefined : `${AI_REPORT_FAILED_PREFIX}AI chưa được bật hoặc chưa có khóa Anthropic`,
+        answerSource: filesOnly ? "MANUAL" : useAi && !practical ? "PENDING" : "FAILED",
+        aiReport: filesOnly ? undefined : practical ? PE_REPORT : useAi ? undefined : AI_OFF_REPORT,
+        kind: thread.kind,
+        description: thread.description,
       });
     } catch (err) {
       // Lượt khác vừa tạo xong cùng thread: dùng đề đó nếu đã đủ
@@ -253,7 +259,7 @@ const importer = {
         kept.map((f) => ({ name: f.file.name, filePath: filePathOf(threadId, f.fileName), mime: f.mime, sizeBytes: f.sizeBytes, sourceUrl: f.file.url.split("?")[0]! })),
       );
       if (refreshing) {
-        await examRepository.finishRefresh(examId, { title: thread.title, sourceUrl, author: thread.author, postedAt: thread.postedAt, total });
+        await examRepository.finishRefresh(examId, { title: thread.title, sourceUrl, author: thread.author, postedAt: thread.postedAt, total, kind: thread.kind, description: thread.description });
         await removeStaleFiles(filesDir, new Set(kept.map((f) => f.fileName))); // thread bớt tệp: xoá tệp cũ trên đĩa
       }
 
@@ -261,11 +267,13 @@ const importer = {
       const aiNow = aiReady(await aiSettingService.get());
       if (filesOnly) {
         if (refreshing) await examRepository.updateAnswers(examId, [], "MANUAL", null); // đề cũ có ảnh, nay chỉ còn tệp
+      } else if (practical) {
+        if (refreshing) await examRepository.updateAnswers(examId, Array<string>(total).fill(""), "FAILED", PE_REPORT);
       } else if (aiNow) {
         if (refreshing || exam.answerSource !== "PENDING") await examRepository.markPending(examId); // làm mới: bỏ đáp án cũ, giải lại từ đầu
         examSolveService.enqueue(examId);
       } else if (useAi || refreshing) {
-        await examRepository.updateAnswers(examId, Array<string>(total).fill(""), "FAILED", `${AI_REPORT_FAILED_PREFIX}AI chưa được bật hoặc chưa có khóa Anthropic`);
+        await examRepository.updateAnswers(examId, Array<string>(total).fill(""), "FAILED", AI_OFF_REPORT);
       }
       void realtimeHub.publishExam(examId);
       console.log(`[crawl] thread ${threadId}: ${total} câu, ${kept.length}/${files.length} tệp | đọc thread ${(tThread / 1000).toFixed(1)}s | ảnh+bình luận ${(tFetch / 1000).toFixed(1)}s (${config.concurrency} luồng) | tổng ${((Date.now() - t0) / 1000).toFixed(1)}s`);

@@ -2,11 +2,11 @@ import * as cheerio from "cheerio";
 import { threadUrl } from "../../utils/fuo-url";
 import { crawlerSettingService } from "../crawler-setting.service";
 import { createFuoClient } from "./fuo-client";
-import { REQUIRED_LABEL, hasRequiredLabel } from "./thread-scraper.service";
+import { NOT_EXAM_MESSAGE, isOutsideSubjectForums } from "./thread-scraper.service";
 
 /**
- * Kiểm tra bài trên FuOverflow TRƯỚC khi nhận tiền: bài có tồn tại không và có đúng nhãn "Đề Thi FE" không.
- * Trước đây lỗi nhãn chỉ lộ ra khi worker đọc thread, lúc đó đã trừ phí rồi phải hoàn lại.
+ * Kiểm tra bài trên FuOverflow TRƯỚC khi nhận tiền: bài có tồn tại không và có nằm trong diễn đàn môn học không
+ * (mọi loại đề đều lấy được: FE, PE, Quiz, khác). Trước đây lỗi chỉ lộ ra khi worker đọc thread, lúc đó đã trừ phí rồi phải hoàn lại.
  *
  * Chỉ đọc đúng 1 trang đầu của bài. Kết quả được nhớ một lúc và các lượt hỏi đồng thời dùng chung một lần đọc,
  * vì giao diện gọi kiểm tra ngay khi người dùng dán link.
@@ -35,9 +35,7 @@ async function read(threadId: string): Promise<ThreadPreflight | null> {
   }
   const $ = cheerio.load(html);
   if ($("h1.p-title-value").length === 0) return null; // không phải trang bài viết (trang đăng nhập/Cloudflare...): không kết luận
-  if (!hasRequiredLabel(html)) {
-    return { ok: false, message: `Chỉ lấy được các bài có nhãn "${REQUIRED_LABEL}". Bài này không có nhãn đó nên không thể lấy.` };
-  }
+  if (isOutsideSubjectForums(html)) return { ok: false, message: NOT_EXAM_MESSAGE };
   return { ok: true, title: $("h1.p-title-value").first().clone().find(".label, .labelLink").remove().end().text().replace(/\s+/g, " ").trim() };
 }
 

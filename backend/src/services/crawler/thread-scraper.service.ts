@@ -1,7 +1,11 @@
 import * as cheerio from "cheerio";
+import { EXAM_DESCRIPTION_MAX } from "../../constants/fuo-catalog";
+import { classifyKind } from "../../utils/exam-kind";
 import { sanitizeName, stripExt, uniqueName } from "../../utils/filename";
+import { textOf } from "../../utils/html";
 import { isFuoHttpsUrl } from "../../utils/fuo-url";
 import type { FuoClient } from "./fuo-client";
+import { SUBJECT_CODE } from "./fuo-forum.service";
 import type { FileRef, ImageRef, ThreadData } from "./types";
 
 const IMAGE_SELECTOR = ".message-body img, .bbWrapper img, .message-attachments img, a.js-lbImage";
@@ -23,15 +27,43 @@ function deriveName(alt: string | undefined, url: URL): string {
   return stripExt(nameFromUrl(url));
 }
 
-// Chỉ nhận bài có nhãn (badge) này ở tiêu đề: <span class="label label--red">Đề Thi FE</span>
+// Nhãn của đề FE trên FuOverflow (<span class="label label--red">Đề Thi FE</span>), dùng cho danh mục nhập từ file
 export const REQUIRED_LABEL = "Đề Thi FE";
-const norm = (s: string) => s.normalize("NFC").replace(/\s+/g, " ").trim().toLowerCase();
+export const NOT_EXAM_MESSAGE = "Bài này không nằm trong diễn đàn môn học nào trên FuOverflow nên không phải đề thi. Hãy dán link bài đề của một môn.";
+const clean = (s: string) => s.normalize("NFC").replace(/\s+/g, " ").trim();
 
-export function hasRequiredLabel(html: string): boolean {
+/** Nhãn ở tiêu đề bài (<span class="label">Đề Thi FE</span>), null nếu bài không có nhãn. */
+export function extractLabel(html: string): string | null {
   const $ = cheerio.load(html);
-  return $("h1.p-title-value .label, h1.p-title-value .labelLink")
-    .toArray()
-    .some((el) => norm($(el).text()) === norm(REQUIRED_LABEL));
+  return clean($("h1.p-title-value .label").first().text()) || null;
+}
+
+// Diễn đàn môn học: tên là mã môn ("PRJ301") hoặc link /forums/prj301... ; mục cha là /categories/subjects/
+const SUBJECT_FORUM_HREF = /\/forums\/([A-Za-z]{2,4}\d{3}[A-Za-z]?)(?:[./]|$)/;
+
+/**
+ * Bài nằm ngoài khu "TÀI LIỆU CÁC MÔN HỌC" (quy định, thông báo, hỏi đáp chung...): không phải đề thi, không cho lấy.
+ * Chỉ kết luận khi đọc được breadcrumb; không đọc được thì không chặn (worker vẫn chặn bài không có ảnh/tệp nào).
+ */
+export function isOutsideSubjectForums(html: string): boolean {
+  const $ = cheerio.load(html);
+  const links = $(".p-breadcrumbs a[href]").toArray();
+  if (!links.length) return false;
+  return !links.some((a) => {
+    const href = $(a).attr("href") ?? "";
+    const name = clean($(a).text()).split(/[\s-]/)[0] ?? "";
+    return href.includes("/categories/subjects/") || SUBJECT_FORUM_HREF.test(href) || (href.includes("/forums/") && SUBJECT_CODE.test(name));
+  });
+}
+
+/** Nội dung bài đầu tiên thành chữ thuần: bỏ ảnh, script/style; giữ xuống dòng; cắt còn EXAM_DESCRIPTION_MAX ký tự. */
+export function extractDescription(html: string): string | null {
+  const $ = cheerio.load(html);
+  const body = $("article.message--post").first().find(".message-body .bbWrapper").first().clone();
+  if (!body.length) return null;
+  body.find("script, style, noscript, iframe, img:not(.smilie)").remove();
+  const text = textOf($, body);
+  return text ? text.slice(0, EXAM_DESCRIPTION_MAX) : null;
 }
 
 const QUESTION_NAME = /^Q\d+$/i;
@@ -145,6 +177,8 @@ export async function collectThread(client: FuoClient, startUrl: string): Promis
   const files = new Map<string, FileRef>();
   const visited = new Set<string>();
   let title = "";
+  let label: string | null = null;
+  let description: string | null = null;
   let signature: ReturnType<typeof extractThreadSignature> = { threadId: null, canonicalUrl: null };
   let firstPost: ReturnType<typeof extractFirstPost> = {};
   let next: string | null = startUrl;
@@ -153,10 +187,10 @@ export async function collectThread(client: FuoClient, startUrl: string): Promis
     visited.add(next);
     const html: string = await (await client.fetchOk(next)).text();
     if (!title) {
-      if (!hasRequiredLabel(html)) {
-        throw new Error(`Chỉ lấy được các bài có nhãn "${REQUIRED_LABEL}". Bài này không có nhãn đó nên không được lấy.`);
-      }
+      if (isOutsideSubjectForums(html)) throw new Error(NOT_EXAM_MESSAGE);
       title = extractTitle(html);
+      label = extractLabel(html);
+      description = extractDescription(html);
       signature = extractThreadSignature(html);
       firstPost = extractFirstPost(html);
     }
@@ -177,6 +211,9 @@ export async function collectThread(client: FuoClient, startUrl: string): Promis
   const named = normalizeQuestionNames([...images.values()]);
   return {
     title: title || "untitled",
+    label,
+    kind: classifyKind(label, title),
+    description,
     threadId: signature.threadId,
     canonicalUrl: signature.canonicalUrl,
     author: firstPost.author,
