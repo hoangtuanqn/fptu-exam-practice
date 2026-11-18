@@ -2,7 +2,7 @@
  * Tính lại thống kê tần suất ra đề (theo chương và theo nhóm câu) của một môn hoặc mọi môn. Mỗi môn một giao dịch, chạy lại bao nhiêu lần cũng được.
  * Thống kê nhóm đọc từ nhóm do npm run groups:build tạo, nên chạy lệnh đó trước.
  *
- *   npm run stats:refresh -- --subject=PRO192      (hoặc --subject=<id>)
+ *   npm run stats:refresh -- --subject=PRO192      (hoặc --subject=<uuid của môn>)
  *   npm run stats:refresh -- --all
  * Tuỳ chọn: --half-life=730 (số ngày để trọng số của một đề còn một nửa, mặc định trong constants/frequency-stats)
  */
@@ -18,7 +18,7 @@ const args = parseArgs();
 async function subjects(): Promise<SubjectRef[]> {
   if (args.has("all")) return subjectRepository.listAll();
   const ref = args.get("subject");
-  if (!ref) throw new Error("Missing --subject=<id or code> (or --all)");
+  if (!ref) throw new Error("Missing --subject=<code or uuid> (or --all)");
   const s = await subjectRepository.findByIdOrCode(ref);
   if (!s) throw new Error(`Subject not found: ${ref}`);
   return [s];

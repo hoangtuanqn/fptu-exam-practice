@@ -23,7 +23,7 @@ export interface BorderlinePair {
 }
 
 export interface GroupSummary {
-  subjectId: number;
+  subjectId: string;
   subjectCode: string;
   model: string;
   threshold: number;
@@ -54,7 +54,7 @@ async function loadRows(subjectCode: string, modelName: string): Promise<Loaded[
   });
 }
 
-export async function groupSimilarQuestions(subjectId: number, opts: GroupOptions = {}): Promise<GroupSummary> {
+export async function groupSimilarQuestions(subjectId: string, opts: GroupOptions = {}): Promise<GroupSummary> {
   const subject = await subjectRepository.findById(subjectId);
   if (!subject) throw AppError.notFound("Không tìm thấy môn học");
   const modelName = opts.modelName ?? FINGERPRINT_MODEL;
