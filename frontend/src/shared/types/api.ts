@@ -114,7 +114,7 @@ export interface AiAdminConfig {
 export type AnswerSource = "PENDING" | "FAILED" | "DEFAULT" | "AI" | "MANUAL";
 
 export interface AdminExam {
-  id: number;
+  id: string;
   title: string;
   threadId: string;
   totalQuestions: number;
@@ -215,7 +215,7 @@ export type ReportStatus = "PENDING" | "APPROVED" | "REJECTED";
 // Báo cáo trong danh sách của admin
 export interface AnswerReportAdmin {
   id: string;
-  examId: number;
+  examId: string;
   questionNumber: number;
   currentAnswer: string;
   proposedAnswer: string;
@@ -308,7 +308,7 @@ export interface AdminCrawlJob {
   finishedAt: string | null;
   guest: boolean; // khách chưa đăng nhập
   user: UserRef | null;
-  exam: { id: number; title: string } | null;
+  exam: { id: string; title: string } | null;
 }
 
 export interface AdminAttempt {
@@ -322,7 +322,7 @@ export interface AdminAttempt {
   durationSec: number;
   createdAt: string;
   user: UserRef;
-  exam: { id: number; title: string };
+  exam: { id: string; title: string };
 }
 
 export interface BonusTier {

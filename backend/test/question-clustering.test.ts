@@ -8,7 +8,7 @@ import { flipBits, randomHash } from "./helpers/fingerprints";
 
 const THRESHOLD = groupThresholdFor(FINGERPRINT_MODEL); // 6 bit
 const opts = { threshold: THRESHOLD, sameChapterOnly: true, allowSameExam: false };
-const row = (questionId: number, examId: number, chapter: string | null, hash: Uint8Array): ClusterRow => ({ questionId, examId, chapter, vector: fingerprintToVector(hash)! });
+const row = (questionId: number, exam: number, chapter: string | null, hash: Uint8Array): ClusterRow => ({ questionId, examId: `exam-${exam}`, chapter, vector: fingerprintToVector(hash)! });
 
 const base = randomHash(10);
 const other = randomHash(11);
@@ -75,9 +75,9 @@ describe("clusterQuestions (pure)", () => {
   it("works with plain text-style vectors and the 0.90 default", () => {
     const v = (...xs: number[]) => normalize(new Float32Array(xs));
     const rows: ClusterRow[] = [
-      { questionId: 1, examId: 1, chapter: "A", vector: v(1, 0.1, 0) },
-      { questionId: 2, examId: 2, chapter: "A", vector: v(1, 0.2, 0) },
-      { questionId: 3, examId: 3, chapter: "A", vector: v(0, 1, 0) },
+      { questionId: 1, examId: "exam-1", chapter: "A", vector: v(1, 0.1, 0) },
+      { questionId: 2, examId: "exam-2", chapter: "A", vector: v(1, 0.2, 0) },
+      { questionId: 3, examId: "exam-3", chapter: "A", vector: v(0, 1, 0) },
     ];
     assert.deepEqual(clusterQuestions(rows, { ...opts, threshold: 0.9 }).groups, [[1, 2]]);
   });

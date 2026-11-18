@@ -2,7 +2,7 @@
 export const SOCKET_PATH = "/api/v1/socket";
 
 export const EVENTS = {
-  subscribe: "subscribe", // client -> server: { room: "exam" | "job", id }
+  subscribe: "subscribe", // client -> server: { room: "exam", id: uuid string } | { room: "job", id: number }
   unsubscribe: "unsubscribe",
   examAnswers: "exam:answers", // server -> client: trạng thái + đáp án của đề
   examQuestions: "exam:questions", // server -> client: các câu đã có ảnh (đề đang được lấy về, hiện dần)
@@ -15,4 +15,4 @@ export const EVENTS = {
 export type RoomKind = "exam" | "job";
 // Phòng của mọi admin đang online: nhận thông báo mới ngay
 export const ADMIN_ROOM = "admins";
-export const roomOf = (kind: RoomKind, id: number) => `${kind}:${id}`;
+export const roomOf = (kind: RoomKind, id: string | number) => `${kind}:${id}`;

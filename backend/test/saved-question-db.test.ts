@@ -16,7 +16,7 @@ const status = (code: number) => (err: unknown) => (err as { status?: number }).
 describe("saved questions (MySQL)", { skip: DB_TESTS_ENABLED ? false : DB_SKIP_REASON }, () => {
   let db: ThrowawayDb;
   let m: Awaited<ReturnType<typeof loadModules>>;
-  let me: number, other: number, aiExam: number, defaultExam: number, notMine: number;
+  let me: number, other: number, aiExam: string, defaultExam: string, notMine: string;
 
   before(async () => {
     db = await createThrowawayDb();
@@ -57,7 +57,7 @@ describe("saved questions (MySQL)", { skip: DB_TESTS_ENABLED ? false : DB_SKIP_R
 
   it("rejects an exam not in the library and a question that does not exist", async () => {
     await assert.rejects(m.saved.save(me, notMine, 1), status(404));
-    await assert.rejects(m.saved.save(me, 999_999, 1), status(404));
+    await assert.rejects(m.saved.save(me, "00000000-0000-7000-8000-000000000000", 1), status(404));
     await assert.rejects(m.saved.save(me, aiExam, 99), status(404));
     await assert.rejects(m.saved.save(me, aiExam, 3), status(404)); // ảnh tài liệu tham khảo không phải câu hỏi
     assert.equal(await m.prisma.savedQuestion.count(), 0);

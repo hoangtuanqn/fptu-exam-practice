@@ -5,6 +5,7 @@ import { userRepository } from "../repositories/user.repository";
 import { crawlJobService } from "../services/crawl-job.service";
 import { topicLabelerService } from "../services/ai/topic-labeler.service";
 import { examService } from "../services/exam.service";
+import { uuidSchema } from "../rules/requests/admin.request";
 import type { Actor } from "../utils/actor";
 import { verifyToken } from "../utils/jwt";
 import { ADMIN_ROOM, EVENTS, SOCKET_PATH, roomOf, type RoomKind } from "./events";
@@ -27,9 +28,20 @@ async function identifySocket(auth: Record<string, unknown>): Promise<Actor> {
   return { owner: { guestId }, isAdmin: false };
 }
 
-// Vào phòng của một đề/job (chỉ khi có quyền xem) rồi gửi ngay trạng thái hiện tại để không lỡ sự kiện nào
-async function subscribe(socket: Socket, actor: Actor, kind: RoomKind, id: number) {
+// Id phòng hợp lệ theo loại: đề = UUID (chữ thường như trong DB), job = số nguyên dương. Sai thì null.
+export const parseRoomId = (kind: RoomKind, raw: unknown): string | number | null => {
   if (kind === "exam") {
+    const r = uuidSchema.safeParse(raw);
+    return r.success ? r.data : null;
+  }
+  const n = Number(raw);
+  return Number.isInteger(n) && n > 0 ? n : null;
+};
+
+// Vào phòng của một đề/job (chỉ khi có quyền xem) rồi gửi ngay trạng thái hiện tại để không lỡ sự kiện nào
+async function subscribe(socket: Socket, actor: Actor, kind: RoomKind, rawId: string | number) {
+  if (kind === "exam") {
+    const id = String(rawId);
     await examService.assertAccess(actor, id);
     await socket.join(roomOf(kind, id));
     const payload = await examPayload(id);
@@ -39,6 +51,7 @@ async function subscribe(socket: Socket, actor: Actor, kind: RoomKind, id: numbe
     if (loaded) socket.emit(EVENTS.examQuestions, loaded);
     if (topicLabelerService.isRunning(id)) socket.emit(EVENTS.examTopics, { examId: id, state: "running", topics: [] });
   } else {
+    const id = Number(rawId);
     await crawlJobService.getForActor(id, actor); // ném lỗi nếu không phải job của người này
     await socket.join(roomOf(kind, id));
     const payload = await jobPayload(id);
@@ -65,8 +78,8 @@ export function initRealtime(server: HttpServer) {
 
     socket.on(EVENTS.subscribe, async (msg: { room?: string; id?: unknown }, ack?: (ok: boolean) => void) => {
       const kind = KINDS.find((k) => k === msg?.room);
-      const id = Number(msg?.id);
-      if (!kind || !Number.isInteger(id) || id <= 0) return ack?.(false);
+      const id = kind ? parseRoomId(kind, msg?.id) : null;
+      if (!kind || id === null) return ack?.(false);
       try {
         await subscribe(socket, actor, kind, id);
         ack?.(true);
@@ -77,8 +90,8 @@ export function initRealtime(server: HttpServer) {
 
     socket.on(EVENTS.unsubscribe, (msg: { room?: string; id?: unknown }) => {
       const kind = KINDS.find((k) => k === msg?.room);
-      const id = Number(msg?.id);
-      if (kind && Number.isInteger(id)) void socket.leave(roomOf(kind, id));
+      const id = kind ? parseRoomId(kind, msg?.id) : null;
+      if (kind && id !== null) void socket.leave(roomOf(kind, id));
     });
   });
 

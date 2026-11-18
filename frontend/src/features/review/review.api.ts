@@ -12,7 +12,7 @@ export interface ReviewSummary {
 // Một câu để ôn: ảnh + đáp án hiện tại
 export interface ReviewQuestion {
   id: number;
-  examId: number;
+  examId: string;
   examTitle: string;
   threadId: string;
   number: number;
@@ -25,7 +25,7 @@ export interface ReviewQuestion {
 
 export interface ReviewRow {
   id: number;
-  examId: number;
+  examId: string;
   examTitle: string;
   threadId: string;
   number: number;

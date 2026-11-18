@@ -135,14 +135,14 @@ adminRouter.get("/settings/ai", adminAiController.getSettings);
 adminRouter.put("/settings/ai", validate(updateAiBody), adminAiController.updateSettings);
 
 adminRouter.get("/exams", validate(paginationQuery, "query"), adminAiController.listExams);
-adminRouter.get("/exams/:id", validate(idParam, "params"), adminAiController.examDetail);
-adminRouter.patch("/exams/:id", validate(idParam, "params"), validate(renameExamBody), adminAiController.renameExam);
-adminRouter.delete("/exams/:id", validate(idParam, "params"), adminAiController.removeExam);
-adminRouter.patch("/exams/:id/questions", validate(idParam, "params"), validate(updateExamQuestionsBody), adminAiController.saveQuestions);
+adminRouter.get("/exams/:id", validate(uuidParam, "params"), adminAiController.examDetail);
+adminRouter.patch("/exams/:id", validate(uuidParam, "params"), validate(renameExamBody), adminAiController.renameExam);
+adminRouter.delete("/exams/:id", validate(uuidParam, "params"), adminAiController.removeExam);
+adminRouter.patch("/exams/:id/questions", validate(uuidParam, "params"), validate(updateExamQuestionsBody), adminAiController.saveQuestions);
 adminRouter.post("/exams/:id/questions/:number/resolve", validate(questionParam, "params"), adminAiController.resolveQuestion);
-adminRouter.post("/exams/:id/solve", validate(idParam, "params"), adminAiController.solve);
-adminRouter.get("/exams/:id/report", validate(idParam, "params"), adminAiController.report);
-adminRouter.get("/exams/:id/download", validate(idParam, "params"), adminAiController.downloadExam);
+adminRouter.post("/exams/:id/solve", validate(uuidParam, "params"), adminAiController.solve);
+adminRouter.get("/exams/:id/report", validate(uuidParam, "params"), adminAiController.report);
+adminRouter.get("/exams/:id/download", validate(uuidParam, "params"), adminAiController.downloadExam);
 
 adminRouter.get("/gift-codes", validate(listGiftCodesQuery, "query"), adminGiftCodeController.list);
 adminRouter.post("/gift-codes", validate(createGiftCodeBody), adminGiftCodeController.create);

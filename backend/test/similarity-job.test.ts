@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { SubjectRef } from "../src/repositories/subject.repository";
 import { createSimilarityJob, type HashOutcome, type SimilarityJobDeps, type SubjectEntry } from "../src/services/similarity-job.service";
-import { EMPTY_EXAM_AGGREGATE, examSignature, examsChanged, hashCursorFor, needsWork, splitHashBudget, type SubjectSnapshot } from "../src/utils/similarity-job";
+import { addToAggregate, EMPTY_EXAM_AGGREGATE, examSignature, examsChanged, hashCursorFor, needsWork, splitHashBudget, type SubjectSnapshot } from "../src/utils/similarity-job";
 
 const NONE = { missingHashes: 0, unembedded: 0 };
 const snap = (signature: string, lastRun: SubjectSnapshot["lastRun"], hasUsableExams = true): SubjectSnapshot => ({ signature, hasUsableExams, lastRun });
@@ -16,6 +16,17 @@ describe("similarity job selection (pure)", () => {
     assert.notEqual(examSignature({ ...base, idSum: 4 }), sig); // một đề bị thay bằng đề khác
     assert.notEqual(examSignature({ ...base, maxRefreshedAt: new Date(2000) }), sig);
     assert.equal(examSignature(EMPTY_EXAM_AGGREGATE), "0:0:0:0");
+  });
+
+  it("aggregates UUID exam ids: same set gives the same signature, swapping one exam changes it", () => {
+    const e = (id: string, ms: number, refreshed: number | null = null) => ({ id, createdAt: new Date(ms), refreshedAt: refreshed === null ? null : new Date(refreshed) });
+    const a = e("0190f5c2-7a10-7000-8000-00000000000a", 1000);
+    const b = e("0190f5c2-7a10-7000-8000-00000000000b", 3000, 5000);
+    const c = e("0190f5c2-7a10-7000-8000-00000000000c", 2000);
+    const of = (...xs: (typeof a)[]) => xs.reduce(addToAggregate, EMPTY_EXAM_AGGREGATE);
+    assert.deepEqual(of(a, b), { count: 2, idSum: 10 + 11, maxCreatedAt: new Date(3000), maxRefreshedAt: new Date(5000) });
+    assert.equal(examSignature(of(a, b)), examSignature(of(b, a)));
+    assert.notEqual(examSignature(of(a, b)), examSignature(of(a, c)));
   });
 
   it("selects subjects whose exams changed, that still miss hashes, or have unembedded questions", () => {

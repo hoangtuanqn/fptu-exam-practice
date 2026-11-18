@@ -152,7 +152,7 @@ export const linkRewardService = {
   },
 
   /** Dùng 1 lượt (sắp hết hạn trước) cho một câu. Gọi trong transaction của việc mua giải thích. false = không còn lượt hợp lệ. */
-  async consume(db: Db, userId: number, examId: number, questionNumber: number) {
+  async consume(db: Db, userId: number, examId: string, questionNumber: number) {
     const now = new Date();
     const turn = await db.freeExplainTurn.findFirst({ where: { userId, usedAt: null, expiresAt: { gt: now } }, orderBy: { expiresAt: "asc" }, select: { id: true } });
     if (!turn) return false;
@@ -161,7 +161,7 @@ export const linkRewardService = {
   },
 
   /** AI lỗi sau khi đã dùng lượt: trả lại lượt cho người dùng */
-  async restore(db: Db, userId: number, examId: number, questionNumber: number) {
+  async restore(db: Db, userId: number, examId: string, questionNumber: number) {
     await db.freeExplainTurn.updateMany({
       where: { userId, usedExamId: examId, usedQuestionNumber: questionNumber, usedAt: { not: null } },
       data: { usedAt: null, usedExamId: null, usedQuestionNumber: null },

@@ -15,22 +15,22 @@ export interface SessionState {
 }
 
 export interface PracticeSession extends SessionState {
-  id: number;
-  examId: number;
+  id: string;
+  examId: string;
   mode: SessionMode;
   status: "IN_PROGRESS" | "SUBMITTED";
   answered: number; // số câu đã chọn đáp án
   createdAt: string;
   updatedAt: string;
-  exam: { id: number; title: string; threadId: string; totalQuestions: number };
+  exam: { id: string; title: string; threadId: string; totalQuestions: number };
 }
 
 export const sessionApi = {
   // Mỗi lần bấm làm bài là một lượt mới
-  create: (examId: number, mode: SessionMode) => http.post<PracticeSession>(`/exams/${examId}/sessions`, { mode }),
-  get: (id: number) => http.get<PracticeSession>(`/sessions/${id}`),
-  save: (id: number, state: SessionState, submitted = false, keepalive = false) => http.put<{ id: number }>(`/sessions/${id}`, { ...state, ...(submitted && { submitted }) }, keepalive),
-  remove: (id: number) => http.delete(`/sessions/${id}`),
+  create: (examId: string, mode: SessionMode) => http.post<PracticeSession>(`/exams/${examId}/sessions`, { mode }),
+  get: (id: string) => http.get<PracticeSession>(`/sessions/${id}`),
+  save: (id: string, state: SessionState, submitted = false, keepalive = false) => http.put<{ id: string }>(`/sessions/${id}`, { ...state, ...(submitted && { submitted }) }, keepalive),
+  remove: (id: string) => http.delete(`/sessions/${id}`),
   // Các lượt làm dở, mới cập nhật lên đầu
   listInProgress: (page = 1, limit = PAGE_SIZE) => http.list<PracticeSession>("/sessions", { page, limit }),
 };

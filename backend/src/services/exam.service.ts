@@ -19,17 +19,17 @@ const imageUrlOf = fileUrlOf;
 
 export const examService = {
   // Người dùng bấm "Thử lại" trên đề FAILED (có thời gian chờ giữa hai lần để không đốt token)
-  async retrySolve(actor: Actor, id: number) {
+  async retrySolve(actor: Actor, id: string) {
     await this.assertAccess(actor, id);
     const result = await examSolveService.retry(id);
     if (result === "cooldown") throw AppError.conflict("Vừa thử lại xong, vui lòng đợi ít phút rồi thử lại");
     return { result };
   },
   // Đề nhập xong (hoặc đã có sẵn) đều vào kho của người nhập: thành viên hoặc khách
-  addToLibrary: (owner: Owner, examId: number, db?: Db) => userExamRepository.add(owner, examId, db),
+  addToLibrary: (owner: Owner, examId: string, db?: Db) => userExamRepository.add(owner, examId, db),
 
   // Chỉ chủ kho (hoặc admin) được xem/làm đề; người khác nhận 404 như thể đề không tồn tại
-  async assertAccess(actor: Actor, examId: number) {
+  async assertAccess(actor: Actor, examId: string) {
     if (actor.isAdmin) return;
     if (!(await userExamRepository.has(actor.owner, examId))) throw AppError.notFound(EXAM_NOT_FOUND);
   },
@@ -58,7 +58,7 @@ export const examService = {
   },
 
   // Dạng giống đề mở từ thư mục: mỗi câu có số, ảnh và đáp án đúng (có thể nhiều đáp án, cách nhau bằng dấu cách)
-  async getDetail(actor: Actor, id: number) {
+  async getDetail(actor: Actor, id: string) {
     await this.assertAccess(actor, id);
     await examSolveService.upgradeIfNeeded(id);
     const exam = await examRepository.findDetail(id);
@@ -92,7 +92,7 @@ export const examService = {
   },
 
   // Tệp đính kèm của đề: công khai như ảnh đề (/api/v1/files), chỉ cần đúng cặp đề + tệp
-  async getAttachmentFile(examId: number, attachmentId: number) {
+  async getAttachmentFile(examId: string, attachmentId: number) {
     const row = await examAttachmentRepository.find(examId, attachmentId);
     const abs = row && resolveInside(storageDir, row.filePath);
     if (!row || !abs) throw AppError.notFound("Không tìm thấy tệp");
@@ -100,7 +100,7 @@ export const examService = {
   },
 
   // Giao diện hỏi lại định kỳ trong lúc AI phân tích: chỉ trả trạng thái và đáp án, nhẹ hơn tải cả đề
-  async getAnswers(actor: Actor, id: number) {
+  async getAnswers(actor: Actor, id: string) {
     await this.assertAccess(actor, id);
     const exam = await examRepository.findAnswers(id);
     if (!exam) throw AppError.notFound(EXAM_NOT_FOUND);

@@ -22,7 +22,7 @@ const normalize = (answer: string) => [...new Set(answer.toUpperCase().replace(/
 const imageUrlOf = fileUrlOf;
 
 // Gắn ảnh câu hỏi cho các dòng của admin (một truy vấn cho cả trang, để admin xem đề khi duyệt)
-async function withImages<T extends { examId: number; questionNumber: number }>(items: T[]) {
+async function withImages<T extends { examId: string; questionNumber: number }>(items: T[]) {
   const images = await answerReportRepository.questionImages(items.map((r) => ({ examId: r.examId, number: r.questionNumber })));
   const imageOf = new Map(images.map((q) => [`${q.examId}:${q.number}`, imageUrlOf(q.imagePath)]));
   return items.map((r) => ({ ...r, imageUrl: imageOf.get(`${r.examId}:${r.questionNumber}`) ?? null }));

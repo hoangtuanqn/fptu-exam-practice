@@ -48,7 +48,7 @@ const SCHEMA = {
 };
 
 export interface LabelResult {
-  examId: number;
+  examId: string;
   title: string;
   subject: string | null;
   skipped?: string; // lý do không gắn nhãn (không có môn, môn không có chủ đề, AI chưa bật...)
@@ -76,9 +76,9 @@ async function askBatch(model: { apiKey: string; model: string }, items: TopicIt
 }
 
 // Gắn chủ đề chạy nền khi người dùng mở đề còn thiếu nhãn: mỗi đề chỉ chạy một lần tại một thời điểm, và nghỉ một lúc nếu không gắn được (tránh gọi AI lặp lại)
-const claimed = new Set<number>(); // giữ chỗ ngay từ lúc vào ensure (hai lần mở đề cùng lúc chỉ chạy một)
-const running = new Set<number>(); // đã qua kiểm tra và đang gọi AI
-const retryAt = new Map<number, number>();
+const claimed = new Set<string>(); // giữ chỗ ngay từ lúc vào ensure (hai lần mở đề cùng lúc chỉ chạy một)
+const running = new Set<string>(); // đã qua kiểm tra và đang gọi AI
+const retryAt = new Map<string, number>();
 const RETRY_PARTIAL_MS = 10 * 60_000;
 const RETRY_SKIPPED_MS = 30 * 60_000;
 
@@ -89,13 +89,13 @@ async function findSubject(title: string) {
 }
 
 export const topicLabelerService = {
-  isRunning: (examId: number) => running.has(examId),
+  isRunning: (examId: string) => running.has(examId),
 
   /**
    * Gọi khi mở đề: nếu còn câu chưa có chủ đề và môn đã có syllabus thì gắn nền, báo "running"/"done" qua realtime.
    * Không bao giờ ném lỗi và không chờ kết quả (không làm chậm việc mở đề).
    */
-  async ensure(examId: number): Promise<void> {
+  async ensure(examId: string): Promise<void> {
     if (claimed.has(examId) || (retryAt.get(examId) ?? 0) > Date.now()) return;
     claimed.add(examId);
     try {
@@ -128,7 +128,7 @@ export const topicLabelerService = {
   },
 
   /** Gắn chủ đề cho các câu của một đề, dựa trên chương/mục của syllabus môn học (bảng subjects). */
-  async labelExam(examId: number, opts: LabelOptions = {}): Promise<LabelResult> {
+  async labelExam(examId: string, opts: LabelOptions = {}): Promise<LabelResult> {
     const exam = await prisma.exam.findUnique({
       where: { id: examId },
       select: {

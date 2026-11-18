@@ -10,7 +10,7 @@ import { readTimeLimit, saveTimeLimit } from "@/features/practice/utils/timeLimi
 interface PendingExam {
   questions: Question[];
   title: string;
-  examId: number | null; // có khi đề lấy từ hệ thống (để ghi lịch sử), null khi mở từ thư mục
+  examId: string | null; // có khi đề lấy từ hệ thống (để ghi lịch sử), null khi mở từ thư mục
   answerSource: AnswerSource | null; // nguồn đáp án của đề hệ thống (null = đề mở từ thư mục)
   total: number; // tổng số ảnh của đề (lớn hơn số câu + tài liệu đã có = đề còn đang được lấy về)
   references: Question[]; // tài liệu tham khảo (trang công thức...): không phải câu hỏi
@@ -21,7 +21,7 @@ const isLocked = (source: AnswerSource | null) => source !== null && source !== 
 
 // Trạng thái của một lượt làm dở dang cần khôi phục
 export interface ResumeState {
-  sessionId: number;
+  sessionId: string;
   answers: UserAnswers;
   checked: Record<number, boolean>;
   flagged: Record<number, boolean>;
@@ -51,7 +51,7 @@ export function useQuiz() {
   const [submitted, setSubmitted] = useState(false);
   const [current, setCurrent] = useState(0); // vị trí câu đang xem (index)
   const [title, setTitle] = useState(""); // tên thư mục đề
-  const [examId, setExamId] = useState<number | null>(null); // đề đang làm có trong hệ thống không
+  const [examId, setExamId] = useState<string | null>(null); // đề đang làm có trong hệ thống không
   const [answerSource, setAnswerSource] = useState<AnswerSource | null>(null); // nguồn đáp án; PENDING = AI đang phân tích
   const [total, setTotal] = useState(0); // tổng số câu của đề đang làm
   const answersPending = isLocked(answerSource); // chưa có đáp án: chỉ xem đề
@@ -61,7 +61,7 @@ export function useQuiz() {
   const [notFound, setNotFound] = useState(false); // upload thư mục không có ảnh hợp lệ
   const [flagged, setFlagged] = useState<Record<number, boolean>>({}); // câu đánh dấu cần xem lại
   const [session, setSession] = useState(0); // tăng mỗi lần bắt đầu/làm lại -> đặt lại đồng hồ
-  const [sessionId, setSessionId] = useState<number | null>(null); // lượt làm lưu trên server (null = chưa tạo / đề mở từ thư mục)
+  const [sessionId, setSessionId] = useState<string | null>(null); // lượt làm lưu trên server (null = chưa tạo / đề mở từ thư mục)
   const [restoredSubmitted, setRestoredSubmitted] = useState(false); // bài đã nộp được mở lại sau khi tải lại trang
   const [resumedElapsed, setResumedElapsed] = useState(0); // số giây đã làm ở lượt được làm tiếp
   const [violations, setViolations] = useState<Violation[]>([]); // các lần rời khỏi bài thi toàn màn hình (chế độ Thi)
@@ -102,7 +102,7 @@ export function useQuiz() {
   }
 
   // Đề đã có sẵn câu hỏi (nhập từ link FuOverflow): cũng chờ xác nhận như đề mở từ thư mục
-  function loadExam(examQuestions: Question[], examTitle: string, id: number, source: AnswerSource = "AI", examTotal = examQuestions.length) {
+  function loadExam(examQuestions: Question[], examTitle: string, id: string, source: AnswerSource = "AI", examTotal = examQuestions.length) {
     setNotFound(false);
     const split = splitReferences(examQuestions);
     setPending({
@@ -119,7 +119,7 @@ export function useQuiz() {
   function openExam(
     examQuestions: Question[],
     examTitle: string,
-    id: number,
+    id: string,
     chosenMode: Mode,
     source: AnswerSource = "AI",
     examTotal = examQuestions.length,
@@ -156,7 +156,7 @@ export function useQuiz() {
   }
 
   // Mở đề ngay (màn hình làm bài hiện phía sau), chờ người dùng chọn chế độ ở hộp thoại; chưa chọn thì không tính giờ
-  function openForChoice(examQuestions: Question[], examTitle: string, id: number, source: AnswerSource = "AI", examTotal = examQuestions.length) {
+  function openForChoice(examQuestions: Question[], examTitle: string, id: string, source: AnswerSource = "AI", examTotal = examQuestions.length) {
     openExam(examQuestions, examTitle, id, "practice", source, examTotal);
     setChoosing(true);
   }

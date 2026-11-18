@@ -13,7 +13,7 @@ import { explanationApi, type ExplanationBundle } from "./explanation.api";
 import { errorMessage } from "@/shared/api/errors";
 
 interface Props {
-  examId: number;
+  examId: string;
   bundle: ExplanationBundle;
   onCancel: () => void;
   onUnlocked: () => void; // đã mở khóa xong (cha tải lại thông tin giá/trạng thái)

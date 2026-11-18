@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { HTTP_STATUS } from "../constants/httpStatus";
 import { getValidated } from "../middlewares/validate.middlewares";
-import type { IdParam, QuestionParam, RenameExamBody, UpdateExamQuestionsBody } from "../rules/requests/admin.request";
+import type { QuestionParam, RenameExamBody, UpdateExamQuestionsBody, UuidParam } from "../rules/requests/admin.request";
 import type { UpdateAiBody } from "../rules/requests/setting.request";
 import { ResponseClient } from "../rules/response";
 import { adminExamService } from "../services/admin.exam.service";
@@ -24,24 +24,24 @@ export const adminAiController = {
   },
 
   async solve(_req: Request, res: Response) {
-    const { id } = getValidated<IdParam>(res, "params");
+    const { id } = getValidated<UuidParam>(res, "params");
     await adminExamService.solve(id);
     res.status(HTTP_STATUS.ACCEPTED).json(new ResponseClient({ message: "AI đang giải lại đáp án, có thể mất vài phút" }));
   },
 
   async report(_req: Request, res: Response) {
-    const { id } = getValidated<IdParam>(res, "params");
+    const { id } = getValidated<UuidParam>(res, "params");
     res.json(new ResponseClient({ data: await adminExamService.report(id) }));
   },
 
   async examDetail(_req: Request, res: Response) {
-    const { id } = getValidated<IdParam>(res, "params");
+    const { id } = getValidated<UuidParam>(res, "params");
     res.json(new ResponseClient({ data: await adminExamService.detail(id) }));
   },
 
   // Tệp nhị phân nên không bọc ResponseClient; lỗi vẫn đi qua AppError như thường
   async downloadExam(req: Request, res: Response) {
-    const { id } = getValidated<IdParam>(res, "params");
+    const { id } = getValidated<UuidParam>(res, "params");
     const { zip, filename } = await adminExamService.download(req.user!.id, id);
     res.setHeader("Content-Type", "application/zip");
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
@@ -50,7 +50,7 @@ export const adminAiController = {
   },
 
   async saveQuestions(req: Request, res: Response) {
-    const { id } = getValidated<IdParam>(res, "params");
+    const { id } = getValidated<UuidParam>(res, "params");
     const data = await adminExamService.saveQuestions(req.user!.id, id, getValidated<UpdateExamQuestionsBody>(res));
     res.json(new ResponseClient({ message: "Đã lưu đáp án", data }));
   },
@@ -62,13 +62,13 @@ export const adminAiController = {
   },
 
   async renameExam(req: Request, res: Response) {
-    const { id } = getValidated<IdParam>(res, "params");
+    const { id } = getValidated<UuidParam>(res, "params");
     const data = await adminExamService.rename(req.user!.id, id, getValidated<RenameExamBody>(res));
     res.json(new ResponseClient({ message: "Đã đổi tên đề", data }));
   },
 
   async removeExam(req: Request, res: Response) {
-    const { id } = getValidated<IdParam>(res, "params");
+    const { id } = getValidated<UuidParam>(res, "params");
     await adminExamService.remove(req.user!.id, id);
     res.json(new ResponseClient({ message: "Đã xoá đề" }));
   },

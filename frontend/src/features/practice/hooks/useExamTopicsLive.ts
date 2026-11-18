@@ -3,7 +3,7 @@ import { EVENTS } from "@/shared/realtime/events";
 import { subscribeRoom } from "@/shared/realtime/socket";
 
 interface TopicsPayload {
-  examId: number;
+  examId: string;
   state: "running" | "done";
   topics: { number: number; topic: string }[];
 }
@@ -14,7 +14,7 @@ const MAX_WAIT_MS = 3 * 60_000; // phòng khi tin "xong" không tới (mất k�
  * Đề còn câu chưa có chủ đề thì máy chủ gắn nền khi mở đề. Hook báo đang gắn hay chưa (để hiện hiệu ứng)
  * và trao các chủ đề mới ngay khi xong. Không cần hỏi định kỳ: kết quả đã lưu, lần mở sau tự có.
  */
-export function useExamTopicsLive(examId: number | null, onTopics: (topics: TopicsPayload["topics"]) => void) {
+export function useExamTopicsLive(examId: string | null, onTopics: (topics: TopicsPayload["topics"]) => void) {
   const [labeling, setLabeling] = useState(false);
   const handler = useRef(onTopics);
   handler.current = onTopics;

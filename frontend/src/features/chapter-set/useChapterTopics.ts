@@ -21,12 +21,12 @@ const topicsOf = (questions: { number: number; topic?: string | null; isReferenc
  * cho tới khi có chương, AI báo lỗi, hoặc quá thời gian chờ (khi đó coi như đề không có chương, vẫn làm cả đề được).
  */
 export function useChapterTopics(exams: PickedExam[]) {
-  const [byExam, setByExam] = useState<Record<number, ExamTopics>>({});
-  const requested = useRef(new Set<number>());
-  const tracking = useRef(new Map<number, { tries: number; startedAt: number }>());
+  const [byExam, setByExam] = useState<Record<string, ExamTopics>>({});
+  const requested = useRef(new Set<string>());
+  const tracking = useRef(new Map<string, { tries: number; startedAt: number }>());
   const idsKey = exams.map((e) => e.id).join(",");
 
-  const patch = (id: number, next: ExamTopics) => setByExam((cur) => ({ ...cur, [id]: next }));
+  const patch = (id: string, next: ExamTopics) => setByExam((cur) => ({ ...cur, [id]: next }));
 
   // Tải chi tiết từng đề lần đầu được chọn
   useEffect(() => {
@@ -63,7 +63,7 @@ export function useChapterTopics(exams: PickedExam[]) {
   useEffect(() => {
     if (waitingIds.length === 0) return;
     let alive = true;
-    const give = (id: number, topicOf: Map<number, string | null>) => alive && patch(id, { status: "ready", stage: "labeling", topicOf });
+    const give = (id: string, topicOf: Map<number, string | null>) => alive && patch(id, { status: "ready", stage: "labeling", topicOf });
     const tick = async () => {
       await Promise.all(
         waitingIds.map(async (id) => {
@@ -97,7 +97,7 @@ export function useChapterTopics(exams: PickedExam[]) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [waitingKey]);
 
-  const stateOf = (id: number): ExamTopics | undefined => byExam[id];
+  const stateOf = (id: string): ExamTopics | undefined => byExam[id];
   const waiting = exams.some((e) => {
     const s = byExam[e.id]?.status;
     return s === undefined || s === "loading" || s === "waiting";
@@ -117,7 +117,7 @@ export function useChapterTopics(exams: PickedExam[]) {
   }, [idsKey, byExam]);
 
   /** Số câu của một đề thuộc các chương đã chọn */
-  const countIn = (id: number, picked: Set<string>) => {
+  const countIn = (id: string, picked: Set<string>) => {
     let n = 0;
     for (const t of byExam[id]?.topicOf.values() ?? []) if (t && picked.has(t)) n++;
     return n;

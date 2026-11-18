@@ -8,10 +8,11 @@ import { EVENTS, SOCKET_PATH, type RoomKind } from "./events";
  * Các màn hình chỉ gọi `subscribeRoom`; việc vào lại phòng sau khi mất kết nối nằm ở đây.
  */
 let socket: Socket | null = null;
-const rooms = new Map<string, { kind: RoomKind; id: number; count: number }>();
-const key = (kind: RoomKind, id: number) => `${kind}:${id}`;
+type RoomId = string | number; // exam: UUID string, job: number
+const rooms = new Map<string, { kind: RoomKind; id: RoomId; count: number }>();
+const key = (kind: RoomKind, id: RoomId) => `${kind}:${id}`;
 
-const join = (s: Socket, kind: RoomKind, id: number) => s.emit(EVENTS.subscribe, { room: kind, id });
+const join = (s: Socket, kind: RoomKind, id: RoomId) => s.emit(EVENTS.subscribe, { room: kind, id });
 
 function getSocket(): Socket {
   if (socket) return socket;
@@ -45,7 +46,7 @@ export function refreshRealtimeAuth() {
 }
 
 /** Theo dõi một phòng (đề hoặc job). Trả về hàm hủy. Server gửi ngay trạng thái hiện tại sau khi vào phòng. */
-export function subscribeRoom<T>(kind: RoomKind, id: number, event: string, handler: (payload: T) => void): () => void {
+export function subscribeRoom<T>(kind: RoomKind, id: RoomId, event: string, handler: (payload: T) => void): () => void {
   const s = getSocket();
   const k = key(kind, id);
   const entry = rooms.get(k);

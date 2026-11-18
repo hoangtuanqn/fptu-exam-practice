@@ -17,11 +17,11 @@ const adminSelect = {
 } satisfies Prisma.ExplanationFeedbackSelect;
 
 export const explanationFeedbackRepository = {
-  find: (userId: number, examId: number, questionNumber: number) =>
+  find: (userId: number, examId: string, questionNumber: number) =>
     prisma.explanationFeedback.findUnique({ where: { userId_examId_questionNumber: { userId, examId, questionNumber } }, select: { helpful: true, reason: true, comment: true } }),
 
   // Mỗi người một đánh giá cho mỗi câu: gửi lại thì ghi đè (lý do và góp ý cũ bị xóa nếu lần này là "hữu ích")
-  upsert: (userId: number, examId: number, questionNumber: number, data: { helpful: boolean; reason: string | null; comment: string | null; resolvedAt?: null; resolvedById?: null }) =>
+  upsert: (userId: number, examId: string, questionNumber: number, data: { helpful: boolean; reason: string | null; comment: string | null; resolvedAt?: null; resolvedById?: null }) =>
     prisma.explanationFeedback.upsert({
       where: { userId_examId_questionNumber: { userId, examId, questionNumber } },
       create: { userId, examId, questionNumber, ...data },
@@ -50,7 +50,7 @@ export const explanationFeedbackRepository = {
   countPending: () => prisma.explanationFeedback.count({ where: { helpful: false, resolvedAt: null } }),
 
   // Nội dung lời giải đang lưu của các câu trong trang, để admin đọc ngay lời giải bị chê
-  explanationsOf: (pairs: { examId: number; questionNumber: number }[]) =>
+  explanationsOf: (pairs: { examId: string; questionNumber: number }[]) =>
     pairs.length === 0 ? Promise.resolve([]) : prisma.questionExplanation.findMany({ where: { OR: pairs }, select: { examId: true, questionNumber: true, content: true, model: true } }),
 
   async summary() {

@@ -2,7 +2,7 @@ import { http } from "@/shared/api/client";
 import { PAGE_SIZE } from "@/shared/api/pagination";
 
 export interface LibraryExam {
-  id: number;
+  id: string;
   title: string;
   threadId: string;
   totalQuestions: number;

@@ -26,6 +26,16 @@ cd ~/app && bash deploy/backup-db.sh && bash deploy/deploy.sh
 
 `deploy.sh` does: fast-forward `main`, `npm ci`, `prisma generate` + `migrate deploy`, build, PM2 reload. Always back up first. After it finishes, check the health endpoint and PM2 status.
 
+### Destructive migrations (0078, 0079 and any later one marked DESTRUCTIVE)
+
+`deploy.sh` migrates while the old build is still serving, and the old build writes the old (INT) ids into tables that are being converted. So for these migrations:
+
+1. Read the migration header and follow its mandatory steps (it lists them; do not skip any).
+2. Run `SELECT VERSION(), @@sql_require_primary_key;` (the second value must be 0) and check no crawl or AI job is running.
+3. Stop the API first: `pm2 stop fepass-api`, then `bash deploy/backup-db.sh`, then `bash deploy/deploy.sh` (it restarts PM2).
+4. Ship the frontend zip right after the backend: the old frontend gets 422 from the new backend until it is replaced.
+5. If it fails half-way, do not re-run: restore the dump, follow the rollback notes in the header, redeploy the previous backend and frontend builds.
+
 ## Frontend
 
 1. On the local machine run `release.cmd` (builds and produces `release/fepass-web.zip`).

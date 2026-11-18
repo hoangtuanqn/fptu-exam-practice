@@ -41,7 +41,7 @@ export const explainChatService = {
     return quotaOf(used, pro);
   },
 
-  async chat(actor: Actor, userId: number, examId: number, questionNumber: number, messages: ChatMessage[]) {
+  async chat(actor: Actor, userId: number, examId: string, questionNumber: number, messages: ChatMessage[]) {
     await examService.assertAccess(actor, examId);
     const question = await examRepository.findQuestionForExplain(examId, questionNumber);
     if (!question) throw AppError.notFound("Không tìm thấy câu hỏi");

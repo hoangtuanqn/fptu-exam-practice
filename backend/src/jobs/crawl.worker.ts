@@ -25,7 +25,7 @@ const drain = async () => {
         };
         const hooks = {
           // Đã có ảnh đầu tiên: cho người dùng mở đề ngay, các câu sau hiện dần
-          onReady: async (readyExamId: number) => {
+          onReady: async (readyExamId: string) => {
             await examService.addToLibrary(await ownerOf(), readyExamId);
             await crawlJobRepository.setExam(job.id, readyExamId);
             void realtimeHub.publishJob(job.id);

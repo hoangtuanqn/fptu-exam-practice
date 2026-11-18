@@ -11,7 +11,7 @@ const FALLBACK_POLL_MS = 3000; // chỉ dùng khi mất kết nối realtime
  * Khi `enabled` là false thì không theo dõi gì. Mất kết nối thì tạm hỏi định kỳ cả đề (và dừng khi nối lại).
  */
 export function useExamQuestionsLive(
-  examId: number | null,
+  examId: string | null,
   enabled: boolean,
   onQuestions: (payload: ExamQuestionsPayload) => void,
   onFailed: (message: string) => void,
@@ -26,7 +26,7 @@ export function useExamQuestionsLive(
     let poll: ReturnType<typeof setInterval> | null = null;
 
     const receive = (p: ExamQuestionsPayload) => p.examId === examId && questionsRef.current(p);
-    const failed = (p: { examId: number; message: string }) => p.examId === examId && failedRef.current(p.message);
+    const failed = (p: { examId: string; message: string }) => p.examId === examId && failedRef.current(p.message);
 
     const startPolling = () => {
       if (poll) return;
@@ -44,7 +44,7 @@ export function useExamQuestionsLive(
     };
 
     const offQuestions = subscribeRoom<ExamQuestionsPayload>("exam", examId, EVENTS.examQuestions, receive);
-    const offFailed = subscribeRoom<{ examId: number; message: string }>("exam", examId, EVENTS.examFailed, failed);
+    const offFailed = subscribeRoom<{ examId: string; message: string }>("exam", examId, EVENTS.examFailed, failed);
     const offConn = onConnectionChange((connected) => (connected ? stopPolling() : startPolling()));
     if (!isRealtimeConnected()) startPolling();
 

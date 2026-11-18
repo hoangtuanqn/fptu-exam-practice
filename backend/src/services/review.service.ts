@@ -15,7 +15,7 @@ const USABLE_EXAM = { answerSource: { in: ["AI", "MANUAL"] } } satisfies Prisma.
 const answersOf = (answer: string) => answer.split(/\s+/).filter(Boolean);
 
 // Lấy ảnh và đáp án hiện tại của các câu (đáp án có thể đã được sửa sau lúc làm sai nên luôn lấy bản mới nhất)
-async function questionsOf(items: { examId: number; questionNumber: number }[]) {
+async function questionsOf(items: { examId: string; questionNumber: number }[]) {
   if (items.length === 0) return new Map<string, { imagePath: string; answer: string; topic: string | null }>();
   const rows = await prisma.examQuestion.findMany({
     where: { isReference: false, OR: items.map((i) => ({ examId: i.examId, number: i.questionNumber })) },
@@ -30,7 +30,7 @@ export const reviewService = {
    * đúng nhưng đã đánh dấu phân vân -> vào sổ ở hộp 2. Thành viên thường bị giới hạn số câu đang ôn.
    * Trả về số câu mới vào sổ và số câu không vào được vì hết chỗ.
    */
-  async recordAttempt(userId: number, examId: number, items: GradedQuestion[], flagged: number[], isPro: boolean) {
+  async recordAttempt(userId: number, examId: string, items: GradedQuestion[], flagged: number[], isPro: boolean) {
     const now = new Date();
     const flaggedSet = new Set(flagged);
     const wrong = items.filter((i) => i.outcome === "wrong" || i.outcome === "skipped").map((i) => i.number);

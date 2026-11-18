@@ -12,7 +12,7 @@ import { answerReportApi } from "./answer-report.api";
 import { REPORT_REASON_MAX, REPORT_REASON_MIN, REPORT_REWARD } from "./config";
 
 interface Props {
-  examId: number;
+  examId: string;
   questionNumber: number;
   currentAnswer: string[]; // đáp án đang có của câu
   onClose: () => void;

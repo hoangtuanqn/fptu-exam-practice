@@ -5,4 +5,4 @@ import { env } from "../configs/env";
 export const fileUrlOf = (imagePath: string) => `${env.API_URL}/api/v1/files/${imagePath}`;
 
 // Tệp đính kèm (pdf, zip...) không phục vụ tĩnh mà qua endpoint riêng để đặt Content-Type/Content-Disposition an toàn
-export const attachmentUrlOf = (examId: number, attachmentId: number) => `${env.API_URL}/api/v1/exams/${examId}/attachments/${attachmentId}`;
+export const attachmentUrlOf = (examId: string, attachmentId: number) => `${env.API_URL}/api/v1/exams/${examId}/attachments/${attachmentId}`;

@@ -25,8 +25,8 @@ export function ResumeList({ limit = 5, className = "" }: Props) {
 
   // Xóa có hoàn tác (thay cho hộp thoại xác nhận): lượt làm biến mất ngay, nhưng chỉ xóa thật ở máy chủ khi hết thời gian hoàn tác.
   // Bấm "Hoàn tác" thì lượt làm hiện lại nguyên vẹn, không gọi máy chủ.
-  const [hidden, setHidden] = useState<Set<number>>(new Set());
-  const setHiding = (id: number, on: boolean) =>
+  const [hidden, setHidden] = useState<Set<string>>(new Set());
+  const setHiding = (id: string, on: boolean) =>
     setHidden((prev) => {
       const next = new Set(prev);
       if (on) next.add(id);

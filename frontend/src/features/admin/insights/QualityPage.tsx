@@ -7,17 +7,18 @@ import { buttonClass } from "@/shared/ui/Button";
 import { Card, CardHeader, PageHeader } from "@/shared/ui/Card";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { insightsApi } from "./insights.api";
+import { isUuid } from "@/shared/utils/uuid";
 
 const pct = (x: number) => `${Math.round(x * 100)}%`;
 
 // Chất lượng đề: đề nào hay bị báo lỗi đáp án, và trong đề, câu nào nhiều người sai hoặc đa số chọn khác đáp án (có thể đáp án AI sai)
 export default function QualityPage() {
   const [url, setUrl] = useUrlState({ exam: "" });
-  const examId = Number(url.exam) || 0;
+  const examId = isUuid(url.exam) ? url.exam : "";
   return examId ? <ExamDetail id={examId} onBack={() => setUrl({ exam: "" })} /> : <ExamList onOpen={(id) => setUrl({ exam: String(id) })} />;
 }
 
-function ExamList({ onOpen }: { onOpen: (id: number) => void }) {
+function ExamList({ onOpen }: { onOpen: (id: string) => void }) {
   const { data, error, loading, reload } = useApi(() => insightsApi.exams(), []);
   return (
     <div className="space-y-6">
@@ -53,7 +54,7 @@ function ExamList({ onOpen }: { onOpen: (id: number) => void }) {
   );
 }
 
-function ExamDetail({ id, onBack }: { id: number; onBack: () => void }) {
+function ExamDetail({ id, onBack }: { id: string; onBack: () => void }) {
   const { data, error, loading, reload } = useApi(() => insightsApi.examQuestions(id), [id]);
   if (loading && !data) return <Loading />;
   if (error || !data) return <ErrorBox message={error ?? "Không có dữ liệu"} onRetry={reload} />;

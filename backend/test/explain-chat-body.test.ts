@@ -3,7 +3,7 @@ import { describe, it } from "node:test";
 import { hasModule } from "../src/prompts";
 import { explainChatBody } from "../src/rules/requests/explanation.request";
 
-const body = (messages: { role: string; content: string }[]) => ({ examId: 1, questionNumber: 1, messages });
+const body = (messages: { role: string; content: string }[]) => ({ examId: "0190f5c2-7a10-7000-8000-000000000001", questionNumber: 1, messages });
 
 describe("explainChatBody", () => {
   it("limits the student's message to 1000 chars", () => {

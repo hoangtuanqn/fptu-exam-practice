@@ -13,7 +13,7 @@ export const crawlJobRepository = {
       // Dùng để ghi nhận một lượt lấy đề đã xong ngay (đề có sẵn), phục vụ đếm giới hạn theo ngày
       status?: "DONE";
       refresh?: boolean; // lượt làm mới đề cũ chạy nền
-      examId?: number;
+      examId?: string;
       finishedAt?: Date;
     },
     db: Db = prisma,
@@ -60,13 +60,13 @@ export const crawlJobRepository = {
   },
 
   // Đề đã đủ điều kiện hiển thị (có ảnh đầu tiên): người dùng mở đề được ngay dù job còn đang tải tiếp
-  setExam: (id: number, examId: number) => prisma.crawlJob.update({ where: { id }, data: { examId } }),
+  setExam: (id: number, examId: string) => prisma.crawlJob.update({ where: { id }, data: { examId } }),
 
   async setStage(id: number, stage: string): Promise<void> {
     await prisma.crawlJob.update({ where: { id }, data: { stage } });
   },
 
-  finish: (id: number, data: { status: Extract<CrawlJobStatus, "DONE" | "FAILED">; examId?: number; error?: string }) =>
+  finish: (id: number, data: { status: Extract<CrawlJobStatus, "DONE" | "FAILED">; examId?: string; error?: string }) =>
     prisma.crawlJob.update({ where: { id }, data: { ...data, stage: null, finishedAt: new Date() } }),
 
   // Đánh dấu lỗi bằng điều kiện ở DB: chỉ một tiến trình đổi được RUNNING -> FAILED, nên hoàn phí không bị lặp

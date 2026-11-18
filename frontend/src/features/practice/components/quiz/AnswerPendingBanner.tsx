@@ -11,7 +11,7 @@ import { errorMessage } from "@/shared/api/errors";
 // - FAILED: AI giải lỗi, đề chỉ xem được, có nút thử lại
 // - AI / MANUAL: không hiện gì
 import { useConfirm } from "@/shared/ui/ConfirmDialog";
-export function AnswerPendingBanner({ source, examId, onRetry }: { source: AnswerSource | null; examId: number | null; onRetry: () => void }) {
+export function AnswerPendingBanner({ source, examId, onRetry }: { source: AnswerSource | null; examId: string | null; onRetry: () => void }) {
   const toast = useToast();
   const [seconds, setSeconds] = useState(0);
   const [retrying, setRetrying] = useState(false);

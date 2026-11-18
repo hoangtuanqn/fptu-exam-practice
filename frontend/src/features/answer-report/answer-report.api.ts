@@ -3,7 +3,7 @@ import { PAGE_SIZE } from "@/shared/api/pagination";
 import type { MyAnswerReport } from "@/shared/types/api";
 
 export interface ReportForm {
-  examId: number;
+  examId: string;
   questionNumber: number;
   proposedAnswer: string; // các chữ cái cách nhau dấu cách, ví dụ "A C"
   reason: string;

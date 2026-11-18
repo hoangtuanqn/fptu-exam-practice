@@ -18,10 +18,10 @@ import { aiSettingService } from "./ai-setting.service";
  */
 const MAX_CONCURRENT = 2;
 
-const waiting: number[] = [];
-const running = new Set<number>();
+const waiting: string[] = [];
+const running = new Set<string>();
 // Lần giải lỗi gần nhất trong lượt chạy này của server (để không tự thử lại, tránh đốt token)
-const lastError = new Map<number, { message: string; at: number }>();
+const lastError = new Map<string, { message: string; at: number }>();
 
 const pump = () => {
   while (running.size < MAX_CONCURRENT && waiting.length > 0) {
@@ -34,7 +34,7 @@ const pump = () => {
   }
 };
 
-async function run(examId: number) {
+async function run(examId: string) {
   const exam = await examRepository.findForSolve(examId);
   if (!exam) return;
   if (exam.questions.length < exam.totalQuestions) return; // đề còn đang được lấy về, chưa đủ câu để giải
@@ -93,11 +93,11 @@ async function run(examId: number) {
 }
 
 export const examSolveService = {
-  isBusy: (examId: number) => running.has(examId) || waiting.includes(examId),
-  lastError: (examId: number) => lastError.get(examId)?.message ?? null,
+  isBusy: (examId: string) => running.has(examId) || waiting.includes(examId),
+  lastError: (examId: string) => lastError.get(examId)?.message ?? null,
 
   // Xếp đề vào hàng đợi giải. Trả về false nếu đề đã đang chờ hoặc đang giải.
-  enqueue(examId: number) {
+  enqueue(examId: string) {
     if (this.isBusy(examId)) return false;
     lastError.delete(examId);
     waiting.push(examId);
@@ -110,7 +110,7 @@ export const examSolveService = {
    * nên không cần lấy lại từ FuOverflow. Tiết kiệm token: chỉ giải khi có người mở, mỗi đề một lần (lỗi rồi thì
    * không tự thử lại cho tới khi khởi động lại server hoặc admin bấm giải lại). Trả về true nếu đề vừa chuyển sang chờ AI.
    */
-  async upgradeIfNeeded(examId: number) {
+  async upgradeIfNeeded(examId: string) {
     if (this.isBusy(examId) || lastError.has(examId)) return false;
     const exam = await examRepository.findAnswerSource(examId);
     if (exam?.answerSource !== "DEFAULT" && exam?.answerSource !== "FAILED") return false;
@@ -123,7 +123,7 @@ export const examSolveService = {
   },
 
   // Người dùng bấm "Thử lại" trên đề FAILED. Mỗi đề chờ tối thiểu AI_RETRY_COOLDOWN_MS giữa hai lần.
-  async retry(examId: number): Promise<"started" | "busy" | "cooldown" | "not-needed"> {
+  async retry(examId: string): Promise<"started" | "busy" | "cooldown" | "not-needed"> {
     if (this.isBusy(examId)) return "busy";
     const exam = await examRepository.findAnswerSource(examId);
     if (exam?.answerSource !== "DEFAULT" && exam?.answerSource !== "FAILED") return "not-needed";

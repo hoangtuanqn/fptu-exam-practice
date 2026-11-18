@@ -47,7 +47,7 @@ const SOCIAL_PROOF_MIN = 5;
 
 export const explanationService = {
   // Báo giá gói "mở khóa cả đề": tính trên các câu CHƯA mua lẻ (ai đã mua lẻ vài câu không phải trả lại những câu đó)
-  async bundleQuote(userId: number, examId: number, explainPrice: number, purchased: number[], promo: PromoConfig) {
+  async bundleQuote(userId: number, examId: string, explainPrice: number, purchased: number[], promo: PromoConfig) {
     const [questions, unlocked, buyers] = await Promise.all([
       explanationRepository.countQuestions(examId),
       explanationRepository.hasUnlocked(userId, examId),
@@ -71,7 +71,7 @@ export const explanationService = {
   },
 
   // Phí hiện tại, những câu đã mua lẻ trong một đề (để giao diện hiện "xem lại miễn phí") và báo giá gói mở khóa cả đề
-  async info(actor: Actor, userId: number, examId: number) {
+  async info(actor: Actor, userId: number, examId: string) {
     await examService.assertAccess(actor, examId);
     const [ai, promo, purchased] = await Promise.all([aiSettingService.get(), promoSettingService.get(), explanationRepository.purchasedNumbers(userId, examId)]);
     const bundle = await this.bundleQuote(userId, examId, ai.explainPrice, purchased, promo);
@@ -85,7 +85,7 @@ export const explanationService = {
    * Mở khóa MỘT LẦN toàn bộ lời giải thích của đề: trả giá gói (rẻ hơn mua lẻ), sau đó xem mọi câu miễn phí.
    * Chỉ trừ tiền, không gọi AI hàng loạt: lời giải của từng câu vẫn được tạo khi người dùng mở câu đó (và dùng chung).
    */
-  async unlock(actor: Actor, userId: number, examId: number, expectedPrice: number) {
+  async unlock(actor: Actor, userId: number, examId: string, expectedPrice: number) {
     await examService.assertAccess(actor, examId);
     const exam = await prisma.exam.findUnique({ where: { id: examId }, select: { answerSource: true } });
     if (!exam) throw AppError.notFound(EXAM_NOT_FOUND);
@@ -119,7 +119,7 @@ export const explanationService = {
    * dùng chung: người đầu tiên khiến AI chạy, những người sau vẫn trả phí nhưng chỉ đọc lại bản đã lưu.
    * Trừ phí trước khi gọi AI; AI lỗi thì hoàn phí đúng số đã trừ.
    */
-  async explain(actor: Actor, userId: number, examId: number, questionNumber: number, useFreeTurn = false) {
+  async explain(actor: Actor, userId: number, examId: string, questionNumber: number, useFreeTurn = false) {
     await examService.assertAccess(actor, examId);
 
     const question = await examRepository.findQuestionForExplain(examId, questionNumber);
@@ -186,7 +186,7 @@ export const explanationService = {
   },
 
   // Gọi AI một lần cho mỗi câu (gộp các yêu cầu cùng lúc) và lưu lại để người sau dùng
-  generate(ai: Awaited<ReturnType<typeof aiSettingService.get>>, examId: number, questionNumber: number, question: ExplainQuestion) {
+  generate(ai: Awaited<ReturnType<typeof aiSettingService.get>>, examId: string, questionNumber: number, question: ExplainQuestion) {
     const key = `${examId}:${questionNumber}`;
     const running = inflight.get(key);
     if (running) return running;
@@ -208,7 +208,7 @@ export const explanationService = {
     return job;
   },
 
-  async refund(userId: number, examId: number, questionNumber: number, amount: number) {
+  async refund(userId: number, examId: string, questionNumber: number, amount: number) {
     await prisma.$transaction(async (tx) => {
       await walletService.applyChange(tx, { userId, amount, type: "EXPLAIN_REFUND", note: `Hoàn phí giải thích AI (lỗi), câu ${questionNumber}` });
       await explanationRepository.deletePurchase(tx, userId, examId, questionNumber);

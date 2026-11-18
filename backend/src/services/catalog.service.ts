@@ -12,7 +12,7 @@ const CACHE_MS = 5 * 60 * 1000;
 const MY_SUBJECTS_MAX = 10;
 
 interface UsableExam {
-  id: number;
+  id: string;
   threadId: string;
   title: string;
   questions: number;
@@ -42,8 +42,8 @@ async function usableExams(): Promise<UsableExam[]> {
     prisma.exam.findMany({ where: { answerSource: { in: ["AI", "MANUAL"] } }, select: { id: true, threadId: true, title: true, subjectCode: true, totalQuestions: true, createdAt: true } }),
     prisma.examQuestion.groupBy({ by: ["examId", "isReference"], _count: { _all: true } }),
   ]);
-  const all = new Map<number, number>(); // tất cả ảnh đã lưu (gồm tài liệu tham khảo): so với totalQuestions để biết đã lấy đủ chưa
-  const real = new Map<number, number>(); // số câu hỏi thật
+  const all = new Map<string, number>(); // tất cả ảnh đã lưu (gồm tài liệu tham khảo): so với totalQuestions để biết đã lấy đủ chưa
+  const real = new Map<string, number>(); // số câu hỏi thật
   for (const c of counts) {
     all.set(c.examId, (all.get(c.examId) ?? 0) + c._count._all);
     if (!c.isReference) real.set(c.examId, c._count._all);
@@ -159,7 +159,7 @@ export const catalogService = {
       prisma.fuoThread.findMany({ where: { subjectCode: subject }, select: { threadId: true, title: true, postedAt: true, replies: true } }),
       usableExams().then((list) => list.filter((e) => e.code === subject)),
     ]);
-    const mine = userId && ours.length ? new Set((await prisma.userExam.findMany({ where: { userId, examId: { in: ours.map((e) => e.id) } }, select: { examId: true } })).map((o) => o.examId)) : new Set<number>();
+    const mine = userId && ours.length ? new Set((await prisma.userExam.findMany({ where: { userId, examId: { in: ours.map((e) => e.id) } }, select: { examId: true } })).map((o) => o.examId)) : new Set<string>();
     const have = new Map(ours.map((e) => [e.threadId, e]));
 
     const merged = new Map<string, CatalogItem>();

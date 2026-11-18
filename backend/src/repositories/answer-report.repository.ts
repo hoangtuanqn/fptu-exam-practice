@@ -22,7 +22,7 @@ const adminSelect = {
 } satisfies Prisma.AnswerReportSelect;
 
 export const answerReportRepository = {
-  create: (data: { examId: number; questionNumber: number; userId: number; currentAnswer: string; proposedAnswer: string; reason: string }) =>
+  create: (data: { examId: string; questionNumber: number; userId: number; currentAnswer: string; proposedAnswer: string; reason: string }) =>
     prisma.answerReport.create({ data, select: { id: true } }),
 
   countSince: (userId: number, since: Date) => prisma.answerReport.count({ where: { userId, createdAt: { gte: since } } }),
@@ -62,7 +62,7 @@ export const answerReportRepository = {
   countPending: () => prisma.answerReport.count({ where: { status: "PENDING", resolvedAt: null } }),
 
   // Ảnh của các câu được báo cáo (một truy vấn cho cả trang, để admin xem đề khi duyệt)
-  questionImages: (pairs: { examId: number; number: number }[]) =>
+  questionImages: (pairs: { examId: string; number: number }[]) =>
     pairs.length === 0
       ? Promise.resolve([])
       : prisma.examQuestion.findMany({

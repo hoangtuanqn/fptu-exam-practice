@@ -52,8 +52,8 @@ export function useSessionSync(quiz: Quiz) {
 
   // Tạo lượt mới. Làm lại cùng đề khi lượt cũ chưa nộp thì bỏ lượt cũ đi, tránh kho đầy lượt dở dang.
   const last = useRef<{
-    id: number;
-    examId: number;
+    id: string;
+    examId: string;
     submitted: boolean;
   } | null>(null);
   const creating = useRef<string | null>(null);

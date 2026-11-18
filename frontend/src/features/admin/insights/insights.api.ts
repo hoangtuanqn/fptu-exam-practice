@@ -14,7 +14,7 @@ export interface Funnel {
 }
 
 export interface ExamToReview {
-  id: number;
+  id: string;
   title: string;
   threadId: string;
   answerSource: string;
@@ -38,7 +38,7 @@ export interface QuestionQuality {
   pendingReports: number;
 }
 export interface ExamQuality {
-  exam: { id: number; title: string; threadId: string; answerSource: string };
+  exam: { id: string; title: string; threadId: string; answerSource: string };
   sampleUsers: number;
   minSample: number;
   questions: QuestionQuality[];
@@ -53,5 +53,5 @@ export const insightsApi = {
   prompts: (days: number) => http.get<PromptPerformance>("/admin/insights/prompts", { days }),
   funnel: (days: number) => http.get<Funnel>("/admin/insights/funnel", { days }),
   exams: () => http.get<ExamToReview[]>("/admin/insights/exams"),
-  examQuestions: (id: number) => http.get<ExamQuality>(`/admin/insights/exams/${id}/questions`),
+  examQuestions: (id: string) => http.get<ExamQuality>(`/admin/insights/exams/${id}/questions`),
 };

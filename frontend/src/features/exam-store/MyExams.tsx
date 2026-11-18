@@ -25,11 +25,11 @@ export function MyExams({ onOpen }: Props) {
   const { user } = useAuth();
   const { data, reload } = useApi(() => examLibraryApi.list(1, SHOWN), [user?.id]);
   useOnLibraryChanged(reload);
-  const [openingId, setOpeningId] = useState<number | null>(null);
+  const [openingId, setOpeningId] = useState<string | null>(null);
 
   if (!data || data.items.length === 0) return null; // chưa có đề thì không chiếm chỗ
 
-  async function open(id: number) {
+  async function open(id: string) {
     setOpeningId(id);
     try {
       onOpen(await examImportApi.exam(id));

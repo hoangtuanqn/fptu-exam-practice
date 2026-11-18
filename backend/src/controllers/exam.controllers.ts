@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { HTTP_STATUS } from "../constants/httpStatus";
 import { getValidated } from "../middlewares/validate.middlewares";
-import type { IdParam } from "../rules/requests/admin.request";
+import type { UuidParam } from "../rules/requests/admin.request";
 import type { AttachmentParam, AttachmentQuery, ListExamsQuery } from "../rules/requests/exam.request";
 import type { SubmitAttemptBody, ThreadParam } from "../rules/requests/attempt.request";
 import { hasTopicReport, hasUnlimitedReview } from "../utils/pro";
@@ -19,7 +19,7 @@ export const examController = {
   },
 
   async get(req: Request, res: Response) {
-    const { id } = getValidated<IdParam>(res, "params");
+    const { id } = getValidated<UuidParam>(res, "params");
     res.json(new ResponseClient({ data: await examService.getDetail(actorOf(req), id) }));
   },
 
@@ -29,12 +29,12 @@ export const examController = {
   },
 
   async answers(req: Request, res: Response) {
-    const { id } = getValidated<IdParam>(res, "params");
+    const { id } = getValidated<UuidParam>(res, "params");
     res.json(new ResponseClient({ data: await examService.getAnswers(actorOf(req), id) }));
   },
 
   async retrySolve(req: Request, res: Response) {
-    const { id } = getValidated<IdParam>(res, "params");
+    const { id } = getValidated<UuidParam>(res, "params");
     res.json(new ResponseClient({ data: await examService.retrySolve(actorOf(req), id) }));
   },
 
@@ -60,7 +60,7 @@ export const examController = {
   },
 
   async submitAttempt(req: Request, res: Response) {
-    const { id } = getValidated<IdParam>(res, "params");
+    const { id } = getValidated<UuidParam>(res, "params");
     const data = await attemptService.submit(actorOf(req), id, getValidated<SubmitAttemptBody>(res), { unlimitedReview: hasUnlimitedReview(req.user), topicReport: hasTopicReport(req.user) });
     res.status(HTTP_STATUS.CREATED).json(new ResponseClient({ message: "Đã lưu lịch sử làm bài", data }));
   },

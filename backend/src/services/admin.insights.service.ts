@@ -68,8 +68,8 @@ export const adminInsightsService = {
       prisma.examAttempt.groupBy({ by: ["examId"], _count: { _all: true }, orderBy: { _count: { examId: "desc" } }, take: 60 }),
       prisma.answerReport.groupBy({ by: ["examId", "status"], _count: { _all: true } }),
     ]);
-    const stat = new Map<number, { attempts: number; pending: number; total: number }>();
-    const get = (id: number) => stat.get(id) ?? stat.set(id, { attempts: 0, pending: 0, total: 0 }).get(id)!;
+    const stat = new Map<string, { attempts: number; pending: number; total: number }>();
+    const get = (id: string) => stat.get(id) ?? stat.set(id, { attempts: 0, pending: 0, total: 0 }).get(id)!;
     for (const a of attempts) get(a.examId).attempts = a._count._all;
     for (const r of reports) {
       const s = get(r.examId);
@@ -88,7 +88,7 @@ export const adminInsightsService = {
    * Chất lượng từng câu của một đề, tính từ bài làm của người dùng (mỗi người chỉ tính bài mới nhất).
    * "Đáp án có thể sai": đủ mẫu, và phương án được chọn nhiều nhất khác đáp án hiện tại với tỷ lệ từ một nửa trở lên.
    */
-  async examQuestions(examId: number) {
+  async examQuestions(examId: string) {
     const exam = await prisma.exam.findUnique({
       where: { id: examId },
       select: {

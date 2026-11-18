@@ -7,10 +7,10 @@ const whereOf = (owner: Owner) => ("userId" in owner ? { userId: owner.userId } 
 
 export const userExamRepository = {
   // Đã có thì bỏ qua, nhập lại cùng đề không lỗi
-  add: (owner: Owner, examId: number, db: Db = prisma) =>
+  add: (owner: Owner, examId: string, db: Db = prisma) =>
     db.userExam.createMany({ data: [{ ...whereOf(owner), examId }], skipDuplicates: true }),
 
-  has: async (owner: Owner, examId: number) => !!(await prisma.userExam.findFirst({ where: { ...whereOf(owner), examId }, select: { id: true } })),
+  has: async (owner: Owner, examId: string) => !!(await prisma.userExam.findFirst({ where: { ...whereOf(owner), examId }, select: { id: true } })),
 
   async list(owner: Owner, query: PaginationQuery & { subject?: string }) {
     const where = { ...whereOf(owner), ...(query.subject && { exam: { subjectCode: query.subject.toUpperCase() } }) };

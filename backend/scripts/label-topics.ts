@@ -2,7 +2,7 @@
  * Gắn chủ đề (theo syllabus môn học) cho câu hỏi trong kho đề, bằng AI.
  *
  *   npm run label:topics -- --sample 20      chạy thử 20 câu, IN KẾT QUẢ ĐỂ XEM, không ghi DB
- *   npm run label:topics -- --exam 12        gắn cho đề có id 12 (ghi DB)
+ *   npm run label:topics -- --exam <uuid>    gắn cho một đề theo id (ghi DB)
  *   npm run label:topics -- --all            gắn cho mọi đề (chỉ câu chưa có nhãn, ghi DB)
  *   thêm --force để gắn lại cả câu đã có nhãn
  *
@@ -21,7 +21,7 @@ const value = (name: string) => {
 async function main() {
   const force = flag("force");
   const sample = Number(value("sample")) || 0;
-  const examId = Number(value("exam")) || 0;
+  const examId = value("exam")?.toLowerCase() ?? ""; // id (UUID) của đề
   if (!sample && !examId && !flag("all")) throw new Error("Chọn một chế độ: --sample N, --exam ID hoặc --all");
 
   const exams = await prisma.exam.findMany({ where: examId ? { id: examId } : {}, orderBy: { id: "asc" }, select: { id: true } });

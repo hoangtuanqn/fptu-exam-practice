@@ -13,7 +13,7 @@ import { errorKind, errorMessage } from "@/shared/api/errors";
 import { depositLink } from "./depositLink";
 
 interface Props {
-  examId: number;
+  examId: string;
   questionNumber: number;
   useFreeTurn?: boolean; // trả bằng 1 lượt miễn phí (nhận từ vượt link) thay vì credit
   firstTime: boolean; // vừa trả phí lần đầu: hiện hiệu ứng "AI đang phân tích". Đã mua rồi thì chỉ hiển thị.

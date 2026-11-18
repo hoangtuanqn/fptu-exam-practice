@@ -37,7 +37,7 @@ export const adminExamService = {
   },
 
   // Bắt đầu nhờ AI giải lại và trả về ngay (việc này có thể mất vài phút); admin theo dõi ở danh sách
-  async solve(id: number) {
+  async solve(id: string) {
     const ai = await aiSettingService.get();
     if (!aiReady(ai)) throw new AppError("Chưa bật AI hoặc chưa có khóa API ở Quản trị → AI giải đáp án");
     if (!(await examRepository.findByThreadIdOfId(id))) throw AppError.notFound("Không tìm thấy đề");
@@ -52,7 +52,7 @@ export const adminExamService = {
    * Không ghi đáp án vào DB: trả gợi ý để admin duyệt rồi lưu. Không lấy lại được bình luận (hết phiên, mất mạng...) thì vẫn
    * giải bằng bình luận đã lưu và báo rõ lý do trong `commentsNote`.
    */
-  async resolveQuestion(id: number, number: number) {
+  async resolveQuestion(id: string, number: number) {
     const ai = await aiSettingService.get();
     if (!aiReady(ai)) throw new AppError("Chưa bật AI hoặc chưa có khóa API ở Quản trị → AI giải đáp án");
     const exam = await examRepository.findForSolve(id);
@@ -105,14 +105,14 @@ export const adminExamService = {
     }
   },
 
-  async report(id: number) {
+  async report(id: string) {
     const exam = await examRepository.findReport(id);
     if (!exam) throw AppError.notFound("Không tìm thấy đề");
     return exam;
   },
 
   // Xem toàn bộ đề: ảnh từng câu và đáp án hiện tại
-  async detail(id: number) {
+  async detail(id: string) {
     const exam = await examRepository.findAdminDetail(id);
     if (!exam) throw AppError.notFound("Không tìm thấy đề");
     const { questions, ...info } = exam;
@@ -131,7 +131,7 @@ export const adminExamService = {
   },
 
   // Tải đề dạng .zip: images/NN.ext + dap-an/dap-an.txt. Ảnh thiếu thì bỏ qua, không làm hỏng cả file
-  async download(adminId: number, id: number) {
+  async download(adminId: number, id: string) {
     const exam = await examRepository.findForExport(id);
     if (!exam) throw AppError.notFound("Không tìm thấy đề");
     const tooLarge = new AppError("Đề quá lớn để tải về", HTTP_STATUS.PAYLOAD_TOO_LARGE);
@@ -151,7 +151,7 @@ export const adminExamService = {
    * Câu nào đổi đáp án thì xoá lời giải AI cũ của câu đó (đã viết theo đáp án cũ).
    * Đề chuyển sang nguồn "Chỉnh tay" để không bị AI ghi đè nhầm khi chưa chủ ý.
    */
-  async saveQuestions(adminId: number, id: number, { changes }: UpdateExamQuestionsBody) {
+  async saveQuestions(adminId: number, id: string, { changes }: UpdateExamQuestionsBody) {
     if (examSolveService.isBusy(id)) throw AppError.conflict("AI đang giải đề này, hãy chờ AI xong rồi sửa");
     const exam = await examRepository.findAdminDetail(id);
     if (!exam) throw AppError.notFound("Không tìm thấy đề");
@@ -179,7 +179,7 @@ export const adminExamService = {
     return this.detail(id);
   },
 
-  async rename(adminId: number, id: number, { title }: RenameExamBody) {
+  async rename(adminId: number, id: string, { title }: RenameExamBody) {
     if (!(await examRepository.findByThreadIdOfId(id))) throw AppError.notFound("Không tìm thấy đề");
     await prisma.exam.update({ where: { id }, data: { title, subjectCode: subjectCodeFromTitle(title) } });
     console.log(`[admin] #${adminId} đổi tên đề #${id}`);
@@ -190,7 +190,7 @@ export const adminExamService = {
    * Xoá hẳn một đề: câu hỏi, kho của người dùng, bài làm, lời giải thích đã mua đều bị xoá theo (khoá ngoại CASCADE).
    * Lượt lấy đề cũ giữ lại nhưng không còn gắn với đề. Xoá luôn thư mục ảnh; thread đó có thể được lấy lại từ đầu.
    */
-  async remove(adminId: number, id: number) {
+  async remove(adminId: number, id: string) {
     if (examSolveService.isBusy(id)) throw AppError.conflict("AI đang giải đề này, hãy chờ AI xong rồi xoá");
     const exam = await prisma.exam.findUnique({ where: { id }, select: { threadId: true } });
     if (!exam) throw AppError.notFound("Không tìm thấy đề");
