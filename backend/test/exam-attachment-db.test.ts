@@ -49,6 +49,7 @@ describe("exam attachments (MySQL)", { skip: DB_TESTS_ENABLED ? false : DB_SKIP_
   it("detail returns attachments; a file of another exam is 404", async () => {
     const detail = await m.examService.getDetail({ owner: { userId }, isAdmin: false }, examId);
     assert.deepEqual(detail.questions, []);
+    assert.equal(detail.kind, "FE"); // kind null (chưa phân loại) trả về FE
     const [a] = detail.attachments;
     assert.ok(a);
     assert.deepEqual({ ...a, url: a.url.replace(/^.*\/api\/v1/, "") }, { id: a.id, name: "paper.pdf", mime: "application/pdf", sizeBytes: 10, kind: "pdf", url: `/exams/${examId}/attachments/${a.id}` });
@@ -56,6 +57,7 @@ describe("exam attachments (MySQL)", { skip: DB_TESTS_ENABLED ? false : DB_SKIP_
     await assert.rejects(m.examService.getAttachmentFile(otherId, a.id), status(404));
     const list = await m.examService.listMine({ userId }, { page: 1, limit: 20 });
     assert.equal(list.items[0]?.attachments, 1);
+    assert.equal(list.items[0]?.kind, "FE");
   });
 
   it("refuses practice sessions and attempts with 400", async () => {

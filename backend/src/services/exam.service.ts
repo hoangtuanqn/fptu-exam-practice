@@ -48,6 +48,7 @@ export const examService = {
     return {
       items: items.map(({ exam: { _count, ...exam }, createdAt }) => ({
         ...exam,
+        kind: exam.kind ?? "FE", // đề cũ chưa phân loại: coi là FE như catalog
         attachments: _count.attachments, // số tệp đính kèm (pdf, zip...)
         addedAt: createdAt,
         attempts: byExam.get(exam.id)?._count._all ?? 0,
@@ -67,6 +68,7 @@ export const examService = {
     return {
       id: exam.id,
       title: exam.title,
+      kind: exam.kind ?? "FE", // đề cũ chưa phân loại: coi là FE như catalog
       totalQuestions: exam.totalQuestions, // lớn hơn số câu trả về = đề còn đang được lấy về, các câu sau đến qua socket
       answerStatus: exam.answerSource, // PENDING = AI đang phân tích, FAILED = AI lỗi: cả hai chỉ xem đề, chưa làm bài được
       answerError: failedMessage(exam.answerSource),
