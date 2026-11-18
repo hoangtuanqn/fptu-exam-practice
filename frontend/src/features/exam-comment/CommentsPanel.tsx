@@ -181,8 +181,7 @@ export function CommentsPanel({ examId, question, onApprovedDelta, children }: P
                 )}
               </p>
             )}
-            <div className="mt-2 flex items-center gap-3">
-              <p className="md-body-small min-w-0 flex-1 text-on-surface-variant">Bình luận sẽ hiển thị sau khi quản trị viên duyệt.</p>
+            <div className="mt-2 flex items-center justify-end gap-3">
               <span className="md-body-small shrink-0 tabular-nums text-on-surface-variant" aria-hidden>
                 {draft.length}/{COMMENT_MAX}
               </span>
