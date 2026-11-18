@@ -72,6 +72,11 @@ export const realtimeHub = {
     io?.to(ADMIN_ROOM).emit(EVENTS.adminNotice, notice);
   },
 
+  // Tiến độ lượt nạp dữ liệu FuOverflow: đẩy cho các admin đang online
+  publishFuoSources(status: unknown) {
+    io?.to(ADMIN_ROOM).emit(EVENTS.fuoSources, status);
+  },
+
   // Tiến độ lấy đề vừa đổi (sang bước mới, xong, hoặc lỗi)
   async publishJob(jobId: number) {
     if (!io || !hasListeners("job", jobId)) return;

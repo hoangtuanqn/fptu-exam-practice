@@ -48,4 +48,15 @@ export const fuoSessionService = {
     const config = await crawlerSettingService.get();
     if (!config.cookie && config.loginEmail && config.loginPassword) await this.login();
   },
+
+  /** Chạy một tác vụ cần phiên FuOverflow: chưa có cookie thì tự đăng nhập trước; phiên hết hạn giữa chừng thì đăng nhập lại rồi chạy lại một lần. */
+  async withSession<T>(task: () => Promise<T>): Promise<T> {
+    await this.ensureCookie();
+    try {
+      return await task();
+    } catch (err) {
+      if (!isFuoAuthFailure(err) || !(await this.login()).ok) throw err;
+      return await task();
+    }
+  },
 };

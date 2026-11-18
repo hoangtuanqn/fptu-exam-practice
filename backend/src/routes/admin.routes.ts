@@ -12,6 +12,8 @@ import { adminExplanationFeedbackController } from "../controllers/admin.explana
 import { adminReferralController } from "../controllers/admin.referral.controllers";
 import { adminGiftCodeController } from "../controllers/admin.gift-code.controllers";
 import { adminCrawlerController } from "../controllers/admin.crawler.controllers";
+import { adminFuoSourceController } from "../controllers/admin.fuo-source.controllers";
+import { addFuoSourcesBody, listFuoSourcesQuery } from "../rules/requests/fuo-source.request";
 import { adminHistoryController } from "../controllers/admin.history.controllers";
 import { adminAccountController } from "../controllers/admin.account.controllers";
 import { adminMarketingController } from "../controllers/admin.marketing.controllers";
@@ -130,6 +132,12 @@ adminRouter.put("/settings/sepay", validate(updateSepayBody), adminSettingContro
 adminRouter.get("/settings/crawler", adminCrawlerController.get);
 adminRouter.put("/settings/crawler", validate(updateCrawlerBody), adminCrawlerController.update);
 adminRouter.post("/settings/crawler/login", adminCrawlerController.login);
+
+// Danh sách link đề FuOverflow và lượt nạp dữ liệu mới (chạy nền)
+adminRouter.get("/fuo-sources", validate(listFuoSourcesQuery, "query"), adminFuoSourceController.list);
+adminRouter.post("/fuo-sources", validate(addFuoSourcesBody), adminFuoSourceController.add);
+adminRouter.get("/fuo-sources/status", adminFuoSourceController.status);
+adminRouter.post("/fuo-sources/runs", adminFuoSourceController.start);
 
 adminRouter.get("/settings/ai", adminAiController.getSettings);
 adminRouter.put("/settings/ai", validate(updateAiBody), adminAiController.updateSettings);

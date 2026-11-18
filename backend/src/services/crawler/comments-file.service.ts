@@ -44,6 +44,14 @@ export function renderCommentsText(meta: { title: string; url: string; at: Date 
 export async function replaceQuestionComments(dir: string, data: QuestionComments): Promise<string> {
   const file = path.join(dir, "comments.txt");
   const old = (await fs.readFile(file, "utf-8").catch(() => "")).replace(/\r\n/g, "\n");
+  const text = replaceSection(old, data);
+  await fs.mkdir(dir, { recursive: true });
+  await fs.writeFile(file, text, "utf-8");
+  return text;
+}
+
+/** Thay (hoặc thêm vào cuối) mục của một câu trong nội dung comments.txt; không đụng các mục khác. */
+export function replaceSection(old: string, data: QuestionComments): string {
   const lines = old.split("\n");
   const start = lines.findIndex((l) => l.startsWith("## ") && l.slice(3).trim().split(/\s+/)[0] === data.image.name);
   const fresh = sectionLines(data);
@@ -56,10 +64,21 @@ export async function replaceQuestionComments(dir: string, data: QuestionComment
     if (end < 0) end = lines.length;
     next = [...lines.slice(0, start), ...fresh, ...lines.slice(end)];
   }
-  const text = next.join("\n");
+  return next.join("\n");
+}
+
+/**
+ * Nạp dữ liệu mới: thay nhiều mục cùng lúc trong bộ nhớ rồi ghi comments.txt MỘT lần (tệp tạm rồi rename).
+ * Chưa có tệp (đề chỉ có tệp đính kèm nay có thêm ảnh) thì dựng phần đầu như lúc lấy đề.
+ */
+export async function replaceCommentsSections(dir: string, meta: { title: string; url: string }, data: QuestionComments[]): Promise<void> {
+  if (!data.length) return;
+  const file = path.join(dir, "comments.txt");
+  const old = (await fs.readFile(file, "utf-8").catch(() => null))?.replace(/\r\n/g, "\n") ?? renderCommentsText({ ...meta, at: new Date() }, []);
+  const text = data.reduce(replaceSection, old);
   await fs.mkdir(dir, { recursive: true });
-  await fs.writeFile(file, text, "utf-8");
-  return text;
+  await fs.writeFile(`${file}.tmp`, text, "utf-8");
+  await fs.rename(`${file}.tmp`, file);
 }
 
 // Ghi comments.txt vào thư mục đề (cạnh thư mục images) và trả về nội dung để gửi cho AI
