@@ -178,10 +178,41 @@ function Preview({ exam }: { exam: ImportedExam }) {
   );
 }
 
-// Tệp đính kèm: biểu tượng lớn theo loại trên nền nhạt; mở được thì mở tab mới, không thì tải về
+// Máy có chuột mới nhúng PDF làm hình xem trước: điện thoại thường không vẽ PDF trong khung, nên chỉ hiện biểu tượng và mở tab mới
+const canEmbedPdf = () => typeof window !== "undefined" && window.matchMedia("(pointer: fine)").matches;
+const pdfSrc = (url: string, bar: boolean) => `${url}#${bar ? "" : "toolbar=0&navpanes=0&"}view=FitH`;
+
+// Tệp đính kèm: PDF hiện luôn trang đầu (bấm để xem lớn); loại khác là biểu tượng lớn trên nền nhạt, mở được thì mở tab mới, không thì tải về
 function FileTile({ a }: { a: ExamAttachment }) {
+  const [big, setBig] = useState(false);
   const Icon = ICONS[a.kind] ?? ICONS.other;
   const open = OPENABLE.has(a.kind);
+  if (a.kind === "pdf" && canEmbedPdf()) {
+    return (
+      <>
+        <button type="button" onClick={() => setBig(true)} aria-label={`Xem lớn ${a.name}`} title={a.name} className={`${TILE} w-full bg-surface-container-lowest`}>
+          <iframe src={pdfSrc(a.url, false)} title={a.name} loading="lazy" tabIndex={-1} className="pointer-events-none h-full w-full border-0" />
+          <span className={CAPTION}>{a.name}</span>
+        </button>
+        {big && (
+          <Modal wide onClose={() => setBig(false)}>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h2 className="md-title-medium truncate text-on-surface">{a.name}</h2>
+              <div className="flex shrink-0 gap-1">
+                <a href={a.url} target="_blank" rel="noopener noreferrer" className={buttonClass({ size: "sm", variant: "text" })}>
+                  Mở tab mới
+                </a>
+                <Button variant="text" onClick={() => setBig(false)} aria-label="Đóng">
+                  <X size={18} />
+                </Button>
+              </div>
+            </div>
+            <iframe src={pdfSrc(a.url, true)} title={a.name} className="h-[75vh] w-full rounded-m3-md border-0 bg-surface-container-lowest" />
+          </Modal>
+        )}
+      </>
+    );
+  }
   return (
     <a
       href={open ? a.url : downloadUrl(a.url)}
