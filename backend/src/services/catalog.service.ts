@@ -89,6 +89,7 @@ export interface LibraryOverview {
   examsKnown: number; // tổng đề biết (danh mục FuOverflow + hệ thống)
   examsReady: number; // đề hệ thống đã có ảnh + đáp án, mở ngay
   bySemester: { semester: number | null; subjects: number; examsKnown: number; examsReady: number }[]; // kỳ 0-9 rồi "chưa phân loại" (null)
+  byKind: Record<ExamKind, number>; // số đề (thread) theo loại: danh mục FuOverflow + đề hệ thống chưa có trong danh mục
 }
 
 export const catalogService = {
@@ -127,7 +128,17 @@ export const catalogService = {
   /** Số liệu thật cho trang Thư viện đề thi: tổng môn/đề và phân theo kỳ học (0-9, rồi chưa phân loại). Đệm vài phút. */
   async overview(): Promise<LibraryOverview> {
     if (overviewCache && Date.now() - overviewCache.at < CACHE_MS) return overviewCache.data;
-    const rows = await this.subjects();
+    const [rows, fuo, exams, kindRows] = await Promise.all([
+      this.subjects(),
+      fuoThreads(),
+      usableExams(),
+      prisma.fuoThread.groupBy({ by: ["kind"], _count: { _all: true } }),
+    ]);
+    const byKind = Object.fromEntries(EXAM_KINDS.map((k) => [k, 0])) as Record<ExamKind, number>;
+    for (const r of kindRows) byKind[r.kind] += r._count._all;
+    const inFuo = new Set(fuo.map((t) => t.threadId));
+    // Cùng quy tắc với examsKnown (chỉ đề có mã môn) và với các tab của exams() (đề cũ chưa có loại = FE)
+    for (const e of exams) if (e.code && !inFuo.has(e.threadId)) byKind[e.kind ?? "FE"]++;
     const bucket = new Map<number | null, { semester: number | null; subjects: number; examsKnown: number; examsReady: number }>();
     for (let i = 0; i <= 9; i++) bucket.set(i, { semester: i, subjects: 0, examsKnown: 0, examsReady: 0 });
     bucket.set(null, { semester: null, subjects: 0, examsKnown: 0, examsReady: 0 });
@@ -142,6 +153,7 @@ export const catalogService = {
       examsKnown: rows.reduce((n, r) => n + r.total, 0),
       examsReady: rows.reduce((n, r) => n + r.ready, 0),
       bySemester: [...bucket.values()],
+      byKind,
     };
     overviewCache = { at: Date.now(), data };
     return data;
