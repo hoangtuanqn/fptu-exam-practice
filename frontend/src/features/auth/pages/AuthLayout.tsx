@@ -6,7 +6,7 @@ import { Footer } from "@/shared/layout/Footer";
 import { brand } from "@/shared/brand/brand";
 
 const POINTS = [
-  "Nhập đề từ link FuOverflow, lưu vào thư viện riêng",
+  "Chọn đề theo môn, lưu vào thư viện riêng",
   "Luyện tập hoặc thi thử, chấm điểm thang 10",
   "Xem lại lịch sử từng lần làm, từng câu",
 ];

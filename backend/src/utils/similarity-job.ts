@@ -55,10 +55,10 @@ export const needsWork = (s: SubjectSnapshot, w: SubjectWork, force = false) =>
  * Chia `total` ảnh cho các môn: môn ít ảnh nhận đủ trước, phần còn lại chia đều cho môn nhiều ảnh hơn.
  * Tổng không vượt `total`; đủ chỗ thì môn nào cũng nhận đủ. Kết quả theo id môn (môn không cần thì 0).
  */
-export function splitHashBudget(needs: readonly { id: number; missing: number }[], total: number): Map<number, number> {
-  const out = new Map<number, number>(needs.map((n) => [n.id, 0]));
+export function splitHashBudget(needs: readonly { id: string; missing: number }[], total: number): Map<string, number> {
+  const out = new Map<string, number>(needs.map((n) => [n.id, 0]));
   let left = Math.max(0, Math.floor(total));
-  const open = needs.filter((n) => n.missing > 0).sort((a, b) => a.missing - b.missing || a.id - b.id);
+  const open = needs.filter((n) => n.missing > 0).sort((a, b) => a.missing - b.missing || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   for (let i = 0; i < open.length && left > 0; i++) {
     const n = open[i]!;
     const give = Math.min(n.missing, Math.floor(left / (open.length - i)));

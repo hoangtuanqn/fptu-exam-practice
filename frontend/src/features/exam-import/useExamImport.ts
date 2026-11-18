@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { errorMessage } from "@/shared/api/errors";
-import { ApiError } from "@/shared/api/client";
 import { useLeaveWarning } from "@/shared/hooks/useLeaveWarning";
 import { importExam } from "./importExam";
 import type { ImportedExam } from "./types";
@@ -13,7 +12,6 @@ export function useExamImport() {
   const [phase, setPhase] = useState<ImportPhase>("idle");
   const [stage, setStage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [errorStatus, setErrorStatus] = useState<number | null>(null); // mã HTTP của lỗi (429 = khách hết lượt hôm nay)
   const [exam, setExam] = useState<ImportedExam | null>(null);
   // Đang lấy đề mà đóng/tải lại trang: server vẫn lấy tiếp (đề vẫn vào kho, không mất phí), nhưng màn hình theo dõi tiến độ thì mất
   useLeaveWarning(phase === "running");
@@ -38,13 +36,11 @@ export function useExamImport() {
     setPhase("running");
     setStage("Đang gửi yêu cầu");
     setError(null);
-    setErrorStatus(null);
     setExam(null);
 
-    const fail = (message: string, status: number | null = null) => {
+    const fail = (message: string) => {
       if (stale()) return;
       setError(message);
-      setErrorStatus(status);
       setPhase("failed");
     };
 
@@ -55,7 +51,7 @@ export function useExamImport() {
       setPhase("done");
     } catch (err) {
       const message = errorMessage(err, "Chưa lấy được đề này, bạn thử lại nhé");
-      fail(message, err instanceof ApiError ? err.status : null);
+      fail(message);
     }
   }, []);
 
@@ -65,9 +61,8 @@ export function useExamImport() {
     setPhase("idle");
     setStage(null);
     setError(null);
-    setErrorStatus(null);
     setExam(null);
   }, []);
 
-  return { phase, stage, error, errorStatus, exam, start, reset };
+  return { phase, stage, error, exam, start, reset };
 }

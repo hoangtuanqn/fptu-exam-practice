@@ -278,7 +278,7 @@ export default function PracticePage({ threadId }: Props) {
         if (stale) return;
         toast.error(
           err instanceof ApiError && err.status === 404
-            ? "Bạn chưa có đề này. Hãy lấy đề từ link FuOverflow ở trang chủ."
+            ? "Bạn chưa có đề này. Hãy chọn đề ở trang chủ."
             : "Không mở được đề này",
         );
         navigate("/", { replace: true });

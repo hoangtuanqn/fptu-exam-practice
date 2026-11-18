@@ -6,7 +6,7 @@ import { CHAPTER_STATS_MAX_ROWS, HOT_QUESTIONS_MIN_EXAMS, STATS_TX_TIMEOUT_MS } 
 // Thống kê tần suất ra đề tính bằng SQL (MySQL 8). Công thức giống hệt utils/frequency-stats (có test so khớp hai bên).
 
 export interface RefreshParams {
-  subjectId: number;
+  subjectId: string;
   subjectCode: string;
   halfLifeDays: number;
   mediumExams: number;
@@ -122,7 +122,7 @@ export const frequencyStatsRepository = {
       { timeout: STATS_TX_TIMEOUT_MS },
     ),
 
-  chapterStats: (subjectId: number) =>
+  chapterStats: (subjectId: string) =>
     prisma.chapterStat.findMany({
       where: { subjectId },
       orderBy: [{ examsWithChapter: "desc" }, { recencyScore: "desc" }, { chapter: "asc" }],
@@ -130,14 +130,14 @@ export const frequencyStatsRepository = {
     }),
 
   /** Nhóm câu ra ở ít nhất HOT_QUESTIONS_MIN_EXAMS đề, nhiều đề nhất trước, bằng nhau thì gần đây hơn trước. */
-  hotGroups: (subjectId: number, take: number) =>
+  hotGroups: (subjectId: string, take: number) =>
     prisma.questionGroupStat.findMany({
       where: { subjectId, examsWithGroup: { gte: HOT_QUESTIONS_MIN_EXAMS } },
       orderBy: [{ examsWithGroup: "desc" }, { recencyScore: "desc" }, { groupId: "asc" }],
       take,
     }),
 
-  countHotGroups: (subjectId: number) => prisma.questionGroupStat.count({ where: { subjectId, examsWithGroup: { gte: HOT_QUESTIONS_MIN_EXAMS } } }),
+  countHotGroups: (subjectId: string) => prisma.questionGroupStat.count({ where: { subjectId, examsWithGroup: { gte: HOT_QUESTIONS_MIN_EXAMS } } }),
 
   questionsByIds: (ids: number[]) =>
     ids.length

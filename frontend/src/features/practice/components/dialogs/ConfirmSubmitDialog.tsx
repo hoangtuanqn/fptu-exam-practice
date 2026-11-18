@@ -69,7 +69,7 @@ export function ConfirmSubmitDialog({ answered, total, savable, answersPending, 
           <Info size={14} className="mt-0.5 shrink-0 text-brand-700" />
           {savable
             ? "Bạn chưa đăng nhập. Sau khi nộp, hãy đăng ký hoặc đăng nhập để bài này được lưu vào lịch sử."
-            : "Đề mở từ thư mục trên máy không được lưu lịch sử. Hãy lấy đề từ link FuOverflow để lưu lại kết quả."}
+            : "Đề mở từ thư mục trên máy không được lưu lịch sử. Hãy chọn đề ở trang chủ để lưu lại kết quả."}
         </p>
       )}
       <ModalActions>

@@ -31,7 +31,7 @@ export function ProHero({ plan, pro, daysLeft, expiresAt }: Props) {
             <span className="bg-gradient-to-r from-[#ffe58a] via-[#ffc61f] to-[#ff9d2f] bg-clip-text text-transparent">không lo bị trừ credit</span>
           </h1>
           <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-[#fff6dc]/80 expanded:mx-0">
-            Lấy đề, xem giải thích AI và tải đề PE <b className="text-white">không bị tính phí</b> trong suốt thời hạn Pro. Trả một lần, không tự gia hạn.
+            Lấy đề và xem giải thích AI <b className="text-white">không bị tính phí</b> trong suốt thời hạn Pro. Trả một lần, không tự gia hạn.
           </p>
 
           <div className="mt-5 flex flex-wrap items-center justify-center gap-2 expanded:justify-start">

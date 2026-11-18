@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, BookOpen, ClipboardPaste } from "lucide-react";
+import { ArrowLeft, BookOpen } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useSignupGift } from "@/features/landing/useSignupGift";
 import { Footer } from "@/shared/layout/Footer";
@@ -76,24 +76,6 @@ export default function PublicCatalogPage() {
           ) : (
             <CatalogOverview subjects={subjects} overview={overview} onPick={(c) => setUrl({ subject: c })} />
           )}
-
-          <section className="relative overflow-hidden rounded-m3-xl border border-outline-variant/70 bg-gradient-to-b from-surface-container-lowest to-surface-container-low p-5 shadow-[0_1px_2px_rgba(0,0,0,0.05),0_24px_50px_-24px_rgba(70,45,0,0.35)] sm:p-6">
-            <span aria-hidden className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-[#ffc61f]/70 to-transparent" />
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="flex min-w-0 items-center gap-3">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-container text-on-primary-container ring-1 ring-[#b87d00]/20">
-                  <ClipboardPaste size={20} />
-                </span>
-                <div className="min-w-0">
-                  <h2 className="md-title-medium text-on-surface">Không thấy đề bạn cần?</h2>
-                  <p className="md-body-small text-on-surface-variant">Dán link đề từ FuOverflow ở trang chủ, hệ thống tự lấy đề về cho bạn.</p>
-                </div>
-              </div>
-              <Link to="/" className={buttonClass({ variant: "tonal" })}>
-                Dán link ở trang chủ
-              </Link>
-            </div>
-          </section>
         </div>
       </main>
       <Footer />

@@ -62,7 +62,7 @@ export function CatalogOverview({ subjects, overview, onPick }: { subjects: Subj
 
       {list.length === 0 ? (
         <Empty icon={BookOpen} title="Chưa có môn nào khớp">
-          Thử mã môn khác, hoặc dán link FuOverflow ở trang chủ để lấy đề mới.
+          Thử mã môn khác.
         </Empty>
       ) : (
         <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">

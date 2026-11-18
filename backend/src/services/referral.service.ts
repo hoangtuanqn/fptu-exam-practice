@@ -121,7 +121,7 @@ export const referralService = {
    * Gọi trong transaction cộng tiền nạp: người nạp có người giới thiệu thì người đó nhận % số tiền vừa nạp.
    * depositOrderId duy nhất trong sổ thưởng nên một lệnh nạp không bao giờ sinh hoa hồng hai lần.
    */
-  async rewardDeposit(db: Db, input: { depositorId: string; depositorName: string; depositOrderId: number; code: string; amount: number }): Promise<RewardNotice | null> {
+  async rewardDeposit(db: Db, input: { depositorId: string; depositorName: string; depositOrderId: string; code: string; amount: number }): Promise<RewardNotice | null> {
     const link = await referralRepository.findReferrerOf(db, input.depositorId);
     if (!link?.referredById) return null;
     const config = await referralSettingService.get();

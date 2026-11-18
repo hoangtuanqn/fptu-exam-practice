@@ -26,7 +26,7 @@ const DEFAULTS = {
   product: "Luyện thi FE FPTU",
   tagline: "MMO Solution",
   slogan: "Hành trình đi đến điểm 10.",
-  description: "Luyện thi FE FPTU: lấy đề FuOverflow bằng một link (500đ/đề, có đáp án AI), giải thích từng câu, chấm điểm thang 10, tải tài nguyên đề PE. Cài tiện ích Chrome để làm đề ngay trên FuOverflow. Đăng ký tặng credit.",
+  description: "Luyện thi FE FPTU: đề thi theo môn có đáp án AI, giải thích từng câu, chấm điểm thang 10. Cài tiện ích Chrome để đồng bộ điểm FAP. Đăng ký tặng credit.",
   siteUrl: "",
   companyUrl: "",
   facebookUrl: "https://facebook.com/mstsoftware.vn",

@@ -16,7 +16,7 @@ export function PartnerAiSection() {
             <span className="md-label-medium inline-flex h-6 items-center rounded-m3-sm bg-secondary-container px-2.5 uppercase tracking-wider text-on-secondary-container">Kho đề</span>
             <h3 className="md-title-large mt-5 text-on-surface">Luyện đề thi FE như thi thật</h3>
             <p className="md-body-medium mt-2 text-on-surface-variant">
-              Dán link đề, hệ thống tự lấy về và lưu vào thư viện của bạn. Làm ngay như thi thật, có chấm điểm, tính giờ và lưu lịch sử từng lần làm.
+              Chọn môn, mở đề và lưu vào thư viện của bạn. Làm ngay như thi thật, có chấm điểm, tính giờ và lưu lịch sử từng lần làm.
             </p>
             <Link to="/kho-de" className={buttonClass({ variant: "text", className: "mt-4 -ml-3" })}>
               Xem kho đề <ArrowRight size={16} />

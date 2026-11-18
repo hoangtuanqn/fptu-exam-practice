@@ -264,19 +264,6 @@ export interface PurchaseUser {
   fullName: string;
 }
 
-export interface AdminPeDownload {
-  id: number;
-  threadId: string;
-  title: string;
-  price: number;
-  files: number;
-  sizeBytes: number;
-  status: "PENDING" | "DONE" | "FAILED";
-  error: string | null;
-  createdAt: string;
-  user: PurchaseUser;
-}
-
 export interface AdminExplanationUnlock {
   id: number;
   price: number;
@@ -534,11 +521,6 @@ export const adminApi = {
     setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
     return filename;
   },
-  peDownloads: (f: { page: number; userId?: string; search?: string }) =>
-    http.list<AdminPeDownload>("/admin/pe-downloads", {
-      ...f,
-      limit: PAGE_SIZE,
-    }),
   explanationUnlocks: (f: { page: number; userId?: string; search?: string }) =>
     http.list<AdminExplanationUnlock>("/admin/explanation-unlocks", {
       ...f,

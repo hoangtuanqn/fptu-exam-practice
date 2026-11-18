@@ -16,7 +16,7 @@ export const depositRepository = {
   findByCode: (db: Db, code: string) => db.depositOrder.findUnique({ where: { code } }),
 
   // Chiếm lệnh bằng điều kiện ở DB: chỉ một tiến trình đổi được sang PAID, các tiến trình khác nhận count = 0
-  async markPaid(db: Db, id: number) {
+  async markPaid(db: Db, id: string) {
     const { count } = await db.depositOrder.updateMany({
       where: { id, status: { not: "PAID" } },
       data: { status: "PAID", paidAt: new Date() },

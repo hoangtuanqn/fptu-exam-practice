@@ -24,7 +24,7 @@ export const referralRepository = {
 
   findReferrerOf: (db: Db, userId: string) => db.user.findUnique({ where: { id: userId }, select: { referredById: true } }),
 
-  createReward: (db: Db, data: { referrerId: string; referredId: string; type: ReferralRewardType; amount: number; depositOrderId?: number }) =>
+  createReward: (db: Db, data: { referrerId: string; referredId: string; type: ReferralRewardType; amount: number; depositOrderId?: string }) =>
     db.referralReward.create({ data, select: { id: true } }),
 
   // Tổng hoa hồng + thưởng người giới thiệu đã nhận, và số người đã giới thiệu

@@ -16,7 +16,7 @@ interface Props {
 }
 
 const PRO_POINTS = [
-  "Lấy đề, giải thích AI, tải đề PE: không trừ credit",
+  "Lấy đề, giải thích AI: không trừ credit",
   "Báo cáo điểm yếu theo chủ đề, luyện đúng phần yếu",
   "Xem đủ “Câu hay ra”, sổ câu sai không giới hạn",
   "Trả một lần, hết hạn thì dừng, không bị trừ thêm",

@@ -89,7 +89,7 @@ export interface MaterialJobStore {
 
 export interface MaterialJobDeps {
   store: MaterialJobStore;
-  subject(subjectId: number): Promise<{ name: string; chapters: { number: number; title: string }[] } | null>;
+  subject(subjectId: string): Promise<{ name: string; chapters: { number: number; title: string }[] } | null>;
   /** Client Claude theo cấu hình AI của trang quản trị; null khi AI đang tắt hoặc chưa có khoá. */
   client(): Promise<MaterialClaudeClient | null>;
   ledger: TokenLedger;

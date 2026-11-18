@@ -54,7 +54,7 @@ export function CompactSubjectPicker({ subjects, loading, error, onRetry, onPick
       ) : term ? (
         matches.length === 0 ? (
           <Empty icon={Search} title="Chưa có môn nào khớp">
-            Thử mã môn khác, hoặc dán link FuOverflow ở khung bên dưới để lấy đề mới.
+            Thử mã môn khác.
           </Empty>
         ) : (
           <div>

@@ -29,7 +29,7 @@ subjectRouter.get("/:code/frequent", limiter, identify, validate(subjectCodePara
   res.json(new ResponseClient({ data: await frequentQuestionsService.forSubject(code, req.user) }));
 });
 
-// Thống kê tần suất ra đề theo id số của môn (npm run stats:refresh tính sẵn): theo chương (công khai) và nhóm câu hay ra (gói thường xem phần đầu)
+// Thống kê tần suất ra đề theo id (UUID) của môn (npm run stats:refresh tính sẵn): theo chương (công khai) và nhóm câu hay ra (gói thường xem phần đầu)
 subjectRouter.get("/:id/chapter-stats", limiter, validate(subjectIdParam, "params"), frequencyStatsController.chapterStats);
 subjectRouter.get("/:id/hot-questions", limiter, identify, validate(subjectIdParam, "params"), validate(hotQuestionsQuery, "query"), frequencyStatsController.hotQuestions);
 
