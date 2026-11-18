@@ -103,7 +103,7 @@ function Preview({ exam }: { exam: ImportedExam }) {
         <li key={q.number}>
           <button type="button" onClick={() => setZoom(q)} aria-label={`Xem lớn trang ${q.number}`} className={`${TILE} w-full`}>
             <img src={q.imageUrl} alt="" loading="lazy" className="h-full w-full object-cover object-top" />
-            <span className={CAPTION}>page_{q.number}</span>
+            <span className={CAPTION}>Trang {q.number}</span>
           </button>
         </li>
       ))}
@@ -166,7 +166,7 @@ function Preview({ exam }: { exam: ImportedExam }) {
       {zoom && (
         <Modal wide onClose={() => setZoom(null)}>
           <div className="mb-3 flex items-center justify-between gap-3">
-            <h2 className="md-title-medium text-on-surface">page_{zoom.number}</h2>
+            <h2 className="md-title-medium text-on-surface">Trang {zoom.number}</h2>
             <Button variant="text" onClick={() => setZoom(null)} aria-label="Đóng">
               <X size={18} />
             </Button>
