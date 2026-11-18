@@ -41,7 +41,7 @@ function Row({ r, onRemove }: { r: ReviewRow; onRemove: (r: ReviewRow) => void }
         </a>
       )}
       <div className="min-w-0 flex-1">
-        <Link to={`/exam/${r.threadId}`} className="md-title-small line-clamp-2 break-words text-on-surface hover:underline" title="Mở đề này">
+        <Link to={`/exam/${r.examId}`} className="md-title-small line-clamp-2 break-words text-on-surface hover:underline" title="Mở đề này">
           Câu {r.number} · {r.examTitle}
         </Link>
         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">

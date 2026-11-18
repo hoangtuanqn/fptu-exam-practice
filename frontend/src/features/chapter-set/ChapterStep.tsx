@@ -39,8 +39,8 @@ export function ChapterStep({ subject, exams, onBack }: { subject: SubjectItem; 
     if (!first) return;
     const qs = new URLSearchParams({ mode });
     if (withChapters) for (const [t] of chapters) if (picked.has(t)) qs.append("t", t);
-    if (list.length > 1) qs.set("next", list.slice(1).map((e) => e.threadId).join(","));
-    navigate(`/exam/${first.threadId}?${qs.toString()}`);
+    if (list.length > 1) qs.set("next", list.slice(1).map((e) => e.id).join(","));
+    navigate(`/exam/${first.id}?${qs.toString()}`);
   };
 
   const totalQuestions = exams.reduce((n, e) => n + (e.totalQuestions || 0), 0);

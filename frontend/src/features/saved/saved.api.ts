@@ -6,7 +6,6 @@ export interface SavedQuestion {
   id: number;
   examId: string;
   examTitle: string;
-  threadId: string;
   subjectCode: string | null;
   number: number;
   imageUrl: string | null;

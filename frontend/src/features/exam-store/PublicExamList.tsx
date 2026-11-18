@@ -69,7 +69,7 @@ function ExamAction({ item, loggedIn, target, price }: { item: CatalogItem; logg
   const track = () => trackPrompt("library-open", "click");
   if (item.status === "owned")
     return (
-      <Link to={`/exam/${item.threadId}`} className={cls}>
+      <Link to={`/exam/${item.examId}`} className={cls}>
         <Play size={15} /> Mở đề
       </Link>
     );

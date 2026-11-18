@@ -25,9 +25,6 @@ export const listAttemptsQuery = paginationQuery.extend({
 
 export const attemptSummaryQuery = z.object({ examId: uuidSchema });
 
-export const threadParam = z.object({ threadId: z.string().regex(/^\d{1,18}$/, "Mã đề không hợp lệ") });
-
-export type ThreadParam = z.infer<typeof threadParam>;
 export type SubmitAttemptBody = z.infer<typeof submitAttemptBody>;
 export type AttemptSummaryQuery = z.infer<typeof attemptSummaryQuery>;
 export type ListAttemptsQuery = z.infer<typeof listAttemptsQuery>;

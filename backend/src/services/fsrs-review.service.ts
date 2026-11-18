@@ -65,7 +65,6 @@ export const fsrsReviewService = {
         questionId: c.questionId,
         examId: c.question.examId,
         examTitle: c.question.exam.title,
-        threadId: c.question.exam.threadId,
         number: c.question.number,
         topic: c.question.topic,
         imageUrl: fileUrlOf(c.question.imagePath),

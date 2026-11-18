@@ -3,7 +3,7 @@ import { HTTP_STATUS } from "../constants/httpStatus";
 import { getValidated } from "../middlewares/validate.middlewares";
 import type { UuidParam } from "../rules/requests/admin.request";
 import type { AttachmentParam, AttachmentQuery, ListExamsQuery } from "../rules/requests/exam.request";
-import type { SubmitAttemptBody, ThreadParam } from "../rules/requests/attempt.request";
+import type { SubmitAttemptBody } from "../rules/requests/attempt.request";
 import { hasTopicReport, hasUnlimitedReview } from "../utils/pro";
 import { AppError } from "../rules/error";
 import { ResponseClient } from "../rules/response";
@@ -52,11 +52,6 @@ export const examController = {
     await new Promise<void>((resolve, reject) =>
       res.sendFile(file.abs, { dotfiles: "allow" }, (err) => (err && !res.headersSent ? reject(AppError.notFound("Không tìm thấy tệp")) : resolve())),
     );
-  },
-
-  async getByThread(req: Request, res: Response) {
-    const { threadId } = getValidated<ThreadParam>(res, "params");
-    res.json(new ResponseClient({ data: await examService.getDetailByThread(actorOf(req), threadId) }));
   },
 
   async submitAttempt(req: Request, res: Response) {

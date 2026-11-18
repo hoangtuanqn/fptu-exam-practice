@@ -12,7 +12,6 @@ import { hammingWithin, hashImagesInBatches, toWords } from "../utils/question-h
 export interface FrequentItem {
   count: number; // số đề (khác nhau) có câu này
   examId: string;
-  threadId: string;
   examTitle: string;
   number: number;
   imageUrl: string;
@@ -35,7 +34,7 @@ const norm = (answer: string) => answer.split(/\s+/).filter(Boolean).sort().join
 async function compute(code: string): Promise<Computed> {
   const exams = await prisma.exam.findMany({
     where: { subjectCode: code, answerSource: { in: ["AI", "MANUAL"] } },
-    select: { id: true, title: true, threadId: true },
+    select: { id: true, title: true },
   });
   if (exams.length === 0) return { totalExams: 0, analyzed: 0, total: 0, items: [] };
 
@@ -77,7 +76,6 @@ async function compute(code: string): Promise<Computed> {
     items.push({
       count: distinct.size,
       examId: rep.examId,
-      threadId: exam.threadId,
       examTitle: exam.title,
       number: rep.number,
       imageUrl: fileUrlOf(rep.imagePath),

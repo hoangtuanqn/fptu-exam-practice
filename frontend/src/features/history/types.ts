@@ -14,7 +14,7 @@ export interface AttemptSummary {
   skipped: number;
   durationSec: number;
   createdAt: string;
-  exam: { id: string; title: string; threadId: string; totalQuestions: number };
+  exam: { id: string; title: string; totalQuestions: number };
 }
 
 // Ảnh chụp từng câu lúc chấm: đã chọn gì, đáp án đúng lúc đó là gì

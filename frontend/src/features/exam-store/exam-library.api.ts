@@ -4,7 +4,6 @@ import { PAGE_SIZE } from "@/shared/api/pagination";
 export interface LibraryExam {
   id: string;
   title: string;
-  threadId: string;
   totalQuestions: number;
   addedAt: string;
   attempts: number; // số lần đã làm

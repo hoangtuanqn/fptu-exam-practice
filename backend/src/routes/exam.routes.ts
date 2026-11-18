@@ -4,7 +4,7 @@ import { practiceSessionController } from "../controllers/practice-session.contr
 import { authenticate, identify } from "../middlewares/auth.middlewares";
 import { validate } from "../middlewares/validate.middlewares";
 import { uuidParam } from "../rules/requests/admin.request";
-import { submitAttemptBody, threadParam } from "../rules/requests/attempt.request";
+import { submitAttemptBody } from "../rules/requests/attempt.request";
 import { attachmentParam, attachmentQuery, listExamsQuery } from "../rules/requests/exam.request";
 import { createSessionBody } from "../rules/requests/session.request";
 
@@ -13,7 +13,6 @@ const examRouter = Router();
 // Khách xem được kho đề của chính mình (theo X-Guest-Id); nộp bài lưu lịch sử và nhận đề về tài khoản thì cần đăng nhập
 examRouter.get("/", identify, validate(listExamsQuery, "query"), examController.listMine);
 examRouter.post("/claim", authenticate, examController.claim);
-examRouter.get("/thread/:threadId", identify, validate(threadParam, "params"), examController.getByThread);
 examRouter.get("/:id/answers", identify, validate(uuidParam, "params"), examController.answers);
 examRouter.post("/:id/retry-solve", identify, validate(uuidParam, "params"), examController.retrySolve);
 // Tệp đính kèm: mở bằng link thường (không gửi được token) nên công khai như ảnh đề ở /api/v1/files

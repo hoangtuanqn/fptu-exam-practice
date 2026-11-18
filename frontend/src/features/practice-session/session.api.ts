@@ -22,7 +22,7 @@ export interface PracticeSession extends SessionState {
   answered: number; // số câu đã chọn đáp án
   createdAt: string;
   updatedAt: string;
-  exam: { id: string; title: string; threadId: string; totalQuestions: number };
+  exam: { id: string; title: string; totalQuestions: number };
 }
 
 export const sessionApi = {
@@ -36,4 +36,4 @@ export const sessionApi = {
 };
 
 // Đường dẫn mở lại đúng lượt làm
-export const sessionPath = (s: Pick<PracticeSession, "id" | "mode" | "exam">) => `/exam/${s.exam.threadId}?mode=${s.mode === "EXAM" ? "exam" : "practice"}&session=${s.id}`;
+export const sessionPath = (s: Pick<PracticeSession, "id" | "mode" | "exam">) => `/exam/${s.exam.id}?mode=${s.mode === "EXAM" ? "exam" : "practice"}&session=${s.id}`;

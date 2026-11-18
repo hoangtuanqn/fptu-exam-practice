@@ -117,9 +117,9 @@ const RUNNERS: Record<string, Runner> = {
       where: { userId, ...(search && { exam: { title: { contains: search } } }) },
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take: take(input),
-      select: { createdAt: true, exam: { select: { title: true, threadId: true, totalQuestions: true, answerSource: true } } },
+      select: { createdAt: true, exam: { select: { id: true, title: true, totalQuestions: true, answerSource: true } } },
     });
-    return rows.map((r) => ({ title: r.exam.title, questions: r.exam.totalQuestions, answerSource: r.exam.answerSource, addedAt: iso(r.createdAt), link: `/exam/${r.exam.threadId}` }));
+    return rows.map((r) => ({ title: r.exam.title, questions: r.exam.totalQuestions, answerSource: r.exam.answerSource, addedAt: iso(r.createdAt), link: `/exam/${r.exam.id}` }));
   },
 
   async list_in_progress_sessions(userId, input) {
@@ -127,7 +127,7 @@ const RUNNERS: Record<string, Runner> = {
       where: { userId, status: "IN_PROGRESS" },
       orderBy: { updatedAt: "desc" },
       take: take(input),
-      select: { mode: true, answers: true, elapsedSec: true, updatedAt: true, exam: { select: { title: true, threadId: true, totalQuestions: true } } },
+      select: { mode: true, answers: true, elapsedSec: true, updatedAt: true, exam: { select: { id: true, title: true, totalQuestions: true } } },
     });
     return rows.map((r) => ({
       exam: r.exam.title,
@@ -136,7 +136,7 @@ const RUNNERS: Record<string, Runner> = {
       totalQuestions: r.exam.totalQuestions,
       minutesSpent: Math.round(r.elapsedSec / 60),
       lastActiveAt: iso(r.updatedAt),
-      link: `/exam/${r.exam.threadId}`,
+      link: `/exam/${r.exam.id}`,
     }));
   },
 
@@ -183,13 +183,13 @@ const RUNNERS: Record<string, Runner> = {
 
   async list_unlocked_explanations(userId, input) {
     const [unlocks, singles, trials] = await Promise.all([
-      prisma.explanationUnlock.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: take(input), select: { price: true, questions: true, createdAt: true, exam: { select: { title: true, threadId: true } } } }),
+      prisma.explanationUnlock.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: take(input), select: { price: true, questions: true, createdAt: true, exam: { select: { id: true, title: true } } } }),
       prisma.explanationPurchase.groupBy({ by: ["examId"], where: { userId, isTrial: false }, _count: { _all: true }, orderBy: { _count: { examId: "desc" } }, take: take(input) }),
       prisma.explanationPurchase.count({ where: { userId, isTrial: true } }),
     ]);
     const titles = new Map((await prisma.exam.findMany({ where: { id: { in: singles.map((s) => s.examId) } }, select: { id: true, title: true } })).map((e) => [e.id, e.title]));
     return {
-      bundlesBought: unlocks.map((u) => ({ exam: u.exam.title, questions: u.questions, priceCredit: u.price, at: iso(u.createdAt), link: `/exam/${u.exam.threadId}` })),
+      bundlesBought: unlocks.map((u) => ({ exam: u.exam.title, questions: u.questions, priceCredit: u.price, at: iso(u.createdAt), link: `/exam/${u.exam.id}` })),
       singleExplanationsByExam: singles.map((s) => ({ exam: titles.get(s.examId) ?? `#${s.examId}`, questionsBought: s._count._all })),
       freeTrialsUsed: trials,
     };

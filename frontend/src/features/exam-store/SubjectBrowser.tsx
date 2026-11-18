@@ -75,14 +75,14 @@ function ExamList({ code, onBack, compact }: { code: string; onBack: () => void;
   useEffect(() => {
     if (job.exam) {
       void refresh();
-      navigate(`/exam/${job.exam.threadId}`);
+      navigate(`/exam/${job.exam.id}`);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [job.exam]);
 
   const pick = async (item: CatalogItem) => {
     if (!user) return void navigate("/login");
-    if (item.status === "owned") return void navigate(`/exam/${item.threadId}`);
+    if (item.status === "owned" && item.examId) return void navigate(`/exam/${item.examId}`);
     setQuoting(item.threadId);
     try {
       // Hỏi phí thực tế và kiểm tra trước khi trừ tiền (đúng nhãn, đúng môn); miễn phí (Pro, đã sở hữu) thì lấy luôn

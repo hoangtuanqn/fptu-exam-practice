@@ -19,6 +19,7 @@ import { Card, PageHeader } from "@/shared/ui/Card";
 import { Empty } from "@/shared/ui/Feedback";
 import { QueryBoundary } from "@/shared/ui/QueryBoundary";
 import { Switch } from "@/shared/ui/Switch";
+import { isUuid } from "@/shared/utils/uuid";
 import { JumpNav } from "./JumpNav";
 import { ViewQuestionCard } from "./ViewQuestionCard";
 
@@ -33,20 +34,20 @@ const readShow = () => {
   }
 };
 
-// Trang xem đề chỉ đọc (/exam/:threadId/view): cả đề một cột, đáp án, lưu câu; muốn làm thì bấm "Làm bài ngay"
+// Trang xem đề chỉ đọc (/exam/:examId/view): cả đề một cột, đáp án, lưu câu; muốn làm thì bấm "Làm bài ngay"
 export default function ExamViewPage() {
-  const threadId = useParams().threadId ?? "";
-  const valid = /^\d{1,18}$/.test(threadId);
+  const examId = useParams().examId ?? "";
+  const valid = isUuid(examId);
   // 404 = đề không có trong kho của người xem: exam null để hiện "không tìm thấy" thay vì lỗi
   const query = useApi(async () => {
     if (!valid) return { exam: null };
     try {
-      return { exam: await examImportApi.examByThread(threadId) };
+      return { exam: await examImportApi.exam(examId) };
     } catch (err) {
       if (err instanceof ApiError && err.status === 404) return { exam: null };
       throw err;
     }
-  }, [threadId, valid]);
+  }, [examId, valid]);
 
   return (
     <div className="flex min-h-screen flex-col bg-surface">
@@ -173,7 +174,7 @@ function ExamView({ exam }: { exam: ImportedExam }) {
               ) : (
                 <span className="md-body-medium text-on-surface-variant">Đề này chưa có đáp án</span>
               )}
-              <Link to={`/exam/${exam.threadId}`} className={buttonClass({ variant: "filled" })}>
+              <Link to={`/exam/${exam.id}`} className={buttonClass({ variant: "filled" })}>
                 <Play size={16} /> Làm bài ngay
               </Link>
             </div>

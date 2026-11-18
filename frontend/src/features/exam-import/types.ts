@@ -16,7 +16,6 @@ export type SubmitResult = { existed: true; examId: string; title: string; free?
 
 export interface ImportedExam {
   id: string;
-  threadId: string; // mã thread FuOverflow, dùng trong địa chỉ /exam/:threadId
   title: string;
   answerStatus: AnswerSource; // PENDING = AI đang phân tích đáp án
   totalQuestions: number; // lớn hơn questions.length = đề còn đang được lấy về, các câu sau đến qua socket

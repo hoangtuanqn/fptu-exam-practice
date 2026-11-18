@@ -23,6 +23,7 @@ interface UsableExam {
 export type CatalogStatus = "owned" | "ready" | "fetch";
 
 export interface CatalogItem {
+  examId: string | null; // ID đề trong hệ thống (dùng trong địa chỉ /exam/:id); null = chưa có, phải lấy về
   threadId: string;
   title: string;
   postedAt: Date | null;
@@ -163,14 +164,15 @@ export const catalogService = {
     const have = new Map(ours.map((e) => [e.threadId, e]));
 
     const merged = new Map<string, CatalogItem>();
-    for (const t of fuo) merged.set(t.threadId, { threadId: t.threadId, title: t.title, postedAt: t.postedAt, replies: t.replies, term: termOf(t.title), status: "fetch", questions: null });
+    for (const t of fuo) merged.set(t.threadId, { examId: null, threadId: t.threadId, title: t.title, postedAt: t.postedAt, replies: t.replies, term: termOf(t.title), status: "fetch", questions: null });
     for (const e of ours) {
-      const base = merged.get(e.threadId) ?? { threadId: e.threadId, title: e.title, postedAt: null, replies: 0, term: termOf(e.title), status: "fetch" as CatalogStatus, questions: null };
+      const base = merged.get(e.threadId) ?? { examId: null, threadId: e.threadId, title: e.title, postedAt: null, replies: 0, term: termOf(e.title), status: "fetch" as CatalogStatus, questions: null };
       merged.set(e.threadId, base);
     }
     for (const item of merged.values()) {
       const e = have.get(item.threadId);
       if (e) {
+        item.examId = e.id;
         item.status = mine.has(e.id) ? "owned" : "ready";
         item.questions = e.questions;
       }

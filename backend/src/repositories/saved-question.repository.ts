@@ -31,7 +31,7 @@ export const savedQuestionRepository = {
           examId: true,
           questionNumber: true,
           createdAt: true,
-          exam: { select: { title: true, threadId: true, subjectCode: true, answerSource: true } },
+          exam: { select: { title: true, subjectCode: true, answerSource: true } },
         },
         orderBy: [...newestFirst(true)],
         ...toSkipTake(query),

@@ -5,7 +5,7 @@ import { toSkipTake, type PaginationQuery } from "../utils/pagination";
 
 const whereOf = (owner: Owner) => ("userId" in owner ? { userId: owner.userId } : { guestId: owner.guestId });
 
-const withExam = { exam: { select: { id: true, title: true, threadId: true, totalQuestions: true } } } satisfies Prisma.PracticeSessionInclude;
+const withExam = { exam: { select: { id: true, title: true, totalQuestions: true } } } satisfies Prisma.PracticeSessionInclude;
 
 export interface SessionState {
   answers: Prisma.InputJsonValue;

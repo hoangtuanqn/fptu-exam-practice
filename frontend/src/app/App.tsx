@@ -3,6 +3,7 @@ import { Navigate, Route, Routes, useLocation, useParams } from "react-router-do
 import { Bookmark, Crown, FileText, Flame, NotebookPen, BookOpen, ListChecks, GraduationCap, LayoutDashboard, UserRound, Wallet, Receipt, Gift, UserPlus, ShoppingBag } from "lucide-react";
 import { PanelLayout, type NavItem } from "@/shared/layout/PanelLayout";
 import { Loading } from "@/shared/ui/Feedback";
+import { isUuid } from "@/shared/utils/uuid";
 import LoginPage from "@/features/auth/pages/LoginPage";
 import RegisterPage from "@/features/auth/pages/RegisterPage";
 import ForgotPasswordPage from "@/features/auth/pages/ForgotPasswordPage";
@@ -19,10 +20,10 @@ import { FreeTurnNotice } from "@/features/link-reward/FreeTurnNotice";
 import { WhatsNewDialog } from "@/features/changelog/WhatsNewDialog";
 import PracticePage from "@/features/practice/PracticePage";
 
-// "/" và "/exam/:threadId" dùng chung một thể hiện của trang để đổi địa chỉ không làm mất bài đang làm
+// "/" và "/exam/:examId" dùng chung một thể hiện của trang để đổi địa chỉ không làm mất bài đang làm
 function PracticeRoute() {
-  const threadId = useParams().threadId;
-  return <PracticePage threadId={threadId && /^\d{1,18}$/.test(threadId) ? threadId : undefined} />;
+  const examId = useParams().examId;
+  return <PracticePage examId={isUuid(examId) ? examId : undefined} />;
 }
 import { GuestOnly, RequireAuth } from "@/features/auth/guards";
 
@@ -100,9 +101,9 @@ export default function App() {
       <ChatWidget />
       <Routes>
         <Route path="/" element={<PracticeRoute />} />
-        <Route path="/exam/:threadId" element={<PracticeRoute />} />
+        <Route path="/exam/:examId" element={<PracticeRoute />} />
         {/* Xem đề chỉ đọc: công khai như trang làm đề (người xem cần có đề trong kho) */}
-        <Route path="/exam/:threadId/view" element={<ExamViewPage />} />
+        <Route path="/exam/:examId/view" element={<ExamViewPage />} />
         {M3Gallery && <Route path="/dev/m3" element={<Suspense fallback={null}><M3Gallery /></Suspense>} />}
 
         {/* Bảng tính năng của hệ thống (để giới thiệu/chụp màn hình): công khai */}

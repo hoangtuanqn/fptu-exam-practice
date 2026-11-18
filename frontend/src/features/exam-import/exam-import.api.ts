@@ -23,5 +23,4 @@ export const examImportApi = {
     http.get<Omit<ExamAnswersPayload, "examId">>(`/exams/${id}/answers`),
   // Đề AI giải lỗi: nhờ AI giải lại (có thời gian chờ giữa hai lần)
   retrySolve: (id: string) => http.post<{ result: string }>(`/exams/${id}/retry-solve`),
-  examByThread: (threadId: string) => http.get<ImportedExam>(`/exams/thread/${encodeURIComponent(threadId)}`),
 };
