@@ -54,7 +54,7 @@ const send = async (to: string, subject: string, { html, text }: Rendered, heade
     html,
     text,
     ...(headers && { headers }),
-    // Ảnh bìa + logo nhúng thẳng vào thư (cid) nên hiển thị cả khi chạy local, không cần ảnh trên internet
+    // Logo nhúng thẳng vào thư (cid) nên hiển thị cả khi chạy local, không cần ảnh trên internet
     attachments: Object.values(MAIL_IMAGES).map(({ file, cid }) => ({ filename: file, path: path.join(MAIL_ASSETS_DIR, file), cid })),
   });
 };
