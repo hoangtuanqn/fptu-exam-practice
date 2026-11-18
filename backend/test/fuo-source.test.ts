@@ -6,6 +6,7 @@ import { renderCommentsText, replaceSection } from "../src/services/crawler/comm
 import { normalizeQuestionNames } from "../src/services/crawler/thread-scraper.service";
 import { pickNewNames, planQuestionMerge } from "../src/utils/exam-merge";
 import { parseSourceLines } from "../src/utils/fuo-source-lines";
+import { catalogSourceRows } from "../src/utils/fuo-source-queue";
 import { createKeyLock } from "../src/utils/key-lock";
 
 describe("FuOverflow source list (pure)", () => {
@@ -45,6 +46,14 @@ describe("FuOverflow source list (pure)", () => {
 
   it("empty text gives nothing", () => {
     assert.deepEqual(parseSourceLines("\n  \n"), { accepted: [], rejected: [], duplicates: [] });
+  });
+
+  it("catalog threads become new links; threads that already have an exam are recorded as processed (not fetched again)", () => {
+    const now = new Date("2026-11-18T00:00:00Z");
+    assert.deepEqual(catalogSourceRows([{ threadId: "7094", examId: null }, { threadId: "8000", examId: "e1" }], now), [
+      { threadId: "7094", url: "https://fuoverflow.com/threads/7094/" },
+      { threadId: "8000", url: "https://fuoverflow.com/threads/8000/", status: "DONE", examId: "e1", processedAt: now },
+    ]);
   });
 });
 
