@@ -19,15 +19,15 @@ interface Base {
 const { company, product } = MAIL_BRAND;
 
 const footer = (why: string, unsubscribeUrl: string) =>
-  note(`${esc(why)} Không muốn nhận những thư như thế này nữa? <a href="${esc(unsubscribeUrl)}" style="color:inherit">Hủy nhận thư</a>.`);
+  note(`${esc(why)} Nếu không muốn nhận những email như thế này nữa, bạn có thể <a href="${esc(unsubscribeUrl)}" style="color:inherit">hủy nhận email</a> bất cứ lúc nào.`);
 
 const build = (o: { subject: string; title: string; preheader: string; blocks: string[]; textLines: string[]; why: string; unsubscribeUrl: string; name: string }): MarketingMail => ({
   subject: o.subject,
-  html: renderLayout({ title: o.title, preheader: o.preheader, bodyHtml: [p(`<strong>Xin chào ${esc(o.name)},</strong>`), ...o.blocks, footer(o.why, o.unsubscribeUrl), signature()].join("") }),
-  text: [`Xin chào ${o.name},`, "", ...o.textLines, "", `${o.why} Hủy nhận thư: ${o.unsubscribeUrl}`, "", "Trân trọng,", company].join("\n"),
+  html: renderLayout({ title: o.title, preheader: o.preheader, bodyHtml: [p(`Kính gửi <strong>${esc(o.name)}</strong>,`), ...o.blocks, footer(o.why, o.unsubscribeUrl), signature()].join("") }),
+  text: [`Kính gửi ${o.name},`, "", ...o.textLines, "", `${o.why} Hủy nhận email: ${o.unsubscribeUrl}`, "", "Trân trọng,", company].join("\n"),
 });
 
-const WHY_ACCOUNT = `Bạn nhận thư này vì có tài khoản trên ${product}.`;
+const WHY_ACCOUNT = `Bạn nhận email này vì có tài khoản trên ${product}.`;
 
 // ---------- Win-back bước 1 (vắng 14 ngày): số câu còn cần ôn, môn đang học
 
@@ -83,14 +83,14 @@ export interface Winback3Input extends Base {
 }
 
 export function renderWinback3(i: Winback3Input): MarketingMail {
-  const lead = "Đã lâu bạn chưa quay lại. Nếu bạn đã thi xong thì chúc mừng bạn! Đây là thư cuối chúng mình gửi về chuyện này.";
+  const lead = "Đã lâu bạn chưa quay lại. Nếu bạn đã thi xong thì chúc mừng bạn! Đây là email cuối cùng chúng tôi gửi về nội dung này.";
   return build({
     ...i,
     subject: "Có phải bạn đã thi xong?",
     title: "Có phải bạn đã thi xong?",
     preheader: lead,
-    blocks: [p(esc(lead)), p("Còn môn cần ôn thì kho đề và các câu bạn đã làm sai vẫn ở đây. Thi xong rồi thì bấm nút thứ hai, chúng mình sẽ không gửi những thư như thế này nữa."), button("Mình vẫn đang ôn", i.url), button("Mình thi xong rồi, dừng gửi thư", i.unsubscribeUrl)],
-    textLines: [lead, "", `Vẫn đang ôn: ${i.url}`, `Thi xong rồi, dừng gửi thư: ${i.unsubscribeUrl}`],
+    blocks: [p(esc(lead)), p("Còn môn cần ôn thì kho đề và các câu bạn đã làm sai vẫn ở đây. Thi xong rồi thì bấm nút thứ hai, chúng tôi sẽ không gửi những email như thế này nữa."), button("Mình vẫn đang ôn", i.url), button("Mình thi xong rồi, dừng gửi thư", i.unsubscribeUrl)],
+    textLines: [lead, "", `Vẫn đang ôn: ${i.url}`, `Thi xong rồi, dừng gửi email: ${i.unsubscribeUrl}`],
     why: WHY_ACCOUNT,
   });
 }
@@ -109,7 +109,7 @@ export interface UpsellInput extends Base {
 export function renderUpsell(i: UpsellInput): MarketingMail {
   const lines: string[] = [];
   if (i.daysToExam !== null) lines.push(i.daysToExam === 0 ? "Hôm nay là buổi thi gần nhất của bạn." : `Còn ${i.daysToExam} ngày đến buổi thi gần nhất của bạn.`);
-  if (i.spent > 0) lines.push(`${i.spentDays} ngày qua bạn đã trả lẻ ${formatCredit(i.spent)} cho lấy đề, giải thích AI và tải đề PE.`);
+  if (i.spent > 0) lines.push(`${i.spentDays} ngày qua bạn đã trả lẻ ${formatCredit(i.spent)} cho việc mở đề và giải thích AI.`);
   const offer = `Gói ${i.pro.name} ${i.pro.months} tháng giá ${formatCredit(i.pro.price)} (khoảng ${formatCredit(i.pro.perDay)} mỗi ngày). Trong thời hạn gói, những việc này không mất thêm credit.`;
   const fuo = i.pro.savingsPercent > 0 ? `Rẻ hơn ${i.pro.savingsPercent}% so với mua VIP FuOverflow cùng thời hạn (${formatMoney(i.pro.fuoPrice)}).` : "";
   const sprint = `Chỉ cần ôn gấp trước kỳ thi? Gói ${i.sprint.name} ${i.sprint.days} ngày giá ${formatCredit(i.sprint.price)}.`;
@@ -160,16 +160,16 @@ export function renderBroadcast(i: BroadcastInput): MarketingMail {
 
 // ---------- Pro sắp hết hạn
 
-// Quyền lợi đang bật trong PRO_BENEFITS, viết cho người dùng
+// Quyền lợi đang bật trong PRO_BENEFITS, viết cho người dùng. Tải đề PE đã bỏ khỏi giao diện nên không nêu trong thư.
 const BENEFIT_LABELS: Record<keyof typeof PRO_BENEFITS, string> = {
-  freeFetch: "Lấy đề FuOverflow không mất credit",
+  freeFetch: "Mở đề không mất credit",
   freeExplain: "Xem giải thích AI mọi câu không mất credit",
   freePe: "Tải bộ tài nguyên đề PE không mất credit",
   topicReport: "Báo cáo điểm mạnh, điểm yếu đầy đủ theo chủ đề",
   frequentQuestions: "Xem toàn bộ Câu hay ra của môn",
   unlimitedReview: "Sổ câu sai không giới hạn số câu",
 };
-export const proBenefitLines = () => (Object.keys(PRO_BENEFITS) as (keyof typeof PRO_BENEFITS)[]).filter((k) => PRO_BENEFITS[k]).map((k) => BENEFIT_LABELS[k]);
+export const proBenefitLines = () => (Object.keys(PRO_BENEFITS) as (keyof typeof PRO_BENEFITS)[]).filter((k) => PRO_BENEFITS[k] && k !== "freePe").map((k) => BENEFIT_LABELS[k]);
 
 export interface ExpiryInput extends Base {
   expiresAt: Date;
@@ -188,6 +188,6 @@ export function renderExpiry(i: ExpiryInput): MarketingMail {
     preheader: lead,
     blocks: [p(esc(lead)), p("Hết hạn thì bạn vẫn dùng bình thường, chỉ không còn các quyền lợi sau:"), list(benefits.map(esc)), p(esc(renew)), button("Gia hạn Pro", i.url)],
     textLines: [lead, "", "Hết hạn thì bạn không còn:", ...benefits.map((b) => `- ${b}`), "", renew, "", `Gia hạn: ${i.url}`],
-    why: "Bạn nhận thư này vì đang dùng gói Pro.",
+    why: "Bạn nhận email này vì đang dùng gói Pro.",
   });
 }
