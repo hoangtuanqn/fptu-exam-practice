@@ -43,7 +43,7 @@ export interface AdminNotice {
   important: boolean;
   title: string;
   body: string | null;
-  userId: number | null;
+  userId: string | null;
   link: string | null; // trang admin liên quan
   createdAt: string;
   readAt: string | null;
@@ -157,7 +157,7 @@ export interface ExplanationFeedbackAdmin {
   comment: string | null;
   updatedAt: string;
   resolvedAt?: string | null; // có thể thiếu khi backend cũ
-  resolvedById?: number | null;
+  resolvedById?: string | null;
   user: { fullName: string; email: string };
   exam: { title: string; threadId: string };
   explanation: string | null; // lời giải đang lưu (null nếu đã bị xóa)
@@ -259,7 +259,7 @@ export interface ExamAdminDetail {
 }
 
 export interface PurchaseUser {
-  id: number;
+  id: string;
   email: string;
   fullName: string;
 }
@@ -308,15 +308,15 @@ export const adminApi = {
   users: (f: UserFilter) =>
     http.list<User>("/admin/users", { ...f, limit: PAGE_SIZE }),
   updateUser: (
-    id: number,
+    id: string,
     body: Partial<Pick<User, "fullName" | "role" | "status">> & {
       emailVerified?: boolean;
     },
   ) => http.patch<User>(`/admin/users/${id}`, body),
-  adjustBalance: (id: number, body: { amount: number; note: string }) =>
+  adjustBalance: (id: string, body: { amount: number; note: string }) =>
     http.post<User>(`/admin/users/${id}/balance`, body),
 
-  user: (id: number) => http.get<User>(`/admin/users/${id}`),
+  user: (id: string) => http.get<User>(`/admin/users/${id}`),
   chatbot: () => http.get<ChatbotAdmin>("/admin/settings/chat"),
   saveChatbot: (body: ChatbotForm) =>
     http.put<ChatbotAdmin["settings"]>("/admin/settings/chat", body),
@@ -328,18 +328,18 @@ export const adminApi = {
       embedded: number;
       warning?: string;
     }>("/admin/settings/chat/reindex"),
-  userSummary: (id: number) =>
+  userSummary: (id: string) =>
     http.get<UserSummary>(`/admin/users/${id}/summary`),
-  resetUserPassword: (id: number, password?: string) =>
+  resetUserPassword: (id: string, password?: string) =>
     http.post<{ password: string }>(
       `/admin/users/${id}/reset-password`,
       password ? { password } : {},
     ),
-  sendResetLink: (id: number) =>
+  sendResetLink: (id: string) =>
     http.post<null>(`/admin/users/${id}/send-reset-link`),
-  revokeUserSessions: (id: number) =>
+  revokeUserSessions: (id: string) =>
     http.post<null>(`/admin/users/${id}/revoke-sessions`),
-  impersonateUser: (id: number) =>
+  impersonateUser: (id: string) =>
     http.post<{ token: string; user: User }>(`/admin/users/${id}/impersonate`),
 
   walletTransactions: (f: {

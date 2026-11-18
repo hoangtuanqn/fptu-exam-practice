@@ -7,7 +7,7 @@ export type BankTxStatus = "MATCHED" | "UNMATCHED";
 export type TransactionType = "DEPOSIT" | "ADMIN_ADJUST" | "CRAWL_CHARGE" | "CRAWL_REFUND" | "GIFT_CODE" | "REPORT_REWARD" | "EXPLAIN_CHARGE" | "EXPLAIN_REFUND" | "REFERRAL_BONUS" | "REFERRAL_COMMISSION" | "SIGNUP_BONUS" | "DEPOSIT_BONUS" | "PE_CHARGE" | "PE_REFUND" | "COURSERA_CHARGE" | "COURSERA_REFUND" | "PLAN_CHARGE" | "CHECKIN_REWARD" | "CREDIT_EXPIRED";
 
 export interface User {
-  id: number;
+  id: string; // UUID
   email: string;
   fullName: string;
   avatarPath: string | null;
@@ -182,7 +182,7 @@ export interface GiftCodeRedemption {
   id: number;
   amount: number;
   createdAt: string;
-  user: { id: number; email: string; fullName: string };
+  user: { id: string; email: string; fullName: string };
 }
 
 // Mã mà chính thành viên đã nhập
@@ -226,10 +226,10 @@ export interface AnswerReportAdmin {
   createdAt: string;
   reviewedAt: string | null;
   resolvedAt?: string | null; // có thể thiếu khi backend cũ
-  resolvedById?: number | null;
+  resolvedById?: string | null;
   imageUrl: string | null;
   exam: { title: string; threadId: string };
-  user: { id: number; email: string; fullName: string };
+  user: { id: string; email: string; fullName: string };
 }
 
 // Báo cáo của chính thành viên
@@ -261,17 +261,17 @@ export interface ReferralSummary {
 
 // Một cặp người giới thiệu - người được giới thiệu (admin xem)
 export interface AdminReferral {
-  id: number;
+  id: string; // id của người được giới thiệu
   fullName: string;
   email: string;
   joinedAt: string;
-  referrer: { id: number; fullName: string; email: string } | null;
+  referrer: { id: string; fullName: string; email: string } | null;
   earned: number; // tổng credit người giới thiệu đã nhận từ người này
 }
 
 // Người mà một thành viên đã giới thiệu (email đã che bớt)
 export interface ReferredMember {
-  id: number;
+  id: string;
   name: string;
   email: string;
   joinedAt: string;

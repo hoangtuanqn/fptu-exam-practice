@@ -15,7 +15,7 @@ const MAX_TRIES = 3;
 export function GuestSync() {
   const { user } = useAuth();
   const toast = useToast();
-  const doneFor = useRef<number | null>(null);
+  const doneFor = useRef<string | null>(null);
 
   useEffect(() => {
     if (!user || doneFor.current === user.id) return;

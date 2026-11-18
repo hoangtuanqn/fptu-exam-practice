@@ -8,7 +8,7 @@ export type OrderStatus = keyof typeof ORDER_LABELS;
 export interface CourseraCourse { id: string; title: string; code?: string | null; url: string | null; isActive: boolean; price?: number }
 export interface LookedUpCourse extends CourseraCourse { kind?: "course" | "specialization" }
 export interface CourseraOrder {
-  id: string; userId: number; courseId: string; courseTitle: string; courseUrl: string;
+  id: string; userId: string; courseId: string; courseTitle: string; courseUrl: string;
   email: string; note: string; status: OrderStatus; adminNote: string; createdAt: string; updatedAt: string;
   amount?: number; refundedAt?: string | null;
 }
