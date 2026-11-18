@@ -19,6 +19,7 @@ import { AnswerPendingBanner } from "./AnswerPendingBanner";
 import { LoadingMoreBanner } from "./LoadingMoreBanner";
 import { ImageViewer } from "./ImageViewer";
 import { QuestionCard } from "./QuestionCard";
+import { RotateHint } from "./RotateHint";
 import type { QuestionViewProps } from "./types";
 
 interface Props {
@@ -136,6 +137,7 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit }: Props)
 
   return (
     <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+      <RotateHint />
       <Sidebar quiz={quiz} />
       <main className={`flex min-w-0 flex-1 flex-col overflow-y-auto p-2 sm:p-3 lg:p-4 ${panelOpen ? "max-lg:pb-[60dvh]" : ""}`}>
         {quiz.loadingMore && <LoadingMoreBanner loaded={quiz.questions.length} total={quiz.total} />}
