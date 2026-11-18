@@ -164,7 +164,7 @@ export interface Paged<T> {
 export type GiftCodeStatus = "ACTIVE" | "DISABLED" | "EXPIRED" | "USED_UP";
 
 export interface GiftCode {
-  id: number;
+  id: string;
   code: string;
   amount: number; // credit mỗi lượt
   maxUses: number;
@@ -214,7 +214,7 @@ export type ReportStatus = "PENDING" | "APPROVED" | "REJECTED";
 
 // Báo cáo trong danh sách của admin
 export interface AnswerReportAdmin {
-  id: number;
+  id: string;
   examId: number;
   questionNumber: number;
   currentAnswer: string;
@@ -234,7 +234,7 @@ export interface AnswerReportAdmin {
 
 // Báo cáo của chính thành viên
 export interface MyAnswerReport {
-  id: number;
+  id: string;
   questionNumber: number;
   proposedAnswer: string;
   status: ReportStatus;
@@ -312,7 +312,7 @@ export interface AdminCrawlJob {
 }
 
 export interface AdminAttempt {
-  id: number;
+  id: string;
   mode: "PRACTICE" | "EXAM";
   score: number;
   correct: number;

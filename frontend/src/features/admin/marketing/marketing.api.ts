@@ -30,7 +30,7 @@ export type BroadcastSegment = "all" | "pro" | "free" | "inactive" | "exam_soon"
 export type BroadcastStatus = "DRAFT" | "SENDING" | "DONE" | "CANCELLED";
 
 export interface Broadcast {
-  id: number;
+  id: string;
   subject: string;
   body: string;
   ctaLabel: string;
@@ -101,10 +101,10 @@ export const marketingAdminApi = {
   preview: (key: CampaignKey, step: number) => http.get<{ subject: string; html: string }>(`/admin/marketing/campaigns/${key}/preview`, { step }),
   broadcasts: (page: number) => http.list<Broadcast>("/admin/marketing/broadcasts", { page, limit: PAGE_SIZE }),
   createBroadcast: (body: BroadcastInput) => http.post<Broadcast>("/admin/marketing/broadcasts", body),
-  estimateBroadcast: (id: number) => http.get<{ recipients: number; days: number }>(`/admin/marketing/broadcasts/${id}/estimate`),
-  previewBroadcast: (id: number) => http.get<{ subject: string; html: string }>(`/admin/marketing/broadcasts/${id}/preview`),
-  testBroadcast: (id: number) => http.post<{ sent: number; to: string }>(`/admin/marketing/broadcasts/${id}/test`),
-  startBroadcast: (id: number, confirm: string) => http.post<Broadcast>(`/admin/marketing/broadcasts/${id}/start`, { confirm }),
-  cancelBroadcast: (id: number) => http.post<Broadcast>(`/admin/marketing/broadcasts/${id}/cancel`),
+  estimateBroadcast: (id: string) => http.get<{ recipients: number; days: number }>(`/admin/marketing/broadcasts/${id}/estimate`),
+  previewBroadcast: (id: string) => http.get<{ subject: string; html: string }>(`/admin/marketing/broadcasts/${id}/preview`),
+  testBroadcast: (id: string) => http.post<{ sent: number; to: string }>(`/admin/marketing/broadcasts/${id}/test`),
+  startBroadcast: (id: string, confirm: string) => http.post<Broadcast>(`/admin/marketing/broadcasts/${id}/start`, { confirm }),
+  cancelBroadcast: (id: string) => http.post<Broadcast>(`/admin/marketing/broadcasts/${id}/cancel`),
   logs: (f: LogFilter) => http.list<MarketingLog>("/admin/marketing/logs", { ...f, limit: PAGE_SIZE }),
 };

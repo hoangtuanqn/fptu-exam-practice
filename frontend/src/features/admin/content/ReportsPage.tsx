@@ -41,12 +41,12 @@ export default function ReportsPage() {
   useClampPage(data?.meta, setPage);
   const [selected, setSelected] = useState<AnswerReportAdmin | null>(null);
   // Dòng vừa giải quyết hiện ngay kết quả server trả về; tải lại danh sách thì bỏ
-  const [patched, setPatched] = useState<Record<number, AnswerReportAdmin>>({});
+  const [patched, setPatched] = useState<Record<string, AnswerReportAdmin>>({});
   useEffect(() => setPatched({}), [data]);
-  const [saving, setSaving] = useState<number | null>(null);
+  const [saving, setSaving] = useState<string | null>(null);
   const items = data?.items.map((r) => patched[r.id] ?? r) ?? [];
 
-  const resolve = async (id: number) => {
+  const resolve = async (id: string) => {
     setSaving(id);
     try {
       const row = await adminApi.resolveReport(id);

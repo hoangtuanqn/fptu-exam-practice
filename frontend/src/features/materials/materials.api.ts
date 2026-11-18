@@ -11,7 +11,7 @@ export interface MaterialQuota {
 }
 
 export interface MaterialItem {
-  id: number | string;
+  id: string;
   title: string;
   subjectCode: string | null;
   subjectName?: string | null;
@@ -51,12 +51,12 @@ export interface MaterialDetail extends MaterialItem {
 }
 
 export interface UploadResult {
-  id: number | string;
+  id: string;
   status: MaterialStatus;
   duplicate?: boolean;
 }
 
-export const resultPath = (id: number | string) => `/account/materials/${encodeURIComponent(String(id))}`;
+export const resultPath = (id: string) => `/account/materials/${encodeURIComponent(String(id))}`;
 
 export const isActive =(m: Pick<MaterialItem, "status">) => m.status === "QUEUED" || m.status === "RUNNING";
 
@@ -75,5 +75,5 @@ export const materialsApi = {
     form.append("subjectCode", subjectCode);
     return sendForm<UploadResult>("POST", "/materials", form);
   },
-  remove: (id: number | string) => http.delete(`/materials/${encodeURIComponent(String(id))}`),
+  remove: (id: string) => http.delete(`/materials/${encodeURIComponent(String(id))}`),
 };

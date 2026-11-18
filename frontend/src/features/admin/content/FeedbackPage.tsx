@@ -38,12 +38,12 @@ export default function FeedbackPage() {
   const setPage = (p: number) => setUrl({ page: String(p) });
   const { data, error, loading, reload } = useApi(() => adminApi.explanationFeedback(page, ...QUERY[filter]), [page, filter]);
   // Dòng vừa giải quyết hiện ngay kết quả server trả về; tải lại danh sách thì bỏ
-  const [patched, setPatched] = useState<Record<number, ExplanationFeedbackAdmin>>({});
+  const [patched, setPatched] = useState<Record<string, ExplanationFeedbackAdmin>>({});
   useEffect(() => setPatched({}), [data]);
-  const [saving, setSaving] = useState<number | null>(null);
+  const [saving, setSaving] = useState<string | null>(null);
   const items = data?.items.map((r) => patched[r.id] ?? r) ?? [];
 
-  const resolve = async (id: number) => {
+  const resolve = async (id: string) => {
     setSaving(id);
     try {
       const row = await adminApi.resolveFeedback(id);
@@ -58,7 +58,7 @@ export default function FeedbackPage() {
   };
   const summary = useApi(() => adminApi.explanationFeedbackSummary(), []);
   useClampPage(data?.meta, setPage);
-  const [open, setOpen] = useState<number | null>(null);
+  const [open, setOpen] = useState<string | null>(null);
   const total = (summary.data?.up ?? 0) + (summary.data?.down ?? 0);
 
   return (

@@ -24,7 +24,7 @@ const FILTERS: { id: Filter; label: string }[] = [
 ];
 
 export default function AttemptDetailPage() {
-  const id = Number(useParams().id);
+  const id = useParams().id ?? "";
   const { data, error, loading, reload } = useApi(() => historyApi.get(id), [id]);
   const [filter, setFilter] = useState<Filter>("all");
 

@@ -45,7 +45,7 @@ export function LogsTab({ campaigns }: { campaigns: Campaign[] | null }) {
 
   const names: Record<string, string> = { ...FALLBACK, ...Object.fromEntries((campaigns ?? []).map((c) => [c.key, c.label])) };
   const campaignText = (l: MarketingLog) => {
-    const m = /^broadcast:(\d+)$/.exec(l.campaign);
+    const m = /^broadcast:([\w-]+)$/.exec(l.campaign);
     if (m) return `Thủ công #${m[1]}`;
     return `${names[l.campaign] ?? l.campaign} · thư ${l.step}`;
   };

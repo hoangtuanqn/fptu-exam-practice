@@ -36,7 +36,7 @@ import { PAGE_SIZE } from "@/shared/api/pagination";
 export type NoticeCategory = "account" | "fetch" | "money" | "exam" | "system";
 
 export interface AdminNotice {
-  id: number;
+  id: string;
   kind: string;
   category: NoticeCategory;
   level: "info" | "success" | "warning" | "error";
@@ -149,7 +149,7 @@ export interface AiForm {
 }
 
 export interface ExplanationFeedbackAdmin {
-  id: number;
+  id: string;
   examId: number;
   questionNumber: number;
   helpful: boolean;
@@ -382,7 +382,7 @@ export const adminApi = {
       category: filter.category ?? "",
     }),
   noticeCounts: () => http.get<NoticeCounts>("/admin/notices/counts"),
-  setNoticeRead: (id: number, read: boolean) =>
+  setNoticeRead: (id: string, read: boolean) =>
     http.patch<AdminNotice>(`/admin/notices/${id}`, { read }),
   readAllNotices: (filter: {
     important?: boolean;
@@ -434,9 +434,9 @@ export const adminApi = {
     }),
   createGiftCode: (body: GiftCodeForm) =>
     http.post<GiftCode>("/admin/gift-codes", body),
-  setGiftCodeActive: (id: number, active: boolean) =>
+  setGiftCodeActive: (id: string, active: boolean) =>
     http.patch<GiftCode>(`/admin/gift-codes/${id}`, { active }),
-  giftCodeRedemptions: (id: number, page: number) =>
+  giftCodeRedemptions: (id: string, page: number) =>
     http.list<GiftCodeRedemption>(`/admin/gift-codes/${id}/redemptions`, {
       page,
       limit: PAGE_SIZE,
@@ -444,7 +444,7 @@ export const adminApi = {
 
   explanationFeedback: (page: number, helpful: "up" | "down" | "", resolved: ResolvedFilter = "") =>
     http.list<ExplanationFeedbackAdmin>("/admin/explanation-feedback", { page, limit: PAGE_SIZE, helpful, resolved }),
-  resolveFeedback: (id: number) =>
+  resolveFeedback: (id: string) =>
     http.post<ExplanationFeedbackAdmin>(`/admin/explanation-feedback/${id}/resolve`),
   reviewCounts: () => http.get<ReviewCounts>("/admin/review-counts"),
   explanationFeedbackSummary: () => http.get<{ up: number; down: number }>("/admin/explanation-feedback/summary"),
@@ -455,11 +455,11 @@ export const adminApi = {
       status,
       resolved,
     }),
-  resolveReport: (id: number) =>
+  resolveReport: (id: string) =>
     http.post<AnswerReportAdmin>(`/admin/answer-reports/${id}/resolve`),
-  approveReport: (id: number, body: { note?: string }) =>
+  approveReport: (id: string, body: { note?: string }) =>
     http.post<unknown>(`/admin/answer-reports/${id}/approve`, body),
-  rejectReport: (id: number, body: { note?: string }) =>
+  rejectReport: (id: string, body: { note?: string }) =>
     http.post<unknown>(`/admin/answer-reports/${id}/reject`, body),
 
   referralSettings: () =>

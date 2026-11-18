@@ -35,7 +35,7 @@ export function BroadcastsTab() {
   const [page, setPage] = useState(1);
   const list = useApi(() => marketingAdminApi.broadcasts(page), [page]);
   useClampPage(list.data?.meta, setPage);
-  const [busy, setBusy] = useState<number | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const closeDialog = useCallback(() => setDialog(null), []); // ổn định để Modal không chạy lại effect focus mỗi lần render
 
