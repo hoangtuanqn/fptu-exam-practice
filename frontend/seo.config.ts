@@ -110,6 +110,7 @@ export const PRIVATE_PAGES: Record<string, PageSeo> = {
 // Trang có tham số trên đường dẫn (khớp theo mẫu)
 export const PATTERN_PAGES: { test: RegExp; seo: PageSeo }[] = [
   { test: /^\/exam\/[^/]+$/, seo: { title: "Làm đề thi FE", description: "Làm đề thi FE với đáp án, giải thích AI và chấm điểm thang 10." } },
+  { test: /^\/exam\/[^/]+\/preview$/, seo: { title: "Xem trước đề thi", description: "Xem các trang và tệp đính kèm của đề, rồi chọn luyện đề hoặc thi thử." } },
   { test: /^\/exam\/[^/]+\/view$/, seo: { title: "Xem đề thi FE", description: "Xem cả đề thi FE kèm đáp án và chủ đề từng câu, lưu câu để xem lại." } },
   { test: /^\/deposit\/[^/]+$/, seo: { title: "Thanh toán nạp credit", description: "Quét mã QR để chuyển khoản cho lệnh nạp credit này." } },
   { test: /^\/account\/attempts\/[^/]+$/, seo: { title: "Chi tiết lần làm bài", description: "Xem lại từng câu, đáp án đã chọn và điểm của lần làm bài này." } },

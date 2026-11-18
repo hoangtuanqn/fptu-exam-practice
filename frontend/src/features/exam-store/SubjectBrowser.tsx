@@ -23,6 +23,7 @@ import { catalogApi, type CatalogItem } from "./catalog.api";
 import { ExamFilterBar, useExamListQuery } from "./ExamFilterBar";
 import { featuredSubjects } from "./featuredSubjects";
 import { NewExamBadge } from "./NewExamBadge";
+import { ExamKindBadge } from "./ExamKindBadge";
 
 const COMPACT_PAGE_SIZE = 6; // trang chủ: chỉ vài đề mỗi trang để không đẩy các phần bên dưới đi quá xa
 
@@ -71,18 +72,18 @@ function ExamList({ code, onBack, compact }: { code: string; onBack: () => void;
   const running = job.phase === "running";
   const busy = running || quoting !== null;
 
-  // Lấy xong thì mở đề; số dư vừa đổi nên tải lại
+  // Lấy xong thì mở trang xem trước của đề; số dư vừa đổi nên tải lại
   useEffect(() => {
     if (job.exam) {
       void refresh();
-      navigate(`/exam/${job.exam.id}`);
+      navigate(`/exam/${job.exam.id}/preview`);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [job.exam]);
 
   const pick = async (item: CatalogItem) => {
     if (!user) return void navigate("/login");
-    if (item.status === "owned" && item.examId) return void navigate(`/exam/${item.examId}`);
+    if (item.status === "owned" && item.examId) return void navigate(`/exam/${item.examId}/preview`);
     setQuoting(item.threadId);
     try {
       // Hỏi phí thực tế và kiểm tra trước khi trừ tiền (đúng nhãn, đúng môn); miễn phí (Pro, đã sở hữu) thì lấy luôn
@@ -129,6 +130,7 @@ function ExamList({ code, onBack, compact }: { code: string; onBack: () => void;
                     <li key={e.threadId} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 py-3.5">
                       <div className="min-w-0 flex-1">
                         <div className="flex min-w-0 items-center gap-2">
+                          <ExamKindBadge kind={e.kind} />
                           <p className="md-title-small truncate text-on-surface">{e.title}</p>
                           <NewExamBadge term={e.term} />
                         </div>

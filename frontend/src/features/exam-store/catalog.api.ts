@@ -1,5 +1,6 @@
 import { http } from "@/shared/api/client";
 import type { PageMeta } from "@/shared/types/api";
+import type { ExamKind } from "@/features/exam-import/types";
 
 export interface CatalogSubject {
   code: string;
@@ -21,6 +22,7 @@ export interface CatalogItem {
   term: string | null; // kỳ học, ví dụ SU26
   status: CatalogStatus;
   questions: number | null;
+  kind?: ExamKind;
 }
 
 export interface CatalogPage {

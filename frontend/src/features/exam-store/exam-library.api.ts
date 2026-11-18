@@ -1,5 +1,6 @@
 import { http } from "@/shared/api/client";
 import { PAGE_SIZE } from "@/shared/api/pagination";
+import type { ExamKind } from "@/features/exam-import/types";
 
 export interface LibraryExam {
   id: string;
@@ -10,6 +11,7 @@ export interface LibraryExam {
   bestScore: number | null;
   answerSource: "PENDING" | "FAILED" | "DEFAULT" | "AI" | "MANUAL";
   attachments?: number; // số tệp đính kèm (máy chủ cũ không trả về)
+  kind?: ExamKind;
 }
 
 // "40 câu"; đề chỉ có tệp thì "2 tệp đính kèm"

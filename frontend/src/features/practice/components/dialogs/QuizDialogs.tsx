@@ -1,6 +1,7 @@
 import { canFullscreen } from "@/features/practice/hooks/useExamGuard";
 import type { Quiz } from "@/features/practice/hooks/useQuiz";
 import type { TopicSummary } from "@/features/history/types";
+import type { Mode } from "@/features/practice/types";
 import { ConfirmSubmitDialog } from "./ConfirmSubmitDialog";
 import { NotFoundDialog } from "./NotFoundDialog";
 import { ResultDialog } from "./ResultDialog";
@@ -17,10 +18,11 @@ interface Props {
   onCancelChoose: () => void; // đóng hộp thoại chọn chế độ của đề đã mở sẵn
   onBeforeSubmit?: () => void; // chạy ngay trước quiz.submit() (chốt lần rời bài thi đang mở)
   nextExam?: { remaining: number; onOpen: () => void }; // bộ đề theo chương nhiều đề: còn đề kế tiếp
+  initialMode?: Mode; // chọn sẵn chế độ trong hộp thoại chọn chế độ
 }
 
 // Quyết định hộp thoại nào đang hiện: bắt đầu / lỗi thư mục / xác nhận nộp / bảng điểm
-export function QuizDialogs({ quiz, topicSummary, dialog, onDialogChange, onCloseZoom, onCancelChoose, onBeforeSubmit, nextExam }: Props) {
+export function QuizDialogs({ quiz, topicSummary, dialog, onDialogChange, onCloseZoom, onCancelChoose, onBeforeSubmit, nextExam, initialMode }: Props) {
   const { pending } = quiz;
 
   return (
@@ -32,6 +34,7 @@ export function QuizDialogs({ quiz, topicSummary, dialog, onDialogChange, onClos
           graded={quiz.questions.filter((q) => q.correct.length > 0).length}
           answersPending={quiz.answersPending}
           replacing={false}
+          initialMode={initialMode}
           onCancel={onCancelChoose}
           onStart={(mode, limitMin) => {
             quiz.chooseMode(mode, limitMin);
