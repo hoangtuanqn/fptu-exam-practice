@@ -30,7 +30,7 @@ export const reviewService = {
    * đúng nhưng đã đánh dấu phân vân -> vào sổ ở hộp 2. Thành viên thường bị giới hạn số câu đang ôn.
    * Trả về số câu mới vào sổ và số câu không vào được vì hết chỗ.
    */
-  async recordAttempt(userId: number, examId: string, items: GradedQuestion[], flagged: number[], isPro: boolean) {
+  async recordAttempt(userId: string, examId: string, items: GradedQuestion[], flagged: number[], isPro: boolean) {
     const now = new Date();
     const flaggedSet = new Set(flagged);
     const wrong = items.filter((i) => i.outcome === "wrong" || i.outcome === "skipped").map((i) => i.number);
@@ -93,7 +93,7 @@ export const reviewService = {
   },
 
   /** Tổng quan sổ câu sai: số câu cần ôn hôm nay, đang ôn, đã nhớ, giới hạn gói thường */
-  async summary(userId: number, isPro: boolean) {
+  async summary(userId: string, isPro: boolean) {
     const now = new Date();
     const active = { userId, mastered: false, exam: USABLE_EXAM };
     const [due, counts, next] = await Promise.all([
@@ -107,7 +107,7 @@ export const reviewService = {
   },
 
   /** Các câu để ôn trong một lượt: mặc định chỉ câu đến hạn (quá hạn lâu nhất trước); `all` = ôn thêm cả câu chưa đến hạn */
-  async queue(userId: number, all: boolean, limit = REVIEW_SESSION_SIZE, byTopic?: { subject: string; topic: string }) {
+  async queue(userId: string, all: boolean, limit = REVIEW_SESSION_SIZE, byTopic?: { subject: string; topic: string }) {
     const now = new Date();
     const found = await prisma.reviewItem.findMany({
       where: { userId, mastered: false, exam: USABLE_EXAM, ...(all ? {} : { nextReviewAt: { lte: now } }) },
@@ -140,7 +140,7 @@ export const reviewService = {
   },
 
   /** Nộp đáp án một câu ôn. Chấm ở server theo đáp án hiện tại rồi xếp lịch ôn kế tiếp */
-  async answer(userId: number, id: number, chosen: string[]) {
+  async answer(userId: string, id: number, chosen: string[]) {
     const item = await prisma.reviewItem.findFirst({ where: { id, userId } });
     if (!item) throw AppError.notFound("Câu này không còn trong sổ");
     const q = await prisma.examQuestion.findUnique({ where: { examId_number: { examId: item.examId, number: item.questionNumber } }, select: { answer: true } });
@@ -160,7 +160,7 @@ export const reviewService = {
   },
 
   /** Danh sách trong trang Sổ câu sai: câu đang ôn (đến hạn trước) hoặc câu đã nhớ */
-  async list(userId: number, query: PaginationQuery, status: "active" | "mastered") {
+  async list(userId: string, query: PaginationQuery, status: "active" | "mastered") {
     const where: Prisma.ReviewItemWhereInput = { userId, mastered: status === "mastered" };
     const [rows, total] = await Promise.all([
       prisma.reviewItem.findMany({
@@ -194,7 +194,7 @@ export const reviewService = {
   },
 
   /** Bỏ một câu khỏi sổ ("mình nhớ rồi") */
-  async remove(userId: number, id: number) {
+  async remove(userId: string, id: number) {
     const r = await prisma.reviewItem.deleteMany({ where: { id, userId } });
     if (r.count === 0) throw AppError.notFound("Câu này không còn trong sổ");
   },

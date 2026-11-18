@@ -10,7 +10,7 @@ import { PdfRenderUnavailableError, type PdfEngine } from "../src/services/mater
 // Máy trạng thái của job phân tích slide với kho, PDF, sổ token và client Claude giả (không DB, không gọi mạng).
 
 const NOW = new Date("2026-11-11T12:00:00.000Z");
-const USER = 7;
+const USER = "u7";
 const UPLOAD_ID = "0190a3c4-5b6d-7e8f-9a0b-1c2d3e4f5a6b";
 const CHAPTERS = [
   { number: 0, title: "Khác" },
@@ -20,7 +20,7 @@ const CHAPTERS = [
 
 interface Upload {
   id: string;
-  userId: number;
+  userId: string;
   subjectId: number;
   pageCount: number;
   status: string;
@@ -139,7 +139,7 @@ function setup({ kinds, respond, limit = 1_000_000, priorUsage = 0 }: { kinds: P
   const mem = memoryStore(kinds.length);
   const pdf = fakePdf(kinds);
   const ai = fakeClient(respond);
-  const usage: { createdAt: Date; totalTokens: number; userId: number; feature: string }[] = [];
+  const usage: { createdAt: Date; totalTokens: number; userId: string; feature: string }[] = [];
   if (priorUsage) usage.push({ createdAt: new Date(NOW.getTime() - 60 * 60 * 1000), totalTokens: priorUsage, userId: USER, feature: "material" });
   const ledgerStore: TokenLedgerStore = {
     async record(u) {

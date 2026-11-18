@@ -12,7 +12,7 @@ const num = (d: Prisma.Decimal | null) => (d === null ? null : Number(d));
 const MOCK_WINDOW = 5; // số bài thi thử gần nhất của mỗi môn được xét (giống mức sẵn sàng)
 
 /** Điểm các bài THI THỬ (không tính luyện tập, vì luyện tập xem đáp án ngay) gần nhất của từng môn */
-async function mockStatsFor(userId: number, codes: string[]): Promise<Map<string, MockStats>> {
+async function mockStatsFor(userId: string, codes: string[]): Promise<Map<string, MockStats>> {
   const out = new Map<string, MockStats>();
   if (codes.length === 0) return out;
   const rows = await prisma.examAttempt.findMany({
@@ -38,12 +38,12 @@ async function mockStatsFor(userId: number, codes: string[]): Promise<Map<string
 }
 
 export const gradeService = {
-  async setting(userId: number) {
+  async setting(userId: string) {
     const s = await prisma.userGradeSetting.findUnique({ where: { userId } });
     return { enabled: !!s?.enabled, syncedAt: s?.syncedAt ?? null };
   },
 
-  async setEnabled(userId: number, enabled: boolean) {
+  async setEnabled(userId: string, enabled: boolean) {
     await prisma.$transaction(async (tx) => {
       await tx.userGradeSetting.upsert({ where: { userId }, create: { userId, enabled }, update: { enabled } });
       if (!enabled) {
@@ -54,12 +54,12 @@ export const gradeService = {
     return this.setting(userId);
   },
 
-  async clear(userId: number) {
+  async clear(userId: string) {
     const [grades] = await prisma.$transaction([prisma.userGrade.deleteMany({ where: { userId } }), prisma.userExamSlot.deleteMany({ where: { userId } })]);
     return { deleted: grades.count };
   },
 
-  async sync(userId: number, body: GradeSyncBody) {
+  async sync(userId: string, body: GradeSyncBody) {
     const s = await prisma.userGradeSetting.findUnique({ where: { userId }, select: { enabled: true } });
     if (!s?.enabled) throw AppError.forbidden("Bạn chưa bật đồng bộ điểm ở trang Điểm FAP");
     const now = new Date();
@@ -98,7 +98,7 @@ export const gradeService = {
   },
 
   /** Các môn đã đồng bộ kèm gợi ý điểm cần đạt (môn đang học hoặc chưa qua trước) */
-  async overview(userId: number) {
+  async overview(userId: string) {
     const [setting, rows, slotRows] = await Promise.all([
       this.setting(userId),
       prisma.userGrade.findMany({ where: { userId }, orderBy: [{ syncedAt: "desc" }, { id: "desc" }] }),

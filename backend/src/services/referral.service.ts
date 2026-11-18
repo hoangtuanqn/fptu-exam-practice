@@ -16,7 +16,7 @@ const randomCode = () => Array.from({ length: REFERRAL_CODE_LENGTH }, () => REFE
 
 // Một khoản thưởng vừa được cộng, để gửi email SAU khi transaction đã commit
 export interface RewardNotice {
-  recipientId: number;
+  recipientId: string;
   kind: "signup" | "referrer_signup" | "commission";
   otherName: string; // tên người còn lại trong cặp giới thiệu
   amount: number;
@@ -24,7 +24,7 @@ export interface RewardNotice {
 }
 
 // Hạn nhập mã giới thiệu: ngày đăng ký + số ngày được phép
-const claimState = (me: { createdAt: Date; referredById: number | null }, config: { enabled: boolean; claimWindowDays: number }) => {
+const claimState = (me: { createdAt: Date; referredById: string | null }, config: { enabled: boolean; claimWindowDays: number }) => {
   if (me.referredById) return { status: "referred" as const, deadline: null };
   const deadline = claimDeadline(me.createdAt, config.claimWindowDays);
   if (!config.enabled) return { status: "unavailable" as const, deadline: null };
@@ -44,7 +44,7 @@ export const referralService = {
   },
 
   // Người dùng cũ chưa có mã thì tạo khi cần; mã không đổi sau đó
-  async ensureCode(userId: number) {
+  async ensureCode(userId: string) {
     const current = (await referralRepository.findCodeOf(userId))?.referralCode;
     if (current) return current;
     for (let i = 0; i < 5; i++) {
@@ -58,7 +58,7 @@ export const referralService = {
   },
 
   // Cộng thưởng đăng ký cho người mới (và người giới thiệu nếu admin đặt). Dùng chung cho lúc đăng ký và lúc nhập mã muộn.
-  async grantSignupRewards(db: Db, newUser: { id: number; fullName: string }, ownerId: number): Promise<RewardNotice[]> {
+  async grantSignupRewards(db: Db, newUser: { id: string; fullName: string }, ownerId: string): Promise<RewardNotice[]> {
     const config = await referralSettingService.get();
     if (!config.enabled) return [];
     const referrer = await db.user.findUnique({ where: { id: ownerId }, select: { fullName: true } });
@@ -81,7 +81,7 @@ export const referralService = {
    * Gọi trong transaction đăng ký. Mã hợp lệ thì gắn người giới thiệu cho tài khoản mới và cộng thưởng (nếu chương trình đang bật).
    * Mã sai thì bỏ qua êm, không làm hỏng việc đăng ký.
    */
-  async applyAtSignup(db: Db, newUser: { id: number; fullName: string }, code: string | undefined): Promise<RewardNotice[]> {
+  async applyAtSignup(db: Db, newUser: { id: string; fullName: string }, code: string | undefined): Promise<RewardNotice[]> {
     if (!code) return [];
     const owner = await referralRepository.findOwnerByCode(db, code);
     if (!owner || owner.status !== "ACTIVE" || owner.id === newUser.id) return [];
@@ -93,7 +93,7 @@ export const referralService = {
    * Nhập mã giới thiệu SAU khi đăng ký, trong hạn `claimWindowDays` (mặc định 7 ngày) và khi chưa có người giới thiệu.
    * Quá hạn thì mất quyền. Gắn người giới thiệu bằng UPDATE có điều kiện nên không thể nhập hai lần.
    */
-  async claim(userId: number, code: string) {
+  async claim(userId: string, code: string) {
     const [user, config] = await Promise.all([userRepository.findReferralProfile(userId), referralSettingService.get()]);
     if (!user) throw new AppError("Không tìm thấy tài khoản", 404);
     if (user.referredById) throw new AppError("Bạn đã được giới thiệu rồi, không thể nhập thêm mã");
@@ -121,7 +121,7 @@ export const referralService = {
    * Gọi trong transaction cộng tiền nạp: người nạp có người giới thiệu thì người đó nhận % số tiền vừa nạp.
    * depositOrderId duy nhất trong sổ thưởng nên một lệnh nạp không bao giờ sinh hoa hồng hai lần.
    */
-  async rewardDeposit(db: Db, input: { depositorId: number; depositorName: string; depositOrderId: number; code: string; amount: number }): Promise<RewardNotice | null> {
+  async rewardDeposit(db: Db, input: { depositorId: string; depositorName: string; depositOrderId: number; code: string; amount: number }): Promise<RewardNotice | null> {
     const link = await referralRepository.findReferrerOf(db, input.depositorId);
     if (!link?.referredById) return null;
     const config = await referralSettingService.get();
@@ -152,7 +152,7 @@ export const referralService = {
   },
 
   // ----- Thành viên
-  async overview(userId: number, query: PaginationQuery) {
+  async overview(userId: string, query: PaginationQuery) {
     const [code, config, stats, list, me] = await Promise.all([
       this.ensureCode(userId),
       referralSettingService.get(),

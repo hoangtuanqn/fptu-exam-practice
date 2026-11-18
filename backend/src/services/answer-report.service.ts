@@ -30,7 +30,7 @@ async function withImages<T extends { examId: string; questionNumber: number }>(
 
 export const answerReportService = {
   // ----- Thành viên
-  async create(actor: Actor, userId: number, body: CreateReportBody) {
+  async create(actor: Actor, userId: string, body: CreateReportBody) {
     await examService.assertAccess(actor, body.examId); // chỉ báo cáo đề nằm trong kho của mình
 
     const source = await examRepository.findAnswerSource(body.examId);
@@ -65,7 +65,7 @@ export const answerReportService = {
     return { reward: ANSWER_REPORT_REWARD };
   },
 
-  async mine(userId: number, query: PaginationQuery) {
+  async mine(userId: string, query: PaginationQuery) {
     const { items, total } = await answerReportRepository.listByUser(userId, query);
     return { items, meta: toMeta(query, total) };
   },
@@ -78,7 +78,7 @@ export const answerReportService = {
   },
 
   /** Admin đánh dấu đã giải quyết (bỏ khỏi badge). Gọi lại không đổi gì; trả về đúng dạng một dòng của danh sách. */
-  async resolve(adminId: number, id: string) {
+  async resolve(adminId: string, id: string) {
     await answerReportRepository.resolve(id, adminId);
     const report = await answerReportRepository.findAdmin(id);
     if (!report) throw AppError.notFound("Không tìm thấy báo cáo");
@@ -90,7 +90,7 @@ export const answerReportService = {
   /**
    * Duyệt đúng: chốt báo cáo (UPDATE có điều kiện), sửa đáp án của câu, thưởng credit cho người báo cáo. Cùng một transaction.
    */
-  async approve(adminId: number, id: string, { note }: ReviewReportBody) {
+  async approve(adminId: string, id: string, { note }: ReviewReportBody) {
     const result = await prisma.$transaction(async (tx) => {
       const report = await answerReportRepository.findPending(tx, id);
       if (!report) throw AppError.conflict("Báo cáo không còn ở trạng thái chờ duyệt");
@@ -119,7 +119,7 @@ export const answerReportService = {
     return { id, status: "APPROVED" as const, reward: ANSWER_REPORT_REWARD };
   },
 
-  async reject(adminId: number, id: string, { note }: ReviewReportBody) {
+  async reject(adminId: string, id: string, { note }: ReviewReportBody) {
     const done = await prisma.$transaction(async (tx) => {
       if (!(await answerReportRepository.findPending(tx, id))) return false;
       return answerReportRepository.review(tx, id, { status: "REJECTED", reward: 0, reviewNote: note, reviewedById: adminId });

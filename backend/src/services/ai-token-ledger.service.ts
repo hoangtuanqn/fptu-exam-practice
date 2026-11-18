@@ -7,7 +7,7 @@ import { availableAt, windowStart, windowStatus, type TokenEntry, type WindowSta
 
 export interface TokenLedgerStore {
   record(u: TokenUsageInput): Promise<unknown>;
-  since(userId: number, feature: string, since: Date): Promise<TokenEntry[]>;
+  since(userId: string, feature: string, since: Date): Promise<TokenEntry[]>;
 }
 
 export interface TokenUsageCounts {
@@ -18,14 +18,14 @@ export interface TokenUsageCounts {
 
 export interface TokenLedger {
   readonly limit: number;
-  status(userId: number, now?: Date): Promise<WindowStatus>;
+  status(userId: string, now?: Date): Promise<WindowStatus>;
   /** Sớm nhất lúc nào còn đủ `needed` token (null: lớn hơn cả giới hạn). */
-  availableAt(userId: number, needed: number, now?: Date): Promise<Date | null>;
-  record(userId: number, usage: TokenUsageCounts): Promise<void>;
+  availableAt(userId: string, needed: number, now?: Date): Promise<Date | null>;
+  record(userId: string, usage: TokenUsageCounts): Promise<void>;
 }
 
 export function createTokenLedger({ feature, limit, windowMs, store }: { feature: string; limit: number; windowMs: number; store: TokenLedgerStore }): TokenLedger {
-  const entries = (userId: number, now: Date) => store.since(userId, feature, windowStart(now, windowMs));
+  const entries = (userId: string, now: Date) => store.since(userId, feature, windowStart(now, windowMs));
   return {
     limit,
     async status(userId, now = new Date()) {

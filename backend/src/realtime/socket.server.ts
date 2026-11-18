@@ -20,7 +20,7 @@ async function identifySocket(auth: Record<string, unknown>): Promise<Actor> {
   const guestId = typeof auth.guestId === "string" && GUEST_ID.test(auth.guestId) ? auth.guestId : null;
 
   if (token) {
-    const user = await userRepository.findById(Number(verifyToken(token).sub));
+    const user = await userRepository.findById(verifyToken(token).sub);
     if (!user || user.status === "BANNED") throw new Error("unauthorized");
     return { owner: { userId: user.id }, isAdmin: user.role === "ADMIN" };
   }

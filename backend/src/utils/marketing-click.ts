@@ -8,7 +8,10 @@ const CLICK = "marketing-click:";
 export const CLICK_PLACEHOLDER = "__FEPASS_CLICK_URL__";
 
 export const signClickToken = (secret: string, logId: number) => signToken(CLICK, secret, logId);
-export const verifyClickToken = (secret: string, token: string) => verifyToken(CLICK, secret, token);
+export const verifyClickToken = (secret: string, token: string) => {
+  const id = verifyToken(CLICK, secret, token);
+  return id && /^\d+$/.test(id) ? Number(id) : null;
+};
 
 export const withClickUrl = <T extends { html: string; text: string }>(mail: T, url: string): T => ({
   ...mail,

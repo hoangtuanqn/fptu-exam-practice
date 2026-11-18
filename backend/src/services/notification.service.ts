@@ -17,7 +17,7 @@ const notify = (label: string, job: () => Promise<void>) => {
 // Thư "trừ phí lấy đề" được hoãn một lúc: nếu lượt lấy lỗi và hoàn phí ngay trong khoảng này thì bỏ cả hai thư (tránh spam).
 // Giữ trong bộ nhớ nên khởi động lại server trong lúc chờ thì thư trừ phí đó không được gửi (số dư vẫn đúng, xem ở lịch sử ví).
 const CHARGE_MAIL_DELAY_MS = 90_000;
-type FetchCharge = { userId: number; amount: number; balanceAfter: number; threadId: string; examTitle?: string };
+type FetchCharge = { userId: string; amount: number; balanceAfter: number; threadId: string; examTitle?: string };
 const pendingChargeMails = new Map<number, NodeJS.Timeout>();
 
 export const notificationService = {
@@ -41,7 +41,7 @@ export const notificationService = {
 
   // Người dùng vừa tạo lệnh nạp: gửi thông tin chuyển khoản để họ có sẵn trong hộp thư
   depositCreated(n: {
-    userId: number;
+    userId: string;
     code: string;
     amount: number;
     expiresAt: Date;
@@ -65,7 +65,7 @@ export const notificationService = {
   },
 
   // Tiền nạp đã khớp lệnh và được cộng vào ví (gọi SAU khi transaction cộng tiền đã commit)
-  depositSuccess(n: { userId: number; code: string; amount: number; balanceAfter: number }) {
+  depositSuccess(n: { userId: string; code: string; amount: number; balanceAfter: number }) {
     notify("nạp tiền thành công", async () => {
       const user = await userRepository.findById(n.userId);
       if (!user) return;
@@ -103,7 +103,7 @@ export const notificationService = {
   },
 
   // Thư xác minh email (đăng ký hoặc đổi email): gửi tới đúng địa chỉ cần xác minh
-  verifyEmail(n: { userId: number; email: string; link: string }) {
+  verifyEmail(n: { userId: string; email: string; link: string }) {
     notify("xác minh email", async () => {
       const user = await userRepository.findById(n.userId);
       if (!user) return;
@@ -119,7 +119,7 @@ export const notificationService = {
   },
 
   // Mật khẩu vừa đổi (đặt lại qua email hoặc đổi trong hồ sơ): cảnh báo để người dùng phát hiện nếu không phải mình
-  passwordChanged(n: { userId: number; via: "reset" | "profile" }) {
+  passwordChanged(n: { userId: string; via: "reset" | "profile" }) {
     notify("đổi mật khẩu", async () => {
       const user = await userRepository.findById(n.userId);
       if (!user) return;
@@ -133,7 +133,7 @@ export const notificationService = {
   },
 
   // Thưởng giới thiệu (đăng ký qua mã, hoặc hoa hồng khi người được giới thiệu nạp tiền). Gọi SAU khi transaction đã commit.
-  referralReward(n: { recipientId: number; kind: "signup" | "referrer_signup" | "commission"; otherName: string; amount: number; balanceAfter: number }) {
+  referralReward(n: { recipientId: string; kind: "signup" | "referrer_signup" | "commission"; otherName: string; amount: number; balanceAfter: number }) {
     notify("thưởng giới thiệu", async () => {
       const user = await userRepository.findById(n.recipientId);
       if (!user) return;
@@ -150,7 +150,7 @@ export const notificationService = {
   },
 
   // Báo cáo đáp án được admin xác nhận đúng và đã thưởng credit (gọi SAU khi transaction đã commit)
-  reportApproved(n: { userId: number; examTitle: string; questionNumber: number; reward: number; balanceAfter: number }) {
+  reportApproved(n: { userId: string; examTitle: string; questionNumber: number; reward: number; balanceAfter: number }) {
     notify("thưởng báo cáo đáp án", async () => {
       const user = await userRepository.findById(n.userId);
       if (!user) return;
@@ -167,7 +167,7 @@ export const notificationService = {
   },
 
   // Vừa nhập giftcode nhận credit (gọi SAU khi transaction cộng credit đã commit)
-  giftCodeRedeemed(n: { userId: number; code: string; amount: number; balanceAfter: number }) {
+  giftCodeRedeemed(n: { userId: string; code: string; amount: number; balanceAfter: number }) {
     notify("nhập giftcode", async () => {
       const user = await userRepository.findById(n.userId);
       if (!user) return;
@@ -183,7 +183,7 @@ export const notificationService = {
   },
 
   // Vừa mua / gia hạn gói Pro (gọi SAU khi transaction đã commit)
-  proPurchased(n: { userId: number; planName: string; duration: string; price: number; renewed: boolean; expiresAt: Date; balanceAfter: number }) {
+  proPurchased(n: { userId: string; planName: string; duration: string; price: number; renewed: boolean; expiresAt: Date; balanceAfter: number }) {
     notify("mua gói Pro", async () => {
       const user = await userRepository.findById(n.userId);
       if (!user) return;
@@ -192,7 +192,7 @@ export const notificationService = {
   },
 
   // Lấy đề lỗi và đã hoàn phí (gọi SAU khi transaction hoàn phí đã commit)
-  fetchRefunded(n: { userId: number; amount: number; balanceAfter: number; threadId: string }) {
+  fetchRefunded(n: { userId: string; amount: number; balanceAfter: number; threadId: string }) {
     notify("hoàn phí lấy đề", async () => {
       const user = await userRepository.findById(n.userId);
       if (!user) return;
@@ -209,7 +209,7 @@ export const notificationService = {
   },
 
   // Đơn Coursera vừa tạo hoặc được admin đổi trạng thái (gọi SAU khi transaction đã commit). Không bao giờ kèm mật khẩu.
-  courseraOrder(n: { userId: number; event: CourseraOrderEmailInput["event"]; orderId: string; courseTitle: string; amount: number; balanceAfter?: number; adminNote: string }) {
+  courseraOrder(n: { userId: string; event: CourseraOrderEmailInput["event"]; orderId: string; courseTitle: string; amount: number; balanceAfter?: number; adminNote: string }) {
     notify("đơn Coursera", async () => {
       const user = await userRepository.findById(n.userId);
       if (!user) return;
@@ -228,7 +228,7 @@ export const notificationService = {
   },
 
   // Quản trị viên cộng/trừ tiền thủ công
-  balanceAdjusted(n: { userId: number; amount: number; note: string | null; balanceAfter: number }) {
+  balanceAdjusted(n: { userId: string; amount: number; note: string | null; balanceAfter: number }) {
     notify("điều chỉnh số dư", async () => {
       const user = await userRepository.findById(n.userId);
       if (!user) return;
@@ -244,7 +244,7 @@ export const notificationService = {
   },
 
   // Quản trị viên khóa / mở khóa tài khoản
-  accountStatusChanged(n: { userId: number; banned: boolean }) {
+  accountStatusChanged(n: { userId: string; banned: boolean }) {
     notify("trạng thái tài khoản", async () => {
       const user = await userRepository.findById(n.userId);
       if (!user) return;

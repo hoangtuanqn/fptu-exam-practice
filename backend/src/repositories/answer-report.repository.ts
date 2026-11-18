@@ -22,10 +22,10 @@ const adminSelect = {
 } satisfies Prisma.AnswerReportSelect;
 
 export const answerReportRepository = {
-  create: (data: { examId: string; questionNumber: number; userId: number; currentAnswer: string; proposedAnswer: string; reason: string }) =>
+  create: (data: { examId: string; questionNumber: number; userId: string; currentAnswer: string; proposedAnswer: string; reason: string }) =>
     prisma.answerReport.create({ data, select: { id: true } }),
 
-  countSince: (userId: number, since: Date) => prisma.answerReport.count({ where: { userId, createdAt: { gte: since } } }),
+  countSince: (userId: string, since: Date) => prisma.answerReport.count({ where: { userId, createdAt: { gte: since } } }),
 
   findPending: (db: Db, id: string) =>
     db.answerReport.findFirst({
@@ -34,7 +34,7 @@ export const answerReportRepository = {
     }),
 
   /** Chốt báo cáo bằng UPDATE có điều kiện (chỉ khi còn PENDING): hai admin duyệt cùng lúc thì chỉ một người thắng. */
-  async review(db: Db, id: string, data: { status: Exclude<ReportStatus, "PENDING">; reward: number; reviewNote?: string; reviewedById: number }) {
+  async review(db: Db, id: string, data: { status: Exclude<ReportStatus, "PENDING">; reward: number; reviewNote?: string; reviewedById: string }) {
     const { count } = await db.answerReport.updateMany({
       where: { id, status: "PENDING" },
       data: { ...data, reviewedAt: new Date() },
@@ -55,7 +55,7 @@ export const answerReportRepository = {
   findAdmin: (id: string) => prisma.answerReport.findUnique({ where: { id }, select: adminSelect }),
 
   /** Đánh dấu đã giải quyết; chỉ ghi lần đầu (giải quyết lại giữ nguyên người và thời điểm đầu tiên). Báo cáo đã duyệt/từ chối thì không đổi. */
-  resolve: (id: string, adminId: number) =>
+  resolve: (id: string, adminId: string) =>
     prisma.answerReport.updateMany({ where: { id, status: "PENDING", resolvedAt: null }, data: { resolvedAt: new Date(), resolvedById: adminId } }),
 
   // Badge sidebar: dùng index (status, resolved_at)
@@ -71,7 +71,7 @@ export const answerReportRepository = {
         }),
 
   // Thành viên xem báo cáo của chính mình
-  async listByUser(userId: number, query: PaginationQuery) {
+  async listByUser(userId: string, query: PaginationQuery) {
     const where = { userId };
     const [items, total] = await Promise.all([
       prisma.answerReport.findMany({

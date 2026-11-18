@@ -6,13 +6,13 @@ import { comparePassword, hashPassword } from "../utils/password";
 import { DAY_MS } from "../utils/time";
 
 export const userService = {
-  updateProfile: (userId: number, { pauseMarketingDays, ...body }: UpdateProfileBody) =>
+  updateProfile: (userId: string, { pauseMarketingDays, ...body }: UpdateProfileBody) =>
     userRepository.updateProfile(userId, {
       ...body,
       ...(pauseMarketingDays !== undefined && { marketingMutedUntil: pauseMarketingDays ? new Date(Date.now() + pauseMarketingDays * DAY_MS) : null }),
     }),
 
-  async changePassword(userId: number, { currentPassword, newPassword }: ChangePasswordBody) {
+  async changePassword(userId: string, { currentPassword, newPassword }: ChangePasswordBody) {
     const user = await userRepository.findByIdWithPassword(userId);
     if (!user) throw AppError.notFound("Không tìm thấy tài khoản");
     if (!(await comparePassword(currentPassword, user.password))) {

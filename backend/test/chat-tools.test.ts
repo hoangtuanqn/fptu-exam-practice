@@ -18,7 +18,7 @@ describe("normalizeSubjectCode", () => {
 describe("chat tools", () => {
   it("gives guests only recent_exams and members their data too", () => {
     assert.deepEqual(chatToolsFor(null).map((t) => t.name), ["recent_exams"]);
-    assert.deepEqual(chatToolsFor(7).map((t) => t.name), ["get_my_data", "recent_exams"]);
+    assert.deepEqual(chatToolsFor("u7").map((t) => t.name), ["get_my_data", "recent_exams"]);
   });
   it("answers an invalid subject with an error before touching the database", async () => {
     const out = JSON.parse(await runChatTool(null, "recent_exams", { subject: "!!" }));

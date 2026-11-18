@@ -18,13 +18,13 @@ export const adminUserService = {
     return { items, meta: toMeta(query, total) };
   },
 
-  async get(id: number) {
+  async get(id: string) {
     const user = await userRepository.findById(id);
     if (!user) throw AppError.notFound("Không tìm thấy thành viên");
     return user;
   },
 
-  async update(actor: PublicUser, id: number, body: UpdateUserBody) {
+  async update(actor: PublicUser, id: string, body: UpdateUserBody) {
     const before = await this.get(id);
     // Tự hạ quyền / tự khoá mình sẽ làm hệ thống mất admin
     if (id === actor.id && (body.role === "USER" || body.status === "BANNED")) {
@@ -42,7 +42,7 @@ export const adminUserService = {
     return updated;
   },
 
-  async adjustBalance(id: number, { amount, note }: AdjustBalanceBody) {
+  async adjustBalance(id: string, { amount, note }: AdjustBalanceBody) {
     await this.get(id);
     const entry = await prisma.$transaction((tx) => walletService.applyChange(tx, { userId: id, amount, type: "ADMIN_ADJUST", note }));
     notificationService.balanceAdjusted({ userId: id, amount, note: note ?? null, balanceAfter: entry.balanceAfter });
@@ -50,7 +50,7 @@ export const adminUserService = {
   },
 
   // Số liệu nhanh để admin nắm tình hình một thành viên khi mở hộp thoại quản lý
-  async summary(id: number) {
+  async summary(id: string) {
     await this.get(id);
     const [attempts, exams, deposits, sessions, lastAttempt, referrals] = await Promise.all([
       prisma.examAttempt.count({ where: { userId: id } }),
@@ -72,7 +72,7 @@ export const adminUserService = {
   },
 
   // Đặt mật khẩu mới (tự sinh nếu không nhập), đăng xuất mọi thiết bị, báo cho chủ tài khoản. Trả mật khẩu một lần để admin chuyển cho người dùng.
-  async resetPassword(actor: PublicUser, id: number, { password }: ResetPasswordByAdminBody) {
+  async resetPassword(actor: PublicUser, id: string, { password }: ResetPasswordByAdminBody) {
     const user = await this.get(id);
     if (user.role === "ADMIN" && user.id !== actor.id) throw AppError.forbidden("Không đặt lại mật khẩu của quản trị viên khác");
     const plain = password ?? randomBytes(9).toString("base64url"); // 12 ký tự
@@ -87,21 +87,21 @@ export const adminUserService = {
     return { password: plain };
   },
 
-  async sendResetLink(id: number) {
+  async sendResetLink(id: string) {
     const user = await this.get(id);
     if (user.status === "BANNED") throw new AppError("Tài khoản đang bị khoá");
     await authService.sendResetLink(user);
   },
 
   // Đăng xuất mọi thiết bị: xoá hết phiên dài hạn (access token hiện hành tự hết hạn sau ít phút)
-  async revokeSessions(actor: PublicUser, id: number) {
+  async revokeSessions(actor: PublicUser, id: string) {
     await this.get(id);
     await refreshTokenRepository.deleteAllOfUser(id);
     console.log(`[admin] #${actor.id} đăng xuất mọi thiết bị của thành viên #${id}`);
   },
 
   // Đăng nhập thay thành viên (xem đúng những gì họ thấy). Chỉ tài khoản thường, không kèm refresh token.
-  async impersonate(actor: PublicUser, id: number) {
+  async impersonate(actor: PublicUser, id: string) {
     const user = await this.get(id);
     if (user.id === actor.id) throw new AppError("Đây là tài khoản của bạn");
     if (user.role === "ADMIN") throw AppError.forbidden("Không đăng nhập thay quản trị viên khác");

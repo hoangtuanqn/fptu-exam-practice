@@ -6,7 +6,7 @@ import { newestFirst, toSkipTake } from "../utils/pagination";
 export const historyUserSelect = { id: true, email: true, fullName: true } satisfies Prisma.UserSelect;
 
 // Tìm theo email hoặc tên của người dùng
-const userFilter = (userId: number | undefined, search: string | undefined): Prisma.UserWhereInput | undefined =>
+const userFilter = (userId: string | undefined, search: string | undefined): Prisma.UserWhereInput | undefined =>
   search ? { id: userId, OR: [{ email: { contains: search } }, { fullName: { contains: search } }] } : userId ? { id: userId } : undefined;
 
 // Truy vấn lịch sử cho trang quản trị: chỉ đọc, mới nhất trước
@@ -26,12 +26,12 @@ export const adminHistoryRepository = {
   },
 
   // CrawlJob chỉ lưu userId (không có quan hệ), nên lọc theo người dùng bằng cách tìm trước danh sách id khớp
-  async matchUserIds(userId: number | undefined, search: string | undefined) {
+  async matchUserIds(userId: string | undefined, search: string | undefined) {
     const matched = await prisma.user.findMany({ where: userFilter(userId, search), select: { id: true }, take: 500 });
     return matched.map((u) => u.id);
   },
 
-  async crawlJobs(query: ListCrawlJobsQuery, userIds: number[] | undefined) {
+  async crawlJobs(query: ListCrawlJobsQuery, userIds: string[] | undefined) {
     const where: Prisma.CrawlJobWhereInput = { status: query.status, ...(userIds && { userId: { in: userIds } }) };
     const [rows, total] = await Promise.all([
       prisma.crawlJob.findMany({
@@ -58,7 +58,7 @@ export const adminHistoryRepository = {
   },
 
   // Quan hệ user không khai báo trên CrawlJob nên tra riêng một lần cho cả trang
-  usersByIds: (ids: number[]) => (ids.length ? prisma.user.findMany({ where: { id: { in: ids } }, select: historyUserSelect }) : Promise.resolve([])),
+  usersByIds: (ids: string[]) => (ids.length ? prisma.user.findMany({ where: { id: { in: ids } }, select: historyUserSelect }) : Promise.resolve([])),
 
   async attempts(query: ListAttemptsQuery) {
     const where: Prisma.ExamAttemptWhereInput = { mode: query.mode, user: userFilter(query.userId, query.search) };

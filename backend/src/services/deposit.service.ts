@@ -54,7 +54,7 @@ export const depositService = {
     };
   },
 
-  async create(userId: number, { amount }: CreateDepositBody) {
+  async create(userId: string, { amount }: CreateDepositBody) {
     const config = await requireConfigured();
     if (amount < config.minDeposit) {
       throw new AppError(`Số tiền nạp tối thiểu ${config.minDeposit.toLocaleString("vi-VN")}đ`, 400, {
@@ -94,7 +94,7 @@ export const depositService = {
   },
 
   // Người dùng poll endpoint này để biết đã nhận tiền chưa
-  async getOfUser(userId: number, code: string) {
+  async getOfUser(userId: string, code: string) {
     const order = await depositRepository.findByCodeOfUser(code, userId);
     if (!order) throw AppError.notFound("Không tìm thấy lệnh nạp");
     const payment = order.status === "PENDING" ? toPayment(await settingService.getSepay(), order) : undefined;
@@ -123,7 +123,7 @@ export const depositService = {
   },
 
   // admin (withUser) thấy người tạo lệnh; thành viên chỉ thấy lệnh của chính mình nên không cần
-  async list(query: ListDepositsQuery, userId?: number, withUser = false) {
+  async list(query: ListDepositsQuery, userId?: string, withUser = false) {
     const { items, total } = await depositRepository.list(query, { userId, status: query.status }, withUser);
     return { items, meta: toMeta(query, total) };
   },

@@ -14,7 +14,7 @@ export interface NewExam {
   sourceUrl: string;
   author?: string;
   postedAt?: string;
-  createdById?: number;
+  createdById?: string;
   answerSource: AnswerSource;
   aiReport?: string;
   questions: {

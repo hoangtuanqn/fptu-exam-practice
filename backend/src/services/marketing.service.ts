@@ -22,8 +22,8 @@ import { marketingSettingService } from "./marketing-setting.service";
 
 export type UnsubscribeMode = "all" | "pause" | "topic";
 
-// Người nhận giả cho xem trước: không dùng dữ liệu của ai (id 0 không phải tài khoản nào)
-export const PREVIEW_RECIPIENT: Recipient = { id: 0, email: "ban@example.com", fullName: "Bạn", proExpiresAt: null };
+// Người nhận giả cho xem trước: không dùng dữ liệu của ai (id toàn số 0 không phải tài khoản nào)
+export const PREVIEW_RECIPIENT: Recipient = { id: "00000000-0000-0000-0000-000000000000", email: "ban@example.com", fullName: "Bạn", proExpiresAt: null };
 
 const paramsView = (values: MarketingParams) => ({ values, defaults: DEFAULT_MARKETING_PARAMS, limits: PARAM_LIMITS });
 
@@ -33,8 +33,10 @@ export const marketingService = {
    * Gọi lại nhiều lần vẫn ổn.
    */
   async unsubscribe(token: string, mode: UnsubscribeMode = "all", topic?: MarketingTopic) {
-    const userId = verifyMarketingToken(env.JWT_SECRET, token);
-    if (userId === null) throw new AppError("Liên kết huỷ nhận thư đã hết hạn hoặc bị thiếu ký tự. Bạn có thể tắt thư ngay trong trang Hồ sơ sau khi đăng nhập.", 400);
+    const raw = verifyMarketingToken(env.JWT_SECRET, token);
+    // Mails sent before migration 0080 carry the old numeric user id
+    const userId = raw && /^\d+$/.test(raw) ? await userRepository.findIdByLegacyId(Number(raw)) : raw;
+    if (!userId) throw new AppError("Liên kết huỷ nhận thư đã hết hạn hoặc bị thiếu ký tự. Bạn có thể tắt thư ngay trong trang Hồ sơ sau khi đăng nhập.", 400);
     if (mode === "pause") await userRepository.pauseMarketing(userId, new Date(Date.now() + MARKETING_PAUSE_DAYS * DAY_MS));
     else if (mode === "topic" && topic) await userRepository.muteMarketingTopic(userId, TOPIC_BITS[topic]);
     else await userRepository.optOutMarketing(userId);

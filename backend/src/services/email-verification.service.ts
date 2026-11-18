@@ -23,7 +23,7 @@ export const emailVerificationService = {
    * Tạo token cho địa chỉ `email` (email hiện tại khi đăng ký, hoặc email mới khi đổi email) và gửi thư tới đúng địa chỉ đó.
    * Token cũ chưa dùng của người này bị vô hiệu: chỉ liên kết mới nhất có tác dụng.
    */
-  async send(userId: number, email: string, options: { enforceCooldown?: boolean } = {}) {
+  async send(userId: string, email: string, options: { enforceCooldown?: boolean } = {}) {
     if (options.enforceCooldown) {
       const latest = await emailVerificationRepository.latestOf(userId);
       const wait = latest ? EMAIL_VERIFICATION_COOLDOWN_MS - (Date.now() - latest.createdAt.getTime()) : 0;
@@ -47,7 +47,7 @@ export const emailVerificationService = {
   },
 
   // Gửi lại thư xác minh cho email hiện tại (có thời gian chờ giữa hai lần)
-  async resend(userId: number) {
+  async resend(userId: string) {
     const user = await userRepository.findById(userId);
     if (!user) throw AppError.notFound("Không tìm thấy tài khoản");
     if (user.emailVerifiedAt) throw new AppError("Email của bạn đã được xác minh");
@@ -58,7 +58,7 @@ export const emailVerificationService = {
    * Đổi email: cần mật khẩu hiện tại. Email KHÔNG đổi ngay: thư xác minh gửi tới địa chỉ mới, bấm liên kết xong mới đổi
    * (chứng minh người dùng thực sự sở hữu địa chỉ đó). Trong lúc chờ, tài khoản vẫn dùng email cũ bình thường.
    */
-  async requestChange(userId: number, { email, password }: ChangeEmailBody) {
+  async requestChange(userId: string, { email, password }: ChangeEmailBody) {
     const user = await userRepository.findByIdWithPassword(userId);
     if (!user) throw AppError.notFound("Không tìm thấy tài khoản");
     if (!(await comparePassword(password, user.password))) {

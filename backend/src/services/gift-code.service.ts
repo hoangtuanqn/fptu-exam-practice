@@ -71,7 +71,7 @@ export const giftCodeService = {
   },
 
   // ----- Thành viên
-  async mine(userId: number, query: PaginationQuery) {
+  async mine(userId: string, query: PaginationQuery) {
     const { items, total } = await giftCodeRepository.listByUser(userId, query);
     return {
       items: items.map((r) => ({ id: r.id, code: r.giftCode.code, amount: r.amount, createdAt: r.createdAt })),
@@ -83,7 +83,7 @@ export const giftCodeService = {
    * Nhập mã nhận credit. Mọi bước nằm trong một transaction: chiếm lượt (UPDATE có điều kiện), ghi nhận người dùng
    * (unique giftCodeId + userId: mỗi người một lần), cộng credit. Bước nào lỗi thì tất cả được hoàn tác.
    */
-  async redeem(userId: number, code: string) {
+  async redeem(userId: string, code: string) {
     const result = await prisma.$transaction(async (tx) => {
       const gift = await giftCodeRepository.findByCode(tx, code);
       if (!gift) throw new AppError(INVALID);

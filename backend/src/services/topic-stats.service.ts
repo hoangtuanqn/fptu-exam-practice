@@ -20,11 +20,11 @@ export interface SubjectStats {
 }
 
 /** Tỷ lệ đúng theo chủ đề của một người, tính từ bài làm MỚI NHẤT của mỗi đề (làm lại nhiều lần không làm lệch số liệu). */
-async function compute(userId: number): Promise<SubjectStats[]> {
+async function compute(userId: string): Promise<SubjectStats[]> {
   return userStatsCache.topics.wrap(userId, () => computeUncached(userId));
 }
 
-async function computeUncached(userId: number) {
+async function computeUncached(userId: string) {
   const latest = await prisma.examAttempt.groupBy({ by: ["examId"], where: { userId }, _max: { id: true }, orderBy: { _max: { id: "desc" } }, take: MAX_EXAMS });
   const attemptIds = latest.map((l) => l._max.id!).filter(Boolean);
   if (attemptIds.length === 0) return [] as SubjectStats[];
@@ -65,7 +65,7 @@ export const topicStatsService = {
    * Gói thường: chỉ chủ đề yếu nhất (kèm số chủ đề đang bị khóa để mời nâng cấp). Pro: toàn bộ theo từng môn.
    * Việc khóa làm ở đây (máy chủ), không chỉ ẩn trên giao diện.
    */
-  async forUser(userId: number, isPro: boolean) {
+  async forUser(userId: string, isPro: boolean) {
     const subjects = await compute(userId);
     const candidates = subjects.flatMap((s) => s.topics.filter((t) => t.enough).map((t) => ({ subject: s.code, ...t })));
     candidates.sort((a, b) => a.rate - b.rate || b.answered - a.answered);

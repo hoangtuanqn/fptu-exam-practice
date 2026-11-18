@@ -3,7 +3,7 @@ import { prisma } from "../configs/prisma";
 // Sổ token AI theo người dùng và tính năng (dùng cho giới hạn theo cửa sổ trượt)
 
 export interface TokenUsageInput {
-  userId: number;
+  userId: string;
   feature: string;
   inputTokens: number;
   outputTokens: number;
@@ -17,7 +17,7 @@ export const aiTokenUsageRepository = {
   deleteBefore: async (before: Date) => (await prisma.aiTokenUsage.deleteMany({ where: { createdAt: { lt: before } } })).count,
 
   /** Các lượt dùng ghi SAU mốc `since` (đọc theo chỉ mục user_id, feature, created_at). */
-  since: (userId: number, feature: string, since: Date) =>
+  since: (userId: string, feature: string, since: Date) =>
     prisma.aiTokenUsage.findMany({
       where: { userId, feature, createdAt: { gt: since } },
       select: { createdAt: true, totalTokens: true },

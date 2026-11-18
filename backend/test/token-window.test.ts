@@ -72,15 +72,15 @@ describe("token ledger", () => {
     const m = memoryStore();
     const a = createTokenLedger({ feature: "material", limit: 10_000, windowMs: W, store: m.store });
     const b = createTokenLedger({ feature: "other", limit: 10_000, windowMs: W, store: m.store });
-    await a.record(1, { input: 1000, output: 600, cacheCreation: 400 });
-    await b.record(1, { input: 5000, output: 0, cacheCreation: 0 });
-    await a.record(2, { input: 9000, output: 0, cacheCreation: 0 });
-    assert.deepEqual(m.rows[0], { userId: 1, feature: "material", inputTokens: 1400, outputTokens: 600, totalTokens: 2000, createdAt: NOW });
-    const s = await a.status(1, NOW);
+    await a.record("u1", { input: 1000, output: 600, cacheCreation: 400 });
+    await b.record("u1", { input: 5000, output: 0, cacheCreation: 0 });
+    await a.record("u2", { input: 9000, output: 0, cacheCreation: 0 });
+    assert.deepEqual(m.rows[0], { userId: "u1", feature: "material", inputTokens: 1400, outputTokens: 600, totalTokens: 2000, createdAt: NOW });
+    const s = await a.status("u1", NOW);
     assert.equal(s.used, 2000);
     assert.equal(s.percentUsed, 20);
     assert.equal(s.resetsAt?.getTime(), NOW.getTime() + W);
-    assert.equal((await a.status(1, new Date(NOW.getTime() + W))).used, 0); // hết cửa sổ
+    assert.equal((await a.status("u1", new Date(NOW.getTime() + W))).used, 0); // hết cửa sổ
   });
 });
 

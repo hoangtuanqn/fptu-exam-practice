@@ -13,7 +13,7 @@ const answersOf = (answer: string) => answer.split(/\s+/).filter(Boolean);
 
 export const savedQuestionService = {
   /** Lưu một câu của đề trong kho của người dùng; lưu lại câu đã lưu không lỗi. `max` truyền vào được để test. */
-  async save(userId: number, examId: string, questionNumber: number, max: number = SAVED_QUESTIONS_MAX) {
+  async save(userId: string, examId: string, questionNumber: number, max: number = SAVED_QUESTIONS_MAX) {
     // Đề ngoài kho của mình: 404 như mọi API đề khác (không lộ đề có tồn tại hay không)
     if (!(await userExamRepository.has({ userId }, examId))) throw AppError.notFound(EXAM_NOT_FOUND);
     if (!(await savedQuestionRepository.questionExists(examId, questionNumber))) throw AppError.notFound("Không tìm thấy câu hỏi");
@@ -24,14 +24,14 @@ export const savedQuestionService = {
     return { saved: true };
   },
 
-  async remove(userId: number, examId: string, questionNumber: number) {
+  async remove(userId: string, examId: string, questionNumber: number) {
     await savedQuestionRepository.remove(userId, examId, questionNumber);
     return { saved: false };
   },
 
-  numbersOfExam: (userId: number, examId: string) => savedQuestionRepository.numbersOfExam(userId, examId),
+  numbersOfExam: (userId: string, examId: string) => savedQuestionRepository.numbersOfExam(userId, examId),
 
-  async list(userId: number, query: PaginationQuery & { subject?: string }) {
+  async list(userId: string, query: PaginationQuery & { subject?: string }) {
     const { rows, total } = await savedQuestionRepository.list(userId, query);
     const questions = await savedQuestionRepository.questionsOf(rows);
     return {

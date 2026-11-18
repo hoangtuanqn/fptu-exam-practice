@@ -294,7 +294,7 @@ describe("chat stream through an OpenAI-compatible endpoint", () => {
     mock.method(chatSettingService, "get", async () => CHAT_DEFAULTS);
     mock.method(aiSettingService, "get", async () => AI);
     mock.method(knowledgeService, "search", async () => []);
-    const prep = await chatService.prepare({ userId: 7 }, undefined, { messages: [{ role: "user", content: "Làm sao đổi mật khẩu?" }] });
+    const prep = await chatService.prepare({ userId: "u7" }, undefined, { messages: [{ role: "user", content: "Làm sao đổi mật khẩu?" }] });
     assert.equal(prep.openai, null);
     assert.equal(prep.request!.params.model, CHAT_DEFAULTS.claudeModel);
     assert.equal(prep.request!.params.system[1]!.text, "<viewer>logged_in</viewer>\n<knowledge>\n(Không có đoạn hướng dẫn nào khớp với câu hỏi này.)\n</knowledge>");
@@ -302,7 +302,7 @@ describe("chat stream through an OpenAI-compatible endpoint", () => {
     assert.equal(prep.request!.params.max_tokens, 4000);
     // 6 tin gần nhất, câu trả lời cũ cắt còn 400 ký tự
     const many = Array.from({ length: 9 }, (_, i) => ({ role: (i % 2 ? "assistant" : "user") as "user" | "assistant", content: i % 2 ? "x".repeat(1000) : `câu ${i}` }));
-    const p2 = await chatService.prepare({ userId: 7 }, undefined, { messages: many });
+    const p2 = await chatService.prepare({ userId: "u7" }, undefined, { messages: many });
     const sent = p2.request!.params.messages;
     assert.equal(sent.length, 5); // 6 tin cuối bắt đầu bằng trả lời nên bỏ tin đầu
     assert.equal(sent[1]!.content.length, 401);

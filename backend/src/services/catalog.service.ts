@@ -141,7 +141,7 @@ export const catalogService = {
   },
 
   /** Các môn người dùng đã lấy đề (mới nhất trước), để bấm nhanh. */
-  async mySubjects(userId: number) {
+  async mySubjects(userId: string) {
     const rows = await prisma.userExam.findMany({ where: { userId }, orderBy: { id: "desc" }, take: 300, select: { exam: { select: { title: true } } } });
     const codes: string[] = [];
     for (const r of rows) {
@@ -153,7 +153,7 @@ export const catalogService = {
   },
 
   /** Đề của một môn: gộp danh mục FuOverflow với đề hệ thống, lọc theo từ khoá và kỳ, mới nhất trước, phân trang. */
-  async exams(code: string, query: PaginationQuery & { q?: string; term?: string }, userId: number | null) {
+  async exams(code: string, query: PaginationQuery & { q?: string; term?: string }, userId: string | null) {
     const subject = code.toUpperCase();
     const [fuo, ours] = await Promise.all([
       prisma.fuoThread.findMany({ where: { subjectCode: subject }, select: { threadId: true, title: true, postedAt: true, replies: true } }),

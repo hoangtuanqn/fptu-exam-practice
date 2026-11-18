@@ -24,7 +24,7 @@ export const accountSettingService = {
   },
 
   /** Gọi trong transaction đăng ký: tặng credit đăng ký (nếu admin đặt > 0). Trả số dư sau khi cộng, hoặc null nếu không tặng. */
-  async grantSignupCredit(db: Db, userId: number) {
+  async grantSignupCredit(db: Db, userId: string) {
     const { signupCredit } = await this.get();
     if (signupCredit <= 0) return null;
     const entry = await walletService.applyChange(db, { userId, amount: signupCredit, type: "SIGNUP_BONUS", note: "Tặng credit khi đăng ký" });

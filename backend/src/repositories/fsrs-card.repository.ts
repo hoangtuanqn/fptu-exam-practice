@@ -53,7 +53,7 @@ const isRetryable = (err: unknown) => {
 };
 
 // Câu ôn được khi đề còn dùng được và (trừ admin) đề còn trong kho của người dùng
-const visibleQuestion = (userId: number, isAdmin: boolean) => ({
+const visibleQuestion = (userId: string, isAdmin: boolean) => ({
   isReference: false,
   exam: { answerSource: { in: [...USABLE_ANSWER_SOURCES] }, ...(isAdmin ? {} : { userExams: { some: { userId } } }) },
 });
@@ -66,7 +66,7 @@ export const fsrsCardRepository = {
    * INSERT IGNORE thẻ mới (nếu chưa có) -> SELECT ... FOR UPDATE khoá đúng dòng thẻ -> `schedule` tính từ dòng đã khoá -> UPDATE thẻ + ghi nhật ký.
    * Lần ôn thứ hai cùng lúc phải chờ lần đầu xong nên tính tiếp từ kết quả của lần đầu. Deadlock hiếm gặp thì chạy lại vài lần.
    */
-  async review<T>(userId: number, questionId: number, empty: StoredCard, schedule: (current: StoredCard) => { card: StoredCard; log: ReviewLogRow; result: T }): Promise<T> {
+  async review<T>(userId: string, questionId: number, empty: StoredCard, schedule: (current: StoredCard) => { card: StoredCard; log: ReviewLogRow; result: T }): Promise<T> {
     for (let attempt = 0; ; attempt++) {
       try {
         return await prisma.$transaction(async (tx) => {
@@ -91,7 +91,7 @@ export const fsrsCardRepository = {
   },
 
   /** Thẻ đến hạn (due <= now), sớm nhất trước; chỉ câu của đề còn dùng được và còn trong kho của người dùng (admin: mọi đề). */
-  due: (userId: number, isAdmin: boolean, now: Date, take: number) =>
+  due: (userId: string, isAdmin: boolean, now: Date, take: number) =>
     prisma.userQuestionCard.findMany({
       where: { userId, due: { lte: now }, question: visibleQuestion(userId, isAdmin) },
       orderBy: [{ due: "asc" }, { id: "asc" }],
@@ -106,5 +106,5 @@ export const fsrsCardRepository = {
       },
     }),
 
-  countDue: (userId: number, isAdmin: boolean, now: Date) => prisma.userQuestionCard.count({ where: { userId, due: { lte: now }, question: visibleQuestion(userId, isAdmin) } }),
+  countDue: (userId: string, isAdmin: boolean, now: Date) => prisma.userQuestionCard.count({ where: { userId, due: { lte: now }, question: visibleQuestion(userId, isAdmin) } }),
 };

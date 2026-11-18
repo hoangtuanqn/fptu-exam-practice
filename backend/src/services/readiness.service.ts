@@ -35,11 +35,11 @@ export function levelOf(average: number, spread: number, weakTopics: number): Ex
 }
 
 export const readinessService = {
-  forUser(userId: number): Promise<SubjectReadiness[]> {
+  forUser(userId: string): Promise<SubjectReadiness[]> {
     return userStatsCache.readiness.wrap(userId, () => this.compute(userId));
   },
 
-  async compute(userId: number): Promise<SubjectReadiness[]> {
+  async compute(userId: string): Promise<SubjectReadiness[]> {
     const rows = await prisma.examAttempt.findMany({
       where: { userId, mode: "EXAM", totalGraded: { gt: 0 } },
       orderBy: { id: "desc" },

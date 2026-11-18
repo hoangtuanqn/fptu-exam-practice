@@ -54,7 +54,7 @@ describe("database (throwaway MySQL)", { skip: DB_TESTS_ENABLED ? false : DB_SKI
   let db: ThrowawayDb | undefined;
   let m: Mods;
   let subjectId = 0;
-  let userId = 0;
+  let userId = "";
   const qid = new Map<string, number>(); // "exam:number" -> id
   const examIds: string[] = [];
   const examIdOf = (i: number) => examIds[i]!;

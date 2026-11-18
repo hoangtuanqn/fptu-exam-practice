@@ -17,11 +17,11 @@ const adminSelect = {
 } satisfies Prisma.ExplanationFeedbackSelect;
 
 export const explanationFeedbackRepository = {
-  find: (userId: number, examId: string, questionNumber: number) =>
+  find: (userId: string, examId: string, questionNumber: number) =>
     prisma.explanationFeedback.findUnique({ where: { userId_examId_questionNumber: { userId, examId, questionNumber } }, select: { helpful: true, reason: true, comment: true } }),
 
   // Mỗi người một đánh giá cho mỗi câu: gửi lại thì ghi đè (lý do và góp ý cũ bị xóa nếu lần này là "hữu ích")
-  upsert: (userId: number, examId: string, questionNumber: number, data: { helpful: boolean; reason: string | null; comment: string | null; resolvedAt?: null; resolvedById?: null }) =>
+  upsert: (userId: string, examId: string, questionNumber: number, data: { helpful: boolean; reason: string | null; comment: string | null; resolvedAt?: null; resolvedById?: null }) =>
     prisma.explanationFeedback.upsert({
       where: { userId_examId_questionNumber: { userId, examId, questionNumber } },
       create: { userId, examId, questionNumber, ...data },
@@ -43,7 +43,7 @@ export const explanationFeedbackRepository = {
   findAdmin: (id: string) => prisma.explanationFeedback.findUnique({ where: { id }, select: adminSelect }),
 
   // Chỉ ghi lần đầu: giải quyết lại giữ nguyên người và thời điểm đầu tiên
-  resolve: (id: string, adminId: number) =>
+  resolve: (id: string, adminId: string) =>
     prisma.explanationFeedback.updateMany({ where: { id, resolvedAt: null }, data: { resolvedAt: new Date(), resolvedById: adminId } }),
 
   // Badge sidebar: lời chê chưa giải quyết, dùng index (helpful, resolved_at, updated_at)

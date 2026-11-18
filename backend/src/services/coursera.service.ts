@@ -25,7 +25,7 @@ async function safe<T>(run: () => Promise<T>): Promise<T> {
 type Order = Awaited<ReturnType<typeof courseraRepository.updateStatus>>;
 const ADMIN_LINK = "/admin/coursera";
 
-function changeStatus(id: string, data: CourseraStatusBody, userId?: number) {
+function changeStatus(id: string, data: CourseraStatusBody, userId?: string) {
   return courseraRepository.transaction(async (tx) => {
     const order = await courseraRepository.updateStatus(tx, id, data, userId);
     if ((data.status === "CANCELLED" || data.status === "REJECTED") && order.amount > 0 && !order.refundedAt) {
@@ -64,8 +64,8 @@ export const courseraService = {
       return { ...raced, kind: link.kind };
     }
   }),
-  orders: (query: CourseraOrdersQuery, userId?: number) => safe(() => courseraRepository.orders(query, userId)),
-  createOrder: (userId: number, data: CourseraOrderBody) => safe(async () => {
+  orders: (query: CourseraOrdersQuery, userId?: string) => safe(() => courseraRepository.orders(query, userId)),
+  createOrder: (userId: string, data: CourseraOrderBody) => safe(async () => {
     const existing = await courseraRepository.findRequest(userId, data.requestKey);
     if (existing) return existing;
     try {
@@ -96,13 +96,13 @@ export const courseraService = {
     if (changed) mailOrder(order, "note", 0);
     return order;
   }),
-  cancel: (id: string, userId: number) => safe(async () => {
+  cancel: (id: string, userId: string) => safe(async () => {
     const { order, refunded, balanceAfter } = await changeStatus(id, { expectedStatus: "PENDING", status: "CANCELLED", adminNote: "" }, userId);
     adminNoticeService.push("coursera.cancelled", { title: `Đơn Coursera #${order.id} bị người dùng hủy`, body: `${order.courseTitle}${refunded ? ` · đã hoàn ${formatCredit(refunded)}` : ""}`, userId, link: ADMIN_LINK });
     mailOrder(order, "CANCELLED", refunded, balanceAfter);
     return order;
   }),
-  credentials: (id: string, adminId: number) => safe(async () => {
+  credentials: (id: string, adminId: string) => safe(async () => {
     const row = await courseraRepository.credentials(id, adminId);
     return { email: row.email, password: row.password! };
   }),

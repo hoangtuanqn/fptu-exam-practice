@@ -26,7 +26,7 @@ type SentMail = { to: string; html: string; text: string };
 describe("marketing audiences (MySQL)", { skip: DB_TESTS_ENABLED ? false : DB_SKIP_REASON }, () => {
   let db: ThrowawayDb;
   let m: Awaited<ReturnType<typeof loadModules>>;
-  const ids: Record<string, number> = {};
+  const ids: Record<string, string> = {};
   const outbox: SentMail[] = [];
   let mk: (key: string, data: Record<string, unknown>) => Promise<void>;
 
@@ -92,7 +92,7 @@ describe("marketing audiences (MySQL)", { skip: DB_TESTS_ENABLED ? false : DB_SK
     const good = m.click.signClickToken(m.env.JWT_SECRET, id);
     assert.equal(await m.marketing.click(good), `${site}/pro`);
     assert.equal(await m.marketing.click(good.slice(0, -1) + (good.endsWith("0") ? "1" : "0")), site);
-    assert.equal(await m.marketing.click(m.token(m.env.JWT_SECRET, id)), site); // token huỷ nhận thư không mở được nút
+    assert.equal(await m.marketing.click(m.token(m.env.JWT_SECRET, String(id))), site); // token huỷ nhận thư không mở được nút
     assert.equal(await m.marketing.click(m.click.signClickToken(m.env.JWT_SECRET, 999_999)), site); // log không còn
     await m.prisma.emailCampaignLog.update({ where: { id }, data: { target: "@evil.example" } });
     assert.equal(await m.marketing.click(good), site);
@@ -127,9 +127,9 @@ describe("marketing audiences (MySQL)", { skip: DB_TESTS_ENABLED ? false : DB_SK
 
   it("builds the funnel from matured mails with last-touch purchases only", async () => {
     for (const k of ["fA", "fB", "fC", "fD"]) await mk(k, { lastActiveAt: new Date() });
-    const log = (userId: number, campaign: string, step: number, sentAt: Date, extra: Record<string, unknown> = {}) =>
+    const log = (userId: string, campaign: string, step: number, sentAt: Date, extra: Record<string, unknown> = {}) =>
       m.prisma.emailCampaignLog.create({ data: { userId, campaign, step, sentAt, ...extra } });
-    const buy = (userId: number, createdAt: Date, price = 100) =>
+    const buy = (userId: string, createdAt: Date, price = 100) =>
       m.prisma.planPurchase.create({ data: { userId, plan: "PRO", months: 4, price, startsAt: createdAt, endsAt: new Date(createdAt.getTime() + 120 * DAY), createdAt } });
     // A: mời Pro 10 ngày trước, đã bấm, mua 8 ngày trước -> tính (cột quay lại có giá trị nhưng chỉ winback mới hiện)
     await log(ids.fA!, "pro_upsell", 1, daysAgo(10), { clickedAt: daysAgo(9.9), returnedAt: daysAgo(9) });

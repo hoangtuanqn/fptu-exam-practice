@@ -7,10 +7,10 @@ export type Db = PrismaClient | Prisma.TransactionClient;
 export const walletRepository = {
   createEntry: (
     db: Db,
-    data: { userId: number; type: TransactionType; amount: number; balanceAfter: number; note?: string },
+    data: { userId: string; type: TransactionType; amount: number; balanceAfter: number; note?: string },
   ) => db.walletTransaction.create({ data }),
 
-  async listByUser(userId: number, query: PaginationQuery) {
+  async listByUser(userId: string, query: PaginationQuery) {
     const where = { userId };
     const [items, total] = await Promise.all([
       prisma.walletTransaction.findMany({

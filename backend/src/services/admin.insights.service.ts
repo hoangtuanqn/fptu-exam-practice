@@ -108,7 +108,7 @@ export const adminInsightsService = {
 
     type Tally = { answered: number; wrong: number; picks: Map<string, number> };
     const tally = new Map<number, Tally>();
-    const seen = new Set<number>();
+    const seen = new Set<string>();
     let users = 0;
     for (const a of attempts) {
       if (seen.has(a.userId)) continue; // chỉ lấy bài mới nhất của mỗi người để một người làm nhiều lần không làm lệch số liệu

@@ -26,8 +26,8 @@ const DAY = 24 * 3600_000;
 describe("material analysis (throwaway MySQL)", { skip: DB_TESTS_ENABLED ? false : DB_SKIP_REASON }, () => {
   let db: ThrowawayDb | undefined;
   let m: Mods;
-  let userId = 0;
-  let otherId = 0;
+  let userId = "";
+  let otherId = "";
   let subjectId = 0;
   let tmpDir = "";
 

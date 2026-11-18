@@ -6,7 +6,7 @@ const SPEND_TYPES = ["CRAWL_CHARGE", "CRAWL_REFUND", "EXPLAIN_CHARGE", "EXPLAIN_
 // Dữ liệu thật của một người, dùng để đưa lời mời Pro đúng lúc (không có gì thì không mời)
 export const planSignalRepository = {
   // Buổi thi sắp tới gần nhất trong lịch thi FAP đã đồng bộ (từ `from` trở đi)
-  nextExamSlot: (userId: number, from: Date) =>
+  nextExamSlot: (userId: string, from: Date) =>
     prisma.userExamSlot.findFirst({
       where: { userId, examDate: { gte: from } },
       orderBy: [{ examDate: "asc" }, { startTime: "asc" }],
@@ -14,13 +14,13 @@ export const planSignalRepository = {
     }),
 
   // Ngày thi người dùng tự đặt trong phần nhắc ôn
-  async userExamDate(userId: number) {
+  async userExamDate(userId: string) {
     const row = await prisma.user.findUnique({ where: { id: userId }, select: { examDate: true } });
     return row?.examDate ?? null;
   },
 
   // Tổng credit đã chi lẻ từ `since` theo từng loại (số dương = tiền đã tiêu, đã trừ phần hoàn lại)
-  async spentSince(userId: number, since: Date) {
+  async spentSince(userId: string, since: Date) {
     const rows = await prisma.walletTransaction.groupBy({
       by: ["type"],
       where: { userId, createdAt: { gte: since }, type: { in: [...SPEND_TYPES] } },
@@ -31,7 +31,7 @@ export const planSignalRepository = {
   },
 
   // Như spentSince nhưng cho nhiều người trong một truy vấn: userId -> tổng credit đã chi lẻ (đã trừ phần hoàn)
-  async netSpendByUser(userIds: number[], since: Date) {
+  async netSpendByUser(userIds: string[], since: Date) {
     const rows = await prisma.walletTransaction.groupBy({
       by: ["userId"],
       where: { userId: { in: userIds }, createdAt: { gte: since }, type: { in: [...SPEND_TYPES] } },

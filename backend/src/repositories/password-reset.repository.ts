@@ -2,10 +2,10 @@ import { prisma } from "../configs/prisma";
 import type { Db } from "./wallet.repository";
 
 export const passwordResetRepository = {
-  create: (data: { userId: number; tokenHash: string; expiresAt: Date }) => prisma.passwordResetToken.create({ data }),
+  create: (data: { userId: string; tokenHash: string; expiresAt: Date }) => prisma.passwordResetToken.create({ data }),
 
   // Token mới nhất của người này, để chặn gửi thư dồn dập
-  latestOf: (userId: number) =>
+  latestOf: (userId: string) =>
     prisma.passwordResetToken.findFirst({ where: { userId }, orderBy: { id: "desc" }, select: { createdAt: true } }),
 
   findByHash: (tokenHash: string) => prisma.passwordResetToken.findUnique({ where: { tokenHash } }),
@@ -20,7 +20,7 @@ export const passwordResetRepository = {
   },
 
   // Đổi mật khẩu xong thì mọi token còn lại của người này không còn dùng được
-  invalidateAll: (db: Db, userId: number) =>
+  invalidateAll: (db: Db, userId: string) =>
     db.passwordResetToken.updateMany({ where: { userId, usedAt: null }, data: { usedAt: new Date() } }),
 
   deleteExpired: async () => (await prisma.passwordResetToken.deleteMany({ where: { expiresAt: { lt: new Date(Date.now() - 24 * 3600 * 1000) } } })).count,

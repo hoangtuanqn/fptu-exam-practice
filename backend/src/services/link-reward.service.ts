@@ -52,7 +52,7 @@ async function shorten(provider: LinkProvider, apiToken: string, destination: st
 }
 
 /** Số lượt đã nhận hôm nay, tách theo dịch vụ */
-async function claimedTodayBy(userId: number): Promise<Record<LinkProvider, number>> {
+async function claimedTodayBy(userId: string): Promise<Record<LinkProvider, number>> {
   const rows = await prisma.linkRewardRequest.findMany({ where: { userId, status: "CLAIMED", claimedAt: { gte: startOfVnDay() } }, select: { provider: true } });
   const out = Object.fromEntries(LINK_PROVIDER_ORDER.map((p) => [p, 0])) as Record<LinkProvider, number>;
   for (const r of rows) if (r.provider in out) out[r.provider as LinkProvider] += 1;
@@ -64,7 +64,7 @@ const activeProviders = (cfg: LinkRewardConfig) => LINK_PROVIDER_ORDER.map((prov
 
 export const linkRewardService = {
   /** Trạng thái cho người dùng: số lượt còn, lượt sắp hết hạn, số lần còn nhận được hôm nay */
-  async status(userId: number) {
+  async status(userId: string) {
     const now = new Date();
     const [cfg, turns, todayBy, expiredRecently] = await Promise.all([
       linkRewardSettingService.get(),
@@ -89,7 +89,7 @@ export const linkRewardService = {
   },
 
   /** Tạo link vượt link cho người dùng (dùng lại link đang chờ nếu còn hạn, để không tạo thừa) */
-  async start(userId: number) {
+  async start(userId: string) {
     const cfg = await linkRewardSettingService.get();
     const active = activeProviders(cfg);
     if (active.length === 0) throw new AppError("Tính năng vượt link chưa được bật");
@@ -127,7 +127,7 @@ export const linkRewardService = {
   },
 
   /** Nhận lượt sau khi vượt link xong. Gọi lại với cùng mã (tải lại trang) thì báo đã nhận, không cộng thêm. */
-  async claim(userId: number, token: string) {
+  async claim(userId: string, token: string) {
     if (!TOKEN_FORMAT.test(token)) throw AppError.notFound(CLAIM_LINK_INVALID);
     const request = await prisma.linkRewardRequest.findUnique({ where: { tokenHash: hash(token) } });
     if (!request || request.userId !== userId) throw AppError.notFound("Liên kết nhận lượt không đúng hoặc được tạo bằng tài khoản khác. Hãy đăng nhập đúng tài khoản đã tạo liên kết, hoặc tạo liên kết mới.");
@@ -152,7 +152,7 @@ export const linkRewardService = {
   },
 
   /** Dùng 1 lượt (sắp hết hạn trước) cho một câu. Gọi trong transaction của việc mua giải thích. false = không còn lượt hợp lệ. */
-  async consume(db: Db, userId: number, examId: string, questionNumber: number) {
+  async consume(db: Db, userId: string, examId: string, questionNumber: number) {
     const now = new Date();
     const turn = await db.freeExplainTurn.findFirst({ where: { userId, usedAt: null, expiresAt: { gt: now } }, orderBy: { expiresAt: "asc" }, select: { id: true } });
     if (!turn) return false;
@@ -161,7 +161,7 @@ export const linkRewardService = {
   },
 
   /** AI lỗi sau khi đã dùng lượt: trả lại lượt cho người dùng */
-  async restore(db: Db, userId: number, examId: string, questionNumber: number) {
+  async restore(db: Db, userId: string, examId: string, questionNumber: number) {
     await db.freeExplainTurn.updateMany({
       where: { userId, usedExamId: examId, usedQuestionNumber: questionNumber, usedAt: { not: null } },
       data: { usedAt: null, usedExamId: null, usedQuestionNumber: null },

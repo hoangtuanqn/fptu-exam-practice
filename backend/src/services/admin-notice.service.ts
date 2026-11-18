@@ -11,7 +11,7 @@ type Row = Prisma.AdminNoticeGetPayload<object>;
 export interface NoticeInput {
   title: string;
   body?: string | null;
-  userId?: number | null;
+  userId?: string | null;
   link?: string | null; // trang admin liên quan, ví dụ /admin/exams/12
 }
 

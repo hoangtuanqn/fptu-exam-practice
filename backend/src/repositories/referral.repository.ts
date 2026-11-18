@@ -9,26 +9,26 @@ export const referralRepository = {
 
   codeExists: async (code: string) => !!(await prisma.user.findUnique({ where: { referralCode: code }, select: { id: true } })),
 
-  findCodeOf: (userId: number) => prisma.user.findUnique({ where: { id: userId }, select: { referralCode: true } }),
+  findCodeOf: (userId: string) => prisma.user.findUnique({ where: { id: userId }, select: { referralCode: true } }),
 
-  setCode: (userId: number, referralCode: string) => prisma.user.update({ where: { id: userId }, data: { referralCode }, select: { referralCode: true } }),
+  setCode: (userId: string, referralCode: string) => prisma.user.update({ where: { id: userId }, data: { referralCode }, select: { referralCode: true } }),
 
   // Gắn người giới thiệu cho người vừa đăng ký
-  setReferrer: (db: Db, userId: number, referredById: number) => db.user.update({ where: { id: userId }, data: { referredById } }),
+  setReferrer: (db: Db, userId: string, referredById: string) => db.user.update({ where: { id: userId }, data: { referredById } }),
 
   // Gắn người giới thiệu bằng UPDATE có điều kiện (chỉ khi chưa có ai): bấm hai lần cùng lúc chỉ một lần thắng
-  async setReferrerIfNone(db: Db, userId: number, referredById: number) {
+  async setReferrerIfNone(db: Db, userId: string, referredById: string) {
     const { count } = await db.user.updateMany({ where: { id: userId, referredById: null }, data: { referredById } });
     return count === 1;
   },
 
-  findReferrerOf: (db: Db, userId: number) => db.user.findUnique({ where: { id: userId }, select: { referredById: true } }),
+  findReferrerOf: (db: Db, userId: string) => db.user.findUnique({ where: { id: userId }, select: { referredById: true } }),
 
-  createReward: (db: Db, data: { referrerId: number; referredId: number; type: ReferralRewardType; amount: number; depositOrderId?: number }) =>
+  createReward: (db: Db, data: { referrerId: string; referredId: string; type: ReferralRewardType; amount: number; depositOrderId?: number }) =>
     db.referralReward.create({ data, select: { id: true } }),
 
   // Tổng hoa hồng + thưởng người giới thiệu đã nhận, và số người đã giới thiệu
-  async statsOf(referrerId: number) {
+  async statsOf(referrerId: string) {
     const [referred, earned] = await Promise.all([
       prisma.user.count({ where: { referredById: referrerId } }),
       prisma.referralReward.aggregate({ where: { referrerId, type: { in: ["DEPOSIT_COMMISSION", "REFERRER_BONUS"] } }, _sum: { amount: true } }),
@@ -37,8 +37,8 @@ export const referralRepository = {
   },
 
   // Hoa hồng đã nhận từ từng người được giới thiệu (cho các id trong một trang)
-  async commissionByReferred(referredIds: number[]) {
-    if (referredIds.length === 0) return new Map<number, number>();
+  async commissionByReferred(referredIds: string[]) {
+    if (referredIds.length === 0) return new Map<string, number>();
     const rows = await prisma.referralReward.groupBy({
       by: ["referredId"],
       where: { referredId: { in: referredIds }, type: { in: ["DEPOSIT_COMMISSION", "REFERRER_BONUS"] } },
@@ -48,7 +48,7 @@ export const referralRepository = {
   },
 
   // Những người một thành viên đã giới thiệu (chỉ các cột cần)
-  async listReferred(referrerId: number, query: PaginationQuery) {
+  async listReferred(referrerId: string, query: PaginationQuery) {
     const where: Prisma.UserWhereInput = { referredById: referrerId };
     const [items, total] = await Promise.all([
       prisma.user.findMany({ where, select: { id: true, fullName: true, email: true, createdAt: true }, orderBy: { id: "desc" }, ...toSkipTake(query) }),

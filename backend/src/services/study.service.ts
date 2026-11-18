@@ -7,7 +7,7 @@ const qualifies = (d: { attempts: number; reviews: number }) => d.attempts >= 1 
 
 export const studyService = {
   /** Ghi nhận hoạt động học của hôm nay (giờ Việt Nam). Không để lỗi ở đây làm hỏng việc chính nên người gọi tự bắt lỗi. */
-  async bump(userId: number, inc: { attempts?: number; reviews?: number }) {
+  async bump(userId: string, inc: { attempts?: number; reviews?: number }) {
     const day = vnDate();
     const attempts = inc.attempts ?? 0;
     const reviews = inc.reviews ?? 0;
@@ -24,7 +24,7 @@ export const studyService = {
    * Chuỗi ngày học, tiến độ tuần và hôm nay. Tuần tính từ thứ Hai theo giờ Việt Nam.
    * Chuỗi còn nối khi hôm nay hoặc hôm qua có học; bỏ lỡ một ngày thì về 0.
    */
-  async stats(userId: number) {
+  async stats(userId: string) {
     const today = vnDate();
     const since = new Date(today.getTime() - 400 * DAY_MS);
     const [days, user] = await Promise.all([
@@ -58,7 +58,7 @@ export const studyService = {
     };
   },
 
-  async setGoal(userId: number, goalDays: number) {
+  async setGoal(userId: string, goalDays: number) {
     if (!(STUDY_GOAL_CHOICES as readonly number[]).includes(goalDays)) throw new AppError("Hãy chọn một mục tiêu ôn tập trong danh sách");
     await prisma.user.update({ where: { id: userId }, data: { studyGoalDays: goalDays } });
     return this.stats(userId);

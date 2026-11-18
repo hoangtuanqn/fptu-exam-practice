@@ -21,7 +21,7 @@ import { planService } from "./plan.service";
 // Phân tích slide (Pro): nhận tệp, xếp hàng job, trả kết quả cho đúng chủ. Số liệu "chương hay ra" ghép lúc đọc, không lưu.
 
 export interface MaterialActor {
-  id: number;
+  id: string;
   role: Role;
 }
 
@@ -40,11 +40,11 @@ interface ChapterStatRow {
 /** Phần lưu trữ service cần (materialRepository đáp ứng; test dùng bản trong bộ nhớ). */
 export interface MaterialServiceStore {
   create(data: NewUpload): Promise<MaterialUploadRow>;
-  findOwned(id: string, userId: number, now: Date): Promise<MaterialUploadRow | null>;
-  listByUser(userId: number, now: Date, take: number): Promise<MaterialUploadRow[]>;
-  findDuplicate(userId: number, subjectId: number, fileHash: string, now: Date): Promise<MaterialUploadRow | null>;
-  countActive(userId: number): Promise<number>;
-  deleteOwned(id: string, userId: number): Promise<number>;
+  findOwned(id: string, userId: string, now: Date): Promise<MaterialUploadRow | null>;
+  listByUser(userId: string, now: Date, take: number): Promise<MaterialUploadRow[]>;
+  findDuplicate(userId: string, subjectId: number, fileHash: string, now: Date): Promise<MaterialUploadRow | null>;
+  countActive(userId: string): Promise<number>;
+  deleteOwned(id: string, userId: string): Promise<number>;
   pages(uploadId: string): Promise<PageRow[]>;
   chapters(uploadId: string): Promise<{ chapterNumber: number; summary: string; keyPoints: unknown }[]>;
 }
@@ -57,7 +57,7 @@ export interface MaterialServiceDeps {
     chapters(subjectId: number): Promise<{ number: number; title: string; topics: string[] }[]>;
   };
   chapterStats(subjectId: number): Promise<ChapterStatRow[]>;
-  isPro(userId: number): Promise<boolean>;
+  isPro(userId: string): Promise<boolean>;
   adminOnly: boolean; // true: chỉ admin dùng được (Pro thấy thông báo đang hoàn thiện)
   aiReady(): Promise<boolean>;
   ledger: TokenLedger;

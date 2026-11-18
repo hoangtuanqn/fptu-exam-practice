@@ -7,7 +7,7 @@ export const crawlJobRepository = {
   create: (
     data: {
       threadId: string;
-      userId?: number;
+      userId?: string;
       guestId?: string;
       chargedAmount: number;
       // Dùng để ghi nhận một lượt lấy đề đã xong ngay (đề có sẵn), phục vụ đếm giới hạn theo ngày

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { paginationQuery } from "../../utils/pagination";
 
 export const idParam = z.object({ id: z.coerce.number().int().positive() });
-// UUID v7 ids (exams, practice sessions, gift codes, notices, broadcasts, coursera, pro tickets, feedback, reports, materials, attempts). Lower-cased like the stored value.
+// UUID v7 ids (users, exams, practice sessions, gift codes, notices, broadcasts, coursera, pro tickets, feedback, reports, materials, attempts). Lower-cased like the stored value.
 export const uuidSchema = z.uuid().toLowerCase();
 export const uuidParam = z.object({ id: uuidSchema });
 export const questionParam = z.object({ id: uuidSchema, number: z.coerce.number().int().positive() });

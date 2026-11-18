@@ -14,7 +14,7 @@ describe("marketing click token", () => {
     assert.equal(verifyClickToken(SECRET, t.replace(/^7\./, "8.")), null);
     assert.equal(verifyClickToken(SECRET, t.slice(0, -1) + (t.endsWith("0") ? "1" : "0")), null);
     assert.equal(verifyClickToken("y".repeat(32), t), null);
-    assert.equal(verifyClickToken(SECRET, signMarketingToken(SECRET, 7)), null); // khác mục đích
+    assert.equal(verifyClickToken(SECRET, signMarketingToken(SECRET, "7")), null); // khác mục đích
     assert.equal(verifyClickToken(SECRET, "https://evil.example"), null);
   });
 });

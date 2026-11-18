@@ -96,7 +96,7 @@ export const authService = {
   },
 
   // Tạo token đặt lại mật khẩu và gửi thư (dùng cho "quên mật khẩu" và cho admin gửi hộ thành viên)
-  async sendResetLink(user: { id: number; email: string; fullName: string }) {
+  async sendResetLink(user: { id: string; email: string; fullName: string }) {
     const token = randomBytes(32).toString("base64url");
     await passwordResetRepository.create({
       userId: user.id,

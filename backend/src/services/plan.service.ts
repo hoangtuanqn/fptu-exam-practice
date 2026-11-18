@@ -36,7 +36,7 @@ const planOf = (code: PlanCode) => {
  * (bằng lệnh trừ tiền hoặc `incrementBalance(…, 0)`), để hai lần cộng cùng lúc chạy lần lượt và luôn cộng dồn đúng.
  * Còn hạn thì tính từ ngày hết hạn cũ, hết hạn rồi thì tính từ bây giờ.
  */
-async function extendPro(tx: Prisma.TransactionClient, userId: number, code: PlanCode, price: number, now = new Date()) {
+async function extendPro(tx: Prisma.TransactionClient, userId: string, code: PlanCode, price: number, now = new Date()) {
   const { plan, sprint, months } = planOf(code);
   const row = await tx.user.findUnique({ where: { id: userId }, select: { proExpiresAt: true } });
   if (!row) throw AppError.notFound("Không tìm thấy tài khoản");
@@ -67,7 +67,7 @@ export const planService = {
     };
   },
 
-  async isPro(userId: number): Promise<boolean> {
+  async isPro(userId: string): Promise<boolean> {
     const row = await prisma.user.findUnique({ where: { id: userId }, select: { proExpiresAt: true } });
     return isProUntil(row?.proExpiresAt);
   },
@@ -76,7 +76,7 @@ export const planService = {
    * Mua (hoặc gia hạn) Pro bằng credit. Trừ tiền trước: lệnh UPDATE số dư khóa dòng người dùng nên hai yêu cầu cùng lúc
    * chạy lần lượt; đọc hạn hiện tại SAU khi đã khóa nên mua liên tiếp luôn cộng dồn đúng, không ghi đè nhau.
    */
-  async purchase(userId: number, code: PlanCode = "PRO") {
+  async purchase(userId: string, code: PlanCode = "PRO") {
     const { plan, duration } = planOf(code);
     const result = await prisma.$transaction(async (tx) => {
       const entry = await walletService.charge(tx, { userId, amount: plan.price, type: "PLAN_CHARGE", note: `Mua gói ${plan.name} ${duration}` });
@@ -93,7 +93,7 @@ export const planService = {
    * Mua vé: trả tiền ngay nhưng CHƯA tính thời hạn Pro, người dùng tự kích hoạt sau (trong TICKET_VALID_DAYS ngày).
    * Trừ tiền và tạo vé trong một transaction: lỗi ở bước nào thì cả hai cùng huỷ, tiền không bị trừ mà không có vé.
    */
-  async purchaseTicket(userId: number, code: PlanCode = "PRO") {
+  async purchaseTicket(userId: string, code: PlanCode = "PRO") {
     const { plan, duration } = planOf(code);
     const now = new Date();
     const result = await prisma.$transaction(async (tx) => {
@@ -110,7 +110,7 @@ export const planService = {
   },
 
   /** Các vé còn dùng được của một người (chưa kích hoạt, chưa hết hạn), vé sắp hết hạn đứng trước. */
-  async tickets(userId: number) {
+  async tickets(userId: string) {
     const items = await proTicketRepository.listOpen(userId, new Date());
     return items.map((t) => ({ id: t.id, plan: t.plan, name: planOf(t.plan as PlanCode).plan.name, duration: planOf(t.plan as PlanCode).duration, price: t.price, expiresAt: t.expiresAt, createdAt: t.createdAt }));
   },
@@ -119,7 +119,7 @@ export const planService = {
    * Kích hoạt một vé: đánh dấu đã dùng và cộng thời hạn Pro trong một transaction. Dòng người dùng bị khóa trước
    * (như lúc mua) nên không đè lên một lần mua khác cùng lúc; bấm đúp thì lần thứ hai thấy vé đã dùng và báo lỗi.
    */
-  async activateTicket(userId: number, ticketId: string) {
+  async activateTicket(userId: string, ticketId: string) {
     const result = await prisma.$transaction(async (tx) => {
       await userRepository.incrementBalance(tx, userId, 0); // chỉ để khóa dòng người dùng
       const now = new Date();
@@ -137,7 +137,7 @@ export const planService = {
    * Dữ kiện thật để đưa lời mời Pro đúng lúc: buổi thi gần nhất (lịch FAP hoặc ngày người dùng tự đặt) và tổng tiền đã chi lẻ
    * cho việc Pro đã bao gồm. Không có dữ kiện thì trả rỗng, giao diện sẽ không mời.
    */
-  async signals(userId: number) {
+  async signals(userId: string) {
     const today = vnDate();
     const since = new Date(Date.now() - NUDGE_SPEND_WINDOW_DAYS * DAY_MS);
     const [slot, userDate, spent] = await Promise.all([planSignalRepository.nextExamSlot(userId, today), planSignalRepository.userExamDate(userId), planSignalRepository.spentSince(userId, since)]);

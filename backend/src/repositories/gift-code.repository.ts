@@ -37,7 +37,7 @@ export const giftCodeRepository = {
     return rows === 1;
   },
 
-  createRedemption: (db: Db, data: { giftCodeId: string; userId: number; amount: number }) =>
+  createRedemption: (db: Db, data: { giftCodeId: string; userId: string; amount: number }) =>
     db.giftCodeRedemption.create({ data, select: { id: true } }),
 
   async list(query: PaginationQuery, filter: { q?: string; active?: boolean }) {
@@ -68,7 +68,7 @@ export const giftCodeRepository = {
   },
 
   // Các mã một thành viên đã nhập
-  async listByUser(userId: number, query: PaginationQuery) {
+  async listByUser(userId: string, query: PaginationQuery) {
     const where = { userId };
     const [items, total] = await Promise.all([
       prisma.giftCodeRedemption.findMany({
