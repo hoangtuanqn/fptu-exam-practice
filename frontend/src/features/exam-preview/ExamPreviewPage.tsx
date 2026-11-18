@@ -97,27 +97,21 @@ function Preview({ exam }: { exam: ImportedExam }) {
   );
 
   const meta = [term && `Kỳ ${term}`, items > 0 && `${items} câu`, attachments.length > 0 && `${attachments.length} tệp đính kèm`].filter(Boolean).join(" · ");
-  const pages = (
-    <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-      {questions.map((q) => (
-        <li key={q.number}>
-          <button type="button" onClick={() => setZoom(q)} aria-label={`Xem lớn trang ${q.number}`} className={`${TILE} w-full`}>
-            <img src={q.imageUrl} alt="" loading="lazy" className="h-full w-full object-cover object-top" />
-            <span className={CAPTION}>Trang {q.number}</span>
-          </button>
-        </li>
-      ))}
-    </ul>
-  );
-  const files = attachments.length > 0 && (
-    <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-      {attachments.map((a) => (
-        <li key={a.id}>
-          <FileTile a={a} />
-        </li>
-      ))}
-    </ul>
-  );
+  // Ảnh các trang và tệp đính kèm nằm chung một lưới như bên FuOverflow (đề PE: tài liệu lên trước); tên hiển thị là tên tệp
+  const pageTiles = questions.map((q) => (
+    <li key={`p${q.number}`}>
+      <button type="button" onClick={() => setZoom(q)} aria-label={`Xem lớn ${fileName(q)}`} className={`${TILE} w-full`}>
+        <img src={q.imageUrl} alt="" loading="lazy" className="h-full w-full object-cover object-top" />
+        <span className={CAPTION}>{fileName(q)}</span>
+      </button>
+    </li>
+  ));
+  const fileTiles = attachments.map((a) => (
+    <li key={`a${a.id}`}>
+      <FileTile a={a} />
+    </li>
+  ));
+  const tiles = kind === "PE" ? [...fileTiles, ...pageTiles] : [...pageTiles, ...fileTiles];
 
   return (
     <>
@@ -144,11 +138,9 @@ function Preview({ exam }: { exam: ImportedExam }) {
 
       {fetching && <LoadingMoreBanner loaded={questions.length} total={total} />}
 
-      {/* Đề PE: tài liệu (materials) là phần chính nên đưa lên trước */}
-      {kind === "PE" && files && <section className="mb-6">{files}</section>}
-      {questions.length > 0 && (
+      {tiles.length > 0 && (
         <section className="mb-6">
-          {pages}
+          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">{tiles}</ul>
           {items > 0 && kind !== "PE" && (
             <Link to={`/exam/${exam.id}/view`} className={buttonClass({ variant: "text", className: "mt-3" })}>
               Xem từng câu kèm đáp án
@@ -156,7 +148,6 @@ function Preview({ exam }: { exam: ImportedExam }) {
           )}
         </section>
       )}
-      {kind !== "PE" && files && <section className="mb-6">{files}</section>}
       {questions.length === 0 && attachments.length === 0 && !fetching && (
         <Card>
           <Empty icon={FileSearch} title="Đề này chưa có trang nào" />
@@ -166,22 +157,56 @@ function Preview({ exam }: { exam: ImportedExam }) {
       {zoom && (
         <Modal wide onClose={() => setZoom(null)}>
           <div className="mb-3 flex items-center justify-between gap-3">
-            <h2 className="md-title-medium text-on-surface">Trang {zoom.number}</h2>
+            <h2 className="md-title-medium truncate text-on-surface">{fileName(zoom)}</h2>
             <Button variant="text" onClick={() => setZoom(null)} aria-label="Đóng">
               <X size={18} />
             </Button>
           </div>
-          <img src={zoom.imageUrl} alt={`Trang ${zoom.number} của đề`} className="h-auto w-full rounded-m3-md bg-surface-container-lowest" />
+          <img src={zoom.imageUrl} alt={`Ảnh ${fileName(zoom)} của đề`} className="h-auto w-full rounded-m3-md bg-surface-container-lowest" />
         </Modal>
       )}
     </>
   );
 }
 
-// Tệp đính kèm: biểu tượng lớn theo loại trên nền nhạt; mở được thì mở tab mới, không thì tải về
+// Tên tệp ảnh của trang (phần cuối đường dẫn, bỏ query), hiện như bên FuOverflow
+const fileName = (q: Question) => decodeURIComponent(q.imageUrl.split("?")[0]!.split("/").pop() ?? `Q${q.number}`);
+
+// Máy có chuột mới nhúng PDF làm hình xem trước: điện thoại thường không vẽ PDF trong khung, nên chỉ hiện biểu tượng và mở tab mới
+const canEmbedPdf = () => typeof window !== "undefined" && window.matchMedia("(pointer: fine)").matches;
+const pdfSrc = (url: string, bar: boolean) => `${url}#${bar ? "" : "toolbar=0&navpanes=0&"}view=FitH`;
+
+// Tệp đính kèm: PDF hiện luôn trang đầu (bấm để xem lớn); loại khác là biểu tượng lớn trên nền nhạt, mở được thì mở tab mới, không thì tải về
 function FileTile({ a }: { a: ExamAttachment }) {
+  const [big, setBig] = useState(false);
   const Icon = ICONS[a.kind] ?? ICONS.other;
   const open = OPENABLE.has(a.kind);
+  if (a.kind === "pdf" && canEmbedPdf()) {
+    return (
+      <>
+        <button type="button" onClick={() => setBig(true)} aria-label={`Xem lớn ${a.name}`} title={a.name} className={`${TILE} w-full bg-surface-container-lowest`}>
+          <iframe src={pdfSrc(a.url, false)} title={a.name} loading="lazy" tabIndex={-1} className="pointer-events-none h-full w-full border-0" />
+          <span className={CAPTION}>{a.name}</span>
+        </button>
+        {big && (
+          <Modal wide onClose={() => setBig(false)}>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h2 className="md-title-medium truncate text-on-surface">{a.name}</h2>
+              <div className="flex shrink-0 gap-1">
+                <a href={a.url} target="_blank" rel="noopener noreferrer" className={buttonClass({ size: "sm", variant: "text" })}>
+                  Mở tab mới
+                </a>
+                <Button variant="text" onClick={() => setBig(false)} aria-label="Đóng">
+                  <X size={18} />
+                </Button>
+              </div>
+            </div>
+            <iframe src={pdfSrc(a.url, true)} title={a.name} className="h-[75vh] w-full rounded-m3-md border-0 bg-surface-container-lowest" />
+          </Modal>
+        )}
+      </>
+    );
+  }
   return (
     <a
       href={open ? a.url : downloadUrl(a.url)}

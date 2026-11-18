@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import { env } from "../configs/env";
 import { HTTP_STATUS } from "../constants/httpStatus";
 import { getValidated } from "../middlewares/validate.middlewares";
 import type { UuidParam } from "../rules/requests/admin.request";
@@ -43,8 +44,14 @@ export const examController = {
     const { examId, attachmentId } = getValidated<AttachmentParam>(res, "params");
     const { download } = getValidated<AttachmentQuery>(res, "query");
     const file = await examService.getAttachmentFile(examId, attachmentId);
+    const headers = attachmentHeaders(file.name, file.filePath, download === "1");
+    // PDF mở xem: cho trang web (CLIENT_URL) nhúng vào khung xem trước; helmet mặc định chỉ cho cùng origin nên khung ở web khác bị chặn
+    if (headers["Content-Type"] === "application/pdf" && headers["Content-Disposition"].startsWith("inline")) {
+      res.removeHeader("X-Frame-Options");
+      res.setHeader("Content-Security-Policy", `frame-ancestors ${env.CLIENT_URL}`);
+    }
     res.set({
-      ...attachmentHeaders(file.name, file.filePath, download === "1"),
+      ...headers,
       "X-Content-Type-Options": "nosniff",
       "Cross-Origin-Resource-Policy": "cross-origin", // web khác origin nhúng được pdf/video như ảnh đề
       "Cache-Control": "private, max-age=86400",
