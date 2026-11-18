@@ -2,7 +2,7 @@ import { prisma } from "../configs/prisma";
 import type { Db } from "./wallet.repository";
 
 interface LotRow {
-  id: number;
+  id: string;
   remaining: number;
 }
 
@@ -14,10 +14,10 @@ export const creditLotRepository = {
   lockUsable: (db: Db, userId: string) =>
     db.$queryRaw<LotRow[]>`SELECT id, remaining FROM credit_lots WHERE user_id = ${userId} AND remaining > 0 ORDER BY expires_at ASC, id ASC FOR UPDATE`,
 
-  setRemaining: (db: Db, id: number, remaining: number) => db.creditLot.update({ where: { id }, data: { remaining }, select: { id: true } }),
+  setRemaining: (db: Db, id: string, remaining: number) => db.creditLot.update({ where: { id }, data: { remaining }, select: { id: true } }),
 
-  async lockOne(db: Db, id: number) {
-    const rows = await db.$queryRaw<{ id: number; user_id: string; remaining: number; expires_at: Date }[]>`
+  async lockOne(db: Db, id: string) {
+    const rows = await db.$queryRaw<{ id: string; user_id: string; remaining: number; expires_at: Date }[]>`
       SELECT id, user_id, remaining, expires_at FROM credit_lots WHERE id = ${id} FOR UPDATE`;
     return rows[0] ?? null;
   },

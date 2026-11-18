@@ -23,7 +23,7 @@ export type MaterialUploadRow = Prisma.MaterialUploadGetPayload<{ select: typeof
 
 export interface NewUpload {
   userId: string;
-  subjectId: number;
+  subjectId: string;
   title: string;
   fileHash: string;
   pageCount: number;
@@ -57,7 +57,7 @@ export const materialRepository = {
     prisma.materialUpload.findMany({ where: { userId, expiresAt: { gt: now } }, orderBy: [{ createdAt: "desc" }, { id: "desc" }], take, select: UPLOAD_SELECT }),
 
   /** Cùng người, cùng tệp (sha256), cùng môn, chưa hết hạn và không lỗi: dùng lại thay vì phân tích lại. */
-  findDuplicate: (userId: string, subjectId: number, fileHash: string, now: Date) =>
+  findDuplicate: (userId: string, subjectId: string, fileHash: string, now: Date) =>
     prisma.materialUpload.findFirst({ where: { userId, fileHash, subjectId, status: { not: "FAILED" }, expiresAt: { gt: now } }, orderBy: { id: "desc" }, select: UPLOAD_SELECT }),
 
   countActive: (userId: string) => prisma.materialUpload.count({ where: { userId, status: { in: ["QUEUED", "RUNNING"] } } }),

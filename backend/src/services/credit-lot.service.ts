@@ -9,7 +9,7 @@ export const creditLotService = {
    * Remove the unused credit of one expired lot. One transaction: lock the user row (so a spend and the expiry cannot
    * interleave), re-read the lot under lock, zero it and write the ledger entry. Safe to run twice.
    */
-  async expireLot(id: number, userId: string) {
+  async expireLot(id: string, userId: string) {
     return prisma.$transaction(async (tx) => {
       await tx.$queryRaw`SELECT id FROM users WHERE id = ${userId} FOR UPDATE`;
       const lot = await creditLotRepository.lockOne(tx, id);

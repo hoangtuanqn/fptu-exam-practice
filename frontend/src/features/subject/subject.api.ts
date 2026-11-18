@@ -6,7 +6,7 @@ export interface SubjectItem {
 }
 
 export interface SubjectInfo {
-  id?: number; // id số của môn; máy chủ cũ chưa trả trường này
+  id?: string; // UUID của môn; máy chủ cũ chưa trả trường này (hoặc trả số)
   code: string;
   name: string;
   chapters: { number: number; title: string }[];

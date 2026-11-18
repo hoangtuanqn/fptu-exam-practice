@@ -38,7 +38,7 @@ export const adminSubjectService = {
       prisma.fuoThread.groupBy({ by: ["subjectCode"], _count: { _all: true } }),
     ]);
 
-    const chaptersOf = new Map<number, { number: number; title: string }[]>();
+    const chaptersOf = new Map<string, { number: number; title: string }[]>();
     for (const c of chapters) (chaptersOf.get(c.subjectId) ?? chaptersOf.set(c.subjectId, []).get(c.subjectId)!).push(c);
     const examCount = countBy(exams, (r) => r.subjectCode);
     const threadCount = countBy(threads, (r) => r.subjectCode);

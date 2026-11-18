@@ -153,7 +153,7 @@ enum DepositStatus {
 
 // Lá»‡nh náº¡p tiá»n: ngÆ°á»i dĂ¹ng chuyá»ƒn khoáº£n kĂ¨m `code` trong ná»™i dung Ä‘á»ƒ há»‡ thá»‘ng Ä‘á»‘i soĂ¡t
 model DepositOrder {
-  id        Int           @id @default(autoincrement())
+  id        String        @id @default(uuid(7)) @db.Char(36)
   userId    String           @map("user_id") @db.Char(36)
   code      String        @unique @db.VarChar(30)
   amount    Int
@@ -186,7 +186,7 @@ model BankTransaction {
   referenceCode  String?      @map("reference_code")
   transactionAt  DateTime     @map("transaction_at")
   status         BankTxStatus
-  depositOrderId Int?         @unique @map("deposit_order_id")
+  depositOrderId String?      @unique @map("deposit_order_id") @db.Char(36)
   createdAt      DateTime     @default(now()) @map("created_at")
 
   depositOrder DepositOrder? @relation(fields: [depositOrderId], references: [id])
@@ -230,7 +230,7 @@ enum TransactionType {
 
 // Sá»• cĂ¡i vĂ­: má»—i láº§n sá»‘ dÆ° Ä‘á»•i lĂ  má»™t dĂ²ng (amount Ă¢m = trá»« tiá»n)
 model WalletTransaction {
-  id           Int             @id @default(autoincrement())
+  id           String          @id @default(uuid(7)) @db.Char(36)
   userId       String             @map("user_id") @db.Char(36)
   type         TransactionType
   amount       Int
@@ -507,7 +507,7 @@ model GiftCode {
 }
 
 model GiftCodeRedemption {
-  id         Int      @id @default(autoincrement())
+  id         String   @id @default(uuid(7)) @db.Char(36)
   giftCodeId String   @map("gift_code_id") @db.Char(36)
   userId     String      @map("user_id") @db.Char(36)
   amount     Int
@@ -524,7 +524,7 @@ model GiftCodeRedemption {
 // A lot of expiring credit (from a giftcode with a time limit). users.balance includes sum(remaining).
 // Debits consume lots first (earliest expiry first); unused credit of an expired lot is removed by the expiry job.
 model CreditLot {
-  id         Int      @id @default(autoincrement())
+  id         String   @id @default(uuid(7)) @db.Char(36)
   userId     String      @map("user_id") @db.Char(36)
   source     String   @db.VarChar(20) // GIFT_CODE
   amount     Int // credit granted
@@ -658,7 +658,7 @@ model ReferralReward {
   referredId     String                @map("referred_id") @db.Char(36)
   type           ReferralRewardType
   amount         Int
-  depositOrderId Int?               @unique @map("deposit_order_id")
+  depositOrderId String?            @unique @map("deposit_order_id") @db.Char(36) // soft reference to deposit_orders.id (no FK)
   createdAt      DateTime           @default(now()) @map("created_at")
 
   referrer User @relation("RewardReferrer", fields: [referrerId], references: [id], onDelete: Cascade)
@@ -739,7 +739,7 @@ model ChatAnswerCache {
 
 // Lich su mua goi Pro (mua khi con han thi cong don: startsAt = ngay het han cu)
 model PlanPurchase {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(uuid(7)) @db.Char(36)
   userId    String      @map("user_id") @db.Char(36)
   plan      String   @db.VarChar(20)
   months    Int
@@ -810,7 +810,7 @@ model StudyDay {
 
 // Mon hoc (lay tu syllabus FLM bang tools/flm-crawler, nhap bang npm run import:syllabus). Dung de gan chu de cho cau hoi
 model Subject {
-  id         Int      @id @default(autoincrement())
+  id         String   @id @default(uuid(7)) @db.Char(36)
   code       String   @unique @db.VarChar(20)
   name       String   @db.VarChar(200)
   syllabusId String?  @map("syllabus_id") @db.VarChar(20)
@@ -835,7 +835,7 @@ model Subject {
 // Mot chuong cua mon (number 0 = nhom "Khac"); topics la mang cac muc noi dung, vd ["1.1. What is an operating system"]
 model SubjectChapter {
   id        Int    @id @default(autoincrement())
-  subjectId Int    @map("subject_id")
+  subjectId String @map("subject_id") @db.Char(36)
   number    Int
   title     String @db.VarChar(255)
   topics    Json
@@ -1064,7 +1064,7 @@ model QuestionEmbedding {
 // Near-identical questions across exams of one subject. Rebuilt as a whole per subject by npm run groups:build
 model QuestionGroup {
   id          Int      @id @default(autoincrement())
-  subjectId   Int      @map("subject_id")
+  subjectId   String   @map("subject_id") @db.Char(36)
   modelName   String   @map("model_name") @db.VarChar(64)
   threshold   Float
   memberCount Int      @map("member_count")
@@ -1082,8 +1082,8 @@ model QuestionGroup {
 model QuestionGroupMember {
   id         Int @id @default(autoincrement())
   groupId    Int @map("group_id")
-  subjectId  Int @map("subject_id")
-  questionId Int @map("question_id")
+  subjectId  String @map("subject_id") @db.Char(36)
+  questionId Int    @map("question_id")
 
   group    QuestionGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
   subject  Subject       @relation(fields: [subjectId], references: [id], onDelete: Cascade)
@@ -1098,7 +1098,7 @@ model QuestionGroupMember {
 // Past exam frequency of a chapter (ExamQuestion.topic) in a subject. Statistics only, refreshed by npm run stats:refresh
 model ChapterStat {
   id                  Int       @id @default(autoincrement())
-  subjectId           Int       @map("subject_id")
+  subjectId           String    @map("subject_id") @db.Char(36)
   chapter             String    @db.VarChar(255)
   questionCount       Int       @map("question_count")
   examsWithChapter    Int       @map("exams_with_chapter")
@@ -1118,7 +1118,7 @@ model ChapterStat {
 // Past exam frequency of a question group. last_seen_exam_id and representative_question_id have no FK (derived, rebuilt on refresh)
 model QuestionGroupStat {
   groupId                  Int       @id @map("group_id")
-  subjectId                Int       @map("subject_id")
+  subjectId                String    @map("subject_id") @db.Char(36)
   chapter                  String?   @db.VarChar(255)
   examsWithGroup           Int       @map("exams_with_group")
   totalExams               Int       @map("total_exams")
@@ -1190,7 +1190,7 @@ model UserReviewLog {
 // Last successful nightly similarity run of a subject (jobs/similarity.cron.ts). exam_signature = count, id sum and newest
 // created/refreshed time of the usable exams it saw; hash_cursor = last question id it tried to fingerprint (failures behind it are not retried until the exams change)
 model SimilarityJobRun {
-  subjectId     Int      @id @map("subject_id")
+  subjectId     String   @id @map("subject_id") @db.Char(36)
   examSignature String   @map("exam_signature") @db.VarChar(100)
   hashCursor    Int      @default(0) @map("hash_cursor")
   finishedAt    DateTime @map("finished_at")
@@ -1269,7 +1269,7 @@ enum MaterialStatus {
 model MaterialUpload {
   id            String @id @default(uuid(7)) @db.Char(36)
   userId        String            @map("user_id") @db.Char(36)
-  subjectId     Int            @map("subject_id")
+  subjectId     String         @map("subject_id") @db.Char(36)
   title         String         @db.VarChar(200)
   fileHash      String         @map("file_hash") @db.Char(64) // sha256 hex of the PDF, dedupe within the same user only
   pageCount     Int            @map("page_count")

@@ -40,7 +40,7 @@ export const similarityJobRepository = {
 
   saveHash: (questionId: number, imageHash: Uint8Array<ArrayBuffer>) => prisma.examQuestion.update({ where: { id: questionId }, data: { imageHash }, select: { id: true } }),
 
-  saveRun: (subjectId: number, examSignature: string, hashCursor: number, finishedAt: Date) =>
+  saveRun: (subjectId: string, examSignature: string, hashCursor: number, finishedAt: Date) =>
     prisma.similarityJobRun.upsert({
       where: { subjectId },
       create: { subjectId, examSignature, hashCursor, finishedAt },

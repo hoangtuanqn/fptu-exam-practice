@@ -26,7 +26,7 @@ cd ~/app && bash deploy/backup-db.sh && bash deploy/deploy.sh
 
 `deploy.sh` does: fast-forward `main`, `npm ci`, `prisma generate` + `migrate deploy`, build, PM2 reload. Always back up first. After it finishes, check the health endpoint and PM2 status.
 
-### Destructive migrations (0078, 0079, 0080 and any later one marked DESTRUCTIVE)
+### Destructive migrations (0078, 0079, 0080, 0081 and any later one marked DESTRUCTIVE)
 
 `deploy.sh` migrates while the old build is still serving, and the old build writes the old (INT) ids into tables that are being converted. So for these migrations:
 

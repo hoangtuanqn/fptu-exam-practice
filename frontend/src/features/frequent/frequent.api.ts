@@ -37,7 +37,7 @@ export interface ChapterStatItem {
 }
 
 export interface ChapterStatsResult {
-  subjectId: number;
+  subjectId: string;
   subject: string;
   totalExams: number;
   computedAt: string | null;
@@ -46,5 +46,5 @@ export interface ChapterStatsResult {
 
 export const frequentApi = {
   forSubject: (code: string) => http.get<FrequentResult>(`/subjects/${encodeURIComponent(code)}/frequent`),
-  chapterStats: (subjectId: number) => http.get<ChapterStatsResult>(`/subjects/${subjectId}/chapter-stats`),
+  chapterStats: (subjectId: string) => http.get<ChapterStatsResult>(`/subjects/${subjectId}/chapter-stats`),
 };

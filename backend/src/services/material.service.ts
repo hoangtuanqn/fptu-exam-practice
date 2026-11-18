@@ -42,7 +42,7 @@ export interface MaterialServiceStore {
   create(data: NewUpload): Promise<MaterialUploadRow>;
   findOwned(id: string, userId: string, now: Date): Promise<MaterialUploadRow | null>;
   listByUser(userId: string, now: Date, take: number): Promise<MaterialUploadRow[]>;
-  findDuplicate(userId: string, subjectId: number, fileHash: string, now: Date): Promise<MaterialUploadRow | null>;
+  findDuplicate(userId: string, subjectId: string, fileHash: string, now: Date): Promise<MaterialUploadRow | null>;
   countActive(userId: string): Promise<number>;
   deleteOwned(id: string, userId: string): Promise<number>;
   pages(uploadId: string): Promise<PageRow[]>;
@@ -53,10 +53,10 @@ export interface MaterialServiceDeps {
   repo: MaterialServiceStore;
   subjects: {
     findByCode(code: string): Promise<SubjectRef | null>;
-    findManyByIds(ids: readonly number[]): Promise<SubjectRef[]>;
-    chapters(subjectId: number): Promise<{ number: number; title: string; topics: string[] }[]>;
+    findManyByIds(ids: readonly string[]): Promise<SubjectRef[]>;
+    chapters(subjectId: string): Promise<{ number: number; title: string; topics: string[] }[]>;
   };
-  chapterStats(subjectId: number): Promise<ChapterStatRow[]>;
+  chapterStats(subjectId: string): Promise<ChapterStatRow[]>;
   isPro(userId: string): Promise<boolean>;
   adminOnly: boolean; // true: chỉ admin dùng được (Pro thấy thông báo đang hoàn thiện)
   aiReady(): Promise<boolean>;
@@ -86,7 +86,7 @@ export function createMaterialService(deps: MaterialServiceDeps) {
   // Tài khoản không dùng được: Pro thì "đang hoàn thiện", chưa Pro thì "chỉ dành cho PRO"
   const accessOf = async (actor: MaterialActor) => ((await canUse(actor)) ? ("ALLOWED" as const) : (await deps.isPro(actor.id)) ? ("COMING_SOON" as const) : ("PRO_ONLY" as const));
 
-  const subjectMap = async (ids: number[]) => new Map((await deps.subjects.findManyByIds([...new Set(ids)])).map((s) => [s.id, s]));
+  const subjectMap = async (ids: string[]) => new Map((await deps.subjects.findManyByIds([...new Set(ids)])).map((s) => [s.id, s]));
 
   const summaryOf = (u: MaterialUploadRow, subject: SubjectRef | undefined) => ({
     id: u.id,
