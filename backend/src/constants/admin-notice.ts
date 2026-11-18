@@ -28,6 +28,8 @@ export const NOTICE_KINDS = {
   "coursera.cancelled": { category: "money", level: "info", important: false },
   "fetch.done": { category: "fetch", level: "success", important: false },
   "fetch.failed": { category: "fetch", level: "error", important: true },
+  "catalog.done": { category: "fetch", level: "success", important: false },
+  "catalog.failed": { category: "fetch", level: "error", important: true },
   "pe.done": { category: "fetch", level: "success", important: false },
   "pe.failed": { category: "fetch", level: "error", important: true },
   "report.created": { category: "exam", level: "warning", important: true },

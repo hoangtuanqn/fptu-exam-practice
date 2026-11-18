@@ -54,7 +54,7 @@ const send = async (to: string, subject: string, { html, text }: Rendered, heade
     html,
     text,
     ...(headers && { headers }),
-    // Ảnh bìa + logo nhúng thẳng vào thư (cid) nên hiển thị cả khi chạy local, không cần ảnh trên internet
+    // Logo nhúng thẳng vào thư (cid) nên hiển thị cả khi chạy local, không cần ảnh trên internet
     attachments: Object.values(MAIL_IMAGES).map(({ file, cid }) => ({ filename: file, path: path.join(MAIL_ASSETS_DIR, file), cid })),
   });
 };
@@ -114,7 +114,7 @@ export const mailService = {
     send(to, `${tag} Mật khẩu của bạn vừa được thay đổi`, renderPasswordChangedEmail(input)),
 
   sendRefund: (to: string, input: RefundEmailInput) =>
-    send(to, `${tag} Hoàn phí lấy đề +${credit(input.amount)}`, renderRefundEmail(input)),
+    send(to, `${tag} Hoàn phí mở đề +${credit(input.amount)}`, renderRefundEmail(input)),
 
   sendBalanceAdjusted: (to: string, input: AdjustEmailInput) =>
     send(
@@ -135,7 +135,7 @@ export const mailService = {
     send(to, `${tag} ${mail.subject}`, mail, { "List-Unsubscribe": `<${oneClickUrl}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" }),
 
   sendFetchCharged: (to: string, input: ChargeEmailInput) =>
-    send(to, `${tag} Biên lai: phí lấy đề −${credit(input.amount)}`, renderChargeEmail(input)),
+    send(to, `${tag} Biên lai: phí mở đề −${credit(input.amount)}`, renderChargeEmail(input)),
 
   sendCourseraOrder: (to: string, input: CourseraOrderEmailInput) => {
     const mail = renderCourseraOrderEmail(input);

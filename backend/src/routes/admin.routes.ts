@@ -15,6 +15,7 @@ import { adminReferralController } from "../controllers/admin.referral.controlle
 import { adminGiftCodeController } from "../controllers/admin.gift-code.controllers";
 import { adminCrawlerController } from "../controllers/admin.crawler.controllers";
 import { adminFuoSourceController } from "../controllers/admin.fuo-source.controllers";
+import { adminFuoCatalogController } from "../controllers/admin.fuo-catalog.controllers";
 import { addFuoSourcesBody, listFuoSourcesQuery } from "../rules/requests/fuo-source.request";
 import { adminHistoryController } from "../controllers/admin.history.controllers";
 import { adminAccountController } from "../controllers/admin.account.controllers";
@@ -140,6 +141,10 @@ adminRouter.get("/fuo-sources", validate(listFuoSourcesQuery, "query"), adminFuo
 adminRouter.post("/fuo-sources", validate(addFuoSourcesBody), adminFuoSourceController.add);
 adminRouter.get("/fuo-sources/status", adminFuoSourceController.status);
 adminRouter.post("/fuo-sources/runs", adminFuoSourceController.start);
+
+// Lượt quét toàn bộ danh mục FuOverflow (mọi môn, mọi bài; chạy nền, admin tự bấm)
+adminRouter.get("/fuo-catalog/status", adminFuoCatalogController.status);
+adminRouter.post("/fuo-catalog/runs", adminFuoCatalogController.start);
 
 adminRouter.get("/settings/ai", adminAiController.getSettings);
 adminRouter.put("/settings/ai", validate(updateAiBody), adminAiController.updateSettings);

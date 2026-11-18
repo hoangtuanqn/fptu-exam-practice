@@ -4,6 +4,9 @@ import { button, details, esc, note, p, qrImage, renderLayout, signature } from 
 
 const { company } = MAIL_BRAND;
 
+// Cuối mọi thư giao dịch: nhắc đối chiếu và cách liên hệ khi có giao dịch lạ
+const CHECK_NOTE = "Vui lòng đối chiếu thông tin trên với lịch sử giao dịch của bạn. Nếu phát hiện giao dịch không do bạn thực hiện, hãy liên hệ chúng tôi qua fanpage để được hỗ trợ kịp thời.";
+
 // ---------- Lệnh nạp tiền vừa được tạo
 
 export interface OrderEmailInput {
@@ -19,6 +22,7 @@ export interface OrderEmailInput {
 }
 
 export function renderOrderEmail(i: OrderEmailInput) {
+  // Thư này giữ bảng vì người nhận cần sao chép từng thông tin chuyển khoản
   const rows = [
     { label: "Ngân hàng", value: esc(i.bankCode) },
     { label: "Số tài khoản", value: esc(i.accountNumber) },
@@ -29,12 +33,13 @@ export function renderOrderEmail(i: OrderEmailInput) {
   ];
 
   const bodyHtml = [
-    p(`<strong>Xin chào ${esc(i.name)},</strong>`),
-    p("Lệnh nạp tiền của bạn đã được tạo. Chuyển khoản <strong>đúng số tiền và nội dung</strong> bên dưới, tiền sẽ được cộng vào ví tự động."),
+    p(`Kính gửi <strong>${esc(i.name)}</strong>,`),
+    p("Lệnh nạp tiền của bạn đã được tạo. Vui lòng chuyển khoản <strong>đúng số tiền và nội dung</strong> dưới đây, credit sẽ được cộng vào ví tự động sau khi chúng tôi nhận được tiền."),
     details(rows),
     qrImage(i.qrUrl),
     button("Mở lệnh nạp tiền", i.orderUrl),
-    note("Nhập chính xác nội dung chuyển khoản để hệ thống nhận diện. Lệnh quá hạn sẽ tự hủy, bạn có thể tạo lệnh mới."),
+    note("Vui lòng nhập chính xác nội dung chuyển khoản để hệ thống nhận diện giao dịch. Lệnh quá hạn sẽ tự hủy, khi đó bạn có thể tạo lệnh mới."),
+    note("Nếu bạn đã chuyển khoản nhưng sau vài phút chưa nhận được credit, hãy liên hệ chúng tôi qua fanpage kèm ảnh giao dịch để được kiểm tra."),
     signature(),
   ].join("");
 
@@ -45,9 +50,9 @@ export function renderOrderEmail(i: OrderEmailInput) {
       bodyHtml,
     }),
     text: [
-      `Xin chào ${i.name},`,
+      `Kính gửi ${i.name},`,
       "",
-      "Lệnh nạp tiền của bạn đã được tạo. Chuyển khoản đúng số tiền và nội dung sau:",
+      "Lệnh nạp tiền của bạn đã được tạo. Vui lòng chuyển khoản đúng số tiền và nội dung sau:",
       `Ngân hàng: ${i.bankCode}`,
       `Số tài khoản: ${i.accountNumber}`,
       i.accountName ? `Chủ tài khoản: ${i.accountName}` : "",
@@ -78,35 +83,29 @@ export interface DepositEmailInput {
 
 export function renderDepositEmail(i: DepositEmailInput) {
   const bodyHtml = [
-    p(`<strong>Xin chào ${esc(i.name)},</strong>`),
-    p("Chúng mình đã nhận được tiền chuyển khoản và cộng credit vào ví của bạn."),
-    details([
-      { label: "Mã nạp", value: esc(i.code) },
-      { label: "Thời gian", value: esc(formatDateTimeVN(i.at)) },
-      { label: "Credit đã cộng", value: `+${esc(formatCredit(i.amount))}`, strong: true },
-      { label: "Số dư hiện tại", value: esc(formatCredit(i.balanceAfter)) },
-    ]),
+    p(`Kính gửi <strong>${esc(i.name)}</strong>,`),
+    p(`Chúng tôi xác nhận đã nhận được khoản chuyển khoản của bạn. Giao dịch <strong>${esc(i.code)}</strong> được ghi nhận lúc ${esc(formatDateTimeVN(i.at))}, và <strong>+${esc(formatCredit(i.amount))}</strong> đã được cộng vào ví của bạn.`),
+    p(`Số dư khả dụng hiện tại: <strong>${esc(formatCredit(i.balanceAfter))}</strong>.`),
     button("Xem lịch sử giao dịch", i.walletUrl),
-    note("Không nhận ra giao dịch này? Hãy liên hệ chúng mình qua fanpage ngay."),
+    note(CHECK_NOTE),
     signature(),
   ].join("");
 
   return {
     html: renderLayout({
-      title: "Nạp credit thành công",
-      preheader: `Đã cộng ${formatCredit(i.amount)} vào ví. Số dư hiện tại: ${formatCredit(i.balanceAfter)}.`,
+      title: "Xác nhận nạp credit thành công",
+      preheader: `Đã cộng ${formatCredit(i.amount)} vào ví. Số dư khả dụng: ${formatCredit(i.balanceAfter)}.`,
       bodyHtml,
     }),
     text: [
-      `Xin chào ${i.name},`,
+      `Kính gửi ${i.name},`,
       "",
-      "Chúng mình đã nhận được tiền chuyển khoản và cộng credit vào ví của bạn.",
-      `Mã nạp: ${i.code}`,
-      `Credit đã cộng: +${formatCredit(i.amount)}`,
-      `Số dư hiện tại: ${formatCredit(i.balanceAfter)}`,
-      `Thời gian: ${formatDateTimeVN(i.at)}`,
+      `Chúng tôi xác nhận đã nhận được khoản chuyển khoản của bạn. Giao dịch ${i.code} được ghi nhận lúc ${formatDateTimeVN(i.at)}, và +${formatCredit(i.amount)} đã được cộng vào ví của bạn.`,
+      `Số dư khả dụng hiện tại: ${formatCredit(i.balanceAfter)}.`,
       "",
       `Xem lịch sử giao dịch: ${i.walletUrl}`,
+      "",
+      CHECK_NOTE,
       "",
       "Trân trọng,",
       company,
@@ -127,34 +126,29 @@ export interface GiftCodeEmailInput {
 
 export function renderGiftCodeEmail(i: GiftCodeEmailInput) {
   const bodyHtml = [
-    p(`<strong>Xin chào ${esc(i.name)},</strong>`),
-    p("Giftcode của bạn đã được áp dụng và credit đã được cộng vào ví."),
-    details([
-      { label: "Giftcode", value: esc(i.code) },
-      { label: "Thời gian", value: esc(formatDateTimeVN(i.at)) },
-      { label: "Credit đã cộng", value: `+${esc(formatCredit(i.amount))}`, strong: true },
-      { label: "Số dư hiện tại", value: esc(formatCredit(i.balanceAfter)) },
-    ]),
+    p(`Kính gửi <strong>${esc(i.name)}</strong>,`),
+    p(`Chúng tôi xác nhận giftcode <strong>${esc(i.code)}</strong> đã được áp dụng lúc ${esc(formatDateTimeVN(i.at))}, và <strong>+${esc(formatCredit(i.amount))}</strong> đã được cộng vào ví của bạn.`),
+    p(`Số dư khả dụng hiện tại: <strong>${esc(formatCredit(i.balanceAfter))}</strong>.`),
     button("Xem lịch sử giao dịch", i.walletUrl),
+    note(CHECK_NOTE),
     signature(),
   ].join("");
 
   return {
     html: renderLayout({
-      title: "Nhận credit thành công",
-      preheader: `Đã cộng ${formatCredit(i.amount)} từ giftcode ${i.code}. Số dư hiện tại: ${formatCredit(i.balanceAfter)}.`,
+      title: "Xác nhận nhận credit từ giftcode",
+      preheader: `Đã cộng ${formatCredit(i.amount)} từ giftcode ${i.code}. Số dư khả dụng: ${formatCredit(i.balanceAfter)}.`,
       bodyHtml,
     }),
     text: [
-      `Xin chào ${i.name},`,
+      `Kính gửi ${i.name},`,
       "",
-      "Giftcode của bạn đã được áp dụng và credit đã được cộng vào ví.",
-      `Giftcode: ${i.code}`,
-      `Credit đã cộng: +${formatCredit(i.amount)}`,
-      `Số dư hiện tại: ${formatCredit(i.balanceAfter)}`,
-      `Thời gian: ${formatDateTimeVN(i.at)}`,
+      `Chúng tôi xác nhận giftcode ${i.code} đã được áp dụng lúc ${formatDateTimeVN(i.at)}, và +${formatCredit(i.amount)} đã được cộng vào ví của bạn.`,
+      `Số dư khả dụng hiện tại: ${formatCredit(i.balanceAfter)}.`,
       "",
       `Xem lịch sử giao dịch: ${i.walletUrl}`,
+      "",
+      CHECK_NOTE,
       "",
       "Trân trọng,",
       company,
@@ -179,33 +173,28 @@ export interface ProEmailInput {
 export function renderProPurchasedEmail(i: ProEmailInput) {
   const action = i.renewed ? "gia hạn" : "kích hoạt";
   const bodyHtml = [
-    p(`<strong>Xin chào ${esc(i.name)},</strong>`),
-    p(`Bạn đã ${action} gói <strong>${esc(i.planName)}</strong> thành công. Trong thời hạn này, lấy đề, giải thích AI và tải đề PE đều không bị trừ credit.`),
-    details([
-      { label: "Gói", value: esc(`${i.planName} ${i.duration}`) },
-      { label: "Thời gian", value: esc(formatDateTimeVN(i.at)) },
-      { label: "Đã trừ", value: `-${esc(formatCredit(i.price))}`, strong: true },
-      { label: "Pro có hiệu lực đến", value: esc(formatDateTimeVN(i.expiresAt)), strong: true },
-      { label: "Số dư hiện tại", value: esc(formatCredit(i.balanceAfter)) },
-    ]),
+    p(`Kính gửi <strong>${esc(i.name)}</strong>,`),
+    p(`Gói <strong>${esc(`${i.planName} ${i.duration}`)}</strong> của bạn đã được ${action} thành công lúc ${esc(formatDateTimeVN(i.at))}. Trong thời hạn này, việc mở đề và giải thích AI không bị trừ credit.`),
+    p(`Chúng tôi đã trừ <strong>-${esc(formatCredit(i.price))}</strong> từ ví của bạn. Gói có hiệu lực đến <strong>${esc(formatDateTimeVN(i.expiresAt))}</strong>. Số dư khả dụng hiện tại: <strong>${esc(formatCredit(i.balanceAfter))}</strong>.`),
     button("Xem gói Pro của tôi", i.proUrl),
-    note("Gói không tự động gia hạn: hết hạn bạn trở về dùng bình thường và không bị trừ thêm."),
+    note("Gói không tự động gia hạn: khi hết hạn, tài khoản trở về chế độ thông thường và không bị trừ thêm credit."),
+    note(CHECK_NOTE),
     signature(),
   ].join("");
 
   return {
     html: renderLayout({
-      title: i.renewed ? "Gia hạn Pro thành công" : "Chào mừng thành viên Pro",
+      title: i.renewed ? "Xác nhận gia hạn gói Pro" : "Xác nhận kích hoạt gói Pro",
       preheader: `Pro có hiệu lực đến ${formatDateTimeVN(i.expiresAt)}. Đã trừ ${formatCredit(i.price)}.`,
       bodyHtml,
     }),
     text: [
-      `Xin chào ${i.name},`,
+      `Kính gửi ${i.name},`,
       "",
-      `Bạn đã ${action} gói ${i.planName} ${i.duration} thành công.`,
+      `Gói ${i.planName} ${i.duration} của bạn đã được ${action} thành công lúc ${formatDateTimeVN(i.at)}.`,
       `Đã trừ: -${formatCredit(i.price)}`,
       `Pro có hiệu lực đến: ${formatDateTimeVN(i.expiresAt)}`,
-      `Số dư hiện tại: ${formatCredit(i.balanceAfter)}`,
+      `Số dư khả dụng hiện tại: ${formatCredit(i.balanceAfter)}`,
       "",
       `Xem gói Pro: ${i.proUrl}`,
       "",
@@ -229,34 +218,25 @@ export interface ReportRewardEmailInput {
 
 export function renderReportRewardEmail(i: ReportRewardEmailInput) {
   const bodyHtml = [
-    p(`<strong>Xin chào ${esc(i.name)},</strong>`),
-    p("Cảm ơn bạn đã đóng góp. Báo cáo đáp án của bạn đã được xác nhận là chính xác, đáp án đã được cập nhật và credit thưởng đã vào ví."),
-    details([
-      { label: "Đề", value: esc(i.examTitle) },
-      { label: "Câu", value: String(i.questionNumber) },
-      { label: "Thời gian", value: esc(formatDateTimeVN(i.at)) },
-      { label: "Credit thưởng", value: `+${esc(formatCredit(i.amount))}`, strong: true },
-      { label: "Số dư hiện tại", value: esc(formatCredit(i.balanceAfter)) },
-    ]),
+    p(`Kính gửi <strong>${esc(i.name)}</strong>,`),
+    p(`Cảm ơn bạn đã đóng góp. Báo cáo của bạn về câu ${i.questionNumber} trong đề <strong>${esc(i.examTitle)}</strong> đã được xác nhận là chính xác, đáp án đã được cập nhật cho mọi người dùng.`),
+    p(`Chúng tôi đã cộng <strong>+${esc(formatCredit(i.amount))}</strong> tiền thưởng vào ví của bạn lúc ${esc(formatDateTimeVN(i.at))}. Số dư khả dụng hiện tại: <strong>${esc(formatCredit(i.balanceAfter))}</strong>.`),
     button("Xem lịch sử giao dịch", i.walletUrl),
     signature(),
   ].join("");
 
   return {
     html: renderLayout({
-      title: "Báo cáo của bạn đã được xác nhận",
-      preheader: `Nhận ${formatCredit(i.amount)} cho báo cáo đáp án câu ${i.questionNumber}. Số dư hiện tại: ${formatCredit(i.balanceAfter)}.`,
+      title: "Báo cáo đáp án của bạn đã được xác nhận",
+      preheader: `Nhận ${formatCredit(i.amount)} cho báo cáo đáp án câu ${i.questionNumber}. Số dư khả dụng: ${formatCredit(i.balanceAfter)}.`,
       bodyHtml,
     }),
     text: [
-      `Xin chào ${i.name},`,
+      `Kính gửi ${i.name},`,
       "",
-      "Báo cáo đáp án của bạn đã được xác nhận chính xác, đáp án đã được cập nhật và credit thưởng đã vào ví.",
-      `Đề: ${i.examTitle}`,
-      `Câu: ${i.questionNumber}`,
-      `Credit thưởng: +${formatCredit(i.amount)}`,
-      `Số dư hiện tại: ${formatCredit(i.balanceAfter)}`,
-      `Thời gian: ${formatDateTimeVN(i.at)}`,
+      `Cảm ơn bạn đã đóng góp. Báo cáo của bạn về câu ${i.questionNumber} trong đề ${i.examTitle} đã được xác nhận là chính xác, đáp án đã được cập nhật.`,
+      `Credit thưởng: +${formatCredit(i.amount)} (lúc ${formatDateTimeVN(i.at)})`,
+      `Số dư khả dụng hiện tại: ${formatCredit(i.balanceAfter)}`,
       "",
       `Xem lịch sử giao dịch: ${i.walletUrl}`,
       "",
@@ -279,22 +259,18 @@ export interface ReferralEmailInput {
 }
 
 const REFERRAL_COPY: Record<ReferralEmailInput["kind"], { title: string; intro: (other: string) => string; label: string }> = {
-  signup: { title: "Quà chào mừng từ giới thiệu", intro: () => "Cảm ơn bạn đã đăng ký qua lời giới thiệu. Credit chào mừng đã được cộng vào ví của bạn.", label: "Credit chào mừng" },
-  referrer_signup: { title: "Bạn vừa giới thiệu thành công", intro: (o) => `${o} vừa đăng ký bằng mã giới thiệu của bạn. Credit thưởng đã được cộng vào ví.`, label: "Credit thưởng" },
-  commission: { title: "Bạn nhận được hoa hồng giới thiệu", intro: (o) => `${o} vừa nạp credit, bạn nhận hoa hồng từ lần nạp này.`, label: "Hoa hồng" },
+  signup: { title: "Quà chào mừng từ lời giới thiệu", intro: () => "Cảm ơn bạn đã đăng ký qua lời giới thiệu. Credit chào mừng đã được cộng vào ví của bạn.", label: "credit chào mừng" },
+  referrer_signup: { title: "Giới thiệu thành viên mới thành công", intro: (o) => `${o} vừa đăng ký bằng mã giới thiệu của bạn. Credit thưởng đã được cộng vào ví.`, label: "credit thưởng" },
+  commission: { title: "Bạn nhận được hoa hồng giới thiệu", intro: (o) => `${o} vừa nạp credit, và bạn nhận được hoa hồng từ lần nạp này.`, label: "hoa hồng" },
 };
 
 export function renderReferralEmail(i: ReferralEmailInput) {
   const copy = REFERRAL_COPY[i.kind];
   const intro = copy.intro(i.otherName || "Một thành viên");
   const bodyHtml = [
-    p(`<strong>Xin chào ${esc(i.name)},</strong>`),
+    p(`Kính gửi <strong>${esc(i.name)}</strong>,`),
     p(esc(intro)),
-    details([
-      { label: "Thời gian", value: esc(formatDateTimeVN(i.at)) },
-      { label: copy.label, value: `+${esc(formatCredit(i.amount))}`, strong: true },
-      { label: "Số dư hiện tại", value: esc(formatCredit(i.balanceAfter)) },
-    ]),
+    p(`Số ${copy.label} đã cộng: <strong>+${esc(formatCredit(i.amount))}</strong> (lúc ${esc(formatDateTimeVN(i.at))}). Số dư khả dụng hiện tại: <strong>${esc(formatCredit(i.balanceAfter))}</strong>.`),
     button("Xem lịch sử giao dịch", i.walletUrl),
     signature(),
   ].join("");
@@ -302,16 +278,15 @@ export function renderReferralEmail(i: ReferralEmailInput) {
   return {
     html: renderLayout({
       title: copy.title,
-      preheader: `${copy.label} +${formatCredit(i.amount)}. Số dư hiện tại: ${formatCredit(i.balanceAfter)}.`,
+      preheader: `+${formatCredit(i.amount)} ${copy.label}. Số dư khả dụng: ${formatCredit(i.balanceAfter)}.`,
       bodyHtml,
     }),
     text: [
-      `Xin chào ${i.name},`,
+      `Kính gửi ${i.name},`,
       "",
       intro,
-      `${copy.label}: +${formatCredit(i.amount)}`,
-      `Số dư hiện tại: ${formatCredit(i.balanceAfter)}`,
-      `Thời gian: ${formatDateTimeVN(i.at)}`,
+      `Số ${copy.label} đã cộng: +${formatCredit(i.amount)} (lúc ${formatDateTimeVN(i.at)})`,
+      `Số dư khả dụng hiện tại: ${formatCredit(i.balanceAfter)}`,
       "",
       `Xem lịch sử giao dịch: ${i.walletUrl}`,
       "",
@@ -321,12 +296,12 @@ export function renderReferralEmail(i: ReferralEmailInput) {
   };
 }
 
-// ---------- Phí lấy đề
+// ---------- Phí mở đề
 
 export interface ChargeEmailInput {
   name: string;
   examLabel: string; // tên đề, hoặc "Thread #1234" nếu chưa biết tên
-  examUrl: string; // liên kết thread trên FuOverflow
+  examUrl: string; // không còn hiện trong thư (không dẫn người dùng ra ngoài hệ thống); giữ để không đổi nơi gọi
   amount: number;
   balanceAfter: number;
   at: Date;
@@ -335,35 +310,27 @@ export interface ChargeEmailInput {
 
 export function renderChargeEmail(i: ChargeEmailInput) {
   const bodyHtml = [
-    p(`<strong>Xin chào ${esc(i.name)},</strong>`),
-    p("Ví của bạn vừa bị trừ phí cho lần lấy đề từ FuOverflow."),
-    details([
-      { label: "Đề", value: `<a href="${esc(i.examUrl)}" target="_blank" style="color:#0066ff">${esc(i.examLabel)}</a>` },
-      { label: "Thời gian", value: esc(formatDateTimeVN(i.at)) },
-      { label: "Phí lấy đề", value: `−${esc(formatCredit(i.amount))}`, strong: true },
-      { label: "Số dư còn lại", value: esc(formatCredit(i.balanceAfter)) },
-    ]),
+    p(`Kính gửi <strong>${esc(i.name)}</strong>,`),
+    p(`Chúng tôi đã trừ <strong>-${esc(formatCredit(i.amount))}</strong> từ ví của bạn cho lần mở đề <strong>${esc(i.examLabel)}</strong> lúc ${esc(formatDateTimeVN(i.at))}. Số dư còn lại: <strong>${esc(formatCredit(i.balanceAfter))}</strong>.`),
     button("Xem lịch sử giao dịch", i.walletUrl),
-    note("Phí tính cho mỗi lần lấy đề. Nếu việc lấy đề thất bại, phí được hoàn lại vào ví tự động."),
+    note("Phí chỉ tính một lần cho mỗi đề. Nếu việc mở đề không thành công, phí sẽ được hoàn lại vào ví tự động."),
+    note(CHECK_NOTE),
     signature(),
   ].join("");
 
   return {
     html: renderLayout({
-      title: "Phí lấy đề",
-      preheader: `Đã trừ ${formatCredit(i.amount)} cho lần lấy đề. Số dư còn lại: ${formatCredit(i.balanceAfter)}.`,
+      title: "Thông báo phí mở đề",
+      preheader: `Đã trừ ${formatCredit(i.amount)} cho lần mở đề. Số dư còn lại: ${formatCredit(i.balanceAfter)}.`,
       bodyHtml,
     }),
     text: [
-      `Xin chào ${i.name},`,
+      `Kính gửi ${i.name},`,
       "",
-      "Ví của bạn vừa bị trừ phí cho lần lấy đề từ FuOverflow.",
-      `Đề: ${i.examLabel} (${i.examUrl})`,
-      `Phí lấy đề: -${formatCredit(i.amount)}`,
+      `Chúng tôi đã trừ -${formatCredit(i.amount)} từ ví của bạn cho lần mở đề ${i.examLabel} lúc ${formatDateTimeVN(i.at)}.`,
       `Số dư còn lại: ${formatCredit(i.balanceAfter)}`,
-      `Thời gian: ${formatDateTimeVN(i.at)}`,
       "",
-      "Nếu việc lấy đề thất bại, phí được hoàn lại tự động.",
+      "Nếu việc mở đề không thành công, phí sẽ được hoàn lại tự động.",
       `Xem lịch sử giao dịch: ${i.walletUrl}`,
       "",
       "Trân trọng,",
