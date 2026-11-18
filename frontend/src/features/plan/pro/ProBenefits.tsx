@@ -1,4 +1,4 @@
-import { Download, Flame, Link2, NotebookPen, Sparkles, Target } from "lucide-react";
+import { Flame, Link2, NotebookPen, Sparkles, Target } from "lucide-react";
 import type { PlanInfo } from "../plan.api";
 import { GlossCard } from "@/shared/ui/GlossCard";
 import { vnd } from "./money";
@@ -12,10 +12,9 @@ export function ProBenefits({ plan, fetchPrice }: { plan: PlanInfo; fetchPrice: 
     plan.benefits.freeFetch && {
       icon: Link2,
       title: "Lấy đề không bị trừ credit",
-      text: fetchPrice > 0 ? `Dán link FuOverflow là có đề kèm đáp án AI. Gói thường mỗi lần lấy đề tính ${vnd(fetchPrice)}.` : "Dán link FuOverflow là có đề kèm đáp án AI.",
+      text: fetchPrice > 0 ? `Đề nào cũng kèm đáp án AI. Gói thường mỗi lần lấy đề tính ${vnd(fetchPrice)}.` : "Đề nào cũng kèm đáp án AI.",
     },
     plan.benefits.freeExplain && { icon: Sparkles, title: "Giải thích AI mọi câu", text: "Xem vì sao đúng, vì sao sai ở bất kỳ câu nào, không cần mở khóa từng câu hay từng đề." },
-    plan.benefits.freePe && { icon: Download, title: "Tải đề PE", text: "Tải trọn bộ tài nguyên đề PE (file zip), không tính phí mỗi lần tải." },
     plan.benefits.topicReport && { icon: Target, title: "Báo cáo điểm yếu đầy đủ", text: "Thấy mình yếu chủ đề nào của môn và luyện đúng phần đó. Gói thường chỉ thấy chủ đề yếu nhất." },
     plan.benefits.frequentQuestions && { icon: Flame, title: "Xem đủ “Câu hay ra”", text: "Biết câu nào lặp lại ở nhiều đề để ôn trước. Gói thường chỉ xem vài câu đầu." },
     plan.benefits.unlimitedReview && { icon: NotebookPen, title: "Sổ câu sai không giới hạn", text: "Mọi câu sai đều được lưu và nhắc ôn đúng lịch. Gói thường có giới hạn số câu." },

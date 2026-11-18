@@ -2,7 +2,7 @@ import { examImportApi } from "./exam-import.api";
 import { waitForJob } from "./jobLive";
 import type { CrawlJob, ImportedExam } from "./types";
 
-export const GIVE_UP_MS = 10 * 60 * 1000;
+const GIVE_UP_MS = 10 * 60 * 1000;
 
 const stageText = (j: CrawlJob) =>
   j.status === "QUEUED"

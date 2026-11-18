@@ -127,7 +127,7 @@ export function MyExamsTab() {
           </div>
         ) : (
           <Empty icon={BookOpen} title="Bạn chưa lấy đề nào">
-            Dán link FuOverflow ở trang chủ để lấy đề đầu tiên.
+            Chọn môn ở tab Theo môn để lấy đề đầu tiên.
           </Empty>
         )}
       </Card>

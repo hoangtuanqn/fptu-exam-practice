@@ -15,12 +15,12 @@ export interface PageSeo {
 export const PUBLIC_PAGES: Record<string, PageSeo> = {
   "/": {
     title: "FEPass: Luyện thi FE FPTU có đáp án và giải thích AI",
-    description: "Dán một link FuOverflow là có ngay đề thi FE kèm đáp án AI, giải thích từng câu, chấm điểm thang 10. Cài tiện ích Chrome, đăng ký tặng credit.",
+    description: "Đề thi FE theo môn kèm đáp án AI, giải thích từng câu, chấm điểm thang 10. Cài tiện ích Chrome, đăng ký tặng credit.",
     index: true,
   },
   "/features": {
     title: "Tính năng nổi bật của Luyện thi FE FPTU",
-    description: "Lấy đề bằng link, AI giải đáp án cả đề, giải thích từng câu, tải đề PE, tiện ích Chrome, nạp credit tự động. Xem toàn bộ tính năng tại đây.",
+    description: "Kho đề theo môn, AI giải đáp án cả đề, giải thích từng câu, tiện ích Chrome, nạp credit tự động. Xem toàn bộ tính năng tại đây.",
     index: true,
   },
   "/kho-de": {
@@ -30,7 +30,7 @@ export const PUBLIC_PAGES: Record<string, PageSeo> = {
   },
   "/pro": {
     title: "Gói Pro 4 tháng chỉ 99.000đ, không giới hạn lượt",
-    description: "Một lần 99.000đ dùng 4 tháng, rẻ hơn 93.000đ so với mua lẻ trên FuOverflow. Không giới hạn lượt lấy đề, giải thích AI và tải đề PE.",
+    description: "Một lần 99.000đ dùng 4 tháng, rẻ hơn 93.000đ so với mua lẻ trên FuOverflow. Không giới hạn lượt lấy đề và giải thích AI.",
     index: true,
   },
   "/changelog": {
@@ -69,7 +69,6 @@ export const PRIVATE_PAGES: Record<string, PageSeo> = {
   "/account/review": { title: "Sổ câu sai", description: "Các câu bạn từng làm sai, tự nhắc ôn lại đúng lúc để nhớ lâu." },
   "/account/review/practice": { title: "Ôn câu sai", description: "Ôn lần lượt các câu đến hạn trong sổ câu sai của bạn." },
   "/account/saved": { title: "Câu đã lưu", description: "Những câu bạn đã lưu để xem lại ảnh đề, đáp án và mở lại đề." },
-  "/account/pe": { title: "Tải đề thi PE", description: "Tải trọn bộ tài nguyên đề thi PE thành một file zip." },
   "/account/reports": { title: "Báo cáo đáp án", description: "Theo dõi các báo cáo đáp án sai bạn đã gửi và trạng thái xử lý." },
   "/account/nhan-luot": { title: "Nhận lượt giải thích", description: "Nhận lượt giải thích AI miễn phí sau khi vượt link." },
   "/account/grades": { title: "Điểm FAP", description: "Điểm trung bình từng kỳ, lịch thi và điểm cần đạt ở bài thi cuối kỳ để qua từng môn, lấy từ FAP khi bạn bật đồng bộ." },

@@ -17,7 +17,7 @@ interface Props {
   userName?: string; // đã đăng nhập thì chào tên thay cho slogan
 }
 
-// Phần đầu trang: câu hỏi "Bạn đang ôn môn nào?" làm tiêu đề, ba ý ngắn, ô chọn môn (việc chính), thanh dán link FuOverflow (việc phụ), dải quà (khách).
+// Phần đầu trang: câu hỏi "Bạn đang ôn môn nào?" làm tiêu đề, ba ý ngắn, ô chọn môn (việc chính), dải quà (khách).
 // Phong cách học thuật: nền giấy ấm, màu navy, một điểm nhấn vàng đồng, không chữ chuyển sắc hay hiệu ứng phát sáng.
 export function HeroSection({ onPick, onImported, userName }: Props) {
   const isGuest = !userName;
@@ -70,7 +70,7 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
           )}
         </div>
 
-        {/* Bố cục: ô chọn môn (việc chính, thấy ngay không cần cuộn) → thanh dán link FuOverflow → dải quà → dải Pro → thẻ ưu đãi.
+        {/* Bố cục: ô chọn môn (việc chính, thấy ngay không cần cuộn) → dải quà → dải Pro → thẻ ưu đãi.
             Không còn chồng/che nhau khi cuộn. */}
         <PromoDeadlineBanner />
 

@@ -8,7 +8,7 @@ import { ChapterStep } from "./ChapterStep";
 import { ExamPickStep } from "./ExamPickStep";
 import type { PickedExam } from "./types";
 
-// Bộ đề theo chương: chọn môn -> chọn nhiều đề (từ kho của tôi và/hoặc link FuOverflow) -> chọn chương -> làm lần lượt từng đề, chỉ các câu thuộc chương đã chọn.
+// Bộ đề theo chương: chọn môn -> chọn nhiều đề (từ kho của tôi) -> chọn chương -> làm lần lượt từng đề, chỉ các câu thuộc chương đã chọn.
 export default function ChapterSetPage() {
   const [subject, setSubject] = useState<SubjectItem | null>(null);
   const [exams, setExams] = useState<PickedExam[]>([]);

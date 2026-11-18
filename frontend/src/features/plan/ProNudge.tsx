@@ -49,13 +49,13 @@ function content(choice: Choice, plan: PlanInfo): { icon: LucideIcon; title: Rea
     const when = e.daysLeft <= 0 ? "thi hôm nay" : e.daysLeft === 1 ? "thi ngày mai" : `thi sau ${e.daysLeft} ngày`;
     const { days, price, name } = plan.sprint;
     if (e.daysLeft <= days) {
-      return { icon: CalendarClock, title: `${subject} ${when} (${formatDate(e.date)})`, text: `Gói ${name} ${days} ngày giá ${vnd(price)}: lấy đề, giải thích AI và tải PE không bị trừ thêm cho tới kỳ thi.`, cta: "Mua gói Nước rút", to: "/pro?buy=sprint" };
+      return { icon: CalendarClock, title: `${subject} ${when} (${formatDate(e.date)})`, text: `Gói ${name} ${days} ngày giá ${vnd(price)}: lấy đề và giải thích AI không bị trừ thêm cho tới kỳ thi.`, cta: "Mua gói Nước rút", to: "/pro?buy=sprint" };
     }
     const activateOn = new Date(new Date(e.date).getTime() - (days - 1) * DAY_MS);
     return { icon: CalendarClock, title: `${subject} ${when} (${formatDate(e.date)})`, text: `Mua vé ${name} ${vnd(price)} từ bây giờ, bật vào khoảng ${dm(activateOn)} là phủ trọn ${days} ngày trước kỳ thi.`, cta: "Mua vé Nước rút", to: "/pro?buy=sprint&later=1" };
   }
   const s = choice.spent!;
-  const covered = [plan.benefits.freeFetch && "lấy đề", plan.benefits.freeExplain && "giải thích AI", plan.benefits.freePe && "tải đề PE"].filter(Boolean).join(", ");
+  const covered = [plan.benefits.freeFetch && "lấy đề", plan.benefits.freeExplain && "giải thích AI"].filter(Boolean).join(", ");
   return {
     icon: Wallet,
     title: `Bạn đã chi ${vnd(s.total)} cho đề và giải thích lẻ trong ${s.days} ngày qua`,

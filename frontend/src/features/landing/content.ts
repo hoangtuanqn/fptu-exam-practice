@@ -11,7 +11,7 @@ export const FEATURES = [
 ];
 
 export const STEPS = [
-  { title: "Chọn đề", text: "Chọn môn rồi mở đề có sẵn. Chưa thấy đề cần tìm thì dán link đề FuOverflow để hệ thống tự lấy về." },
+  { title: "Chọn đề", text: "Chọn môn rồi mở đề có sẵn." },
   { title: "Làm bài", text: "Luyện tập xem đúng sai từng câu, hoặc thi thử rồi mới chấm." },
   { title: "Nhận điểm thang 10", text: "Điểm tính tự động, kèm thời gian làm bài và câu còn bỏ trống." },
 ];

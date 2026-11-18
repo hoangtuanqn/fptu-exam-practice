@@ -1,4 +1,4 @@
-import { Bot, Check, Crown, FileDown, History, Infinity as InfinityIcon, Link2, MessageCircleQuestion, Minus, Sparkles, Timer } from "lucide-react";
+import { Bot, Check, Crown, History, Infinity as InfinityIcon, Link2, MessageCircleQuestion, Minus, Sparkles, Timer } from "lucide-react";
 import type { PlanInfo } from "../plan.api";
 import { GlossCard } from "@/shared/ui/GlossCard";
 import { vnd } from "./money";
@@ -13,7 +13,6 @@ const FEATURES: { icon: typeof Bot; text: string; fuo: boolean }[] = [
   { icon: Sparkles, text: "Giải thích AI từng câu, nói rõ vì sao sai", fuo: false },
   { icon: History, text: "Chấm điểm thang 10, lưu lịch sử và điểm cao nhất", fuo: false },
   { icon: Timer, text: "Chế độ Thi có đếm ngược, tự nộp khi hết giờ", fuo: false },
-  { icon: FileDown, text: "Tải trọn bộ tài nguyên đề PE (file zip)", fuo: false },
   { icon: MessageCircleQuestion, text: "Trợ lý Cóc Pass trả lời mọi lúc", fuo: false },
   { icon: InfinityIcon, text: "Không giới hạn lượt lấy đề, giải thích, AI giải đề", fuo: false },
 ];

@@ -49,7 +49,7 @@ export default function AttemptsPage() {
           data &&
           (data.items.length === 0 ? (
             <Empty icon={History} title="Chưa có bài làm nào">
-              Nhập đề từ link FuOverflow ở trang chủ và nộp bài, kết quả sẽ hiện ở đây.
+              Chọn một đề ở trang chủ và nộp bài, kết quả sẽ hiện ở đây.
             </Empty>
           ) : (
             <>

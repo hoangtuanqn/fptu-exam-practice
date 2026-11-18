@@ -100,7 +100,7 @@ export function ResultDialog({ result, topicSummary = null, elapsed, savable, an
           <p className="mb-3 mt-1 text-xs leading-relaxed text-slate-600">
             {savable
               ? "Đăng ký (hoặc đăng nhập) ngay bây giờ, bài vừa làm sẽ được lưu vào lịch sử cùng điểm và chi tiết từng câu, và các đề bạn đã lấy sẽ nằm trong kho riêng của bạn."
-              : "Đề mở từ thư mục không được lưu lịch sử. Đăng ký tài khoản miễn phí để lấy đề từ link FuOverflow, lưu điểm và chi tiết từng câu, rồi theo dõi tiến bộ qua mỗi lần làm."}
+              : "Đề mở từ thư mục không được lưu lịch sử. Đăng ký tài khoản miễn phí để lưu điểm và chi tiết từng câu, rồi theo dõi tiến bộ qua mỗi lần làm."}
           </p>
           <SignUpCta />
         </div>

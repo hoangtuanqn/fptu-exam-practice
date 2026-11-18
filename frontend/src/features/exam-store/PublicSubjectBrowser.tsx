@@ -48,7 +48,7 @@ export function PublicSubjectBrowser({ subjects, compact = false }: { subjects: 
       error={subjects.error}
       onRetry={subjects.reload}
       onPick={(c) => setUrl({ subject: c })}
-      emptyHint="Thử mã môn khác, hoặc dán link FuOverflow ở trang chủ để lấy đề mới."
+      emptyHint="Thử mã môn khác."
     />
   );
 }
