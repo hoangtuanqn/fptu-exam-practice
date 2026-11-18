@@ -12,6 +12,7 @@ import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
 import { examLibraryApi, sizeText } from "./exam-library.api";
 import { useOnLibraryChanged } from "./libraryEvents";
+import { ExamKindBadge } from "./ExamKindBadge";
 
 const SHOWN = 6;
 
@@ -86,8 +87,9 @@ export function MyExams({ onOpen }: Props) {
                   )}
 
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-semibold text-slate-900 transition-colors group-hover:text-brand-700">
-                      {e.title}
+                    <span className="flex min-w-0 items-center gap-2">
+                      <ExamKindBadge kind={e.kind} />
+                      <span className="truncate text-sm font-semibold text-slate-900 transition-colors group-hover:text-brand-700">{e.title}</span>
                     </span>
                     <span className="mt-0.5 block truncate text-xs text-slate-500">
                       {e.answerSource === "PENDING" && (

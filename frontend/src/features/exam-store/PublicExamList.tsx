@@ -9,6 +9,7 @@ import { Pagination } from "@/shared/ui/Table";
 import { formatCredit, formatDate } from "@/shared/utils/formatters";
 import { catalogApi, type CatalogItem } from "./catalog.api";
 import { NewExamBadge } from "./NewExamBadge";
+import { ExamKindBadge } from "./ExamKindBadge";
 import { isPro } from "@/shared/utils/pro";
 import { trackPrompt } from "@/shared/utils/trackPrompt";
 import { ExamFilterBar, useExamListQuery } from "./ExamFilterBar";
@@ -42,6 +43,7 @@ export function PublicExamList({ code, pageSize }: { code: string; pageSize?: nu
                     {e.term && <span className="md-label-medium w-14 shrink-0 rounded-full bg-primary-container/70 px-2.5 py-1 text-center text-on-primary-container">{e.term}</span>}
                     <div className="min-w-0 flex-1">
                       <div className="flex min-w-0 items-center gap-2">
+                        <ExamKindBadge kind={e.kind} />
                         <p className="md-title-small truncate text-on-surface">{e.title}</p>
                         <NewExamBadge term={e.term} />
                       </div>
@@ -69,7 +71,7 @@ function ExamAction({ item, loggedIn, target, price }: { item: CatalogItem; logg
   const track = () => trackPrompt("library-open", "click");
   if (item.status === "owned")
     return (
-      <Link to={`/exam/${item.examId}`} className={cls}>
+      <Link to={`/exam/${item.examId}/preview`} className={cls}>
         <Play size={15} /> Mở đề
       </Link>
     );

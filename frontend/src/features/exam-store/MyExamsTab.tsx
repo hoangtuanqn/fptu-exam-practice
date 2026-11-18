@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { BookOpen, Eye, History } from "lucide-react";
 import { useOnLibraryChanged } from "@/features/exam-store/libraryEvents";
 import { examLibraryApi, sizeText, type LibraryExam } from "@/features/exam-store/exam-library.api";
+import { ExamKindBadge } from "@/features/exam-store/ExamKindBadge";
 import { ResumeList } from "@/features/practice-session/ResumeList";
 import { formatScore } from "@/features/practice/utils/format";
 import { useApi } from "@/shared/hooks/useApi";
@@ -65,7 +66,10 @@ export function MyExamsTab() {
               {data.items.map((e) => (
                 <li key={e.id} className="flex items-center gap-1 pr-2">
                   <Link to={`/exam/${e.id}`} className="block min-w-0 flex-1 px-4 py-3 transition active:bg-slate-50">
-                    <div className="truncate text-sm font-medium text-slate-900">{e.title}</div>
+                    <div className="flex min-w-0 items-center gap-2">
+                      <ExamKindBadge kind={e.kind} />
+                      <span className="truncate text-sm font-medium text-slate-900">{e.title}</span>
+                    </div>
                     <div className="mt-0.5 text-xs text-slate-500">
                       {sizeText(e)} · {attemptsText(e)}
                     </div>
@@ -104,9 +108,12 @@ export function MyExamsTab() {
                     <Tr key={e.id}>
                       <Td>
                         <div className="flex items-center justify-between gap-2">
-                          <Link to={`/exam/${e.id}`} className="font-medium text-slate-900 hover:text-brand-700 hover:underline">
-                            {e.title}
-                          </Link>
+                          <span className="flex min-w-0 items-center gap-2">
+                            <ExamKindBadge kind={e.kind} />
+                            <Link to={`/exam/${e.id}`} className="font-medium text-slate-900 hover:text-brand-700 hover:underline">
+                              {e.title}
+                            </Link>
+                          </span>
                           <ViewLink examId={e.id} />
                         </div>
                       </Td>

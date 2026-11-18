@@ -14,9 +14,13 @@ export interface CrawlJob {
 // POST /crawl-jobs: đề đã có thì trả examId ngay, chưa có thì trả job để theo dõi
 export type SubmitResult = { existed: true; examId: string; title: string; free?: boolean } | { existed: false; job: CrawlJob };
 
+// Loại đề; máy chủ cũ không trả về thì coi là FE
+export type ExamKind = "FE" | "PE" | "QUIZ" | "OTHER";
+
 export interface ImportedExam {
   id: string;
   title: string;
+  kind?: ExamKind;
   answerStatus: AnswerSource; // PENDING = AI đang phân tích đáp án
   totalQuestions: number; // lớn hơn questions.length = đề còn đang được lấy về, các câu sau đến qua socket
   questions: Question[];

@@ -3,7 +3,7 @@ import type { ExamAttachment } from "@/features/exam-import/types";
 import { buttonClass } from "@/shared/ui/Button";
 import { formatBytes } from "@/shared/utils/formatters";
 
-const ICONS: Record<ExamAttachment["kind"], LucideIcon> = {
+export const ICONS: Record<ExamAttachment["kind"], LucideIcon> = {
   pdf: FileText,
   text: FileText,
   archive: FileArchive,
@@ -13,9 +13,9 @@ const ICONS: Record<ExamAttachment["kind"], LucideIcon> = {
 };
 
 // Máy chủ chỉ mở thẳng trên trình duyệt các loại này; zip, rar... luôn là tải về
-const OPENABLE = new Set<ExamAttachment["kind"]>(["pdf", "text", "video", "audio"]);
+export const OPENABLE = new Set<ExamAttachment["kind"]>(["pdf", "text", "video", "audio"]);
 
-const downloadUrl = (url: string) => `${url}${url.includes("?") ? "&" : "?"}download=1`;
+export const downloadUrl = (url: string) => `${url}${url.includes("?") ? "&" : "?"}download=1`;
 
 // Danh sách tệp đính kèm của đề: mỗi dòng là biểu tượng theo loại, tên, dung lượng, nút Mở (nếu xem được) và Tải về
 export function AttachmentList({ attachments }: { attachments: ExamAttachment[] }) {

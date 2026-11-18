@@ -18,12 +18,13 @@ interface Props {
   replacing: boolean; // đang có bài làm dở sẽ bị thay thế
   onCancel: () => void;
   onStart: (mode: Mode, limitMin: number | null) => void;
+  initialMode?: Mode; // chọn sẵn chế độ (bấm "Thi" ở trang xem trước đề)
 }
 
 // Hộp thoại sau khi upload đề: xác nhận + chọn chế độ (không đổi được giữa chừng).
 // Chọn chế độ là nhóm radio (role=radiogroup), chọn thời gian là các filter chip.
-export function StartDialog({ title, total, graded, answersPending, replacing, onCancel, onStart }: Props) {
-  const [mode, setMode] = useState<Mode | null>(null); // chưa chọn thì chưa cho bắt đầu
+export function StartDialog({ title, total, graded, answersPending, replacing, onCancel, onStart, initialMode }: Props) {
+  const [mode, setMode] = useState<Mode | null>(initialMode ?? null); // chưa chọn thì chưa cho bắt đầu
   const [limit, setLimit] = useState<number>(TIME_LIMIT_OPTIONS[0]); // phút; mặc định 90, 0 = không giới hạn (chỉ dùng ở chế độ Thi)
   const [custom, setCustom] = useState(false); // chọn "Khác": người dùng tự nhập số phút
   const [customText, setCustomText] = useState("");

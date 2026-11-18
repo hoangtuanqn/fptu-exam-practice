@@ -38,7 +38,7 @@ interface Props {
 }
 
 // Trang luyện đề. Địa chỉ phản ánh đề đang mở: "/" là trang chủ, "/exam/:examId" là đề của hệ thống,
-// "/exam/:examId?mode=exam" mở thẳng vào chế độ thi. Sao chép địa chỉ là gửi được đúng đề đó (người mở cần có đề trong kho).
+// "/exam/:examId?mode=exam" mở thẳng vào chế độ thi, "?start=exam" mở hộp chọn chế độ đã chọn sẵn Thi. Sao chép địa chỉ là gửi được đúng đề đó (người mở cần có đề trong kho).
 export default function PracticePage({ examId }: Props) {
   const quiz = useQuiz();
   const { user } = useAuth();
@@ -340,7 +340,7 @@ export default function PracticePage({ examId }: Props) {
         onShowResult={() => setDialog("result")}
       />
 
-      <QuizDialogs quiz={quiz} topicSummary={topicSummary} dialog={dialog} onDialogChange={setDialog} onCloseZoom={() => setZoomOpen(false)} onCancelChoose={cancelChoosing} onBeforeSubmit={guard.finish} nextExam={nextQueue.length > 0 ? { remaining: nextQueue.length, onOpen: openNext } : undefined} />
+      <QuizDialogs quiz={quiz} topicSummary={topicSummary} dialog={dialog} onDialogChange={setDialog} onCloseZoom={() => setZoomOpen(false)} onCancelChoose={cancelChoosing} onBeforeSubmit={guard.finish} nextExam={nextQueue.length > 0 ? { remaining: nextQueue.length, onOpen: openNext } : undefined} initialMode={new URLSearchParams(location.search).get("start") === "exam" ? "exam" : undefined} />
       {leaveAsk && (
         <Modal onClose={() => setLeaveAsk(false)}>
           <ModalTitle icon={TriangleAlert}>Thoát và bỏ bài đang làm?</ModalTitle>
