@@ -78,7 +78,12 @@ async function runOnce(run: FuoCatalogRun) {
     adminNoticeService.push("catalog.failed", { title: "Quét danh mục FuOverflow thất bại", body: fatal, link });
   } else if (run.autoImport) {
     // Lượt của "Load dữ liệu mới": nạp ngay các đề mới/đổi (lượt nạp tự báo khi xong)
-    await fuoSourceService.afterScan(run.createdById);
+    try {
+      await fuoSourceService.afterScan(run.createdById);
+    } catch (err) {
+      console.error("[fuo-catalog] không bắt đầu được lượt nạp sau khi quét:", (err as Error).message);
+      adminNoticeService.push("catalog.failed", { title: "Quét xong nhưng chưa nạp được đề mới", body: `${errorText(err)} Bấm Load dữ liệu mới để thử lại.`, link: SOURCES_PAGE });
+    }
     publish(); // không để trang nguồn đề tưởng đã dừng trong lúc chuyển từ quét sang nạp
   } else {
     adminNoticeService.push("catalog.done", {
