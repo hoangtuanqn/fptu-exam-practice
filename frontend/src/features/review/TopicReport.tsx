@@ -15,7 +15,7 @@ function Row({ subject, t }: { subject: string; t: TopicStat }) {
   return (
     <li className="px-5 py-3">
       <div className="flex items-baseline justify-between gap-3">
-        <span className="md-title-small min-w-0 truncate text-on-surface">{t.topic}</span>
+        <span className="md-title-small min-w-0 break-words text-on-surface">{t.topic}</span>
         <span className="md-body-small shrink-0 tabular-nums text-on-surface-variant">
           {t.enough ? (
             <>
