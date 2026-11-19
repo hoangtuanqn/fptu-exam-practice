@@ -116,7 +116,7 @@ export default function PracticePage({ examId }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quiz.timing]);
 
-  useTimeWarnings(quiz.mode === "exam" && quiz.timing && !quiz.submitted ? quiz.timeLimitSec : null, quiz.elapsed);
+  useTimeWarnings(quiz.mode === "exam" && quiz.timing && !quiz.submitted ? quiz.timeLimitSec : null, quiz.elapsed, quiz.session);
 
   // Đang mở hộp thoại thì tắt phím tắt để tránh bấm nhầm đáp án
   const requestSubmit = useCallback(() => {

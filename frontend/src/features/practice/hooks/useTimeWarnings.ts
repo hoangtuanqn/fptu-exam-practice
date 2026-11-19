@@ -8,13 +8,16 @@ const MARKS = [
 
 // Chế độ Thi có giới hạn: nhắc ngắn khi còn 5 phút và 1 phút (đồng hồ chỉ đổi màu, dễ bỏ sót khi đang nhìn đề).
 // Bài ngắn thì bỏ mốc quá gần lúc bắt đầu. `limitSec` null = không nhắc.
-export function useTimeWarnings(limitSec: number | null, elapsed: number) {
+export function useTimeWarnings(limitSec: number | null, elapsed: number, session: number) {
   const toast = useToast();
   const fired = useRef(new Set<number>());
 
   useEffect(() => {
+    fired.current.clear(); // lượt làm mới (làm lại hoặc làm tiếp bài khác): nhắc lại từ đầu
+  }, [session]);
+
+  useEffect(() => {
     if (!limitSec) return;
-    if (elapsed === 0) fired.current.clear();
     const left = limitSec - elapsed;
     const hit = [...MARKS].reverse().find((m) => limitSec > m.sec * 2 && left > 0 && left <= m.sec); // mốc nhỏ nhất đã qua
     if (!hit || fired.current.has(hit.sec)) return;
