@@ -24,10 +24,11 @@ function decide(p: ActivePromo) {
   return true;
 }
 
-// Thanh mỏng báo ưu đãi kỳ mới ở trang chủ (khi chưa mở bài) và các trang tài khoản. Chỉ cho người chưa Pro hoặc Pro sắp hết hạn.
+// Thanh mỏng báo ưu đãi kỳ mới ở trang chủ (khi chưa mở bài) và các trang tài khoản. Cho khách, người chưa Pro hoặc Pro sắp hết hạn.
 export function SemesterPromoBar() {
   const { user } = useAuth();
-  const eligible = !!user && (!isPro(user) || proDaysLeft(user) <= RENEW_DAYS);
+  // Khách cũng thấy (bấm vào trang /pro, mua thì được mời đăng ký); thành viên: chưa Pro hoặc Pro sắp hết hạn
+  const eligible = !user || !isPro(user) || proDaysLeft(user) <= RENEW_DAYS;
   const plan = usePlanInfo(eligible).data;
   const promo = eligible ? activePromo(plan) : null;
   const [open, setOpen] = useState(false);
