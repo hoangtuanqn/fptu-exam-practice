@@ -3,7 +3,7 @@ import { prisma } from "../configs/prisma";
 import { CHAT_CANNED, CHAT_CONTINUE_PROMPT, CHAT_EFFORT, CHAT_LIMITS, CHAT_MONEY_HINT, CHAT_SYSTEM_PROMPT, chatProviderReady, type ChatConfig } from "../constants/chat";
 import { HTTP_STATUS } from "../constants/httpStatus";
 import { PRO_PLAN, SPRINT_PLAN, TICKET_MAX_OPEN, TICKET_VALID_DAYS } from "../constants/plan";
-import { activePromoEnd, promoExpired } from "../constants/promo";
+import { activePromoEnd, promoExpired, semesterPromoActive } from "../constants/promo";
 import { ANSWER_REPORT_REWARD } from "../constants/report";
 import { AppError } from "../rules/error";
 import type { ChatBody } from "../rules/requests/chat.request";
@@ -44,7 +44,7 @@ async function liveFacts() {
     promo.depositBonusTiers.length ? `Thưởng khi nạp: ${promo.depositBonusTiers.map((t) => `từ ${nf.format(t.min)} ₫ thưởng thêm ${t.percent}%`).join("; ")}.` : "Hiện không có thưởng khi nạp.",
     account.signupCredit > 0 ? `Tặng ${nf.format(account.signupCredit)} credit khi đăng ký tài khoản mới.` : "Không tặng credit khi đăng ký.",
     `Báo cáo đáp án đúng được thưởng ${nf.format(ANSWER_REPORT_REWARD)} credit.`,
-    `Gói ${PRO_PLAN.name}: ${nf.format(PRO_PLAN.price)} credit cho ${PRO_PLAN.months} tháng (mua trực tiếp gói VIP trên FuOverflow cùng thời hạn là ${nf.format(PRO_PLAN.fuoPrice)} ₫).`,
+    `Gói ${PRO_PLAN.name}: ${nf.format(PRO_PLAN.price)} credit cho ${PRO_PLAN.months} tháng (mua trực tiếp gói VIP trên FuOverflow cùng thời hạn là ${nf.format(PRO_PLAN.fuoPrice)} ₫)${semesterPromoActive(promo) ? `; đang ưu đãi kỳ ${promo.semesterPromoTerm}: ${nf.format(promo.semesterPromoPrice)} credit tới ${new Date(promo.semesterPromoEndsAt).toLocaleDateString("vi-VN")}, mỗi tài khoản một lần` : ""}.`,
     `Gói ${SPRINT_PLAN.name}: ${nf.format(SPRINT_PLAN.price)} credit cho ${SPRINT_PLAN.days} ngày, cùng quyền lợi Pro, dành cho ôn gấp trước kỳ thi.`,
     `Vé Pro: mua trước, kích hoạt sau; chưa kích hoạt thì dùng được trong ${TICKET_VALID_DAYS} ngày, tối đa ${TICKET_MAX_OPEN} vé chưa kích hoạt mỗi tài khoản.`,
   ];
