@@ -24,9 +24,12 @@
 }
 
 /* ---- State layer: lớp phủ màu chữ (currentColor) ở độ mờ theo đặc tả khi di chuột / focus / nhấn / kéo; đặt class md-state lên điều khiển ---- */
-.md-state {
-  position: relative;
-  isolation: isolate;
+/* Trong @layer để class absolute/fixed/sticky đặt trên cùng phần tử (nút X của ngăn kéo, FAB nổi) vẫn thắng */
+@layer components {
+  .md-state {
+    position: relative;
+    isolation: isolate;
+  }
 }
 .md-state::before {
   content: "";
