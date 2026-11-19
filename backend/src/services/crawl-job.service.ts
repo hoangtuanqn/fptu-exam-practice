@@ -1,6 +1,8 @@
 import { PRO_BENEFITS } from "../constants/plan";
 import { planService } from "./plan.service";
-import type { CrawlJob } from "@prisma/client";
+import type { CrawlJob, ExamKind } from "@prisma/client";
+import { PE_PRICE } from "../constants/pe";
+import { fuoCatalogRepository } from "../repositories/fuo-catalog.repository";
 import { prisma } from "../configs/prisma";
 import { crawlJobRepository } from "../repositories/crawl-job.repository";
 import { subjectService } from "./subject.service";
@@ -37,6 +39,16 @@ async function assertThreadAccepted(threadId: string) {
   if (check && !check.ok) throw new AppError(check.message, HTTP_STATUS.UNPROCESSABLE_ENTITY);
 }
 
+// Đề PE có giá riêng. Loại đề lấy từ đề đã có trong hệ thống, không có thì từ bài trên FuOverflow (đã nhớ sẵn khi kiểm tra), rồi tới danh mục
+async function fetchPriceOf(threadId: string, found: { kind: ExamKind | null } | null) {
+  let kind = found?.kind ?? null;
+  if (!kind) {
+    const check = await threadPreflight.check(threadId);
+    kind = check?.ok ? check.kind : ((await fuoCatalogRepository.findThreads([threadId]))[0]?.kind ?? null);
+  }
+  return kind === "PE" ? PE_PRICE : (await crawlerSettingService.get()).fetchPrice;
+}
+
 // Tạo bộ đề theo chương: đề phải đúng môn đã chọn. Đề đã có trong hệ thống thì so theo tiêu đề của nó, đề mới thì theo tiêu đề bài trên FuOverflow.
 // Không kết luận được (chưa đọc được bài) thì không cho đi tiếp, vì nếu sai môn thì người dùng đã bị trừ phí.
 async function assertSubject(subject: string | undefined, threadId: string, examTitle: string | null) {
@@ -64,9 +76,9 @@ export const crawlJobService = {
   // Khách còn kèm số lượt miễn phí còn lại hôm nay để giao diện báo trước (thay vì đợi hết lượt mới biết)
   async getPrice(actor?: Actor) {
     const price = (await crawlerSettingService.get()).fetchPrice;
-    if (!actor || isMember(actor.owner)) return { price };
+    if (!actor || isMember(actor.owner)) return { price, pePrice: PE_PRICE };
     const used = await crawlJobRepository.countGuestFetchesSince(actor.owner.guestId, startOfVnDay());
-    return { price, guestLimit: GUEST_DAILY_LIMIT, guestRemaining: Math.max(0, GUEST_DAILY_LIMIT - used) };
+    return { price, pePrice: PE_PRICE, guestLimit: GUEST_DAILY_LIMIT, guestRemaining: Math.max(0, GUEST_DAILY_LIMIT - used) };
   },
 
   // Phí thực tế của lần lấy này. Đề người này đã lấy về kho trước đó thì miễn phí (chỉ mở lại, không crawl);
@@ -75,9 +87,9 @@ export const crawlJobService = {
     const { owner } = actor;
     const threadId = parseThreadId(url);
     if (!threadId) throw new AppError(FUO_LINK_INVALID);
-    const price = isMember(owner) ? (await crawlerSettingService.get()).fetchPrice : 0;
     const active = await crawlJobRepository.findActive(threadId, owner);
     const found = await examRepository.findByThreadId(threadId);
+    const price = isMember(owner) ? await fetchPriceOf(threadId, found) : 0;
     const exam = found && (await examRepository.isComplete(found)) ? found : null;
     const owned = !!exam && (await userExamRepository.has(owner, exam.id));
     if (!exam && !active) await assertThreadAccepted(threadId); // đề phải lấy mới: bài sai thì không cho tới bước xác nhận phí
@@ -119,7 +131,7 @@ export const crawlJobService = {
     const alreadyOwned = isMember(owner) && !!exam && (await userExamRepository.has(owner, exam.id));
     // Pro: lấy đề không bị trừ phí (vẫn tính là thành viên, vẫn lưu vào kho)
     const isPro = isMember(owner) && PRO_BENEFITS.freeFetch && (await planService.isPro(owner.userId));
-    const fetchPrice = isMember(owner) && !alreadyOwned && !isPro ? (await crawlerSettingService.get()).fetchPrice : 0;
+    const fetchPrice = isMember(owner) && !alreadyOwned && !isPro ? await fetchPriceOf(threadId, found) : 0;
 
     // Đề đã cũ quá hạn: người này vẫn mở được ngay bản hiện có, đồng thời xếp một lượt làm mới chạy nền
     // (lấy lại ảnh + bình luận, giải lại đáp án). Chưa tạo thêm nếu đang làm mới hoặc vừa thất bại gần đây.
