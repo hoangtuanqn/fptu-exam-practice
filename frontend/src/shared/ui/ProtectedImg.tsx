@@ -5,7 +5,7 @@ const BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAA
 
 /**
  * Thay cho <img> ở mọi chỗ hiện ảnh đề: tải bằng fetch có danh tính rồi hiển thị bằng blob (xem protectedImage.ts).
- * Tắt menu chuột phải và kéo thả ảnh ra ngoài. `loading="lazy"` vẫn có nghĩa: chỉ tải khi ảnh sắp vào màn hình.
+ * Chuột phải vẫn dùng bình thường (chặn chỉ gây khó chịu, không ngăn được ai). `loading="lazy"` vẫn có nghĩa: chỉ tải khi ảnh sắp vào màn hình.
  * shortcut: người rành kỹ thuật vẫn lấy được ảnh qua tab Network khi đang đăng nhập; chặn hẳn là bất khả thi với ảnh đã hiển thị.
  */
 export const ProtectedImg = forwardRef<HTMLImageElement, ImgHTMLAttributes<HTMLImageElement>>(function ProtectedImg(
@@ -60,7 +60,6 @@ export const ProtectedImg = forwardRef<HTMLImageElement, ImgHTMLAttributes<HTMLI
       ref={setRef as Ref<HTMLImageElement>}
       src={shown?.url ?? BLANK}
       draggable={false}
-      onContextMenu={(e) => e.preventDefault()}
       onLoad={blobUrl ? onLoad : undefined}
       onError={blobUrl ? onError : undefined}
       aria-busy={!blobUrl}
