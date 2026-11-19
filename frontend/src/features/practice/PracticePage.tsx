@@ -12,6 +12,7 @@ import { sessionApi } from "@/features/practice-session/session.api";
 import { useSessionSync } from "@/features/practice-session/useSessionSync";
 import { useLeaveWarning } from "@/shared/hooks/useLeaveWarning";
 import { useExamAnswersLive } from "@/features/practice/hooks/useExamAnswersLive";
+import { useExamAttachmentsLive } from "@/features/practice/hooks/useExamAttachmentsLive";
 import { useExamQuestionsLive } from "@/features/practice/hooks/useExamQuestionsLive";
 import { useToast } from "@/shared/context/ToastContext";
 import { useQuiz } from "@/features/practice/hooks/useQuiz";
@@ -54,12 +55,13 @@ export default function PracticePage({ examId }: Props) {
   const [trialEnded, setTrialEnded] = useState(false);
   const [referencesOpen, setReferencesOpen] = useState(false); // đang xem tài liệu tham khảo của đề
   const [attachments, setAttachments] = useState<{ examId: string; list: ExamAttachment[] } | null>(null); // tệp đính kèm của đề mở theo địa chỉ
-  const [filesOnly, setFilesOnly] = useState<{ title: string; list: ExamAttachment[] } | null>(null); // đề chỉ có tệp: không mở bài làm
+  const [filesOnly, setFilesOnly] = useState<{ title: string } | null>(null); // đề chỉ có tệp: không mở bài làm
   const [bestScore, setBestScore] = useState<number | null>(null); // điểm cao nhất của người dùng ở đề đang mở
   const [topicSummary, setTopicSummary] = useState<TopicSummary>(null); // kết quả theo chủ đề của bài vừa nộp, hiện trong bảng điểm
 
   const hasQuiz = quiz.questions.length > 0;
-  const examFiles = attachments && attachments.examId === quiz.examId ? attachments.list : [];
+  const liveFiles = useExamAttachmentsLive(attachments?.examId ?? null, attachments?.list); // tệp đến sau khi đề còn đang được lấy về
+  const examFiles = attachments && attachments.examId === quiz.examId ? liveFiles : [];
   // Bộ đề theo chương nhiều đề: ?next=<id>,<id> là các đề còn lại sẽ làm lần lượt sau đề này
   const nextQueue = (new URLSearchParams(location.search).get("next") ?? "").split(",").filter(isUuid);
   // Thi thử toàn màn hình: rời khỏi (Esc, chuyển tab, mất focus) là một lần vi phạm, đề bị gỡ khỏi trang cho tới khi quay lại
@@ -247,7 +249,7 @@ export default function PracticePage({ examId }: Props) {
         // Đề chỉ có tệp: không có câu để làm, không tạo lượt làm bài
         if (isFilesOnly(exam)) {
           quiz.closeExam(); // đang mở đề khác (đi tiếp từ bộ đề) thì gỡ đề đó ra
-          setFilesOnly({ title: exam.title, list: exam.attachments ?? [] });
+          setFilesOnly({ title: exam.title });
           return;
         }
         const mode = params.get("mode");
@@ -377,7 +379,7 @@ export default function PracticePage({ examId }: Props) {
       {guard.away ? null : hasQuiz ? ( // đang ở ngoài bài thi: gỡ hẳn đề khỏi trang, mọi trạng thái bài làm vẫn nằm trong useQuiz
         <QuizWorkspace quiz={quiz} zoomOpen={zoomOpen} onZoomChange={setZoomOpen} onSubmit={requestSubmit} />
       ) : filesOnly && examId ? (
-        <FilesOnlyExam title={filesOnly.title} attachments={filesOnly.list} />
+        <FilesOnlyExam title={filesOnly.title} attachments={liveFiles} />
       ) : opening ? (
         <div className="flex flex-1 items-center justify-center bg-surface">
           <Loading label="Đang mở đề…" />

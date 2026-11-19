@@ -7,6 +7,7 @@ import { downloadUrl, ICONS, OPENABLE } from "@/features/exam-attachments/Attach
 import { ExamKindBadge } from "@/features/exam-store/ExamKindBadge";
 import { NewExamBadge } from "@/features/exam-store/NewExamBadge";
 import { LoadingMoreBanner } from "@/features/practice/components/quiz/LoadingMoreBanner";
+import { useExamAttachmentsLive } from "@/features/practice/hooks/useExamAttachmentsLive";
 import { useExamQuestionsLive } from "@/features/practice/hooks/useExamQuestionsLive";
 import type { Question } from "@/features/practice/types";
 import { ApiError } from "@/shared/api/client";
@@ -71,7 +72,7 @@ function Preview({ exam }: { exam: ImportedExam }) {
   const [failed, setFailed] = useState(false);
   const [zoom, setZoom] = useState<Question | null>(null);
   const fetching = !failed && questions.length < total;
-  const attachments = exam.attachments ?? [];
+  const attachments = useExamAttachmentsLive(exam.id, exam.attachments);
   const kind = exam.kind ?? "FE";
   const term = exam.title.match(/\b(?:SP|SU|FA)\d{2}\b/i)?.[0].toUpperCase() ?? null;
   const items = questions.filter((q) => !q.isReference).length;
