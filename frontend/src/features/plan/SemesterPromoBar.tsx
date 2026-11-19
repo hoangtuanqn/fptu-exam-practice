@@ -16,7 +16,7 @@ function decide(p: ActivePromo) {
   const dismissed = isSnoozed(`semester-promo:${p.term}`);
   const lastCallKey = `semester-promo-last:${p.term}`;
   if (dismissed && !(p.msLeft <= LAST_CALL_MS && !isSnoozed(lastCallKey))) return false;
-  if (promoBarOwnsToday()) return true;
+  if (promoBarOwnsToday() && !dismissed) return true; // đã bấm ✕ thì không giữ chỗ nữa (kể cả trong 48 giờ cuối)
   if (!takePromoSlot()) return false;
   markPromoBarToday();
   if (dismissed) snooze(lastCallKey, 2);
