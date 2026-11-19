@@ -11,7 +11,7 @@ const FOCUSABLE = 'a[href], button:not(:disabled), input:not(:disabled), select:
  * "khung chứa" của lớp phủ position:fixed và làm nó chỉ phủ một mảng nhỏ thay vì cả màn hình.
  * Truy cập: role=dialog + aria-modal, nhốt phím Tab trong hộp, Esc để đóng, trả focus về nút đã mở hộp thoại khi đóng.
  */
-export function Modal({ children, onClose, wide = false, blur = false }: { children: ReactNode; onClose?: () => void; wide?: boolean; blur?: boolean }) {
+export function Modal({ children, onClose, wide = false, blur = false, maxWidth }: { children: ReactNode; onClose?: () => void; wide?: boolean; blur?: boolean; maxWidth?: string }) {
   // blur: nền phủ tối hơn và nhòe nội dung phía sau, để không đọc được (ví dụ hộp chọn chế độ nằm đè lên đề đã mở: chưa chọn chế độ thì chưa xem được đề)
   const box = useRef<HTMLDivElement>(null);
 
@@ -58,7 +58,7 @@ export function Modal({ children, onClose, wide = false, blur = false }: { child
         role="dialog"
         aria-modal="true"
         tabIndex={-1}
-        className={`md-enter my-auto max-h-full w-full ${wide ? "max-w-4xl" : "max-w-md"} overflow-y-auto rounded-m3-xl bg-surface-container-high p-6 text-on-surface shadow-m3-3 outline-none sm:p-7`}
+        className={`md-enter my-auto max-h-full w-full ${maxWidth ?? (wide ? "max-w-4xl" : "max-w-md")} overflow-y-auto rounded-m3-xl bg-surface-container-high p-6 text-on-surface shadow-m3-3 outline-none sm:p-7`}
       >
         {children}
       </div>
