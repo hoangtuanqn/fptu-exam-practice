@@ -25,6 +25,12 @@ export const authenticate: RequestHandler = async (req, _res, next) => {
   next();
 };
 
+// Trang công khai: có token hợp lệ thì nạp user, token hỏng hoặc không có thì coi như khách (không chặn)
+export const optionalAuthenticate: RequestHandler = async (req, _res, next) => {
+  if (req.headers.authorization) await loadUser(req).catch(() => undefined);
+  next();
+};
+
 // Cho cả thành viên lẫn khách: có token thì phải hợp lệ, không có thì cần header X-Guest-Id.
 // Khách chỉ là danh tính ẩn danh theo trình duyệt, không có quyền gì ngoài kho đề của chính mình.
 export const identify: RequestHandler = async (req, _res, next) => {
