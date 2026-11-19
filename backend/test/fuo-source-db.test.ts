@@ -10,6 +10,7 @@ const loadModules = async () => ({
   repo: (await import("../src/repositories/fuo-source.repository")).fuoSourceRepository,
   worker: await import("../src/jobs/fuo-source.worker"),
   authMessage: (await import("../src/services/crawler/fuo-client")).FUO_AUTH_MESSAGE,
+  settings: (await import("../src/repositories/setting.repository")).settingRepository,
 });
 
 const link = (id: number) => `https://fuoverflow.com/threads/de-${id}.${id}/`;
@@ -44,7 +45,7 @@ describe("FuOverflow source runs (MySQL)", { skip: DB_TESTS_ENABLED ? false : DB
   });
 
   it("paste is idempotent: the same thread is stored once, invalid lines are reported", async () => {
-    await assert.rejects(m.service.start(admin), (e: { status?: number }) => e.status === 422); // chưa có link nào
+    await assert.rejects(m.service.start(admin), (e: { status?: number }) => e.status === 422); // chưa có cookie/tài khoản FuOverflow
     const first = await m.service.add([link(1), link(2), "https://example.com/x", link(1).replace("/de-1.1/", "/1/page-3")].join("\n"));
     assert.equal(first.added, 2);
     assert.equal(first.existing, 0);
@@ -55,15 +56,16 @@ describe("FuOverflow source runs (MySQL)", { skip: DB_TESTS_ENABLED ? false : DB
     assert.equal(await m.prisma.fuoSourceUrl.count(), 3);
   });
 
-  it("start is idempotent while a run is active and the run goes RUNNING -> DONE", async () => {
-    // Chưa đăng ký worker: lượt nằm ở RUNNING để kiểm tra lần bấm thứ hai
-    const a = await m.service.start(admin);
-    const b = await m.service.start(admin);
-    assert.equal(a.started, true);
-    assert.equal(b.started, false);
-    assert.equal(b.run?.id, a.run?.id);
+  it("afterScan is idempotent while a run is active, start does nothing then, and the run goes RUNNING -> DONE", async () => {
+    // Chưa đăng ký worker: lượt nằm ở RUNNING để kiểm tra lần gọi thứ hai
+    await m.service.afterScan(admin);
+    await m.service.afterScan(admin);
+    const a = await m.service.status();
     assert.equal(await m.prisma.fuoSourceRun.count(), 1);
-    assert.deepEqual({ total: a.run?.total, queued: a.counts.QUEUED }, { total: 3, queued: 3 });
+    assert.deepEqual({ status: a.run?.status, total: a.run?.total, queued: a.counts.QUEUED, scan: a.scan }, { status: "RUNNING", total: 3, queued: 3, scan: null });
+    const b = await m.service.start(admin); // đang có lượt nạp: không quét, không cần cookie
+    assert.deepEqual({ started: b.started, run: b.run?.id }, { started: false, run: a.run?.id });
+    assert.equal(await m.prisma.fuoCatalogRun.count(), 0);
 
     const seen: string[] = [];
     const commentsAtSeen: (Date | null)[] = [];
@@ -98,30 +100,54 @@ describe("FuOverflow source runs (MySQL)", { skip: DB_TESTS_ENABLED ? false : DB
     assert.deepEqual(await m.repo.runSummary(s.run!.id), { addedQuestions: 4, examsWithNewQuestions: 1 });
   });
 
-  it("a FuOverflow login failure stops the run as NEEDS_AUTH, and the next start resumes the same run", async () => {
+  it("a FuOverflow login failure stops the run as NEEDS_AUTH, and the next run resumes the same run", async () => {
     let calls = 0;
     m.service.process = async () => {
       calls++;
       throw new Error(m.authMessage);
     };
-    const started = await m.service.start(admin);
-    assert.equal(started.started, true);
+    await m.service.afterScan(admin); // link đã xong và bài không đổi không vào hàng chờ: chỉ link lỗi (2)
+    const started = await m.service.status();
+    assert.equal(started.run?.total, 1);
     await waitFor(runFinished);
-    assert.equal(calls, 1); // dừng ngay, không làm hỏng các link còn lại
+    assert.equal(calls, 1); // dừng ngay
     const stopped = await m.service.status();
     assert.equal(stopped.run?.status, "NEEDS_AUTH");
     assert.equal(stopped.run?.id === started.run?.id, true);
-    assert.equal(stopped.counts.QUEUED, 3);
+    assert.equal(stopped.counts.QUEUED, 1);
     assert.equal(stopped.run?.failed, 0);
 
     await m.service.add(link(4)); // dán thêm trong lúc dừng: lượt tiếp tục cũng nhận
     m.service.process = async () => ({ examId: EXAM_ID, result: "UNCHANGED" as const, addedQuestions: 0, commentsRefreshed: false });
-    const resumed = await m.service.start(admin);
+    await m.service.afterScan(admin);
+    const resumed = await m.service.status();
     assert.equal(resumed.run?.id, started.run?.id);
     await waitFor(runFinished);
     const s = await m.service.status();
-    assert.deepEqual({ status: s.run?.status, total: s.run?.total, done: s.run?.done }, { status: "DONE", total: 4, done: 4 });
+    assert.deepEqual({ status: s.run?.status, total: s.run?.total, done: s.run?.done }, { status: "DONE", total: 2, done: 2 });
     assert.equal(await m.prisma.fuoSourceRun.count(), 2);
+  });
+
+  it("afterScan adds FE catalog threads and queues only new links and links whose thread changed on FuOverflow", async () => {
+    const future = new Date(Date.now() + 60_000);
+    const thread = (threadId: string, kind: "FE" | "PE", syncedAt?: Date) => ({ threadId, subjectCode: "TST101", title: `t${threadId}`, kind, ...(syncedAt && { syncedAt }) });
+    await m.prisma.fuoThread.createMany({ data: [thread("1", "FE", future), thread("3", "FE", new Date(0)), thread("5", "FE"), thread("6", "FE"), thread("7", "PE")] });
+    await m.prisma.exam.create({ data: { threadId: "6", title: "t6", sourceUrl: link(6), totalQuestions: 1, answerSource: "AI" } });
+    const seen: string[] = [];
+    m.service.process = async (threadId: string) => {
+      seen.push(threadId);
+      return { examId: EXAM_ID, result: "UNCHANGED" as const, addedQuestions: 0, commentsRefreshed: false };
+    };
+    await m.service.afterScan(admin);
+    await waitFor(runFinished);
+    assert.deepEqual(seen.sort(), ["1", "5"]); // 1: bài đổi sau lần xử lý; 5: bài FE mới. 3: không đổi; 6: đã có đề; 7: không phải FE
+    const six = await m.prisma.fuoSourceUrl.findUnique({ where: { threadId: "6" } });
+    assert.deepEqual({ status: six?.status, url: six?.url, processed: six?.processedAt !== null }, { status: "DONE", url: "https://fuoverflow.com/threads/6/", processed: true });
+    assert.equal(await m.prisma.fuoSourceUrl.count({ where: { threadId: "7" } }), 0);
+    await m.prisma.fuoThread.update({ where: { threadId: "1" }, data: { syncedAt: new Date(0) } });
+    await m.service.afterScan(admin); // gọi lại: không còn gì để nạp
+    await waitFor(runFinished);
+    assert.equal((await m.service.status()).run?.total, 0);
   });
 
   it("the run waits while user crawl jobs are queued or running, then continues", async () => {
@@ -133,13 +159,14 @@ describe("FuOverflow source runs (MySQL)", { skip: DB_TESTS_ENABLED ? false : DB
       calls++;
       return { examId: EXAM_ID, result: "UNCHANGED" as const, addedQuestions: 0, commentsRefreshed: false };
     };
-    await m.service.start(admin);
+    await m.service.add(link(8));
+    await m.service.afterScan(admin);
     await new Promise((r) => setTimeout(r, 1500));
     assert.equal(calls, 0); // chưa nhận link nào khi người dùng đang chờ
     assert.equal((await m.service.status()).counts.RUNNING, 0);
     busy = false;
     await waitFor(runFinished);
-    assert.equal(calls, 4);
+    assert.equal(calls, 1);
     m.service.userImportsWaiting = realWaiting;
 
     // Hàm thật đọc crawl_jobs: có job QUEUED thì báo bận
@@ -150,12 +177,17 @@ describe("FuOverflow source runs (MySQL)", { skip: DB_TESTS_ENABLED ? false : DB
     assert.equal(await m.service.userImportsWaiting(), false);
   });
 
-  it("two starts at the same moment create a single run", async () => {
-    const before = await m.prisma.fuoSourceRun.count();
+  it("two starts at the same moment create a single incremental catalog scan, shown in the status", async () => {
+    await m.settings.setMany({ "crawler.cookie": "xf_user=test" });
     const [a, b] = await Promise.all([m.service.start(admin), m.service.start(admin)]);
     assert.equal([a.started, b.started].filter(Boolean).length, 1);
-    assert.equal(await m.prisma.fuoSourceRun.count(), before + 1);
-    await waitFor(runFinished);
+    const runs = await m.prisma.fuoCatalogRun.findMany();
+    assert.deepEqual(runs.map((r) => [r.status, r.autoImport]), [["RUNNING", true]]);
+    const s = await m.service.status(); // worker quét chưa đăng ký ở test này: lượt nằm ở RUNNING
+    assert.deepEqual(s.scan, { status: "RUNNING", subjectsTotal: 0, subjectsDone: 0, subjectsFailed: 0, currentSubject: null, threadsNew: 0, threadsUpdated: 0, lastError: null });
+    assert.equal((await m.service.start(admin)).started, false); // đang quét: không tạo thêm
+    await m.prisma.fuoCatalogRun.updateMany({ data: { status: "DONE", activeLock: null } });
+    assert.equal((await m.service.status()).scan, null);
   });
 
   it("appending questions to an existing exam keeps ids and answers of the old ones and never lowers the total", async () => {

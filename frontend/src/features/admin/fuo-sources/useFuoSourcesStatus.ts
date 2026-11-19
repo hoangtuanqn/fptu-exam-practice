@@ -14,7 +14,7 @@ export function useFuoSourcesStatus() {
   const query = useApi(() => fuoSourcesApi.status(), []);
   const [live, setLive] = useState<FuoSourcesStatus | null>(null);
   const status = live ?? query.data;
-  const running = status?.run?.status === "RUNNING";
+  const running = status?.run?.status === "RUNNING" || status?.scan?.status === "RUNNING";
   const refresh = useCallback(() => void fuoSourcesApi.status().then(setLive).catch(() => undefined), []);
 
   useEffect(() => onServerEvent<FuoSourcesStatus>(EVENTS.fuoSources, setLive), []);

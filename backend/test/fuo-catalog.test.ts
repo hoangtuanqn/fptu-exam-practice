@@ -7,7 +7,7 @@ import { looksBlocked, parseCount, parseForumPage } from "../src/services/crawle
 import { parseSubjectSemesters } from "../src/services/crawler/fuo-subjects.service";
 import { collectThread, extractDescription, extractLabel, isOutsideSubjectForums } from "../src/services/crawler/thread-scraper.service";
 import { classifyKind } from "../src/utils/exam-kind";
-import { diffCatalogRows } from "../src/utils/fuo-catalog-diff";
+import { diffCatalogRows, pageHasNews } from "../src/utils/fuo-catalog-diff";
 
 // Danh mục FuOverflow: đọc trang danh sách bài, phân loại đề, so bài đã lưu, và việc lấy đề nhận mọi loại (thuần, không gọi mạng/DB)
 
@@ -92,6 +92,15 @@ describe("catalog diff", () => {
     assert.deepEqual(added.map((r) => r.threadId), ["4"]);
     assert.deepEqual(changed.map((r) => r.threadId), ["2"]);
     assert.deepEqual(diffCatalogRows([row("1", { postedAt: null })], [row("1")]).changed.length, 1);
+  });
+
+  it("incremental scan stops at the first page without new or changed rows", () => {
+    const stored = [row("1"), row("2")];
+    assert.equal(pageHasNews(stored, [row("1"), row("2")]), false); // trang không đổi: dừng
+    assert.equal(pageHasNews(stored, [row("1"), row("2", { replies: 9 })]), true); // có bình luận mới: đọc tiếp trang sau
+    assert.equal(pageHasNews(stored, [row("1"), row("3")]), true); // có bài mới
+    assert.equal(pageHasNews([], [row("1")]), true); // môn chưa quét lần nào: đi hết
+    assert.equal(pageHasNews(stored, []), false);
   });
 });
 

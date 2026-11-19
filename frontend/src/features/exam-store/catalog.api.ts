@@ -39,6 +39,7 @@ export interface LibraryOverview {
   examsKnown: number; // đề biết (danh mục FuOverflow + hệ thống)
   examsReady: number; // đề đã có ảnh + đáp án, mở ngay
   bySemester: { semester: number | null; subjects: number; examsKnown: number; examsReady: number }[];
+  byKind?: Record<ExamKind, number>; // số đề theo loại; máy chủ cũ chưa trả về
 }
 
 // Đề mới đăng gần đây trên danh mục (chỉ mô tả)
@@ -48,6 +49,7 @@ export interface LatestExam {
   title: string;
   postedAt: string;
   term: string | null;
+  kind?: ExamKind;
 }
 
 export const catalogApi = {

@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { BookOpen, Eye, History } from "lucide-react";
 import { useOnLibraryChanged } from "@/features/exam-store/libraryEvents";
+import { examOpenPath } from "@/features/exam-import/types";
 import { examLibraryApi, sizeText, type LibraryExam } from "@/features/exam-store/exam-library.api";
 import { ExamKindBadge } from "@/features/exam-store/ExamKindBadge";
 import { ResumeList } from "@/features/practice-session/ResumeList";
@@ -65,7 +66,7 @@ export function MyExamsTab() {
             <ul className="divide-y divide-slate-100 md:hidden">
               {data.items.map((e) => (
                 <li key={e.id} className="flex items-center gap-1 pr-2">
-                  <Link to={`/exam/${e.id}/preview`} className="block min-w-0 flex-1 px-4 py-3 transition active:bg-slate-50">
+                  <Link to={examOpenPath(e)} className="block min-w-0 flex-1 px-4 py-3 transition active:bg-slate-50">
                     <div className="flex min-w-0 items-center gap-2">
                       <ExamKindBadge kind={e.kind} />
                       <span className="truncate text-sm font-medium text-slate-900">{e.title}</span>
@@ -110,7 +111,7 @@ export function MyExamsTab() {
                         <div className="flex items-center justify-between gap-2">
                           <span className="flex min-w-0 items-center gap-2">
                             <ExamKindBadge kind={e.kind} />
-                            <Link to={`/exam/${e.id}/preview`} className="font-medium text-slate-900 hover:text-brand-700 hover:underline">
+                            <Link to={examOpenPath(e)} className="font-medium text-slate-900 hover:text-brand-700 hover:underline">
                               {e.title}
                             </Link>
                           </span>
