@@ -11,6 +11,7 @@ export function HelpDialog({ mode, onClose }: { mode: Mode; onClose: () => void 
     { keys: ["←", "→"], text: "Câu trước / câu tiếp" },
     { keys: ["Enter"], text: mode === "exam" ? "Câu tiếp; câu cuối là nộp bài" : "Xác nhận, rồi câu tiếp; câu cuối là nộp bài" },
     { keys: ["M"], text: "Đánh dấu câu để xem lại" },
+    { keys: ["N"], text: "Nhảy tới câu chưa làm" },
   ];
 
   return (
