@@ -1,7 +1,7 @@
 import { ProtectedImg } from "@/shared/ui/ProtectedImg";
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { BookOpen, FileSearch, Timer, X } from "lucide-react";
+import { BookOpen, FileSearch, Timer } from "lucide-react";
 import { examImportApi } from "@/features/exam-import/exam-import.api";
 import { canPractice, type ExamAttachment, type ExamQuestionsPayload, type ImportedExam } from "@/features/exam-import/types";
 import { downloadUrl, ICONS, OPENABLE } from "@/features/exam-attachments/AttachmentList";
@@ -15,12 +15,12 @@ import { ApiError } from "@/shared/api/client";
 import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
 import { SiteHeader } from "@/shared/layout/SiteHeader";
-import { Button, buttonClass } from "@/shared/ui/Button";
+import { buttonClass } from "@/shared/ui/Button";
 import { Card } from "@/shared/ui/Card";
 import { Empty } from "@/shared/ui/Feedback";
-import { Modal } from "@/shared/ui/Modal";
 import { QueryBoundary } from "@/shared/ui/QueryBoundary";
 import { isUuid } from "@/shared/utils/uuid";
+import { ImageLightbox } from "./ImageLightbox";
 
 const TILE = "md-state group relative block aspect-[4/3] overflow-hidden rounded-m3-md bg-surface-container-lowest shadow-m3-1 outline-none focus-visible:ring-2 focus-visible:ring-primary";
 const CAPTION = "md-label-large absolute inset-x-0 bottom-0 truncate bg-inverse-surface/70 px-3 py-2 text-left text-inverse-on-surface";
@@ -155,19 +155,7 @@ function Preview({ exam }: { exam: ImportedExam }) {
         </Card>
       )}
 
-      {zoom && (
-        <Modal wide onClose={() => setZoom(null)}>
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <h2 className="md-title-medium truncate text-on-surface">{fileName(zoom)}</h2>
-            <Button variant="text" onClick={() => setZoom(null)} aria-label="Đóng">
-              <X size={18} />
-            </Button>
-          </div>
-          <div className="relative">
-            <ProtectedImg src={zoom.imageUrl} alt={`Ảnh ${fileName(zoom)} của đề`} className="h-auto w-full rounded-m3-md bg-surface-container-lowest" />
-          </div>
-        </Modal>
-      )}
+      {zoom && <ImageLightbox src={zoom.imageUrl} name={fileName(zoom)} onClose={() => setZoom(null)} />}
     </>
   );
 }
@@ -181,33 +169,15 @@ const pdfSrc = (url: string, bar: boolean) => `${url}#${bar ? "" : "toolbar=0&na
 
 // Tệp đính kèm: PDF hiện luôn trang đầu (bấm để xem lớn); loại khác là biểu tượng lớn trên nền nhạt, mở được thì mở tab mới, không thì tải về
 function FileTile({ a }: { a: ExamAttachment }) {
-  const [big, setBig] = useState(false);
   const Icon = ICONS[a.kind] ?? ICONS.other;
   const open = OPENABLE.has(a.kind);
   if (a.kind === "pdf" && canEmbedPdf()) {
+    // PDF: bấm là mở thẳng file .pdf ở tab mới (không xem trong trang); khung nhỏ chỉ là hình xem trước
     return (
-      <>
-        <button type="button" onClick={() => setBig(true)} aria-label={`Xem lớn ${a.name}`} title={a.name} className={`${TILE} w-full bg-surface-container-lowest`}>
-          <iframe src={pdfSrc(a.url, false)} title={a.name} loading="lazy" tabIndex={-1} className="pointer-events-none h-full w-full border-0" />
-          <span className={CAPTION}>{a.name}</span>
-        </button>
-        {big && (
-          <Modal wide onClose={() => setBig(false)}>
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <h2 className="md-title-medium truncate text-on-surface">{a.name}</h2>
-              <div className="flex shrink-0 gap-1">
-                <a href={a.url} target="_blank" rel="noopener noreferrer" className={buttonClass({ size: "sm", variant: "text" })}>
-                  Mở tab mới
-                </a>
-                <Button variant="text" onClick={() => setBig(false)} aria-label="Đóng">
-                  <X size={18} />
-                </Button>
-              </div>
-            </div>
-            <iframe src={pdfSrc(a.url, true)} title={a.name} className="h-[75vh] w-full rounded-m3-md border-0 bg-surface-container-lowest" />
-          </Modal>
-        )}
-      </>
+      <a href={a.url} target="_blank" rel="noopener noreferrer" aria-label={`Mở ${a.name}`} title={a.name} className={`${TILE} bg-surface-container-lowest`}>
+        <iframe src={pdfSrc(a.url, false)} title={a.name} loading="lazy" tabIndex={-1} className="pointer-events-none h-full w-full border-0" />
+        <span className={CAPTION}>{a.name}</span>
+      </a>
     );
   }
   return (

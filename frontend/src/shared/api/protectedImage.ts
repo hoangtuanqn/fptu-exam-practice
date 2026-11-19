@@ -50,6 +50,16 @@ export async function openProtectedImage(url: string) {
   }
 }
 
+/** Tải ảnh về máy với tên cho trước (ảnh cần danh tính nên không dùng link trực tiếp được). */
+export async function downloadProtectedImage(url: string, filename: string) {
+  const blobUrl = URL.createObjectURL(await fetchImageBlob(url));
+  const a = document.createElement("a");
+  a.href = blobUrl;
+  a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(blobUrl), 10_000);
+}
+
 export const openImageHandler = (url: string) => (e: { preventDefault: () => void }) => {
   e.preventDefault();
   void openProtectedImage(url);
