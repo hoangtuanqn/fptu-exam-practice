@@ -8,21 +8,9 @@ import { useApi } from "@/shared/hooks/useApi";
 
 export const PICK_SECTION_ID = "chon-de"; // id khối "Chọn môn và đề" (ExamSourcePicker), đích cuộn khi bấm một đề
 
-const FRESH_DAYS = 60; // chỉ coi là "mới" khi đăng trong chừng này ngày; đề cũ hơn thì không bày ra như thể mới
+const FRESH_DAYS = 30; // chỉ coi là "mới" khi đăng trong chừng này ngày; đề cũ hơn thì không bày ra như thể mới
 
 const DAY_MS = 86_400_000;
-
-// "hôm nay", "hôm qua", "5 ngày trước", "3 tuần trước"
-function ago(iso: string, now = Date.now()) {
-  const days = Math.max(
-    0,
-    Math.floor((now - new Date(iso).getTime()) / DAY_MS),
-  );
-  if (days === 0) return "hôm nay";
-  if (days === 1) return "hôm qua";
-  if (days < 14) return `${days} ngày trước`;
-  return `${Math.floor(days / 7)} tuần trước`;
-}
 
 // Bấm một đề: địa chỉ đổi sang ?subject=..., khối chọn môn phía trên nạp môn đó. Cuộn khối ấy lên đầu để người dùng thấy ngay,
 // kể cả khi môn đã đang được chọn. Mở tab mới (Ctrl/Shift/Cmd) thì không cuộn trang hiện tại.
@@ -95,7 +83,6 @@ export function LatestExamsStrip() {
                   <span className="rounded-full bg-surface-container-high px-2 py-0.5 font-semibold text-on-surface">
                     {e.subjectCode}
                   </span>
-                  <span>{ago(e.postedAt, now)}</span>
                   <NewExamBadge term={e.term} />
                 </span>
               </span>
