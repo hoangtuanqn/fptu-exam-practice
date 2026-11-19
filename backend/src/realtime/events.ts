@@ -7,6 +7,7 @@ export const EVENTS = {
   examAnswers: "exam:answers", // server -> client: trạng thái + đáp án của đề
   examQuestions: "exam:questions", // server -> client: các câu đã có ảnh (đề đang được lấy về, hiện dần)
   examTopics: "exam:topics", // server -> client: việc gắn chủ đề chạy nền (đang chạy / xong kèm các chủ đề mới)
+  examAttachments: "exam:attachments", // server -> client: danh sách tệp đính kèm của đề, gửi khi danh sách đổi (đề đang được lấy về)
   examFailed: "exam:failed", // server -> client: lấy đề thất bại giữa chừng, đề bị gỡ
   jobUpdate: "job:update", // server -> client: tiến độ lấy đề
   adminNotice: "admin:notice", // server -> client (chỉ admin): có thông báo mới về hành vi người dùng

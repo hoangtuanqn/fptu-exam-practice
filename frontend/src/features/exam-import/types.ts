@@ -37,6 +37,12 @@ export interface ExamAttachment {
   url: string;
 }
 
+// Sự kiện realtime "exam:attachments": cả danh sách tệp đính kèm của đề
+export interface ExamAttachmentsPayload {
+  examId: string;
+  attachments: ExamAttachment[];
+}
+
 // Đề chỉ có tệp đính kèm, không có câu hỏi để làm trên web
 export const isFilesOnly = (e: ImportedExam) => e.totalQuestions === 0 && e.questions.length === 0 && (e.attachments?.length ?? 0) > 0;
 

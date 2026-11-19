@@ -10,9 +10,8 @@ import { AppError } from "../rules/error";
 import { isMember, type Actor, type Owner } from "../utils/actor";
 import { failedMessage, toAnswersPayload } from "../utils/exam-answers";
 import { storageDir } from "../configs/env";
-import { attachmentKind } from "../utils/attachment";
 import { resolveInside } from "../utils/exam-zip";
-import { attachmentUrlOf, fileUrlOf } from "../utils/file-url";
+import { fileUrlOf, toAttachmentDto } from "../utils/file-url";
 import { toMeta, type PaginationQuery } from "../utils/pagination";
 
 const imageUrlOf = fileUrlOf;
@@ -80,14 +79,7 @@ export const examService = {
         topic: q.topic, // chủ đề theo syllabus môn (null nếu chưa gắn)
       })),
       // Tệp đính kèm không phải ảnh; đề chỉ có tệp thì questions rỗng
-      attachments: exam.attachments.map((a) => ({
-        id: a.id,
-        name: a.name,
-        mime: a.mime,
-        sizeBytes: a.sizeBytes,
-        kind: attachmentKind(a.filePath),
-        url: attachmentUrlOf(exam.id, a.id),
-      })),
+      attachments: exam.attachments.map((a) => toAttachmentDto(exam.id, a)),
     };
   },
 

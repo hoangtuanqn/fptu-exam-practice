@@ -6,6 +6,7 @@ import { examImportApi } from "@/features/exam-import/exam-import.api";
 import { isFilesOnly, type ExamQuestionsPayload, type ImportedExam } from "@/features/exam-import/types";
 import { AttachmentList } from "@/features/exam-attachments/AttachmentList";
 import { LoadingMoreBanner } from "@/features/practice/components/quiz/LoadingMoreBanner";
+import { useExamAttachmentsLive } from "@/features/practice/hooks/useExamAttachmentsLive";
 import { useExamQuestionsLive } from "@/features/practice/hooks/useExamQuestionsLive";
 import type { Question } from "@/features/practice/types";
 import { savedApi } from "@/features/saved/saved.api";
@@ -93,8 +94,8 @@ function ExamView({ exam }: { exam: ImportedExam }) {
   const fetching = !failed && questions.length < total;
   const references = questions.filter((q) => q.isReference);
   const items = questions.filter((q) => !q.isReference);
-  const attachments = exam.attachments ?? [];
-  const filesOnly = isFilesOnly(exam);
+  const attachments = useExamAttachmentsLive(exam.id, exam.attachments);
+  const filesOnly = isFilesOnly({ ...exam, attachments });
 
   useExamQuestionsLive(
     exam.id,
