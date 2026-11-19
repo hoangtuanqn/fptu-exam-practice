@@ -140,41 +140,46 @@ export function Header({
               </span>
             )}
 
-            {/* Chế độ (chip) và đồng hồ đếm ngược của bài thi (khối riêng, trên điện thoại chỉ giữ đồng hồ cho đỡ chật) */}
-            <span
-              title={waiting ? "Giờ làm bài sẽ bắt đầu tính khi đề có đáp án" : undefined}
-              className={`inline-flex items-center gap-2 rounded-xl border px-2.5 py-1.5 text-sm transition sm:px-3 ${showLeft ? "max-sm:hidden" : ""} ${
-                submitted
-                  ? "border-slate-200 bg-slate-50 text-slate-500"
-                  : waiting
-                    ? "border-amber-200 bg-amber-50 text-amber-800"
-                    : `border-brand-200 bg-brand-50 text-brand-800 ${flash ? "scale-105 shadow-card ring-2 ring-brand-400" : ""}`
-              }`}
-            >
-              <Icon size={15} />
-              <span className="hidden sm:inline">{label}</span>
-              {waiting && (
-                <>
-                  <span className="hidden h-4 w-px bg-current opacity-20 sm:block" />
-                  <span className="whitespace-nowrap">
-                    Chờ đáp án{isExam && <span className="max-sm:hidden"> · chưa tính giờ</span>}
-                  </span>
-                </>
-              )}
-            </span>
-            {showLeft && timeLimitSec && <ExamTimer left={left!} limit={timeLimitSec} />}
-
+            {/* Tài liệu tham khảo: đứng đầu cụm nút bên phải, luôn có chữ (không chỉ biểu tượng) vì người làm bài cần tới nó thường xuyên */}
             {referenceCount > 0 && onShowReferences && (
               <Button
+                variant="tonal"
                 onClick={onShowReferences}
                 title="Tài liệu tham khảo (không tính điểm)"
-                aria-label="Tài liệu tham khảo"
-                className="!px-2.5 sm:!px-4"
+                aria-label={`Tài liệu tham khảo, ${referenceCount} mục`}
+                className="!px-3 sm:!px-4"
               >
                 <BookOpen size={16} />
-                <span className="hidden sm:inline">Tài liệu</span>
+                Tài liệu
+                <span className="md-label-small hidden rounded-full bg-primary px-1.5 tabular-nums text-on-primary sm:inline">{referenceCount}</span>
               </Button>
             )}
+
+            {/* Chế độ (chip) và đồng hồ đếm ngược: chỉ hiện khi Thi hoặc đang chờ đáp án. Luyện tập thì không cần nhắc người dùng đang ở chế độ nào */}
+            {(isExam || waiting) && (
+              <span
+                title={waiting ? "Giờ làm bài sẽ bắt đầu tính khi đề có đáp án" : undefined}
+                className={`inline-flex items-center gap-2 rounded-xl border px-2.5 py-1.5 text-sm transition sm:px-3 ${showLeft ? "max-sm:hidden" : ""} ${
+                  submitted
+                    ? "border-slate-200 bg-slate-50 text-slate-500"
+                    : waiting
+                      ? "border-amber-200 bg-amber-50 text-amber-800"
+                      : `border-brand-200 bg-brand-50 text-brand-800 ${flash ? "scale-105 shadow-card ring-2 ring-brand-400" : ""}`
+                }`}
+              >
+                <Icon size={15} />
+                <span className="hidden sm:inline">{label}</span>
+                {waiting && (
+                  <>
+                    <span className="hidden h-4 w-px bg-current opacity-20 sm:block" />
+                    <span className="whitespace-nowrap">
+                      Chờ đáp án{isExam && <span className="max-sm:hidden"> · chưa tính giờ</span>}
+                    </span>
+                  </>
+                )}
+              </span>
+            )}
+            {showLeft && timeLimitSec && <ExamTimer left={left!} limit={timeLimitSec} />}
 
             {onHelp && (
               <Button variant="tonal" onClick={openHelp} title="Hướng dẫn làm bài: cách chọn đáp án và phím tắt" aria-label="Hướng dẫn làm bài" className="relative !px-2.5 sm:!px-4">
