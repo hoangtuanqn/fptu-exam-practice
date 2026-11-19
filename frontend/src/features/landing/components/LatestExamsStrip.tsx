@@ -80,18 +80,18 @@ export function LatestExamsStrip() {
             <Link
               to={`/?subject=${encodeURIComponent(e.subjectCode)}`}
               onClick={scrollToPicker}
-              className="md-state group flex min-h-14 items-center gap-3 rounded-m3-md border border-outline-variant/70 bg-surface px-3 py-2.5 transition hover:-translate-y-0.5 hover:border-[#e0a100]/70 hover:shadow-m3-1 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+              className="md-state group flex min-h-14 items-start sm:items-center gap-3 rounded-m3-md border border-outline-variant/70 bg-surface px-3 py-2.5 transition hover:-translate-y-0.5 hover:border-[#e0a100]/70 hover:shadow-m3-1 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
             >
-              {/* Máy chủ cũ chưa trả loại đề: không đoán, bỏ nhãn */}
-              {e.kind && <ExamKindBadge kind={e.kind} />}
               <span className="min-w-0 flex-1">
                 <span
-                  className="md-label-large block truncate text-on-surface"
+                  className="md-label-large line-clamp-2 break-words text-on-surface"
                   title={e.title}
                 >
                   {e.title}
                 </span>
-                <span className="md-label-small mt-1 flex items-center gap-1.5 text-on-surface-variant">
+                <span className="md-label-small mt-1 flex flex-wrap items-center gap-1.5 text-on-surface-variant">
+                  {/* Máy chủ cũ chưa trả loại đề: không đoán, bỏ nhãn */}
+                  {e.kind && <ExamKindBadge kind={e.kind} />}
                   <span className="rounded-full bg-surface-container-high px-2 py-0.5 font-semibold text-on-surface">
                     {e.subjectCode}
                   </span>
@@ -101,7 +101,7 @@ export function LatestExamsStrip() {
               </span>
               <ChevronRight
                 size={18}
-                className="shrink-0 text-on-surface-variant transition group-hover:translate-x-0.5 motion-reduce:transition-none"
+                className="shrink-0 self-center text-on-surface-variant transition group-hover:translate-x-0.5 motion-reduce:transition-none"
                 aria-hidden
               />
             </Link>
