@@ -6,12 +6,10 @@ import {
   CircleHelp,
   RotateCcw,
   Send,
-  Trophy,
 } from "lucide-react";
 import type { Mode } from "@/features/practice/types.ts";
 import { brand } from "@/shared/brand/brand";
 import { getModeConfig } from "@/features/practice/config/modes";
-import { formatScore } from "@/features/practice/utils/format";
 import { ExamTimer } from "./ExamTimer";
 import { Logo } from "@/shared/brand/Logo";
 import { Button } from "@/shared/ui/Button";
@@ -37,7 +35,6 @@ interface Props {
   submitLocked?: boolean; // AI chưa xong đáp án: chưa cho nộp
   elapsed: number; // số giây đã làm bài
   timeLimitSec?: number | null; // chế độ Thi có giới hạn: hiện thời gian còn lại thay cho thời gian đã làm
-  bestScore?: number | null; // điểm cao nhất của người dùng ở đề này (chưa làm lần nào thì không hiện)
   timing: boolean; // đồng hồ đang chạy (không chạy khi chờ đáp án hoặc đã nộp)
   referenceCount?: number; // số tài liệu tham khảo của đề (trang công thức...); có thì hiện nút "Tài liệu"
   onShowReferences?: () => void;
@@ -57,7 +54,6 @@ export function Header({
   submitLocked,
   elapsed,
   timeLimitSec,
-  bestScore,
   timing,
   referenceCount = 0,
   onShowReferences,
@@ -129,17 +125,6 @@ export function Header({
       <div className="flex min-w-0 items-center justify-end gap-1.5 sm:shrink-0 sm:gap-2">
         {loaded && (
           <>
-            {bestScore != null && !(isExam && !submitted) && (
-              <span
-                title={`Điểm cao nhất của bạn ở đề này: ${formatScore(bestScore)}`}
-                className="hidden items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-sm font-medium text-amber-800 sm:inline-flex sm:px-3"
-              >
-                <Trophy size={14} />
-                <span className="hidden sm:inline">Cao nhất</span>
-                <span className="tabular-nums">{formatScore(bestScore)}</span>
-              </span>
-            )}
-
             {/* Tài liệu tham khảo: đứng đầu cụm nút bên phải, luôn có chữ (không chỉ biểu tượng) vì người làm bài cần tới nó thường xuyên */}
             {referenceCount > 0 && onShowReferences && (
               <Button

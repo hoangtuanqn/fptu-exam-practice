@@ -59,7 +59,6 @@ export default function PracticePage({ examId }: Props) {
   const [referencesOpen, setReferencesOpen] = useState(false); // đang xem tài liệu tham khảo của đề
   const [attachments, setAttachments] = useState<{ examId: string; list: ExamAttachment[] } | null>(null); // tệp đính kèm của đề mở theo địa chỉ
   const [filesOnly, setFilesOnly] = useState<{ title: string } | null>(null); // đề chỉ có tệp: không mở bài làm
-  const [bestScore, setBestScore] = useState<number | null>(null); // điểm cao nhất của người dùng ở đề đang mở
   const [topicSummary, setTopicSummary] = useState<TopicSummary>(null); // kết quả theo chủ đề của bài vừa nộp, hiện trong bảng điểm
 
   const hasQuiz = quiz.questions.length > 0;
@@ -108,17 +107,6 @@ export default function PracticePage({ examId }: Props) {
     return true;
   };
 
-  // Điểm cao nhất ở đề này (chỉ thành viên, đề của hệ thống); nạp lại sau mỗi lần nộp được lưu
-  const loadBest = (examId: string) =>
-    historyApi
-      .summary(examId)
-      .then((s) => setBestScore(s.bestScore))
-      .catch(() => undefined);
-  useEffect(() => {
-    setBestScore(null);
-    if (user && quiz.examId !== null) void loadBest(quiz.examId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, quiz.examId]);
 
   // Đồng hồ bắt đầu chạy (đề có đáp án rồi): báo cho học viên biết giờ đã được tính
   const wasTiming = useRef(false);
@@ -218,7 +206,6 @@ export default function PracticePage({ examId }: Props) {
         } else if (review && review.capped > 0) {
           toast.error("Sổ câu sai đã đầy nên một số câu chưa được lưu. Pro không giới hạn.", { action: { label: "Xem gói Pro", onClick: () => navigate("/pro") } });
         } else toast.success("Đã lưu vào lịch sử làm bài");
-        if (quiz.examId !== null) void loadBest(quiz.examId);
       })
       .catch((err: unknown) => {
         setTopicSummary(null);
@@ -343,7 +330,6 @@ export default function PracticePage({ examId }: Props) {
         submitLocked={quiz.answersPending}
         elapsed={quiz.elapsed}
         timeLimitSec={quiz.timeLimitSec}
-        bestScore={bestScore}
         referenceCount={quiz.references.length + examFiles.length}
         onShowReferences={() => setReferencesOpen(true)}
         onHelp={() => setHelpOpen(true)}
