@@ -240,27 +240,42 @@ const importer = {
         }),
       );
 
+      const keptFiles = () => savedFiles.filter((f): f is DownloadedFile => !!f);
+      const attachmentRows = (kept: DownloadedFile[]) =>
+        kept.map((f) => ({ name: f.file.name, filePath: filePathOf(threadId, f.fileName), mime: f.mime, sizeBytes: f.sizeBytes, sourceUrl: f.file.url.split("?")[0]! }));
+
+      // Đề mới: ghi tệp đính kèm ngay khi ảnh và tệp xong (không chờ bình luận) để người đang mở đề thấy tệp sớm.
+      // Chỉ ghi một lần: replace tạo lại dòng (đổi id, hỏng link người dùng đang có) nên bước hoàn tất bỏ qua khi đã ghi ở đây.
+      let attachmentsSaved = false;
+      const saveAttachmentsEarly = async () => {
+        const settled = await Promise.allSettled([...imageTasks, ...fileTasks]);
+        if (refreshing || aborted || flushError || settled.some((r) => r.status === "rejected")) return;
+        const kept = keptFiles();
+        if (!kept.length) return;
+        await examAttachmentRepository.replace(examId, attachmentRows(kept));
+        attachmentsSaved = true;
+        void realtimeHub.publishExamAttachments(examId);
+      };
+
       // Chờ tất cả dừng hẳn (kể cả khi có lỗi) rồi mới dọn dẹp, để không còn tác vụ nào ghi vào thư mục đã xóa
-      const results = await Promise.allSettled([...imageTasks, ...fileTasks, ...commentTasks]);
+      const results = await Promise.allSettled([...imageTasks, ...fileTasks, ...commentTasks, saveAttachmentsEarly()]);
       await chain;
       const failure = results.find((r): r is PromiseRejectedResult => r.status === "rejected");
       if (failure) throw failure.reason;
       if (flushError) throw flushError;
       if (committed < total) throw new Error("Không tải đủ ảnh của đề");
-      const kept = savedFiles.filter((f): f is DownloadedFile => !!f);
+      const kept = keptFiles();
       if (filesOnly && !kept.length) throw new Error("Không tải được tệp đính kèm nào của đề");
 
       const tFetch = Date.now() - t0 - tThread;
       await stage("Đang hoàn tất", true);
       const withComments = thread.images.map((image, i) => comments[i] ?? { image, comments: [] });
       if (!filesOnly) await writeCommentsFile(dir, { title: thread.title, url: sourceUrl }, withComments);
-      await examAttachmentRepository.replace(
-        examId,
-        kept.map((f) => ({ name: f.file.name, filePath: filePathOf(threadId, f.fileName), mime: f.mime, sizeBytes: f.sizeBytes, sourceUrl: f.file.url.split("?")[0]! })),
-      );
+      if (!attachmentsSaved) await examAttachmentRepository.replace(examId, attachmentRows(kept));
       if (refreshing) {
         await examRepository.finishRefresh(examId, { title: thread.title, sourceUrl, author: thread.author, postedAt: thread.postedAt, total, kind: thread.kind, description: thread.description });
         await removeStaleFiles(filesDir, new Set(kept.map((f) => f.fileName))); // thread bớt tệp: xoá tệp cũ trên đĩa
+        void realtimeHub.publishExamAttachments(examId); // id tệp đã đổi: người đang xem đề cần danh sách mới
       }
 
       // Đáp án do AI giải NỀN sau khi lấy xong cả ảnh và bình luận. Cấu hình AI có thể đã đổi trong lúc lấy đề.
