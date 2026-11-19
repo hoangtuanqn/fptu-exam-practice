@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Gamepad2 } from "lucide-react";
+import { Building2, GraduationCap, Rocket, Users, Gamepad2 } from "lucide-react";
 import { Modal } from "@/shared/ui/Modal";
 import { Button, buttonClass } from "@/shared/ui/Button";
 import { isSnoozed, snooze } from "@/shared/utils/promptSnooze";
 import { LANDING_NOTICE as N } from "../content";
 
+const PERK_ICON = { tour: Building2, learn: GraduationCap, project: Rocket, friends: Users } as const;
 const SURFACE = "landing_notice";
 const SNOOZE_DAYS = 1 / 24; // tắt thì ẩn 1 giờ
 
@@ -29,10 +30,16 @@ export function LandingNoticePopup() {
       <p className="mt-3 rounded-m3-lg bg-secondary-container px-3 py-2 text-sm text-on-secondary-container">
         <b>Tin vui:</b> {N.goodNews}
       </p>
-      <ul className="mt-3 flex flex-wrap gap-2">
-        {N.perks.map((t) => (
-          <li key={t} className="rounded-full border border-outline-variant px-3 py-1 text-xs font-medium text-on-surface">✓ {t}</li>
-        ))}
+      <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+        {N.perks.map((p) => {
+          const Icon = PERK_ICON[p.icon as keyof typeof PERK_ICON];
+          return (
+            <li key={p.title} className="flex items-start gap-3 rounded-m3-lg border border-outline-variant p-3">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary-container text-on-secondary-container"><Icon size={18} aria-hidden /></span>
+              <span className="text-sm"><b className="block text-on-surface">{p.title}</b><span className="text-on-surface-variant">{p.text}</span></span>
+            </li>
+          );
+        })}
       </ul>
       <ol className="mt-3 space-y-1.5">
         {N.rounds.map((r, i) => (
