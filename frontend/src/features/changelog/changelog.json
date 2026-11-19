@@ -11,6 +11,10 @@
       "changes": [
         {
           "type": "new",
+          "text": "Ưu đãi kỳ mới: mua gói Pro trọn kỳ với giá giảm trong thời gian có hạn, mỗi tài khoản một lần"
+        },
+        {
+          "type": "new",
           "text": "Trang xem trước đề PE có nút Download All: tải mọi tệp và ảnh của đề trong một file zip mang tên đề"
         },
         {
