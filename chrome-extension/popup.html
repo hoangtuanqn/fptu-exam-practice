@@ -47,11 +47,25 @@
       <div id="gbody"></div>
     </section>
 
+    <section class="card">
+      <label class="toggle">
+        <span>
+          <b>Nút làm đề trên FuOverflow</b>
+          <small>Hiện cạnh bài “Đề Thi FE” và “Đề Thi PE”. Bấm nút chỉ mở fepass.top và hỏi xác nhận, bạn đồng ý mới bị trừ credit.</small>
+        </span>
+        <input type="checkbox" id="enabled" role="switch" />
+      </label>
+    </section>
+
     <details>
       <summary>Nâng cao (dùng để chạy thử)</summary>
       <label class="field">
         Địa chỉ website
         <input type="url" id="siteUrl" placeholder="https://fepass.top" />
+      </label>
+      <label class="field">
+        Địa chỉ API
+        <input type="url" id="apiUrl" placeholder="https://api.fepass.top" />
       </label>
       <div class="actions">
         <button type="button" id="save" class="btn small">Lưu</button>
