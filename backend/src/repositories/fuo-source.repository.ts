@@ -1,6 +1,6 @@
 import { type FuoSourceResult, type FuoSourceStatus, Prisma } from "@prisma/client";
 import { prisma } from "../configs/prisma";
-import { FUO_SOURCE_INSERT_CHUNK } from "../constants/fuo-source";
+import { FUO_SOURCE_AUTO_IMPORT_MAX, FUO_SOURCE_INSERT_CHUNK } from "../constants/fuo-source";
 import { catalogSourceRows } from "../utils/fuo-source-queue";
 import { type PaginationQuery, toSkipTake } from "../utils/pagination";
 
@@ -29,7 +29,7 @@ const queueForRun = async (tx: Prisma.TransactionClient, runId: string) => {
   });
   const changed = await tx.$executeRaw`
     UPDATE fuo_source_urls s JOIN fuo_threads t ON t.thread_id = s.thread_id
-    SET s.status = 'QUEUED', s.last_run_id = ${runId}, s.updated_at = NOW(3)
+    SET s.status = 'QUEUED', s.last_run_id = ${runId}, s.updated_at = ${new Date()}
     WHERE s.status = 'DONE' AND t.synced_at > s.processed_at`;
   return { count: pending.count + changed };
 };
@@ -38,14 +38,20 @@ export const fuoSourceRepository = {
   // Link đã có (trùng thread_id, unique) thì bỏ qua: dán lại nhiều lần không tạo trùng
   addMany: (rows: { threadId: string; url: string }[]) => prisma.fuoSourceUrl.createMany({ data: rows, skipDuplicates: true }),
 
-  // Mọi bài FE của danh mục chưa có link: thêm vào danh sách (bài đã có đề ghi là đã xử lý, xem catalogSourceRows). Trả về số link thêm.
+  // Bài FE của danh mục chưa có link: thêm vào danh sách (bài đã có đề ghi là đã xử lý, xem catalogSourceRows). Trả về số link thêm.
+  // Bài chưa có đề mỗi lượt chỉ lấy tối đa FUO_SOURCE_AUTO_IMPORT_MAX (mới đăng trước) vì mỗi đề mới tốn AI; phần còn lại vào lần bấm sau.
   async addCatalogThreads() {
     const found = await prisma.$queryRaw<{ threadId: string; examId: string | null }[]>`
       SELECT t.thread_id AS threadId, e.id AS examId FROM fuo_threads t
       LEFT JOIN fuo_source_urls s ON s.thread_id = t.thread_id
       LEFT JOIN exams e ON e.thread_id = t.thread_id
-      WHERE t.kind = 'FE' AND s.id IS NULL`;
-    const rows = catalogSourceRows(found, new Date());
+      WHERE t.kind = 'FE' AND s.id IS NULL
+      ORDER BY t.posted_at DESC`;
+    let fresh = 0;
+    const rows = catalogSourceRows(
+      found.filter((f) => f.examId || fresh++ < FUO_SOURCE_AUTO_IMPORT_MAX),
+      new Date(),
+    );
     let added = 0;
     for (let i = 0; i < rows.length; i += FUO_SOURCE_INSERT_CHUNK) added += (await prisma.fuoSourceUrl.createMany({ data: rows.slice(i, i + FUO_SOURCE_INSERT_CHUNK), skipDuplicates: true })).count;
     return added;
