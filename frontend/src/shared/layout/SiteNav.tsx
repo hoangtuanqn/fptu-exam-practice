@@ -3,7 +3,8 @@ import { Link, useLocation } from "react-router-dom";
 import { BookOpen, Crown, Menu, ShoppingBag } from "lucide-react";
 import { IconButton } from "@/shared/ui/Button";
 
-// Điều hướng chính dùng chung cho header trang chủ, /features, /kho-de, /pro. Từ màn hình vừa trở lên hiện thành hàng; điện thoại gom vào nút menu.
+// Điều hướng chính dùng chung cho header trang chủ, /features, /kho-de, /pro. Từ màn hình vừa trở lên hiện thành hàng; 600-767px gom vào nút menu;
+// điện thoại (<600px) dùng thanh điều hướng dưới (BottomNav) nên không có nút này.
 export function SiteNav() {
   const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
@@ -12,7 +13,7 @@ export function SiteNav() {
     `md-state md-motion md-label-large inline-flex h-10 items-center gap-2 rounded-full px-4 ${pathname === to ? "bg-secondary-container text-on-secondary-container" : "text-on-surface-variant hover:text-on-surface"}`;
   return (
     <>
-    <div className="relative md:hidden">
+    <div className="relative hidden medium:block md:hidden">
       {/* Trang làm đề (/exam/) giữ thanh trên gọn, không thêm nút */}
       {!pathname.startsWith("/exam/") && (
         <IconButton label="Mở menu điều hướng" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
