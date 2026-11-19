@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { PRO_PLAN } from "../src/constants/plan";
-import { nextSemesterStartedAt, PROMO_DEFAULTS, proPriceFor, semesterPromoActive } from "../src/constants/promo";
+import { nextSemesterStartedAt, PROMO_DEFAULTS, proPriceFor, semesterEndsAtNeedsFuture, semesterPromoActive } from "../src/constants/promo";
 
 const now = Date.parse("2026-12-01T00:00:00Z");
 const on = { ...PROMO_DEFAULTS, semesterPromoEnabled: true, semesterPromoTerm: "SP27", semesterPromoPrice: 69_000, semesterPromoEndsAt: "2027-01-15T00:00:00Z", semesterPromoStartedAt: "2026-11-20T00:00:00Z" };
@@ -39,5 +39,19 @@ describe("nextSemesterStartedAt", () => {
   it("keeps the campaign when nothing relevant changes or it is switched off", () => {
     assert.equal(nextSemesterStartedAt(on, true, "SP27", at), on.semesterPromoStartedAt);
     assert.equal(nextSemesterStartedAt(on, false, "SP27", at), on.semesterPromoStartedAt);
+  });
+});
+
+describe("semesterEndsAtNeedsFuture", () => {
+  it("lets other settings save after the campaign has expired by itself", () => {
+    assert.equal(semesterEndsAtNeedsFuture(on, true, "SP27", on.semesterPromoEndsAt), false);
+    assert.equal(semesterEndsAtNeedsFuture(on, true, "SP27", "2027-01-15T07:00:00+07:00"), false);
+    assert.equal(semesterEndsAtNeedsFuture(on, false, "SU27", ""), false);
+  });
+  it("requires a future end when switching on or changing the term or end", () => {
+    assert.equal(semesterEndsAtNeedsFuture({ ...on, semesterPromoEnabled: false }, true, "SP27", on.semesterPromoEndsAt), true);
+    assert.equal(semesterEndsAtNeedsFuture(on, true, "SU27", on.semesterPromoEndsAt), true);
+    assert.equal(semesterEndsAtNeedsFuture(on, true, "SP27", "2027-02-01T00:00:00Z"), true);
+    assert.equal(semesterEndsAtNeedsFuture({ ...on, semesterPromoEndsAt: "" }, true, "SP27", ""), true);
   });
 });

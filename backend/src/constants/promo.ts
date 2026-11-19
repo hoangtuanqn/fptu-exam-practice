@@ -62,6 +62,10 @@ export const proPriceFor = (c: SemesterPromo, used: boolean, now = Date.now()) =
 export const nextSemesterStartedAt = (cur: SemesterPromo, enabled: boolean, term: string, now = new Date()) =>
   enabled && (!cur.semesterPromoEnabled || cur.semesterPromoTerm !== term || !cur.semesterPromoStartedAt) ? now.toISOString() : cur.semesterPromoStartedAt;
 
+// Chỉ bắt hạn chót ở tương lai khi admin đang bật hoặc đổi kỳ/hạn; đợt đã tự hết hạn thì lưu phần khác (mốc thưởng nạp…) vẫn được
+export const semesterEndsAtNeedsFuture = (cur: SemesterPromo, enabled: boolean, term: string, endsAt: string) =>
+  enabled && (!cur.semesterPromoEnabled || cur.semesterPromoTerm !== term || Date.parse(cur.semesterPromoEndsAt) !== Date.parse(endsAt));
+
 export const PROMO_KEY_PREFIX = "promo.";
 
 // Thưởng thêm khi nạp `amount` VND theo các bậc đã cấu hình

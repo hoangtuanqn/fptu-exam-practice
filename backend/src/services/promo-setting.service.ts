@@ -1,5 +1,5 @@
 import { HTTP_STATUS } from "../constants/httpStatus";
-import { nextSemesterStartedAt, PROMO_DEFAULTS, PROMO_KEY_PREFIX, type BonusTier, type PromoConfig } from "../constants/promo";
+import { nextSemesterStartedAt, PROMO_DEFAULTS, semesterEndsAtNeedsFuture, PROMO_KEY_PREFIX, type BonusTier, type PromoConfig } from "../constants/promo";
 import { AppError } from "../rules/error";
 import { settingRepository } from "../repositories/setting.repository";
 import type { UpdatePromoBody } from "../rules/requests/setting.request";
@@ -56,7 +56,7 @@ export const promoSettingService = {
     if (enabled) {
       const errors: Record<string, string> = {};
       if (!term) errors.semesterPromoTerm = "Vui lòng nhập kỳ ưu đãi, ví dụ SP27";
-      if (!(Date.parse(endsAt) > Date.now())) errors.semesterPromoEndsAt = "Hạn chót phải là thời điểm trong tương lai";
+      if (semesterEndsAtNeedsFuture(cur, enabled, term, endsAt) && !(Date.parse(endsAt) > Date.now())) errors.semesterPromoEndsAt = "Hạn chót phải là thời điểm trong tương lai";
       const messages = Object.values(errors);
       if (messages.length) throw new AppError(messages.length === 1 ? messages[0]! : `Có ${messages.length} thông tin chưa hợp lệ, xem từng ô bên dưới`, HTTP_STATUS.BAD_REQUEST, errors);
     }
