@@ -19,6 +19,7 @@ import { useQuiz } from "@/features/practice/hooks/useQuiz";
 import { canFullscreen, useExamGuard } from "@/features/practice/hooks/useExamGuard";
 import { ExamGuardOverlay } from "@/features/practice/components/ExamGuardOverlay";
 import { MAX_VIOLATIONS } from "@/features/practice/types";
+import { useTimeWarnings } from "@/features/practice/hooks/useTimeWarnings";
 import { useQuizShortcuts } from "@/features/practice/hooks/useQuizShortcuts";
 import { useGuestTrial } from "@/features/trial/useGuestTrial";
 import { useAuth } from "@/features/auth/AuthContext";
@@ -126,6 +127,8 @@ export default function PracticePage({ examId }: Props) {
     wasTiming.current = quiz.timing;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quiz.timing]);
+
+  useTimeWarnings(quiz.mode === "exam" && quiz.timing && !quiz.submitted ? quiz.timeLimitSec : null, quiz.elapsed);
 
   // Đang mở hộp thoại thì tắt phím tắt để tránh bấm nhầm đáp án
   const requestSubmit = useCallback(() => {
