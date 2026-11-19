@@ -79,7 +79,7 @@ async function run(examId: string) {
     const message = (err as Error).message;
     console.error(`[ai] giải đề ${exam.threadId} lỗi: ${message}`);
     lastError.set(examId, { message, at: Date.now() });
-    adminNoticeService.push("ai.failed", { title: `AI giải đề lỗi: thread ${exam.threadId}`, body: message, link: `/admin/exams/${examId}` });
+    adminNoticeService.push("ai.failed", { title: "AI giải đề lỗi: {exam}", examId, body: message, link: `/admin/exams/${examId}` });
     // Ghi log lại để tra cứu (cạnh ảnh của đề) và lưu lý do vào báo cáo để admin xem ở trang Đề thi
     const dir = path.join(storageDir, EXAM_STORAGE_DIR, exam.threadId);
     await fs.appendFile(path.join(dir, "ai-error.log"), `[${new Date().toISOString()}] ${message}

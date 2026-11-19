@@ -45,7 +45,7 @@ export const attemptService = {
 
     // Sổ câu sai và chuỗi ngày học: việc phụ, lỗi ở đây không được làm mất bài đã nộp
     const userId = actor.owner.userId;
-    adminNoticeService.push("attempt.finished", { title: `Nộp bài đề #${examId}`, body: `${grade.correct}/${grade.totalGraded} câu đúng, điểm ${grade.score}`, userId, link: "/admin/attempts" });
+    adminNoticeService.push("attempt.finished", { title: "Nộp bài: {exam}", examId, body: `${grade.correct}/${grade.totalGraded} câu đúng, điểm ${grade.score}`, userId, link: "/admin/attempts" });
     let review = { added: 0, capped: 0 };
     try {
       review = await reviewService.recordAttempt(userId, examId, grade.items, body.flagged ?? [], !!perks.unlimitedReview);

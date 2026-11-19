@@ -61,7 +61,7 @@ export const answerReportService = {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") throw AppError.conflict("Bạn đã báo cáo câu này rồi");
       throw err;
     }
-    adminNoticeService.push("report.created", { title: `Báo cáo đáp án sai: câu ${body.questionNumber}`, body: `Đề xuất ${proposed} (hiện là ${normalize(question.answer)})${body.reason ? `. ${body.reason}` : ""}`, userId, link: "/admin/reports" });
+    adminNoticeService.push("report.created", { title: `Báo cáo đáp án sai: {exam}, câu ${body.questionNumber}`, examId: body.examId, body: `Đề xuất ${proposed} (hiện là ${normalize(question.answer)})${body.reason ? `. ${body.reason}` : ""}`, userId, link: "/admin/reports" });
     return { reward: ANSWER_REPORT_REWARD };
   },
 

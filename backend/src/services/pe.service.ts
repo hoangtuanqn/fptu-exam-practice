@@ -157,7 +157,8 @@ export const peService = {
     } catch (err) {
       const message = err instanceof Error ? (err.message === FUO_UNAVAILABLE_MESSAGE ? FUO_AUTH_MESSAGE : err.message) : "Lỗi không xác định"; // admin cần biết lý do thật
       console.error(`[pe] thread ${threadId} lỗi: ${message}`);
-      adminNoticeService.push("pe.failed", { title: `Tải đề PE lỗi: thread ${threadId}`, body: `${message}${fee > 0 ? ` (đã hoàn ${fee} credit)` : ""}`, userId, link: "/admin/purchases" });
+      adminNoticeService.push("pe.failed", { title: "Tải đề PE lỗi", body: `Bài gốc: ${threadUrl(threadId)}
+${message}${fee > 0 ? ` (đã hoàn ${fee} credit)` : ""}`, userId, link: "/admin/purchases" });
       await prisma.$transaction(async (tx) => {
         await tx.peDownload.update({ where: { id: row.id }, data: { status: "FAILED", error: message.slice(0, 500) } });
         if (fee > 0) await walletService.applyChange(tx, { userId, amount: fee, type: "PE_REFUND", note: `Hoàn phí tải đề PE thread ${threadId} (lỗi)` });
