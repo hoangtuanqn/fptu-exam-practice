@@ -73,13 +73,15 @@ export function IconButton({
   children,
   ...props
 }: { label: string; variant?: IconVariant; selected?: boolean; children: ReactNode } & ButtonHTMLAttributes<HTMLButtonElement>) {
+  // Nơi gọi tự đặt vị trí (absolute/fixed...) thì không thêm relative, vì relative sẽ thắng và kéo nút về giữa dòng
+  const positioned = /(^|\s)(absolute|fixed|sticky)(\s|$)/.test(className);
   return (
     <button
       type="button"
       aria-label={label}
       title={label}
       aria-pressed={selected}
-      className={`md-state md-motion relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full after:absolute after:-inset-1 after:content-[''] disabled:pointer-events-none ${
+      className={`md-state md-motion ${positioned ? "" : "relative"} inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full after:absolute after:-inset-1 after:content-[''] disabled:pointer-events-none ${
         selected && variant === "standard" ? "text-primary" : ICON_VARIANTS[variant]
       } ${className}`}
       {...props}
