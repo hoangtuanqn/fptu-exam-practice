@@ -161,6 +161,7 @@ export interface ExplanationFeedbackAdmin {
   user: { fullName: string; email: string };
   exam: { title: string; threadId: string };
   explanation: string | null; // lời giải đang lưu (null nếu đã bị xóa)
+  imageUrl?: string | null; // ảnh câu hỏi để đối chiếu; backend cũ không có
   model: string | null;
 }
 
@@ -442,8 +443,6 @@ export const adminApi = {
       status,
       resolved,
     }),
-  resolveReport: (id: string) =>
-    http.post<AnswerReportAdmin>(`/admin/answer-reports/${id}/resolve`),
   approveReport: (id: string, body: { note?: string }) =>
     http.post<unknown>(`/admin/answer-reports/${id}/approve`, body),
   rejectReport: (id: string, body: { note?: string }) =>

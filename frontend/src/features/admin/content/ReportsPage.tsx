@@ -1,12 +1,10 @@
-import { useEffect, useState } from "react";
-import { CheckCheck, MessageSquareWarning } from "lucide-react";
+import { useState } from "react";
+import { MessageSquareWarning, SearchCheck } from "lucide-react";
 import { adminApi, type ResolvedFilter } from "@/features/admin/api/admin.api";
 import { ReportReviewDialog } from "@/features/admin/content/ReportReviewDialog";
 import { refreshReviewCounts } from "@/features/admin/review-counts.store";
 import { ResolvedBadge } from "@/features/admin/shared";
-import { errorMessage } from "@/shared/api/errors";
 import { ReportStatusBadge } from "@/shared/components/StatusBadge";
-import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
 import { useClampPage } from "@/shared/hooks/useClampPage";
 import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
@@ -32,7 +30,6 @@ const QUERY: Record<StatusFilter, [ReportStatus | "", ResolvedFilter]> = {
 
 // Báo cáo đáp án do người dùng gửi: mặc định hiện các báo cáo chờ duyệt chưa giải quyết
 export default function ReportsPage() {
-  const toast = useToast();
   const [url, setUrl] = useUrlState({ status: "OPEN", page: "1" });
   const status = (Object.prototype.hasOwnProperty.call(QUERY, url.status) ? url.status : "OPEN") as StatusFilter;
   const page = toPage(url.page);
@@ -40,37 +37,20 @@ export default function ReportsPage() {
   const { data, error, loading, reload } = useApi(() => adminApi.answerReports(page, ...QUERY[status]), [page, status]);
   useClampPage(data?.meta, setPage);
   const [selected, setSelected] = useState<AnswerReportAdmin | null>(null);
-  // Dòng vừa giải quyết hiện ngay kết quả server trả về; tải lại danh sách thì bỏ
-  const [patched, setPatched] = useState<Record<string, AnswerReportAdmin>>({});
-  useEffect(() => setPatched({}), [data]);
-  const [saving, setSaving] = useState<string | null>(null);
-  const items = data?.items.map((r) => patched[r.id] ?? r) ?? [];
+  const items = data?.items ?? [];
 
-  const resolve = async (id: string) => {
-    setSaving(id);
-    try {
-      const row = await adminApi.resolveReport(id);
-      setPatched((p) => ({ ...p, [id]: row }));
-      toast.success("Đã đánh dấu đã giải quyết");
-      void refreshReviewCounts();
-    } catch (err) {
-      toast.error(errorMessage(err));
-    } finally {
-      setSaving(null);
-    }
-  };
-  const resolveButton = (r: AnswerReportAdmin) => (
+  // Một việc duy nhất cho báo cáo chờ duyệt: mở hộp xem xét, ở đó Duyệt đúng (sửa đáp án + thưởng credit) hoặc Từ chối
+  const reviewButton = (r: AnswerReportAdmin) => (
     <Button
       size="sm"
       onClick={(e) => {
         e.stopPropagation();
-        void resolve(r.id);
+        setSelected(r);
       }}
-      disabled={saving !== null || r.status !== "PENDING" || !!r.resolvedAt}
-      aria-label={`Giải quyết báo cáo câu ${r.questionNumber}, ${r.exam.title}`}
+      aria-label={`Xem xét báo cáo câu ${r.questionNumber}, ${r.exam.title}`}
       className="shrink-0"
     >
-      <CheckCheck size={16} aria-hidden /> Giải quyết
+      <SearchCheck size={16} aria-hidden /> Xem xét
     </Button>
   );
 
@@ -120,7 +100,7 @@ export default function ReportsPage() {
                       {r.user.fullName} · {formatDateTime(r.createdAt)}
                     </div>
                   </button>
-                  {r.status === "PENDING" && !r.resolvedAt && resolveButton(r)}
+                  {r.status === "PENDING" && reviewButton(r)}
                 </li>
               ))}
             </ul>
@@ -158,7 +138,7 @@ export default function ReportsPage() {
                         {r.resolvedAt && <div className="mt-1 text-xs text-slate-500">{formatDateTime(r.resolvedAt)}</div>}
                       </Td>
                       <Td className="whitespace-nowrap text-slate-500">{formatDateTime(r.createdAt)}</Td>
-                      <Td className="text-right">{r.status === "PENDING" && !r.resolvedAt && resolveButton(r)}</Td>
+                      <Td className="text-right">{r.status === "PENDING" && reviewButton(r)}</Td>
                     </Tr>
                   ))}
                 </tbody>
@@ -176,14 +156,12 @@ export default function ReportsPage() {
 
       {selected && (
         <ReportReviewDialog
-          report={patched[selected.id] ?? selected}
+          report={selected}
           onClose={() => setSelected(null)}
           onDone={() => {
             reload();
             void refreshReviewCounts();
           }}
-          onResolve={() => resolve(selected.id)}
-          resolving={saving === selected.id}
         />
       )}
     </>
