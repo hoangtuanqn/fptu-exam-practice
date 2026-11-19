@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { BookOpen, Loader2, Play } from "lucide-react";
 import { ConfirmFetchDialog } from "@/features/exam-import/components/ConfirmFetchDialog";
 import { examImportApi } from "@/features/exam-import/exam-import.api";
+import { examOpenPath } from "@/features/exam-import/types";
 import { useExamImport } from "@/features/exam-import/useExamImport";
 import { useAuth } from "@/features/auth/AuthContext";
 import { errorMessage } from "@/shared/api/errors";
@@ -76,14 +77,14 @@ function ExamList({ code, onBack, compact }: { code: string; onBack: () => void;
   useEffect(() => {
     if (job.exam) {
       void refresh();
-      navigate(`/exam/${job.exam.id}/preview`);
+      navigate(examOpenPath(job.exam));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [job.exam]);
 
   const pick = async (item: CatalogItem) => {
     if (!user) return void navigate("/login");
-    if (item.status === "owned" && item.examId) return void navigate(`/exam/${item.examId}/preview`);
+    if (item.status === "owned" && item.examId) return void navigate(examOpenPath({ id: item.examId, kind: item.kind, totalQuestions: item.questions }));
     setQuoting(item.threadId);
     try {
       // Hỏi phí thực tế và kiểm tra trước khi trừ tiền (đúng nhãn, đúng môn); miễn phí (Pro, đã sở hữu) thì lấy luôn

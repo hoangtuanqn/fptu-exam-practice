@@ -7,6 +7,7 @@ import { Empty } from "@/shared/ui/Feedback";
 import { QueryBoundary } from "@/shared/ui/QueryBoundary";
 import { Pagination } from "@/shared/ui/Table";
 import { formatCredit, formatDate } from "@/shared/utils/formatters";
+import { examOpenPath } from "@/features/exam-import/types";
 import { catalogApi, type CatalogItem } from "./catalog.api";
 import { NewExamBadge } from "./NewExamBadge";
 import { ExamKindBadge } from "./ExamKindBadge";
@@ -71,7 +72,7 @@ function ExamAction({ item, loggedIn, target, price }: { item: CatalogItem; logg
   const track = () => trackPrompt("library-open", "click");
   if (item.status === "owned")
     return (
-      <Link to={`/exam/${item.examId}/preview`} className={cls}>
+      <Link to={examOpenPath({ id: item.examId!, kind: item.kind, totalQuestions: item.questions })} className={cls}>
         <Play size={15} /> Mở đề
       </Link>
     );
