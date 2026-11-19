@@ -19,6 +19,16 @@ import { UserMenu } from "@/shared/layout/UserMenu";
 import { SiteNav } from "@/shared/layout/SiteNav";
 import { ThemeToggle } from "@/shared/theme/ThemeToggle";
 
+// Nút "Hướng dẫn": chưa từng mở thì có chấm nhấp nháy gợi ý bấm vào (mở một lần là thôi)
+const HELP_SEEN_KEY = "practice_help_seen";
+const helpSeen = () => {
+  try {
+    return localStorage.getItem(HELP_SEEN_KEY) === "1";
+  } catch {
+    return true; // không đọc được thì khỏi nhắc
+  }
+};
+
 interface Props {
   title: string;
   mode: Mode;
@@ -58,6 +68,16 @@ export function Header({
   onShowResult,
 }: Props) {
   const { Icon, label } = getModeConfig(mode);
+  const [seenHelp, setSeenHelp] = useState(helpSeen);
+  const openHelp = () => {
+    setSeenHelp(true);
+    try {
+      localStorage.setItem(HELP_SEEN_KEY, "1");
+    } catch {
+      /* không lưu được thì thôi */
+    }
+    onHelp?.();
+  };
 
   // Luyện tập không hiện thời gian; chỉ chế độ Thi mới có đồng hồ (thanh còn lại khi có giới hạn)
   const isExam = mode === "exam";
@@ -157,8 +177,15 @@ export function Header({
             )}
 
             {onHelp && (
-              <Button onClick={onHelp} title="Hướng dẫn làm bài" aria-label="Hướng dẫn làm bài" className="!px-2.5">
-                <CircleHelp size={16} />
+              <Button variant="tonal" onClick={openHelp} title="Hướng dẫn làm bài: cách chọn đáp án và phím tắt" aria-label="Hướng dẫn làm bài" className="relative !px-2.5 sm:!px-4">
+                {!seenHelp && (
+                  <span aria-hidden className="absolute -right-1 -top-1 flex h-3 w-3">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+                    <span className="relative inline-flex h-3 w-3 rounded-full bg-primary" />
+                  </span>
+                )}
+                <CircleHelp size={18} />
+                <span className="hidden sm:inline">Hướng dẫn</span>
               </Button>
             )}
 
