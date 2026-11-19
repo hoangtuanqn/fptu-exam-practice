@@ -1,6 +1,7 @@
 import path from "node:path";
 import { storageDir } from "../configs/env";
 import { aiReady, CHAT_FREE_DAILY, CHAT_PRO_DAILY_SAFETY } from "../constants/ai";
+import { MIN_PLAYABLE_QUESTIONS } from "../constants/exam";
 import { HTTP_STATUS } from "../constants/httpStatus";
 import { PRO_BENEFITS } from "../constants/plan";
 import { examRepository } from "../repositories/exam.repository";
@@ -45,6 +46,8 @@ export const explainChatService = {
     await examService.assertAccess(actor, examId);
     const question = await examRepository.findQuestionForExplain(examId, questionNumber);
     if (!question) throw AppError.notFound("Không tìm thấy câu hỏi");
+    // Chỉ đề FE đủ câu (đề làm bài được) mới có hỏi AI; kind null = đề cũ chưa phân loại, coi như FE như bên frontend
+    if ((question.exam.kind ?? "FE") !== "FE" || question.exam.totalQuestions < MIN_PLAYABLE_QUESTIONS) throw AppError.forbidden("Chỉ đề FE có từ 20 câu mới hỏi được AI");
 
     const pro = await planService.isPro(userId);
     const entitled =
