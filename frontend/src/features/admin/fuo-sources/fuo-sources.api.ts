@@ -35,9 +35,22 @@ export interface FuoSourceRun {
 
 export type FuoSourceCounts = Record<FuoSourceStatus | "total", number>;
 
+// Lượt quét danh mục FuOverflow của "Load dữ liệu mới" (chạy trước lượt nạp). null khi không chạy/không dừng giữa chừng.
+export interface FuoSourceScan {
+  status: "RUNNING" | "NEEDS_AUTH" | "FAILED";
+  subjectsTotal: number;
+  subjectsDone: number;
+  subjectsFailed: number;
+  currentSubject: string | null;
+  threadsNew: number;
+  threadsUpdated: number;
+  lastError: string | null;
+}
+
 export interface FuoSourcesStatus {
   run: FuoSourceRun | null;
   counts: FuoSourceCounts;
+  scan?: FuoSourceScan | null; // backend cũ chưa có
 }
 
 export interface FuoSourcesAddResult {

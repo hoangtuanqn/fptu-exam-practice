@@ -7,7 +7,7 @@ import { FormError, Spinner } from "@/shared/ui/Feedback";
 import { Field } from "@/shared/ui/Input";
 import { fuoSourcesApi, type FuoSourcesAddResult } from "./fuo-sources.api";
 
-// Ô dán danh sách link (mỗi dòng một link) và kết quả lưu: số link mới/đã có, các dòng lỗi và dòng trùng
+// Ô dán danh sách link (không bắt buộc: "Load dữ liệu mới" tự tìm đề mới) (mỗi dòng một link) và kết quả lưu: số link mới/đã có, các dòng lỗi và dòng trùng
 export function PasteCard({ onSaved }: { onSaved: () => void }) {
   const [text, setText] = useState("");
   const [result, setResult] = useState<FuoSourcesAddResult | null>(null);
@@ -23,7 +23,7 @@ export function PasteCard({ onSaved }: { onSaved: () => void }) {
 
   return (
     <Card>
-      <CardHeader title="Thêm link đề" description="Dán link bài viết FuOverflow, mỗi dòng một link. Link đã có sẽ không bị thêm lại." />
+      <CardHeader title="Thêm link thủ công (không bắt buộc)" description="Chỉ cần khi muốn thêm đề mà Load dữ liệu mới chưa tìm thấy. Dán link bài viết FuOverflow, mỗi dòng một link; link đã có sẽ không bị thêm lại." />
       <form
         className="space-y-3 px-5 py-4"
         onSubmit={(e) => {
