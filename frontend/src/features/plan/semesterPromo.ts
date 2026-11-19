@@ -6,6 +6,7 @@ import { planApi, type PlanInfo, type SemesterPromo } from "./plan.api";
 const HOUR_MS = 3_600_000;
 const DAY_MS = 86_400_000;
 export const LAST_CALL_MS = 2 * DAY_MS; // 48 giờ cuối: đếm theo giờ
+export const BUYERS_SHOWN_FROM = 10; // ít người mua quá thì không hiện số (con số nhỏ làm người xem ngần ngại)
 
 // Thông tin gói dùng chung cho mọi nơi: tải một lần cho mỗi tài khoản (ưu đãi phụ thuộc người đó đã dùng hay chưa)
 let cache: { key: string; p: Promise<PlanInfo> } | null = null;

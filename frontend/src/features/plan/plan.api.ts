@@ -23,6 +23,7 @@ export interface SemesterPromo {
   percentOff: number;
   endsAt: string; // ISO
   used: boolean; // tài khoản này đã mua giá ưu đãi trong đợt: trả giá thường
+  buyers?: number; // số tài khoản đã mua giá ưu đãi trong đợt (đếm thật); máy chủ cũ không có
 }
 
 export interface PurchaseResult {
