@@ -1,3 +1,4 @@
+import { ProtectedImg } from "@/shared/ui/ProtectedImg";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Bookmark, BookmarkX, ExternalLink, Tag, X } from "lucide-react";
@@ -23,7 +24,7 @@ function SavedCard({ q, onZoom, onRemove }: { q: SavedQuestion; onZoom: (q: Save
       <Card className="flex h-full flex-col overflow-hidden">
         {q.imageUrl && (
           <button type="button" onClick={() => onZoom(q)} title="Bấm để xem ảnh lớn" aria-label={`Xem ảnh lớn câu ${q.number}`} className="block w-full border-b border-outline-variant bg-surface-container-lowest">
-            <img src={q.imageUrl} alt={`Câu ${q.number}`} loading="lazy" className="h-48 w-full object-cover object-top" />
+            <ProtectedImg src={q.imageUrl} alt={`Câu ${q.number}`} loading="lazy" className="h-48 w-full object-cover object-top" />
           </button>
         )}
         <div className="flex flex-1 flex-col gap-2 p-4">
@@ -127,7 +128,7 @@ export default function SavedPage() {
               <X size={18} />
             </Button>
           </div>
-          <img src={zoom.imageUrl} alt={`Câu ${zoom.number}`} className="h-auto w-full rounded-m3-sm" />
+          <ProtectedImg src={zoom.imageUrl} alt={`Câu ${zoom.number}`} className="h-auto w-full rounded-m3-sm" />
         </Modal>
       )}
     </div>

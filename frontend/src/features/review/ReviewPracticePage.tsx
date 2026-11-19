@@ -1,3 +1,4 @@
+import { ProtectedImg } from "@/shared/ui/ProtectedImg";
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Check, PartyPopper, X } from "lucide-react";
@@ -171,7 +172,7 @@ export default function ReviewPracticePage() {
           Câu {q.number} · {q.examTitle}
         </p>
         <a href={q.imageUrl} target="_blank" rel="noreferrer" title="Mở ảnh lớn" className="block bg-surface-container-lowest p-3">
-          <img src={q.imageUrl} alt={`Câu ${q.number}`} className="mx-auto max-h-[55vh] w-auto max-w-full object-contain" />
+          <ProtectedImg src={q.imageUrl} alt={`Câu ${q.number}`} className="mx-auto max-h-[55vh] w-auto max-w-full object-contain" />
         </a>
 
         <div className="space-y-4 p-5">

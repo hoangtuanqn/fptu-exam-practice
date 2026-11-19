@@ -1,3 +1,5 @@
+import { openImageHandler } from "@/shared/api/protectedImage";
+import { ProtectedImg } from "@/shared/ui/ProtectedImg";
 import { useState } from "react";
 import { Check, CheckCheck, Loader2, MessageSquareWarning, X } from "lucide-react";
 import { adminApi } from "@/features/admin/api/admin.api";
@@ -57,8 +59,8 @@ export function ReportReviewDialog({ report, onClose, onDone, onResolve, resolvi
       </div>
 
       {report.imageUrl && (
-        <a href={report.imageUrl} target="_blank" rel="noreferrer" className="mt-3 block overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
-          <img src={report.imageUrl} alt={`Câu ${report.questionNumber}`} className="max-h-72 w-full object-contain" />
+        <a href="#" onClick={openImageHandler(report.imageUrl)} className="mt-3 block overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+          <ProtectedImg src={report.imageUrl} alt={`Câu ${report.questionNumber}`} className="max-h-72 w-full object-contain" />
         </a>
       )}
 

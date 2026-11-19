@@ -1,3 +1,4 @@
+import { ProtectedImg } from "@/shared/ui/ProtectedImg";
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { BookOpen, FileSearch, Timer, X } from "lucide-react";
@@ -16,6 +17,7 @@ import { useApi } from "@/shared/hooks/useApi";
 import { SiteHeader } from "@/shared/layout/SiteHeader";
 import { Button, buttonClass } from "@/shared/ui/Button";
 import { Card } from "@/shared/ui/Card";
+import { ImageWatermark } from "@/shared/ui/ImageWatermark";
 import { Empty } from "@/shared/ui/Feedback";
 import { Modal } from "@/shared/ui/Modal";
 import { QueryBoundary } from "@/shared/ui/QueryBoundary";
@@ -101,7 +103,7 @@ function Preview({ exam }: { exam: ImportedExam }) {
   const pageTiles = questions.map((q) => (
     <li key={`p${q.number}`}>
       <button type="button" onClick={() => setZoom(q)} aria-label={`Xem lớn ${fileName(q)}`} className={`${TILE} w-full`}>
-        <img src={q.imageUrl} alt="" loading="lazy" className="h-full w-full object-cover object-top" />
+        <ProtectedImg src={q.imageUrl} alt="" loading="lazy" className="h-full w-full object-cover object-top" />
         <span className={CAPTION}>{fileName(q)}</span>
       </button>
     </li>
@@ -162,7 +164,10 @@ function Preview({ exam }: { exam: ImportedExam }) {
               <X size={18} />
             </Button>
           </div>
-          <img src={zoom.imageUrl} alt={`Ảnh ${fileName(zoom)} của đề`} className="h-auto w-full rounded-m3-md bg-surface-container-lowest" />
+          <div className="relative">
+            <ProtectedImg src={zoom.imageUrl} alt={`Ảnh ${fileName(zoom)} của đề`} className="h-auto w-full rounded-m3-md bg-surface-container-lowest" />
+            <ImageWatermark />
+          </div>
         </Modal>
       )}
     </>

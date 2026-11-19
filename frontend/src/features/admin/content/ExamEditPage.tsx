@@ -1,3 +1,4 @@
+import { ProtectedImg } from "@/shared/ui/ProtectedImg";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, BookOpen, Check, ClipboardPaste, Download, ExternalLink, Loader2, Pencil, RotateCcw, Save, Search, Sparkles, Trash2, X } from "lucide-react";
@@ -263,7 +264,7 @@ function QuestionCard({ q, answer, isReference, dirty, disabled, solving, aiNote
       </div>
 
       <button type="button" onClick={onZoom} className="block w-full bg-slate-50 p-2" title="Bấm để xem ảnh lớn">
-        <img src={q.imageUrl} alt={`Câu ${q.number}`} loading="lazy" className="mx-auto max-h-[460px] w-auto max-w-full rounded-lg object-contain" />
+        <ProtectedImg src={q.imageUrl} alt={`Câu ${q.number}`} loading="lazy" className="mx-auto max-h-[460px] w-auto max-w-full rounded-lg object-contain" />
       </button>
 
       <div className="space-y-3 px-4 py-3">
@@ -590,7 +591,7 @@ export default function ExamEditPage() {
               <X size={18} />
             </button>
           </div>
-          <img src={zoom.imageUrl} alt={`Câu ${zoom.number}`} className="mt-4 w-full rounded-lg" />
+          <ProtectedImg src={zoom.imageUrl} alt={`Câu ${zoom.number}`} className="mt-4 w-full rounded-lg" />
         </Modal>
       )}
     </>
