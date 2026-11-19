@@ -121,7 +121,7 @@ export default function PlanPage() {
       </div>
 
       {plan && !plansVisible && (
-        <div className="fixed inset-x-0 bottom-0 z-30 px-3 pb-3 expanded:bottom-5 expanded:left-1/2 expanded:right-auto expanded:w-[32rem] expanded:-translate-x-1/2 expanded:px-0 expanded:pb-0">
+        <div className="fixed inset-x-0 bottom-[var(--bottom-nav-h,0px)] z-30 px-3 pb-3 expanded:bottom-5 expanded:left-1/2 expanded:right-auto expanded:w-[32rem] expanded:-translate-x-1/2 expanded:px-0 expanded:pb-0">
           <div className="pro-rise flex items-center gap-3 rounded-full border border-[#ffc61f]/40 bg-[#1d1500]/95 py-2 pl-5 pr-2 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.6)] backdrop-blur">
             <div className="min-w-0 flex-1 leading-tight">
               <div className="truncate text-xs text-[#fff6dc]/70">

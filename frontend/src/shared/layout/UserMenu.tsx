@@ -63,9 +63,12 @@ export function UserMenu() {
         <Link to="/login" className={buttonClass({ variant: "text" })}>
           Đăng nhập
         </Link>
-        <Link to="/register" className={buttonClass({ variant: "filled", })}>
-          Đăng ký
-        </Link>
+        {/* Điện thoại: nút Đăng ký nằm ở thanh điều hướng dưới */}
+        <span className="hidden medium:contents expanded:contents">
+          <Link to="/register" className={buttonClass({ variant: "filled", })}>
+            Đăng ký
+          </Link>
+        </span>
       </div>
     );
   }

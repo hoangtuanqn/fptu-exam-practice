@@ -177,7 +177,7 @@ export default function ChatWidget() {
     void send(input);
   };
 
-  const lift = "bottom-1";
+  const lift = "bottom-[calc(0.25rem+var(--bottom-nav-h,0px))]"; // nằm trên thanh điều hướng dưới (nếu có)
   const showChips = messages.length <= 1 && !busy;
 
   return (

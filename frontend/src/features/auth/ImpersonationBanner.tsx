@@ -7,7 +7,7 @@ export function ImpersonationBanner() {
   const { user, signOut } = useAuth();
   if (!user || !impersonation.active()) return null;
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-4 z-[80] flex justify-center px-3">
+    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(1rem+var(--bottom-nav-h,0px))] z-[80] flex justify-center px-3">
       <div className="pointer-events-auto flex max-w-full items-center gap-3 rounded-full border border-amber-300 bg-amber-50 py-1.5 pl-4 pr-1.5 text-sm text-amber-900 shadow-pop">
         <UserCog size={16} className="shrink-0 text-amber-600" />
         <span className="min-w-0 truncate">

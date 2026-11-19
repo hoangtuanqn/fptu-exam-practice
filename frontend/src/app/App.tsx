@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { Bookmark, Crown, FileText, Flame, NotebookPen, BookOpen, ListChecks, GraduationCap, LayoutDashboard, UserRound, Wallet, Receipt, Gift, UserPlus, ShoppingBag } from "lucide-react";
 import { PanelLayout, type NavItem } from "@/shared/layout/PanelLayout";
+import { BottomNav } from "@/shared/layout/BottomNav";
 import { Loading } from "@/shared/ui/Feedback";
 import { isUuid } from "@/shared/utils/uuid";
 import LoginPage from "@/features/auth/pages/LoginPage";
@@ -109,6 +110,7 @@ export default function App() {
       <DailyCheckInPopup />
       <WhatsNewDialog />
       <ChatWidget />
+      <BottomNav more={ACCOUNT_NAV} />
       <Routes>
         <Route path="/" element={<PracticeRoute />} />
         <Route path="/exam/:examId" element={<PracticeRoute />} />
@@ -149,7 +151,7 @@ export default function App() {
         <Route element={<RequireAuth />}>
           {/* Nút Làm đề / Tải đề PE của tiện ích Chrome mở trang này */}
           <Route path="/fetch" element={<FetchLinkPage />} />
-          <Route path="/account" element={<PanelLayout title="Tài khoản" items={ACCOUNT_NAV} notice={<AccountPromoBar />} />}>
+          <Route path="/account" element={<PanelLayout title="Tài khoản" items={ACCOUNT_NAV} notice={<AccountPromoBar />} bottomNav />}>
             <Route index element={<OverviewPage />} />
             <Route path="attempts" element={<AttemptsPage />} />
             <Route path="attempts/:id" element={<AttemptDetailPage />} />

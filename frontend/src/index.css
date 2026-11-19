@@ -3,6 +3,30 @@
 @import "./styles/m3-tailwind.css";
 @import "./styles/m3-base.css";
 
+/* Thanh điều hướng dưới trên điện thoại (BottomNav): --bottom-nav-h là chiều cao của nó (0 khi không có thanh),
+   dùng để đẩy nội dung và các nút nổi (toast, chat, thanh mua) lên trên. Màn đang làm đề gắn data-no-bottom-nav để ẩn thanh. */
+@media (width < 600px) {
+  :root:has([data-bottom-nav]):not(:has([data-no-bottom-nav])) {
+    --bottom-nav-h: calc(4rem + env(safe-area-inset-bottom));
+  }
+  body {
+    padding-bottom: var(--bottom-nav-h, 0px);
+  }
+}
+:root:has([data-no-bottom-nav]) [data-bottom-nav] {
+  display: none;
+}
+/* Ngăn "Thêm" của thanh điều hướng dưới trượt vào từ cạnh phải */
+@keyframes md-drawer-in-right {
+  from { transform: translateX(100%); }
+}
+.md-drawer-in-right {
+  animation: md-drawer-in-right var(--md-sys-motion-duration-medium4) var(--md-sys-motion-easing-emphasized-decelerate) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .md-drawer-in-right { animation: none; }
+}
+
 @theme {
   /* CẢ HỆ THỐNG CHỈ DÙNG INTER (nhúng từ Google Fonts trong index.html). Mọi họ phông đều trỏ về Inter: các class font-serif, font-display,
      font-mono cũ và thẻ <code>/<pre>/<kbd> (Tailwind mặc định dùng phông monospace) đều ra Inter. Không thêm phông khác (xem BRAND.md). */

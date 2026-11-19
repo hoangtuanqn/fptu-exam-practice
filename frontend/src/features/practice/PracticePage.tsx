@@ -321,7 +321,8 @@ export default function PracticePage({ examId }: Props) {
   };
 
   return (
-    <div className="flex h-screen flex-col">
+    // Đang làm đề thì ẩn thanh điều hướng dưới; trang chủ thì chừa chỗ cho nó
+    <div className="flex h-[calc(100dvh-var(--bottom-nav-h,0px))] flex-col" data-no-bottom-nav={hasQuiz || undefined}>
       <Header
         title={quiz.title}
         mode={quiz.mode}
