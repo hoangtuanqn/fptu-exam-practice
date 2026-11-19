@@ -28,7 +28,8 @@ export const LANDING_NOTICE = {
   imageAlt: "Poster tuyển thành viên của CLB F-Code",
   badge: "Tin vui cho dân FPTU",
   title: "CLB F-Code đang tuyển thành viên, vào chơi thôi!",
-  lead: "F-Code là câu lạc bộ học thuật của FPTU, nơi mọi người cùng học, cùng làm và cùng lớn lên. Không cần giỏi sẵn: F-Code tìm những bạn chịu khó học hỏi, kỹ thuật cứ từ từ rồi sẽ tới. Tham gia cùng tụi mình nhé!",
+  lead: "F-Code là câu lạc bộ học thuật đầu tiên của ĐH FPT TP.HCM, thành lập từ 28/08/2014, với 5 team chuyên môn: FE, BE, AI, DevOps và Game. Không cần giỏi sẵn: F-Code tìm những bạn chịu khó học hỏi, kỹ thuật cứ từ từ rồi sẽ tới. Tham gia cùng tụi mình nhé!",
+  perks: ["Tham quan doanh nghiệp", "Học hỏi từ các anh chị đi trước", "Làm dự án thực tế", "Kết bạn, vui như một gia đình"],
   goodNews: "Thành viên F-Code là những người trực tiếp vận hành FEPass.top. Vào CLB là bạn được làm ra sản phẩm có người dùng thật mỗi ngày.",
   rounds: [
     { name: "Vòng 1: Nộp đơn", when: "Đăng ký từ 12 – 22/11" },

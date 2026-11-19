@@ -29,6 +29,11 @@ export function LandingNoticePopup() {
       <p className="mt-3 rounded-m3-lg bg-secondary-container px-3 py-2 text-sm text-on-secondary-container">
         <b>Tin vui:</b> {N.goodNews}
       </p>
+      <ul className="mt-3 flex flex-wrap gap-2">
+        {N.perks.map((t) => (
+          <li key={t} className="rounded-full border border-outline-variant px-3 py-1 text-xs font-medium text-on-surface">✓ {t}</li>
+        ))}
+      </ul>
       <ol className="mt-3 space-y-1.5">
         {N.rounds.map((r, i) => (
           <li key={r.name} className="flex items-center gap-2 text-sm">
