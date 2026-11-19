@@ -54,7 +54,7 @@ export function PublicExamList({ code, pageSize }: { code: string; pageSize?: nu
                         {e.questions !== null ? <span>{e.questions} câu</span> : null}
                       </p>
                     </div>
-                    <ExamAction item={e} loggedIn={!!user} target={target} price={isPro(user) ? 0 : data.price} />
+                    <ExamAction item={e} loggedIn={!!user} target={target} price={isPro(user) ? 0 : e.kind === "PE" ? (data.pePrice ?? data.price) : data.price} />
                   </li>
                 ))}
               </ul>

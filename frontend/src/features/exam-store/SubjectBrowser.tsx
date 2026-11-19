@@ -58,6 +58,8 @@ function SubjectChooser({ onPick, compact }: { onPick: (code: string) => void; c
   );
 }
 
+const priceOf = (d: { price: number; pePrice?: number }, e: CatalogItem) => (e.kind === "PE" ? (d.pePrice ?? d.price) : d.price);
+
 function ExamList({ code, onBack, compact }: { code: string; onBack: () => void; compact: boolean }) {
   const navigate = useNavigate();
   const toast = useToast();
@@ -143,7 +145,7 @@ function ExamList({ code, onBack, compact }: { code: string; onBack: () => void;
                       </div>
                       <Button size="sm" variant="tonal" onClick={() => void pick(e)} disabled={busy}>
                         {quoting === e.threadId ? <Loader2 size={15} className="animate-spin" /> : <Play size={15} />}
-                        {e.status !== "owned" && data.price > 0 && !isPro(user) ? formatCredit(data.price) : "Mở đề"}
+                        {e.status !== "owned" && priceOf(data, e) > 0 && !isPro(user) ? formatCredit(priceOf(data, e)) : "Mở đề"}
                       </Button>
                     </li>
                   ))}
