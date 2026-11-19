@@ -1,9 +1,10 @@
 import type { Server } from "socket.io";
 import { crawlJobRepository } from "../repositories/crawl-job.repository";
+import { examAttachmentRepository } from "../repositories/exam-attachment.repository";
 import { examRepository } from "../repositories/exam.repository";
 import { toJobDto } from "../services/crawl-job.dto";
 import { toAnswersPayload } from "../utils/exam-answers";
-import { fileUrlOf } from "../utils/file-url";
+import { fileUrlOf, toAttachmentDto } from "../utils/file-url";
 import { ADMIN_ROOM, EVENTS, roomOf, type RoomKind } from "./events";
 
 /**
@@ -30,6 +31,12 @@ export const questionsPayload = async (examId: string) => {
   };
 };
 
+// Toàn bộ tệp đính kèm hiện có của đề, cùng dạng với attachments của GET đề
+export const attachmentsPayload = async (examId: string) => ({
+  examId,
+  attachments: (await examAttachmentRepository.list(examId)).map((a) => toAttachmentDto(examId, a)),
+});
+
 export const jobPayload = async (jobId: number) => {
   const job = await crawlJobRepository.findById(jobId);
   if (!job) return null;
@@ -53,6 +60,13 @@ export const realtimeHub = {
     if (!io || !hasListeners("exam", examId)) return;
     const payload = await questionsPayload(examId).catch(() => null);
     if (payload) io.to(roomOf("exam", examId)).emit(EVENTS.examQuestions, payload);
+  },
+
+  // Danh sách tệp đính kèm vừa đổi: gửi cả danh sách, giao diện thay hẳn danh sách cũ
+  async publishExamAttachments(examId: string) {
+    if (!io || !hasListeners("exam", examId)) return;
+    const payload = await attachmentsPayload(examId).catch(() => null);
+    if (payload) io.to(roomOf("exam", examId)).emit(EVENTS.examAttachments, payload);
   },
 
   // Gắn chủ đề chạy nền: "running" khi bắt đầu, "done" kèm các chủ đề vừa gắn khi xong (hoặc không gắn được)

@@ -22,6 +22,10 @@ export const examAttachmentRepository = {
   // Nạp dữ liệu mới: tệp đã có của đề (để chỉ tải tệp mới, không trùng tên trên đĩa)
   listByExam: (examId: string) => prisma.examAttachment.findMany({ where: { examId }, select: { filePath: true, sourceUrl: true } }),
 
+  // Danh sách tệp của đề cho giao diện (cùng thứ tự với GET đề)
+  list: (examId: string) =>
+    prisma.examAttachment.findMany({ where: { examId }, orderBy: { id: "asc" }, select: { id: true, name: true, filePath: true, mime: true, sizeBytes: true } }),
+
   // Thêm tệp mới, giữ nguyên các tệp cũ (id không đổi)
   add: (examId: string, rows: NewAttachment[]) =>
     prisma.examAttachment.createMany({ data: rows.map((r) => ({ ...r, examId })), skipDuplicates: true }),
