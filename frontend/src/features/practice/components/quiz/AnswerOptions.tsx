@@ -41,7 +41,7 @@ export function AnswerOptions({ question, selected, revealed, onChoose, compact 
       aria-label={multiple ? "Chọn một hoặc nhiều đáp án" : "Chọn một đáp án"}
       className={vertical ? "flex flex-col items-center gap-1" : dense ? "mx-auto grid max-w-md grid-cols-8 gap-1" : compact ? "grid grid-cols-4 gap-2 sm:flex sm:flex-wrap sm:justify-center" : "flex flex-wrap gap-3"}
     >
-      {OPTIONS.map((opt) => {
+      {OPTIONS.map((opt, i) => {
         const { cls, mark } = state(opt);
         return (
           <button
@@ -50,6 +50,8 @@ export function AnswerOptions({ question, selected, revealed, onChoose, compact 
             onClick={() => onChoose(opt)}
             disabled={locked}
             aria-pressed={selected.includes(opt)}
+            aria-keyshortcuts={`${opt} ${i + 1}`}
+            title={`Đáp án ${opt} (phím ${opt} hoặc ${i + 1})`}
             aria-label={`Đáp án ${opt}${mark === "right" ? ", đúng" : mark === "wrong" ? ", sai" : ""}`}
             className={`md-state md-motion md-title-medium relative inline-flex items-center justify-center gap-0.5 border disabled:cursor-not-allowed disabled:opacity-[0.38] ${
               vertical ? "h-10 w-10 min-w-10" : dense ? "h-11 w-full min-w-0" : `h-12 min-w-12 ${compact ? "w-full sm:w-12" : "w-12"}`
