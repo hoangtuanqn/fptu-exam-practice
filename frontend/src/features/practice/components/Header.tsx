@@ -129,7 +129,7 @@ export function Header({
       <div className="flex min-w-0 items-center justify-end gap-1.5 sm:shrink-0 sm:gap-2">
         {loaded && (
           <>
-            {bestScore != null && (
+            {bestScore != null && !(isExam && !submitted) && (
               <span
                 title={`Điểm cao nhất của bạn ở đề này: ${formatScore(bestScore)}`}
                 className="hidden items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-sm font-medium text-amber-800 sm:inline-flex sm:px-3"
