@@ -42,6 +42,8 @@ export function QuestionCard({
   nudge,
   topic,
   topicLoading,
+  autoNext,
+  onToggleAutoNext,
   onChoose,
   onCheck,
   onPrev,
@@ -68,7 +70,7 @@ export function QuestionCard({
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
             {onExplain && <ExplainButton onExplain={onExplain} bought={explainBought} free={explainFree} />}
-            <QuestionToolsMenu flagged={flagged} onToggleFlag={onToggleFlag} saved={saved} onToggleSave={onToggleSave} onZoom={onZoom} onReport={onReport} reported={reported} size={size} />
+            <QuestionToolsMenu flagged={flagged} onToggleFlag={onToggleFlag} saved={saved} onToggleSave={onToggleSave} onZoom={onZoom} onReport={onReport} reported={reported} autoNext={autoNext} onToggleAutoNext={onToggleAutoNext} size={size} />
           </div>
         </div>
 

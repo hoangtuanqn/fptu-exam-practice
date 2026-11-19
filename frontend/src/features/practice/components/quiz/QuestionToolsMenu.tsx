@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { Bookmark, Flag, Maximize2, MessageSquareWarning, MoreHorizontal, ZoomIn, ZoomOut } from "lucide-react";
+import { Bookmark, ChevronsRight, Flag, Maximize2, MessageSquareWarning, MoreHorizontal, ZoomIn, ZoomOut } from "lucide-react";
 import { useKeydown } from "@/features/practice/hooks/useKeydown";
 import type { useQuestionImageScale } from "@/features/practice/hooks/useQuestionImageScale";
 
@@ -11,12 +11,14 @@ interface Props {
   onZoom: () => void;
   onReport?: () => void; // chỉ có khi đã có kết quả của câu và người dùng đã đăng nhập
   reported?: boolean;
+  autoNext?: boolean;
+  onToggleAutoNext?: () => void; // chỉ có ở chế độ Thi
   size: ReturnType<typeof useQuestionImageScale>;
 }
 
 // Các công cụ phụ của câu hỏi gom vào một nút "…" cho khu vực làm bài gọn: đánh dấu xem lại, phóng to ảnh, cỡ ảnh, báo cáo đáp án sai.
 // Câu đang đánh dấu hoặc đã lưu thì nút "…" có chấm nhỏ để vẫn thấy.
-export function QuestionToolsMenu({ flagged, onToggleFlag, saved, onToggleSave, onZoom, onReport, reported, size }: Props) {
+export function QuestionToolsMenu({ flagged, onToggleFlag, saved, onToggleSave, onZoom, onReport, reported, autoNext, onToggleAutoNext, size }: Props) {
   const [open, setOpen] = useState(false);
   useKeydown((e) => open && e.key === "Escape" && setOpen(false));
   const run = (fn: () => void) => () => {
@@ -46,6 +48,7 @@ export function QuestionToolsMenu({ flagged, onToggleFlag, saved, onToggleSave, 
             <Item icon={<Flag size={16} className={flagged ? "fill-current text-primary" : ""} />} label={flagged ? "Bỏ đánh dấu xem lại" : "Đánh dấu xem lại"} hint="M" onClick={run(onToggleFlag)} />
             {onToggleSave && <Item icon={<Bookmark size={16} className={saved ? "fill-current text-primary" : ""} />} label={saved ? "Bỏ lưu câu này" : "Lưu câu này"} onClick={run(onToggleSave)} />}
             <Item icon={<Maximize2 size={16} />} label="Mở cửa sổ phóng to ảnh" onClick={run(onZoom)} />
+            {onToggleAutoNext && <Item icon={<ChevronsRight size={16} className={autoNext ? "text-primary" : ""} />} label="Tự sang câu sau khi chọn" hint={autoNext ? "Bật" : "Tắt"} onClick={run(onToggleAutoNext)} />}
             <div role="group" aria-label="Cỡ ảnh đề" className="flex items-center gap-1 px-2.5 py-1.5">
               <span className="flex-1 text-sm text-slate-700">Cỡ ảnh đề</span>
               <button type="button" onClick={size.zoomOut} disabled={!size.canZoomOut} aria-label="Thu nhỏ ảnh đề" className="flex h-9 w-9 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:hover:bg-transparent">
