@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { adminApi } from "@/features/admin/api/admin.api";
+import { planApi } from "@/features/plan/plan.api";
 import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
 import { useSubmit } from "@/shared/hooks/useSubmit";
@@ -9,6 +10,8 @@ import { Button } from "@/shared/ui/Button";
 import { Card, CardHeader, PageHeader } from "@/shared/ui/Card";
 import { ErrorBox, FormError, Loading } from "@/shared/ui/Feedback";
 import { Input, inputClass } from "@/shared/ui/Input";
+import { Switch } from "@/shared/ui/Switch";
+import { formatDateTime } from "@/shared/utils/formatters";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 // ISO -> giá trị cho ô datetime-local (giờ máy người dùng)
@@ -17,17 +20,35 @@ const toLocalInput = (iso: string) => {
   return d && !Number.isNaN(d.getTime()) ? `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}` : "";
 };
 const digits = (v: string, max: number) => v.replace(/\D/g, "").slice(0, max);
+const vnd = (n: number) => `${n.toLocaleString("vi-VN")}đ`;
 
-function PromoForm({ initial, explainPrice, onSaved }: { initial: PromoSettings; explainPrice: number; onSaved: () => void }) {
+// Kỳ FPT kế tiếp: SP = tháng 1-4, SU = 5-8, FA = 9-12. Tháng 11/2026 -> SP27
+const nextTerm = (d: Date) => {
+  const m = d.getMonth(); // 0-11
+  const yy = d.getFullYear() % 100;
+  return m < 4 ? `SU${pad(yy)}` : m < 8 ? `FA${pad(yy)}` : `SP${pad((yy + 1) % 100)}`;
+};
+
+function PromoForm({ initial, explainPrice, proPrice, proMonths, onSaved }: { initial: PromoSettings; explainPrice: number; proPrice: number; proMonths: number; onSaved: () => void }) {
   const toast = useToast();
   const { run, loading, error, fieldErrors } = useSubmit();
   const [discount, setDiscount] = useState(String(initial.bundleDiscountPercent));
   const [trials, setTrials] = useState(String(initial.freeTrials));
   const [endsAt, setEndsAt] = useState(toLocalInput(initial.promoEndsAt));
   const [upsell, setUpsell] = useState({ result: initial.upsellResult ?? true, reviewCap: initial.upsellReviewCap ?? true, depositTier: initial.upsellDepositTier ?? true, firstRun: initial.upsellFirstRun ?? true, proNudge: initial.upsellProNudge ?? true });
+  const hasSemester = initial.semesterPromoEnabled !== undefined; // máy chủ cũ chưa có ưu đãi kỳ mới
+  const [sp, setSp] = useState({
+    enabled: !!initial.semesterPromoEnabled && Date.parse(initial.semesterPromoEndsAt ?? "") > Date.now(), // qua hạn là máy chủ đã tự tắt
+    term: initial.semesterPromoTerm || nextTerm(new Date()),
+    price: String(initial.semesterPromoPrice ?? 69000),
+    endsAt: toLocalInput(initial.semesterPromoEndsAt ?? ""),
+  });
   const [tiers, setTiers] = useState<{ min: string; percent: string }[]>(initial.depositBonusTiers.map((t) => ({ min: String(t.min), percent: String(t.percent) })));
 
   const d = Number(discount || 0);
+  const spPrice = Number(sp.price || 0);
+  const spExpired = !sp.enabled && !!initial.semesterPromoEnabled && !!sp.endsAt && new Date(sp.endsAt).getTime() <= Date.now();
+  const spOff =proPrice > 0 ? Math.round(((proPrice - spPrice) / proPrice) * 100) : 0;
   const sample = Math.round((explainPrice * 50 * (100 - d)) / 100);
 
   const onSubmit = (e: FormEvent) => {
@@ -44,6 +65,12 @@ function PromoForm({ initial, explainPrice, onSaved }: { initial: PromoSettings;
         upsellDepositTier: upsell.depositTier,
         upsellFirstRun: upsell.firstRun,
         upsellProNudge: upsell.proNudge,
+        ...(hasSemester && {
+          semesterPromoEnabled: sp.enabled,
+          semesterPromoTerm: sp.term.trim().toUpperCase(),
+          ...(sp.price ? { semesterPromoPrice: Number(sp.price) } : {}),
+          semesterPromoEndsAt: sp.endsAt ? new Date(sp.endsAt).toISOString() : "",
+        }),
       });
       toast.success("Đã lưu cấu hình ưu đãi");
       onSaved();
@@ -90,6 +117,46 @@ function PromoForm({ initial, explainPrice, onSaved }: { initial: PromoSettings;
           </label>
         </div>
       </Card>
+
+      {hasSemester && (
+        <Card>
+          <CardHeader
+            title="Ưu đãi kỳ mới (gói Pro)"
+            description="Giảm giá gói Pro dịp đầu kỳ. Mỗi tài khoản được mua giá ưu đãi một lần trong mỗi đợt. Tới hạn chót thì ưu đãi tự tắt."
+            action={<Switch checked={sp.enabled} onChange={(v) => setSp((s) => ({ ...s, enabled: v }))} label="Bật ưu đãi kỳ mới" />}
+          />
+          <div className="grid max-w-2xl gap-5 p-5 sm:grid-cols-2">
+            <Input
+              label="Kỳ ưu đãi"
+              placeholder="SP27"
+              value={sp.term}
+              onChange={(e) => setSp((s) => ({ ...s, term: e.target.value.toUpperCase().slice(0, 4) }))}
+              error={fieldErrors.semesterPromoTerm}
+              hint="Dạng SP27, SU27 hoặc FA27. Đổi kỳ là bắt đầu đợt mới."
+            />
+            <Input
+              label={`Giá ưu đãi gói Pro ${proMonths} tháng (credit)`}
+              inputMode="numeric"
+              value={sp.price ? Number(sp.price).toLocaleString("vi-VN") : ""}
+              onChange={(e) => setSp((s) => ({ ...s, price: digits(e.target.value, 7) }))}
+              error={fieldErrors.semesterPromoPrice}
+              hint={proPrice > 0 ? `Phải thấp hơn giá thường ${vnd(proPrice)}.` : undefined}
+            />
+            <label className="block sm:col-span-2">
+              <span className="mb-1.5 block text-sm font-medium text-slate-700">Hạn chót{sp.enabled && " (bắt buộc khi bật)"}</span>
+              <input type="datetime-local" value={sp.endsAt} onChange={(e) => setSp((s) => ({ ...s, endsAt: e.target.value }))} className={`${inputClass(fieldErrors.semesterPromoEndsAt)} max-w-xs`} />
+              {fieldErrors.semesterPromoEndsAt && <span className="mt-1 block text-xs text-rose-600">{fieldErrors.semesterPromoEndsAt}</span>}
+            </label>
+            <p className="rounded-m3-md bg-surface-container-high px-3 py-2 text-sm text-on-surface sm:col-span-2">
+              {sp.enabled
+                ? `Đang bật: Pro ${proMonths} tháng ${vnd(spPrice)}${proPrice > 0 ? ` thay vì ${vnd(proPrice)} (-${spOff}%)` : ""}${sp.endsAt ? `, hết hạn ${formatDateTime(new Date(sp.endsAt).toISOString())}` : ", chưa đặt hạn chót"}`
+                : spExpired
+                  ? `Đã hết hạn ngày ${formatDateTime(new Date(sp.endsAt).toISOString())}`
+                  : `Đang tắt${proPrice > 0 ? `: giá ${vnd(proPrice)}` : ""}`}
+            </p>
+          </div>
+        </Card>
+      )}
 
       <Card>
         <CardHeader
@@ -174,11 +241,12 @@ function PromoForm({ initial, explainPrice, onSaved }: { initial: PromoSettings;
 export default function PromoSettingsPage() {
   const settings = useApi(() => adminApi.promoSettings(), []);
   const ai = useApi(() => adminApi.aiConfig(), []);
+  const plan = useApi(() => planApi.info(), []).data;
   return (
     <>
       <PageHeader title="Ưu đãi & khuyến mãi" description="Chỉnh các con số ưu đãi tại đây: trang chủ, trang làm bài và trang nạp tiền tự cập nhật theo. Số credit tặng khi đăng ký ở “Cấu hình đăng ký”." />
       {settings.data ? (
-        <PromoForm key={JSON.stringify(settings.data)} initial={settings.data} explainPrice={ai.data?.explainPrice ?? 0} onSaved={settings.reload} />
+        <PromoForm key={JSON.stringify(settings.data)} initial={settings.data} explainPrice={ai.data?.explainPrice ?? 0} proPrice={plan?.price ?? 0} proMonths={plan?.months ?? 4} onSaved={settings.reload} />
       ) : settings.loading ? (
         <Loading />
       ) : (
