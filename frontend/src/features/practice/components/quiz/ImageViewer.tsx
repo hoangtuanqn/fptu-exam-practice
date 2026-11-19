@@ -9,7 +9,6 @@ import { AnswerOptions } from "./AnswerOptions";
 import { AnswerStatus } from "./AnswerStatus";
 import { ExplainButton } from "./ExplainButton";
 import { NextButton } from "./NextButton";
-import { ImageWatermark } from "@/shared/ui/ImageWatermark";
 import type { QuestionViewProps } from "./types";
 import { ZoomControls } from "./ZoomControls";
 
@@ -82,7 +81,6 @@ export function ImageViewer({
                 title={zoom.zoom <= 1 ? "Bấm để phóng to" : "Bấm để thu nhỏ"}
                 className={`block w-full ${zoom.zoom <= 1 ? "cursor-zoom-in" : "cursor-zoom-out"}`}
               />
-              <ImageWatermark />
             </div>
           </div>
         </div>

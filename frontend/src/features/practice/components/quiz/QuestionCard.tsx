@@ -4,7 +4,6 @@ import { ChevronLeft, Flag, Sparkles, Tag } from "lucide-react";
 import { useQuestionImageScale } from "@/features/practice/hooks/useQuestionImageScale";
 import { isMultiple } from "@/features/practice/utils/question";
 import { Button } from "@/shared/ui/Button";
-import { ImageWatermark } from "@/shared/ui/ImageWatermark";
 import { AnswerOptions } from "./AnswerOptions";
 import { AnswerStatus } from "./AnswerStatus";
 import { ExplainButton } from "./ExplainButton";
@@ -112,7 +111,6 @@ export function QuestionCard({
         <div className="min-h-0 w-full flex-1 overflow-auto bg-slate-50 p-1.5 sm:p-2">
           <div className="relative" style={{ width: `${size.scale * 100}%`, maxWidth: "none" }}>
             <ProtectedImg src={imageUrl} alt={`Câu ${number}`} onClick={onZoom} title="Bấm để mở cửa sổ phóng to" className="block h-auto w-full cursor-zoom-in" />
-            <ImageWatermark />
           </div>
         </div>
       </section>

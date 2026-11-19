@@ -65,12 +65,7 @@ export const userRepository = {
       role: query.role,
       status: query.status,
       ...(query.search && {
-        OR: [
-          { email: { contains: query.search } },
-          { fullName: { contains: query.search } },
-          // Mã trên chữ chìm của ảnh đề là 8 ký tự cuối của ID tài khoản: gõ đúng mã đó là ra người dùng (chỉ khi đúng dạng, tránh quét cả bảng với từ khoá khác)
-          ...(/^[0-9a-f]{8}$/i.test(query.search) ? [{ id: { endsWith: query.search.toLowerCase() } }] : []),
-        ],
+        OR: [{ email: { contains: query.search } }, { fullName: { contains: query.search } }],
       }),
     };
     const [items, total] = await Promise.all([

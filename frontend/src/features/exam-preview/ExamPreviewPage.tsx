@@ -17,7 +17,6 @@ import { useApi } from "@/shared/hooks/useApi";
 import { SiteHeader } from "@/shared/layout/SiteHeader";
 import { Button, buttonClass } from "@/shared/ui/Button";
 import { Card } from "@/shared/ui/Card";
-import { ImageWatermark } from "@/shared/ui/ImageWatermark";
 import { Empty } from "@/shared/ui/Feedback";
 import { Modal } from "@/shared/ui/Modal";
 import { QueryBoundary } from "@/shared/ui/QueryBoundary";
@@ -166,7 +165,6 @@ function Preview({ exam }: { exam: ImportedExam }) {
           </div>
           <div className="relative">
             <ProtectedImg src={zoom.imageUrl} alt={`Ảnh ${fileName(zoom)} của đề`} className="h-auto w-full rounded-m3-md bg-surface-container-lowest" />
-            <ImageWatermark />
           </div>
         </Modal>
       )}
