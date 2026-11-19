@@ -16,6 +16,16 @@
 :root:has([data-no-bottom-nav]) [data-bottom-nav] {
   display: none;
 }
+/* Ngăn "Thêm" của thanh điều hướng dưới trượt vào từ cạnh phải */
+@keyframes md-drawer-in-right {
+  from { transform: translateX(100%); }
+}
+.md-drawer-in-right {
+  animation: md-drawer-in-right var(--md-sys-motion-duration-medium4) var(--md-sys-motion-easing-emphasized-decelerate) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .md-drawer-in-right { animation: none; }
+}
 
 @theme {
   /* CẢ HỆ THỐNG CHỈ DÙNG INTER (nhúng từ Google Fonts trong index.html). Mọi họ phông đều trỏ về Inter: các class font-serif, font-display,

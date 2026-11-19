@@ -28,7 +28,7 @@ function shown(pathname: string) {
   return pathname === "/" || ["/kho-de", "/pro", "/features", "/changelog", "/mon", "/account"].some((p) => under(pathname, p));
 }
 
-// Thanh điều hướng dưới (M3 navigation bar) cho điện thoại (<600px). Mục "Thêm" mở danh sách đầy đủ của trang tài khoản.
+// Thanh điều hướng dưới (M3 navigation bar) cho điện thoại (<600px). Mục "Thêm" mở ngăn trượt từ cạnh phải chứa danh sách đầy đủ của trang tài khoản.
 export function BottomNav({ more }: { more: NavItem[] }) {
   const { user } = useAuth();
   const { pathname } = useLocation();
@@ -93,7 +93,7 @@ export function BottomNav({ more }: { more: NavItem[] }) {
             aria-modal="true"
             aria-label="Tài khoản"
             tabIndex={-1}
-            className="md-enter absolute inset-x-0 bottom-0 h-[80dvh] overflow-hidden rounded-t-m3-xl bg-surface-container-low pb-[env(safe-area-inset-bottom)] shadow-m3-3 outline-none"
+            className="md-drawer-in-right absolute inset-y-0 right-0 w-[min(22.5rem,85vw)] overflow-hidden rounded-l-m3-xl bg-surface-container-low pb-[env(safe-area-inset-bottom)] shadow-m3-3 outline-none"
           >
             <IconButton label="Đóng menu" onClick={() => setOpen(false)} className="absolute right-3 top-3 z-10">
               <X size={22} />
