@@ -1,7 +1,8 @@
 import { prisma } from "../configs/prisma";
-import { storageDir } from "../configs/env";
+import { env, storageDir } from "../configs/env";
 import { FREQUENT_CACHE_MS, FREQUENT_FREE_LIMIT, FREQUENT_MATCH_BITS, FREQUENT_MAX_ITEMS, FREQUENT_MAX_NEW_HASHES } from "../constants/frequent";
 import { PRO_BENEFITS } from "../constants/plan";
+import { signExamFile } from "../utils/exam-path";
 import { fileUrlOf } from "../utils/file-url";
 import { isProUser } from "../utils/pro";
 import { hammingWithin, hashImagesInBatches, toWords } from "../utils/question-hash";
@@ -103,6 +104,7 @@ export const frequentQuestionsService = {
       cache.set(code, { at: Date.now(), sig, data });
     }
 
+    const exp = Date.now() + 60 * 60 * 1000; // link ảnh sống 1 giờ
     const pro = PRO_BENEFITS.frequentQuestions && isProUser(user);
     const shown = pro ? data.items : data.items.slice(0, FREQUENT_FREE_LIMIT);
     return {
@@ -112,7 +114,8 @@ export const frequentQuestionsService = {
       pending: Math.max(0, data.total - data.analyzed), // câu chưa được phân tích ảnh: kết quả sẽ đầy đủ dần
       locked: !pro && data.items.length > shown.length,
       hidden: data.items.length - shown.length,
-      items: shown,
+      // Ảnh lấy từ đề mới nhất của môn (thường không nằm trong kho của người xem): kèm chữ ký ngắn hạn cho đúng ảnh đó
+      items: shown.map((i) => ({ ...i, imageUrl: `${i.imageUrl}?${signExamFile(i.imageUrl.slice(fileUrlOf("").length), exp, env.JWT_SECRET)}` })),
     };
   },
 };

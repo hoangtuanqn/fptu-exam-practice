@@ -3,6 +3,7 @@ import express from "express";
 import helmet from "helmet";
 import { env, storageDir } from "./configs/env";
 import { errorHandler, notFoundHandler } from "./middlewares/error.middlewares";
+import { examFilesRouter } from "./middlewares/examFiles.middlewares";
 import rootRouter from "./routes/root.routes";
 import { isAttachmentStaticPath } from "./utils/attachment";
 
@@ -17,7 +18,10 @@ export const createApp = () => {
   app.use(cors({ origin: env.CLIENT_URL, credentials: true, exposedHeaders: ["Content-Disposition", "Retry-After", "RateLimit-Reset", "Idempotent-Replay"] }));
   app.use(express.json({ limit: "100kb" }));
 
-  // Ảnh đề đã crawl. Cho phép trang web ở origin khác nhúng (helmet mặc định chỉ cho cùng origin)
+  // Ảnh đề (exams/...) cần danh tính và đề phải thuộc kho của người xem; các tệp khác (ví dụ ảnh đại diện) đi tiếp xuống static bên dưới
+  app.use("/api/v1/files", examFilesRouter);
+
+  // Tệp tĩnh còn lại. Cho phép trang web ở origin khác nhúng (helmet mặc định chỉ cho cùng origin)
   app.use(
     "/api/v1/files",
     (req, res, next) => {

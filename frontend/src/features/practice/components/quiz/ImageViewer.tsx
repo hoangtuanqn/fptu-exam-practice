@@ -1,3 +1,4 @@
+import { ProtectedImg } from "@/shared/ui/ProtectedImg";
 import type { ReactNode } from "react";
 import { ChevronLeft } from "lucide-react";
 import { useImageZoom } from "@/features/practice/hooks/useImageZoom";
@@ -70,16 +71,17 @@ export function ImageViewer({
         <div ref={zoom.scrollRef} onScroll={zoom.onScroll} className="relative isolate z-0 min-h-0 flex-1 overflow-auto rounded-xl bg-surface-container-lowest p-4">
           {/* m-auto thay cho justify-center: ảnh nhỏ thì nằm giữa, ảnh tràn khung thì vẫn cuộn tới được mọi phía */}
           <div className="flex min-h-full min-w-full">
-            <img
-              ref={zoom.imgRef}
-              src={question.imageUrl}
-              alt={`Câu ${question.number}`}
-              onClick={zoom.toggleAt}
-              onLoad={zoom.onImageLoad}
-              title={zoom.zoom <= 1 ? "Bấm để phóng to" : "Bấm để thu nhỏ"}
-              className={`m-auto shrink-0 ${zoom.zoom <= 1 ? "cursor-zoom-in" : "cursor-zoom-out"}`}
-              style={{ width: `${zoom.zoom * 100}%`, maxWidth: "none" }}
-            />
+            <div className="relative m-auto shrink-0" style={{ width: `${zoom.zoom * 100}%`, maxWidth: "none" }}>
+              <ProtectedImg
+                ref={zoom.imgRef}
+                src={question.imageUrl}
+                alt={`Câu ${question.number}`}
+                onClick={zoom.toggleAt}
+                onLoad={zoom.onImageLoad}
+                title={zoom.zoom <= 1 ? "Bấm để phóng to" : "Bấm để thu nhỏ"}
+                className={`block w-full ${zoom.zoom <= 1 ? "cursor-zoom-in" : "cursor-zoom-out"}`}
+              />
+            </div>
           </div>
         </div>
 

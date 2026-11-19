@@ -1,3 +1,4 @@
+import { ProtectedImg } from "@/shared/ui/ProtectedImg";
 import { Bookmark, BookmarkCheck, Tag } from "lucide-react";
 import type { Question } from "@/features/practice/types";
 import { IconButton } from "@/shared/ui/Button";
@@ -31,7 +32,11 @@ export function ViewQuestionCard({ q, showAnswer, highlighted, saved, onToggleSa
             </IconButton>
           )}
         </div>
-        {q.imageUrl && <img src={q.imageUrl} alt={`Câu ${q.number}`} loading="lazy" className="h-auto w-full border-y border-outline-variant bg-surface-container-lowest" />}
+        {q.imageUrl && (
+          <div className="relative">
+            <ProtectedImg src={q.imageUrl} alt={`Câu ${q.number}`} loading="lazy" className="h-auto w-full border-y border-outline-variant bg-surface-container-lowest" />
+          </div>
+        )}
         {showAnswer && correct.length > 0 && (
           <p className="md-body-medium px-4 py-2 text-on-surface">
             Đáp án: <b>{correct.join(" ")}</b>

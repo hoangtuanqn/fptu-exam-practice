@@ -1,3 +1,5 @@
+import { openImageHandler } from "@/shared/api/protectedImage";
+import { ProtectedImg } from "@/shared/ui/ProtectedImg";
 import { Link } from "react-router-dom";
 import { BookCheck, Crown, Flame, Lightbulb, NotebookPen, PenLine, Play, Trash2 } from "lucide-react";
 import { errorMessage } from "@/shared/api/errors";
@@ -36,8 +38,8 @@ function Row({ r, onRemove }: { r: ReviewRow; onRemove: (r: ReviewRow) => void }
   return (
     <li className="flex items-center gap-3 px-4 py-3 sm:px-5">
       {r.imageUrl && (
-        <a href={r.imageUrl} target="_blank" rel="noreferrer" title="Xem ảnh câu hỏi" className="h-14 w-20 shrink-0 overflow-hidden rounded-m3-sm border border-outline-variant bg-surface-container-lowest sm:h-16 sm:w-28">
-          <img src={r.imageUrl} alt={`Câu ${r.number}`} loading="lazy" className="h-full w-full object-cover object-top" />
+        <a href="#" onClick={openImageHandler(r.imageUrl)} title="Xem ảnh câu hỏi" className="h-14 w-20 shrink-0 overflow-hidden rounded-m3-sm border border-outline-variant bg-surface-container-lowest sm:h-16 sm:w-28">
+          <ProtectedImg src={r.imageUrl} alt={`Câu ${r.number}`} loading="lazy" className="h-full w-full object-cover object-top" />
         </a>
       )}
       <div className="min-w-0 flex-1">

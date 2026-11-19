@@ -10,6 +10,9 @@ export const userExamRepository = {
   add: (owner: Owner, examId: string, db: Db = prisma) =>
     db.userExam.createMany({ data: [{ ...whereOf(owner), examId }], skipDuplicates: true }),
 
+  // Đề (theo thread FuOverflow) có trong kho của chủ này không: một truy vấn, không cần tra id đề trước
+  hasThread: async (owner: Owner, threadId: string) => !!(await prisma.userExam.findFirst({ where: { ...whereOf(owner), exam: { threadId } }, select: { id: true } })),
+
   has: async (owner: Owner, examId: string) => !!(await prisma.userExam.findFirst({ where: { ...whereOf(owner), examId }, select: { id: true } })),
 
   async list(owner: Owner, query: PaginationQuery & { subject?: string }) {

@@ -1,3 +1,5 @@
+import { openImageHandler } from "@/shared/api/protectedImage";
+import { ProtectedImg } from "@/shared/ui/ProtectedImg";
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { AlertTriangle, Crown, Flame, Loader2, Tag } from "lucide-react";
@@ -115,8 +117,8 @@ function Item({ rank, item, totalExams }: { rank: number; item: FrequentItem; to
           </span>
         )}
       </div>
-      <a href={item.imageUrl} target="_blank" rel="noreferrer" title="Mở ảnh lớn" className="block bg-surface-container-lowest p-2">
-        <img src={item.imageUrl} alt={`Câu hay ra số ${rank}`} loading="lazy" className="mx-auto max-h-72 w-auto max-w-full object-contain object-top" />
+      <a href="#" onClick={openImageHandler(item.imageUrl)} title="Mở ảnh lớn" className="block bg-surface-container-lowest p-2">
+        <ProtectedImg src={item.imageUrl} alt={`Câu hay ra số ${rank}`} loading="lazy" className="mx-auto max-h-72 w-auto max-w-full object-contain object-top" />
       </a>
       {item.conflict && (
         <p className="md-body-small flex items-start gap-2 bg-warning-container px-4 py-2 text-on-warning-container">

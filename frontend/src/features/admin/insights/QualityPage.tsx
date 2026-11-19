@@ -1,3 +1,5 @@
+import { openImageHandler } from "@/shared/api/protectedImage";
+import { ProtectedImg } from "@/shared/ui/ProtectedImg";
 import { Link } from "react-router-dom";
 import { AlertTriangle, ArrowLeft, ChevronRight, Pencil } from "lucide-react";
 import { useApi } from "@/shared/hooks/useApi";
@@ -93,8 +95,8 @@ function ExamDetail({ id, onBack }: { id: string; onBack: () => void }) {
           <ul className="divide-y divide-outline-variant">
             {data.questions.map((q) => (
               <li key={q.number} className="flex items-start gap-3 px-5 py-4">
-                <a href={q.imageUrl} target="_blank" rel="noreferrer" className="hidden h-16 w-24 shrink-0 overflow-hidden rounded-m3-sm border border-outline-variant bg-surface-container-lowest sm:block">
-                  <img src={q.imageUrl} alt={`Câu ${q.number}`} loading="lazy" className="h-full w-full object-cover object-top" />
+                <a href="#" onClick={openImageHandler(q.imageUrl)} className="hidden h-16 w-24 shrink-0 overflow-hidden rounded-m3-sm border border-outline-variant bg-surface-container-lowest sm:block">
+                  <ProtectedImg src={q.imageUrl} alt={`Câu ${q.number}`} loading="lazy" className="h-full w-full object-cover object-top" />
                 </a>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-1.5">

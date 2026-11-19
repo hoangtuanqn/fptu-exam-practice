@@ -1,3 +1,4 @@
+import { ProtectedImg } from "@/shared/ui/ProtectedImg";
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { FileSearch, Play } from "lucide-react";
@@ -202,7 +203,7 @@ function ExamView({ exam }: { exam: ImportedExam }) {
           <h2 className="md-title-medium text-on-surface">Tài liệu tham khảo</h2>
           {references.map((r) => (
             <Card key={r.number} className="overflow-hidden">
-              <img src={r.imageUrl} alt={`Tài liệu tham khảo ${r.number}`} loading="lazy" className="h-auto w-full bg-surface-container-lowest" />
+              <ProtectedImg src={r.imageUrl} alt={`Tài liệu tham khảo ${r.number}`} loading="lazy" className="h-auto w-full bg-surface-container-lowest" />
             </Card>
           ))}
         </section>

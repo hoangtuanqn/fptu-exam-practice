@@ -1,3 +1,4 @@
+import { ProtectedImg } from "@/shared/ui/ProtectedImg";
 import type { ReactNode } from "react";
 import { ChevronLeft, Flag, Sparkles, Tag } from "lucide-react";
 import { useQuestionImageScale } from "@/features/practice/hooks/useQuestionImageScale";
@@ -108,14 +109,9 @@ export function QuestionCard({
 
         {/* Ảnh rộng hết khung (chữ to hơn nhiều so với co ảnh vừa cả chiều cao); đề dài thì cuộn trong khung. Bấm vào ảnh mở cửa sổ phóng to */}
         <div className="min-h-0 w-full flex-1 overflow-auto bg-slate-50 p-1.5 sm:p-2">
-          <img
-            src={imageUrl}
-            alt={`Câu ${number}`}
-            onClick={onZoom}
-            title="Bấm để mở cửa sổ phóng to"
-            className="block h-auto cursor-zoom-in"
-            style={{ width: `${size.scale * 100}%`, maxWidth: "none" }}
-          />
+          <div className="relative" style={{ width: `${size.scale * 100}%`, maxWidth: "none" }}>
+            <ProtectedImg src={imageUrl} alt={`Câu ${number}`} onClick={onZoom} title="Bấm để mở cửa sổ phóng to" className="block h-auto w-full cursor-zoom-in" />
+          </div>
         </div>
       </section>
 
