@@ -57,7 +57,8 @@ export const fuoSourceService = {
     const counts = Object.fromEntries(STATUSES.map((s) => [s, 0])) as Record<FuoSourceStatus, number>;
     for (const g of groups) counts[g.status] = g._count._all;
     const total = STATUSES.reduce((n, s) => n + counts[s], 0);
-    const scanRun = latestScan?.autoImport && SCAN_SHOWN.includes(latestScan.status) ? latestScan : null;
+    // Lượt quét thủ công ở trang danh mục đang chạy cũng hiện (nút đang bị khoá); lượt dừng/lỗi chỉ hiện với lượt của nút này
+    const scanRun = latestScan && SCAN_SHOWN.includes(latestScan.status) && (latestScan.autoImport || latestScan.status === "RUNNING") ? latestScan : null;
     const scan = scanRun && {
       status: scanRun.status,
       subjectsTotal: scanRun.subjectsTotal,

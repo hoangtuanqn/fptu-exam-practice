@@ -79,6 +79,7 @@ async function runOnce(run: FuoCatalogRun) {
   } else if (run.autoImport) {
     // Lượt của "Load dữ liệu mới": nạp ngay các đề mới/đổi (lượt nạp tự báo khi xong)
     await fuoSourceService.afterScan(run.createdById);
+    publish(); // không để trang nguồn đề tưởng đã dừng trong lúc chuyển từ quét sang nạp
   } else {
     adminNoticeService.push("catalog.done", {
       title: `Quét danh mục FuOverflow xong: ${done.threadsNew} bài mới, ${done.threadsUpdated} bài cập nhật`,
