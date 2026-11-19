@@ -56,6 +56,7 @@ export const PRIVATE_PAGES: Record<string, PageSeo> = {
   "/admin/coursera": { title: "Quản trị: Coursera", description: "Quản lý danh mục khóa học và xử lý đơn Coursera của thành viên." },
   "/forgot-password": { title: "Quên mật khẩu", description: "Nhập email để nhận liên kết đặt lại mật khẩu tài khoản Luyện thi FE FPTU." },
   "/reset-password": { title: "Đặt lại mật khẩu", description: "Tạo mật khẩu mới cho tài khoản Luyện thi FE FPTU của bạn." },
+  "/fetch": { title: "Lấy đề từ FuOverflow", description: "Xác nhận phí rồi mở đề vừa chọn trên FuOverflow." },
   "/verify-email": { title: "Xác minh email", description: "Xác minh địa chỉ email để mở khoá đầy đủ tính năng tài khoản." },
   "/unsubscribe": { title: "Huỷ nhận thư gợi ý", description: "Dừng nhận thư gợi ý ôn tập và ưu đãi. Thư về tài khoản và giao dịch vẫn được gửi." },
   "/auth/github/callback": { title: "Đăng nhập bằng GitHub", description: "Đang hoàn tất đăng nhập bằng tài khoản GitHub của bạn." },
