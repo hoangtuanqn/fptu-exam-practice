@@ -5,6 +5,7 @@ import { Footer } from "@/shared/layout/Footer";
 import { CtaSection } from "./components/CtaSection";
 import { FeatureShowcase } from "./components/FeatureShowcase";
 import { HeroSection } from "./components/HeroSection";
+import { LandingNoticePopup } from "./components/LandingNoticePopup";
 import { PartnerAiSection } from "./components/PartnerAiSection";
 import { StepsSection } from "./components/StepsSection";
 
@@ -21,6 +22,7 @@ export function Landing({ onPick, onImported, userName }: Props) {
 
   return (
     <div className="flex flex-1 flex-col overflow-y-auto bg-surface">
+      <LandingNoticePopup />
       <HeroSection onPick={onPick} onImported={onImported} userName={userName} />
       <ExtensionBar />
 
