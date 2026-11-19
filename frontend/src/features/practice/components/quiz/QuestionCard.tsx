@@ -64,9 +64,10 @@ export function QuestionCard({
             {/* Chỉ báo "Chọn nhiều" (hoặc chưa biết) cho khỏi chọn thiếu; câu chọn một thì khỏi nhắc */}
             {(question.answerPending || isMultiple(question)) && <QuestionKindBadge question={question} short />}
             {topic ? (
-              <span className="inline-flex min-w-0 items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5 text-xs text-brand-900 lg:max-w-[16rem]" title={`Chủ đề: ${topic}`}>
-                <Tag size={12} className="shrink-0 text-brand-700" />
-                <span className="truncate font-medium">{topic}</span>
+              <span className="inline-flex min-w-0 max-w-full items-start gap-1 rounded-2xl bg-brand-50 px-2 py-0.5 text-xs text-brand-900" title={`Chủ đề: ${topic}`}>
+                <Tag size={12} className="mt-0.5 shrink-0 text-brand-700" />
+                {/* Hiện đủ tên chủ đề, dài thì xuống dòng (không cắt thành "…" vì trên điện thoại không rê chuột để xem được) */}
+                <span className="break-words font-medium">{topic}</span>
               </span>
             ) : (
               topicLoading && (

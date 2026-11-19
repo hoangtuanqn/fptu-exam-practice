@@ -147,8 +147,8 @@ function TopicBreakdown({ summary }: { summary: Exclude<TopicSummary, null> }) {
           const weak = i === 0 && rate < 0.75;
           return (
             <li key={t.topic}>
-              <div className="flex items-baseline justify-between gap-3 text-sm">
-                <span className="min-w-0 truncate text-slate-800">
+              <div className="flex items-start justify-between gap-3 text-sm">
+                <span className="min-w-0 break-words text-slate-800">
                   {t.topic}
                   {weak && <span className="ml-2 rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-700">Cần ôn</span>}
                 </span>
