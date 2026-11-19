@@ -3,7 +3,7 @@
     {
       "version": "1.13.0",
       "date": "2026-11-19",
-      "title": "Tải trọn bộ đề PE một lần",
+      "title": "Tải trọn bộ đề PE và lưu câu nhanh hơn",
       "highlights": [
         "Nút Download All tải mọi tài nguyên đề PE trong một file zip",
         "Lấy đề PE chỉ 50 credit"
@@ -16,6 +16,10 @@
         {
           "type": "improved",
           "text": "Lấy đề PE có giá riêng 50 credit, hiện ngay trên nút mở đề"
+        },
+        {
+          "type": "improved",
+          "text": "Nút lưu câu hiện ngay ở đầu mỗi câu hỏi, bấm một lần là lưu để ôn lại ở Câu đã lưu"
         }
       ]
     },

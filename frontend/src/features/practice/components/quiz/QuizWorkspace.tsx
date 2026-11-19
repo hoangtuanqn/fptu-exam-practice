@@ -87,7 +87,7 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit }: Props)
     try {
       await (next ? savedApi.save(quiz.examId!, number) : savedApi.remove(quiz.examId!, number));
       setSavedChanged((prev) => ({ ...prev, [savedKey]: next }));
-      toast.success(next ? `Đã lưu câu ${number}` : `Đã bỏ lưu câu ${number}`);
+      toast.success(next ? `Đã lưu câu ${number} vào Câu đã lưu` : `Đã bỏ lưu câu ${number}`);
     } catch (err) {
       toast.error(errorMessage(err, next ? "Chưa lưu được câu này" : "Chưa bỏ lưu được câu này"));
     }
