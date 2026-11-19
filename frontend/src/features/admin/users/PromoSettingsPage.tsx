@@ -48,7 +48,7 @@ function PromoForm({ initial, explainPrice, proPrice, proMonths, onSaved }: { in
   const d = Number(discount || 0);
   const spPrice = Number(sp.price || 0);
   const spExpired = !sp.enabled && !!initial.semesterPromoEnabled && !!sp.endsAt && new Date(sp.endsAt).getTime() <= Date.now();
-  const spOff =proPrice > 0 ? Math.round(((proPrice - spPrice) / proPrice) * 100) : 0;
+  const spOff = proPrice > 0 ? Math.round(((proPrice - spPrice) / proPrice) * 100) : 0;
   const sample = Math.round((explainPrice * 50 * (100 - d)) / 100);
 
   const onSubmit = (e: FormEvent) => {
