@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, ChevronDown, ChevronRight, LayoutGrid } from "lucide-react";
+import { ChevronDown, ChevronRight, LayoutGrid } from "lucide-react";
 import type { Quiz } from "@/features/practice/hooks/useQuiz";
 import { useKeydown } from "@/features/practice/hooks/useKeydown";
 import { nextUnanswered } from "@/features/practice/utils/unanswered";
@@ -61,13 +61,6 @@ export function Sidebar({ quiz, onSubmit }: { quiz: Quiz; onSubmit?: () => void 
           Câu {quiz.current + 1}
           <span className="lg:block">/{count}</span>
         </span>
-        {/* Số câu đã làm: không phải mở danh sách mới biết còn thiếu bao nhiêu */}
-        {!quiz.submitted && (
-          <span className="inline-flex items-center gap-0.5 text-[11px] font-semibold tabular-nums opacity-80" title={`Đã làm ${done}/${count} câu`}>
-            <Check size={11} strokeWidth={3} aria-hidden />
-            {done}
-          </span>
-        )}
         <ChevronDown size={14} className={`lg:hidden ${open ? "rotate-180" : ""}`} />
         <ChevronRight size={14} className={`hidden lg:block ${open ? "rotate-180" : ""}`} />
       </button>
