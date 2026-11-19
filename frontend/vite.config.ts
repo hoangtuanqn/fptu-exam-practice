@@ -1,4 +1,4 @@
-import { defineConfig, loadEnv } from "vite";
+import { defineConfig, loadEnv, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { loadBrand } from "./brand.config";
@@ -25,6 +25,35 @@ export default defineConfig(({ mode }) => {
         siteName: brand.company,
       };
       return html.replace(/\{\{(\w+)\}\}/g, (_, key: string) => esc(values[key] ?? ""));
+    },
+  };
+
+  // manifest.webmanifest để cài web như app (PWA), lấy tên và màu từ brand nên đổi env là đổi theo
+  const manifest = JSON.stringify({
+    name: brand.title,
+    short_name: brand.product,
+    description: brand.description,
+    lang: "vi",
+    start_url: "/",
+    scope: "/",
+    display: "standalone",
+    theme_color: brand.themeColor,
+    background_color: "#ffffff",
+    icons: [
+      { src: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { src: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+  });
+  const webManifest: Plugin = {
+    name: "web-manifest",
+    configureServer(server) {
+      server.middlewares.use("/manifest.webmanifest", (_req, res) => {
+        res.setHeader("Content-Type", "application/manifest+json");
+        res.end(manifest);
+      });
+    },
+    generateBundle() {
+      this.emitFile({ type: "asset", fileName: "manifest.webmanifest", source: manifest });
     },
   };
 
@@ -75,7 +104,7 @@ export default defineConfig(({ mode }) => {
   };
 
   return {
-    plugins: [react(), tailwindcss(), brandHtml, seoPages],
+    plugins: [react(), tailwindcss(), brandHtml, webManifest, seoPages],
     // "@/shared/ui/Button" = src/shared/ui/Button (Vite hiểu "/src" là thư mục src của dự án)
     resolve: { alias: { "@": "/src" } },
     // Gọi /api/... từ trình duyệt, Vite chuyển tiếp sang backend (tránh CORS khi phát triển)
