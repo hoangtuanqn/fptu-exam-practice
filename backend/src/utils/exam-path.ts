@@ -1,3 +1,4 @@
+import { createHmac, timingSafeEqual } from "node:crypto";
 import path from "node:path";
 import { EXAM_STORAGE_DIR } from "../constants/crawler";
 import { isAttachmentStaticPath } from "./attachment";
@@ -18,4 +19,18 @@ export function examRelPath(p: string): { rel: string; threadId: string } | "blo
   } catch {
     return "blocked";
   }
+}
+
+// Link ký ngắn hạn cho đúng MỘT ảnh (trang "Câu hay ra" lấy ảnh từ đề mới nhất của môn, thường không nằm trong kho của người xem).
+// Chữ ký gắn với đường dẫn và hạn dùng, không dùng được cho ảnh khác.
+const macOf = (rel: string, exp: number, secret: string) => createHmac("sha256", secret).update(`exam-file:${rel}:${exp}`).digest("hex").slice(0, 32);
+
+export const signExamFile = (rel: string, exp: number, secret: string) => `e=${exp}&s=${macOf(rel, exp, secret)}`;
+
+export function isValidExamFileSignature(rel: string, exp: unknown, sig: unknown, secret: string, now = Date.now()): boolean {
+  const e = Number(exp);
+  if (!Number.isInteger(e) || e < now || typeof sig !== "string" || sig.length !== 32) return false;
+  const want = Buffer.from(macOf(rel, e, secret));
+  const got = Buffer.from(sig);
+  return got.length === want.length && timingSafeEqual(got, want);
 }
