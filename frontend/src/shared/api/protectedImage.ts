@@ -33,6 +33,9 @@ export function fetchImageBlob(url: string): Promise<Blob> {
   return hit;
 }
 
+/** Nội dung một tệp có kèm danh tính, không cache (dùng khi gom nhiều tệp lớn, ví dụ nén zip). */
+export const fetchProtectedFile = (url: string) => download(url);
+
 /** Tải trước để bấm sang câu kế tiếp là hiện ngay. Lỗi thì bỏ qua (lúc hiển thị sẽ tải lại). */
 export const prefetchImage = (url: string) => void fetchImageBlob(url).catch(() => undefined);
 
