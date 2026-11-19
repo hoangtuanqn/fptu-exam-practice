@@ -34,14 +34,14 @@ export function LibraryStats() {
   const onPhone = Math.min(3, stats.filter((s) => !s.wideOnly).length);
 
   return (
-    <div className="mx-auto mt-7 max-w-2xl">
-      <dl className={`grid gap-2.5 sm:gap-3 ${PHONE_COLS[onPhone]} ${SM_COLS[Math.min(4, stats.length)]}`}>
+    <div className="mx-auto mt-5 max-w-md sm:max-w-lg">
+      <dl className={`grid gap-2 sm:gap-2.5 ${PHONE_COLS[onPhone]} ${SM_COLS[Math.min(4, stats.length)]}`}>
         {stats.map((s, i) => (
           <StatTile key={s.label} stat={s} index={i} />
         ))}
       </dl>
       {priceKnown && (
-        <p className="md-body-medium mt-4 text-on-surface-variant">
+        <p className="md-body-small mt-3 text-on-surface-variant">
           Mở đề 1 click · <b className="font-semibold text-primary">{price > 0 ? `${formatCredit(price)} / đề` : "miễn phí"}</b>
         </p>
       )}
@@ -57,20 +57,20 @@ function StatTile({ stat, index }: { stat: Stat & { value: number }; index: numb
   return (
     <div
       style={{ animationDelay: `${index * 90}ms` }}
-      className={`stat-tile group relative animate-fade-up flex-col items-center overflow-hidden rounded-m3-lg border border-outline-variant/70 bg-gradient-to-b from-surface-container-lowest to-surface-container-low px-2 pb-3.5 pt-4 text-center shadow-[0_1px_2px_rgba(0,0,0,0.05),0_14px_28px_-18px_rgba(70,45,0,0.45)] transition duration-300 hover:border-[#e0a100]/70 hover:shadow-[0_2px_4px_rgba(0,0,0,0.06),0_20px_36px_-16px_rgba(232,154,0,0.55)] motion-safe:hover:-translate-y-1 ${wideOnly ? "hidden sm:flex" : "flex"}`}
+      className={`stat-tile group relative animate-fade-up flex-col items-center overflow-hidden rounded-m3-md border border-outline-variant/70 bg-gradient-to-b from-surface-container-lowest to-surface-container-low px-2 pb-2.5 pt-3 text-center shadow-[0_1px_2px_rgba(0,0,0,0.05),0_14px_28px_-18px_rgba(70,45,0,0.45)] transition duration-300 hover:border-[#e0a100]/70 hover:shadow-[0_2px_4px_rgba(0,0,0,0.06),0_20px_36px_-16px_rgba(232,154,0,0.55)] motion-safe:hover:-translate-y-1 ${wideOnly ? "hidden sm:flex" : "flex"}`}
     >
-      <span aria-hidden className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-[#ffd75e] via-[#ffc61f] to-[#e89a00]" />
-      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-container/70 text-primary transition duration-300 motion-safe:group-hover:scale-110 motion-safe:group-hover:-rotate-6">
-        <Icon size={18} aria-hidden />
+      <span aria-hidden className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-[#ffd75e] via-[#ffc61f] to-[#e89a00]" />
+      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-container/70 text-primary transition duration-300 motion-safe:group-hover:scale-110 motion-safe:group-hover:-rotate-6">
+        <Icon size={15} aria-hidden />
       </span>
-      <dd className="order-2 mt-2 font-display text-3xl font-semibold leading-none tabular-nums sm:text-4xl">
+      <dd className="order-2 mt-1.5 font-display text-2xl font-semibold leading-none tabular-nums sm:text-3xl">
         {/* Số chạy chỉ để nhìn; trình đọc màn hình đọc số cuối */}
         <span aria-hidden className="bg-gradient-to-b from-[#e89a00] to-[#8a6200] bg-clip-text text-transparent">
           {shown.toLocaleString("vi-VN")}
         </span>
         <span className="sr-only">{value.toLocaleString("vi-VN")}</span>
       </dd>
-      <dt className="md-label-medium order-3 mt-1.5 text-on-surface-variant">{label}</dt>
+      <dt className="md-label-small order-3 mt-1 text-on-surface-variant">{label}</dt>
     </div>
   );
 }
