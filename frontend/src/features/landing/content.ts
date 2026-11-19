@@ -21,3 +21,11 @@ export function splitSlogan(slogan: string) {
   const m = slogan.match(/^(.*?)(điểm\s*\d+\.?)$/i);
   return m ? [m[1] ?? "", m[2] ?? ""] : [slogan, ""];
 }
+
+// Thông báo đầu trang chủ (có hạn thật: hết hạn đăng ký thì tự ẩn, không cần sửa code)
+export const LANDING_NOTICE = {
+  text: "CLB F-Code đang tuyển thành viên ARCODE: cần bạn chịu khó học hỏi, không đặt nặng kỹ thuật. Đăng ký đến hết 22/11.",
+  link: "https://www.facebook.com/fcodeclub",
+  linkLabel: "Xem chi tiết",
+  endsAt: "2026-11-23T00:00:00+07:00",
+};
