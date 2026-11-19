@@ -2,12 +2,11 @@ import { Sparkles } from "lucide-react";
 import type { ImportedExam } from "@/features/exam-import/types";
 import type { PickFolder } from "@/features/practice/components/FolderInput";
 import { brand } from "@/shared/brand/brand";
-import { FEATURES } from "../content";
 import { ExamSourcePicker } from "./ExamSourcePicker";
+import { LibraryStats } from "./LibraryStats";
 import { PromoCard } from "./PromoCard";
 import { PromoDeadlineBanner } from "./PromoDeadlineBanner";
 import { SignupGiftBanner } from "./SignupGiftBanner";
-import { ValueTrio } from "./ValueTrio";
 import { ProNudge } from "@/features/plan/ProNudge";
 import { FirstRunChecklist } from "@/features/account/FirstRunChecklist";
 
@@ -17,7 +16,7 @@ interface Props {
   userName?: string; // đã đăng nhập thì chào tên thay cho slogan
 }
 
-// Phần đầu trang: câu hỏi "Bạn đang ôn môn nào?" làm tiêu đề, ba ý ngắn, ô chọn môn (việc chính), dải quà (khách).
+// Phần đầu trang: câu hỏi "Bạn đang ôn môn nào?" làm tiêu đề, dải số liệu kho đề (số thật), ô chọn môn (việc chính), dải quà (khách).
 // Phong cách học thuật: nền giấy ấm, màu navy, một điểm nhấn vàng đồng, không chữ chuyển sắc hay hiệu ứng phát sáng.
 export function HeroSection({ onPick, onImported, userName }: Props) {
   const isGuest = !userName;
@@ -56,7 +55,6 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
             <>
               <div aria-hidden className="mx-auto mt-4 h-px w-24 bg-primary/40" />
               {freeNote}
-              <ValueTrio />
             </>
           )}
 
@@ -68,6 +66,8 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
               </p>
             </>
           )}
+
+          <LibraryStats />
         </div>
 
         {/* Bố cục: ô chọn môn (việc chính, thấy ngay không cần cuộn) → dải quà → dải Pro → thẻ ưu đãi.
@@ -91,17 +91,6 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
           <div className="mt-8 animate-fade-up [animation-delay:120ms]">
             <PromoCard />
           </div>
-        )}
-
-        {!isGuest && (
-        <ul className="mt-8 hidden flex-wrap items-center justify-center gap-2.5 sm:flex">
-          {FEATURES.map(({ icon: Icon, text }) => (
-            <li key={text} className="inline-flex items-center gap-2 rounded-full border border-outline-variant bg-surface-container-lowest/80 px-3.5 py-1.5 text-sm text-on-surface-variant shadow-m3-1">
-              <Icon size={15} className="text-primary" />
-              {text}
-            </li>
-          ))}
-        </ul>
         )}
       </div>
     </section>

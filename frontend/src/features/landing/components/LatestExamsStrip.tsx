@@ -1,7 +1,11 @@
+import type { MouseEvent } from "react";
 import { Link } from "react-router-dom";
-import { Flame } from "lucide-react";
+import { ChevronRight, Flame } from "lucide-react";
 import { catalogApi } from "@/features/exam-store/catalog.api";
+import { ExamKindBadge } from "@/features/exam-store/ExamKindBadge";
 import { useApi } from "@/shared/hooks/useApi";
+
+export const PICK_SECTION_ID = "chon-de"; // id khối "Chọn môn và đề" (ExamSourcePicker), đích cuộn khi bấm một đề
 
 const FRESH_DAYS = 60; // chỉ coi là "mới" khi đăng trong chừng này ngày; đề cũ hơn thì không bày ra như thể mới
 
@@ -16,6 +20,16 @@ function ago(iso: string, now = Date.now()) {
   return `${Math.floor(days / 7)} tuần trước`;
 }
 
+// Bấm một đề: địa chỉ đổi sang ?subject=..., khối chọn môn phía trên nạp môn đó. Cuộn khối ấy lên đầu để người dùng thấy ngay,
+// kể cả khi môn đã đang được chọn. Mở tab mới (Ctrl/Shift/Cmd) thì không cuộn trang hiện tại.
+function scrollToPicker(ev: MouseEvent) {
+  if (ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.altKey) return;
+  requestAnimationFrame(() => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    document.getElementById(PICK_SECTION_ID)?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+  });
+}
+
 // Khối "Đề mới đăng": các đề vừa được đăng gần đây, lấy từ danh mục thật. Người học sắp thi sẽ muốn biết đề kỳ này đã có chưa,
 // nên đây là lý do để mở web ngay thay vì để sau. Không có đề đăng trong FRESH_DAYS ngày gần đây thì ẩn hẳn (không dựng số liệu).
 export function LatestExamsStrip() {
@@ -25,19 +39,34 @@ export function LatestExamsStrip() {
   if (fresh.length === 0) return null;
 
   return (
-    <section aria-label="Đề mới đăng gần đây" className="mt-8">
-      <p className="md-label-large mb-2.5 flex items-center justify-center gap-1.5 text-on-surface-variant">
-        <Flame size={16} className="text-[#e89a00]" aria-hidden /> Mới đăng gần đây
-      </p>
-      <ul className="flex flex-wrap justify-center gap-2">
+    <section aria-labelledby="latest-exams-title" className="mt-8 rounded-m3-md border border-outline-variant bg-surface-container-lowest p-4 shadow-m3-1">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+        <h2 id="latest-exams-title" className="md-title-small flex items-center gap-1.5 text-on-surface">
+          <Flame size={18} className="text-[#e89a00]" aria-hidden /> Mới đăng gần đây
+        </h2>
+        <p className="md-label-medium flex items-center gap-1.5 text-on-surface-variant">
+          <span aria-hidden className="h-2 w-2 rounded-full bg-success motion-safe:animate-pulse" />
+          Cập nhật từ FuOverflow
+        </p>
+      </div>
+      <ul className="mt-3 grid gap-2 sm:grid-cols-2">
         {fresh.map((e) => (
-          <li key={e.threadId}>
+          <li key={e.threadId} className="min-w-0">
             <Link
               to={`/?subject=${encodeURIComponent(e.subjectCode)}`}
-              className="md-state inline-flex items-center gap-2 rounded-full border border-outline-variant/70 bg-gradient-to-b from-surface-container-lowest to-surface-container-low px-3.5 py-1.5 shadow-[0_1px_2px_rgba(0,0,0,0.05),0_8px_18px_-12px_rgba(70,45,0,0.35)] transition hover:-translate-y-0.5 hover:border-[#e0a100]/70"
+              onClick={scrollToPicker}
+              className="md-state flex min-h-12 items-center gap-2.5 rounded-m3-sm border border-outline-variant/70 bg-surface px-3 py-2 transition hover:border-[#e0a100]/70"
             >
-              <span className="md-label-large text-on-surface">{e.title}</span>
-              <span className="md-label-medium rounded-full bg-primary-container/70 px-2 py-0.5 text-on-primary-container">{ago(e.postedAt, now)}</span>
+              {/* Máy chủ cũ chưa trả loại đề: không đoán, bỏ nhãn */}
+              {e.kind && <ExamKindBadge kind={e.kind} />}
+              <span className="min-w-0 flex-1">
+                <span className="md-label-large block truncate text-on-surface" title={e.title}>{e.title}</span>
+                <span className="md-label-small mt-0.5 flex items-center gap-1.5 text-on-surface-variant">
+                  <span className="rounded bg-surface-container-high px-1.5 py-0.5 font-semibold text-on-surface">{e.subjectCode}</span>
+                  <span>{ago(e.postedAt, now)}</span>
+                </span>
+              </span>
+              <ChevronRight size={18} className="shrink-0 text-on-surface-variant" aria-hidden />
             </Link>
           </li>
         ))}
