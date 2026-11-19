@@ -43,9 +43,10 @@ export function PublicExamList({ code, pageSize }: { code: string; pageSize?: nu
                   <li key={e.threadId} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 py-3.5 transition hover:bg-surface-container-low/70">
                     {e.term && <span className="md-label-medium w-14 shrink-0 rounded-full bg-primary-container/70 px-2.5 py-1 text-center text-on-primary-container">{e.term}</span>}
                     <div className="min-w-0 flex-1">
-                      <div className="flex min-w-0 items-center gap-2">
+                      <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
                         <ExamKindBadge kind={e.kind} />
-                        <p className="md-title-small truncate text-on-surface">{e.title}</p>
+                        {/* Mobile: nhãn lên trước, tiêu đề xuống dòng riêng để đọc được; từ sm trở lên nằm cùng một hàng */}
+                        <p className="md-title-small order-last line-clamp-2 basis-full break-words text-on-surface sm:order-none sm:line-clamp-1 sm:min-w-0 sm:flex-1 sm:basis-0" title={e.title}>{e.title}</p>
                         <NewExamBadge term={e.term} />
                       </div>
                       <p className="md-body-small flex flex-wrap items-center gap-x-3 text-on-surface-variant">
