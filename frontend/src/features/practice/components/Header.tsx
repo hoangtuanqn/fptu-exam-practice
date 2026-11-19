@@ -182,7 +182,7 @@ export function Header({
             {showLeft && timeLimitSec && <ExamTimer left={left!} limit={timeLimitSec} />}
 
             {onHelp && (
-              <Button variant="tonal" onClick={openHelp} title="Hướng dẫn làm bài: cách chọn đáp án và phím tắt" aria-label="Hướng dẫn làm bài" className="relative !px-2.5 sm:!px-4">
+              <Button variant="tonal" onClick={openHelp} title="Hướng dẫn làm bài: cách chọn đáp án và phím tắt" aria-label="Hướng dẫn làm bài" className="relative !px-2.5">
                 {!seenHelp && (
                   <span aria-hidden className="absolute -right-1 -top-1 flex h-3 w-3">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
@@ -190,7 +190,6 @@ export function Header({
                   </span>
                 )}
                 <CircleHelp size={18} />
-                <span className="hidden sm:inline">Hướng dẫn</span>
               </Button>
             )}
 
