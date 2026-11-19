@@ -12,21 +12,22 @@ interface Stat {
   icon: LucideIcon;
   value: number | undefined;
   wideOnly?: boolean; // ô phụ: chỉ hiện khi đủ chỗ (từ sm)
+  always?: boolean; // ô chính: có số liệu từ máy chủ thì luôn hiện, kể cả khi số là 0 (số thật, không giấu)
 }
 
 // Dải số liệu kho đề ở đầu trang chủ: số thật đếm từ danh mục, không làm tròn lên, không "200+".
-// Đang tải hoặc lỗi thì ẩn hẳn; mục nào máy chủ chưa trả (byKind ở bản cũ) hoặc bằng 0 thì bỏ.
+// Đang tải hoặc lỗi thì ẩn hẳn; mục nào máy chủ chưa trả (byKind ở bản cũ) thì bỏ. FE và PE luôn hiện khi có số liệu, các ô phụ bằng 0 thì bỏ.
 export function LibraryStats() {
   const data = useApi(() => catalogApi.overview(), []).data;
   if (!data) return null;
 
   const all: Stat[] = [
-    { label: "Đề thi FE", icon: FileText, value: data.byKind?.FE },
-    { label: "Đề thi PE/BE", icon: Terminal, value: data.byKind?.PE },
+    { label: "Đề thi FE", icon: FileText, value: data.byKind?.FE, always: true },
+    { label: "Đề thi PE", icon: Terminal, value: data.byKind?.PE, always: true },
     { label: "Môn học", icon: BookOpen, value: data.subjects },
     { label: "Đề Quiz", icon: ListChecks, value: data.byKind?.QUIZ, wideOnly: true },
   ];
-  const stats = all.filter((s): s is Stat & { value: number } => typeof s.value === "number" && s.value > 0);
+  const stats = all.filter((s): s is Stat & { value: number } => typeof s.value === "number" && (s.always || s.value > 0));
   if (stats.length === 0) return null;
   const onPhone = Math.min(3, stats.filter((s) => !s.wideOnly).length);
 
