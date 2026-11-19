@@ -50,8 +50,10 @@ export function subscribeRoom<T>(kind: RoomKind, id: RoomId, event: string, hand
   const s = getSocket();
   const k = key(kind, id);
   const entry = rooms.get(k);
-  if (entry) entry.count++;
-  else {
+  if (entry) {
+    entry.count++;
+    if (s.connected) join(s, kind, id); // vào lại để server gửi lại trạng thái hiện tại cho handler mới (join phía server lặp lại không sao)
+  } else {
     rooms.set(k, { kind, id, count: 1 });
     if (s.connected) join(s, kind, id);
   }
