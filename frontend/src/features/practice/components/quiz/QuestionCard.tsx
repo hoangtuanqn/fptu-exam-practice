@@ -18,8 +18,8 @@ interface Props extends QuestionViewProps {
   topicLoading?: boolean; // chủ đề đang được gắn nền: hiện chip chờ có hiệu ứng thay cho chủ đề
 }
 
-// Máy tính (lg trở lên): một hàng đầu [số câu, chủ đề, kết quả | giải thích AI, menu công cụ, Trước, Tiếp] và ảnh đề chiếm hết chỗ còn lại;
-// đáp án A–H nằm ở thanh dọc dưới nút danh sách câu (Sidebar).
+// Máy tính (lg trở lên): một hàng đầu [số câu, chủ đề, kết quả | giải thích AI, menu công cụ] và ảnh đề chiếm hết chỗ còn lại;
+// đáp án A–H cùng nút Trước / Tiếp nằm ở thanh dọc dưới nút danh sách câu (Sidebar).
 // Điện thoại và máy tính bảng: hàng đầu chỉ còn chủ đề + giải thích AI + menu (một dòng, số câu đã có ở nút danh sách câu phía trên),
 // ảnh chiếm gần hết màn hình, còn đáp án và Trước/Tiếp nằm ở thanh dưới cùng tầm ngón cái.
 export function QuestionCard({
@@ -82,13 +82,6 @@ export function QuestionCard({
           <div className="flex shrink-0 items-center gap-1.5">
             {onExplain && <ExplainButton onExplain={onExplain} bought={explainBought} free={explainFree} />}
             <QuestionToolsMenu flagged={flagged} onToggleFlag={onToggleFlag} saved={saved} onToggleSave={onToggleSave} onZoom={onZoom} onReport={onReport} reported={reported} size={size} />
-            <div className="hidden items-center gap-1.5 lg:flex">
-              <Button size="sm" onClick={onPrev} disabled={!hasPrev} aria-label="Câu trước" className="!min-h-9 !px-3">
-                <ChevronLeft size={16} />
-                Trước
-              </Button>
-              <NextButton hasNext={hasNext} onNext={onNext} onSubmit={onSubmit} className="!min-h-9 !px-3" />
-            </div>
           </div>
         </div>
 
