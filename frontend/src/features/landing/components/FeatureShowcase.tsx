@@ -2,11 +2,14 @@ import { Crown } from "lucide-react";
 import { GlossCard } from "@/shared/ui/GlossCard";
 import { GOLD_GLOSS } from "@/shared/ui/gold";
 import { SectionTitle } from "@/shared/ui/SectionTitle";
+import { usePlanPrices } from "@/features/plan/semesterPromo";
+import { vnd } from "@/features/plan/pro/money";
 import { FEATURE_GROUPS } from "../featureGroups";
 
 // Bảng tính năng chính của hệ thống: bốn nhóm, mỗi nhóm ba mục. Thiết kế để chụp màn hình khoe hệ thống (đủ trong một khung, chữ lớn, đều nhau).
 // `standalone`: dùng ở trang /features riêng (không có đệm trên/dưới của khối trang chủ).
 export function FeatureShowcase({ standalone = false }: { standalone?: boolean }) {
+  const prices = usePlanPrices();
   return (
     <section id="tinh-nang" className={`bg-surface px-5 ${standalone ? "py-10" : "py-12 sm:py-16"}`}>
       <div className="mx-auto max-w-5xl">
@@ -37,7 +40,7 @@ export function FeatureShowcase({ standalone = false }: { standalone?: boolean }
                           </span>
                         )}
                       </div>
-                      <p className="md-body-medium mt-0.5 text-on-surface-variant">{f.text}</p>
+                      <p className="md-body-medium mt-0.5 text-on-surface-variant">{f.proPrice && prices.pro !== null ? `${vnd(prices.pro)} cho ${prices.months} tháng. ${f.text}` : f.text}</p>
                     </div>
                   </li>
                 ))}

@@ -46,6 +46,13 @@ export const activePromo = (plan: PlanInfo | null | undefined): ActivePromo | nu
 
 export const useSemesterPromo = (enabled = true) => activePromo(usePlanInfo(enabled).data);
 
+// Giá đang bán của gói Pro (đã tính ưu đãi nếu có) và gói Nước rút, lấy từ máy chủ; null khi chưa tải xong hoặc lỗi
+export function usePlanPrices() {
+  const plan = usePlanInfo().data;
+  if (!plan) return { pro: null, sprint: null, months: null, sprintDays: null };
+  return { pro: withPromo(plan, activePromo(plan)).price, sprint: plan.sprint.price, months: plan.months, sprintDays: plan.sprint.days };
+}
+
 // Gói Pro với giá ưu đãi, để mọi chỗ hiện giá (và số tiền trừ) khớp nhau
 export const withPromo = (plan: PlanInfo, promo: ActivePromo | null): PlanInfo => {
   if (!promo) return plan;
