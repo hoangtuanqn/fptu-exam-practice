@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { Download, ExternalLink, X } from "lucide-react";
+import { downloadProtectedImage, openProtectedImage } from "@/shared/api/protectedImage";
 import { ProtectedImg } from "@/shared/ui/ProtectedImg";
 
 // Xem ảnh trang đề trong lớp phủ: hiện đúng cỡ gốc của ảnh (không kéo giãn; chỉ thu nhỏ khi lớn hơn màn hình).
 // Bấm vào ảnh để phóng to (cỡ gốc, hoặc gấp đôi nếu ảnh vốn đã nhỏ), bấm lần nữa để về như cũ.
+const ACTION = "flex h-10 items-center gap-1.5 rounded-full px-3 text-sm hover:bg-white/15";
+
 export function ImageLightbox({ src, name, onClose }: { src: string; name: string; onClose: () => void }) {
   const [natural, setNatural] = useState<{ w: number; h: number } | null>(null);
   const [zoomed, setZoomed] = useState(false);
@@ -29,9 +32,17 @@ export function ImageLightbox({ src, name, onClose }: { src: string; name: strin
     >
       <div className="fixed inset-x-0 top-0 z-10 flex items-center justify-between gap-3 bg-gradient-to-b from-black/70 to-transparent px-4 py-3 text-white">
         <span className="truncate text-sm font-medium">{name}</span>
-        <button type="button" onClick={onClose} aria-label="Đóng" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full hover:bg-white/15">
+        <div className="flex shrink-0 items-center gap-1">
+          <button type="button" onClick={() => void openProtectedImage(src)} className={ACTION}>
+            <ExternalLink size={16} /> <span className="hidden sm:inline">Mở tab mới</span>
+          </button>
+          <button type="button" onClick={() => void downloadProtectedImage(src, name).catch(() => undefined)} className={ACTION}>
+            <Download size={16} /> <span className="hidden sm:inline">Tải về</span>
+          </button>
+          <button type="button" onClick={onClose} aria-label="Đóng" className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-white/15">
           <X size={22} />
-        </button>
+          </button>
+        </div>
       </div>
       <div className="m-auto p-4 pt-16" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
         <ProtectedImg
