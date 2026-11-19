@@ -1,11 +1,9 @@
 import { useState, type ReactNode } from "react";
-import { Bookmark, ChevronsRight, Maximize2, MessageSquareWarning, MoreHorizontal, ZoomIn, ZoomOut } from "lucide-react";
+import { ChevronsRight, Maximize2, MessageSquareWarning, MoreHorizontal, ZoomIn, ZoomOut } from "lucide-react";
 import { useKeydown } from "@/features/practice/hooks/useKeydown";
 import type { useQuestionImageScale } from "@/features/practice/hooks/useQuestionImageScale";
 
 interface Props {
-  saved?: boolean;
-  onToggleSave?: () => void; // chỉ có khi đã đăng nhập và là đề của hệ thống
   onZoom: () => void;
   onReport?: () => void; // chỉ có khi đã có kết quả của câu và người dùng đã đăng nhập
   reported?: boolean;
@@ -14,9 +12,9 @@ interface Props {
   size: ReturnType<typeof useQuestionImageScale>;
 }
 
-// Các công cụ phụ của câu hỏi gom vào một nút "…" cho khu vực làm bài gọn: lưu câu, phóng to ảnh, cỡ ảnh, báo cáo đáp án sai.
-// (Đánh dấu xem lại dùng thường xuyên nên có nút riêng ngoài menu.) Câu đã lưu thì nút "…" có chấm nhỏ để vẫn thấy.
-export function QuestionToolsMenu({ saved, onToggleSave, onZoom, onReport, reported, autoNext, onToggleAutoNext, size }: Props) {
+// Các công cụ phụ của câu hỏi gom vào một nút "…" cho khu vực làm bài gọn: phóng to ảnh, cỡ ảnh, báo cáo đáp án sai.
+// (Đánh dấu xem lại và Lưu câu dùng thường xuyên nên có nút riêng ngoài menu.)
+export function QuestionToolsMenu({ onZoom, onReport, reported, autoNext, onToggleAutoNext, size }: Props) {
   const [open, setOpen] = useState(false);
   useKeydown((e) => open && e.key === "Escape" && setOpen(false));
   const run = (fn: () => void) => () => {
@@ -32,18 +30,16 @@ export function QuestionToolsMenu({ saved, onToggleSave, onZoom, onReport, repor
         aria-expanded={open}
         aria-haspopup="menu"
         aria-label="Công cụ khác của câu hỏi"
-        title="Đánh dấu, lưu câu, phóng to, cỡ ảnh, báo cáo"
+        title="Phóng to, cỡ ảnh, báo cáo"
         className="relative flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-surface-container-lowest text-slate-500 transition hover:border-slate-400 hover:text-slate-800"
       >
         <MoreHorizontal size={18} />
-        {saved && <span aria-hidden className="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary" />}
       </button>
 
       {open && (
         <>
           <button type="button" aria-label="Đóng menu" onClick={() => setOpen(false)} className="fixed inset-0 z-10 cursor-default" tabIndex={-1} />
           <div role="menu" className="absolute right-0 top-full z-20 mt-1 w-64 space-y-0.5 rounded-xl border border-outline-variant bg-surface p-1.5 shadow-lg">
-            {onToggleSave && <Item icon={<Bookmark size={16} className={saved ? "fill-current text-primary" : ""} />} label={saved ? "Bỏ lưu câu này" : "Lưu câu này"} onClick={run(onToggleSave)} />}
             <Item icon={<Maximize2 size={16} />} label="Mở cửa sổ phóng to ảnh" onClick={run(onZoom)} />
             {onToggleAutoNext && <Item icon={<ChevronsRight size={16} className={autoNext ? "text-primary" : ""} />} label="Tự sang câu sau khi chọn" state={autoNext ? "Bật" : "Tắt"} checked={!!autoNext} onClick={run(onToggleAutoNext)} />}
             <div role="group" aria-label="Cỡ ảnh đề" className="flex items-center gap-1 px-2.5 py-1.5">

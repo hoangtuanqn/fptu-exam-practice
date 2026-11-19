@@ -1,6 +1,6 @@
 import { ProtectedImg } from "@/shared/ui/ProtectedImg";
 import type { ReactNode } from "react";
-import { ChevronLeft, Flag, Sparkles, Tag } from "lucide-react";
+import { Bookmark, ChevronLeft, Flag, Sparkles, Tag } from "lucide-react";
 import { useQuestionImageScale } from "@/features/practice/hooks/useQuestionImageScale";
 import { isMultiple } from "@/features/practice/utils/question";
 import { Button } from "@/shared/ui/Button";
@@ -71,6 +71,21 @@ export function QuestionCard({
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
             {onExplain && <ExplainButton onExplain={onExplain} bought={explainBought} free={explainFree} />}
+            {/* Lưu câu để ôn lại: nút riêng ngoài menu cho dễ thấy (trước đây nằm trong "…" nên nhiều người không biết là có) */}
+            {onToggleSave && (
+              <button
+                type="button"
+                onClick={onToggleSave}
+                aria-pressed={!!saved}
+                aria-label={saved ? "Bỏ lưu câu này" : "Lưu câu này để ôn lại"}
+                title={saved ? "Bỏ lưu câu này" : "Lưu câu này để ôn lại (xem ở Câu đã lưu)"}
+                className={`flex h-9 w-9 items-center justify-center rounded-md border transition ${
+                  saved ? "border-primary bg-primary-container text-on-primary-container" : "border-slate-200 bg-surface-container-lowest text-slate-500 hover:border-slate-400 hover:text-slate-800"
+                }`}
+              >
+                <Bookmark size={18} className={saved ? "fill-current" : ""} />
+              </button>
+            )}
             <button
               type="button"
               onClick={onToggleFlag}
@@ -83,7 +98,7 @@ export function QuestionCard({
             >
               <Flag size={18} className={flagged ? "fill-current" : ""} />
             </button>
-            <QuestionToolsMenu saved={saved} onToggleSave={onToggleSave} onZoom={onZoom} onReport={onReport} reported={reported} autoNext={autoNext} onToggleAutoNext={onToggleAutoNext} size={size} />
+            <QuestionToolsMenu onZoom={onZoom} onReport={onReport} reported={reported} autoNext={autoNext} onToggleAutoNext={onToggleAutoNext} size={size} />
           </div>
         </div>
 
