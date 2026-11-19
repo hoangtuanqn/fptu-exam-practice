@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ChevronRight, Flame } from "lucide-react";
 import { catalogApi } from "@/features/exam-store/catalog.api";
 import { ExamKindBadge } from "@/features/exam-store/ExamKindBadge";
+import { NewExamBadge } from "@/features/exam-store/NewExamBadge";
 import { useApi } from "@/shared/hooks/useApi";
 
 export const PICK_SECTION_ID = "chon-de"; // id khối "Chọn môn và đề" (ExamSourcePicker), đích cuộn khi bấm một đề
@@ -10,9 +11,6 @@ export const PICK_SECTION_ID = "chon-de"; // id khối "Chọn môn và đề" (
 const FRESH_DAYS = 60; // chỉ coi là "mới" khi đăng trong chừng này ngày; đề cũ hơn thì không bày ra như thể mới
 
 const DAY_MS = 86_400_000;
-
-const NEW_DAYS = 3; // đăng trong chừng này ngày thì gắn nhãn "Mới"
-const isNew = (iso: string, now: number) => now - new Date(iso).getTime() <= NEW_DAYS * DAY_MS;
 
 // "hôm nay", "hôm qua", "5 ngày trước", "3 tuần trước"
 function ago(iso: string, now = Date.now()) {
@@ -98,11 +96,7 @@ export function LatestExamsStrip() {
                     {e.subjectCode}
                   </span>
                   <span>{ago(e.postedAt, now)}</span>
-                  {isNew(e.postedAt, now) && (
-                    <span className="rounded-full bg-success-container px-1.5 py-0.5 font-bold text-success">
-                      Mới
-                    </span>
-                  )}
+                  <NewExamBadge term={e.term} />
                 </span>
               </span>
               <ChevronRight
