@@ -6,19 +6,18 @@ import { isPro, proDaysLeft } from "@/shared/utils/pro";
 import { isSnoozed, snooze } from "@/shared/utils/promptSnooze";
 import { vnd } from "./pro/money";
 import { PromoCountdown } from "./PromoCountdown";
-import { activePromo, LAST_CALL_MS, markPromoBarToday, promoBarOwnsToday, takePromoSlot, usePlanInfo, type ActivePromo } from "./semesterPromo";
+import { activePromo, LAST_CALL_MS, markPromoBarToday, usePlanInfo, type ActivePromo } from "./semesterPromo";
 
 const RENEW_DAYS = 30; // Pro còn ít hơn ngần này ngày thì vẫn mời (gia hạn giá ưu đãi)
 
 const short = (n: number) => (n % 1000 === 0 ? `${n / 1000}k` : vnd(n));
 
-// Đóng thì ẩn 3 ngày; 48 giờ cuối được hiện lại đúng một lần dù đang ẩn. Khóa theo kỳ nên đợt mới không bị ẩn theo đợt cũ.
+// Hiện cho tới khi bấm ✕; đóng thì ẩn 3 ngày; 48 giờ cuối được hiện lại đúng một lần dù đang ẩn. Khóa theo kỳ nên đợt mới không bị ẩn theo đợt cũ.
 function decide(p: ActivePromo) {
   const dismissed = isSnoozed(`semester-promo:${p.term}`);
   const lastCallKey = `semester-promo-last:${p.term}`;
   if (dismissed && !(p.msLeft <= LAST_CALL_MS && !isSnoozed(lastCallKey))) return false;
-  if (promoBarOwnsToday() && !dismissed) return true; // đã bấm ✕ thì không giữ chỗ nữa (kể cả trong 48 giờ cuối)
-  if (!takePromoSlot()) return false;
+  // Thanh là chỗ báo ưu đãi chính: luôn hiện tới khi người dùng bấm ✕ (không bị lượt mời mỗi ngày chặn); đánh dấu để lời mời khác ở trang chủ nhường chỗ
   markPromoBarToday();
   if (dismissed) snooze(lastCallKey, 2);
   return true;
