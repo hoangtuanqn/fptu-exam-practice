@@ -12,6 +12,7 @@ export interface NoticeInput {
   title: string;
   body?: string | null;
   userId?: string | null;
+  examId?: string | null; // có thì "{exam}" trong title được thay bằng tên đề (không để mã đề trong thông báo)
   link?: string | null; // trang admin liên quan, ví dụ /admin/exams/12
 }
 
@@ -76,12 +77,14 @@ export const adminNoticeService = {
     // Có người gây ra sự kiện thì ghi tên + email vào đầu nội dung, để đọc là biết ai (không phải mở trang khác)
     const who = input.userId ? await prisma.user.findUnique({ where: { id: input.userId }, select: { fullName: true, email: true } }) : null;
     const lines = [who ? `${who.fullName} (${who.email})` : input.userId === null ? "Khách" : null, input.body].filter(Boolean);
+    const exam = input.examId ? await prisma.exam.findUnique({ where: { id: input.examId }, select: { title: true } }) : null;
+    const title = input.title.replace("{exam}", exam?.title ?? "đề đã bị xóa");
     const row = await prisma.adminNotice.create({
       data: {
         kind,
         level: spec.level,
         important: spec.important,
-        title: input.title.slice(0, 200),
+        title: title.slice(0, 200),
         body: lines.length ? lines.join("\n").slice(0, 500) : null,
         userId: input.userId ?? null,
         link: input.link ? input.link.slice(0, 200) : null,
