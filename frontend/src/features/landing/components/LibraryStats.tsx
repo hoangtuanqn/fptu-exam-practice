@@ -2,8 +2,6 @@ import { BookOpen, FileText, ListChecks, Terminal, type LucideIcon } from "lucid
 import { catalogApi } from "@/features/exam-store/catalog.api";
 import { useApi } from "@/shared/hooks/useApi";
 import { useCountUp } from "@/shared/hooks/useCountUp";
-import { formatCredit } from "@/shared/utils/formatters";
-import { useSignupGift } from "../useSignupGift";
 
 // Số cột theo số ô: trên điện thoại ô phụ (Quiz) bị ẩn nên tính riêng, để không bị lẻ một ô
 const PHONE_COLS = ["", "grid-cols-1", "grid-cols-2", "grid-cols-3"];
@@ -20,7 +18,6 @@ interface Stat {
 // Đang tải hoặc lỗi thì ẩn hẳn; mục nào máy chủ chưa trả (byKind ở bản cũ) hoặc bằng 0 thì bỏ.
 export function LibraryStats() {
   const data = useApi(() => catalogApi.overview(), []).data;
-  const { price, priceKnown } = useSignupGift();
   if (!data) return null;
 
   const all: Stat[] = [
@@ -40,11 +37,6 @@ export function LibraryStats() {
           <StatTile key={s.label} stat={s} index={i} />
         ))}
       </dl>
-      {priceKnown && (
-        <p className="md-body-small mt-3 text-on-surface-variant">
-          Mở đề 1 click · <b className="font-semibold text-primary">{price > 0 ? `${formatCredit(price)} / đề` : "miễn phí"}</b>
-        </p>
-      )}
     </div>
   );
 }
