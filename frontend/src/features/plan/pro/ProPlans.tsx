@@ -3,13 +3,15 @@ import { useCountUp } from "@/shared/hooks/useCountUp";
 import { buttonClass } from "@/shared/ui/Button";
 import { formatDate } from "@/shared/utils/formatters";
 import type { PlanInfo } from "../plan.api";
+import type { ActivePromo } from "../semesterPromo";
 import { DAYS_PER_MONTH, vnd } from "./money";
 import { GlossCard } from "@/shared/ui/GlossCard";
 import { Reveal } from "./Reveal";
 import { GOLD_BUTTON, GOLD_GLOSS } from "@/shared/ui/gold";
 
 interface Props {
-  plan: PlanInfo;
+  plan: PlanInfo; // giá Pro đã là giá ưu đãi nếu có
+  promo?: ActivePromo | null;
   label: string; // chữ nút mua Pro theo ngữ cảnh (khách, đã đăng nhập, đang là Pro)
   newExpiry: Date; // Pro sẽ đến ngày này nếu mua hôm nay
   onBuy: (kind: "pro" | "sprint") => void;
@@ -24,7 +26,7 @@ const PRO_POINTS = [
 
 // Hai gói cạnh nhau, nổi chồng lên phần đầu trang. Pro đứng trước với khung vàng phát sáng và nhãn "Tiết kiệm nhất";
 // Nước rút là lựa chọn ngắn hạn, vẫn rõ ràng và dễ chọn.
-export function ProPlans({ plan, label, newExpiry, onBuy }: Props) {
+export function ProPlans({ plan, promo, label, newExpiry, onBuy }: Props) {
   const s = plan.sprint;
   const price = useCountUp(plan.price, 1100);
   const proPerDay = Math.round(plan.price / (plan.months * DAYS_PER_MONTH));
@@ -42,9 +44,15 @@ export function ProPlans({ plan, label, newExpiry, onBuy }: Props) {
             <div className="relative flex h-full flex-col rounded-m3-lg bg-gradient-to-b from-surface-container-lowest to-surface-container-low p-5 sm:p-6">
               <h2 className="md-title-large text-on-surface">Pro {plan.months} tháng</h2>
               <p className="mt-3 flex flex-wrap items-end gap-x-3 gap-y-1">
+                {promo && <s className="mb-1 text-xl font-semibold tabular-nums text-on-surface-variant">{vnd(promo.originalPrice)}</s>}
                 <span className="text-5xl font-black leading-none tabular-nums tracking-tight text-on-surface">{vnd(price)}</span>
-                <span className="mb-1 rounded-full bg-[#ff4d4d] px-2.5 py-1 text-xs font-extrabold text-white">-{plan.savingsPercent}%</span>
+                <span className="mb-1 rounded-full bg-[#ff4d4d] px-2.5 py-1 text-xs font-extrabold text-white">-{promo ? promo.percentOff : plan.savingsPercent}%</span>
               </p>
+              {promo && (
+                <p className="md-label-large mt-2 text-[#b07800]">
+                  Ưu đãi kỳ {promo.term} · {promo.left} · mỗi tài khoản một lần
+                </p>
+              )}
               <p className="md-body-medium mt-2 text-on-surface-variant">
                 ≈ {vnd(proPerDay)}/ngày · FuOverflow VIP cùng thời hạn: <s>{vnd(plan.fuoPrice)}</s>
               </p>
