@@ -25,7 +25,7 @@ export function LibraryStats() {
 
   const all: Stat[] = [
     { label: "Đề thi FE", icon: FileText, value: data.byKind?.FE },
-    { label: "Đề thi PE", icon: Terminal, value: data.byKind?.PE },
+    { label: "Đề thi PE/BE", icon: Terminal, value: data.byKind?.PE },
     { label: "Môn học", icon: BookOpen, value: data.subjects },
     { label: "Đề Quiz", icon: ListChecks, value: data.byKind?.QUIZ, wideOnly: true },
   ];
