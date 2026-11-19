@@ -34,4 +34,14 @@ export const proTicketRepository = {
     const where = { userId, plan: "PRO", price: { lt: PRO_PLAN.price }, createdAt: { gte: since } };
     return !!(await db.planPurchase.findFirst({ where, select: { id: true } })) || !!(await db.proTicket.findFirst({ where, select: { id: true } }));
   },
+
+  /** Số tài khoản đã mua giá ưu đãi trong đợt (mua ngay hoặc vé; một người có cả hai chỉ tính một). */
+  async promoBuyers(since: Date) {
+    const where = { plan: "PRO", price: { lt: PRO_PLAN.price }, createdAt: { gte: since } };
+    const [a, b] = await Promise.all([
+      prisma.planPurchase.findMany({ where, select: { userId: true }, distinct: ["userId"] }),
+      prisma.proTicket.findMany({ where, select: { userId: true }, distinct: ["userId"] }),
+    ]);
+    return new Set([...a, ...b].map((r) => r.userId)).size;
+  },
 };

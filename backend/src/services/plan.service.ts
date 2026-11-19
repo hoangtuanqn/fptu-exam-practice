@@ -15,6 +15,8 @@ import { notificationService } from "./notification.service";
 import { promoSettingService } from "./promo-setting.service";
 import { walletService } from "./wallet.service";
 
+let buyersCache: { key: number; at: number; count: number } | null = null;
+
 const addDays = (from: Date, days: number) => new Date(from.getTime() + days * 86_400_000);
 
 const addMonths = (from: Date, months: number) => {
@@ -89,6 +91,15 @@ export const planService = {
   },
 
   // Như info() kèm ưu đãi kỳ mới đang chạy; `used` chỉ đúng khi đã đăng nhập và người này đã mua giá ưu đãi trong đợt
+  // Số người đã mua trong đợt (hiện "Đã có N bạn mua"): nhớ 60 giây vì trang nào cũng gọi /plan
+  async promoBuyers(since: Date) {
+    const key = since.getTime();
+    if (buyersCache && buyersCache.key === key && Date.now() - buyersCache.at < 60_000) return buyersCache.count;
+    const count = await proTicketRepository.promoBuyers(since);
+    buyersCache = { key, at: Date.now(), count };
+    return count;
+  },
+
   async publicInfo(userId?: string) {
     const promo = await promoSettingService.get();
     const base = this.info();
@@ -103,6 +114,7 @@ export const planService = {
         percentOff: Math.round(((base.price - price) / base.price) * 100),
         endsAt: new Date(promo.semesterPromoEndsAt).toISOString(),
         used: userId ? await promoUsed(prisma, userId, promo) : false,
+        buyers: promo.semesterPromoStartedAt ? await this.promoBuyers(new Date(promo.semesterPromoStartedAt)) : 0,
       },
     };
   },
