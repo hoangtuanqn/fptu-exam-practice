@@ -3,7 +3,8 @@ import { useCountUp } from "@/shared/hooks/useCountUp";
 import { buttonClass } from "@/shared/ui/Button";
 import { formatDate } from "@/shared/utils/formatters";
 import type { PlanInfo } from "../plan.api";
-import type { ActivePromo } from "../semesterPromo";
+import { PromoCountdown } from "../PromoCountdown";
+import { BUYERS_SHOWN_FROM, type ActivePromo } from "../semesterPromo";
 import { DAYS_PER_MONTH, vnd } from "./money";
 import { GlossCard } from "@/shared/ui/GlossCard";
 import { Reveal } from "./Reveal";
@@ -49,9 +50,14 @@ export function ProPlans({ plan, promo, label, newExpiry, onBuy }: Props) {
                 <span className="mb-1 rounded-full bg-[#ff4d4d] px-2.5 py-1 text-xs font-extrabold text-white">-{promo ? promo.percentOff : plan.savingsPercent}%</span>
               </p>
               {promo && (
-                <p className="md-label-large mt-2 text-[#b07800]">
-                  Ưu đãi kỳ {promo.term} · {promo.left} · mỗi tài khoản một lần
-                </p>
+                <div className="mt-2 space-y-0.5">
+                  <p className="md-label-large text-[#b07800]">
+                    Ưu đãi kỳ {promo.term} kết thúc sau <PromoCountdown endsAt={promo.endsAt} className="font-extrabold" />
+                  </p>
+                  <p className="md-body-small text-on-surface-variant">
+                    {(promo.buyers ?? 0) >= BUYERS_SHOWN_FROM && <>Đã có {promo.buyers} bạn mua giá ưu đãi · </>}Mỗi tài khoản một lần, sau đó giá về {vnd(promo.originalPrice)}
+                  </p>
+                </div>
               )}
               <p className="md-body-medium mt-2 text-on-surface-variant">
                 ≈ {vnd(proPerDay)}/ngày · FuOverflow VIP cùng thời hạn: <s>{vnd(plan.fuoPrice)}</s>

@@ -22,6 +22,7 @@ import { ProPlans } from "./pro/ProPlans";
 import { ProSteps } from "./pro/ProSteps";
 import { ProTickets } from "./pro/ProTickets";
 import { vnd } from "./pro/money";
+import { PromoCountdown } from "./PromoCountdown";
 import { UpgradeDialog } from "./UpgradeDialog";
 import { activePromo, resetPlanInfo, usePlanInfo, withPromo } from "./semesterPromo";
 
@@ -124,7 +125,13 @@ export default function PlanPage() {
           <div className="pro-rise flex items-center gap-3 rounded-full border border-[#ffc61f]/40 bg-[#1d1500]/95 py-2 pl-5 pr-2 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.6)] backdrop-blur">
             <div className="min-w-0 flex-1 leading-tight">
               <div className="truncate text-xs text-[#fff6dc]/70">
-                <span className="line-through">{vnd(promo?.originalPrice ?? plan.fuoPrice)}</span> · {promo ? `ưu đãi kỳ ${promo.term}, ${promo.left}` : `tiết kiệm ${vnd(plan.savings)}`}
+                <span className="line-through">{vnd(promo?.originalPrice ?? plan.fuoPrice)}</span> · {promo ? (
+                  <>
+                    ưu đãi kỳ {promo.term} còn <PromoCountdown endsAt={promo.endsAt} />
+                  </>
+                ) : (
+                  `tiết kiệm ${vnd(plan.savings)}`
+                )}
               </div>
               <div className="text-lg font-extrabold tabular-nums text-[#ffc61f]">
                 {vnd(plan.price)} <span className="text-xs font-semibold text-[#fff6dc]/70">/ {plan.months} tháng</span>

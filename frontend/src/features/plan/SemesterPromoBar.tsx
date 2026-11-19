@@ -5,6 +5,7 @@ import { useAuth } from "@/features/auth/AuthContext";
 import { isPro, proDaysLeft } from "@/shared/utils/pro";
 import { isSnoozed, snooze } from "@/shared/utils/promptSnooze";
 import { vnd } from "./pro/money";
+import { PromoCountdown } from "./PromoCountdown";
 import { activePromo, LAST_CALL_MS, markPromoBarToday, promoBarOwnsToday, takePromoSlot, usePlanInfo, type ActivePromo } from "./semesterPromo";
 
 const RENEW_DAYS = 30; // Pro còn ít hơn ngần này ngày thì vẫn mời (gia hạn giá ưu đãi)
@@ -44,7 +45,7 @@ export function SemesterPromoBar() {
       <Link to="/pro" className="md-body-medium flex min-h-10 min-w-0 flex-1 items-center justify-center gap-2 py-1.5 text-center">
         <Crown size={16} className="shrink-0 text-[#ffc61f]" aria-hidden />
         <span className="min-w-0">
-          <b className="text-[#ffc61f]">Ưu đãi kỳ {promo.term}:</b> Pro {plan.months} tháng chỉ {short(promo.price)} (-{promo.percentOff}%), {promo.left}
+          <b className="text-[#ffc61f]">Ưu đãi kỳ {promo.term}:</b> Pro {plan.months} tháng chỉ {short(promo.price)} (-{promo.percentOff}%), còn <PromoCountdown endsAt={promo.endsAt} className="font-semibold" />
         </span>
       </Link>
       <button
