@@ -1,22 +1,28 @@
 import { PRO_BENEFITS } from "../constants/plan";
+import { answerReportRepository } from "../repositories/answer-report.repository";
 import { explanationFeedbackRepository } from "../repositories/explanation-feedback.repository";
 import { explanationRepository } from "../repositories/explanation.repository";
 import { AppError } from "../rules/error";
 import type { ExplainFeedbackBody, ListFeedbackQuery } from "../rules/requests/explanation.request";
 import type { Actor } from "../utils/actor";
+import { fileUrlOf } from "../utils/file-url";
 import { toMeta } from "../utils/pagination";
 import { examService } from "./exam.service";
 import { planService } from "./plan.service";
 
 type AdminRow = NonNullable<Awaited<ReturnType<typeof explanationFeedbackRepository.findAdmin>>>;
 
-// Gắn nội dung lời giải đang lưu cho các dòng của admin (một truy vấn cho cả trang)
+// Gắn nội dung lời giải đang lưu và ảnh câu hỏi cho các dòng của admin (mỗi thứ một truy vấn cho cả trang), để admin đối chiếu với đề
 async function withExplanations(items: AdminRow[]) {
-  const explained = await explanationFeedbackRepository.explanationsOf(items.map((r) => ({ examId: r.examId, questionNumber: r.questionNumber })));
+  const [explained, images] = await Promise.all([
+    explanationFeedbackRepository.explanationsOf(items.map((r) => ({ examId: r.examId, questionNumber: r.questionNumber }))),
+    answerReportRepository.questionImages(items.map((r) => ({ examId: r.examId, number: r.questionNumber }))),
+  ]);
   const contentOf = new Map(explained.map((e) => [`${e.examId}:${e.questionNumber}`, e]));
+  const imageOf = new Map(images.map((q) => [`${q.examId}:${q.number}`, fileUrlOf(q.imagePath)]));
   return items.map((r) => {
     const e = contentOf.get(`${r.examId}:${r.questionNumber}`);
-    return { ...r, updatedAt: r.updatedAt.toISOString(), resolvedAt: r.resolvedAt?.toISOString() ?? null, explanation: e?.content ?? null, model: e?.model ?? null };
+    return { ...r, imageUrl: imageOf.get(`${r.examId}:${r.questionNumber}`) ?? null, updatedAt: r.updatedAt.toISOString(), resolvedAt: r.resolvedAt?.toISOString() ?? null, explanation: e?.content ?? null, model: e?.model ?? null };
   });
 }
 

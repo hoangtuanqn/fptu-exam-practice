@@ -1,7 +1,7 @@
 import { openImageHandler } from "@/shared/api/protectedImage";
 import { ProtectedImg } from "@/shared/ui/ProtectedImg";
 import { useState } from "react";
-import { Check, CheckCheck, Loader2, MessageSquareWarning, X } from "lucide-react";
+import { Check, Loader2, MessageSquareWarning, X } from "lucide-react";
 import { adminApi } from "@/features/admin/api/admin.api";
 import { REPORT_REWARD } from "@/features/answer-report/config";
 import { ResolvedBadge } from "@/features/admin/shared";
@@ -20,12 +20,10 @@ interface Props {
   report: AnswerReportAdmin;
   onClose: () => void;
   onDone: () => void; // báo danh sách tải lại
-  onResolve: () => void; // đánh dấu đã giải quyết (trang danh sách lo gọi API và cập nhật dòng)
-  resolving: boolean;
 }
 
 // Xem một báo cáo đáp án: ảnh câu hỏi, đáp án hiện tại và đề xuất, lý do. Duyệt đúng thì sửa đáp án và thưởng credit.
-export function ReportReviewDialog({ report, onClose, onDone, onResolve, resolving }: Props) {
+export function ReportReviewDialog({ report, onClose, onDone }: Props) {
   const toast = useToast();
   const { run, loading, error } = useSubmit();
   const [note, setNote] = useState("");
@@ -93,10 +91,6 @@ export function ReportReviewDialog({ report, onClose, onDone, onResolve, resolvi
             />
           </Field>
           <ModalActions>
-            <Button onClick={onResolve} disabled={loading || resolving || !!report.resolvedAt}>
-              {resolving ? <Loader2 size={16} className="animate-spin" /> : <CheckCheck size={16} />}
-              Giải quyết
-            </Button>
             <Button onClick={() => review("reject")} disabled={loading}>
               <X size={16} /> Từ chối
             </Button>
