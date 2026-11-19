@@ -26,7 +26,7 @@ export interface MarketingOverview {
   funnel: Partial<Record<CampaignKey | "broadcast", FunnelRow>>;
 }
 
-export type BroadcastSegment = "all" | "pro" | "free" | "inactive" | "exam_soon";
+export type BroadcastSegment = "all" | "pro" | "free" | "inactive" | "exam_soon" | "upgrade";
 export type BroadcastStatus = "DRAFT" | "SENDING" | "DONE" | "CANCELLED";
 
 export interface Broadcast {
