@@ -1,6 +1,7 @@
 import type { ImportedExam } from "@/features/exam-import/types";
 import { ExtensionBar } from "./components/ExtensionBar";
 import type { PickFolder } from "@/features/practice/components/FolderInput";
+import { SemesterPromoBar } from "@/features/plan/SemesterPromoBar";
 import { Footer } from "@/shared/layout/Footer";
 import { CtaSection } from "./components/CtaSection";
 import { FeatureShowcase } from "./components/FeatureShowcase";
@@ -23,6 +24,7 @@ export function Landing({ onPick, onImported, userName }: Props) {
   return (
     <div className="flex flex-1 flex-col overflow-y-auto bg-surface">
       <LandingNoticePopup />
+      <SemesterPromoBar />
       <HeroSection onPick={onPick} onImported={onImported} userName={userName} />
       <ExtensionBar />
 
