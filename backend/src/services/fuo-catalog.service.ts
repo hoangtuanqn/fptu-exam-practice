@@ -6,7 +6,7 @@ import { type CatalogThreadRow, fuoCatalogRepository } from "../repositories/fuo
 import { fuoSourceRepository } from "../repositories/fuo-source.repository";
 import { AppError } from "../rules/error";
 import { EXAM_KINDS } from "../utils/exam-kind";
-import { diffCatalogRows } from "../utils/fuo-catalog-diff";
+import { diffCatalogRows, pageHasNews } from "../utils/fuo-catalog-diff";
 import { sleep } from "../utils/sleep";
 import { FUO_AUTH_MESSAGE, FuoAuthError, createFuoClient } from "./crawler/fuo-client";
 import { type ForumRow, forumUrl, looksBlocked, parseForumPage } from "./crawler/fuo-forum.service";
@@ -15,6 +15,8 @@ import { MIN_SUBJECTS, URL_SUBJECTS, parseSubjectSemesters } from "./crawler/fuo
 import { crawlerSettingService } from "./crawler-setting.service";
 
 const listeners: (() => void)[] = [];
+
+const toCatalogRow = (code: string, r: ForumRow): CatalogThreadRow => ({ threadId: r.threadId, subjectCode: code, title: r.title, label: r.label, kind: r.kind, postedAt: r.postedAt, replies: r.replies });
 
 const toRunDto = (run: FuoCatalogRun, currentSubject: string | null) => ({
   id: run.id,
@@ -51,20 +53,28 @@ export const fuoCatalogService = {
 
   /** Bắt đầu lượt quét (trả về ngay, chạy nền). Lượt gần nhất dừng vì cần đăng nhập thì chạy tiếp lượt đó. */
   async start(adminId: string) {
-    const busy = () => {
-      listeners.forEach((fn) => fn()); // đánh thức worker (kể cả khi lượt đang chạy bị kẹt vì lỗi DB trước đó)
-      return new AppError("Đang có lượt quét danh mục FuOverflow chạy. Hãy đợi lượt đó xong.", HTTP_STATUS.CONFLICT);
-    };
-    if (await fuoCatalogRepository.findActiveRun()) throw busy();
+    if (!(await this.begin(adminId, false))) throw new AppError("Đang có lượt quét danh mục FuOverflow chạy. Hãy đợi lượt đó xong.", HTTP_STATUS.CONFLICT);
+    return { started: true, ...(await this.status()) };
+  },
+
+  /**
+   * Tạo lượt quét (hoặc chạy tiếp lượt cùng loại đang dừng vì cần đăng nhập) rồi đánh thức worker; false nếu đang có lượt chạy.
+   * `autoImport`: lượt của nút "Load dữ liệu mới" (quét tăng dần, xong thì nạp các đề mới/đổi), khác lượt quét đầy đủ ở trang danh mục.
+   */
+  async begin(adminId: string, autoImport: boolean) {
+    const wake = () => listeners.forEach((fn) => fn()); // đánh thức worker (kể cả khi lượt đang chạy bị kẹt vì lỗi DB trước đó)
+    if (await fuoCatalogRepository.findActiveRun()) {
+      wake();
+      return false;
+    }
     const config = await crawlerSettingService.get();
     if (!config.cookie && !(config.loginEmail && config.loginPassword)) {
       throw new AppError("Chưa có cookie hay tài khoản FuOverflow. Hãy cập nhật ở Quản trị → Cấu hình lấy đề trước.", HTTP_STATUS.UNPROCESSABLE_ENTITY);
     }
     const latest = await fuoCatalogRepository.findLatestRun();
-    const run = latest?.status === "NEEDS_AUTH" ? await fuoCatalogRepository.resumeRun(latest.id) : await fuoCatalogRepository.createRun(adminId);
-    if (!run) throw busy(); // lần bấm khác vừa tạo lượt
-    listeners.forEach((fn) => fn());
-    return { started: true, ...(await this.status()) };
+    const run = latest?.status === "NEEDS_AUTH" && latest.autoImport === autoImport ? await fuoCatalogRepository.resumeRun(latest.id) : await fuoCatalogRepository.createRun(adminId, autoImport);
+    wake();
+    return run !== null; // null: lần bấm khác vừa tạo lượt
   },
 
   /** Một trang FuOverflow qua FuoClient (cookie/UA/thử lại). Trang Cloudflare/đăng nhập: lỗi phiên. Thay được trong test. */
@@ -87,8 +97,11 @@ export const fuoCatalogService = {
       return codes;
     }),
 
-  /** Mọi bài của một môn: trang 1, đọc số trang cuối, rồi các trang còn lại (lần lượt). Bài trùng giữa các trang chỉ tính một lần. */
-  crawlSubject: (code: string) =>
+  /**
+   * Mọi bài của một môn: trang 1, đọc số trang cuối, rồi các trang còn lại (lần lượt). Bài trùng giữa các trang chỉ tính một lần.
+   * `incremental`: dừng ở trang đầu tiên không có bài mới hay đã đổi so với bản đã lưu (môn chưa quét lần nào thì vẫn đi hết).
+   */
+  crawlSubject: (code: string, opts: { incremental?: boolean } = {}) =>
     fuoSessionService.withSession(async () => {
       const first = await fuoCatalogService.fetchPage(forumUrl(code));
       const page1 = parseForumPage(first.html);
@@ -97,16 +110,20 @@ export const fuoCatalogService = {
       const base = first.url.replace(/[?#].*$/, "").replace(/\/page-\d+\/?$/, "").replace(/\/?$/, "/");
       const pages = Math.min(page1.lastPage, FUO_CATALOG_MAX_PAGES);
       const rows = new Map<string, ForumRow>(page1.rows.map((r) => [r.threadId, r]));
-      for (let p = 2; p <= pages; p++) {
+      const unchanged = async (list: ForumRow[]) =>
+        !!opts.incremental && !pageHasNews(await fuoCatalogRepository.findThreads(list.map((r) => r.threadId)), list.map((r) => toCatalogRow(code, r)));
+      for (let p = 2, stop = await unchanged(page1.rows); p <= pages && !stop; p++) {
         await fuoCatalogService.pause();
-        for (const r of parseForumPage((await fuoCatalogService.fetchPage(`${base}page-${p}`)).html).rows) if (!rows.has(r.threadId)) rows.set(r.threadId, r);
+        const list = parseForumPage((await fuoCatalogService.fetchPage(`${base}page-${p}`)).html).rows;
+        for (const r of list) if (!rows.has(r.threadId)) rows.set(r.threadId, r);
+        stop = await unchanged(list);
       }
       return { pages, rows: [...rows.values()] };
     }),
 
   /** Ghi kết quả một môn: chỉ bài mới hoặc đã đổi được ghi; trả về các con số mới của lượt. */
   async saveSubject(runId: string, subjectId: string, code: string, result: { pages: number; rows: ForumRow[] }) {
-    const rows: CatalogThreadRow[] = result.rows.map((r) => ({ threadId: r.threadId, subjectCode: code, title: r.title, label: r.label, kind: r.kind, postedAt: r.postedAt, replies: r.replies }));
+    const rows = result.rows.map((r) => toCatalogRow(code, r));
     const { added, changed } = diffCatalogRows(await fuoCatalogRepository.findThreads(rows.map((r) => r.threadId)), rows);
     return fuoCatalogRepository.saveSubject(runId, subjectId, { added, changed, found: rows.length, pages: result.pages });
   },

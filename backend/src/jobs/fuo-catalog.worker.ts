@@ -5,17 +5,25 @@ import { fuoCatalogRepository } from "../repositories/fuo-catalog.repository";
 import { adminNoticeService } from "../services/admin-notice.service";
 import { isFuoAuthFailure } from "../services/crawler/fuo-session.service";
 import { fuoCatalogService } from "../services/fuo-catalog.service";
+import { fuoSourceService } from "../services/fuo-source.service";
 import { sleep } from "../utils/sleep";
 
 const ADMIN_PAGE = "/admin/fuo-catalog";
+const SOURCES_PAGE = "/admin/fuo-sources";
 let draining = false;
 let wake = false;
 
-const publish = () =>
+// Trang nguồn đề cũng hiện tiến độ lượt quét của "Load dữ liệu mới" (trường scan)
+const publish = () => {
   void fuoCatalogService
     .status()
     .then((s) => realtimeHub.publishFuoCatalog(s))
     .catch(() => undefined);
+  void fuoSourceService
+    .status()
+    .then((s) => realtimeHub.publishFuoSources(s))
+    .catch(() => undefined);
+};
 
 const errorText = (err: unknown) => ((err as Error).message || "Lỗi không xác định").slice(0, FUO_CATALOG_ERROR_MAX);
 
@@ -44,7 +52,7 @@ async function runOnce(run: FuoCatalogRun) {
     if (!subject) break;
     publish();
     try {
-      await fuoCatalogService.saveSubject(run.id, subject.id, subject.code, await fuoCatalogService.crawlSubject(subject.code));
+      await fuoCatalogService.saveSubject(run.id, subject.id, subject.code, await fuoCatalogService.crawlSubject(subject.code, { incremental: run.autoImport }));
     } catch (err) {
       const message = errorText(err);
       if (isFuoAuthFailure(err)) {
@@ -62,10 +70,21 @@ async function runOnce(run: FuoCatalogRun) {
   const done = await fuoCatalogRepository.finishRun(run.id, authError ? "NEEDS_AUTH" : fatal ? "FAILED" : "DONE", authError ?? fatal ?? undefined);
   publish();
   console.log(`[fuo-catalog] lượt ${run.id} ${done.status}: ${done.subjectsDone}/${done.subjectsTotal} môn (${done.subjectsFailed} lỗi), ${done.threadsFound} bài, ${done.threadsNew} mới, ${done.threadsUpdated} cập nhật`);
+  const link = run.autoImport ? SOURCES_PAGE : ADMIN_PAGE;
   if (authError) {
-    adminNoticeService.push("catalog.failed", { title: "Quét danh mục FuOverflow tạm dừng: cần đăng nhập lại", body: `${authError} Sau khi cập nhật, bấm quét lại để chạy tiếp.`, link: ADMIN_PAGE });
+    const again = run.autoImport ? "bấm Load dữ liệu mới" : "bấm quét lại";
+    adminNoticeService.push("catalog.failed", { title: "Quét danh mục FuOverflow tạm dừng: cần đăng nhập lại", body: `${authError} Sau khi cập nhật, ${again} để chạy tiếp.`, link });
   } else if (fatal) {
-    adminNoticeService.push("catalog.failed", { title: "Quét danh mục FuOverflow thất bại", body: fatal, link: ADMIN_PAGE });
+    adminNoticeService.push("catalog.failed", { title: "Quét danh mục FuOverflow thất bại", body: fatal, link });
+  } else if (run.autoImport) {
+    // Lượt của "Load dữ liệu mới": nạp ngay các đề mới/đổi (lượt nạp tự báo khi xong)
+    try {
+      await fuoSourceService.afterScan(run.createdById);
+    } catch (err) {
+      console.error("[fuo-catalog] không bắt đầu được lượt nạp sau khi quét:", (err as Error).message);
+      adminNoticeService.push("catalog.failed", { title: "Quét xong nhưng chưa nạp được đề mới", body: `${errorText(err)} Bấm Load dữ liệu mới để thử lại.`, link: SOURCES_PAGE });
+    }
+    publish(); // không để trang nguồn đề tưởng đã dừng trong lúc chuyển từ quét sang nạp
   } else {
     adminNoticeService.push("catalog.done", {
       title: `Quét danh mục FuOverflow xong: ${done.threadsNew} bài mới, ${done.threadsUpdated} bài cập nhật`,

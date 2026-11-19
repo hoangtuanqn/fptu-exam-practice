@@ -1495,6 +1495,7 @@ model FuoCatalogRun {
   threadsFound   Int                 @default(0) @map("threads_found")
   threadsNew     Int                 @default(0) @map("threads_new")
   threadsUpdated Int                 @default(0) @map("threads_updated")
+  autoImport     Boolean             @default(false) @map("auto_import") // started by "load new data": incremental scan, then a source run
   lastError      String?             @map("last_error") @db.Text
   createdById    String?             @map("created_by_id") @db.Char(36) // admin who started it (soft reference)
   createdAt      DateTime            @default(now()) @map("created_at")
