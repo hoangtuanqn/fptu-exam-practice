@@ -45,6 +45,7 @@ const ReviewPage = lazy(() => import("@/features/review/ReviewPage"));
 const SavedPage = lazy(() => import("@/features/saved/SavedPage"));
 const ExamViewPage = lazy(() => import("@/features/exam-view/ExamViewPage"));
 const ExamPreviewPage = lazy(() => import("@/features/exam-preview/ExamPreviewPage"));
+const FetchLinkPage = lazy(() => import("@/features/exam-import/FetchLinkPage"));
 const SubjectPage = lazy(() => import("@/features/landing/SubjectPage"));
 const PublicCatalogPage = lazy(() => import("@/features/exam-store/PublicCatalogPage"));
 const FrequentPage = lazy(() => import("@/features/frequent/FrequentPage"));
@@ -140,6 +141,8 @@ export default function App() {
         <Route path="/unsubscribe" element={<UnsubscribePage />} />
 
         <Route element={<RequireAuth />}>
+          {/* Nút Làm đề / Tải đề PE của tiện ích Chrome mở trang này */}
+          <Route path="/fetch" element={<FetchLinkPage />} />
           <Route path="/account" element={<PanelLayout title="Tài khoản" items={ACCOUNT_NAV} />}>
             <Route index element={<OverviewPage />} />
             <Route path="attempts" element={<AttemptsPage />} />

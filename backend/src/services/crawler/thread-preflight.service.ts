@@ -1,8 +1,10 @@
+import type { ExamKind } from "@prisma/client";
 import * as cheerio from "cheerio";
+import { classifyKind } from "../../utils/exam-kind";
 import { threadUrl } from "../../utils/fuo-url";
 import { crawlerSettingService } from "../crawler-setting.service";
 import { createFuoClient } from "./fuo-client";
-import { NOT_EXAM_MESSAGE, isOutsideSubjectForums } from "./thread-scraper.service";
+import { NOT_EXAM_MESSAGE, extractLabel, isOutsideSubjectForums } from "./thread-scraper.service";
 
 /**
  * Kiểm tra bài trên FuOverflow TRƯỚC khi nhận tiền: bài có tồn tại không và có nằm trong diễn đàn môn học không
@@ -13,7 +15,7 @@ import { NOT_EXAM_MESSAGE, isOutsideSubjectForums } from "./thread-scraper.servi
  * Trả về `null` khi KHÔNG kết luận được (chưa có cookie, cookie hết hạn, FuOverflow lỗi/chậm): khi đó không chặn người dùng,
  * worker vẫn kiểm tra lại và hoàn phí nếu bài sai.
  */
-export type ThreadPreflight = { ok: true; title: string } | { ok: false; message: string };
+export type ThreadPreflight = { ok: true; title: string; kind: ExamKind } | { ok: false; message: string };
 
 const OK_TTL_MS = 10 * 60_000;
 const REJECT_TTL_MS = 5 * 60_000;
@@ -36,7 +38,8 @@ async function read(threadId: string): Promise<ThreadPreflight | null> {
   const $ = cheerio.load(html);
   if ($("h1.p-title-value").length === 0) return null; // không phải trang bài viết (trang đăng nhập/Cloudflare...): không kết luận
   if (isOutsideSubjectForums(html)) return { ok: false, message: NOT_EXAM_MESSAGE };
-  return { ok: true, title: $("h1.p-title-value").first().clone().find(".label, .labelLink").remove().end().text().replace(/\s+/g, " ").trim() };
+  const title = $("h1.p-title-value").first().clone().find(".label, .labelLink").remove().end().text().replace(/\s+/g, " ").trim();
+  return { ok: true, title, kind: classifyKind(extractLabel(html), title) };
 }
 
 export const threadPreflight = {

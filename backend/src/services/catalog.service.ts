@@ -1,3 +1,4 @@
+import { PE_PRICE } from "../constants/pe";
 import type { ExamKind } from "@prisma/client";
 import { prisma } from "../configs/prisma";
 import { EXAM_KINDS } from "../utils/exam-kind";
@@ -220,6 +221,7 @@ export const catalogService = {
       total: everything.length,
       kinds, // số đề theo loại của cả môn (cho các tab lọc)
       price: cfg.fetchPrice, // phí lấy một đề chưa có trong kho của bạn, để hiện trên nút mở đề
+      pePrice: PE_PRICE, // đề PE có giá riêng
       subject: { code: subject, name: info?.name ?? null, semester: info?.semester ?? null },
     };
   },

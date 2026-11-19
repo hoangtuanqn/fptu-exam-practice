@@ -31,6 +31,7 @@ export interface CatalogPage {
   terms: { term: string; count: number }[];
   total: number; // tổng số đề của môn (trước khi lọc)
   price: number; // phí lấy một đề chưa có trong kho của bạn (credit)
+  pePrice?: number; // đề PE có giá riêng; API cũ chưa có thì dùng price
   subject: { code: string; name: string | null; semester: number | null };
 }
 

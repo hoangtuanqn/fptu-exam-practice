@@ -264,6 +264,7 @@ async function load() {
   const s = await fepassGetSettings();
   $("ver").textContent = `Phiên bản ${chrome.runtime.getManifest().version}`;
   $("siteUrl").value = s.siteUrl;
+  $("apiUrl").value = s.apiUrl;
   await render();
 }
 
@@ -277,14 +278,17 @@ $("welcomeOk").addEventListener("click", () => chrome.storage.local.set({ onboar
 
 $("save").addEventListener("click", async () => {
   const site = fepassSanitizeUrl($("siteUrl").value, null);
-  if (!site) return msg("Địa chỉ phải bắt đầu bằng https:// (hoặc http://localhost khi chạy thử).", true);
-  await chrome.storage.sync.set({ siteUrl: site });
+  const api = fepassSanitizeUrl($("apiUrl").value, null);
+  if (!site || !api) return msg("Địa chỉ phải bắt đầu bằng https:// (hoặc http://localhost khi chạy thử).", true);
+  await chrome.storage.sync.set({ siteUrl: site, apiUrl: api });
+  await chrome.storage.local.remove("prices"); // đổi API thì bỏ giá đã nhớ
   await render();
   msg("Đã lưu.");
 });
 
 $("reset").addEventListener("click", async () => {
-  await chrome.storage.sync.set({ siteUrl: FEPASS_DEFAULTS.siteUrl });
+  await chrome.storage.sync.set({ siteUrl: FEPASS_DEFAULTS.siteUrl, apiUrl: FEPASS_DEFAULTS.apiUrl });
+  await chrome.storage.local.remove("prices");
   await load();
   msg("Đã về mặc định.");
 });

@@ -2,6 +2,7 @@
 // Giá trị mặc định trỏ tới hệ thống thật; chỉ đổi khi chạy thử trên máy (xem popup > Nâng cao).
 const FEPASS_DEFAULTS = {
   siteUrl: "https://fepass.top",
+  apiUrl: "https://api.fepass.top",
 };
 
 // So sánh phiên bản dạng 1.2.3: trả true nếu a mới hơn b
@@ -33,6 +34,7 @@ async function fepassGetSettings() {
   const raw = await chrome.storage.sync.get(FEPASS_DEFAULTS);
   return {
     siteUrl: fepassSanitizeUrl(raw.siteUrl, FEPASS_DEFAULTS.siteUrl),
+    apiUrl: fepassSanitizeUrl(raw.apiUrl, FEPASS_DEFAULTS.apiUrl),
   };
 }
 

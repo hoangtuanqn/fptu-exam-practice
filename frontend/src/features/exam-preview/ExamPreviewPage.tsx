@@ -1,7 +1,7 @@
 import { ProtectedImg } from "@/shared/ui/ProtectedImg";
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { BookOpen, FileSearch, Timer } from "lucide-react";
+import { BookOpen, Download, FileSearch, Loader2, Timer } from "lucide-react";
 import { examImportApi } from "@/features/exam-import/exam-import.api";
 import { canPractice, type ExamAttachment, type ExamQuestionsPayload, type ImportedExam } from "@/features/exam-import/types";
 import { downloadUrl, ICONS, OPENABLE } from "@/features/exam-attachments/AttachmentList";
@@ -20,6 +20,9 @@ import { Card } from "@/shared/ui/Card";
 import { Empty } from "@/shared/ui/Feedback";
 import { QueryBoundary } from "@/shared/ui/QueryBoundary";
 import { isUuid } from "@/shared/utils/uuid";
+import { errorMessage } from "@/shared/api/errors";
+import { Button } from "@/shared/ui/Button";
+import { downloadAllAsZip } from "./downloadAll";
 import { ImageLightbox } from "./ImageLightbox";
 
 const TILE = "md-state group relative block aspect-[4/3] overflow-hidden rounded-m3-md bg-surface-container-lowest shadow-m3-1 outline-none focus-visible:ring-2 focus-visible:ring-primary";
@@ -72,6 +75,7 @@ function Preview({ exam }: { exam: ImportedExam }) {
   const [total, setTotal] = useState(exam.totalQuestions ?? 0);
   const [failed, setFailed] = useState(false);
   const [zoom, setZoom] = useState<Question | null>(null);
+  const [zipping, setZipping] = useState(false);
   const fetching = !failed && questions.length < total;
   const attachments = useExamAttachmentsLive(exam.id, exam.attachments);
   const kind = exam.kind ?? "FE";
@@ -114,6 +118,21 @@ function Preview({ exam }: { exam: ImportedExam }) {
   ));
   const tiles = kind === "PE" ? [...fileTiles, ...pageTiles] : [...pageTiles, ...fileTiles];
 
+  // Đề PE: gom mọi tài nguyên (tệp đính kèm + ảnh) vào một file zip mang tên đề
+  const downloadAll = async () => {
+    setZipping(true);
+    try {
+      await downloadAllAsZip(exam.title, [
+        ...attachments.map((a) => ({ name: a.name, url: a.url })),
+        ...questions.map((q) => ({ name: fileName(q), url: q.imageUrl, protectedImage: true })),
+      ]);
+    } catch (err) {
+      toast.error(errorMessage(err, "Chưa tải được bộ tài nguyên, bạn thử lại nhé"));
+    } finally {
+      setZipping(false);
+    }
+  };
+
   return (
     <>
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
@@ -125,6 +144,11 @@ function Preview({ exam }: { exam: ImportedExam }) {
           <h1 className="md-headline-small mt-2 break-words text-on-surface">{exam.title}</h1>
           {meta && <p className="md-body-medium mt-1 text-on-surface-variant">{meta}</p>}
         </div>
+        {kind === "PE" && tiles.length > 0 && (
+          <Button variant="filled" onClick={() => void downloadAll()} disabled={zipping || fetching}>
+            {zipping ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} {zipping ? "Đang nén…" : "Download All"}
+          </Button>
+        )}
         {playable && (
           <div className="flex flex-wrap gap-2">
             <Link to={`/exam/${exam.id}?mode=practice`} className={buttonClass({ variant: "tonal" })}>
