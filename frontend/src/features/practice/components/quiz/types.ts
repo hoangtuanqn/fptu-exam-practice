@@ -19,6 +19,8 @@ export interface QuestionViewProps {
   explainBought?: boolean; // đã mua lời giải của câu này (xem lại miễn phí)
   explainFree?: boolean; // còn lượt xem thử miễn phí (nút hiện "Giải thích miễn phí")
   reported?: boolean; // đã gửi báo cáo cho câu này trong phiên làm bài
+  autoNext?: boolean; // đang bật "Tự sang câu sau khi chọn"
+  onToggleAutoNext?: () => void; // chỉ có ở chế độ Thi
   onChoose: (option: string) => void;
   onCheck: () => void;
   onPrev: () => void;

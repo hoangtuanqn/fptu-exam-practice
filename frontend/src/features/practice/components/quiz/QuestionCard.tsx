@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { ChevronLeft, Sparkles, Tag } from "lucide-react";
+import { ChevronLeft, Flag, Sparkles, Tag } from "lucide-react";
 import { useQuestionImageScale } from "@/features/practice/hooks/useQuestionImageScale";
 import { isMultiple } from "@/features/practice/utils/question";
 import { Button } from "@/shared/ui/Button";
@@ -42,6 +42,8 @@ export function QuestionCard({
   nudge,
   topic,
   topicLoading,
+  autoNext,
+  onToggleAutoNext,
   onChoose,
   onCheck,
   onPrev,
@@ -68,7 +70,19 @@ export function QuestionCard({
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
             {onExplain && <ExplainButton onExplain={onExplain} bought={explainBought} free={explainFree} />}
-            <QuestionToolsMenu flagged={flagged} onToggleFlag={onToggleFlag} saved={saved} onToggleSave={onToggleSave} onZoom={onZoom} onReport={onReport} reported={reported} size={size} />
+            <button
+              type="button"
+              onClick={onToggleFlag}
+              aria-pressed={flagged}
+              aria-label="Đánh dấu xem lại"
+              title="Đánh dấu xem lại (M)"
+              className={`flex h-9 w-9 items-center justify-center rounded-md border transition ${
+                flagged ? "border-warning bg-warning-container text-on-warning-container" : "border-slate-200 bg-surface-container-lowest text-slate-500 hover:border-slate-400 hover:text-slate-800"
+              }`}
+            >
+              <Flag size={18} className={flagged ? "fill-current" : ""} />
+            </button>
+            <QuestionToolsMenu saved={saved} onToggleSave={onToggleSave} onZoom={onZoom} onReport={onReport} reported={reported} autoNext={autoNext} onToggleAutoNext={onToggleAutoNext} size={size} />
           </div>
         </div>
 

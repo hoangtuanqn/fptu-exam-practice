@@ -12,6 +12,7 @@ import { useApi } from "@/shared/hooks/useApi";
 import { ReportAnswerDialog } from "@/features/answer-report/ReportAnswerDialog";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useExamTopicsLive } from "@/features/practice/hooks/useExamTopicsLive";
+import { useAutoNext } from "@/features/practice/hooks/useAutoNext";
 import { usePreloadImages } from "@/features/practice/hooks/usePreloadImages";
 import type { Quiz } from "@/features/practice/hooks/useQuiz";
 import { Sidebar } from "@/features/practice/components/sidebar/Sidebar";
@@ -47,6 +48,7 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit }: Props)
   const [unlockOpen, setUnlockOpen] = useState(false); // hộp xác nhận mở khóa cả đề
   const [bannerCollapsed, setBannerCollapsed] = useState(false); // thẻ ưu đãi thu thành viên thuốc
   usePreloadImages(quiz);
+  const autoNext = useAutoNext(quiz);
   const topicsLabeling = useExamTopicsLive(quiz.examId, quiz.applyTopics); // đề còn câu chưa có chủ đề: máy chủ gắn nền, hiện hiệu ứng chờ
   const showTopic = quiz.mode === "practice" || quiz.submitted; // thi: chủ đề chỉ hiện sau khi nộp bài
 
@@ -110,6 +112,8 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit }: Props)
     explainBought,
     explainFree,
     reported: reported.has(question.number),
+    autoNext: autoNext.on,
+    onToggleAutoNext: autoNext.available ? autoNext.toggle : undefined,
     onChoose: (option) => quiz.choose(question, option),
     onCheck: () => quiz.check(question),
     onPrev: quiz.prev,

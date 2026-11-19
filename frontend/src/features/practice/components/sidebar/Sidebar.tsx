@@ -2,6 +2,9 @@ import { useState } from "react";
 import { ChevronDown, ChevronRight, LayoutGrid } from "lucide-react";
 import type { Quiz } from "@/features/practice/hooks/useQuiz";
 import { useKeydown } from "@/features/practice/hooks/useKeydown";
+import { nextUnanswered } from "@/features/practice/utils/unanswered";
+import { Button } from "@/shared/ui/Button";
+import { Kbd } from "@/shared/ui/Kbd";
 import { AnswerOptions } from "@/features/practice/components/quiz/AnswerOptions";
 import { Legend } from "./Legend";
 import { NavButtons } from "./NavButtons";
@@ -36,6 +39,7 @@ export function Sidebar({ quiz, onSubmit }: { quiz: Quiz; onSubmit?: () => void 
 
   const question = quiz.questions[quiz.current];
   const count = Math.max(quiz.total, quiz.questions.length);
+  const nextUnansweredAt = nextUnanswered(quiz.questions, quiz.answers, quiz.current);
   const done = quiz.result ? quiz.result.correct : Object.values(quiz.answers).filter((a) => a.length > 0).length;
 
   return (
@@ -93,6 +97,22 @@ export function Sidebar({ quiz, onSubmit }: { quiz: Quiz; onSubmit?: () => void 
                 setOpen(false);
               }}
             />
+            {!quiz.submitted && nextUnansweredAt >= 0 && (
+              <Button
+                variant="tonal"
+                size="sm"
+                className="w-full"
+                onClick={() => {
+                  quiz.goTo(nextUnansweredAt);
+                  setOpen(false);
+                }}
+              >
+                Tới câu chưa làm tiếp theo
+                <span className="hidden lg:inline">
+                  <Kbd>N</Kbd>
+                </span>
+              </Button>
+            )}
             <Legend mode={quiz.mode} submitted={quiz.submitted} />
           </div>
         </>
