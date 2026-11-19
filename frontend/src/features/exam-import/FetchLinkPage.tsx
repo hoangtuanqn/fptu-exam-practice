@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { FileSearch, Loader2 } from "lucide-react";
+import { CloudDownload, FileSearch, Loader2 } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
+import { formatDuration } from "@/features/practice/utils/format";
 import { errorMessage } from "@/shared/api/errors";
 import { SiteHeader } from "@/shared/layout/SiteHeader";
 import { buttonClass } from "@/shared/ui/Button";
@@ -58,9 +59,7 @@ export default function FetchLinkPage() {
               </div>
             </Empty>
           ) : (
-            <p className="flex items-center justify-center gap-2 px-5 py-10 text-on-surface-variant" role="status">
-              <Loader2 size={18} className="animate-spin" /> {job.phase === "running" ? `${job.stage ?? "Đang lấy đề…"} Đề mới có thể mất vài phút, đừng đóng trang.` : "Đang kiểm tra đề…"}
-            </p>
+            <FetchProgress stage={job.phase === "running" ? (job.stage ?? "Đang lấy đề") : fee !== null ? "Chờ bạn xác nhận" : "Đang kiểm tra đề"} running={job.phase === "running"} />
           )}
         </Card>
       </main>
@@ -77,6 +76,41 @@ export default function FetchLinkPage() {
             void job.start(link);
           }}
         />
+      )}
+    </div>
+  );
+}
+
+// Thanh tiến trình khi lấy đề: bước có dạng "x/y" (ví dụ "Đang tải ảnh 12/50") thì chạy theo số thật,
+// còn lại chạy theo thời gian, chậm dần và không chạm 100% khi chưa xong (giống dải chờ AI giải đề)
+function FetchProgress({ stage, running }: { stage: string; running: boolean }) {
+  const [seconds, setSeconds] = useState(0);
+  useEffect(() => {
+    if (!running) return;
+    const id = setInterval(() => setSeconds((x) => x + 1), 1000);
+    return () => clearInterval(id);
+  }, [running]);
+  const m = stage.match(/(\d+)\s*\/\s*(\d+)/);
+  const timed = Math.round(90 * (1 - Math.exp(-seconds / 60)));
+  const percent = !running ? 3 : m && Number(m[2]) > 0 ? Math.max(timed, Math.min(99, Math.round((Number(m[1]) / Number(m[2])) * 100))) : timed;
+  return (
+    <div role="status" aria-live="polite" className="rounded-xl border border-brand-200 bg-brand-50 px-4 py-4 text-sm text-brand-900">
+      <div className="flex items-start gap-2.5">
+        <CloudDownload size={18} className="mt-0.5 shrink-0 text-brand-700" />
+        <div className="min-w-0 flex-1">
+          <p className="font-medium">{stage.replace(/[.…\s]+$/, "")}…</p>
+          <p className="text-brand-800/80">{running ? "Đề mới có thể mất vài phút, đừng đóng trang. Xong sẽ tự mở đề." : "Đang chuẩn bị mở đề từ FuOverflow."}</p>
+        </div>
+        <Loader2 size={16} className="mt-0.5 shrink-0 animate-spin text-brand-700" />
+      </div>
+      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-brand-100" aria-hidden>
+        <div className="h-full rounded-full bg-brand-600 transition-[width] duration-1000 ease-linear" style={{ width: `${percent}%` }} />
+      </div>
+      {running && (
+        <div className="mt-1.5 flex justify-between text-xs tabular-nums text-brand-800/70">
+          <span>Đã chờ {formatDuration(seconds)}</span>
+          <span>{percent}%</span>
+        </div>
       )}
     </div>
   );
