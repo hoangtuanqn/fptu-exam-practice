@@ -1,10 +1,9 @@
 import { type Request, type RequestHandler, Router } from "express";
-import { storageDir } from "../configs/env";
-import { examRepository } from "../repositories/exam.repository";
+import { env, storageDir } from "../configs/env";
 import { AppError } from "../rules/error";
 import { examService } from "../services/exam.service";
 import { actorOf } from "../utils/actor";
-import { examRelPath } from "../utils/exam-path";
+import { examRelPath, isValidExamFileSignature } from "../utils/exam-path";
 import { resolveInside } from "../utils/exam-zip";
 import { identify } from "./auth.middlewares";
 import { makeLimiter } from "./rateLimit.middlewares";
@@ -20,24 +19,12 @@ const examImageLimiter = makeLimiter({
   message: "Bạn xem ảnh đề quá nhanh.",
 });
 
-const idOfThread = new Map<string, { id: string; at: number }>(); // thread -> id đề, nhớ vài phút cho đỡ hỏi DB mỗi ảnh
-const THREAD_TTL_MS = 5 * 60 * 1000;
-const examIdOf = async (threadId: string) => {
-  const hit = idOfThread.get(threadId);
-  if (hit && Date.now() - hit.at < THREAD_TTL_MS) return hit.id;
-  const exam = await examRepository.findByThreadId(threadId);
-  if (!exam) return null;
-  if (idOfThread.size > 500) idOfThread.clear();
-  idOfThread.set(threadId, { id: exam.id, at: Date.now() });
-  return exam.id;
-};
-
 const serve: RequestHandler = async (req, res) => {
   const info = examRelPath(req.path);
   if (!info || info === "blocked") throw AppError.notFound("Không tìm thấy tệp");
-  const examId = await examIdOf(info.threadId);
-  if (!examId) throw AppError.notFound("Không tìm thấy tệp");
-  await examService.assertAccess(actorOf(req), examId); // không có trong kho của người xem: 404 như đề không tồn tại
+  // Ảnh có chữ ký ngắn hạn (trang "Câu hay ra") thì không cần có đề trong kho; còn lại phải là đề của người xem hoặc admin
+  const signed = isValidExamFileSignature(info.rel, req.query.e, req.query.s, env.JWT_SECRET);
+  if (!signed) await examService.assertThreadFileAccess(actorOf(req), info.threadId);
   const abs = resolveInside(storageDir, info.rel);
   if (!abs) throw AppError.notFound("Không tìm thấy tệp");
   // private: chỉ trình duyệt của người xem được giữ; không để proxy/CDN dùng chung bản có danh tính khác

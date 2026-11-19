@@ -33,6 +33,12 @@ export const examService = {
     if (!(await userExamRepository.has(actor.owner, examId))) throw AppError.notFound(EXAM_NOT_FOUND);
   },
 
+  // Tệp ảnh của đề (theo thread) chỉ cho chủ kho hoặc admin; người khác nhận 404 như tệp không tồn tại
+  async assertThreadFileAccess(actor: Actor, threadId: string) {
+    const ok = actor.isAdmin ? !!(await examRepository.findByThreadId(threadId)) : await userExamRepository.hasThread(actor.owner, threadId);
+    if (!ok) throw AppError.notFound(EXAM_NOT_FOUND);
+  },
+
   async listMine(owner: Owner, query: PaginationQuery & { subject?: string }) {
     const { items, total } = await userExamRepository.list(owner, query);
     // Khách chưa có lịch sử làm bài nên không cần thống kê
