@@ -26,6 +26,9 @@ export function LandingNoticePopup() {
       </p>
       <h2 className="md-headline-small mt-1 text-on-surface">{N.title}</h2>
       <p className="md-body-medium mt-2 text-on-surface-variant">{N.lead}</p>
+      <p className="mt-3 rounded-m3-lg bg-secondary-container px-3 py-2 text-sm text-on-secondary-container">
+        <b>Tin vui:</b> {N.goodNews}
+      </p>
       <ol className="mt-3 space-y-1.5">
         {N.rounds.map((r, i) => (
           <li key={r.name} className="flex items-center gap-2 text-sm">

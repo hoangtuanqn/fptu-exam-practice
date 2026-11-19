@@ -27,8 +27,9 @@ export const LANDING_NOTICE = {
   image: "/promo/fcode-arcode.jpg",
   imageAlt: "Poster tuyển thành viên ARCODE của CLB F-Code",
   badge: "Tin vui cho dân FPTU",
-  title: "CLB F-Code đang tuyển thành viên ARCODE!",
-  lead: "Insert coin, bắt đầu hành trình của bạn. F-Code cần những bạn chịu khó học hỏi, không đặt nặng kỹ thuật: cứ đến, rồi cùng học, cùng lớn lên.",
+  title: "F-Code đang tuyển thành viên ARCODE, vào chơi thôi!",
+  lead: "F-Code là câu lạc bộ học thuật của FPTU, nơi mọi người cùng học, cùng làm và cùng lớn lên. Không cần giỏi sẵn: F-Code tìm những bạn chịu khó học hỏi, kỹ thuật cứ từ từ rồi sẽ tới. Insert coin, bắt đầu hành trình của bạn!",
+  goodNews: "Thành viên F-Code là những người trực tiếp vận hành FEPass.top. Vào CLB là bạn được làm ra sản phẩm có người dùng thật mỗi ngày.",
   rounds: [
     { name: "Vòng 1: Build Character", when: "Đăng ký 12 – 22/11" },
     { name: "Vòng 2: Game Start", when: "Phỏng vấn 01 – 09/12" },
