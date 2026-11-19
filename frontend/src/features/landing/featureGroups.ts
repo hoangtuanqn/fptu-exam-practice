@@ -30,7 +30,7 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
     title: "AI đồng hành",
     tag: "Thông minh",
     features: [
-      { icon: Bot, title: "AI giải đáp án cả đề", text: "Mỗi đề có đáp án do AI giải, đối chiếu cả bình luận trên FuOverflow.", pro: true },
+      { icon: Bot, title: "AI giải đáp án cả đề", text: "Mỗi đề có đáp án do AI giải, đối chiếu cả bình luận của người học.", pro: true },
       { icon: Sparkles, title: "Giải thích từng câu", text: "Bấm vào câu bất kỳ để biết vì sao đúng, vì sao các lựa chọn kia sai.", pro: true },
       { icon: MessageCircleQuestion, title: "Trợ lý Cóc Pass", text: "Hỏi cách dùng web, tra đề theo môn, xem dữ liệu tài khoản của bạn." },
     ],
