@@ -21,6 +21,8 @@ export function AnswerOptions({ question, selected, revealed, onChoose, compact 
   const multiple = isMultiple(question);
   const graded = hasAnswer(question);
   const locked = !!question.answerPending; // AI chưa có đáp án: chỉ xem đề, chưa cho chọn
+  // Dấu đúng/sai: ở thanh dọc nằm hẳn trong nút (lấn ra ngoài sẽ làm khung cuộn được và bị cắt); các chỗ khác vẫn nhô ra ở góc
+  const badge = vertical ? "right-0 top-0" : "-right-1 -top-1";
 
   function state(opt: string): { cls: string; mark: "right" | "wrong" | null } {
     const isSelected = selected.includes(opt);
@@ -58,8 +60,8 @@ export function AnswerOptions({ question, selected, revealed, onChoose, compact 
             } ${multiple ? "rounded-m3-md" : "rounded-full"} ${cls}`}
           >
             {opt}
-            {mark === "right" && <Check size={14} strokeWidth={3} className="absolute -right-1 -top-1 rounded-full bg-success p-0.5 text-on-success" />}
-            {mark === "wrong" && <X size={14} strokeWidth={3} className="absolute -right-1 -top-1 rounded-full bg-error p-0.5 text-on-error" />}
+            {mark === "right" && <Check size={14} strokeWidth={3} className={`absolute ${badge} rounded-full bg-success p-0.5 text-on-success`} />}
+            {mark === "wrong" && <X size={14} strokeWidth={3} className={`absolute ${badge} rounded-full bg-error p-0.5 text-on-error`} />}
           </button>
         );
       })}

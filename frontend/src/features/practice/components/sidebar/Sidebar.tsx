@@ -65,7 +65,7 @@ export function Sidebar({ quiz, onSubmit }: { quiz: Quiz; onSubmit?: () => void 
           Trước / Tiếp nằm liền dưới đáp án để chọn xong bấm luôn. Đáp án quá dài thì cuộn, hai nút Trước / Tiếp luôn thấy. */}
       {question && (
         <div className="mt-2 hidden max-h-[calc(100dvh-12rem)] w-full flex-col items-center rounded-2xl border border-outline-variant bg-surface-container-lowest px-1.5 py-2 shadow-sm lg:flex">
-          <div className="flex min-h-0 w-full flex-col items-center overflow-y-auto">
+          <div className="flex min-h-0 w-full flex-col items-center overflow-x-hidden overflow-y-auto">
             <AnswerOptions vertical question={question} selected={quiz.answers[question.number] ?? []} revealed={quiz.isRevealed(question)} onChoose={(opt) => quiz.choose(question, opt)} />
           </div>
           <NavButtons hasPrev={quiz.current > 0} hasNext={quiz.current < quiz.questions.length - 1} onPrev={quiz.prev} onNext={quiz.next} onSubmit={onSubmit} />
