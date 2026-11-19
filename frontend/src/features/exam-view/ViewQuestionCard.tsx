@@ -22,7 +22,7 @@ export function ViewQuestionCard({ q, showAnswer, highlighted, saved, onToggleSa
           {q.topic && (
             <span className="inline-flex min-w-0 max-w-full items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5 text-xs text-brand-900" title={`Chủ đề: ${q.topic}`}>
               <Tag size={12} className="shrink-0 text-brand-700" />
-              <span className="truncate font-medium">{q.topic}</span>
+              <span className="break-words font-medium">{q.topic}</span>
             </span>
           )}
           {onToggleSave && (

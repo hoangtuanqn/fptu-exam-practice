@@ -18,8 +18,8 @@ interface Props extends QuestionViewProps {
   topicLoading?: boolean; // chủ đề đang được gắn nền: hiện chip chờ có hiệu ứng thay cho chủ đề
 }
 
-// Máy tính (lg trở lên): một hàng đầu [số câu, chủ đề, kết quả | giải thích AI, menu công cụ, Trước, Tiếp] và ảnh đề chiếm hết chỗ còn lại;
-// đáp án A–H nằm ở thanh dọc dưới nút danh sách câu (Sidebar).
+// Máy tính (lg trở lên): một hàng đầu [số câu, chủ đề, kết quả | giải thích AI, menu công cụ] và ảnh đề chiếm hết chỗ còn lại;
+// đáp án A–H cùng nút Trước / Tiếp nằm ở thanh dọc dưới nút danh sách câu (Sidebar).
 // Điện thoại và máy tính bảng: hàng đầu chỉ còn chủ đề + giải thích AI + menu (một dòng, số câu đã có ở nút danh sách câu phía trên),
 // ảnh chiếm gần hết màn hình, còn đáp án và Trước/Tiếp nằm ở thanh dưới cùng tầm ngón cái.
 export function QuestionCard({
@@ -63,34 +63,34 @@ export function QuestionCard({
             </h2>
             {/* Chỉ báo "Chọn nhiều" (hoặc chưa biết) cho khỏi chọn thiếu; câu chọn một thì khỏi nhắc */}
             {(question.answerPending || isMultiple(question)) && <QuestionKindBadge question={question} short />}
-            {topic ? (
-              <span className="inline-flex min-w-0 items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5 text-xs text-brand-900 lg:max-w-[16rem]" title={`Chủ đề: ${topic}`}>
-                <Tag size={12} className="shrink-0 text-brand-700" />
-                <span className="truncate font-medium">{topic}</span>
-              </span>
-            ) : (
-              topicLoading && (
-                <span role="status" className="topic-scan inline-flex items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5 text-xs text-slate-500">
-                  <Sparkles size={12} className="shrink-0 animate-pulse text-brand-700" />
-                  Đang phân loại chủ đề…
-                </span>
-              )
-            )}
             {/* Máy tính: nút Xác nhận / kết quả đúng sai hiện ngay đầu câu khi cần */}
             {(canCheck || revealed) && <div className="hidden lg:block">{status}</div>}
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
             {onExplain && <ExplainButton onExplain={onExplain} bought={explainBought} free={explainFree} />}
             <QuestionToolsMenu flagged={flagged} onToggleFlag={onToggleFlag} saved={saved} onToggleSave={onToggleSave} onZoom={onZoom} onReport={onReport} reported={reported} size={size} />
-            <div className="hidden items-center gap-1.5 lg:flex">
-              <Button size="sm" onClick={onPrev} disabled={!hasPrev} aria-label="Câu trước" className="!min-h-9 !px-3">
-                <ChevronLeft size={16} />
-                Trước
-              </Button>
-              <NextButton hasNext={hasNext} onNext={onNext} onSubmit={onSubmit} className="!min-h-9 !px-3" />
-            </div>
           </div>
         </div>
+
+        {/* Chủ đề của câu: một dòng chữ thường riêng ngay dưới thanh tiêu đề, rộng hết chiều ngang nên đọc được đủ cả trên điện thoại (tên dài thì xuống dòng, không cắt) */}
+        {(topic || topicLoading) && (
+          <div className="flex shrink-0 items-start gap-1.5 border-b border-slate-200 px-3 py-1.5 sm:px-4">
+            {topic ? (
+              <>
+                <Tag size={13} aria-hidden className="mt-0.5 shrink-0 text-brand-700" />
+                <p className="min-w-0 break-words text-[13px] leading-snug text-on-surface-variant">
+                  <span className="font-medium text-on-surface">Chủ đề: </span>
+                  {topic}
+                </p>
+              </>
+            ) : (
+              <p role="status" className="topic-scan inline-flex items-center gap-1.5 text-[13px] leading-snug text-on-surface-variant">
+                <Sparkles size={13} aria-hidden className="shrink-0 animate-pulse text-brand-700" />
+                Đang phân loại chủ đề…
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Ảnh rộng hết khung (chữ to hơn nhiều so với co ảnh vừa cả chiều cao); đề dài thì cuộn trong khung. Bấm vào ảnh mở cửa sổ phóng to */}
         <div className="min-h-0 w-full flex-1 overflow-auto bg-slate-50 p-1.5 sm:p-2">

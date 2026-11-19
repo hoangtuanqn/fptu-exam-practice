@@ -2,7 +2,7 @@ import { OPTIONS } from "@/features/practice/config/options";
 import { useKeydown } from "./useKeydown";
 import type { Quiz } from "./useQuiz";
 
-// Phím tắt khi làm bài: ← → chuyển câu, A–H chọn đáp án, M đánh dấu.
+// Phím tắt khi làm bài: ← → chuyển câu, A–H hoặc 1–8 chọn đáp án (số 1 = A, 2 = B...), M đánh dấu.
 // Enter: luyện tập có đáp án chưa chốt thì chốt trước; còn lại là sang câu tiếp, và ở câu cuối là Nộp bài.
 export function useQuizShortcuts(quiz: Quiz, enabled: boolean, onSubmit?: () => void) {
   const question = quiz.questions[quiz.current];
@@ -23,7 +23,8 @@ export function useQuizShortcuts(quiz: Quiz, enabled: boolean, onSubmit?: () => 
     } else if (e.key.toLowerCase() === "m") {
       quiz.toggleFlag(question.number); // M = đánh dấu xem lại
     } else {
-      const letter = e.key.toUpperCase();
+      // Phím số 1–8 chọn A–H, dùng cùng chỗ với phím chữ
+      const letter = /^[1-8]$/.test(e.key) ? (OPTIONS[Number(e.key) - 1] ?? "") : e.key.toUpperCase();
       if (OPTIONS.includes(letter)) quiz.choose(question, letter);
     }
   }, enabled && !!question);

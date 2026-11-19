@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import {
   Award,
   BookOpen,
+  CircleHelp,
   RotateCcw,
   Send,
   Trophy,
@@ -30,6 +31,7 @@ interface Props {
   timing: boolean; // đồng hồ đang chạy (không chạy khi chờ đáp án hoặc đã nộp)
   referenceCount?: number; // số tài liệu tham khảo của đề (trang công thức...); có thì hiện nút "Tài liệu"
   onShowReferences?: () => void;
+  onHelp?: () => void; // nút "?" mở bảng hướng dẫn làm bài
   onHome: () => boolean; // bấm logo khi đang làm đề: trả về false nếu người dùng huỷ việc thoát
   onSubmit: () => void;
   onReset: () => void;
@@ -49,6 +51,7 @@ export function Header({
   timing,
   referenceCount = 0,
   onShowReferences,
+  onHelp,
   onHome,
   onSubmit,
   onReset,
@@ -150,6 +153,12 @@ export function Header({
               >
                 <BookOpen size={16} />
                 <span className="hidden sm:inline">Tài liệu</span>
+              </Button>
+            )}
+
+            {onHelp && (
+              <Button onClick={onHelp} title="Hướng dẫn làm bài" aria-label="Hướng dẫn làm bài" className="!px-2.5">
+                <CircleHelp size={16} />
               </Button>
             )}
 

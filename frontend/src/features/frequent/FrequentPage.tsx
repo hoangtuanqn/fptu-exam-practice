@@ -111,7 +111,7 @@ function Item({ rank, item, totalExams }: { rank: number; item: FrequentItem; to
         <Badge tone="success">Đáp án: {item.answer.join(", ")}</Badge>
         {item.topic && (
           <span className="md-body-small inline-flex min-w-0 items-center gap-1 text-on-surface-variant">
-            <Tag size={13} className="shrink-0" /> <span className="truncate">{item.topic}</span>
+            <Tag size={13} className="shrink-0" /> <span className="break-words">{item.topic}</span>
           </span>
         )}
       </div>
