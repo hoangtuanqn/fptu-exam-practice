@@ -100,7 +100,7 @@ export default function SavedPage() {
           d.items.length === 0 ? (
             <Card>
               <Empty icon={Bookmark} title="Chưa có câu nào">
-                Mở menu … ở câu hỏi và chọn Lưu câu này.
+                Khi làm đề, bấm biểu tượng dấu trang ở đầu câu hỏi để lưu câu đó vào đây.
               </Empty>
             </Card>
           ) : (
