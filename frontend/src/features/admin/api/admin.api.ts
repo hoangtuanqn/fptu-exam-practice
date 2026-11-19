@@ -442,8 +442,6 @@ export const adminApi = {
       status,
       resolved,
     }),
-  resolveReport: (id: string) =>
-    http.post<AnswerReportAdmin>(`/admin/answer-reports/${id}/resolve`),
   approveReport: (id: string, body: { note?: string }) =>
     http.post<unknown>(`/admin/answer-reports/${id}/approve`, body),
   rejectReport: (id: string, body: { note?: string }) =>
