@@ -4,6 +4,7 @@ import type { PickFolder } from "@/features/practice/components/FolderInput";
 import { brand } from "@/shared/brand/brand";
 import { ExamSourcePicker } from "./ExamSourcePicker";
 import { LibraryStats } from "./LibraryStats";
+import { ValueTrio } from "./ValueTrio";
 import { PromoCard } from "./PromoCard";
 import { PromoDeadlineBanner } from "./PromoDeadlineBanner";
 import { SignupGiftBanner } from "./SignupGiftBanner";
@@ -55,6 +56,8 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
             <>
               <div aria-hidden className="mx-auto mt-4 h-px w-24 bg-primary/40" />
               {freeNote}
+              <ValueTrio />
+              <LibraryStats />
             </>
           )}
 
@@ -66,8 +69,6 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
               </p>
             </>
           )}
-
-          <LibraryStats />
         </div>
 
         {/* Bố cục: ô chọn môn (việc chính, thấy ngay không cần cuộn) → dải quà → dải Pro → thẻ ưu đãi.
