@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { openImageHandler } from "@/shared/api/protectedImage";
+import { ProtectedImg } from "@/shared/ui/ProtectedImg";
 import { CheckCheck, ThumbsDown, ThumbsUp } from "lucide-react";
 import { adminApi, type ExplanationFeedbackAdmin, type ResolvedFilter } from "@/features/admin/api/admin.api";
 import { refreshReviewCounts } from "@/features/admin/review-counts.store";
@@ -129,6 +131,12 @@ export default function FeedbackPage() {
                   </div>
                   {open === r.id && (
                     <div className="mt-3 rounded-xl bg-slate-50 p-3">
+                      {/* Ảnh câu hỏi trên đầu để đối chiếu lời giải với đề; bấm để mở ảnh lớn ở tab mới */}
+                      {r.imageUrl && (
+                        <a href="#" onClick={openImageHandler(r.imageUrl)} title="Mở ảnh lớn" className="mb-3 block overflow-hidden rounded-lg border border-slate-200 bg-surface-container-lowest">
+                          <ProtectedImg src={r.imageUrl} alt={`Câu ${r.questionNumber}`} loading="lazy" className="max-h-96 w-full object-contain" />
+                        </a>
+                      )}
                       <div className="mb-2 text-xs text-slate-500">Lời giải đang lưu{r.model ? ` (${r.model})` : ""}:</div>
                       {r.explanation ? <Markdown>{r.explanation}</Markdown> : <p className="text-sm text-slate-500">Lời giải này đã bị xóa.</p>}
                     </div>

@@ -161,6 +161,7 @@ export interface ExplanationFeedbackAdmin {
   user: { fullName: string; email: string };
   exam: { title: string; threadId: string };
   explanation: string | null; // lời giải đang lưu (null nếu đã bị xóa)
+  imageUrl?: string | null; // ảnh câu hỏi để đối chiếu; backend cũ không có
   model: string | null;
 }
 
