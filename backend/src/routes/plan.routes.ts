@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { makeLimiter } from "../middlewares/rateLimit.middlewares";
 import type { Request, Response } from "express";
-import { authenticate, requireVerifiedMember } from "../middlewares/auth.middlewares";
+import { authenticate, optionalAuthenticate, requireVerifiedMember } from "../middlewares/auth.middlewares";
 import { idempotent } from "../middlewares/idempotency.middlewares";
 import { z } from "zod";
 import { PLAN_CODES, TICKET_VALID_DAYS } from "../constants/plan";
@@ -12,19 +12,20 @@ import { planService } from "../services/plan.service";
 
 const limiter = makeLimiter({ limit: 60 });
 
-// Bản frontend cũ không gửi body: coi như mua gói Pro như trước
-const purchaseBody = z.preprocess((v) => v ?? {}, z.object({ plan: z.enum(PLAN_CODES).default("PRO") }));
+// Bản frontend cũ không gửi body: coi như mua gói Pro như trước. expectedPrice = giá đang hiện trên trang, lệch giá thật thì báo 409
+const purchaseBody = z.preprocess((v) => v ?? {}, z.object({ plan: z.enum(PLAN_CODES).default("PRO"), expectedPrice: z.number().int().nonnegative().optional() }));
 
 const planRouter = Router();
 
 // Công khai: trang giới thiệu gói hiện cho cả khách
-planRouter.get("/", limiter, (_req: Request, res: Response) => {
-  res.json(new ResponseClient({ data: planService.info() }));
+planRouter.get("/", limiter, optionalAuthenticate, async (req: Request, res: Response) => {
+  res.json(new ResponseClient({ data: await planService.publicInfo(req.user?.id) }));
 });
 
 // Mua / gia hạn: cần đăng nhập + email đã xác minh (dịch vụ trừ credit); chống bấm đúp bằng idempotent
 planRouter.post("/purchase", authenticate, requireVerifiedMember, idempotent, limiter, validate(purchaseBody), async (req: Request, res: Response) => {
-  const data = await planService.purchase(req.user!.id, getValidated<z.infer<typeof purchaseBody>>(res).plan);
+  const body = getValidated<z.infer<typeof purchaseBody>>(res);
+  const data = await planService.purchase(req.user!.id, body.plan, body.expectedPrice);
   res.json(new ResponseClient({ message: data.renewed ? "Đã gia hạn gói Pro" : "Đã kích hoạt gói Pro", data }));
 });
 
@@ -39,7 +40,8 @@ planRouter.get("/tickets", authenticate, limiter, async (req: Request, res: Resp
 });
 
 planRouter.post("/tickets", authenticate, requireVerifiedMember, idempotent, limiter, validate(purchaseBody), async (req: Request, res: Response) => {
-  const data = await planService.purchaseTicket(req.user!.id, getValidated<z.infer<typeof purchaseBody>>(res).plan);
+  const body = getValidated<z.infer<typeof purchaseBody>>(res);
+  const data = await planService.purchaseTicket(req.user!.id, body.plan, body.expectedPrice);
   res.json(new ResponseClient({ message: `Đã mua vé. Hãy kích hoạt trong vòng ${TICKET_VALID_DAYS} ngày kể từ hôm nay`, data }));
 });
 

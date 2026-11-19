@@ -1372,7 +1372,7 @@ model MarketingBroadcast {
   body        String          @db.Text // plain text, escaped when rendered
   ctaLabel    String          @map("cta_label") @db.VarChar(40)
   ctaPath     String          @map("cta_path") @db.VarChar(120) // internal path only
-  segment     String          @db.VarChar(20) // all | pro | free | inactive | exam_soon
+  segment     String          @db.VarChar(20) // all | pro | free | inactive | exam_soon | upgrade
   segmentDays Int?            @map("segment_days") // inactive: days without activity (7..180)
   status      BroadcastStatus @default(DRAFT)
   sendingLock Boolean?        @unique @map("sending_lock") // true only while SENDING: at most one SENDING broadcast

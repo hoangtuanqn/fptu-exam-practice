@@ -1,17 +1,17 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Crown } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
-import { useApi } from "@/shared/hooks/useApi";
 import { isPro, proDaysLeft } from "@/shared/utils/pro";
-import { planApi } from "./plan.api";
+import { activePromo, usePlanInfo } from "./semesterPromo";
 
 const vnd = (n: number) => `${n.toLocaleString("vi-VN")}đ`;
 
 // Dải mời nâng cấp ở trang chủ: một dòng, vàng nổi bật. Ẩn khi đã là Pro hoặc chưa tải được giá.
 export function ProTeaser() {
   const { user } = useAuth();
-  const plan = useApi(() => planApi.info(), []).data;
-  if (!plan) return null;
+  const plan = usePlanInfo().data;
+  // Đang có ưu đãi kỳ mới: thanh ưu đãi ở đầu trang đã mời, không lặp thêm một dải nữa
+  if (!plan || activePromo(plan)) return null;
   const days = proDaysLeft(user);
   // Đang là Pro và còn nhiều ngày: không làm phiền. Còn ≤ 7 ngày: nhắc gia hạn (một dòng, cùng kiểu dải vàng).
   if (isPro(user) && days > 7) return null;

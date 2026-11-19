@@ -13,6 +13,17 @@ export interface PlanInfo {
   sprint: { code: string; name: string; days: number; price: number }; // gói Nước rút ngắn hạn
   ticket?: { validDays: number; maxOpen: number }; // vé Pro (mua trước, kích hoạt sau); máy chủ cũ chưa có thì không hiện lựa chọn này
   benefits: { freeFetch: boolean; freeExplain: boolean; freePe: boolean; unlimitedReview?: boolean; frequentQuestions?: boolean; topicReport?: boolean };
+  semesterPromo?: SemesterPromo | null; // ưu đãi kỳ mới cho gói Pro; máy chủ cũ chưa có hoặc null = không có ưu đãi
+}
+
+export interface SemesterPromo {
+  term: string; // ví dụ SP27
+  price: number; // giá ưu đãi (credit)
+  originalPrice: number;
+  percentOff: number;
+  endsAt: string; // ISO
+  used: boolean; // tài khoản này đã mua giá ưu đãi trong đợt: trả giá thường
+  buyers?: number; // số tài khoản đã mua giá ưu đãi trong đợt (đếm thật); máy chủ cũ không có
 }
 
 export interface PurchaseResult {
@@ -53,9 +64,10 @@ export interface PlanSignals {
 
 export const planApi = {
   info: () => http.get<PlanInfo>("/plan"),
-  purchase: (plan: "PRO" | "SPRINT" = "PRO") => http.post<PurchaseResult>("/plan/purchase", { plan }),
+  // expectedPrice = giá đang hiện trên màn hình; giá thật đã đổi thì máy chủ báo 409, không trừ tiền
+  purchase: (plan: "PRO" | "SPRINT" = "PRO", expectedPrice?: number) => http.post<PurchaseResult>("/plan/purchase", { plan, expectedPrice }),
   signals: () => http.get<PlanSignals>("/plan/signals"),
   tickets: () => http.get<ProTicket[]>("/plan/tickets"),
-  buyTicket: (plan: "PRO" | "SPRINT" = "PRO") => http.post<TicketPurchaseResult>("/plan/tickets", { plan }),
+  buyTicket: (plan: "PRO" | "SPRINT" = "PRO", expectedPrice?: number) => http.post<TicketPurchaseResult>("/plan/tickets", { plan, expectedPrice }),
   activateTicket: (id: string) => http.post<ActivateResult>(`/plan/tickets/${id}/activate`, {}),
 };

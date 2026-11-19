@@ -29,8 +29,8 @@ export const PUBLIC_PAGES: Record<string, PageSeo> = {
     index: true,
   },
   "/pro": {
-    title: "Gói Pro 4 tháng chỉ 99.000đ, không giới hạn lượt",
-    description: "Một lần 99.000đ dùng 4 tháng, rẻ hơn 93.000đ so với mua lẻ trên FuOverflow. Không giới hạn lượt lấy đề và giải thích AI.",
+    title: "Gói Pro trọn kỳ, không giới hạn lượt",
+    description: "Trả một lần dùng cả kỳ, rẻ hơn nhiều so với mua lẻ trên FuOverflow. Không giới hạn lượt lấy đề và giải thích AI.",
     index: true,
   },
   "/changelog": {

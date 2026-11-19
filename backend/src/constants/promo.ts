@@ -1,3 +1,5 @@
+import { PRO_PLAN } from "./plan";
+
 // Cấu hình ưu đãi & khuyến mãi (admin chỉnh ở trang Ưu đãi, lưu trong bảng settings với tiền tố "promo.")
 export interface BonusTier {
   min: number; // nạp từ mức này (VND) trở lên
@@ -14,6 +16,11 @@ export interface PromoConfig {
   upsellDepositTier: boolean; // gợi ý nạp thêm một chút để lên bậc thưởng kế tiếp
   upsellFirstRun: boolean; // danh sách "Bắt đầu" cho người mới ở trang chủ
   upsellProNudge: boolean; // lời mời Pro ở trang chủ dựa trên dữ liệu thật: kỳ thi sắp tới, tiền đã chi lẻ, vé Pro chưa kích hoạt
+  semesterPromoEnabled: boolean; // ưu đãi kỳ mới: giảm giá gói Pro 4 tháng, mỗi tài khoản một lần mỗi đợt
+  semesterPromoTerm: string; // kỳ của đợt ưu đãi, ví dụ SP27
+  semesterPromoPrice: number; // giá ưu đãi (credit), luôn thấp hơn PRO_PLAN.price
+  semesterPromoEndsAt: string; // hạn chót (ISO); qua hạn thì tự hết, không cần cron
+  semesterPromoStartedAt: string; // máy chủ tự đặt khi bật hoặc đổi kỳ: định danh đợt, mua từ lúc này mới tính là đã dùng
 }
 
 export const PROMO_DEFAULTS: PromoConfig = {
@@ -30,7 +37,34 @@ export const PROMO_DEFAULTS: PromoConfig = {
   upsellDepositTier: true,
   upsellFirstRun: true,
   upsellProNudge: true,
+  semesterPromoEnabled: false,
+  semesterPromoTerm: "",
+  semesterPromoPrice: 69_000,
+  semesterPromoEndsAt: "",
+  semesterPromoStartedAt: "",
 };
+
+export const SEMESTER_TERM = /^(SP|SU|FA)\d{2}$/;
+export const SEMESTER_PROMO_MIN_PRICE = 1000;
+
+type SemesterPromo = Pick<PromoConfig, "semesterPromoEnabled" | "semesterPromoTerm" | "semesterPromoPrice" | "semesterPromoEndsAt" | "semesterPromoStartedAt">;
+
+// Ưu đãi kỳ mới đang chạy: đã bật, có kỳ, giá hợp lệ và chưa qua hạn chót
+export const semesterPromoActive = (c: SemesterPromo, now = Date.now()) => {
+  const end = Date.parse(c.semesterPromoEndsAt);
+  return c.semesterPromoEnabled && !!c.semesterPromoTerm && c.semesterPromoPrice > 0 && c.semesterPromoPrice < PRO_PLAN.price && end > now;
+};
+
+// Giá gói Pro 4 tháng cho một người: ưu đãi chỉ áp dụng khi đang chạy và người này chưa dùng trong đợt này
+export const proPriceFor = (c: SemesterPromo, used: boolean, now = Date.now()) => (semesterPromoActive(c, now) && !used ? c.semesterPromoPrice : PRO_PLAN.price);
+
+// Mốc bắt đầu đợt sau khi lưu: bật từ tắt sang hoặc đổi kỳ khi đang bật thì là đợt mới, còn lại giữ mốc cũ
+export const nextSemesterStartedAt = (cur: SemesterPromo, enabled: boolean, term: string, now = new Date()) =>
+  enabled && (!cur.semesterPromoEnabled || cur.semesterPromoTerm !== term || !cur.semesterPromoStartedAt) ? now.toISOString() : cur.semesterPromoStartedAt;
+
+// Chỉ bắt hạn chót ở tương lai khi admin đang bật hoặc đổi kỳ/hạn; đợt đã tự hết hạn thì lưu phần khác (mốc thưởng nạp…) vẫn được
+export const semesterEndsAtNeedsFuture = (cur: SemesterPromo, enabled: boolean, term: string, endsAt: string) =>
+  enabled && (!cur.semesterPromoEnabled || cur.semesterPromoTerm !== term || Date.parse(cur.semesterPromoEndsAt) !== Date.parse(endsAt));
 
 export const PROMO_KEY_PREFIX = "promo.";
 

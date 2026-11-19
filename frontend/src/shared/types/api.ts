@@ -341,6 +341,12 @@ export interface PromoSettings {
   upsellDepositTier?: boolean; // công tắc: gợi ý lên bậc thưởng nạp kế tiếp
   upsellFirstRun?: boolean; // công tắc: danh sách Bắt đầu cho người mới
   upsellProNudge?: boolean; // công tắc: lời mời Pro ở trang chủ (kỳ thi sắp tới, tiền đã chi lẻ, vé chưa kích hoạt)
+  // Ưu đãi kỳ mới cho gói Pro; máy chủ cũ chưa có thì ẩn mục này
+  semesterPromoEnabled?: boolean;
+  semesterPromoTerm?: string; // ví dụ SP27
+  semesterPromoPrice?: number;
+  semesterPromoEndsAt?: string; // ISO; rỗng = chưa đặt
+  semesterPromoStartedAt?: string; // máy chủ tự đặt, chỉ để xem
 }
 
 // Số liệu ưu đãi hiện hành cho trang chủ (công khai)

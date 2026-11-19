@@ -19,6 +19,12 @@ import { GradeBridgeHost } from "@/features/grade/GradeBridgeHost";
 import { FreeTurnNotice } from "@/features/link-reward/FreeTurnNotice";
 import { WhatsNewDialog } from "@/features/changelog/WhatsNewDialog";
 import PracticePage from "@/features/practice/PracticePage";
+import { SemesterPromoBar } from "@/features/plan/SemesterPromoBar";
+
+// Không hiện ưu đãi khi đang luyện câu sai (màn làm bài)
+function AccountPromoBar() {
+  return useLocation().pathname.startsWith("/account/review/practice") ? null : <SemesterPromoBar />;
+}
 
 // "/" và "/exam/:examId" dùng chung một thể hiện của trang để đổi địa chỉ không làm mất bài đang làm
 function PracticeRoute() {
@@ -143,7 +149,7 @@ export default function App() {
         <Route element={<RequireAuth />}>
           {/* Nút Làm đề / Tải đề PE của tiện ích Chrome mở trang này */}
           <Route path="/fetch" element={<FetchLinkPage />} />
-          <Route path="/account" element={<PanelLayout title="Tài khoản" items={ACCOUNT_NAV} />}>
+          <Route path="/account" element={<PanelLayout title="Tài khoản" items={ACCOUNT_NAV} notice={<AccountPromoBar />} />}>
             <Route index element={<OverviewPage />} />
             <Route path="attempts" element={<AttemptsPage />} />
             <Route path="attempts/:id" element={<AttemptDetailPage />} />

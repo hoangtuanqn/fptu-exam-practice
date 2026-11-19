@@ -288,11 +288,13 @@ export function PanelLayout({
   items,
   collapsible = false,
   actions,
+  notice,
 }: {
   title: string;
   items: NavItem[];
   collapsible?: boolean;
   actions?: ReactNode;
+  notice?: ReactNode; // thanh thông báo mỏng dưới thanh ứng dụng
 }) {
   const { user } = useAuth();
   const { pathname } = useLocation();
@@ -390,6 +392,7 @@ export function PanelLayout({
         </header>
 
         <VerifyEmailNotice />
+        {notice}
 
         <main className="flex-1 px-4 pb-6 pt-2 sm:px-6 expanded:px-8 expanded:pb-8">
           <div

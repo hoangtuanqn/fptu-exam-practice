@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Crown } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
@@ -22,7 +22,9 @@ import { ProPlans } from "./pro/ProPlans";
 import { ProSteps } from "./pro/ProSteps";
 import { ProTickets } from "./pro/ProTickets";
 import { vnd } from "./pro/money";
+import { PromoCountdown } from "./PromoCountdown";
 import { UpgradeDialog } from "./UpgradeDialog";
+import { activePromo, resetPlanInfo, usePlanInfo, withPromo } from "./semesterPromo";
 
 // Trang bán gói Pro (công khai). Bố cục: tiêu đề -> hai gói cạnh nhau -> quyền lợi -> so với VIP -> 3 bước -> hỏi đáp.
 // Một hành động chính (mua Pro), gói Nước rút là lựa chọn ngắn hạn; thanh mua nổi hiện khi hai gói đã cuộn khỏi màn hình.
@@ -30,7 +32,7 @@ export default function PlanPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
-  const info = useApi(() => planApi.info(), []);
+  const info = usePlanInfo();
   const fetchPrice = useApi(() => examImportApi.price(), []).data?.price ?? 0;
   const [open, setOpen] = useState<false | "pro" | "sprint">(false);
   const [openLater, setOpenLater] = useState(false); // mở hộp mua ở chế độ "giữ vé, dùng sau"
@@ -42,7 +44,13 @@ export default function PlanPage() {
 
   const pro = isPro(user);
   const unverified = !!user && !user.emailVerifiedAt;
-  const plan = info.data;
+  // Có ưu đãi kỳ mới thì mọi chỗ hiện giá Pro (và số tiền trừ) dùng giá ưu đãi
+  const promo = useMemo(() => activePromo(info.data), [info.data]);
+  const plan = useMemo(() => info.data && withPromo(info.data, promo), [info.data, promo]);
+  const reloadPlan = () => {
+    resetPlanInfo();
+    info.reload();
+  };
   // Chữ nút theo ngữ cảnh: khách được báo trước sẽ phải đăng nhập (đỡ bất ngờ), người đang là Pro thấy "Gia hạn"
   const label = !user ? "Đăng nhập để nâng cấp Pro" : pro ? "Gia hạn Pro" : "Nâng cấp Pro ngay";
 
@@ -80,7 +88,7 @@ export default function PlanPage() {
       <SiteHeader />
 
       <main className="flex-1 pb-20">
-        {info.loading ? (
+        {info.loading && !plan ? (
           <Loading />
         ) : info.error || !plan ? (
           <div className="mx-auto max-w-xl p-6">
@@ -96,7 +104,7 @@ export default function PlanPage() {
             )}
             <ProTickets tickets={tickets.data ?? []} onActivate={setActivating} />
             <div ref={plansRef}>
-              <ProPlans plan={plan} label={label} newExpiry={addMonths(startsAt, plan.months)} onBuy={cta} />
+              <ProPlans plan={plan} promo={promo} label={label} newExpiry={addMonths(startsAt, plan.months)} onBuy={cta} />
             </div>
             <ProBenefits plan={plan} fetchPrice={fetchPrice} />
             <ProCompare plan={plan} />
@@ -117,7 +125,13 @@ export default function PlanPage() {
           <div className="pro-rise flex items-center gap-3 rounded-full border border-[#ffc61f]/40 bg-[#1d1500]/95 py-2 pl-5 pr-2 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.6)] backdrop-blur">
             <div className="min-w-0 flex-1 leading-tight">
               <div className="truncate text-xs text-[#fff6dc]/70">
-                <span className="line-through">{vnd(plan.fuoPrice)}</span> · tiết kiệm {vnd(plan.savings)}
+                <span className="line-through">{vnd(promo?.originalPrice ?? plan.fuoPrice)}</span> · {promo ? (
+                  <>
+                    ưu đãi kỳ {promo.term} còn <PromoCountdown endsAt={promo.endsAt} />
+                  </>
+                ) : (
+                  `tiết kiệm ${vnd(plan.savings)}`
+                )}
               </div>
               <div className="text-lg font-extrabold tabular-nums text-[#ffc61f]">
                 {vnd(plan.price)} <span className="text-xs font-semibold text-[#fff6dc]/70">/ {plan.months} tháng</span>
@@ -135,10 +149,12 @@ export default function PlanPage() {
           plan={plan}
           kind={open}
           defaultLater={openLater}
+          onPriceChanged={reloadPlan}
           onClose={() => {
             setOpen(false);
             setOpenLater(false);
             tickets.reload();
+            reloadPlan(); // đã mua giá ưu đãi thì lần sau là giá thường
           }}
         />
       )}

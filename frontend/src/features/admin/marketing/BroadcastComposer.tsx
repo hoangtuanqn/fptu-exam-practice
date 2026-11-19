@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Loader2, PenLine } from "lucide-react";
+import { Crown, Loader2, PenLine } from "lucide-react";
+import { planApi } from "@/features/plan/plan.api";
+import { vnd } from "@/features/plan/pro/money";
 import { ApiError } from "@/shared/api/client";
 import { errorMessage } from "@/shared/api/errors";
 import { useToast } from "@/shared/context/ToastContext";
@@ -15,7 +17,28 @@ export const SEGMENTS: { value: BroadcastSegment; label: string }[] = [
   { value: "free", label: "Chưa dùng Pro" },
   { value: "inactive", label: "Không hoạt động từ N ngày" },
   { value: "exam_soon", label: "Có buổi thi trong 30 ngày" },
+  { value: "upgrade", label: "Chưa có Pro hoặc Pro hết hạn trong 30 ngày" },
 ];
+
+// Mẫu thư mời mua Pro theo đợt ưu đãi kỳ mới đang bật (giá, hạn chót lấy thật từ máy chủ); admin vẫn sửa được trước khi lưu
+async function promoTemplate(): Promise<Partial<Form> | null> {
+  const plan = await planApi.info();
+  const p = plan.semesterPromo;
+  if (!p || Date.parse(p.endsAt) <= Date.now()) return null;
+  const end = new Date(p.endsAt).toLocaleDateString("vi-VN");
+  return {
+    subject: `Ưu đãi kỳ ${p.term}: Pro ${plan.months} tháng chỉ ${vnd(p.price)}`,
+    body: [
+      `Kỳ ${p.term} sắp bắt đầu. Từ nay tới hết ngày ${end}, gói Pro ${plan.months} tháng chỉ còn ${vnd(p.price)} thay vì ${vnd(p.originalPrice)} (giảm ${p.percentOff}%).`,
+      "Với Pro, bạn lấy đề FuOverflow không bị trừ credit, xem giải thích AI cho mọi câu, ôn Sổ câu sai không giới hạn và xem đủ Câu hay ra của từng môn.",
+      `Mỗi tài khoản được mua giá ưu đãi một lần. Sau ngày ${end}, giá trở lại ${vnd(p.originalPrice)}.`,
+      ...(plan.ticket ? [`Chưa muốn dùng ngay? Bạn có thể mua vé Pro bây giờ để giữ giá, rồi kích hoạt khi vào kỳ (trong ${plan.ticket.validDays} ngày).`] : []),
+    ].join("\n\n"),
+    ctaLabel: "Xem ưu đãi Pro",
+    ctaPath: "/pro",
+    segment: "upgrade",
+  };
+}
 
 export const segmentLabel = (b: Pick<Broadcast, "segment" | "segmentDays">) =>
   b.segment === "inactive" ? `Không hoạt động từ ${b.segmentDays ?? "N"} ngày` : (SEGMENTS.find((s) => s.value === b.segment)?.label ?? b.segment);
@@ -108,6 +131,19 @@ export function BroadcastComposer({ onClose, onCreated }: { onClose: () => void;
           void save();
         }}
       >
+        <Button
+          type="button"
+          size="sm"
+          variant="tonal"
+          disabled={busy}
+          onClick={() =>
+            void promoTemplate()
+              .then((t) => (t ? setForm((f) => ({ ...f, ...t })) : toast.error("Chưa bật ưu đãi kỳ mới (hoặc đã hết hạn) ở trang Khuyến mãi")))
+              .catch((err) => toast.error(errorMessage(err, "Chưa tải được thông tin ưu đãi")))
+          }
+        >
+          <Crown size={15} /> Dùng mẫu ưu đãi kỳ mới
+        </Button>
         <Input label="Tiêu đề thư" value={form.subject} maxLength={MAX.subject} onChange={(e) => set("subject", e.target.value)} error={errors.subject} />
         <Field label="Nội dung" error={errors.body} hint={`Văn bản thường, cách đoạn bằng dòng trống, không dùng HTML. ${form.body.trim().length}/${MAX.body}`}>
           <textarea

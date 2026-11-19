@@ -5,6 +5,7 @@ export interface Feature {
   title: string;
   text: string;
   pro?: boolean; // tính năng có ưu đãi riêng cho gói Pro
+  proPrice?: boolean; // ghép giá gói Pro hiện tại (lấy từ máy chủ) vào đầu `text`
 }
 export interface FeatureGroup {
   icon: LucideIcon;
@@ -52,7 +53,7 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
     features: [
       { icon: Wallet, title: "Nạp credit tự động", text: "Chuyển khoản qua mã QR, credit cộng tự động, nạp càng nhiều thưởng càng lớn." },
       { icon: CalendarCheck, title: "Điểm danh và giới thiệu", text: "Điểm danh mỗi ngày nhận credit, mời bạn bè cả hai cùng có thưởng." },
-      { icon: Crown, title: "Gói Pro 4 tháng", text: "99.000đ, không giới hạn lượt lấy đề và giải thích AI." },
+      { icon: Crown, title: "Gói Pro trọn kỳ", text: "Không giới hạn lượt lấy đề và giải thích AI.", proPrice: true },
     ],
   },
 ];

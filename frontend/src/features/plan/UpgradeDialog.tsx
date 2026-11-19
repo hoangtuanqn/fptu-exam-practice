@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Check, Crown, PartyPopper, Sparkles, Ticket } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { depositLink } from "@/features/explanation/depositLink";
+import { ApiError } from "@/shared/api/client";
 import { errorMessage } from "@/shared/api/errors";
 import { Button, buttonClass } from "@/shared/ui/Button";
 import { ChargeSummary } from "@/shared/ui/ChargeSummary";
@@ -11,11 +12,13 @@ import { Modal, ModalActions, ModalTitle } from "@/shared/ui/Modal";
 import { formatCredit, formatDate } from "@/shared/utils/formatters";
 import { addMonths, isPro } from "@/shared/utils/pro";
 import { planApi, type PlanInfo, type PurchaseResult, type TicketPurchaseResult } from "./plan.api";
+import { resetPlanInfo } from "./semesterPromo";
 
 const CONFETTI = ["#ffc61f", "#fff1c2", "#f0a800", "#ffffff", "#e7c26c", "#ff8a3d"];
 
 // Hộp thoại xác nhận mua / gia hạn Pro: nói rõ trừ bao nhiêu, còn lại bao nhiêu, hạn mới là ngày nào. Thành công thì chúc mừng.
-export function UpgradeDialog({ plan, kind = "pro", defaultLater = false, onClose }: { plan: PlanInfo; kind?: "pro" | "sprint"; defaultLater?: boolean; onClose: () => void }) {
+// `plan.price` là giá đang hiện (đã tính ưu đãi); máy chủ báo giá đổi (409) thì gọi onPriceChanged để tải lại giá
+export function UpgradeDialog({ plan, kind = "pro", defaultLater = false, onClose, onPriceChanged }: { plan: PlanInfo; kind?: "pro" | "sprint"; defaultLater?: boolean; onClose: () => void; onPriceChanged?: () => void }) {
   const { user, setUser } = useAuth();
   const location = useLocation();
   const [busy, setBusy] = useState(false);
@@ -41,15 +44,18 @@ export function UpgradeDialog({ plan, kind = "pro", defaultLater = false, onClos
     setError(null);
     try {
       if (later) {
-        const result = await planApi.buyTicket(sprint ? "SPRINT" : "PRO");
+        const result = await planApi.buyTicket(sprint ? "SPRINT" : "PRO", price);
+        resetPlanInfo();
         setUser(result.user);
         setTicketDone(result);
       } else {
-        const result = await planApi.purchase(sprint ? "SPRINT" : "PRO");
+        const result = await planApi.purchase(sprint ? "SPRINT" : "PRO", price);
+        resetPlanInfo();
         setUser(result.user);
         setDone(result);
       }
     } catch (err) {
+      if (err instanceof ApiError && err.status === 409) onPriceChanged?.();
       setError(errorMessage(err, later ? "Chưa mua được vé, bạn thử lại nhé" : "Chưa nâng cấp được, bạn thử lại nhé"));
     } finally {
       setBusy(false);

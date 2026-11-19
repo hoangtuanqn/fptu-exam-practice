@@ -10,11 +10,14 @@ import { Loading } from "@/shared/ui/Feedback";
 import { PublicExamList } from "@/features/exam-store/PublicExamList";
 import { subjectApi } from "@/features/subject/subject.api";
 import NotFoundPage from "@/app/NotFoundPage";
+import { vnd } from "@/features/plan/pro/money";
+import { usePlanPrices } from "@/features/plan/semesterPromo";
 
 // Trang giới thiệu một môn (SEO): /mon/pro192. Nội dung chính (tên, mô tả) có sẵn trong HTML lúc build; số đề và các chương lấy từ máy chủ khi mở trang.
 export default function SubjectPage() {
   const { code = "" } = useParams();
   const subject = SUBJECTS.find((s) => s.code.toLowerCase() === code.toLowerCase());
+  const prices = usePlanPrices();
   const info = useApi(() => (subject ? subjectApi.info(subject.code) : Promise.reject(new Error("no subject"))), [subject?.code]);
   if (!subject) return <NotFoundPage />;
   const d = info.data;
@@ -76,7 +79,8 @@ export default function SubjectPage() {
         <section className="mt-10 rounded-m3-md bg-surface-container-low p-5">
           <h2 className="md-title-medium text-on-surface">Ôn nhanh trước kỳ thi</h2>
           <p className="md-body-medium mt-1 text-on-surface-variant">
-            Gói Nước rút 14 ngày chỉ 29.000đ hoặc Pro 4 tháng 99.000đ: lấy đề không bị trừ credit, xem đủ câu hay ra, báo cáo điểm yếu theo chủ đề.
+            {prices.pro !== null && prices.sprint !== null ? `Gói Nước rút ${prices.sprintDays} ngày chỉ ${vnd(prices.sprint)} hoặc Pro ${prices.months} tháng ${vnd(prices.pro)}: ` : "Gói Nước rút hoặc Pro: "}
+            lấy đề không bị trừ credit, xem đủ câu hay ra, báo cáo điểm yếu theo chủ đề.
           </p>
           <Link to="/pro" className={`${buttonClass({ variant: "primary" })} mt-3`}>
             Xem các gói

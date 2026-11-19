@@ -12,6 +12,7 @@ import { ActivateTicketDialog } from "./ActivateTicketDialog";
 import { planApi, type PlanInfo, type PlanSignals, type ProTicket } from "./plan.api";
 import { vnd } from "./pro/money";
 import { ProTeaser } from "./ProTeaser";
+import { activePromo, promoBarOwnsToday, usePlanInfo, withPromo } from "./semesterPromo";
 
 const DAY_MS = 86_400_000;
 const EXPIRY_WARN_DAYS = 14; // vé còn ngần này ngày hạn thì báo "sắp hết hạn"
@@ -73,7 +74,7 @@ export function ProNudge() {
   const daysLeft = proDaysLeft(user);
   const newcomer = !!user && Date.now() - new Date(user.createdAt).getTime() < NEWCOMER_MS;
   const eligible = !!user && flags.proNudge;
-  const plan = useApi(() => (eligible ? planApi.info() : Promise.resolve(null)), [eligible]);
+  const plan = usePlanInfo(eligible);
   const tickets = useApi(() => (eligible ? planApi.tickets() : Promise.resolve([] as ProTicket[])), [eligible, user?.id]);
   const signals = useApi(() => (eligible && !pro ? planApi.signals() : Promise.resolve(null)), [eligible, pro, user?.id]);
   const [closed, setClosed] = useState<string | null>(null);
@@ -88,9 +89,10 @@ export function ProNudge() {
 
   // Đang tải dữ kiện thì chưa hiện gì để khỏi nháy từ dải Pro thường sang lời mời
   if (eligible && (tickets.loading || signals.loading || plan.loading)) return null;
+  if (promoBarOwnsToday()) return null; // thanh ưu đãi kỳ mới đang hiện: không chồng thêm lời mời
   if (!visible || !choice || !plan.data) return <ProTeaser />;
 
-  const c = content(choice, plan.data);
+  const c = content(choice, withPromo(plan.data, activePromo(plan.data)));
   const Icon = c.icon;
   const click = () => trackPrompt(choice.surface, "click");
   const cta =

@@ -1,5 +1,7 @@
 import cron from "node-cron";
 import { z } from "zod";
+import { PRO_PLAN } from "../../constants/plan";
+import { SEMESTER_PROMO_MIN_PRICE, SEMESTER_TERM } from "../../constants/promo";
 
 // Cron 5 trường (phút giờ ngày tháng thứ, tối thiểu 1 phút/lần) hoặc 6 trường (thêm GIÂY ở đầu).
 // Với 6 trường chỉ nhận giây dạng "giá trị cố định" hoặc "*/N" với N >= 10, để không gọi API SePay quá dồn dập.
@@ -76,6 +78,16 @@ export const updatePromoBody = z.object({
   upsellDepositTier: z.boolean().optional(),
   upsellFirstRun: z.boolean().optional(),
   upsellProNudge: z.boolean().optional(),
+  // Ưu đãi kỳ mới: tùy chọn (thiếu = giữ nguyên); mốc bắt đầu đợt do máy chủ đặt nên không nhận từ client
+  semesterPromoEnabled: z.boolean().optional(),
+  semesterPromoTerm: z.string().trim().toUpperCase().refine((v) => v === "" || SEMESTER_TERM.test(v), "Kỳ phải có dạng SP27, SU27 hoặc FA26").optional(),
+  semesterPromoPrice: z
+    .number("Giá không hợp lệ")
+    .int("Phải là số nguyên")
+    .min(SEMESTER_PROMO_MIN_PRICE, "Tối thiểu 1.000")
+    .max(PRO_PLAN.price - 1, `Phải thấp hơn giá gốc ${PRO_PLAN.price.toLocaleString("vi-VN")}`)
+    .optional(),
+  semesterPromoEndsAt: z.string().trim().refine((v) => v === "" || !Number.isNaN(Date.parse(v)), "Thời điểm không hợp lệ").optional(),
 });
 export type UpdatePromoBody = z.infer<typeof updatePromoBody>;
 
