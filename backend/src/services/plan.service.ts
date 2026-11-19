@@ -54,7 +54,7 @@ const PRICE_CHANGED = "Giá gói vừa thay đổi, vui lòng tải lại trang 
 
 // Người này đã dùng ưu đãi kỳ mới của đợt hiện tại chưa (đợt không chạy thì coi như chưa)
 const promoUsed = (db: Db, userId: string, promo: PromoConfig) =>
-  semesterPromoActive(promo) ? proTicketRepository.usedPromo(db, userId, promo.semesterPromoPrice, new Date(promo.semesterPromoStartedAt || 0)) : Promise.resolve(false);
+  semesterPromoActive(promo) ? proTicketRepository.usedPromo(db, userId, new Date(promo.semesterPromoStartedAt || 0)) : Promise.resolve(false);
 
 /**
  * Giá thật phải trả cho một gói, PHẢI gọi trong transaction sau khi đã khóa dòng người dùng: hai yêu cầu cùng lúc chạy lần lượt
