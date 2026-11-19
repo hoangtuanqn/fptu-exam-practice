@@ -26,11 +26,11 @@ export function splitSlogan(slogan: string) {
 export const LANDING_NOTICE = {
   image: "/promo/fcode-arcode.jpg",
   imageAlt: "Poster tuyển thành viên của CLB F-Code",
-  badge: "Tin vui cho dân FPTU",
-  title: "CLB F-Code đang tuyển thành viên, vào chơi thôi!",
-  lead: "F-Code là câu lạc bộ học thuật đầu tiên của ĐH FPT TP.HCM, thành lập từ 28/08/2014, với 5 team chuyên môn: FE, BE, AI, DevOps và Game. Không cần giỏi sẵn: F-Code tìm những bạn chịu khó học hỏi, kỹ thuật cứ từ từ rồi sẽ tới. Tham gia cùng tụi mình nhé!",
-  perks: ["Tham quan doanh nghiệp", "Học hỏi từ các anh chị đi trước", "Làm dự án thực tế", "Kết bạn, vui như một gia đình"],
-  goodNews: "Thành viên F-Code là những người trực tiếp vận hành FEPass.top. Vào CLB là bạn được làm ra sản phẩm có người dùng thật mỗi ngày.",
+  badge: "Cơ hội cho sinh viên FPTU",
+  title: "Muốn học code mà chưa biết bắt đầu từ đâu? F-Code đang chờ bạn!",
+  lead: "F-Code là câu lạc bộ học thuật đầu tiên của ĐH FPT TP.HCM, hơn 11 năm kể từ ngày thành lập 28/08/2014. Ở đây có 5 crew để bạn chọn: FE, BE, AI, DevOps và Game. Tụi mình không cần bạn giỏi sẵn, chỉ cần bạn chịu khó học hỏi. Còn lại cứ để anh chị chỉ cho!",
+  perks: ["Tham quan doanh nghiệp", "Được anh chị kèm cặp", "Làm dự án thật, không phải bài tập", "Có thêm một đám bạn cùng chí hướng"],
+  goodNews: "Cả hệ thống FEPass.top mà bạn đang dùng đây là do thành viên F-Code trực tiếp vận hành. Vào CLB là bạn được ngồi cùng làm ra sản phẩm có người dùng thật.",
   rounds: [
     { name: "Vòng 1: Nộp đơn", when: "Đăng ký từ 12 – 22/11" },
     { name: "Vòng 2: Gặp nhau trò chuyện", when: "Phỏng vấn từ 01 – 09/12" },
