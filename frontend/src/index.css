@@ -199,6 +199,23 @@ h3 {
   }
 }
 
+/* Ô số liệu ở trang chủ: một vệt sáng quét qua mỗi ô một lần khi hiện ra */
+@keyframes stat-sweep {
+  from { transform: translateX(-130%); }
+  to { transform: translateX(130%); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .stat-tile::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(110deg, transparent 38%, rgba(255, 255, 255, 0.55) 50%, transparent 62%);
+    transform: translateX(-130%);
+    animation: stat-sweep 1.1s ease-out 0.5s 1 both;
+  }
+}
+
 /* Đồng hồ thi sắp hết giờ: số nhấp nháy (chỉ đổi opacity). Tắt chuyển động thì chỉ giữ chữ đậm + màu */
 @keyframes timer-blink { 50% { opacity: 0.35; } }
 @media (prefers-reduced-motion: no-preference) {
