@@ -23,4 +23,10 @@ export const proTicketRepository = {
   claim: (db: Db, id: string, userId: string, now: Date) => db.proTicket.updateMany({ where: { id, userId, activatedAt: null, expiresAt: { gt: now } }, data: { activatedAt: now } }),
 
   findPlan: (db: Db, id: string) => db.proTicket.findUnique({ where: { id }, select: { plan: true, price: true } }),
+
+  // Đã mua gói Pro giá ưu đãi trong đợt này chưa (mua thẳng hoặc mua vé, tính từ mốc bắt đầu đợt)
+  async usedPromo(db: Db, userId: string, price: number, since: Date) {
+    const where = { userId, plan: "PRO", price, createdAt: { gte: since } };
+    return !!(await db.planPurchase.findFirst({ where, select: { id: true } })) || !!(await db.proTicket.findFirst({ where, select: { id: true } }));
+  },
 };

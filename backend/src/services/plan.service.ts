@@ -1,8 +1,10 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "../configs/prisma";
 import { NUDGE_EXAM_WINDOW_DAYS, NUDGE_MIN_SPEND, NUDGE_SPEND_WINDOW_DAYS, PRO_BENEFITS, PRO_PLAN, SPRINT_PLAN, TICKET_MAX_OPEN, TICKET_VALID_DAYS, type PlanCode } from "../constants/plan";
+import { proPriceFor, semesterPromoActive, type PromoConfig } from "../constants/promo";
 import { planSignalRepository } from "../repositories/plan-signal.repository";
 import { proTicketRepository } from "../repositories/pro-ticket.repository";
+import type { Db } from "../repositories/wallet.repository";
 import { userRepository } from "../repositories/user.repository";
 import { userCache } from "../utils/user-cache";
 import { AppError } from "../rules/error";
@@ -10,6 +12,7 @@ import { isProUntil } from "../utils/pro";
 import { DAY_MS, vnDate } from "../utils/time";
 import { adminNoticeService } from "./admin-notice.service";
 import { notificationService } from "./notification.service";
+import { promoSettingService } from "./promo-setting.service";
 import { walletService } from "./wallet.service";
 
 const addDays = (from: Date, days: number) => new Date(from.getTime() + days * 86_400_000);
@@ -47,6 +50,24 @@ async function extendPro(tx: Prisma.TransactionClient, userId: string, code: Pla
   return { proExpiresAt: endsAt, renewed: startsAt > now };
 }
 
+const PRICE_CHANGED = "Giá gói vừa thay đổi, vui lòng tải lại trang để xem giá mới";
+
+// Người này đã dùng ưu đãi kỳ mới của đợt hiện tại chưa (đợt không chạy thì coi như chưa)
+const promoUsed = (db: Db, userId: string, promo: PromoConfig) =>
+  semesterPromoActive(promo) ? proTicketRepository.usedPromo(db, userId, promo.semesterPromoPrice, new Date(promo.semesterPromoStartedAt || 0)) : Promise.resolve(false);
+
+/**
+ * Giá thật phải trả cho một gói, PHẢI gọi trong transaction sau khi đã khóa dòng người dùng: hai yêu cầu cùng lúc chạy lần lượt
+ * nên lần sau thấy lần trước đã dùng ưu đãi. Gửi kèm `expectedPrice` mà lệch giá thật thì báo 409, không trừ tiền.
+ */
+async function priceFor(tx: Prisma.TransactionClient, userId: string, code: PlanCode, promo: PromoConfig, expectedPrice?: number) {
+  const { plan, duration } = planOf(code);
+  const price = code === "PRO" ? proPriceFor(promo, await promoUsed(tx, userId, promo)) : plan.price;
+  if (expectedPrice !== undefined && expectedPrice !== price) throw AppError.conflict(PRICE_CHANGED);
+  // Thời hạn kèm ghi chú ưu đãi, dùng chung cho ghi chú ví, thông báo admin và email
+  return { price, duration: price === plan.price ? duration : `${duration} (ưu đãi kỳ ${promo.semesterPromoTerm})` };
+}
+
 export const planService = {
   // Thông tin gói để hiện trang bán hàng; mức tiết kiệm luôn tính từ giá, không lưu cứng
   info() {
@@ -67,6 +88,25 @@ export const planService = {
     };
   },
 
+  // Như info() kèm ưu đãi kỳ mới đang chạy; `used` chỉ đúng khi đã đăng nhập và người này đã mua giá ưu đãi trong đợt
+  async publicInfo(userId?: string) {
+    const promo = await promoSettingService.get();
+    const base = this.info();
+    if (!semesterPromoActive(promo)) return { ...base, semesterPromo: null };
+    const price = promo.semesterPromoPrice;
+    return {
+      ...base,
+      semesterPromo: {
+        term: promo.semesterPromoTerm,
+        price,
+        originalPrice: base.price,
+        percentOff: Math.round(((base.price - price) / base.price) * 100),
+        endsAt: new Date(promo.semesterPromoEndsAt).toISOString(),
+        used: userId ? await promoUsed(prisma, userId, promo) : false,
+      },
+    };
+  },
+
   async isPro(userId: string): Promise<boolean> {
     const row = await prisma.user.findUnique({ where: { id: userId }, select: { proExpiresAt: true } });
     return isProUntil(row?.proExpiresAt);
@@ -76,16 +116,19 @@ export const planService = {
    * Mua (hoặc gia hạn) Pro bằng credit. Trừ tiền trước: lệnh UPDATE số dư khóa dòng người dùng nên hai yêu cầu cùng lúc
    * chạy lần lượt; đọc hạn hiện tại SAU khi đã khóa nên mua liên tiếp luôn cộng dồn đúng, không ghi đè nhau.
    */
-  async purchase(userId: string, code: PlanCode = "PRO") {
-    const { plan, duration } = planOf(code);
-    const result = await prisma.$transaction(async (tx) => {
-      const entry = await walletService.charge(tx, { userId, amount: plan.price, type: "PLAN_CHARGE", note: `Mua gói ${plan.name} ${duration}` });
-      const extended = await extendPro(tx, userId, code, plan.price);
-      return { ...extended, balanceAfter: entry.balanceAfter };
+  async purchase(userId: string, code: PlanCode = "PRO", expectedPrice?: number) {
+    const { plan } = planOf(code);
+    const promo = await promoSettingService.get();
+    const { price, duration, ...result } = await prisma.$transaction(async (tx) => {
+      await userRepository.incrementBalance(tx, userId, 0); // khóa dòng người dùng trước khi chốt giá
+      const { price, duration } = await priceFor(tx, userId, code, promo, expectedPrice);
+      const entry = await walletService.charge(tx, { userId, amount: price, type: "PLAN_CHARGE", note: `Mua gói ${plan.name} ${duration}` });
+      const extended = await extendPro(tx, userId, code, price);
+      return { ...extended, balanceAfter: entry.balanceAfter, price, duration };
     });
-    notificationService.proPurchased({ userId, planName: plan.name, duration, price: plan.price, renewed: result.renewed, expiresAt: result.proExpiresAt, balanceAfter: result.balanceAfter });
+    notificationService.proPurchased({ userId, planName: plan.name, duration, price, renewed: result.renewed, expiresAt: result.proExpiresAt, balanceAfter: result.balanceAfter });
     userCache.invalidate(userId); // đã commit: lần xác thực sau thấy ngay gói Pro mới
-    adminNoticeService.push("plan.purchased", { title: `${result.renewed ? "Gia hạn" : "Mua"} gói ${plan.name} ${duration}`, body: `${plan.price.toLocaleString("vi-VN")} credit`, userId, link: "/admin/purchases" });
+    adminNoticeService.push("plan.purchased", { title: `${result.renewed ? "Gia hạn" : "Mua"} gói ${plan.name} ${duration}`, body: `${price.toLocaleString("vi-VN")} credit`, userId, link: "/admin/purchases" });
     return { ...result, user: await userRepository.findById(userId) };
   },
 
@@ -93,16 +136,19 @@ export const planService = {
    * Mua vé: trả tiền ngay nhưng CHƯA tính thời hạn Pro, người dùng tự kích hoạt sau (trong TICKET_VALID_DAYS ngày).
    * Trừ tiền và tạo vé trong một transaction: lỗi ở bước nào thì cả hai cùng huỷ, tiền không bị trừ mà không có vé.
    */
-  async purchaseTicket(userId: string, code: PlanCode = "PRO") {
-    const { plan, duration } = planOf(code);
+  async purchaseTicket(userId: string, code: PlanCode = "PRO", expectedPrice?: number) {
+    const { plan } = planOf(code);
     const now = new Date();
+    const promo = await promoSettingService.get();
     const result = await prisma.$transaction(async (tx) => {
-      const entry = await walletService.charge(tx, { userId, amount: plan.price, type: "PLAN_CHARGE", note: `Mua vé ${plan.name} ${duration} (kích hoạt sau)` });
+      await userRepository.incrementBalance(tx, userId, 0); // khóa dòng người dùng trước khi chốt giá
+      const { price, duration } = await priceFor(tx, userId, code, promo, expectedPrice);
+      const entry = await walletService.charge(tx, { userId, amount: price, type: "PLAN_CHARGE", note: `Mua vé ${plan.name} ${duration} (kích hoạt sau)` });
       // Đếm sau khi đã khóa dòng người dùng bằng lệnh trừ tiền, nên hai lần mua cùng lúc không lách được giới hạn
       if ((await proTicketRepository.countOpen(tx, userId, now)) >= TICKET_MAX_OPEN) {
         throw new AppError(`Bạn đang giữ ${TICKET_MAX_OPEN} vé chưa kích hoạt. Hãy kích hoạt bớt rồi mua thêm.`);
       }
-      const ticket = await proTicketRepository.create(tx, { userId, plan: plan.code, price: plan.price, expiresAt: addDays(now, TICKET_VALID_DAYS) });
+      const ticket = await proTicketRepository.create(tx, { userId, plan: plan.code, price, expiresAt: addDays(now, TICKET_VALID_DAYS) });
       return { ticket: { id: ticket.id, plan: ticket.plan, expiresAt: ticket.expiresAt }, balanceAfter: entry.balanceAfter };
     });
     userCache.invalidate(userId); // số dư đã đổi
