@@ -25,6 +25,7 @@ import { useAuth } from "@/features/auth/AuthContext";
 import { Header } from "@/features/practice/components/Header";
 import { Landing } from "@/features/landing/Landing";
 import { QuizDialogs, type SubmitDialog } from "@/features/practice/components/dialogs/QuizDialogs";
+import { HelpDialog } from "@/features/practice/components/dialogs/HelpDialog";
 import { ReferenceDialog } from "@/features/practice/components/dialogs/ReferenceDialog";
 import { TrialEndedDialog } from "@/features/trial/TrialEndedDialog";
 import { TriangleAlert } from "lucide-react";
@@ -52,6 +53,7 @@ export default function PracticePage({ examId }: Props) {
   const openedId = quiz.examId;
   const [zoomOpen, setZoomOpen] = useState(false);
   const [dialog, setDialog] = useState<SubmitDialog>(null);
+  const [helpOpen, setHelpOpen] = useState(false); // bảng hướng dẫn làm bài (nút "?")
   const [trialEnded, setTrialEnded] = useState(false);
   const [referencesOpen, setReferencesOpen] = useState(false); // đang xem tài liệu tham khảo của đề
   const [attachments, setAttachments] = useState<{ examId: string; list: ExamAttachment[] } | null>(null); // tệp đính kèm của đề mở theo địa chỉ
@@ -72,7 +74,7 @@ export default function PracticePage({ examId }: Props) {
     onLeave: quiz.addViolation,
     onBack: quiz.endViolation,
   });
-  const anyDialogOpen = !!dialog || !!quiz.pending || quiz.choosing || quiz.notFound || trialEnded || referencesOpen || guard.away !== null;
+  const anyDialogOpen = !!dialog || !!quiz.pending || quiz.choosing || quiz.notFound || trialEnded || referencesOpen || helpOpen || guard.away !== null;
 
   // Lưu tiến độ lên server để tải lại trang vẫn làm tiếp được (chỉ với đề của hệ thống)
   const { flush } = useSessionSync(quiz);
@@ -341,6 +343,7 @@ export default function PracticePage({ examId }: Props) {
         bestScore={bestScore}
         referenceCount={quiz.references.length + examFiles.length}
         onShowReferences={() => setReferencesOpen(true)}
+        onHelp={() => setHelpOpen(true)}
         timing={quiz.timing}
         onHome={goHome}
         onSubmit={() => setDialog("confirm")}
@@ -348,6 +351,7 @@ export default function PracticePage({ examId }: Props) {
         onShowResult={() => setDialog("result")}
       />
 
+      {helpOpen && <HelpDialog mode={quiz.mode} onClose={() => setHelpOpen(false)} />}
       <QuizDialogs quiz={quiz} topicSummary={topicSummary} dialog={dialog} onDialogChange={setDialog} onCloseZoom={() => setZoomOpen(false)} onCancelChoose={cancelChoosing} onBeforeSubmit={guard.finish} nextExam={nextQueue.length > 0 ? { remaining: nextQueue.length, onOpen: openNext } : undefined} initialMode={new URLSearchParams(location.search).get("start") === "exam" ? "exam" : undefined} />
       {leaveAsk && (
         <Modal onClose={() => setLeaveAsk(false)}>
