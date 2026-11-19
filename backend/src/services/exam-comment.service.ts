@@ -53,7 +53,8 @@ function notifyAdmins(userId: string, examId: string, questionNumber: number, bo
   if (lastNotice.size > 500) lastNotice.clear();
   lastNotice.set(examId, Date.now());
   adminNoticeService.push("comment.created", {
-    title: `Bình luận mới chờ duyệt (câu ${questionNumber})`,
+    title: `Bình luận mới chờ duyệt: {exam}, câu ${questionNumber}`,
+    examId,
     body: body.slice(0, 200),
     userId,
     link: "/admin/exam-comments",
