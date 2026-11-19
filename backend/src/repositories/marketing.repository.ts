@@ -5,6 +5,7 @@ import {
   BROADCAST_STEP,
   CAMPAIGN_KEYS,
   CLICK_SCANNER_MS,
+  BROADCAST_RENEW_DAYS,
   CONVERSION_DAYS,
   STEP_CYCLE_FACTOR,
   TOPIC_BITS,
@@ -82,6 +83,8 @@ const segmentSql = (b: BroadcastAudience, now: Date, examFrom: Date, examTo: Dat
     case "exam_soon":
       return Prisma.sql`((u.exam_date >= ${examFrom} AND u.exam_date <= ${examTo})
         OR EXISTS (SELECT 1 FROM user_exam_slots s WHERE s.user_id = u.id AND s.exam_date >= ${examFrom} AND s.exam_date <= ${examTo}))`;
+    case "upgrade":
+      return Prisma.sql`(u.pro_expires_at IS NULL OR u.pro_expires_at <= ${new Date(now.getTime() + BROADCAST_RENEW_DAYS * DAY_MS)})`;
     case "all":
       return Prisma.sql`TRUE`;
   }
