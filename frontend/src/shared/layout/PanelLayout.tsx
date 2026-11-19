@@ -65,7 +65,7 @@ function currentItem(items: NavItem[], pathname: string) {
 
 // Ngăn điều hướng (navigation drawer) của M3: mục dạng viên thuốc cao 48dp, mục đang chọn nền secondary-container, tiêu đề nhóm title-small.
 // Dùng làm ngăn cố định ở cỡ expanded và ngăn mở ra (modal) ở cỡ compact.
-function DrawerContent({
+export function DrawerContent({
   title,
   items,
   onNavigate,
@@ -289,12 +289,14 @@ export function PanelLayout({
   collapsible = false,
   actions,
   notice,
+  bottomNav = false,
 }: {
   title: string;
   items: NavItem[];
   collapsible?: boolean;
   actions?: ReactNode;
   notice?: ReactNode; // thanh thông báo mỏng dưới thanh ứng dụng
+  bottomNav?: boolean; // compact đã có thanh điều hướng dưới (BottomNav) nên bỏ nút mở ngăn
 }) {
   const { user } = useAuth();
   const { pathname } = useLocation();
@@ -360,13 +362,15 @@ export function PanelLayout({
         {/* Thanh ứng dụng trên cùng (small top app bar, cao 64dp) */}
         <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between gap-2 bg-surface px-2 sm:px-4 expanded:px-6">
           <div className="flex min-w-0 items-center gap-1">
-            <IconButton
-              label="Mở menu"
-              onClick={() => setOpen(true)}
-              className="medium:hidden expanded:hidden"
-            >
-              <Menu size={24} />
-            </IconButton>
+            {!bottomNav && (
+              <IconButton
+                label="Mở menu"
+                onClick={() => setOpen(true)}
+                className="medium:hidden expanded:hidden"
+              >
+                <Menu size={24} />
+              </IconButton>
+            )}
             <div className="md-title-large truncate pl-2 text-on-surface">
               {current?.label ?? title}
             </div>
