@@ -65,7 +65,7 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
           {!isGuest && (
             <>
               <p className="md-body-large mx-auto mt-4 max-w-xl text-on-surface-variant">
-                Luyện đề thi FE, làm bài như thi thật và nhận điểm thang 10 ngay.
+                Luyện đề thi FE, PE làm bài như thi thật.
               </p>
             </>
           )}
