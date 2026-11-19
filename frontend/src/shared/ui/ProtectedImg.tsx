@@ -14,7 +14,9 @@ export const ProtectedImg = forwardRef<HTMLImageElement, ImgHTMLAttributes<HTMLI
 ) {
   const [node, setNode] = useState<HTMLImageElement | null>(null);
   const [near, setNear] = useState(loading !== "lazy"); // lazy: chờ tới gần màn hình mới tải
-  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  // Ảnh đang hiển thị và nó thuộc src nào: khi đổi src giữ nguyên khung ảnh cũ (ẩn đi) tới lúc ảnh mới về, để bố cục không nhảy và không hiện nhầm ảnh câu trước
+  const [shown, setShown] = useState<{ url: string; of: string } | null>(null);
+  const blobUrl = shown && shown.of === src ? shown.url : null;
 
   const setRef = useCallback(
     (el: HTMLImageElement | null) => {
@@ -34,16 +36,15 @@ export const ProtectedImg = forwardRef<HTMLImageElement, ImgHTMLAttributes<HTMLI
   }, [near, node]);
 
   useEffect(() => {
-    setBlobUrl(null);
     if (!src || !near) return;
-    if (/^(blob|data):/.test(src)) return setBlobUrl(src); // đề mở từ thư mục máy: ảnh đã ở trình duyệt, không qua máy chủ
+    if (/^(blob|data):/.test(src)) return setShown({ url: src, of: src }); // đề mở từ thư mục máy: ảnh đã ở trình duyệt, không qua máy chủ
     let alive = true;
     let made: string | null = null;
     fetchImageBlob(src)
       .then((blob) => {
         if (!alive) return;
         made = URL.createObjectURL(blob);
-        setBlobUrl(made);
+        setShown({ url: made, of: src });
       })
       .catch(() => alive && onError?.(new Event("error") as never));
     return () => {
@@ -57,14 +58,15 @@ export const ProtectedImg = forwardRef<HTMLImageElement, ImgHTMLAttributes<HTMLI
     <img
       {...rest}
       ref={setRef as Ref<HTMLImageElement>}
-      src={blobUrl ?? BLANK}
+      src={shown?.url ?? BLANK}
       draggable={false}
       onContextMenu={(e) => e.preventDefault()}
       onLoad={blobUrl ? onLoad : undefined}
+      onError={blobUrl ? onError : undefined}
       aria-busy={!blobUrl}
       className={`select-none ${className ?? ""}`}
       // Chưa có ảnh thì giữ một khoảng trống: nếu không, ảnh lazy xẹp còn 1px và mọi ảnh cùng "vào màn hình" một lúc
-      style={blobUrl ? style : { minHeight: loading === "lazy" ? "10rem" : undefined, ...style }}
+      style={blobUrl ? style : shown ? { ...style, visibility: "hidden" } : { minHeight: loading === "lazy" ? "10rem" : undefined, ...style }}
     />
   );
 });
