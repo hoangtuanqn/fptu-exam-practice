@@ -17,7 +17,8 @@ export interface CatalogThreadRow {
 const chunks = <T>(list: T[]) => Array.from({ length: Math.ceil(list.length / FUO_CATALOG_WRITE_CHUNK) }, (_, i) => list.slice(i * FUO_CATALOG_WRITE_CHUNK, (i + 1) * FUO_CATALOG_WRITE_CHUNK));
 
 const upsertThreads = (tx: Prisma.TransactionClient, rows: CatalogThreadRow[]) => {
-  const values = rows.map((r) => Prisma.sql`(${r.threadId}, ${r.subjectCode}, ${r.title}, ${r.postedAt}, ${r.replies}, ${r.kind}, ${r.label}, NOW(3))`);
+  const now = new Date(); // giờ của ứng dụng (UTC) để so được với processed_at của link nguồn; NOW(3) theo múi giờ MySQL có thể lệch
+  const values = rows.map((r) => Prisma.sql`(${r.threadId}, ${r.subjectCode}, ${r.title}, ${r.postedAt}, ${r.replies}, ${r.kind}, ${r.label}, ${now})`);
   return tx.$executeRaw`
     INSERT INTO fuo_threads (thread_id, subject_code, title, posted_at, replies, kind, label, synced_at)
     VALUES ${Prisma.join(values)}
