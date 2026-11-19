@@ -22,10 +22,20 @@ export function splitSlogan(slogan: string) {
   return m ? [m[1] ?? "", m[2] ?? ""] : [slogan, ""];
 }
 
-// Thông báo đầu trang chủ (có hạn thật: hết hạn đăng ký thì tự ẩn, không cần sửa code)
+// Popup thông báo khi vào trang chủ (có hạn thật: hết hạn đăng ký thì tự ẩn, không cần sửa code)
 export const LANDING_NOTICE = {
-  text: "CLB F-Code đang tuyển thành viên ARCODE: cần bạn chịu khó học hỏi, không đặt nặng kỹ thuật. Đăng ký đến hết 22/11.",
+  image: "/promo/fcode-arcode.jpg",
+  imageAlt: "Poster tuyển thành viên ARCODE của CLB F-Code",
+  badge: "Tin vui cho dân FPTU",
+  title: "CLB F-Code đang tuyển thành viên ARCODE!",
+  lead: "Insert coin, bắt đầu hành trình của bạn. F-Code cần những bạn chịu khó học hỏi, không đặt nặng kỹ thuật: cứ đến, rồi cùng học, cùng lớn lên.",
+  rounds: [
+    { name: "Vòng 1: Build Character", when: "Đăng ký 12 – 22/11" },
+    { name: "Vòng 2: Game Start", when: "Phỏng vấn 01 – 09/12" },
+    { name: "Vòng 3: Level Up", when: "Challenge 14 – 24/12" },
+  ],
+  note: "Đăng ký đến hết 22/11, đừng để lỡ lượt chơi nhé!",
   link: "https://www.facebook.com/fcodeclub",
-  linkLabel: "Xem chi tiết",
+  linkLabel: "Xem chi tiết & đăng ký",
   endsAt: "2026-11-23T00:00:00+07:00",
 };
