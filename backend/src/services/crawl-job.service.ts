@@ -10,7 +10,7 @@ import { HTTP_STATUS } from "../constants/httpStatus";
 import { AppError } from "../rules/error";
 import type { ImportExamBody } from "../rules/requests/crawl.request";
 import { isMember, type Actor } from "../utils/actor";
-import { parseThreadId } from "../utils/fuo-url";
+import { parseThreadId, threadUrl } from "../utils/fuo-url";
 import { subjectCodeFromTitle } from "../utils/subject-code";
 import { startOfVnDay } from "../utils/time";
 import { EXAM_REFRESH_RETRY_HOURS, EXAM_STALE_AFTER_DAYS, FUO_LINK_INVALID } from "../constants/crawler";
@@ -184,7 +184,8 @@ export const crawlJobService = {
     });
     // Báo qua email sau khi transaction hoàn phí đã commit
     if (refunded && !notificationService.cancelPendingCharge(job.id)) notificationService.fetchRefunded(refunded);
-    adminNoticeService.push("fetch.failed", { title: `Lấy đề lỗi: thread ${job.threadId}`, body: `${message}${refunded ? ` (đã hoàn ${refunded.amount} credit)` : ""}`, userId: job.userId, link: "/admin/crawl-jobs" });
+    adminNoticeService.push("fetch.failed", { title: "Lấy đề lỗi", body: `Bài gốc: ${threadUrl(job.threadId)}
+${message}${refunded ? ` (đã hoàn ${refunded.amount} credit)` : ""}`, userId: job.userId, link: "/admin/crawl-jobs" });
   },
 
   // Chỉ chủ job (thành viên hoặc đúng khách đó, hoặc admin) được xem tiến độ

@@ -68,7 +68,7 @@ export const adminNoticeService = {
   async save(kind: NoticeKind, input: NoticeInput) {
     const spec = NOTICE_KINDS[kind];
     if (spec.level === "error") {
-      const key = `${kind}:${input.title}`;
+      const key = `${kind}:${input.title}:${input.examId ?? ""}:${input.body ?? ""}`; // title không còn mã đề/thread nên key phải kèm đề và nội dung
       const last = recent.get(key);
       if (last && Date.now() - last < NOTICE_DEDUPE_MS) return;
       recent.set(key, Date.now());
