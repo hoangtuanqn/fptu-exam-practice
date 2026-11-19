@@ -21,7 +21,6 @@ export function LandingNoticePopup() {
 
   return (
     <Modal onClose={close} maxWidth="max-w-xl">
-      <img src={N.image} alt={N.imageAlt} className="-mx-6 -mt-6 mb-4 w-[calc(100%+3rem)] max-w-none rounded-t-m3-xl sm:-mx-7 sm:-mt-7 sm:w-[calc(100%+3.5rem)]" style={{ maxHeight: "60vh", objectFit: "cover", objectPosition: "top" }} />
       <p className="md-label-medium inline-flex items-center gap-1.5 text-primary">
         <Gamepad2 size={14} aria-hidden /> {N.badge}
       </p>
@@ -36,6 +35,7 @@ export function LandingNoticePopup() {
         ))}
       </ol>
       <p className="mt-3 text-sm font-semibold text-primary">{N.note}</p>
+      <img src={N.image} alt={N.imageAlt} className="mt-4 w-full rounded-m3-lg" />
       <div className="mt-5 flex flex-wrap justify-end gap-2">
         <Button variant="text" onClick={snoozeAndClose}>Tắt trong 1 giờ</Button>
         <a href={N.link} target="_blank" rel="noreferrer" onClick={close} className={buttonClass({ variant: "filled" })}>{N.linkLabel}</a>
