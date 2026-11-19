@@ -263,14 +263,11 @@ async function load() {
   showUpdate();
   const s = await fepassGetSettings();
   $("ver").textContent = `Phiên bản ${chrome.runtime.getManifest().version}`;
-  $("enabled").checked = s.enabled;
   $("siteUrl").value = s.siteUrl;
   $("apiUrl").value = s.apiUrl;
   await render();
 }
 
-// Công tắc lưu ngay
-$("enabled").addEventListener("change", () => chrome.storage.sync.set({ enabled: $("enabled").checked }));
 $("syncToggle").addEventListener("change", () => {
   if ($("syncToggle").checked) return void changeSync(true);
   $("syncToggle").checked = true; // tắt thì xoá dữ liệu: hỏi xác nhận trước

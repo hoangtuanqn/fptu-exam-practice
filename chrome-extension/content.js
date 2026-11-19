@@ -187,7 +187,7 @@
   }
 
   function scan() {
-    if (!settings || !settings.enabled) return;
+    if (!settings) return;
 
     // Danh sách bài: mỗi dòng .structItem-title chứa nhãn (.label / .labelLink) và liên kết tiêu đề
     document.querySelectorAll(".structItem--thread .structItem-title").forEach((box) => {

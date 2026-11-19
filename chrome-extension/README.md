@@ -23,7 +23,7 @@ Sửa code xong chỉ cần bấm nút tải lại (⟳) ở thẻ tiện ích t
 | `manifest.json` | Manifest V3. Chỉ chạy trên `fuoverflow.com`; quyền: `storage`, và gọi API `api.fepass.top` (cùng `localhost` để chạy thử). |
 | `content.js`, `content.css` | Quét trang, tìm bài có nhãn “Đề Thi FE” (danh sách `.structItem-title`, trang bài `h1.p-title-value`), chèn nút. Có theo dõi thay đổi DOM để nút vẫn hiện khi trang nạp thêm nội dung. |
 | `background.js` | Lấy phí lấy đề từ `GET /api/v1/crawl-jobs/price` (endpoint công khai) và nhớ 10 phút. Gọi ở đây vì trang FuOverflow không được phép gọi chéo tên miền. |
-| `popup.html/js/css` | Popup: thẻ Điểm FAP (trạng thái, nút Đồng bộ ngay, xoá dữ liệu đã đọc), công tắc nút FuOverflow, công tắc thông báo trên FAP; mục “Nâng cao” để trỏ sang môi trường chạy thử. Hỗ trợ chế độ tối. |
+| `popup.html/js/css` | Popup: thẻ Điểm FAP (trạng thái, nút Đồng bộ ngay, xoá dữ liệu đã đọc), công tắc thông báo trên FAP; mục “Nâng cao” để trỏ sang môi trường chạy thử. Hỗ trợ chế độ tối. |
 | `shared.js` | Cấu hình mặc định + kiểm tra địa chỉ (chỉ `https`, hoặc `http://localhost`). |
 
 Cả hai nút (“Làm đề” cho Đề Thi FE, “Tải đề PE” cho Đề Thi PE) trỏ tới: `https://fepass.top/fetch?link=<link bài>&src=ext`.
