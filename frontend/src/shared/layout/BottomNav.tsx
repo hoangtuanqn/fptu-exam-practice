@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { BookOpen, Crown, Home, ListChecks, LogIn, Menu, NotebookPen, X, type LucideIcon } from "lucide-react";
+import { BookOpen, Crown, Home, ListChecks, Menu, NotebookPen, UserPlus, X, type LucideIcon } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { IconButton } from "@/shared/ui/Button";
 import { DrawerContent, type NavItem } from "./PanelLayout";
@@ -17,7 +17,7 @@ const GUEST_TABS: Tab[] = [
   { to: "/", label: "Trang chủ", icon: Home },
   { to: "/kho-de", label: "Kho đề", icon: BookOpen },
   { to: "/pro", label: "Gói Pro", icon: Crown },
-  { to: "/login", label: "Đăng nhập", icon: LogIn },
+  { to: "/register", label: "Đăng ký", icon: UserPlus }, // Đăng nhập nằm ở header
 ];
 
 // Chỉ hiện ở các trang duyệt nội dung; màn làm bài, đăng nhập, quản trị... không có thanh này.
