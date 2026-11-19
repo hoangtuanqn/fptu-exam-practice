@@ -21,6 +21,7 @@ import { Empty } from "@/shared/ui/Feedback";
 import { Modal } from "@/shared/ui/Modal";
 import { QueryBoundary } from "@/shared/ui/QueryBoundary";
 import { isUuid } from "@/shared/utils/uuid";
+import { ImageLightbox } from "./ImageLightbox";
 
 const TILE = "md-state group relative block aspect-[4/3] overflow-hidden rounded-m3-md bg-surface-container-lowest shadow-m3-1 outline-none focus-visible:ring-2 focus-visible:ring-primary";
 const CAPTION = "md-label-large absolute inset-x-0 bottom-0 truncate bg-inverse-surface/70 px-3 py-2 text-left text-inverse-on-surface";
@@ -155,19 +156,7 @@ function Preview({ exam }: { exam: ImportedExam }) {
         </Card>
       )}
 
-      {zoom && (
-        <Modal wide onClose={() => setZoom(null)}>
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <h2 className="md-title-medium truncate text-on-surface">{fileName(zoom)}</h2>
-            <Button variant="text" onClick={() => setZoom(null)} aria-label="Đóng">
-              <X size={18} />
-            </Button>
-          </div>
-          <div className="relative">
-            <ProtectedImg src={zoom.imageUrl} alt={`Ảnh ${fileName(zoom)} của đề`} className="h-auto w-full rounded-m3-md bg-surface-container-lowest" />
-          </div>
-        </Modal>
-      )}
+      {zoom && <ImageLightbox src={zoom.imageUrl} name={fileName(zoom)} onClose={() => setZoom(null)} />}
     </>
   );
 }
