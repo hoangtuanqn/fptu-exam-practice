@@ -1,6 +1,25 @@
 {
   "web": [
     {
+      "version": "1.13.0",
+      "date": "2026-11-19",
+      "title": "Tải trọn bộ đề PE một lần",
+      "highlights": [
+        "Nút Download All tải mọi tài nguyên đề PE trong một file zip",
+        "Lấy đề PE chỉ 50 credit"
+      ],
+      "changes": [
+        {
+          "type": "new",
+          "text": "Trang xem trước đề PE có nút Download All: tải mọi tệp và ảnh của đề trong một file zip mang tên đề"
+        },
+        {
+          "type": "improved",
+          "text": "Lấy đề PE có giá riêng 50 credit, hiện ngay trên nút mở đề"
+        }
+      ]
+    },
+    {
       "version": "1.12.0",
       "date": "2026-11-18",
       "title": "Xem trước đề và nhãn loại đề",
@@ -443,6 +462,24 @@
     }
   ],
   "extension": [
+    {
+      "version": "1.7.0",
+      "date": "2026-11-19",
+      "title": "Nút Làm đề và Tải đề PE trở lại",
+      "highlights": [
+        "Làm đề FE và tải đề PE ngay từ FuOverflow"
+      ],
+      "changes": [
+        {
+          "type": "new",
+          "text": "Nút “Làm đề” cạnh bài Đề Thi FE và “Tải đề PE” cạnh bài Đề Thi PE trên FuOverflow trở lại"
+        },
+        {
+          "type": "improved",
+          "text": "Bấm “Tải đề PE” mở thẳng trang xem trước của đề trên fepass.top để tải trọn bộ tài nguyên"
+        }
+      ]
+    },
     {
       "version": "1.6.0",
       "date": "2026-11-18",
