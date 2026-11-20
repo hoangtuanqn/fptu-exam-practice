@@ -7,10 +7,9 @@ import { prefetchImage } from "@/shared/api/protectedImage";
 import { useApi } from "@/shared/hooks/useApi";
 import { useUrlState } from "@/shared/hooks/useUrlState";
 import { Button, buttonClass } from "@/shared/ui/Button";
-import { Empty } from "@/shared/ui/Feedback";
+import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { Kbd } from "@/shared/ui/Kbd";
 import { ProtectedImg } from "@/shared/ui/ProtectedImg";
-import { QueryBoundary } from "@/shared/ui/QueryBoundary";
 import { flashcardApi, type FlashcardResult } from "./flashcard.api";
 import { LockedPanel } from "./LockedPanel";
 
@@ -24,9 +23,7 @@ export default function FlashcardSubjectPage() {
   return (
     // Giống trang làm đề: chiếm đúng chiều cao màn hình, ẩn thanh điều hướng dưới
     <div className="flex h-[calc(100dvh-var(--bottom-nav-h,0px))] flex-col bg-surface" data-no-bottom-nav>
-      <QueryBoundary query={q} loadingLabel="Đang tải flashcard…">
-        {(d) => <Viewer key={code} code={code} data={d} />}
-      </QueryBoundary>
+      {q.data ? <Viewer key={code} code={code} data={q.data} /> : q.error ? <ErrorBox message={q.error} onRetry={q.reload} /> : <Loading label="Đang tải flashcard…" />}
     </div>
   );
 }
@@ -164,7 +161,7 @@ function Viewer({ code, data }: { code: string; data: FlashcardResult }) {
 
       <main className="min-h-0 flex-1 overflow-auto p-3 sm:p-4 lg:p-6">
         {item ? (
-          <div className="mx-auto overflow-hidden rounded-3xl border border-outline-variant/70 bg-surface-container-lowest shadow-[0_2px_4px_rgba(0,0,0,0.05),0_22px_44px_-22px_rgba(70,45,0,0.4)]" style={{ width: `${zoom.scale * 100}%`, maxWidth: "none" }}>
+          <div className="mx-auto overflow-hidden rounded-3xl border border-outline-variant/70 bg-surface-container-lowest shadow-[0_2px_4px_rgba(0,0,0,0.05),0_22px_44px_-22px_rgba(70,45,0,0.4)]" style={{ width: `min(${zoom.scale * 100}%, ${zoom.scale * 60}rem)` }}>
             <div className="flex items-center justify-between border-b border-outline-variant/60 bg-gradient-to-r from-primary-container/60 to-transparent px-4 py-2">
               <span className="md-label-large text-on-primary-container">Câu hỏi {i + 1}</span>
               <span className="md-label-medium text-on-surface-variant">{code}</span>
