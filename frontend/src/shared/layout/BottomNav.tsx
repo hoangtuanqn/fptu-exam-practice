@@ -10,7 +10,7 @@ type Tab = { to: string; label: string; icon: LucideIcon; also?: string[] };
 const MEMBER_TABS: Tab[] = [
   { to: "/", label: "Trang chủ", icon: Home },
   { to: "/account/exams", label: "Kho đề", icon: BookOpen, also: ["/kho-de"] },
-  { to: "/account/review", label: "Ôn tập", icon: NotebookPen, also: ["/account/saved", "/account/frequent"] },
+  { to: "/account/review", label: "Ôn tập", icon: NotebookPen, also: ["/account/saved", "/account/frequent", "/flashcard"] },
   { to: "/account/attempts", label: "Kết quả", icon: ListChecks, also: ["/account/reports", "/account/grades"] },
 ];
 const GUEST_TABS: Tab[] = [
@@ -25,7 +25,7 @@ const GUEST_TABS: Tab[] = [
 const under = (pathname: string, p: string) => pathname === p || pathname.startsWith(`${p}/`);
 function shown(pathname: string) {
   if (under(pathname, "/account/review/practice")) return false;
-  return pathname === "/" || ["/kho-de", "/pro", "/features", "/changelog", "/mon", "/account"].some((p) => under(pathname, p));
+  return pathname === "/" || ["/kho-de", "/flashcard", "/pro", "/features", "/changelog", "/mon", "/account"].some((p) => under(pathname, p));
 }
 
 // Thanh điều hướng dưới (M3 navigation bar) cho điện thoại (<600px). Mục "Thêm" mở ngăn trượt từ cạnh phải chứa danh sách đầy đủ của trang tài khoản.

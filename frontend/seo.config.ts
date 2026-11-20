@@ -33,6 +33,11 @@ export const PUBLIC_PAGES: Record<string, PageSeo> = {
     description: "Trả một lần dùng cả kỳ, rẻ hơn nhiều so với mua lẻ trên FuOverflow. Không giới hạn lượt lấy đề và giải thích AI.",
     index: true,
   },
+  "/flashcard": {
+    title: "Flashcard ôn thi FE theo từng môn FPTU",
+    description: "Flashcard từng môn FPTU: xem lần lượt từng câu hỏi, bấm hiện đáp án để tự kiểm tra trước kỳ thi FE.",
+    index: true,
+  },
   "/changelog": {
     title: "Có gì mới: lịch sử cập nhật web và tiện ích",
     description: "Danh sách tính năng mới, cải tiến và sửa lỗi theo từng phiên bản của Luyện thi FE FPTU và tiện ích Chrome.",
@@ -113,6 +118,7 @@ export const PATTERN_PAGES: { test: RegExp; seo: PageSeo }[] = [
   { test: /^\/exam\/[^/]+$/, seo: { title: "Làm đề thi FE", description: "Làm đề thi FE với đáp án, giải thích AI và chấm điểm thang 10." } },
   { test: /^\/exam\/[^/]+\/preview$/, seo: { title: "Xem trước đề thi", description: "Xem các trang và tệp đính kèm của đề, rồi chọn luyện đề hoặc thi thử." } },
   { test: /^\/exam\/[^/]+\/view$/, seo: { title: "Xem đề thi FE", description: "Xem cả đề thi FE kèm đáp án và chủ đề từng câu, lưu câu để xem lại." } },
+  { test: /^\/flashcard\/[^/]+$/, seo: { title: "Flashcard theo môn", description: "Xem lần lượt từng câu hỏi của môn, bấm hiện đáp án để tự kiểm tra, phím mũi tên để chuyển câu." } },
   { test: /^\/deposit\/[^/]+$/, seo: { title: "Thanh toán nạp credit", description: "Quét mã QR để chuyển khoản cho lệnh nạp credit này." } },
   { test: /^\/account\/attempts\/[^/]+$/, seo: { title: "Chi tiết lần làm bài", description: "Xem lại từng câu, đáp án đã chọn và điểm của lần làm bài này." } },
   { test: /^\/account\/materials\/[^/]+$/, seo: { title: "Kết quả phân tích slide", description: "Tóm tắt từng chương từ slide của bạn, kèm ý chính và số đề có chương đó." } },
