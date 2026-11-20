@@ -4,6 +4,7 @@ import path from "node:path";
 import { storageDir } from "../configs/env";
 import { AI_REPORT_FAILED_PREFIX, aiReady, AI_RETRY_COOLDOWN_MS } from "../constants/ai";
 import { EXAM_STORAGE_DIR } from "../constants/crawler";
+import { AI_NOT_SOLVABLE_MESSAGE, isAiSolvable } from "../constants/exam";
 import { realtimeHub } from "../realtime/hub";
 import { compactCommentsText } from "./crawler/comments-file.service";
 import { examRepository } from "../repositories/exam.repository";
@@ -40,6 +41,12 @@ async function run(examId: string) {
   if (exam.questions.length < exam.totalQuestions) return; // đề còn đang được lấy về, chưa đủ câu để giải
   if (exam.questions.length === 0) return; // đề chỉ có tệp đính kèm: không có gì để giải
   const wasPending = exam.answerSource === "PENDING";
+  if (!isAiSolvable(exam)) {
+    // Cổng cuối trước khi tốn tiền AI (mọi đường vào đều qua đây)
+    if (wasPending) await examRepository.updateAnswers(examId, exam.questions.map(() => ""), "FAILED", `${AI_REPORT_FAILED_PREFIX}${AI_NOT_SOLVABLE_MESSAGE}`);
+    void realtimeHub.publishExam(examId);
+    return;
+  }
 
   const t0 = Date.now();
   try {
@@ -113,7 +120,7 @@ export const examSolveService = {
   async upgradeIfNeeded(examId: string) {
     if (this.isBusy(examId) || lastError.has(examId)) return false;
     const exam = await examRepository.findAnswerSource(examId);
-    if (exam?.answerSource !== "DEFAULT" && exam?.answerSource !== "FAILED") return false;
+    if (!exam || !isAiSolvable(exam) || (exam.answerSource !== "DEFAULT" && exam.answerSource !== "FAILED")) return false;
     const ai = await aiSettingService.get();
     if (!aiReady(ai)) return false;
     await examRepository.markPending(examId);
@@ -126,7 +133,7 @@ export const examSolveService = {
   async retry(examId: string): Promise<"started" | "busy" | "cooldown" | "not-needed"> {
     if (this.isBusy(examId)) return "busy";
     const exam = await examRepository.findAnswerSource(examId);
-    if (exam?.answerSource !== "DEFAULT" && exam?.answerSource !== "FAILED") return "not-needed";
+    if (!exam || !isAiSolvable(exam) || (exam.answerSource !== "DEFAULT" && exam.answerSource !== "FAILED")) return "not-needed";
     const last = lastError.get(examId);
     if (last && Date.now() - last.at < AI_RETRY_COOLDOWN_MS) return "cooldown";
     const ai = await aiSettingService.get();

@@ -1,6 +1,6 @@
 import { type FuoSourceResult, type FuoSourceStatus, Prisma } from "@prisma/client";
 import { prisma } from "../configs/prisma";
-import { FUO_SOURCE_AUTO_IMPORT_MAX, FUO_SOURCE_INSERT_CHUNK } from "../constants/fuo-source";
+import { FUO_SOURCE_INSERT_CHUNK } from "../constants/fuo-source";
 import { catalogSourceRows } from "../utils/fuo-source-queue";
 import { type PaginationQuery, toSkipTake } from "../utils/pagination";
 
@@ -23,15 +23,17 @@ const URL_SELECT = {
 // Đưa vào hàng chờ của lượt chỉ link cần làm: link mới (NEW), link lỗi hoặc còn chờ từ lượt khác, và link đã xong mà bài đã đổi
 // trên FuOverflow sau lần xử lý (fuo_threads.synced_at > processed_at). Link đã xong và bài không đổi thì không tải lại.
 const queueForRun = async (tx: Prisma.TransactionClient, runId: string) => {
-  const pending = await tx.fuoSourceUrl.updateMany({
-    where: { status: { in: ["NEW", "QUEUED", "FAILED"] }, OR: [{ lastRunId: null }, { lastRunId: { not: runId } }] },
-    data: { status: "QUEUED", lastRunId: runId },
-  });
+  // Link chưa có đề (NEW) ở lại "Chưa lấy": chỉ lấy ảnh và nhờ AI giải khi có người bấm vào đề; lượt này chỉ cập nhật đề đã có
+  const pending = await tx.$executeRaw`
+    UPDATE fuo_source_urls s
+    SET s.status = 'QUEUED', s.last_run_id = ${runId}, s.updated_at = ${new Date()}
+    WHERE s.status IN ('NEW', 'QUEUED', 'FAILED') AND (s.last_run_id IS NULL OR s.last_run_id <> ${runId})
+      AND EXISTS (SELECT 1 FROM exams e WHERE e.thread_id = s.thread_id)`;
   const changed = await tx.$executeRaw`
     UPDATE fuo_source_urls s JOIN fuo_threads t ON t.thread_id = s.thread_id
     SET s.status = 'QUEUED', s.last_run_id = ${runId}, s.updated_at = ${new Date()}
     WHERE s.status = 'DONE' AND t.synced_at > s.processed_at`;
-  return { count: pending.count + changed };
+  return { count: pending + changed };
 };
 
 export const fuoSourceRepository = {
@@ -39,7 +41,7 @@ export const fuoSourceRepository = {
   addMany: (rows: { threadId: string; url: string }[]) => prisma.fuoSourceUrl.createMany({ data: rows, skipDuplicates: true }),
 
   // Bài FE của danh mục chưa có link: thêm vào danh sách (bài đã có đề ghi là đã xử lý, xem catalogSourceRows). Trả về số link thêm.
-  // Bài chưa có đề mỗi lượt chỉ lấy tối đa FUO_SOURCE_AUTO_IMPORT_MAX (mới đăng trước) vì mỗi đề mới tốn AI; phần còn lại vào lần bấm sau.
+  // Bài chưa có đề không được thêm: chúng vẫn hiện trong danh mục, chỉ lấy ảnh và nhờ AI giải khi có người bấm vào (tránh tốn chi phí).
   async addCatalogThreads() {
     const found = await prisma.$queryRaw<{ threadId: string; examId: string | null }[]>`
       SELECT t.thread_id AS threadId, e.id AS examId FROM fuo_threads t
@@ -47,11 +49,7 @@ export const fuoSourceRepository = {
       LEFT JOIN exams e ON e.thread_id = t.thread_id
       WHERE t.kind = 'FE' AND s.id IS NULL
       ORDER BY t.posted_at DESC`;
-    let fresh = 0;
-    const rows = catalogSourceRows(
-      found.filter((f) => f.examId || fresh++ < FUO_SOURCE_AUTO_IMPORT_MAX),
-      new Date(),
-    );
+    const rows = catalogSourceRows(found.filter((f) => f.examId), new Date());
     let added = 0;
     for (let i = 0; i < rows.length; i += FUO_SOURCE_INSERT_CHUNK) added += (await prisma.fuoSourceUrl.createMany({ data: rows.slice(i, i + FUO_SOURCE_INSERT_CHUNK), skipDuplicates: true })).count;
     return added;

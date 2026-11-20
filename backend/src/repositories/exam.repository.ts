@@ -105,7 +105,7 @@ export const examRepository = {
       prisma.exam.update({ where: { id: examId }, data: { answerSource: "PENDING" } }),
     ]),
 
-  findAnswerSource: (id: string) => prisma.exam.findUnique({ where: { id }, select: { answerSource: true } }),
+  findAnswerSource: (id: string) => prisma.exam.findUnique({ where: { id }, select: { answerSource: true, kind: true, totalQuestions: true } }),
 
   // Đề còn đang chờ AI (ví dụ server tắt giữa chừng): xếp lại hàng khi khởi động
   // (bỏ đề đang lấy dở: chưa đủ câu thì chưa thể giải)

@@ -5,6 +5,10 @@ export const USABLE_ANSWER_SOURCES = ["AI", "MANUAL"] as const;
 // Đề làm bài được (luyện tập/thi) và được hỏi AI: đề FE từ chừng này câu; cùng mốc với MIN_PLAYABLE_QUESTIONS ở frontend
 export const MIN_PLAYABLE_QUESTIONS = 20;
 
+// Chỉ đề FE (ảnh câu hỏi) từ chừng đó câu mới được AI giải / giải thích / hỏi đáp (tốn tiền). Đề ít câu, PE, Quiz, tài liệu khác thì không.
+export const isAiSolvable = (exam: { kind: string | null; totalQuestions: number }) => (exam.kind ?? "FE") === "FE" && exam.totalQuestions >= MIN_PLAYABLE_QUESTIONS;
+export const AI_NOT_SOLVABLE_MESSAGE = "Chỉ đề FE có từ 20 câu ảnh mới được AI giải";
+
 // Admin tải đề dạng .zip (dựng trong bộ nhớ mỗi lần tải): chặn đề bất thường
 export const EXAM_ZIP_MAX_QUESTIONS = 500;
 export const EXAM_ZIP_MAX_BYTES = 100 * 1024 * 1024;

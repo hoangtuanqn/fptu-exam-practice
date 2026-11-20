@@ -20,7 +20,7 @@ import { fuoSessionService, isFuoAuthFailure } from "./crawler/fuo-session.servi
 import { examSolveService } from "./exam-solve.service";
 import { subjectCodeFromTitle } from "../utils/subject-code";
 import { buildExamZip, ExamZipTooLarge, withTrustedAnswers } from "../utils/exam-zip";
-import { EXAM_ZIP_MAX_BYTES, EXAM_ZIP_MAX_QUESTIONS } from "../constants/exam";
+import { AI_NOT_SOLVABLE_MESSAGE, EXAM_ZIP_MAX_BYTES, EXAM_ZIP_MAX_QUESTIONS, isAiSolvable } from "../constants/exam";
 import { HTTP_STATUS } from "../constants/httpStatus";
 
 export const adminExamService = {
@@ -42,6 +42,8 @@ export const adminExamService = {
     if (!aiReady(ai)) throw new AppError("Chưa bật AI hoặc chưa có khóa API ở Quản trị → AI giải đáp án");
     if (!(await examRepository.findByThreadIdOfId(id))) throw AppError.notFound("Không tìm thấy đề");
     if ((await examRepository.countQuestions(id)) === 0) throw new AppError("Đề này không có câu hỏi để AI giải");
+    const meta = await examRepository.findAnswerSource(id);
+    if (!meta || !isAiSolvable(meta)) throw new AppError(AI_NOT_SOLVABLE_MESSAGE);
     if (!examSolveService.enqueue(id)) throw AppError.conflict("Đề này đang được AI giải");
   },
 
@@ -57,6 +59,7 @@ export const adminExamService = {
     if (!aiReady(ai)) throw new AppError("Chưa bật AI hoặc chưa có khóa API ở Quản trị → AI giải đáp án");
     const exam = await examRepository.findForSolve(id);
     if (!exam) throw AppError.notFound("Không tìm thấy đề");
+    if (!isAiSolvable(exam)) throw new AppError(AI_NOT_SOLVABLE_MESSAGE);
     const q = exam.questions.find((x) => x.number === number);
     if (!q) throw AppError.notFound("Không tìm thấy câu này");
     if (exam.answerSource === "PENDING" || examSolveService.isBusy(id)) throw AppError.conflict("AI đang giải cả đề này, chờ xong rồi giải lại từng câu");
