@@ -10,6 +10,7 @@ import { LoadingMoreBanner } from "@/features/practice/components/quiz/LoadingMo
 import { useExamAttachmentsLive } from "@/features/practice/hooks/useExamAttachmentsLive";
 import { useExamQuestionsLive } from "@/features/practice/hooks/useExamQuestionsLive";
 import type { Question } from "@/features/practice/types";
+import { historyApi } from "@/features/history/history.api";
 import { savedApi } from "@/features/saved/saved.api";
 import { ApiError } from "@/shared/api/client";
 import { errorMessage } from "@/shared/api/errors";
@@ -116,6 +117,10 @@ function ExamView({ exam }: { exam: ImportedExam }) {
   );
 
   const savedOfExam = useApi(() => (user ? savedApi.ofExam(exam.id) : Promise.resolve(null)), [user?.id, exam.id]);
+  // ?attempt=ID: xem lại đề cùng bài đã làm (lỗi hoặc bài của đề khác thì chỉ xem đề như thường)
+  const attemptId = params.get("attempt");
+  const attempt = useApi(() => (user && attemptId && isUuid(attemptId) ? historyApi.get(attemptId).catch(() => null) : Promise.resolve(null)), [user?.id, attemptId]);
+  const mineByNumber = new Map(attempt.data?.examId === exam.id || attempt.data?.exam.id === exam.id ? attempt.data.details.map((d) => [d.number, d]) : []);
   const isSaved = (n: number) => savedChanged[n] ?? (Array.isArray(savedOfExam.data) && savedOfExam.data.includes(n));
   const saving = useRef(new Set<number>()); // câu đang chờ máy chủ: bỏ qua lần bấm tiếp theo
   const toggleSave = async (n: number) => {
@@ -216,6 +221,7 @@ function ExamView({ exam }: { exam: ImportedExam }) {
             q={q}
             showAnswer={hasAnswers && show}
             highlighted={highlight === q.number}
+            mine={mineByNumber.get(q.number)}
             saved={isSaved(q.number)}
             onToggleSave={user ? () => void toggleSave(q.number) : undefined}
           />
