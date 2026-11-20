@@ -1,4 +1,5 @@
 import type { CrawlJob } from "@prisma/client";
+import { AI_NOT_SOLVABLE_MESSAGE, isAiSolvable } from "../constants/exam";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { storageDir } from "../configs/env";
@@ -33,7 +34,7 @@ const FIRST_READY = 2;
 const STAGE_THROTTLE_MS = 400; // ghi tiến độ tối đa chừng này mỗi lần để không dồn DB/socket
 const AI_OFF_REPORT = `${AI_REPORT_FAILED_PREFIX}AI chưa được bật hoặc chưa có khóa Anthropic`;
 // Đề PE (thực hành): ảnh là đề bài, không phải câu trắc nghiệm nên không nhờ AI giải (chỉ xem; admin vẫn giải lại được nếu muốn)
-const PE_REPORT = `${AI_REPORT_FAILED_PREFIX}Đề PE (thực hành) không có đáp án trắc nghiệm để giải`;
+const PE_REPORT = `${AI_REPORT_FAILED_PREFIX}${AI_NOT_SOLVABLE_MESSAGE}`;
 
 export interface ImportHooks {
   /** Gọi một lần khi đã có ảnh đầu tiên: đưa đề vào kho người nhập để họ mở ngay. */
@@ -112,7 +113,7 @@ const importer = {
       return fileName ? [{ file, fileName }] : [];
     });
     const filesOnly = total === 0; // không có câu hỏi: không AI, không bình luận
-    const practical = thread.kind === "PE";
+    const practical = !isAiSolvable({ kind: thread.kind, totalQuestions: total }); // không phải đề FE đủ 20 câu: không bao giờ gọi AI
 
     // Không có đáp án giả: AI chưa dùng được thì đề ở trạng thái FAILED (chỉ xem), có thể giải lại sau.
     const useAi = aiReady(await aiSettingService.get());
