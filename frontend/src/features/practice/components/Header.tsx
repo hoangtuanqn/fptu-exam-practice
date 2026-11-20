@@ -12,7 +12,7 @@ import { brand } from "@/shared/brand/brand";
 import { getModeConfig } from "@/features/practice/config/modes";
 import { ExamTimer } from "./ExamTimer";
 import { Logo } from "@/shared/brand/Logo";
-import { Button } from "@/shared/ui/Button";
+import { Button, buttonClass } from "@/shared/ui/Button";
 import { UserMenu } from "@/shared/layout/UserMenu";
 import { SiteNav } from "@/shared/layout/SiteNav";
 import { ThemeToggle } from "@/shared/theme/ThemeToggle";
@@ -43,6 +43,7 @@ interface Props {
   onSubmit: () => void;
   onReset: () => void;
   onShowResult: () => void;
+  reviewBackTo?: string; // xem lại bài đã nộp: chỉ còn một nút quay về kết quả
 }
 
 // Header tối giản. Chưa có đề: tên app + tài khoản. Đang làm: tên đề | chế độ + đồng hồ | mở đề khác | nộp bài | tài khoản.
@@ -62,6 +63,7 @@ export function Header({
   onSubmit,
   onReset,
   onShowResult,
+  reviewBackTo,
 }: Props) {
   const { Icon, label } = getModeConfig(mode);
   const [seenHelp, setSeenHelp] = useState(helpSeen);
@@ -166,7 +168,7 @@ export function Header({
             )}
             {showLeft && timeLimitSec && <ExamTimer left={left!} limit={timeLimitSec} />}
 
-            {onHelp && (
+            {onHelp && !reviewBackTo && (
               <Button variant="tonal" onClick={openHelp} title="Hướng dẫn làm bài: cách chọn đáp án và phím tắt" aria-label="Hướng dẫn làm bài" className="relative !px-2.5">
                 {!seenHelp && (
                   <span aria-hidden className="absolute -right-1 -top-1 flex h-3 w-3">
@@ -178,7 +180,12 @@ export function Header({
               </Button>
             )}
 
-            {submitted ? (
+            {reviewBackTo ? (
+              <Link to={reviewBackTo} className={buttonClass({ variant: "primary", className: "!px-3 sm:!px-4" })}>
+                <Award size={16} />
+                Về kết quả
+              </Link>
+            ) : submitted ? (
               <>
                 <Button onClick={onReset} className="!px-2.5 sm:!px-4" title="Làm lại" aria-label="Làm lại">
                   <RotateCcw size={16} />
