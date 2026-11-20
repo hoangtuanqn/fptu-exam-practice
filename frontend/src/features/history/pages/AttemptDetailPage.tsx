@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, RotateCcw } from "lucide-react";
+import { ArrowLeft, FileSearch, RotateCcw } from "lucide-react";
 import { historyApi } from "@/features/history/history.api";
 import { QuestionResultGrid } from "@/features/history/components/QuestionResultGrid";
 import { MAX_SCORE, PASS_SCORE } from "@/features/practice/config/scoring";
@@ -64,6 +64,9 @@ export default function AttemptDetailPage() {
           <Link to={`/exam/${data.exam.id}`} className={buttonClass({ variant: "primary" })}>
             <RotateCcw size={16} /> Làm lại đề
           </Link>
+          <Link to={`/exam/${data.exam.id}/view?attempt=${data.id}`} className={buttonClass({ variant: "tonal" })}>
+            <FileSearch size={16} /> Xem lại đề
+          </Link>
         </div>
         {data.mode === "EXAM" && data.violations && data.violations.length > 0 && <ViolationSummary violations={data.violations} className="mt-5" />}
       </Card>
@@ -90,7 +93,7 @@ export default function AttemptDetailPage() {
             </div>
           }
         />
-        <QuestionResultGrid items={shown} />
+        <QuestionResultGrid items={shown} hrefFor={(n) => `/exam/${data.exam.id}/view?attempt=${data.id}&q=${n}`} />
       </Card>
     </>
   );

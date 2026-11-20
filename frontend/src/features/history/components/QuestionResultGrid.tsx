@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Check, Minus, X } from "lucide-react";
 import type { AttemptQuestion, Outcome } from "@/features/history/types";
 import { Empty } from "@/shared/ui/Feedback";
@@ -19,7 +20,7 @@ const TEXT: Record<Outcome, string> = {
 const show = (list: string[]) => (list.length ? list.join(", ") : "—");
 
 // Lưới các câu: số câu, đáp án đã chọn, đáp án đúng, kết quả
-export function QuestionResultGrid({ items }: { items: AttemptQuestion[] }) {
+export function QuestionResultGrid({ items, hrefFor }: { items: AttemptQuestion[]; hrefFor?: (n: number) => string }) {
   if (items.length === 0) return <Empty title="Không có câu nào trong mục này" />;
 
   return (
@@ -29,7 +30,13 @@ export function QuestionResultGrid({ items }: { items: AttemptQuestion[] }) {
         return (
           <li key={q.number} className={`rounded-lg border px-3 py-2.5 sm:px-4 sm:py-3 ${box}`}>
             <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold text-slate-900 sm:text-base">Câu {q.number}</span>
+              {hrefFor ? (
+                <Link to={hrefFor(q.number)} className="text-sm font-semibold text-slate-900 hover:underline sm:text-base">
+                  Câu {q.number}
+                </Link>
+              ) : (
+                <span className="text-sm font-semibold text-slate-900 sm:text-base">Câu {q.number}</span>
+              )}
               <span className={`inline-flex items-center gap-1 text-xs font-medium ${TEXT[q.outcome]}`}>
                 <Icon size={14} /> <span className="hidden sm:inline">{label}</span>
               </span>
