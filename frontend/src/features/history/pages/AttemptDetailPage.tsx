@@ -64,7 +64,7 @@ export default function AttemptDetailPage() {
           <Link to={`/exam/${data.exam.id}`} className={buttonClass({ variant: "primary" })}>
             <RotateCcw size={16} /> Làm lại đề
           </Link>
-          <Link to={`/exam/${data.exam.id}/view?attempt=${data.id}`} className={buttonClass({ variant: "tonal" })}>
+          <Link to={`/attempts/${data.id}/review`} className={buttonClass({ variant: "tonal" })}>
             <FileSearch size={16} /> Xem lại đề
           </Link>
         </div>
@@ -93,7 +93,7 @@ export default function AttemptDetailPage() {
             </div>
           }
         />
-        <QuestionResultGrid items={shown} hrefFor={(n) => `/exam/${data.exam.id}/view?attempt=${data.id}&q=${n}`} />
+        <QuestionResultGrid items={shown} hrefFor={(n) => `/attempts/${data.id}/review?q=${n}`} />
       </Card>
     </>
   );
