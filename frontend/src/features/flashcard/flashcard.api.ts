@@ -9,7 +9,7 @@ export interface FlashcardItem {
 export interface FlashcardResult {
   subject: string;
   total: number; // tổng số thẻ của môn (số thật, kể cả phần bị khóa)
-  locked: boolean; // khách/gói thường: chỉ có các thẻ xem trước
+  locked: boolean; // gói thường: chỉ có các thẻ xem trước
   hidden: number; // số thẻ bị khóa
   items: FlashcardItem[];
 }
