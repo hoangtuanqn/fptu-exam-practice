@@ -121,6 +121,7 @@ export const PATTERN_PAGES: { test: RegExp; seo: PageSeo }[] = [
   { test: /^\/flashcard\/[^/]+$/, seo: { title: "Flashcard theo môn", description: "Xem lần lượt từng câu hỏi của môn, bấm hiện đáp án để tự kiểm tra, phím mũi tên để chuyển câu." } },
   { test: /^\/deposit\/[^/]+$/, seo: { title: "Thanh toán nạp credit", description: "Quét mã QR để chuyển khoản cho lệnh nạp credit này." } },
   { test: /^\/account\/attempts\/[^/]+$/, seo: { title: "Chi tiết lần làm bài", description: "Xem lại từng câu, đáp án đã chọn và điểm của lần làm bài này." } },
+  { test: /^\/attempts\/[^/]+\/review$/, seo: { title: "Xem lại bài đã làm", description: "Xem lại đề cùng đáp án bạn đã chọn trong lần làm bài này." } },
   { test: /^\/account\/materials\/[^/]+$/, seo: { title: "Kết quả phân tích slide", description: "Tóm tắt từng chương từ slide của bạn, kèm ý chính và số đề có chương đó." } },
   { test: /^\/account\/deposit\/[^/]+$/, seo: { title: "Chi tiết lệnh nạp", description: "Theo dõi trạng thái và mã QR của lệnh nạp credit." } },
   { test: /^\/admin\/users\/[^/]+$/, seo: { title: "Quản trị: chi tiết thành viên", description: "Thông tin, ví và hoạt động của một thành viên." } },
