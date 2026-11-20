@@ -17,6 +17,7 @@
     "import:fuo-catalog": "tsx scripts/import-fuo-catalog.ts",
     "import:coursera-courses": "tsx scripts/import-coursera-courses.ts",
     "import:subject-semesters": "tsx scripts/import-subject-semesters.ts",
+    "import:flashcards": "tsx scripts/import-flashcards.ts",
     "sync:subject-semesters": "tsx scripts/sync-subject-semesters.ts",
     "import:syllabus": "tsx scripts/import-syllabus.ts",
     "relabel:topics": "tsx scripts/relabel-topics.ts",
