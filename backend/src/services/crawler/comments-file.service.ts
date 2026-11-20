@@ -97,6 +97,9 @@ export function commentsOfQuestion(compact: string | null, name: string): string
   return body || null;
 }
 
+// Bình luận là chữ của người lạ trên diễn đàn: đổi thẻ dạng <tag> / </tag> thành ‹tag› để không đóng sớm khối <comments> hay giả khối khác trong prompt
+export const defang = (text: string) => text.replace(/<(\/?[A-Za-z][^>]*)>/g, "‹$1›");
+
 // "[time] author [score] (#id): text" -> author, score, text (dòng đầu của một bình luận)
 const COMMENT_LINE = /^\[[^\]]*\] (.*?)(?: (\[-?\d+\]))? \(#\d+\): ?(.*)$/;
 
@@ -122,10 +125,10 @@ export function compactCommentsText(raw: string): string | null {
     const m = line.match(COMMENT_LINE);
     if (m) {
       const score = m[2] ? ` ${m[2]}` : "";
-      current.comments.push(`${m[1]}${score}: ${m[3] ?? ""}`);
+      current.comments.push(`${m[1]}${score}: ${defang(m[3] ?? "")}`);
       last = current.comments.length - 1;
     } else if (line.startsWith("    ") && last >= 0) {
-      current.comments[last] += ` ${line.trim()}`; // dòng tiếp theo của cùng một bình luận
+      current.comments[last] += ` ${defang(line.trim())}`; // dòng tiếp theo của cùng một bình luận
     }
   }
 
