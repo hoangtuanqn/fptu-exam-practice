@@ -28,21 +28,22 @@ interface Props {
   zoomOpen: boolean;
   onZoomChange: (open: boolean) => void;
   onSubmit: () => void; // mở hộp xác nhận nộp bài
+  readOnly?: boolean; // xem lại bài đã nộp: bỏ các nút lưu, đánh dấu, báo cáo, giải thích, nộp bài
 }
 
 // Màn hình làm bài: sidebar danh sách câu + khung câu hỏi + (tuỳ chọn) cửa sổ phóng to ảnh
-export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit }: Props) {
+export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit, readOnly }: Props) {
   const { user } = useAuth();
   const [reportOpen, setReportOpen] = useState(false);
   const [confirmExplain, setConfirmExplain] = useState(false); // hộp xác nhận phí (chỉ lần đầu mỗi câu)
   const [panel, setPanel] = useState<{ number: number; firstTime: boolean; useFreeTurn?: boolean } | null>(null); // lời giải đang mở cạnh đề
   const [bought, setBought] = useState<Set<number>>(new Set()); // câu vừa mua lời giải trong phiên này (cộng với danh sách từ server)
-  const explainEnabled = !!user && quiz.examId !== null;
+  const explainEnabled = !readOnly && !!user && quiz.examId !== null;
   const info = useApi(() => (explainEnabled ? explanationApi.info(quiz.examId!) : Promise.resolve(null)), [explainEnabled, quiz.examId]);
   const [reported, setReported] = useState<Set<number>>(new Set()); // các câu đã báo cáo trong phiên này
   const toast = useToast();
   // Câu đã lưu của đề: tải một lần mỗi đề, sau đó cập nhật tại chỗ khi bấm lưu/bỏ lưu (khoá theo "đề:câu")
-  const saveEnabled = !!user && quiz.examId !== null;
+  const saveEnabled = !readOnly && !!user && quiz.examId !== null;
   const savedOfExam = useApi(() => (saveEnabled ? savedApi.ofExam(quiz.examId!) : Promise.resolve(null)), [saveEnabled, quiz.examId]);
   const [savedChanged, setSavedChanged] = useState<Record<string, boolean>>({});
   const [unlockOpen, setUnlockOpen] = useState(false); // hộp xác nhận mở khóa cả đề
@@ -56,7 +57,7 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit }: Props)
   if (!question) return null;
 
   // Báo cáo đáp án sai: chỉ với đề của hệ thống, đã đăng nhập, và khi câu này đã có kết quả (đáp án đã chắc chắn)
-  const canReport = !!user && quiz.examId !== null && quiz.isRevealed(question) && !question.answerPending && question.correct.length > 0;
+  const canReport = !readOnly && !!user && quiz.examId !== null && quiz.isRevealed(question) && !question.answerPending && question.correct.length > 0;
 
   const unlockedAll = !!info.data?.unlocked;
   const explainBought = unlockedAll || !!info.data?.purchased.includes(question.number) || bought.has(question.number);
@@ -104,7 +105,7 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit }: Props)
     hasPrev: quiz.current > 0,
     hasNext: quiz.current < quiz.questions.length - 1,
     flagged: !!quiz.flagged[question.number],
-    onToggleFlag: () => quiz.toggleFlag(question.number),
+    onToggleFlag: readOnly ? undefined : () => quiz.toggleFlag(question.number),
     saved: isSaved,
     onToggleSave: saveEnabled ? () => void toggleSave() : undefined,
     onReport: canReport ? () => setReportOpen(true) : undefined,
@@ -113,13 +114,13 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit }: Props)
     explainFree,
     reported: reported.has(question.number),
     autoNext: autoNext.on,
-    onToggleAutoNext: autoNext.available ? autoNext.toggle : undefined,
+    onToggleAutoNext: !readOnly && autoNext.available ? autoNext.toggle : undefined,
     onChoose: (option) => quiz.choose(question, option),
     onCheck: () => quiz.check(question),
     onPrev: quiz.prev,
     onNext: quiz.next,
     // Câu cuối thì nút "Tiếp" thành "Nộp bài" (không khi đã nộp, chờ AI, hoặc đề còn đang được lấy về)
-    onSubmit: !quiz.submitted && !quiz.answersPending && !quiz.loadingMore ? onSubmit : undefined,
+    onSubmit: !readOnly && !quiz.submitted && !quiz.answersPending && !quiz.loadingMore ? onSubmit : undefined,
   };
 
   // Dùng chung cho màn hình làm bài và cửa sổ phóng to ảnh (chỉ gắn vào một nơi tại một thời điểm)

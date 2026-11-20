@@ -11,7 +11,7 @@ export interface QuestionViewProps {
   hasPrev: boolean;
   hasNext: boolean;
   flagged: boolean; // đã đánh dấu xem lại chưa
-  onToggleFlag: () => void;
+  onToggleFlag?: () => void; // không có = xem lại bài cũ, không đánh dấu
   saved?: boolean; // câu đã có trong "Câu đã lưu"
   onToggleSave?: () => void; // lưu/bỏ lưu câu (chỉ khi đã đăng nhập và là đề của hệ thống)
   onReport?: () => void; // có khi đã có kết quả của câu và người dùng đã đăng nhập (báo cáo đáp án sai)
