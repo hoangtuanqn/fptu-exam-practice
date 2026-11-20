@@ -1,5 +1,5 @@
 import { Link, useParams } from "react-router-dom";
-import { BookOpen, Flame, Layers, Play } from "lucide-react";
+import { BookOpen, Flame, Layers, Play, SquareStack } from "lucide-react";
 import { SUBJECTS } from "../../../seo.config";
 import { Footer } from "@/shared/layout/Footer";
 import { SiteHeader } from "@/shared/layout/SiteHeader";
@@ -35,6 +35,9 @@ export default function SubjectPage() {
         <div className="mt-6 flex flex-wrap gap-2">
           <Link to={`/account/exams?tab=subject&subject=${subject.code}`} className={buttonClass({ variant: "primary" })}>
             <Play size={16} /> {d && d.exams > 0 ? `Xem ${d.exams} đề có sẵn` : "Xem đề có sẵn"}
+          </Link>
+          <Link to={`/flashcard/${subject.code.toLowerCase()}`} className={buttonClass({ variant: "outlined" })}>
+            <SquareStack size={16} /> Ôn bằng flashcard
           </Link>
         </div>
 

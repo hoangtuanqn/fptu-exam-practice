@@ -827,6 +827,7 @@ model Subject {
 
   chapters SubjectChapter[]
   questionGroups     QuestionGroup[]
+  flashcards         Flashcard[]
   groupMembers       QuestionGroupMember[]
   chapterStats       ChapterStat[]
   questionGroupStats QuestionGroupStat[]
@@ -1519,4 +1520,19 @@ model FuoCatalogSubject {
 
   @@index([lastRunId, status])
   @@map("fuo_catalog_subjects")
+}
+
+// Flashcard of a subject: one question image (storage/flashcards/<SUBJECT CODE>/Q<number>.webp) plus its answer.
+// Images and answers are imported by hand (scripts/import-flashcards.ts), not taken from exams.
+model Flashcard {
+  id        Int      @id @default(autoincrement())
+  subjectId String   @map("subject_id") @db.Char(36)
+  number    Int
+  answer    String   @db.VarChar(20) // letters separated by spaces, e.g. "A" or "A C"
+  createdAt DateTime @default(now()) @map("created_at")
+
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([subjectId, number])
+  @@map("flashcards")
 }

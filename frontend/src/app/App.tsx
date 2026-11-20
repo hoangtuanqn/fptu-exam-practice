@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
-import { Bookmark, Crown, FileText, Flame, NotebookPen, BookOpen, ListChecks, GraduationCap, LayoutDashboard, UserRound, Wallet, Receipt, Gift, UserPlus, ShoppingBag } from "lucide-react";
+import { Bookmark, Crown, FileText, Flame, Layers, NotebookPen, BookOpen, ListChecks, GraduationCap, LayoutDashboard, UserRound, Wallet, Receipt, Gift, UserPlus, ShoppingBag } from "lucide-react";
 import { PanelLayout, type NavItem } from "@/shared/layout/PanelLayout";
 import { BottomNav } from "@/shared/layout/BottomNav";
 import { Loading } from "@/shared/ui/Feedback";
@@ -56,6 +56,8 @@ const FetchLinkPage = lazy(() => import("@/features/exam-import/FetchLinkPage"))
 const SubjectPage = lazy(() => import("@/features/landing/SubjectPage"));
 const PublicCatalogPage = lazy(() => import("@/features/exam-store/PublicCatalogPage"));
 const FrequentPage = lazy(() => import("@/features/frequent/FrequentPage"));
+const FlashcardSubjectsPage = lazy(() => import("@/features/flashcard/FlashcardSubjectsPage"));
+const FlashcardSubjectPage = lazy(() => import("@/features/flashcard/FlashcardSubjectPage"));
 const MaterialsPage = lazy(() => import("@/features/materials/MaterialsPage"));
 const MaterialResultPage = lazy(() => import("@/features/materials/MaterialResultPage"));
 const ReviewPracticePage = lazy(() => import("@/features/review/ReviewPracticePage"));
@@ -79,6 +81,7 @@ const ACCOUNT_NAV: NavItem[] = [
   { to: "/account/review", label: "Sổ câu sai", icon: NotebookPen, group: "Ôn tập" },
   { to: "/account/saved", label: "Câu đã lưu", icon: Bookmark, group: "Ôn tập" },
   { to: "/account/frequent", label: "Câu hay ra", icon: Flame, group: "Ôn tập" },
+  { to: "/flashcard", label: "Flashcard", icon: Layers, group: "Ôn tập" },
   // Tạm ẩn: { to: "/account/materials", label: "Phân tích slide", icon: FileText, group: "Ôn tập" },
   { to: "/account/attempts", label: "Lịch sử làm bài", icon: ListChecks, group: "Kết quả", also: ["/account/reports"] },
   { to: "/account/grades", label: "Điểm FAP", icon: GraduationCap, group: "Kết quả" },
@@ -125,6 +128,9 @@ export default function App() {
         <Route path="/kho-de" element={<PublicCatalogPage />} />
         {/* Trang giới thiệu từng môn (SEO): /mon/pro192 */}
         <Route path="/mon/:code" element={<SubjectPage />} />
+        {/* Flashcard theo môn: công khai, khách xem các thẻ đầu */}
+        <Route path="/flashcard" element={<FlashcardSubjectsPage />} />
+        <Route path="/flashcard/:code" element={<FlashcardSubjectPage />} />
         {/* Lịch sử thay đổi (Có gì mới) của web và tiện ích Chrome: công khai */}
         <Route path="/changelog" element={<ChangelogPage />} />
 

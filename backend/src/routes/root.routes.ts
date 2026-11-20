@@ -18,6 +18,7 @@ import depositPublicRouter from "./deposit-public.routes";
 import depositRouter from "./deposit.routes";
 import examRouter from "./exam.routes";
 import explanationRouter from "./explanation.routes";
+import flashcardRouter from "./flashcard.routes";
 import giftCodeRouter from "./gift-code.routes";
 import offersPublicRouter from "./offers-public.routes";
 import extensionRouter from "./extension.routes";
@@ -59,6 +60,7 @@ rootRouter.use("/catalog", catalogRouter);
 rootRouter.use("/public/reminder", reminderPublicRouter);
 rootRouter.use("/marketing", marketingRouter); // hủy nhận thư marketing (công khai)
 rootRouter.use("/subjects", subjectRouter);
+rootRouter.use("/flashcards", flashcardRouter); // flashcard theo môn (khách xem trước)
 rootRouter.use("/grades", gradeRouter);
 rootRouter.use("/materials", materialRouter); // phân tích slide (Pro)
 rootRouter.use("/attempts", attemptRouter);

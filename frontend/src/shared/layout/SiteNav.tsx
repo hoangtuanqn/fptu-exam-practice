@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { BookOpen, Crown, Menu, ShoppingBag } from "lucide-react";
+import { BookOpen, Crown, Layers, Menu, ShoppingBag } from "lucide-react";
 import { IconButton } from "@/shared/ui/Button";
 
 // Điều hướng chính dùng chung cho header trang chủ, /features, /kho-de, /pro. Từ màn hình vừa trở lên hiện thành hàng; 600-767px gom vào nút menu;
@@ -22,7 +22,7 @@ export function SiteNav() {
       )}
       {open && (
         <div className="md-enter absolute left-0 top-full z-50 mt-1 w-56 rounded-m3-sm bg-surface-container py-2 shadow-m3-2">
-          {[["/kho-de", "Kho đề"], ["/account/coursera", "Coursera"], ["/pro", "Gói Pro"]].map(([to, text]) => (
+          {[["/kho-de", "Kho đề"], ["/flashcard", "Flashcard"], ["/account/coursera", "Coursera"], ["/pro", "Gói Pro"]].map(([to, text]) => (
             <Link key={to} to={to} className="md-state md-label-large flex h-12 items-center px-4 text-on-surface">
               {text}
             </Link>
@@ -33,6 +33,9 @@ export function SiteNav() {
     <nav aria-label="Điều hướng chính" className="hidden min-w-0 flex-1 items-center justify-center gap-1 px-4 md:flex">
       <Link to="/kho-de" className={cls("/kho-de")} aria-current={pathname === "/kho-de" ? "page" : undefined}>
         <BookOpen size={18} /> Kho đề
+      </Link>
+      <Link to="/flashcard" className={cls("/flashcard")} aria-current={pathname === "/flashcard" ? "page" : undefined}>
+        <Layers size={18} /> Flashcard
       </Link>
       <Link to="/account/coursera" className={cls("/account/coursera")} aria-current={pathname === "/account/coursera" ? "page" : undefined}>
         <ShoppingBag size={18} /> Coursera
