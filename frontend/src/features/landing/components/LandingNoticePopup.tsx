@@ -50,7 +50,7 @@ export function LandingNoticePopup() {
         ))}
       </ol>
       <p className="mt-3 text-sm font-semibold text-primary">{N.note}</p>
-      <img src={N.image} alt={N.imageAlt} className="mt-4 w-full rounded-m3-lg" />
+      <img src={N.image} width={1000} height={1333} alt={N.imageAlt} className="mt-4 w-full rounded-m3-lg" />
       <div className="mt-5 flex flex-wrap justify-end gap-2">
         <Button variant="text" onClick={snoozeAndClose}>Tắt trong 1 giờ</Button>
         <a href={N.link} target="_blank" rel="noreferrer" onClick={close} className={buttonClass({ variant: "filled" })}>{N.linkLabel}</a>

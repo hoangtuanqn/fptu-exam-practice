@@ -9,5 +9,6 @@ interface Props {
 // Logo thương hiệu: mọi nơi trong app dùng component này nên đổi logo chỉ cần thay file trong public/brand/
 export function Logo({ variant = "mark", onDark = false, className = "h-7" }: Props) {
   const src = variant === "mark" ? logos.mark : onDark ? logos.fullOnDark : logos.fullOnLight;
-  return <img src={src} alt={brand.company} className={`w-auto select-none ${className}`} draggable={false} />;
+  const [width, height] = variant === "mark" ? [528, 400] : [868, 448]; // tỉ lệ gốc của file, giữ chỗ trước khi tải
+  return <img src={src} width={width} height={height} alt={brand.company} className={`w-auto select-none ${className}`} draggable={false} />;
 }
