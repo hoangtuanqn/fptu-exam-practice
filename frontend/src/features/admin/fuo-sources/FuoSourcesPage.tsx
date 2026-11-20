@@ -29,7 +29,7 @@ export default function FuoSourcesPage() {
 
   return (
     <>
-      <PageHeader title="Nguồn đề" description="Bấm Load dữ liệu mới để tìm đề mới trên FuOverflow (đề mới chỉ được tải khi có người mở) và cập nhật đề đã có." />
+      <PageHeader title="Nguồn đề" description="Bấm Load dữ liệu mới để tìm đề mới trên FuOverflow (đề mới, kể cả link dán, chỉ được tải khi có người mở) và cập nhật đề đã có." />
       <div className="space-y-4">
         <QueryBoundary query={{ ...live.query, data: live.status }}>
           {(s) => <RunCard status={s} running={live.running} onStatus={live.set} />}

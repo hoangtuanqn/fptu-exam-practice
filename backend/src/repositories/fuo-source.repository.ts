@@ -23,15 +23,17 @@ const URL_SELECT = {
 // Đưa vào hàng chờ của lượt chỉ link cần làm: link mới (NEW), link lỗi hoặc còn chờ từ lượt khác, và link đã xong mà bài đã đổi
 // trên FuOverflow sau lần xử lý (fuo_threads.synced_at > processed_at). Link đã xong và bài không đổi thì không tải lại.
 const queueForRun = async (tx: Prisma.TransactionClient, runId: string) => {
-  const pending = await tx.fuoSourceUrl.updateMany({
-    where: { status: { in: ["NEW", "QUEUED", "FAILED"] }, OR: [{ lastRunId: null }, { lastRunId: { not: runId } }] },
-    data: { status: "QUEUED", lastRunId: runId },
-  });
+  // Link chưa có đề (NEW) ở lại "Chưa lấy": chỉ lấy ảnh và nhờ AI giải khi có người bấm vào đề; lượt này chỉ cập nhật đề đã có
+  const pending = await tx.$executeRaw`
+    UPDATE fuo_source_urls s
+    SET s.status = 'QUEUED', s.last_run_id = ${runId}, s.updated_at = ${new Date()}
+    WHERE s.status IN ('NEW', 'QUEUED', 'FAILED') AND (s.last_run_id IS NULL OR s.last_run_id <> ${runId})
+      AND EXISTS (SELECT 1 FROM exams e WHERE e.thread_id = s.thread_id)`;
   const changed = await tx.$executeRaw`
     UPDATE fuo_source_urls s JOIN fuo_threads t ON t.thread_id = s.thread_id
     SET s.status = 'QUEUED', s.last_run_id = ${runId}, s.updated_at = ${new Date()}
     WHERE s.status = 'DONE' AND t.synced_at > s.processed_at`;
-  return { count: pending.count + changed };
+  return { count: pending + changed };
 };
 
 export const fuoSourceRepository = {
