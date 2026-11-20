@@ -1,14 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, ChevronLeft, ChevronRight, Eye, EyeOff, Layers, Maximize2, Minimize2 } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Crown, Eye, EyeOff, Layers, LayoutGrid, Maximize2, Minimize2, ZoomIn, ZoomOut } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
-import { openImageHandler, prefetchImage } from "@/shared/api/protectedImage";
+import { useQuestionImageScale } from "@/features/practice/hooks/useQuestionImageScale";
+import { prefetchImage } from "@/shared/api/protectedImage";
 import { useApi } from "@/shared/hooks/useApi";
 import { useUrlState } from "@/shared/hooks/useUrlState";
-import { Footer } from "@/shared/layout/Footer";
-import { SiteHeader } from "@/shared/layout/SiteHeader";
 import { Button, buttonClass } from "@/shared/ui/Button";
-import { Card } from "@/shared/ui/Card";
 import { Empty } from "@/shared/ui/Feedback";
 import { Kbd } from "@/shared/ui/Kbd";
 import { ProtectedImg } from "@/shared/ui/ProtectedImg";
@@ -16,7 +14,7 @@ import { QueryBoundary } from "@/shared/ui/QueryBoundary";
 import { flashcardApi, type FlashcardResult } from "./flashcard.api";
 import { LockedPanel } from "./LockedPanel";
 
-// /flashcard/:code: xem lần lượt từng câu hỏi của môn (ảnh từ máy chủ), bấm để hiện/ẩn đáp án.
+// /flashcard/:code: bố cục như trang làm đề: thanh trên gọn, ảnh câu hỏi chiếm gần hết màn hình, thanh dưới có Trước / Hiện đáp án / Tiếp.
 export default function FlashcardSubjectPage() {
   const code = (useParams().code ?? "").toUpperCase();
   const { user } = useAuth();
@@ -24,17 +22,11 @@ export default function FlashcardSubjectPage() {
   const q = useApi(() => flashcardApi.subject(code), [code, user?.id, user?.proExpiresAt]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-surface">
-      <SiteHeader />
-      <main className="mx-auto w-full max-w-3xl flex-1 space-y-4 px-4 py-8">
-        <Link to="/flashcard" className={buttonClass({ size: "sm", variant: "text" })}>
-          <ArrowLeft size={15} /> Tất cả môn
-        </Link>
-        <QueryBoundary query={q} loadingLabel="Đang tải flashcard…">
-          {(d) => <Viewer key={code} code={code} data={d} />}
-        </QueryBoundary>
-      </main>
-      <Footer />
+    // Giống trang làm đề: chiếm đúng chiều cao màn hình, ẩn thanh điều hướng dưới
+    <div className="flex h-[calc(100dvh-var(--bottom-nav-h,0px))] flex-col bg-surface" data-no-bottom-nav>
+      <QueryBoundary query={q} loadingLabel="Đang tải flashcard…">
+        {(d) => <Viewer key={code} code={code} data={d} />}
+      </QueryBoundary>
     </div>
   );
 }
@@ -47,6 +39,8 @@ function Viewer({ code, data }: { code: string; data: FlashcardResult }) {
   const [url, setUrl] = useUrlState({ q: "1" }); // ?q=34: mở đúng câu, tải lại trang không mất chỗ
   const [show, setShow] = useState(false);
   const [full, setFull] = useState(false);
+  const [listOpen, setListOpen] = useState(false);
+  const zoom = useQuestionImageScale();
   const box = useRef<HTMLDivElement>(null);
 
   const items = data.items;
@@ -57,12 +51,14 @@ function Viewer({ code, data }: { code: string; data: FlashcardResult }) {
   const go = (next: number) => {
     setUrl({ q: String(Math.min(Math.max(0, next), slots - 1) + 1) });
     setShow(false);
+    setListOpen(false);
   };
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (isTyping(e.target) || e.altKey || e.ctrlKey || e.metaKey) return;
-      if (e.key === "ArrowLeft") go(i - 1);
+      if (e.key === "Escape") setListOpen(false);
+      else if (e.key === "ArrowLeft") go(i - 1);
       else if (e.key === "ArrowRight") go(i + 1);
       else if (e.key === " " && !isControl(e.target) && item) {
         e.preventDefault();
@@ -87,65 +83,125 @@ function Viewer({ code, data }: { code: string; data: FlashcardResult }) {
 
   if (data.total === 0)
     return (
-      <Card>
+      <div className="flex flex-1 flex-col items-center justify-center gap-3 p-4">
         <Empty icon={Layers} title={`Môn ${code} chưa có flashcard`}>
           Bạn quay lại sau hoặc chọn môn khác.
         </Empty>
-      </Card>
+        <Link to="/flashcard" className={buttonClass({ variant: "tonal" })}>
+          <ArrowLeft size={16} /> Tất cả môn
+        </Link>
+      </div>
     );
 
-  return (
-    <div ref={box} className={`space-y-4 ${full ? "overflow-y-auto bg-surface p-4 sm:p-8" : ""}`}>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <p className="md-label-large text-primary">Flashcard</p>
-          <h1 className="md-headline-medium text-on-surface">{code}</h1>
-        </div>
-        <Button size="sm" variant="tonal" onClick={toggleFull} aria-label={full ? "Thoát toàn màn hình" : "Toàn màn hình"}>
-          {full ? <Minimize2 size={15} /> : <Maximize2 size={15} />} {full ? "Thoát" : "Toàn màn hình"}
-        </Button>
-      </div>
+  const iconBtn = "md-state flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-on-surface-variant disabled:opacity-40";
 
-      <Card className="space-y-4 p-4 sm:p-5">
-        <div className="flex items-center justify-between gap-2">
-          <Button variant="outlined" onClick={() => go(i - 1)} onMouseDown={keepFocus} disabled={i === 0} aria-label="Câu trước" className="!px-4">
+  return (
+    <div ref={box} className="flex min-h-0 flex-1 flex-col bg-surface">
+      <header className="relative z-20 flex h-14 shrink-0 items-center justify-between gap-2 border-b border-outline-variant bg-surface-container-lowest px-2 sm:px-4">
+        <div className="flex min-w-0 items-center gap-1">
+          <Link to="/flashcard" aria-label="Tất cả môn" title="Tất cả môn" className={iconBtn}>
+            <ArrowLeft size={20} />
+          </Link>
+          <h1 className="md-title-medium truncate text-on-surface">
+            <span className="hidden text-primary sm:inline">Flashcard · </span>
+            {code}
+          </h1>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setListOpen((o) => !o)}
+          aria-expanded={listOpen}
+          title="Danh sách câu"
+          className="md-state md-label-large inline-flex shrink-0 items-center gap-1.5 rounded-full border border-outline-variant bg-secondary-container px-3.5 py-1.5 tabular-nums text-on-secondary-container"
+          aria-live="polite"
+        >
+          <LayoutGrid size={16} />
+          Câu {i + 1} / {data.total}
+        </button>
+
+        <div className="flex shrink-0 items-center">
+          <button type="button" onClick={zoom.zoomOut} disabled={!zoom.canZoomOut} aria-label="Thu nhỏ ảnh" title="Thu nhỏ ảnh" className={iconBtn}>
+            <ZoomOut size={18} />
+          </button>
+          <button type="button" onClick={zoom.reset} title="Đặt lại" className="md-label-medium hidden w-12 rounded-md py-1 text-center tabular-nums text-on-surface-variant hover:bg-surface-container sm:block">
+            {Math.round(zoom.scale * 100)}%
+          </button>
+          <button type="button" onClick={zoom.zoomIn} disabled={!zoom.canZoomIn} aria-label="Phóng to ảnh" title="Phóng to ảnh" className={iconBtn}>
+            <ZoomIn size={18} />
+          </button>
+          <button type="button" onClick={toggleFull} aria-label={full ? "Thoát toàn màn hình" : "Toàn màn hình"} title={full ? "Thoát toàn màn hình" : "Toàn màn hình"} className={`${iconBtn} hidden sm:flex`}>
+            {full ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+          </button>
+        </div>
+
+        {listOpen && (
+          <>
+            <button aria-label="Đóng danh sách câu" onClick={() => setListOpen(false)} className="fixed inset-0 cursor-default" tabIndex={-1} />
+            <div className="absolute left-2 right-2 top-full z-10 mt-1 max-h-[70dvh] overflow-y-auto rounded-2xl border border-outline-variant bg-surface p-3 shadow-lg sm:left-1/2 sm:right-auto sm:w-[30rem] sm:-translate-x-1/2">
+              <div role="list" aria-label="Danh sách câu hỏi" className="grid grid-cols-6 gap-2 sm:grid-cols-8">
+                {Array.from({ length: slots }, (_, k) => (
+                  <div role="listitem" key={k}>
+                    <button
+                      type="button"
+                      aria-current={k === i ? "true" : undefined}
+                      title={items[k] ? `Câu ${k + 1}` : "Dành cho Pro"}
+                      onClick={() => go(k)}
+                      className={`md-state md-label-large flex h-10 w-full items-center justify-center rounded-m3-sm border border-outline text-on-surface ${k === i ? "ring-2 ring-primary ring-offset-2 ring-offset-surface" : ""}`}
+                    >
+                      {items[k] ? k + 1 : <Crown size={16} className="text-[#f0a800]" />}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+      </header>
+
+      <main className="min-h-0 flex-1 overflow-auto bg-slate-50 p-2 sm:p-3 lg:p-4">
+        {item ? (
+          <div className="mx-auto rounded-xl border border-outline-variant bg-surface-container-lowest p-1.5 shadow-sm sm:p-2" style={{ width: `${zoom.scale * 100}%`, maxWidth: "none" }}>
+            <ProtectedImg src={item.imageUrl} alt={`Câu hỏi ${i + 1}`} className="block h-auto w-full" />
+          </div>
+        ) : (
+          <div className="mx-auto max-w-xl pt-6">
+            <LockedPanel hidden={data.hidden} onClose={() => go(0)} />
+          </div>
+        )}
+      </main>
+
+      <footer className="shrink-0 border-t border-outline-variant bg-surface-container-lowest px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 sm:px-4">
+        <div className="mx-auto grid max-w-3xl grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 sm:gap-3">
+          <Button variant="outlined" onClick={() => go(i - 1)} onMouseDown={keepFocus} disabled={i === 0} aria-label="Câu trước" className="!min-h-12 !px-4">
             <ChevronLeft size={20} />
           </Button>
-          <p className="md-title-small tabular-nums text-on-surface-variant" aria-live="polite">
-            Câu {i + 1} / {data.total}
-          </p>
-          <Button variant="outlined" onClick={() => go(i + 1)} onMouseDown={keepFocus} disabled={i >= slots - 1} aria-label="Câu sau" className="!px-4">
+          {item ? (
+            <button
+              type="button"
+              onClick={() => setShow((s) => !s)}
+              aria-pressed={show}
+              aria-live="polite"
+              className={`md-state md-motion flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-full px-4 py-2 ${show ? "bg-primary-container text-on-primary-container" : "bg-primary text-on-primary"}`}
+            >
+              {show ? <EyeOff size={18} className="shrink-0" /> : <Eye size={18} className="shrink-0" />}
+              {show ? (
+                <span className="md-title-large min-w-0 truncate font-semibold">Đáp án: {item.answer.length ? item.answer.join(", ") : "chưa có"}</span>
+              ) : (
+                <span className="md-label-large">Hiện đáp án</span>
+              )}
+            </button>
+          ) : (
+            <span />
+          )}
+          <Button variant="outlined" onClick={() => go(i + 1)} onMouseDown={keepFocus} disabled={i >= slots - 1} aria-label="Câu sau" className="!min-h-12 !px-4">
             <ChevronRight size={20} />
           </Button>
         </div>
-
-        {item ? (
-          <>
-            <a href="#" onClick={full ? (e) => e.preventDefault() : openImageHandler(item.imageUrl)} title={full ? undefined : "Mở ảnh lớn"} className="block rounded-m3-md bg-surface-container-lowest p-2">
-              <ProtectedImg src={item.imageUrl} alt={`Câu hỏi ${i + 1}`} className={`mx-auto w-auto max-w-full object-contain object-top ${full ? "max-h-[65vh]" : "max-h-[60vh]"}`} />
-            </a>
-
-            <div className="flex justify-end">
-              <Button onClick={() => setShow((s) => !s)} aria-pressed={show}>
-                {show ? <EyeOff size={16} /> : <Eye size={16} />} {show ? "Ẩn đáp án" : "Hiện đáp án"}
-              </Button>
-            </div>
-
-            {show && (
-              <section aria-label="Đáp án" aria-live="polite" className="rounded-m3-md bg-primary-container px-5 py-4 text-on-primary-container">
-                <p className="md-label-large">Đáp án</p>
-                <p className="md-display-small mt-1 text-center font-semibold">{item.answer.length ? item.answer.join(", ") : "Chưa có đáp án"}</p>
-              </section>
-            )}
-          </>
-        ) : (
-          <LockedPanel hidden={data.hidden} onClose={() => go(0)} />
-        )}
-
-        <p className="md-body-small text-center text-on-surface-variant">
-          <Kbd>←</Kbd> <Kbd>→</Kbd> để chuyển câu · <Kbd>Space</Kbd> để hiện/ẩn đáp án
+        <p className="md-body-small mt-1.5 hidden text-center text-on-surface-variant lg:block">
+          <Kbd>←</Kbd> <Kbd>→</Kbd> chuyển câu · <Kbd>Space</Kbd> hiện/ẩn đáp án
         </p>
-      </Card>
+      </footer>
     </div>
   );
 }
