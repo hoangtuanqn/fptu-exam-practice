@@ -32,11 +32,13 @@ function scrollToPicker(ev: MouseEvent) {
 // Khối "Đề mới đăng": các đề vừa được đăng gần đây, lấy từ danh mục thật. Người học sắp thi sẽ muốn biết đề kỳ này đã có chưa,
 // nên đây là lý do để mở web ngay thay vì để sau. Không có đề đăng trong FRESH_DAYS ngày gần đây thì ẩn hẳn (không dựng số liệu).
 export function LatestExamsStrip() {
-  const { data } = useApi(() => catalogApi.latest(), []);
+  const { data, loading } = useApi(() => catalogApi.latest(), []);
   const now = Date.now();
   const fresh = (data ?? []).filter(
     (e) => now - new Date(e.postedAt).getTime() <= FRESH_DAYS * DAY_MS,
   );
+  // Đang tải: giữ chỗ để khi danh sách về không đẩy nội dung bên dưới (CLS)
+  if (!data && loading) return <div aria-hidden className="mt-8 h-44 rounded-m3-lg border border-outline-variant bg-surface-container-lowest" />;
   if (fresh.length === 0) return null;
 
   return (

@@ -18,8 +18,9 @@ interface Stat {
 // Dải số liệu kho đề ở đầu trang chủ: số thật đếm từ danh mục, không làm tròn lên, không "200+".
 // Đang tải hoặc lỗi thì ẩn hẳn; mục nào máy chủ chưa trả (byKind ở bản cũ) thì bỏ. FE và PE luôn hiện khi có số liệu, các ô phụ bằng 0 thì bỏ.
 export function LibraryStats() {
-  const data = useApi(() => catalogApi.overview(), []).data;
-  if (!data) return null;
+  const { data, loading } = useApi(() => catalogApi.overview(), []);
+  // Đang tải thì giữ chỗ đúng chiều cao dải số liệu, để khi số về không làm nhảy bố cục; lỗi thì ẩn hẳn
+  if (!data) return loading ? <div aria-hidden className="mx-auto mt-5 h-[7.5rem] max-w-md sm:h-[8.5rem] sm:max-w-lg" /> : null;
 
   const all: Stat[] = [
     { label: "Đề thi FE", icon: FileText, value: data.byKind?.FE, always: true },
@@ -56,6 +57,8 @@ function StatTile({ stat, index }: { stat: Stat & { value: number }; index: numb
       <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-container/70 text-primary transition duration-300 motion-safe:group-hover:scale-110 motion-safe:group-hover:-rotate-6">
         <Icon size={15} aria-hidden />
       </span>
+      {/* dt phải đứng trước dd trong HTML (dl chỉ nhận nhóm dt rồi dd); thứ tự hiển thị vẫn do class order */}
+      <dt className="md-label-small order-3 mt-1 text-on-surface-variant">{label}</dt>
       <dd className="order-2 mt-1.5 font-display text-2xl font-semibold leading-none tabular-nums sm:text-3xl">
         {/* Số chạy chỉ để nhìn; trình đọc màn hình đọc số cuối */}
         <span aria-hidden className="bg-gradient-to-b from-[#e89a00] to-[#8a6200] bg-clip-text text-transparent">
@@ -63,7 +66,6 @@ function StatTile({ stat, index }: { stat: Stat & { value: number }; index: numb
         </span>
         <span className="sr-only">{value.toLocaleString("vi-VN")}</span>
       </dd>
-      <dt className="md-label-small order-3 mt-1 text-on-surface-variant">{label}</dt>
     </div>
   );
 }
