@@ -86,6 +86,7 @@ export function QuestionCard({
                 <Bookmark size={18} className={saved ? "fill-current" : ""} />
               </button>
             )}
+            {onToggleFlag && (
             <button
               type="button"
               onClick={onToggleFlag}
@@ -98,6 +99,7 @@ export function QuestionCard({
             >
               <Flag size={18} className={flagged ? "fill-current" : ""} />
             </button>
+            )}
             <QuestionToolsMenu onZoom={onZoom} onReport={onReport} reported={reported} autoNext={autoNext} onToggleAutoNext={onToggleAutoNext} size={size} />
           </div>
         </div>
