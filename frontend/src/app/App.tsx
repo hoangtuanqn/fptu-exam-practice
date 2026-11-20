@@ -72,6 +72,7 @@ const CourseraPage = lazy(() => import("@/features/coursera/CourseraPage"));
 const ProfilePage = lazy(() => import("@/features/account/pages/ProfilePage"));
 
 const AttemptsPage = lazy(() => import("@/features/history/pages/AttemptsPage"));
+const AttemptReviewPage = lazy(() => import("@/features/history/pages/AttemptReviewPage"));
 const AttemptDetailPage = lazy(() => import("@/features/history/pages/AttemptDetailPage"));
 
 // Thanh bên của người dùng, xếp theo việc người học làm: tìm và làm đề -> ôn tập -> xem kết quả -> ví và Pro -> hồ sơ
@@ -119,6 +120,9 @@ export default function App() {
         <Route path="/exam/:examId" element={<PracticeRoute />} />
         {/* Xem đề chỉ đọc: công khai như trang làm đề (người xem cần có đề trong kho) */}
         <Route path="/exam/:examId/view" element={<ExamViewPage />} />
+        <Route element={<RequireAuth />}>
+          <Route path="/attempts/:id/review" element={<AttemptReviewPage />} />
+        </Route>
         <Route path="/exam/:examId/preview" element={<ExamPreviewPage />} />
         {M3Gallery && <Route path="/dev/m3" element={<Suspense fallback={null}><M3Gallery /></Suspense>} />}
 
