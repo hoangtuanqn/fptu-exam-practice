@@ -16,7 +16,7 @@ function ExamPaper() {
         <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">
           Đề thi thử
         </span>
-        <span className="text-[10px] text-outline">Mã đề 01</span>
+        <span className="text-[10px] text-on-surface-variant">Mã đề 01</span>
       </div>
 
       <div className="mt-4 space-y-1.5">
@@ -33,7 +33,7 @@ function ExamPaper() {
                 className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border font-display text-[10px] font-semibold ${
                   right
                     ? "border-emerald-600 text-emerald-600 ring-2 ring-emerald-500/25"
-                    : "border-outline-variant text-outline"
+                    : "border-outline-variant text-on-surface-variant"
                 }`}
               >
                 {o}
