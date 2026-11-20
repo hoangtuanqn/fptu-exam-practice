@@ -96,7 +96,7 @@ function Viewer({ code, data }: { code: string; data: FlashcardResult }) {
   const iconBtn = "md-state flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-on-surface-variant disabled:opacity-40";
 
   return (
-    <div ref={box} className="flex min-h-0 flex-1 flex-col bg-surface">
+    <div ref={box} className="flex min-h-0 flex-1 flex-col bg-gradient-to-b from-surface-container-low to-surface">
       <header className="relative z-20 flex h-14 shrink-0 items-center justify-between gap-2 border-b border-outline-variant bg-surface-container-lowest px-2 sm:px-4">
         <div className="flex min-w-0 items-center gap-1">
           <Link to="/flashcard" aria-label="Tất cả môn" title="Tất cả môn" className={iconBtn}>
@@ -158,11 +158,20 @@ function Viewer({ code, data }: { code: string; data: FlashcardResult }) {
           </>
         )}
       </header>
+      <div role="progressbar" aria-valuemin={1} aria-valuemax={slots} aria-valuenow={i + 1} aria-label="Tiến độ" className="h-1 shrink-0 bg-surface-container-high">
+        <div className="h-full rounded-r-full bg-gradient-to-r from-[#ffc61f] to-[#e89a00] transition-[width] duration-300" style={{ width: `${((i + 1) / slots) * 100}%` }} />
+      </div>
 
-      <main className="min-h-0 flex-1 overflow-auto bg-slate-50 p-2 sm:p-3 lg:p-4">
+      <main className="min-h-0 flex-1 overflow-auto p-3 sm:p-4 lg:p-6">
         {item ? (
-          <div className="mx-auto rounded-xl border border-outline-variant bg-surface-container-lowest p-1.5 shadow-sm sm:p-2" style={{ width: `${zoom.scale * 100}%`, maxWidth: "none" }}>
-            <ProtectedImg src={item.imageUrl} alt={`Câu hỏi ${i + 1}`} className="block h-auto w-full" />
+          <div className="mx-auto overflow-hidden rounded-3xl border border-outline-variant/70 bg-surface-container-lowest shadow-[0_2px_4px_rgba(0,0,0,0.05),0_22px_44px_-22px_rgba(70,45,0,0.4)]" style={{ width: `${zoom.scale * 100}%`, maxWidth: "none" }}>
+            <div className="flex items-center justify-between border-b border-outline-variant/60 bg-gradient-to-r from-primary-container/60 to-transparent px-4 py-2">
+              <span className="md-label-large text-on-primary-container">Câu hỏi {i + 1}</span>
+              <span className="md-label-medium text-on-surface-variant">{code}</span>
+            </div>
+            <div className="p-2 sm:p-3">
+              <ProtectedImg src={item.imageUrl} alt={`Câu hỏi ${i + 1}`} className="block h-auto w-full" />
+            </div>
           </div>
         ) : (
           <div className="mx-auto max-w-xl pt-6">
@@ -171,7 +180,7 @@ function Viewer({ code, data }: { code: string; data: FlashcardResult }) {
         )}
       </main>
 
-      <footer className="shrink-0 border-t border-outline-variant bg-surface-container-lowest px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 sm:px-4">
+      <footer className="shrink-0 border-t border-outline-variant bg-surface-container-lowest/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_24px_-16px_rgba(70,45,0,0.35)] backdrop-blur sm:px-4">
         <div className="mx-auto grid max-w-3xl grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 sm:gap-3">
           <Button variant="outlined" onClick={() => go(i - 1)} onMouseDown={keepFocus} disabled={i === 0} aria-label="Câu trước" className="!min-h-12 !px-4">
             <ChevronLeft size={20} />
@@ -182,11 +191,22 @@ function Viewer({ code, data }: { code: string; data: FlashcardResult }) {
               onClick={() => setShow((s) => !s)}
               aria-pressed={show}
               aria-live="polite"
-              className={`md-state md-motion flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-full px-4 py-2 ${show ? "bg-primary-container text-on-primary-container" : "bg-primary text-on-primary"}`}
+              className={`md-state md-motion flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-full px-4 py-2 shadow-sm ${show ? "bg-primary-container text-on-primary-container" : "bg-primary text-on-primary"}`}
             >
               {show ? <EyeOff size={18} className="shrink-0" /> : <Eye size={18} className="shrink-0" />}
               {show ? (
-                <span className="md-title-large min-w-0 truncate font-semibold">Đáp án: {item.answer.length ? item.answer.join(", ") : "chưa có"}</span>
+                <span className="flex min-w-0 items-center gap-2">
+                  <span className="md-label-large">Đáp án</span>
+                  {item.answer.length ? (
+                    item.answer.map((a) => (
+                      <span key={a} className="md-title-medium flex h-9 w-9 items-center justify-center rounded-full bg-primary font-semibold text-on-primary">
+                        {a}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="md-body-medium">chưa có</span>
+                  )}
+                </span>
               ) : (
                 <span className="md-label-large">Hiện đáp án</span>
               )}
@@ -198,8 +218,12 @@ function Viewer({ code, data }: { code: string; data: FlashcardResult }) {
             <ChevronRight size={20} />
           </Button>
         </div>
-        <p className="md-body-small mt-1.5 hidden text-center text-on-surface-variant lg:block">
-          <Kbd>←</Kbd> <Kbd>→</Kbd> chuyển câu · <Kbd>Space</Kbd> hiện/ẩn đáp án
+        <p className="md-body-small mt-1.5 text-center text-on-surface-variant">
+          Flashcard do FEPass tổng hợp để mọi người cùng luyện tập và tham khảo. Đáp án chỉ để tham khảo, bạn nên đối chiếu thêm với tài liệu môn học.
+          <span className="hidden lg:inline">
+            {" "}
+            · <Kbd>←</Kbd> <Kbd>→</Kbd> chuyển câu · <Kbd>Space</Kbd> hiện/ẩn đáp án
+          </span>
         </p>
       </footer>
     </div>
