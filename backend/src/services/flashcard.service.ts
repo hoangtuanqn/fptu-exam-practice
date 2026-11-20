@@ -9,7 +9,7 @@ export const flashcardService = {
   listSubjects: () => flashcardRepository.subjectsWithCards().then((items) => ({ items })),
 
   /**
-   * Thẻ của một môn theo số câu. Khách và gói thường chỉ nhận FLASHCARD_PREVIEW_LIMIT thẻ đầu: phần còn lại không rời máy chủ
+   * Thẻ của một môn theo số câu. Người dùng đã đăng nhập (route đã chặn khách); gói thường chỉ nhận FLASHCARD_PREVIEW_LIMIT thẻ đầu: phần còn lại không rời máy chủ
    * (không có link ảnh cũng không có đáp án), chỉ báo số lượng. Link ảnh ký ngắn hạn cho đúng từng ảnh được phép xem.
    */
   async forSubject(codeRaw: string, user: unknown) {

@@ -128,9 +128,11 @@ export default function App() {
         <Route path="/kho-de" element={<PublicCatalogPage />} />
         {/* Trang giới thiệu từng môn (SEO): /mon/pro192 */}
         <Route path="/mon/:code" element={<SubjectPage />} />
-        {/* Flashcard theo môn: công khai, khách xem các thẻ đầu */}
+        {/* Flashcard theo môn: danh sách môn công khai, xem thẻ phải đăng nhập */}
         <Route path="/flashcard" element={<FlashcardSubjectsPage />} />
-        <Route path="/flashcard/:code" element={<FlashcardSubjectPage />} />
+        <Route element={<RequireAuth />}>
+          <Route path="/flashcard/:code" element={<FlashcardSubjectPage />} />
+        </Route>
         {/* Lịch sử thay đổi (Có gì mới) của web và tiện ích Chrome: công khai */}
         <Route path="/changelog" element={<ChangelogPage />} />
 

@@ -20,7 +20,7 @@ import { AnswerPendingBanner } from "./AnswerPendingBanner";
 import { LoadingMoreBanner } from "./LoadingMoreBanner";
 import { ImageViewer } from "./ImageViewer";
 import { QuestionCard } from "./QuestionCard";
-import { RotateHint } from "./RotateHint";
+import { RotateHint } from "@/shared/ui/RotateHint";
 import type { QuestionViewProps } from "./types";
 
 interface Props {

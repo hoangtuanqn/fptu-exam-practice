@@ -60,7 +60,7 @@ rootRouter.use("/catalog", catalogRouter);
 rootRouter.use("/public/reminder", reminderPublicRouter);
 rootRouter.use("/marketing", marketingRouter); // hủy nhận thư marketing (công khai)
 rootRouter.use("/subjects", subjectRouter);
-rootRouter.use("/flashcards", flashcardRouter); // flashcard theo môn (khách xem trước)
+rootRouter.use("/flashcards", flashcardRouter); // flashcard theo môn (xem thẻ cần đăng nhập)
 rootRouter.use("/grades", gradeRouter);
 rootRouter.use("/materials", materialRouter); // phân tích slide (Pro)
 rootRouter.use("/attempts", attemptRouter);
