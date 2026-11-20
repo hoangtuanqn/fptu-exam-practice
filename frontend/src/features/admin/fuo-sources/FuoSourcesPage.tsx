@@ -12,7 +12,7 @@ import { useFuoSourcesStatus } from "./useFuoSourcesStatus";
 
 const FILTERS: FuoSourceStatus[] = ["NEW", "QUEUED", "RUNNING", "DONE", "FAILED"];
 
-// Nguồn đề FuOverflow (chỉ admin): bấm một nút để quét FuOverflow, nhập đề mới và cập nhật đề đã đổi, chạy nền; dán link là tuỳ chọn
+// Nguồn đề FuOverflow (chỉ admin): bấm một nút để quét FuOverflow để tìm đề mới và cập nhật đề đã đổi (đề mới chỉ tải khi có người mở), chạy nền; dán link là tuỳ chọn
 export default function FuoSourcesPage() {
   const [url, setUrl] = useUrlState({ status: "", page: "1" });
   const status = url.status as FuoSourceStatus | "";
@@ -29,7 +29,7 @@ export default function FuoSourcesPage() {
 
   return (
     <>
-      <PageHeader title="Nguồn đề" description="Bấm Load dữ liệu mới để tự tìm và tải đề mới, cập nhật đề đã đổi trên FuOverflow." />
+      <PageHeader title="Nguồn đề" description="Bấm Load dữ liệu mới để tìm đề mới trên FuOverflow (đề mới chỉ được tải khi có người mở) và cập nhật đề đã có." />
       <div className="space-y-4">
         <QueryBoundary query={{ ...live.query, data: live.status }}>
           {(s) => <RunCard status={s} running={live.running} onStatus={live.set} />}
