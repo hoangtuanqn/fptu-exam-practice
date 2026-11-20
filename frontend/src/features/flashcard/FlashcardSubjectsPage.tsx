@@ -1,50 +1,107 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search } from "lucide-react";
+import { Info, Layers } from "lucide-react";
 import { Footer } from "@/shared/layout/Footer";
 import { SiteHeader } from "@/shared/layout/SiteHeader";
 import { useApi } from "@/shared/hooks/useApi";
+import { Button } from "@/shared/ui/Button";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
+import { Segmented } from "@/shared/ui/Segmented";
 import { SubjectSearchInput } from "@/features/subject/SubjectSearchInput";
 import { SubjectTile } from "@/features/subject/SubjectTile";
 import { flashcardApi } from "./flashcard.api";
 
-// /flashcard: các môn đã có flashcard, bấm một môn để học. Khách xem được.
+const STEP = 24; // mỗi lần hiện thêm bấy nhiêu môn
+type Sort = "most" | "az";
+
+// /flashcard: cùng bố cục với Kho đề (tiêu đề, ô tìm, lưới môn) nhưng không có lọc theo kỳ. Khách xem được.
 export default function FlashcardSubjectsPage() {
   const navigate = useNavigate();
   const q = useApi(() => flashcardApi.subjects(), []);
   const [term, setTerm] = useState("");
-  const list = useMemo(() => q.data?.items?.map((s) => ({ code: s.code, name: s.name, badge: `${s.cardCount} thẻ` })), [q.data]);
-  const t = term.trim().toLowerCase();
-  const shown = useMemo(() => (list ?? []).filter((s) => !t || s.code.toLowerCase().includes(t) || (s.name ?? "").toLowerCase().includes(t)), [list, t]);
+  const [sort, setSort] = useState<Sort>("most");
+  const [limit, setLimit] = useState(STEP);
+  useEffect(() => setLimit(STEP), [term, sort]); // đổi tìm kiếm hay cách sắp thì về đợt đầu
+
+  const all = q.data?.items;
+  const list = useMemo(() => {
+    const t = term.trim().toLowerCase();
+    const found = (all ?? []).filter((s) => !t || s.code.toLowerCase().includes(t) || (s.name ?? "").toLowerCase().includes(t));
+    return [...found].sort((a, b) => (sort === "az" ? a.code.localeCompare(b.code) : b.cardCount - a.cardCount || a.code.localeCompare(b.code)));
+  }, [all, term, sort]);
+  const shown = list.slice(0, limit);
+  const rest = list.length - shown.length;
 
   return (
     <div className="flex min-h-screen flex-col bg-surface">
       <SiteHeader />
-      <main className="mx-auto w-full max-w-5xl flex-1 space-y-6 px-4 py-10">
-        <div>
-          <p className="md-label-large text-primary">Ôn tập</p>
-          <h1 className="md-headline-large mt-1 text-on-surface">Flashcard theo môn</h1>
-          <p className="md-body-large mt-2 text-on-surface-variant">Mỗi thẻ là một câu hỏi. Xem câu, nghĩ đáp án rồi bấm hiện đáp án để tự kiểm tra.</p>
+      <main className="flex-1">
+        <section className="relative isolate border-b border-outline-variant">
+          <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+            <div className="absolute left-1/2 top-[-7rem] h-64 w-[44rem] max-w-full -translate-x-1/2 rounded-full bg-[#ffc61f]/20 blur-3xl" />
+            <div className="absolute inset-0 opacity-50 [background-image:radial-gradient(var(--md-sys-color-outline-variant)_1px,transparent_1px)] [background-size:22px_22px] [mask-image:radial-gradient(ellipse_70%_70%_at_50%_0%,#000_25%,transparent_100%)]" />
+          </div>
+          <div className="mx-auto w-full max-w-5xl px-4 pb-8 pt-10 text-center sm:pt-12">
+            <p className="md-label-large uppercase tracking-[0.2em] text-primary">Flashcard</p>
+            <h1 className="md-hero-title mt-2 text-on-surface">
+              Flashcard <span className="italic text-primary">FE</span> của từng môn
+            </h1>
+            <p className="md-body-large mx-auto mt-3 max-w-xl text-on-surface-variant">Chọn môn để học. Mỗi thẻ là một câu hỏi: xem câu, nghĩ đáp án rồi bấm hiện đáp án để tự kiểm tra.</p>
+            <p className="md-body-medium mx-auto mt-4 flex max-w-xl items-start gap-2 rounded-m3-md border border-outline-variant/70 bg-surface-container-low px-4 py-2.5 text-left text-on-surface-variant">
+              <Info size={18} className="mt-0.5 shrink-0 text-primary" />
+              Flashcard do FEPass tổng hợp để mọi người cùng luyện tập và tham khảo. Đáp án chỉ để tham khảo, bạn nên đối chiếu thêm với tài liệu môn học.
+            </p>
+          </div>
+        </section>
+
+        <div className="mx-auto w-full max-w-5xl space-y-5 px-4 py-8">
+          <SubjectSearchInput value={term} onChange={setTerm} />
+
+          {q.loading && !all ? (
+            <Loading />
+          ) : q.error ? (
+            <ErrorBox message={q.error} onRetry={q.reload} />
+          ) : (
+            <>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="md-body-medium text-on-surface-variant" aria-live="polite">
+                  {term.trim() ? `Tìm thấy ${list.length}/${all?.length ?? 0} môn` : `Hiển thị ${shown.length}/${list.length} môn`}
+                </p>
+                <Segmented
+                  label="Sắp xếp môn"
+                  value={sort}
+                  options={[
+                    { value: "most", label: "Nhiều thẻ nhất" },
+                    { value: "az", label: "Theo mã A-Z" },
+                  ]}
+                  onChange={setSort}
+                />
+              </div>
+
+              {list.length === 0 ? (
+                <Empty icon={Layers} title="Chưa có môn nào khớp">
+                  Thử mã môn khác.
+                </Empty>
+              ) : (
+                <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                  {shown.map((s) => (
+                    <li key={s.code}>
+                      <SubjectTile subject={{ code: s.code, name: s.name, badge: `${s.cardCount} thẻ` }} onPick={() => navigate(`/flashcard/${s.code.toLowerCase()}`)} />
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {rest > 0 && (
+                <div className="flex justify-center">
+                  <Button variant="tonal" onClick={() => setLimit((n) => n + STEP)}>
+                    Xem thêm {Math.min(STEP, rest)} môn
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
         </div>
-        <SubjectSearchInput value={term} onChange={setTerm} />
-        {q.loading && !list ? (
-          <Loading />
-        ) : q.error ? (
-          <ErrorBox message={q.error} onRetry={q.reload} />
-        ) : shown.length === 0 ? (
-          <Empty icon={Search} title="Chưa có môn nào khớp">
-            Chưa có môn nào có flashcard khớp với từ bạn tìm.
-          </Empty>
-        ) : (
-          <ul className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4">
-            {shown.map((s) => (
-              <li key={s.code}>
-                <SubjectTile subject={s} onPick={() => navigate(`/flashcard/${s.code.toLowerCase()}`)} />
-              </li>
-            ))}
-          </ul>
-        )}
       </main>
       <Footer />
     </div>
