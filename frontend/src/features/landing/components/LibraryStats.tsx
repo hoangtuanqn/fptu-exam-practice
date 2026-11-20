@@ -34,11 +34,11 @@ export function LibraryStats() {
 
   return (
     <div className="mx-auto mt-5 max-w-md sm:max-w-lg">
-      <dl className={`grid gap-2 sm:gap-2.5 ${PHONE_COLS[onPhone]} ${SM_COLS[Math.min(4, stats.length)]}`}>
+      <ul className={`grid gap-2 sm:gap-2.5 ${PHONE_COLS[onPhone]} ${SM_COLS[Math.min(4, stats.length)]}`}>
         {stats.map((s, i) => (
           <StatTile key={s.label} stat={s} index={i} />
         ))}
-      </dl>
+      </ul>
     </div>
   );
 }
@@ -49,7 +49,7 @@ function StatTile({ stat, index }: { stat: Stat & { value: number }; index: numb
   const { icon: Icon, label, value, wideOnly } = stat;
   const shown = useCountUp(value);
   return (
-    <div
+    <li
       style={{ animationDelay: `${index * 90}ms` }}
       className={`stat-tile group relative animate-fade-up flex-col items-center overflow-hidden rounded-m3-md border border-outline-variant/70 bg-gradient-to-b from-surface-container-lowest to-surface-container-low px-2 pb-2.5 pt-3 text-center shadow-[0_1px_2px_rgba(0,0,0,0.05),0_14px_28px_-18px_rgba(70,45,0,0.45)] transition duration-300 hover:border-[#e0a100]/70 hover:shadow-[0_2px_4px_rgba(0,0,0,0.06),0_20px_36px_-16px_rgba(232,154,0,0.55)] motion-safe:hover:-translate-y-1 ${wideOnly ? "hidden sm:flex" : "flex"}`}
     >
@@ -57,15 +57,15 @@ function StatTile({ stat, index }: { stat: Stat & { value: number }; index: numb
       <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-container/70 text-primary transition duration-300 motion-safe:group-hover:scale-110 motion-safe:group-hover:-rotate-6">
         <Icon size={15} aria-hidden />
       </span>
-      {/* dt phải đứng trước dd trong HTML (dl chỉ nhận nhóm dt rồi dd); thứ tự hiển thị vẫn do class order */}
-      <dt className="md-label-small order-3 mt-1 text-on-surface-variant">{label}</dt>
-      <dd className="order-2 mt-1.5 font-display text-2xl font-semibold leading-none tabular-nums sm:text-3xl">
+      {/* Danh sách thường thay vì dl: dl chỉ cho nhóm dt/dd, còn ô này có icon và vạch trang trí */}
+      <span className="md-label-small order-3 mt-1 text-on-surface-variant">{label}</span>
+      <span className="order-2 mt-1.5 font-display text-2xl font-semibold leading-none tabular-nums sm:text-3xl">
         {/* Số chạy chỉ để nhìn; trình đọc màn hình đọc số cuối */}
         <span aria-hidden className="bg-gradient-to-b from-[#e89a00] to-[#8a6200] bg-clip-text text-transparent">
           {shown.toLocaleString("vi-VN")}
         </span>
         <span className="sr-only">{value.toLocaleString("vi-VN")}</span>
-      </dd>
-    </div>
+      </span>
+    </li>
   );
 }
