@@ -1,6 +1,5 @@
 import { ProtectedImg } from "@/shared/ui/ProtectedImg";
 import { Bookmark, BookmarkCheck, Tag } from "lucide-react";
-import type { AttemptQuestion } from "@/features/history/types";
 import type { Question } from "@/features/practice/types";
 import { IconButton } from "@/shared/ui/Button";
 import { Card } from "@/shared/ui/Card";
@@ -11,11 +10,10 @@ interface Props {
   highlighted: boolean;
   saved?: boolean;
   onToggleSave?: () => void; // chỉ có khi đã đăng nhập
-  mine?: AttemptQuestion; // bài làm cũ đang xem lại: đã chọn gì và đúng hay sai
 }
 
 // Một câu của trang xem đề: số câu, chủ đề, ảnh, đáp án và nút lưu (không chọn đáp án, không chấm)
-export function ViewQuestionCard({ q, showAnswer, highlighted, saved, onToggleSave, mine }: Props) {
+export function ViewQuestionCard({ q, showAnswer, highlighted, saved, onToggleSave }: Props) {
   const correct = q.correct ?? [];
   return (
     <li id={`q-${q.number}`} className="scroll-mt-20 md:scroll-mt-36">
@@ -38,14 +36,6 @@ export function ViewQuestionCard({ q, showAnswer, highlighted, saved, onToggleSa
           <div className="relative">
             <ProtectedImg src={q.imageUrl} alt={`Câu ${q.number}`} loading="lazy" className="h-auto w-full border-y border-outline-variant bg-surface-container-lowest" />
           </div>
-        )}
-        {mine && (
-          <p className={`md-body-medium px-4 py-2 ${mine.outcome === "correct" ? "text-emerald-700" : mine.outcome === "wrong" ? "text-rose-700" : "text-on-surface-variant"}`}>
-            Bạn chọn: <b>{mine.chosen.length ? mine.chosen.join(" ") : "—"}</b>
-            {mine.outcome === "correct" && " · Đúng"}
-            {mine.outcome === "wrong" && " · Sai"}
-            {mine.outcome === "skipped" && " · Chưa làm"}
-          </p>
         )}
         {showAnswer && correct.length > 0 && (
           <p className="md-body-medium px-4 py-2 text-on-surface">
