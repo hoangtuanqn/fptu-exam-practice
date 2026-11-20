@@ -1,0 +1,15 @@
+{
+  "entries": [
+    {
+      "identifier": "urn:air:fepass.top:site:fepass",
+      "displayName": "FEPass",
+      "description": "Nền tảng luyện thi môn FE cho sinh viên FPT University",
+      "type": "text/plain",
+      "url": "https://fepass.top/llms.txt",
+      "representativeQueries": [
+        "Đề thi FE của FPT University có ở đâu?",
+        "Luyện thi môn FE với lời giải AI"
+      ]
+    }
+  ]
+}
