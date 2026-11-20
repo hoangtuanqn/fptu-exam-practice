@@ -24,7 +24,7 @@ export function splitSlogan(slogan: string) {
 
 // Popup thông báo khi vào trang chủ (có hạn thật: hết hạn đăng ký thì tự ẩn, không cần sửa code)
 export const LANDING_NOTICE = {
-  image: "/promo/fcode-arcode.jpg",
+  image: "/promo/fcode-arcode.webp",
   imageAlt: "Poster tuyển thành viên của CLB F-Code",
   badge: "Cơ hội cho sinh viên FPTU",
   title: "CLB F-Code đang mở đơn tuyển thành viên",

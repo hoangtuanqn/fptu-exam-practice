@@ -2,6 +2,19 @@
 DirectorySlash Off
 Options -Indexes
 
+# Bộ nhớ đệm: file JS/CSS trong assets/ có mã băm trong tên nên cache một năm; ảnh cache một tuần; HTML và sw.js luôn kiểm tra lại
+<IfModule mod_headers.c>
+<FilesMatch "^(?!sw\.js$).*\.(js|css|woff2)$">
+Header set Cache-Control "public, max-age=31536000, immutable"
+</FilesMatch>
+<FilesMatch "\.(png|jpe?g|webp|svg|ico)$">
+Header set Cache-Control "public, max-age=604800"
+</FilesMatch>
+<FilesMatch "^(index\.html|sw\.js|manifest\.webmanifest)$">
+Header set Cache-Control "no-cache"
+</FilesMatch>
+</IfModule>
+
 <IfModule mod_rewrite.c>
 RewriteEngine On
 RewriteBase /

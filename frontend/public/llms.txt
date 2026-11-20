@@ -1,0 +1,16 @@
+# FEPass
+
+> FEPass là nền tảng luyện thi môn FE (Final Exam) cho sinh viên FPT University: đề thi thật, chấm điểm, lời giải và giải thích bằng AI, ôn tập lặp lại ngắt quãng.
+
+## Trang chính
+
+- [Trang chủ](https://fepass.top/): giới thiệu và bắt đầu luyện thi
+- [Kho đề](https://fepass.top/kho-de/): danh sách đề thi theo môn
+- [Tính năng](https://fepass.top/features/): các tính năng của FEPass
+- [Gói Pro](https://fepass.top/pro/): quyền lợi gói Pro
+- [Nhật ký thay đổi](https://fepass.top/changelog/): các cập nhật mới
+
+## Tài nguyên
+
+- [Sơ đồ trang](https://fepass.top/sitemap.xml): danh sách URL công khai
+- [Quy tắc thu thập dữ liệu](https://fepass.top/robots.txt): trang nào được phép thu thập

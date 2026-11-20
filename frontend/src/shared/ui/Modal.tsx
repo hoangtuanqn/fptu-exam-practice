@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import type { LucideIcon } from "lucide-react";
 
 const openModals: object[] = []; // hộp thoại đang mở theo thứ tự: chỉ hộp trên cùng nhận Esc/Tab (hộp xác nhận mở chồng lên hộp khác)
+let modalTitleSeq = 0; // id cho tiêu đề hộp thoại (aria-labelledby)
 const FOCUSABLE = 'a[href], button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])';
 
 /**
@@ -20,6 +21,12 @@ export function Modal({ children, onClose, wide = false, blur = false, maxWidth 
     const node = box.current;
     const token = {};
     openModals.push(token);
+    // Tên cho hộp thoại (trình đọc màn hình): tiêu đề đầu tiên trong hộp, khi hộp chưa có aria-label
+    const heading = node?.querySelector<HTMLElement>("h1, h2, h3");
+    if (node && heading && !node.hasAttribute("aria-label")) {
+      heading.id ||= `modal-title-${++modalTitleSeq}`;
+      node.setAttribute("aria-labelledby", heading.id);
+    }
     // Đưa focus vào hộp: ưu tiên phần tử có autoFocus, không thì khung hộp
     (node?.querySelector<HTMLElement>("[autofocus]") ?? node)?.focus({ preventScroll: true });
 
