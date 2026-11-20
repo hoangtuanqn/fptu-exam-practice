@@ -26,8 +26,17 @@ export default function FlashcardSubjectsPage() {
   const all = q.data?.items;
   const list = useMemo(() => {
     const t = term.trim().toLowerCase();
-    const found = (all ?? []).filter((s) => !t || s.code.toLowerCase().includes(t) || (s.name ?? "").toLowerCase().includes(t));
-    return [...found].sort((a, b) => (sort === "az" ? a.code.localeCompare(b.code) : b.cardCount - a.cardCount || a.code.localeCompare(b.code)));
+    const found = (all ?? []).filter(
+      (s) =>
+        !t ||
+        s.code.toLowerCase().includes(t) ||
+        (s.name ?? "").toLowerCase().includes(t),
+    );
+    return [...found].sort((a, b) =>
+      sort === "az"
+        ? a.code.localeCompare(b.code)
+        : b.cardCount - a.cardCount || a.code.localeCompare(b.code),
+    );
   }, [all, term, sort]);
   const shown = list.slice(0, limit);
   const rest = list.length - shown.length;
@@ -37,19 +46,25 @@ export default function FlashcardSubjectsPage() {
       <SiteHeader />
       <main className="flex-1">
         <section className="relative isolate border-b border-outline-variant">
-          <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+          >
             <div className="absolute left-1/2 top-[-7rem] h-64 w-[44rem] max-w-full -translate-x-1/2 rounded-full bg-[#ffc61f]/20 blur-3xl" />
             <div className="absolute inset-0 opacity-50 [background-image:radial-gradient(var(--md-sys-color-outline-variant)_1px,transparent_1px)] [background-size:22px_22px] [mask-image:radial-gradient(ellipse_70%_70%_at_50%_0%,#000_25%,transparent_100%)]" />
           </div>
           <div className="mx-auto w-full max-w-5xl px-4 pb-8 pt-10 text-center sm:pt-12">
-            <p className="md-label-large uppercase tracking-[0.2em] text-primary">Flashcard</p>
+            <p className="md-label-large uppercase tracking-[0.2em] text-primary">
+              Flashcard
+            </p>
             <h1 className="md-hero-title mt-2 text-on-surface">
-              Flashcard <span className="italic text-primary">FE</span> của từng môn
+              Flashcard <span className="italic text-primary">FE</span> của từng
+              môn
             </h1>
-            <p className="md-body-large mx-auto mt-3 max-w-xl text-on-surface-variant">Chọn môn để học. Mỗi thẻ là một câu hỏi: xem câu, nghĩ đáp án rồi bấm hiện đáp án để tự kiểm tra.</p>
-            <p className="md-body-medium mx-auto mt-4 flex max-w-xl items-start gap-2 rounded-m3-md border border-outline-variant/70 bg-surface-container-low px-4 py-2.5 text-left text-on-surface-variant">
-              <Info size={18} className="mt-0.5 shrink-0 text-primary" />
-              Flashcard do FEPass tổng hợp để mọi người cùng luyện tập và tham khảo. Đáp án chỉ để tham khảo, bạn nên đối chiếu thêm với tài liệu môn học.
+            <p className="md-body-large mx-auto mt-3 max-w-xl text-on-surface-variant">
+              Flashcard do FEPass tổng hợp để mọi người cùng luyện tập và tham
+              khảo. Đáp án chỉ để tham khảo, bạn nên đối chiếu thêm với tài liệu
+              môn học.
             </p>
           </div>
         </section>
@@ -64,8 +79,13 @@ export default function FlashcardSubjectsPage() {
           ) : (
             <>
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="md-body-medium text-on-surface-variant" aria-live="polite">
-                  {term.trim() ? `Tìm thấy ${list.length}/${all?.length ?? 0} môn` : `Hiển thị ${shown.length}/${list.length} môn`}
+                <p
+                  className="md-body-medium text-on-surface-variant"
+                  aria-live="polite"
+                >
+                  {term.trim()
+                    ? `Tìm thấy ${list.length}/${all?.length ?? 0} môn`
+                    : `Hiển thị ${shown.length}/${list.length} môn`}
                 </p>
                 <Segmented
                   label="Sắp xếp môn"
@@ -86,7 +106,16 @@ export default function FlashcardSubjectsPage() {
                 <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                   {shown.map((s) => (
                     <li key={s.code}>
-                      <SubjectTile subject={{ code: s.code, name: s.name, badge: `${s.cardCount} thẻ` }} onPick={() => navigate(`/flashcard/${s.code.toLowerCase()}`)} />
+                      <SubjectTile
+                        subject={{
+                          code: s.code,
+                          name: s.name,
+                          badge: `${s.cardCount} thẻ`,
+                        }}
+                        onPick={() =>
+                          navigate(`/flashcard/${s.code.toLowerCase()}`)
+                        }
+                      />
                     </li>
                   ))}
                 </ul>
@@ -94,7 +123,10 @@ export default function FlashcardSubjectsPage() {
 
               {rest > 0 && (
                 <div className="flex justify-center">
-                  <Button variant="tonal" onClick={() => setLimit((n) => n + STEP)}>
+                  <Button
+                    variant="tonal"
+                    onClick={() => setLimit((n) => n + STEP)}
+                  >
                     Xem thêm {Math.min(STEP, rest)} môn
                   </Button>
                 </div>
