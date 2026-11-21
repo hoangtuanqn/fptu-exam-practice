@@ -1,5 +1,5 @@
 // Lượt quét danh mục FuOverflow của admin: mọi môn trong mục "TÀI LIỆU CÁC MÔN HỌC" và mọi bài trong diễn đàn của từng môn (chỉ thông tin mô tả, không tải ảnh/tệp)
-export const FUO_CATALOG_PAGE_PAUSE_MS = 1000; // nghỉ tối thiểu giữa hai trang (và hai môn) liên tiếp (lấy giá trị lớn hơn giữa số này và requestDelayMs)
+export const FUO_CATALOG_PAGE_PAUSE_MS = 3000; // nghỉ tối thiểu giữa hai trang (và hai môn) liên tiếp (lấy giá trị lớn hơn giữa số này và requestDelayMs)
 export const FUO_CATALOG_BUSY_WAIT_MS = 5000; // có job lấy đề của người dùng hoặc lượt nạp dữ liệu đang chạy: đợi chừng này rồi kiểm tra lại
 export const FUO_CATALOG_MAX_PAGES = 200; // chặn phân trang bất thường của một môn (20 bài mỗi trang)
 export const FUO_CATALOG_WRITE_CHUNK = 500; // số bài mỗi lần đọc/ghi DB
