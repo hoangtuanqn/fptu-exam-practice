@@ -1011,8 +1011,10 @@ model UserNotice {
   link      String?   @db.VarChar(200) // internal page path, starts with "/"
   createdAt DateTime  @default(now()) @map("created_at")
   readAt    DateTime? @map("read_at")
+  dedupeKey String?   @map("dedupe_key") @db.VarChar(64) // system broadcast key: a retry skips users who already got it; NULL for wallet notices
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([userId, dedupeKey])
   @@index([userId, createdAt])
   @@index([userId, readAt])
   @@index([readAt]) // nightly cleanup of old read notices
