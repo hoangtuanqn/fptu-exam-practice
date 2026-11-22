@@ -52,7 +52,7 @@ import { listReportsQuery, reviewReportBody } from "../rules/requests/answer-rep
 import { createGiftCodeBody, listGiftCodesQuery, updateGiftCodeBody } from "../rules/requests/gift-code.request";
 import { validate } from "../middlewares/validate.middlewares";
 import { drainBeforeError } from "../middlewares/drain.middlewares";
-import { oneExamUploadPerAdmin } from "../middlewares/single-flight.middlewares";
+import { examUploadQueueRoom, oneExamUploadPerAdmin } from "../middlewares/single-flight.middlewares";
 import { uploadExamImages } from "../middlewares/upload.middlewares";
 import { adminExamUploadController } from "../controllers/admin.exam-upload.controllers";
 import { examGapFilter, examGapsQuery, updateExamImagesBody, uploadExamBody } from "../rules/requests/exam-upload.request";
@@ -162,9 +162,11 @@ adminRouter.get("/settings/ai", adminAiController.getSettings);
 adminRouter.put("/settings/ai", validate(updateAiBody), adminAiController.updateSettings);
 
 adminRouter.get("/exams", validate(paginationQuery, "query"), adminAiController.listExams);
-// Tải đề bằng tay (thư mục images/Q<số>.webp + ans.json): tạo đề / cập nhật ảnh của đề có sẵn; mỗi admin một lần tải đang chạy
-adminRouter.post("/exams/upload", oneExamUploadPerAdmin, uploadExamImages, validate(uploadExamBody), adminExamUploadController.upload);
-adminRouter.post("/exams/:id/images", validate(uuidParam, "params"), oneExamUploadPerAdmin, uploadExamImages, validate(updateExamImagesBody), adminExamUploadController.updateImages);
+// Tải đề bằng tay (thư mục images/Q<số>.webp + ans.json): tạo đề / cập nhật ảnh của đề có sẵn; mỗi admin một lần tải đang chạy.
+// ?async=1: trả 202 ngay sau khi nhận tệp, xử lý nền; kết quả ở GET /exam-upload/jobs và sự kiện realtime admin:exam-upload
+adminRouter.post("/exams/upload", oneExamUploadPerAdmin, examUploadQueueRoom, uploadExamImages, validate(uploadExamBody), adminExamUploadController.upload);
+adminRouter.post("/exams/:id/images", validate(uuidParam, "params"), oneExamUploadPerAdmin, examUploadQueueRoom, uploadExamImages, validate(updateExamImagesBody), adminExamUploadController.updateImages);
+adminRouter.get("/exam-upload/jobs", adminExamUploadController.jobs);
 // Đề còn thiếu (chưa có đề / thiếu ảnh / thiếu đáp án)
 adminRouter.get("/exam-gaps", validate(examGapsQuery, "query"), adminExamUploadController.gaps);
 adminRouter.get("/exam-gaps/summary", validate(examGapFilter, "query"), adminExamUploadController.gapSummary);
