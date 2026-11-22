@@ -4,6 +4,8 @@ import { Logo } from "@/shared/brand/Logo";
 import { ThemeToggle } from "@/shared/theme/ThemeToggle";
 import { SiteNav } from "./SiteNav";
 import { UserMenu } from "./UserMenu";
+// Ngoại lệ đã biết (giống UserMenu): layout dùng chung lấy chuông từ feature
+import { UserNoticeBell } from "@/features/notifications/UserNoticeBell";
 
 // Header của các trang công khai ngoài trang chủ (/features, /pro): giống header trang chủ (logo, tên, điều hướng, giao diện, tài khoản)
 export function SiteHeader() {
@@ -18,6 +20,7 @@ export function SiteHeader() {
       </div>
       <SiteNav />
       <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+        <UserNoticeBell />
         <ThemeToggle />
         <UserMenu />
       </div>

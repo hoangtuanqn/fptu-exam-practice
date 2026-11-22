@@ -34,6 +34,17 @@ export async function refreshNoticeCounts() {
   }
 }
 
+/** Đánh dấu đã đọc các thông báo vừa hiện ở chuông: trừ số đếm ngay, rồi hỏi lại server cho đúng. */
+export async function markNoticesRead(ids: string[]) {
+  counts = { ...counts, unread: Math.max(0, counts.unread - ids.length) };
+  emit();
+  try {
+    await adminApi.readNoticeIds(ids);
+  } finally {
+    void refreshNoticeCounts();
+  }
+}
+
 function start() {
   if (started) return;
   void refreshNoticeCounts();

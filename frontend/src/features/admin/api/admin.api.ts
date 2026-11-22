@@ -377,7 +377,15 @@ export const adminApi = {
     important?: boolean;
     category?: NoticeCategory;
   }) => http.post<{ updated: number }>("/admin/notices/read-all", filter),
+  readNoticeIds: (ids: string[]) =>
+    http.post<{ updated: number }>("/admin/notices/read-ids", { ids }),
   deleteReadNotices: () => http.delete("/admin/notices/read"),
+  sendSystemNotice: (body: {
+    title: string;
+    body?: string;
+    link?: string;
+    level?: AdminNotice["level"];
+  }) => http.post<{ sent: number }>("/admin/system-notices", body),
   subjects: () => http.get<{ subjects: SubjectRow[] }>("/admin/subjects"),
   subject: (code: string) =>
     http.get<SubjectDetail>(`/admin/subjects/${encodeURIComponent(code)}`),
