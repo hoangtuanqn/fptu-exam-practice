@@ -3,6 +3,7 @@ import { CREDIT_EXPIRY_BATCH } from "../constants/credit-lot";
 import { creditLotRepository } from "../repositories/credit-lot.repository";
 import { userRepository } from "../repositories/user.repository";
 import { walletRepository } from "../repositories/wallet.repository";
+import { userNoticeService } from "./user-notice.service";
 
 export const creditLotService = {
   /**
@@ -19,7 +20,8 @@ export const creditLotService = {
       await creditLotRepository.setRemaining(tx, id, 0);
       if (take > 0) {
         const balance = await userRepository.incrementBalance(tx, userId, -take);
-        await walletRepository.createEntry(tx, { userId, type: "CREDIT_EXPIRED", amount: -take, balanceAfter: balance, note: "Credit giftcode hết hạn chưa dùng" });
+        const entry = await walletRepository.createEntry(tx, { userId, type: "CREDIT_EXPIRED", amount: -take, balanceAfter: balance, note: "Credit giftcode hết hạn chưa dùng" });
+        await userNoticeService.fromLedger(tx, entry);
       }
       return take;
     });

@@ -3,6 +3,7 @@ import { creditLotRepository } from "../repositories/credit-lot.repository";
 import { userRepository } from "../repositories/user.repository";
 import { walletRepository, type Db } from "../repositories/wallet.repository";
 import { AppError } from "../rules/error";
+import { userNoticeService } from "./user-notice.service";
 import { toMeta, type PaginationQuery } from "../utils/pagination";
 
 // Spending uses expiring credit first (earliest expiry first), so what is left in the balance after a debit is always the
@@ -23,7 +24,9 @@ export const walletService = {
     const balance = await userRepository.incrementBalance(db, input.userId, input.amount);
     if (balance < 0) throw new AppError("Số dư không đủ để trừ");
     if (input.amount < 0) await spendLots(db, input.userId, -input.amount);
-    return walletRepository.createEntry(db, { ...input, balanceAfter: balance });
+    const entry = await walletRepository.createEntry(db, { ...input, balanceAfter: balance });
+    await userNoticeService.fromLedger(db, entry); // chuông của người dùng, cùng transaction (số tiền 0 thì bỏ qua)
+    return entry;
   },
 
   // Trừ tiền (số dương). Không đủ số dư thì ném 402 và cả transaction chứa nó bị huỷ.
@@ -31,7 +34,9 @@ export const walletService = {
     const balance = await userRepository.incrementBalance(db, input.userId, -input.amount);
     if (balance < 0) throw AppError.paymentRequired("Số dư không đủ, vui lòng nạp thêm credit");
     await spendLots(db, input.userId, input.amount);
-    return walletRepository.createEntry(db, { ...input, amount: -input.amount, balanceAfter: balance });
+    const entry = await walletRepository.createEntry(db, { ...input, amount: -input.amount, balanceAfter: balance });
+    await userNoticeService.fromLedger(db, entry);
+    return entry;
   },
 
   async history(userId: string, query: PaginationQuery) {

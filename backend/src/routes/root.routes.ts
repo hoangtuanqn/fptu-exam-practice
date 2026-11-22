@@ -32,6 +32,7 @@ import materialRouter from "./material.routes";
 import marketingRouter from "./marketing.routes";
 import subjectRouter from "./subject.routes";
 import userRouter from "./user.routes";
+import notificationRouter from "./notification.routes";
 
 const rootRouter = Router();
 
@@ -41,6 +42,7 @@ rootRouter.get("/health", (_req, res) => {
 
 rootRouter.use("/auth", authRouter);
 rootRouter.use("/users", userRouter);
+rootRouter.use("/notifications", notificationRouter); // chuông thông báo của thành viên
 rootRouter.use("/deposits", depositRouter);
 rootRouter.use("/public/deposits", depositPublicRouter);
 rootRouter.use("/crawl-jobs", crawlJobRouter);

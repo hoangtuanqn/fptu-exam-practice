@@ -40,6 +40,8 @@ import { adminPromoController } from "../controllers/admin.promo.controllers";
 import { adminLibraryController } from "../controllers/admin.library.controllers";
 import { adminNoticeController } from "../controllers/admin.notice.controllers";
 import { listNoticesQuery, readAllNoticesBody, setNoticeReadBody } from "../rules/requests/admin-notice.request";
+import { readNoticeIdsBody, systemNoticeBody } from "../rules/requests/user-notice.request";
+import { idempotent } from "../middlewares/idempotency.middlewares";
 import { adminSubjectController } from "../controllers/admin.subject.controllers";
 import { subjectCodeOnlyParam, subjectSemesterBody, updateSubjectBody } from "../rules/requests/library.request";
 import { listAttemptsQuery, listCrawlJobsQuery, listPurchasesQuery, listWalletQuery } from "../rules/requests/admin-history.request";
@@ -86,6 +88,8 @@ adminRouter.put("/settings/promo", validate(updatePromoBody), adminPromoControll
 adminRouter.get("/notices", validate(listNoticesQuery, "query"), adminNoticeController.list);
 adminRouter.get("/notices/counts", adminNoticeController.counts);
 adminRouter.post("/notices/read-all", validate(readAllNoticesBody), adminNoticeController.readAll);
+adminRouter.post("/notices/read-ids", validate(readNoticeIdsBody), adminNoticeController.readIds);
+adminRouter.post("/system-notices", validate(systemNoticeBody), idempotent, adminNoticeController.broadcastSystem);
 adminRouter.delete("/notices/read", adminNoticeController.deleteRead);
 adminRouter.patch("/notices/:id", validate(uuidParam, "params"), validate(setNoticeReadBody), adminNoticeController.setRead);
 adminRouter.get("/subjects", adminSubjectController.list);
