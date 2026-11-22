@@ -20,3 +20,8 @@ export const MANUAL_THREAD_HEX_BYTES = 6;
 export const EXAM_UPLOAD_NAMES_SHOWN = 10; // số tên tệp lỗi liệt kê trong lời nhắn
 export const EXAM_GAP_QUERY_MAX = 60;
 export const EXAM_UPLOAD_TX_TIMEOUT_MS = 60_000; // một transaction ghi tối đa 100 câu
+
+// Tải đề chạy nền (?async=1): trả lời 202 ngay, xử lý lần lượt từng lượt
+export const EXAM_UPLOAD_MAX_QUEUED = 3; // số lượt chờ tối đa (không tính lượt đang chạy)
+export const EXAM_UPLOAD_MAX_STAGED_BYTES = 1024 * 1024 * 1024; // tổng tệp tạm trên đĩa
+export const EXAM_UPLOAD_JOBS_KEPT = 50; // số lượt gần nhất giữ trong RAM để xem kết quả

@@ -61,6 +61,8 @@ export const storageDir = path.resolve(env.STORAGE_DIR);
 
 // Thư mục tệp PDF tạm của Phân tích slide: không bao giờ nằm trong storageDir (thư mục đó được phục vụ công khai ở /api/v1/files)
 export const materialTempDir = path.resolve(env.MATERIAL_TEMP_DIR || path.join("private", "materials"));
+// Tệp tạm của lượt tải đề chạy nền: thư mục con của materialTempDir nên cũng không bao giờ được phục vụ công khai
+export const examUploadTempDir = path.join(materialTempDir, "exam-uploads");
 const rel = path.relative(storageDir, materialTempDir);
 if (rel === "" || (!rel.startsWith("..") && !path.isAbsolute(rel))) {
   console.error("Biến môi trường không hợp lệ:");
