@@ -4,6 +4,11 @@ import { sleep } from "../../utils/sleep";
 // Cookie hết hạn / chưa đăng nhập: server FuOverflow trả trang đăng nhập thay cho ảnh
 export class FuoAuthError extends Error {}
 
+// HTTP 429 khi client chạy với stopOnRateLimit: không thử lại, lượt nạp dừng ngay (tránh bị khoá tài khoản)
+export class FuoRateLimitError extends Error {}
+export const FUO_RATE_LIMIT_MESSAGE = "FuOverflow đang giới hạn truy cập (HTTP 429). Lượt lấy đề đã dừng, hãy chờ một thời gian rồi chạy lại.";
+export const isFuoRateLimited = (err: unknown) => err instanceof FuoRateLimitError || (err instanceof Error && err.cause instanceof FuoRateLimitError);
+
 // Câu cho người dùng khi phiên FuOverflow của hệ thống hỏng (chi tiết kỹ thuật ở FUO_AUTH_MESSAGE chỉ dành cho admin)
 export const FUO_UNAVAILABLE_MESSAGE = "Hệ thống tạm thời chưa tải được dữ liệu từ FuOverflow, không phải do bạn. Quản trị viên đã được báo; vui lòng thử lại sau.";
 export const FUO_AUTH_MESSAGE =
@@ -23,7 +28,8 @@ export interface FuoClient {
 }
 
 // Client được dựng theo cấu hình tại thời điểm chạy job, nên admin đổi cookie là có hiệu lực ở lượt sau
-export function createFuoClient(config: CrawlerConfig): FuoClient {
+// stopOnRateLimit: 429 ném FuoRateLimitError ngay thay vì thử lại (lượt lấy đề hàng loạt của admin)
+export function createFuoClient(config: CrawlerConfig, { stopOnRateLimit = false } = {}): FuoClient {
   const baseHeaders: Record<string, string> = {
     accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
     "accept-language": "vi,en-US;q=0.9,en;q=0.8",
@@ -43,12 +49,13 @@ export function createFuoClient(config: CrawlerConfig): FuoClient {
             signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
           });
           if (res.status === 401 || res.status === 403) throw new FuoAuthError(`HTTP ${res.status} - ${url}`);
+          if (res.status === 429 && stopOnRateLimit) throw new FuoRateLimitError(FUO_RATE_LIMIT_MESSAGE);
           if (res.ok) return res;
           const err = new Error(`HTTP ${res.status} ${res.statusText} - ${url}`);
           if (!RETRYABLE.has(res.status)) throw Object.assign(err, { fatal: true });
           throw err;
         } catch (err) {
-          const fatal = err instanceof FuoAuthError || (err as { fatal?: boolean }).fatal;
+          const fatal = err instanceof FuoAuthError || err instanceof FuoRateLimitError || (err as { fatal?: boolean }).fatal;
           if (fatal || attempt >= MAX_ATTEMPTS) throw err;
           await sleep(RETRY_BACKOFF_MS[attempt - 1] ?? 1500);
         }

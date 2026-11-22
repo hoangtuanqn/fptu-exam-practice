@@ -7,7 +7,7 @@ import type { ReadableStream as NodeReadableStream } from "node:stream/web";
 import { ATTACHMENT_MAX_BYTES, ATTACHMENT_TOTAL_MAX_BYTES } from "../../constants/crawler";
 import { attachmentType } from "../../utils/attachment";
 import { isFuoHttpsUrl } from "../../utils/fuo-url";
-import { FUO_AUTH_MESSAGE, FuoAuthError, type FuoClient } from "./fuo-client";
+import { FUO_AUTH_MESSAGE, FuoAuthError, type FuoClient, FuoRateLimitError } from "./fuo-client";
 import type { FileRef } from "./types";
 
 export interface DownloadedFile {
@@ -69,6 +69,7 @@ export async function downloadAttachment(
     budget.used -= size;
     await fs.rm(tmp, { force: true });
     if (err instanceof FuoAuthError) throw new Error(FUO_AUTH_MESSAGE, { cause: err });
+    if (err instanceof FuoRateLimitError) throw err;
     return skip(file, err instanceof TooLarge ? "vượt giới hạn dung lượng" : err instanceof Error ? err.message : String(err));
   }
 }
