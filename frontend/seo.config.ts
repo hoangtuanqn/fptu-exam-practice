@@ -101,6 +101,8 @@ export const PRIVATE_PAGES: Record<string, PageSeo> = {
   "/admin/gift-codes": { title: "Quản trị: giftcode", description: "Tạo và quản lý mã quà tặng." },
   "/admin/sepay": { title: "Quản trị: cấu hình SePay", description: "Thiết lập kết nối cổng thanh toán SePay." },
   "/admin/exams": { title: "Quản trị: đề thi", description: "Quản lý kho đề thi và chỉnh sửa câu hỏi." },
+  "/admin/exam-upload": { title: "Quản trị: tải đề lên", description: "Tạo đề mới từ thư mục ảnh và đáp án." },
+  "/admin/exam-gaps": { title: "Quản trị: đề cần bổ sung", description: "Đề còn thiếu ảnh hoặc đáp án và bài chưa có đề." },
   "/admin/reports": { title: "Quản trị: báo cáo đáp án", description: "Xử lý báo cáo đáp án sai từ người dùng." },
   "/admin/contributions": { title: "Quản trị: đề đóng góp", description: "Xem và duyệt ảnh đề thi thành viên gửi lên." },
   "/admin/explanation-feedback": { title: "Quản trị: đánh giá lời giải AI", description: "Xem đánh giá hữu ích hoặc chưa tốt của người dùng về lời giải AI." },

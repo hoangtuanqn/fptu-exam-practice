@@ -478,9 +478,11 @@ export default function ExamEditPage() {
               <span>
                 · có đáp án {answered}/{gradable.length}
               </span>
-              <a href={data.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-brand-700 hover:underline">
-                <ExternalLink size={13} /> Xem đề này trên FuOverflow
-              </a>
+              {data.sourceUrl && (
+                <a href={data.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-brand-700 hover:underline">
+                  <ExternalLink size={13} /> Xem đề này trên FuOverflow
+                </a>
+              )}
               <Link to={`/exam/${data.id}`} className="inline-flex items-center gap-1 text-brand-700 hover:underline">
                 <BookOpen size={13} /> Mở làm thử
               </Link>
