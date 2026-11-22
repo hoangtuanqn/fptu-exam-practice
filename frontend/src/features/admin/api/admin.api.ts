@@ -291,7 +291,14 @@ export interface QuestionChange {
   isReference?: boolean;
 }
 
+export interface PresenceData {
+  guests: number;
+  total: number; // tổng thành viên online (danh sách có thể bị cắt bớt)
+  users: { userId: string; fullName: string; email: string; pages: string[] }[];
+}
+
 export const adminApi = {
+  presence: () => http.get<PresenceData>("/admin/presence"),
   dashboard: () => http.get<DashboardOverview>("/admin/dashboard"),
 
   users: (f: UserFilter) =>

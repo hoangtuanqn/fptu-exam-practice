@@ -6,4 +6,8 @@ export const adminDashboardController = {
   async overview(_req: Request, res: Response) {
     res.json(new ResponseClient({ data: await adminDashboardService.overview() }));
   },
+
+  async presence(_req: Request, res: Response) {
+    res.json(new ResponseClient({ data: await adminDashboardService.presence() }));
+  },
 };

@@ -12,6 +12,7 @@ import ResetPasswordPage from "@/features/auth/pages/ResetPasswordPage";
 import VerifyEmailPage from "@/features/auth/pages/VerifyEmailPage";
 import GithubCallbackPage from "@/features/auth/github/GithubCallbackPage";
 import NotFoundPage from "./NotFoundPage";
+import { PresenceReporter } from "@/shared/realtime/PresenceReporter";
 import { adminRoutes } from "@/features/admin/admin.routes";
 import { AdminLayout } from "@/features/admin/AdminLayout";
 import { GuestSync } from "@/features/guest-sync/GuestSync";
@@ -113,6 +114,7 @@ export default function App() {
       <ScrollToTop />
       <GoogleTagManager />
       <GuestSync />
+      <PresenceReporter />
       <GradeBridgeHost />
       <FreeTurnNotice />
       <DailyCheckInPopup />

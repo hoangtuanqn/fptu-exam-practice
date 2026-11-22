@@ -89,6 +89,7 @@ export const PRIVATE_PAGES: Record<string, PageSeo> = {
 
   "/admin": { title: "Quản trị: tổng quan", description: "Số liệu tổng quan hệ thống dành cho quản trị viên." },
   "/admin/users": { title: "Quản trị: thành viên", description: "Danh sách và quản lý thành viên." },
+  "/admin/online": { title: "Quản trị: đang online", description: "Người dùng đang online và trang họ đang xem." },
   "/admin/referrals": { title: "Quản trị: giới thiệu", description: "Theo dõi lượt giới thiệu và thưởng." },
   "/admin/account-settings": { title: "Quản trị: cấu hình đăng ký", description: "Thiết lập tặng credit và quy tắc đăng ký." },
   "/admin/promotions": { title: "Quản trị: ưu đãi và khuyến mãi", description: "Cấu hình mốc thưởng nạp tiền và ưu đãi." },

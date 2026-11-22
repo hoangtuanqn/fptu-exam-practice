@@ -65,6 +65,7 @@ const adminRouter = Router();
 adminRouter.use(authenticate, requireAdmin);
 
 adminRouter.get("/dashboard", adminDashboardController.overview);
+adminRouter.get("/presence", adminDashboardController.presence);
 adminRouter.use("/insights", adminInsightsRouter);
 
 adminRouter.get("/users",validate(listUsersQuery, "query"), adminUserController.list);

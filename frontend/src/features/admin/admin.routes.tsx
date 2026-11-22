@@ -1,6 +1,6 @@
 import { lazy } from "react";
 import { Navigate, Route } from "react-router-dom";
-import { BellRing, BookMarked, Link2, MailPlus, Activity, ShieldCheck as QualityIcon, MessagesSquare, ShoppingBag, Megaphone, Bot, ClipboardList, DatabaseZap, ListPlus, FileText, FileUp, FolderSearch, History, SlidersHorizontal, Wallet, Gift, ImageUp, MessageSquareWarning, UserPlus, Landmark, LayoutDashboard, Receipt, Settings, ThumbsUp, Users } from "lucide-react";
+import { BellRing, BookMarked, Link2, MailPlus, Activity, ShieldCheck as QualityIcon, MessagesSquare, ShoppingBag, Megaphone, Bot, ClipboardList, DatabaseZap, ListPlus, FileText, FileUp, FolderSearch, History, SlidersHorizontal, Wallet, Gift, ImageUp, MessageSquareWarning, UserPlus, Landmark, LayoutDashboard, Radio, Receipt, Settings, ThumbsUp, Users } from "lucide-react";
 import type { NavItem } from "@/shared/layout/PanelLayout";
 
 /**
@@ -41,6 +41,7 @@ const AiPage = lazy(() => import("./content/AiPage"));
 const SubjectsManagerPage = lazy(() => import("./content/SubjectsManagerPage"));
 const NoticesPage = lazy(() => import("./notices/NoticesPage"));
 const SystemNoticePage = lazy(() => import("./notices/SystemNoticePage"));
+const OnlinePage = lazy(() => import("./users/OnlinePage"));
 const FunnelPage = lazy(() => import("./insights/FunnelPage"));
 const QualityPage = lazy(() => import("./insights/QualityPage"));
 const MarketingPage = lazy(() => import("./marketing/MarketingPage"));
@@ -48,6 +49,7 @@ const MarketingPage = lazy(() => import("./marketing/MarketingPage"));
 export const ADMIN_NAV: NavItem[] = [
   { to: "/admin", label: "Tổng quan", icon: LayoutDashboard, end: true, group: "Chung" },
   { to: "/admin/users", label: "Thành viên", icon: Users, group: "Người dùng" },
+  { to: "/admin/online", label: "Đang online", icon: Radio, group: "Người dùng" },
   { to: "/admin/referrals", label: "Giới thiệu", icon: UserPlus, group: "Người dùng" },
   { to: "/admin/account-settings", label: "Cấu hình đăng ký", icon: SlidersHorizontal, group: "Người dùng" },
   { to: "/admin/attempts", label: "Lịch sử làm bài", icon: ClipboardList, group: "Người dùng" },
@@ -86,6 +88,7 @@ export const adminRoutes = (
     <Route path="users" element={<UsersPage />} />
     <Route path="users/:id" element={<UserDetailPage />} />
     <Route path="purchases" element={<PurchasesPage />} />
+    <Route path="online" element={<OnlinePage />} />
     <Route path="referrals" element={<ReferralsPage />} />
     <Route path="account-settings" element={<AccountSettingsPage />} />
     <Route path="link-rewards" element={<LinkRewardSettingsPage />} />

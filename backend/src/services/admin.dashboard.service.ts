@@ -1,6 +1,9 @@
+import { presence } from "../realtime/presence";
 import { bankTransactionRepository } from "../repositories/bank-transaction.repository";
 import { depositRepository } from "../repositories/deposit.repository";
 import { userRepository } from "../repositories/user.repository";
+
+const PRESENCE_MAX_ROWS = 500;
 
 const countOf = (rows: { status: string; _count: { _all: number } }[], status: string) =>
   rows.find((r) => r.status === status)?._count._all ?? 0;
@@ -43,5 +46,14 @@ export const adminDashboardService = {
         unmatchedTransactions: unmatched, // tiền vào không khớp lệnh nào, cần admin xem
       },
     };
+  },
+
+  // Ai đang online và đang ở trang nào (đọc từ RAM, chỉ tra DB lấy tên; tối đa PRESENCE_MAX_ROWS người)
+  async presence() {
+    const { guests, members } = presence.snapshot();
+    const shown = members.slice(0, PRESENCE_MAX_ROWS);
+    const names = new Map((await userRepository.findNames(shown.map((m) => m.userId))).map((u) => [u.id, u]));
+    const users = shown.map((m) => ({ ...m, fullName: names.get(m.userId)?.fullName ?? "", email: names.get(m.userId)?.email ?? "" }));
+    return { guests, total: members.length, users };
   },
 };
