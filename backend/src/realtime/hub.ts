@@ -101,6 +101,11 @@ export const realtimeHub = {
     io?.to(MEMBERS_ROOM).emit(EVENTS.userNoticeSync);
   },
 
+  // Ai đang online vừa đổi: chỉ báo "có thay đổi", admin tự tải lại danh sách
+  publishPresence() {
+    io?.to(ADMIN_ROOM).emit(EVENTS.presence);
+  },
+
   // Tiến độ lượt quét danh mục FuOverflow: đẩy cho các admin đang online
   publishFuoCatalog(status: unknown) {
     io?.to(ADMIN_ROOM).emit(EVENTS.fuoCatalog, status);

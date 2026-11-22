@@ -9,6 +9,7 @@ import { uuidSchema } from "../rules/requests/admin.request";
 import { isMember, type Actor } from "../utils/actor";
 import { verifyToken } from "../utils/jwt";
 import { ADMIN_ROOM, EVENTS, MEMBERS_ROOM, SOCKET_PATH, roomOf, userRoom, type RoomKind } from "./events";
+import { presence } from "./presence";
 import { attachmentsPayload, examPayload, jobPayload, questionsPayload, realtimeHub } from "./hub";
 
 const GUEST_ID = /^[A-Za-z0-9-]{16,64}$/;
@@ -79,6 +80,10 @@ export function initRealtime(server: HttpServer) {
     const actor = socket.data.actor as Actor;
     if (actor.isAdmin) void socket.join(ADMIN_ROOM); // admin tự nhận thông báo mới, không cần đăng ký
     if (isMember(actor.owner)) void socket.join([userRoom(actor.owner.userId), MEMBERS_ROOM]); // thành viên tự nhận thông báo của mình
+
+    presence.add(socket.id, isMember(actor.owner) ? actor.owner.userId : null);
+    socket.on(EVENTS.presencePage, (page: unknown) => presence.setPage(socket.id, page));
+    socket.on("disconnect", () => presence.remove(socket.id));
 
     socket.on(EVENTS.subscribe, async (msg: { room?: string; id?: unknown }, ack?: (ok: boolean) => void) => {
       const kind = KINDS.find((k) => k === msg?.room);

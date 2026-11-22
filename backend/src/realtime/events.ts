@@ -13,6 +13,8 @@ export const EVENTS = {
   adminNotice: "admin:notice", // server -> client (chỉ admin): có thông báo mới về hành vi người dùng
   fuoCatalog: "admin:fuo-catalog", // server -> client (chỉ admin): tiến độ lượt quét danh mục FuOverflow, cùng dạng GET /admin/fuo-catalog/status
   fuoSources: "admin:fuo-sources", // server -> client (chỉ admin): tiến độ lượt nạp dữ liệu FuOverflow, cùng dạng GET /admin/fuo-sources/status
+  presence: "admin:presence", // server -> client (chỉ admin): có người vào/ra/đổi trang, không kèm dữ liệu, tải lại GET /admin/presence
+  presencePage: "presence:page", // client -> server: trang đang xem, ví dụ "/account/attempts"
   userNotice: "user:notice", // server -> client (chính thành viên đó): thông báo mới, cùng dạng một mục của GET /notifications
   userNoticeSync: "user:notice-sync", // server -> client (mọi thành viên đã đăng nhập): không kèm dữ liệu, tải lại thông báo (sau khi gửi thông báo hệ thống)
 } as const;
