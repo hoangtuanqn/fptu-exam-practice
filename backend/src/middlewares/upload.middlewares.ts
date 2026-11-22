@@ -1,6 +1,8 @@
 import multer from "multer";
 import type { Request, Response, NextFunction, RequestHandler } from "express";
+import { CONTRIBUTION_MAX_FILE_BYTES, CONTRIBUTION_MAX_FILE_MB, CONTRIBUTION_MAX_IMAGES, CONTRIBUTION_MAX_REQUEST_BYTES } from "../constants/exam-contribution";
 import { MATERIAL_MAX_FILE_BYTES, MATERIAL_MAX_FILE_MB } from "../constants/materials";
+import { HTTP_STATUS } from "../constants/httpStatus";
 import { AppError } from "../rules/error";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -48,6 +50,35 @@ export const uploadMaterialPdf: RequestHandler = (req, res, next) => {
     if (!err) return next();
     if (err instanceof multer.MulterError) {
       return next(new AppError(err.code === "LIMIT_FILE_SIZE" ? `Tệp quá lớn, tối đa ${MATERIAL_MAX_FILE_MB} MB` : "Không đọc được tệp tải lên. Hãy chọn lại một tệp PDF rồi thử lại.", 400));
+    }
+    next(err);
+  });
+};
+
+// ---- Ảnh đóng góp đề thi: field "images", nhiều tệp. Mimetype chỉ lọc sơ bộ; service kiểm tra byte đầu và giải mã bằng sharp ----
+const contributionUpload = multer({
+  storage, // RAM: tổng dung lượng bị chặn bởi Content-Length bên dưới
+  limits: { fileSize: CONTRIBUTION_MAX_FILE_BYTES, files: CONTRIBUTION_MAX_IMAGES, fields: 10, fieldSize: 4096 },
+  fileFilter(_req, file, cb) {
+    if (ALLOWED_TYPES.includes(file.mimetype)) cb(null, true);
+    else cb(new AppError("Chỉ chấp nhận ảnh JPG, PNG hoặc WebP", 400));
+  },
+}).array("images", CONTRIBUTION_MAX_IMAGES);
+
+const CONTRIBUTION_MULTER_MESSAGES: Partial<Record<multer.ErrorCode, string>> = {
+  LIMIT_FILE_SIZE: `Mỗi ảnh tối đa ${CONTRIBUTION_MAX_FILE_MB} MB`,
+  LIMIT_FILE_COUNT: `Mỗi lần gửi tối đa ${CONTRIBUTION_MAX_IMAGES} ảnh`,
+  LIMIT_UNEXPECTED_FILE: `Mỗi lần gửi tối đa ${CONTRIBUTION_MAX_IMAGES} ảnh`,
+};
+
+export const uploadContributionImages: RequestHandler = (req, res, next) => {
+  const length = Number(req.headers["content-length"]);
+  if (!Number.isFinite(length) || length <= 0) return next(new AppError("Không đọc được ảnh tải lên. Hãy chọn lại ảnh rồi thử lại.", 400));
+  if (length > CONTRIBUTION_MAX_REQUEST_BYTES) return next(new AppError("Tổng dung lượng ảnh quá lớn. Hãy chia thành nhiều lần gửi.", HTTP_STATUS.PAYLOAD_TOO_LARGE));
+  contributionUpload(req, res, (err: unknown) => {
+    if (!err) return next();
+    if (err instanceof multer.MulterError) {
+      return next(new AppError(CONTRIBUTION_MULTER_MESSAGES[err.code] ?? "Không đọc được ảnh tải lên. Hãy chọn lại ảnh rồi thử lại.", 400));
     }
     next(err);
   });
