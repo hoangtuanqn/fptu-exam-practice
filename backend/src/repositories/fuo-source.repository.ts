@@ -196,10 +196,11 @@ export const fuoSourceRepository = {
 
   // DONE mà còn link chờ (vừa được queueMissing xếp vào) thì chưa kết thúc: trả null để worker chạy tiếp lượt này.
   // Khoá dòng lượt trước khi đếm (queueMissing giữ cùng khoá) nên không có link nào bị xếp vào lượt đã xong.
-  finishRun: (runId: string, status: "DONE" | "NEEDS_AUTH", lastError?: string) =>
+  // stopped: admin đã bấm dừng, kết thúc lượt dù còn link chờ (link đó vẫn QUEUED, lượt sau sẽ nhận)
+  finishRun: (runId: string, status: "DONE" | "NEEDS_AUTH", lastError?: string, stopped = false) =>
     prisma.$transaction(async (tx) => {
       await tx.$queryRaw`SELECT id FROM fuo_source_runs WHERE id = ${runId} FOR UPDATE`;
-      if (status === "DONE" && (await tx.fuoSourceUrl.count({ where: { status: "QUEUED" } })) > 0) return null;
+      if (status === "DONE" && !stopped && (await tx.fuoSourceUrl.count({ where: { status: "QUEUED" } })) > 0) return null;
       return tx.fuoSourceRun.update({ where: { id: runId }, data: { status, activeLock: null, finishedAt: new Date(), ...(lastError && { lastError }) } });
     }),
 };

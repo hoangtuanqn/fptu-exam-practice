@@ -57,6 +57,7 @@ export interface FuoSourcesStatus {
   run: FuoSourceRun | null;
   counts: FuoSourceCounts;
   scan?: FuoSourceScan | null; // backend cũ chưa có
+  stopping?: boolean; // admin đã bấm dừng: lượt sẽ kết thúc sau đề đang lấy
 }
 
 export interface FuoSourcesAddResult {
@@ -72,6 +73,8 @@ export const fuoSourcesApi = {
   list: (page: number, status: FuoSourceStatus | "") => http.list<FuoSource>("/admin/fuo-sources", { page, status, limit: PAGE_SIZE }),
   status: () => http.get<FuoSourcesStatus>("/admin/fuo-sources/status"),
   start: () => http.post<FuoSourcesStatus & { started: boolean }>("/admin/fuo-sources/runs"),
+  // Dừng lượt sau khi đề đang lấy xong (không nhận đề mới)
+  stop: () => http.post<FuoSourcesStatus & { stopping: boolean }>("/admin/fuo-sources/stop"),
   // Lấy nền mọi đề "Chưa có đề" (theo bộ lọc nếu có). started=false, queued>0: đã thêm vào lượt đang chạy
   fetchMissing: (filters: { kind?: string; subject?: string; q?: string; threadIds?: string[] }) =>
     http.post<FuoSourcesStatus & { started: boolean; queued: number }>("/admin/fuo-sources/fetch-missing", filters),

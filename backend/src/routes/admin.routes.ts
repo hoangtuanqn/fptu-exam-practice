@@ -154,6 +154,7 @@ adminRouter.post("/fuo-sources", validate(addFuoSourcesBody), adminFuoSourceCont
 adminRouter.get("/fuo-sources/status", adminFuoSourceController.status);
 adminRouter.post("/fuo-sources/runs", adminFuoSourceController.start);
 adminRouter.post("/fuo-sources/fetch-missing", validate(fetchMissingBody), adminFuoSourceController.fetchMissing);
+adminRouter.post("/fuo-sources/stop", adminFuoSourceController.stop);
 
 // Lượt quét toàn bộ danh mục FuOverflow (mọi môn, mọi bài; chạy nền, admin tự bấm)
 adminRouter.get("/fuo-catalog/status", adminFuoCatalogController.status);

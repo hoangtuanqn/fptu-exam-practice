@@ -51,6 +51,17 @@ export function FetchMissingCard({ noExam, filters, onDone }: Props) {
 
   const showRun = run && (run.status !== "DONE" || startedHere);
   const finished = run ? run.done + run.failed : 0;
+  const stopping = !!status?.stopping;
+
+  const stopRun = async () => {
+    try {
+      const r = await fuoSourcesApi.stop();
+      set(r);
+      toast.success(r.stopping ? "Sẽ dừng sau khi đề đang lấy xong" : "Không có lượt nào đang chạy");
+    } catch (err) {
+      toast.error(errorMessage(err, "Chưa dừng được lượt, thử lại sau"));
+    }
+  };
 
   return (
     <>
@@ -77,6 +88,13 @@ export function FetchMissingCard({ noExam, filters, onDone }: Props) {
           <p aria-live="polite" className="md-body-medium tabular-nums text-on-surface">
             {run.status === "DONE" ? "Đã lấy xong" : run.status === "RUNNING" ? "Đang lấy đề" : "Tạm dừng"}: {finished}/{run.total} đề · {run.imported} đề mới · {run.failed} lỗi
           </p>
+          {run.status === "RUNNING" && (
+            <div className="flex flex-wrap items-center gap-3">
+              <Button size="sm" variant="outlined" onClick={() => void stopRun()} disabled={stopping}>
+                {stopping ? "Đang chờ đề hiện tại xong rồi dừng" : "Dừng sau đề hiện tại"}
+              </Button>
+            </div>
+          )}
           {run.status === "NEEDS_AUTH" && (
             <div role="alert" className="md-body-medium space-y-2 rounded-m3-sm bg-error-container px-4 py-3 text-on-error-container">
               <p>{run.lastError || "Tạm dừng vì đăng nhập FuOverflow lỗi hoặc FuOverflow đang hạn chế truy cập."}</p>

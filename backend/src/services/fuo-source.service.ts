@@ -20,6 +20,7 @@ import { fuoCatalogService } from "./fuo-catalog.service";
 const STATUSES: FuoSourceStatus[] = ["NEW", "QUEUED", "RUNNING", "DONE", "FAILED"];
 const noop = async () => undefined;
 const listeners: (() => void)[] = [];
+let stopping = false; // admin bấm "Dừng": worker không nhận đề mới, đề đang lấy xong thì lượt kết thúc
 const SCAN_SHOWN = ["RUNNING", "NEEDS_AUTH", "FAILED", "DONE"]; // lượt quét của "Load dữ liệu mới" hiện ở trang nguồn đề (đang chạy, dừng, hoặc kết quả lần gần nhất)
 
 const toRunDto = (run: FuoSourceRun, running: number) => ({
@@ -81,7 +82,7 @@ export const fuoSourceService = {
       subjectsWithNew, // tổng số môn có đề mới
       coolingDownUntil: scanRun.status === "RUNNING" && cooldownUntil > Date.now() ? new Date(cooldownUntil) : null, // FuOverflow đang hạn chế: tạm nghỉ tới lúc này
     };
-    return { run: latest ? toRunDto(latest, counts.RUNNING) : null, counts: { total, ...counts }, scan };
+    return { run: latest ? toRunDto(latest, counts.RUNNING) : null, counts: { total, ...counts }, scan, stopping };
   },
 
   /**
@@ -149,6 +150,16 @@ export const fuoSourceService = {
       const { examId } = await examImportService.run({ threadId, refresh: false, userId: createdById }, { onReady: noop, onStage: noop });
       return { examId, result: "IMPORTED" as const, addedQuestions: 0, commentsRefreshed: true }; // lấy đề mới đã lấy cả bình luận
     });
+  },
+
+  // Dừng lượt sau khi đề đang lấy xong (không nhận đề mới). Không có lượt đang chạy thì không làm gì.
+  async stop() {
+    if (await fuoSourceRepository.findActiveRun()) stopping = true;
+    return this.status(); // status() đã có trường stopping
+  },
+  isStopping: () => stopping,
+  clearStop: () => {
+    stopping = false;
   },
 
   // Có job lấy đề của người dùng đang chờ/chạy: lượt nạp nhường FuOverflow cho họ

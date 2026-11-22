@@ -34,4 +34,10 @@ export const adminFuoSourceController = {
     const message = data.started ? `Đã bắt đầu lấy ${data.queued} đề còn thiếu` : data.queued ? `Đã thêm ${data.queued} đề vào lượt nạp đang chạy` : "Không có đề nào cần lấy thêm";
     res.status(HTTP_STATUS.ACCEPTED).json(new ResponseClient({ message, data }));
   },
+
+  // Dừng lượt sau khi đề đang lấy xong
+  async stop(_req: Request, res: Response) {
+    const data = await fuoSourceService.stop();
+    res.json(new ResponseClient({ message: data.stopping ? "Sẽ dừng sau khi đề đang lấy xong" : "Không có lượt nào đang chạy", data }));
+  },
 };
