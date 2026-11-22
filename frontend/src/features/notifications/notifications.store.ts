@@ -49,12 +49,15 @@ function start() {
   const onFocus = () => void refreshUnread();
   const timer = setInterval(onFocus, POLL_MS);
   window.addEventListener("focus", onFocus);
-  const off = onServerEvent(EVENTS.userNotice, () => {
+  const onChange = () => {
     version++;
     void refreshUnread();
-  });
+  };
+  const off = onServerEvent(EVENTS.userNotice, onChange);
+  const offSync = onServerEvent(EVENTS.userNoticeSync, onChange);
   stop = () => {
     off();
+    offSync();
     clearInterval(timer);
     window.removeEventListener("focus", onFocus);
   };

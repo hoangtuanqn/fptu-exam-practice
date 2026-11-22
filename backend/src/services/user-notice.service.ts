@@ -63,17 +63,22 @@ export const userNoticeService = {
     return { updated: await userNoticeRepository.markRead(userId, ids) };
   },
 
-  /** Thông báo hệ thống cho mọi thành viên đang hoạt động, ghi theo lô (không gói một transaction lớn). */
+  /**
+   * Thông báo hệ thống cho mọi thành viên đang hoạt động, ghi theo lô (không gói một transaction lớn).
+   * Gửi lại cùng `key` (ví dụ sau khi lần trước đứt giữa chừng) chỉ ghi cho người còn thiếu; `sent` = số ghi thêm lần này.
+   */
   async broadcast(input: SystemNoticeBody) {
     const data = { kind: "system", level: input.level, title: input.title, body: input.body ?? null, link: input.link ?? null };
     let sent = 0;
     let after: string | null = null;
     for (;;) {
       const ids = await userNoticeRepository.activeUserIds(after, USER_NOTICE_BROADCAST_BATCH);
-      if (ids.length) sent += await userNoticeRepository.createForUsers(ids, data);
-      if (ids.length < USER_NOTICE_BROADCAST_BATCH) return { sent };
+      if (ids.length) sent += await userNoticeRepository.createForUsers(ids, data, input.key);
+      if (ids.length < USER_NOTICE_BROADCAST_BATCH) break;
       after = ids[ids.length - 1]!;
     }
+    if (sent > 0) realtimeHub.publishUserNoticeSync(); // các dòng đã commit: thành viên đang mở trang tải lại chuông
+    return { sent };
   },
 
   /** Dọn thông báo đã đọc quá hạn và thông báo chưa đọc quá cũ (cron hằng đêm). */

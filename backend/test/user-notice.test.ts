@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { afterEach, describe, it, mock } from "node:test";
 import { Prisma, TransactionType } from "@prisma/client";
-import { USER_NOTICE_LEVELS, USER_NOTICE_READ_MAX_IDS, WALLET_NOTICE_LINK } from "../src/constants/user-notice";
+import { USER_NOTICE_BROADCAST_BATCH, USER_NOTICE_LEVELS, USER_NOTICE_READ_MAX_IDS, WALLET_NOTICE_LINK } from "../src/constants/user-notice";
+import { realtimeHub } from "../src/realtime/hub";
 import { userNoticeRepository } from "../src/repositories/user-notice.repository";
 import type { Db } from "../src/repositories/wallet.repository";
 import { readNoticeIdsBody, systemNoticeBody } from "../src/rules/requests/user-notice.request";
@@ -50,7 +51,9 @@ describe("readNoticeIdsBody", () => {
 
 describe("systemNoticeBody", () => {
   it("defaults level to info and keeps internal links only", () => {
-    assert.deepEqual(systemNoticeBody.parse({ title: " Bảo trì " }), { title: "Bảo trì", level: "info" });
+    const { key, ...rest } = systemNoticeBody.parse({ title: " Bảo trì " });
+    assert.deepEqual(rest, { title: "Bảo trì", level: "info" });
+    assert.match(key, /^[0-9a-f-]{36}$/);
     assert.equal(systemNoticeBody.parse({ title: "a", link: "/plan" }).link, "/plan");
     assert.equal(systemNoticeBody.parse({ title: "a", link: "" }).link, undefined);
     for (const link of ["https://evil.com", "//evil.com", "/\\evil.com", "plan", "/a b"]) assert.equal(systemNoticeBody.safeParse({ title: "a", link }).success, false, link);
@@ -59,8 +62,40 @@ describe("systemNoticeBody", () => {
     assert.equal(systemNoticeBody.safeParse({ title: "a", body: "x".repeat(501) }).success, false);
     assert.equal(systemNoticeBody.safeParse({ title: "a", level: "error" }).success, false);
   });
+
+  it("key: lower-cases a given uuid, rejects non-uuids, generates a fresh one when absent", () => {
+    assert.equal(systemNoticeBody.parse({ title: "a", key: ID.toUpperCase() }).key, ID);
+    for (const key of ["", "abc", 123, "x".repeat(36)]) assert.equal(systemNoticeBody.safeParse({ title: "a", key }).success, false, String(key));
+    assert.notEqual(systemNoticeBody.parse({ title: "a" }).key, systemNoticeBody.parse({ title: "a" }).key);
+  });
 });
 
+describe("userNoticeService.broadcast", () => {
+  afterEach(() => mock.restoreAll());
+  const input = systemNoticeBody.parse({ title: "Bảo trì", key: ID });
+  const full = (n: number) => Array.from({ length: n }, (_, i) => `u${String(i).padStart(5, "0")}`);
+
+  it("writes every batch with the key, sums inserted rows and syncs once", async () => {
+    const batches = [full(USER_NOTICE_BROADCAST_BATCH), ["last"]];
+    const afters: (string | null)[] = [];
+    mock.method(userNoticeRepository, "activeUserIds", async (after: string | null) => (afters.push(after), batches.shift() ?? []));
+    const create = mock.method(userNoticeRepository, "createForUsers", async (ids: string[]) => (ids.length > 1 ? 3 : 0)); // lô đầu: chỉ 3 người còn thiếu
+    const sync = mock.method(realtimeHub, "publishUserNoticeSync", () => {});
+    assert.deepEqual(await userNoticeService.broadcast(input), { sent: 3 });
+    assert.equal(create.mock.callCount(), 2);
+    for (const c of create.mock.calls) assert.equal(c.arguments[2], ID);
+    assert.equal(afters[1], `u${String(USER_NOTICE_BROADCAST_BATCH - 1).padStart(5, "0")}`);
+    assert.equal(sync.mock.callCount(), 1);
+  });
+
+  it("a full retry (nothing inserted) reports 0 and does not sync", async () => {
+    mock.method(userNoticeRepository, "activeUserIds", async () => ["a", "b"]);
+    mock.method(userNoticeRepository, "createForUsers", async () => 0);
+    const sync = mock.method(realtimeHub, "publishUserNoticeSync", () => {});
+    assert.deepEqual(await userNoticeService.broadcast(input), { sent: 0 });
+    assert.equal(sync.mock.callCount(), 0);
+  });
+});
 describe("userNoticeService.fromLedger", () => {
   const tx = {} as Db; // không có $transaction: giống client trong transaction
   const entry = { userId: ID, type: TransactionType.DEPOSIT, amount: 1000, balanceAfter: 1000 };

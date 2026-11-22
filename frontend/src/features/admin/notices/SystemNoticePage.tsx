@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { Loader2, Send } from "lucide-react";
 import { adminApi, type AdminNotice } from "@/features/admin/api/admin.api";
 import { useToast } from "@/shared/context/ToastContext";
@@ -21,7 +21,13 @@ export default function SystemNoticePage() {
   const { confirm, confirmDialog } = useConfirm();
   const { run, loading, error, fieldErrors, setFieldErrors } = useSubmit("Chưa gửi được thông báo");
   const [form, setForm] = useState(EMPTY);
-  const set = (patch: Partial<typeof EMPTY>) => setForm((f) => ({ ...f, ...patch }));
+  // Một key cho mỗi lần gửi: lỗi/hết giờ thì bấm lại dùng đúng key đó để server gửi tiếp chứ không gửi trùng.
+  // Chỉ tạo key mới khi đã gửi xong hoặc nội dung đổi.
+  const keyRef = useRef<string | null>(null);
+  const set = (patch: Partial<typeof EMPTY>) => {
+    keyRef.current = null;
+    setForm((f) => ({ ...f, ...patch }));
+  };
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -33,14 +39,18 @@ export default function SystemNoticePage() {
     if (Object.keys(errors).length) return setFieldErrors(errors);
     if (!(await confirm({ title: "Gửi tới tất cả người dùng?", message: `“${title}” sẽ hiện ở chuông thông báo của mọi người dùng. Không thu hồi được.`, confirmLabel: "Gửi", tone: "primary", icon: Send })))
       return;
+    const retry = keyRef.current !== null;
+    const key = (keyRef.current ??= crypto.randomUUID());
     void run(async () => {
       const { sent } = await adminApi.sendSystemNotice({
         title,
         body: form.body.trim() || undefined,
         link: link || undefined,
         level: form.level,
+        key,
       });
-      toast.success(`Đã gửi tới ${sent ?? 0} người dùng`);
+      toast.success(retry && !sent ? "Tất cả người dùng đã nhận thông báo này" : `Đã gửi tới ${sent ?? 0} người dùng`);
+      keyRef.current = null;
       setForm(EMPTY);
     });
   };

@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { USER_NOTICE_BODY_MAX, USER_NOTICE_LEVELS, USER_NOTICE_LINK_MAX, USER_NOTICE_READ_MAX_IDS, USER_NOTICE_TITLE_MAX } from "../../constants/user-notice";
 import { uuidSchema } from "./admin.request";
@@ -20,6 +21,8 @@ export const systemNoticeBody = z.object({
       .optional(),
   ),
   level: z.enum(USER_NOTICE_LEVELS).default("info"),
+  // Khoá chống gửi trùng: gửi lại cùng khoá chỉ ghi cho người còn thiếu. Không gửi thì server tự tạo (mỗi lần một khoá mới).
+  key: uuidSchema.default(() => randomUUID()),
 });
 
 export type ReadNoticeIdsBody = z.infer<typeof readNoticeIdsBody>;

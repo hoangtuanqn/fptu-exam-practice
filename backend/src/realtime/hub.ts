@@ -5,7 +5,7 @@ import { examRepository } from "../repositories/exam.repository";
 import { toJobDto } from "../services/crawl-job.dto";
 import { toAnswersPayload } from "../utils/exam-answers";
 import { fileUrlOf, toAttachmentDto } from "../utils/file-url";
-import { ADMIN_ROOM, EVENTS, roomOf, userRoom, type RoomKind } from "./events";
+import { ADMIN_ROOM, EVENTS, MEMBERS_ROOM, roomOf, userRoom, type RoomKind } from "./events";
 
 /**
  * Điểm phát sự kiện realtime cho phần còn lại của server. Dịch vụ nghiệp vụ chỉ gọi `publishExam` / `publishJob`,
@@ -94,6 +94,11 @@ export const realtimeHub = {
   // Thông báo mới của một thành viên (đã commit): đẩy cho mọi tab đang mở của người đó
   publishUserNotice(userId: string, notice: unknown) {
     io?.to(userRoom(userId)).emit(EVENTS.userNotice, notice);
+  },
+
+  // Vừa gửi thông báo hệ thống: báo mọi thành viên đang online tải lại chuông (một lần cho cả server, không duyệt người dùng)
+  publishUserNoticeSync() {
+    io?.to(MEMBERS_ROOM).emit(EVENTS.userNoticeSync);
   },
 
   // Tiến độ lượt quét danh mục FuOverflow: đẩy cho các admin đang online
