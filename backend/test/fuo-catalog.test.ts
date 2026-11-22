@@ -7,7 +7,7 @@ import { isChallengePage, isLoginPage, parseCount, parseForumPage } from "../src
 import { parseSubjectSemesters } from "../src/services/crawler/fuo-subjects.service";
 import { collectThread, extractDescription, extractLabel, isOutsideSubjectForums } from "../src/services/crawler/thread-scraper.service";
 import { classifyKind } from "../src/utils/exam-kind";
-import { diffCatalogRows, pageHasNews } from "../src/utils/fuo-catalog-diff";
+import { diffCatalogRows, takeNewUntilKnown } from "../src/utils/fuo-catalog-diff";
 
 // Danh mục FuOverflow: đọc trang danh sách bài, phân loại đề, so bài đã lưu, và việc lấy đề nhận mọi loại (thuần, không gọi mạng/DB)
 
@@ -94,13 +94,13 @@ describe("catalog diff", () => {
     assert.deepEqual(diffCatalogRows([row("1", { postedAt: null })], [row("1")]).changed.length, 1);
   });
 
-  it("incremental scan stops at the first page without new or changed rows", () => {
-    const stored = [row("1"), row("2")];
-    assert.equal(pageHasNews(stored, [row("1"), row("2")]), false); // trang không đổi: dừng
-    assert.equal(pageHasNews(stored, [row("1"), row("2", { replies: 9 })]), true); // có bình luận mới: đọc tiếp trang sau
-    assert.equal(pageHasNews(stored, [row("1"), row("3")]), true); // có bài mới
-    assert.equal(pageHasNews([], [row("1")]), true); // môn chưa quét lần nào: đi hết
-    assert.equal(pageHasNews(stored, []), false);
+  it("incremental scan reads in order: unseen threads are new, the first known thread stops it", () => {
+    const known = new Set(["2", "5"]);
+    const pick = (list: { threadId: string }[]) => takeNewUntilKnown(known, list);
+    assert.deepEqual(pick([{ threadId: "2" }, { threadId: "3" }]), { fresh: [], stop: true }); // bài đầu đã có: không có đề mới
+    assert.deepEqual(pick([{ threadId: "1" }, { threadId: "2" }, { threadId: "3" }]).fresh.map((r) => r.threadId), ["1"]); // bài sau bài đã có không tính
+    assert.deepEqual(pick([{ threadId: "1" }, { threadId: "3" }]), { fresh: [{ threadId: "1" }, { threadId: "3" }], stop: false }); // hết trang chưa gặp bài đã có: đọc tiếp
+    assert.deepEqual(takeNewUntilKnown(new Set(), [{ threadId: "1" }]), { fresh: [{ threadId: "1" }], stop: false }); // môn chưa quét lần nào: đi hết
   });
 });
 

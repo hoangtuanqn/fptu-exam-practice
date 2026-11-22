@@ -26,8 +26,15 @@ export function diffCatalogRows<T extends ThreadRow>(stored: ThreadRow[], incomi
   return { added, changed };
 }
 
-/** Quét tăng dần: danh sách bài xếp theo hoạt động mới nhất, nên trang không có bài mới hay đã đổi thì các trang sau cũng không có: dừng ở đây. */
-export const pageHasNews = (stored: ThreadRow[], page: ThreadRow[]) => {
-  const { added, changed } = diffCatalogRows(stored, page);
-  return added.length + changed.length > 0;
-};
+/**
+ * Quét tăng dần: đọc bài theo thứ tự (mới hoạt động nhất trước). Bài chưa có trong kho là bài mới, đọc tiếp;
+ * gặp bài đầu tiên đã có trong kho thì dừng, các bài sau không tính.
+ */
+export function takeNewUntilKnown<T extends { threadId: string }>(known: Set<string>, list: T[]): { fresh: T[]; stop: boolean } {
+  const fresh: T[] = [];
+  for (const row of list) {
+    if (known.has(row.threadId)) return { fresh, stop: true };
+    fresh.push(row);
+  }
+  return { fresh, stop: false };
+}
