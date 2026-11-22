@@ -45,6 +45,8 @@ let examCache: { at: number; exams: UsableExam[] } | null = null;
 let fuoCache: { at: number; threads: { threadId: string; subjectCode: string }[] } | null = null;
 // Tăng mỗi lần bỏ đệm: lượt đọc bắt đầu trước khi bỏ đệm thì không được ghi đè đệm bằng dữ liệu cũ
 let generation = 0;
+// Đề đã lưu nhưng chưa đủ ảnh (chưa có câu, hoặc thiếu ảnh so với số câu), nhóm theo môn: ẩn khỏi danh mục đến khi đủ ảnh
+let noImageCache: { at: number; byCode: Map<string, Set<string>> } | null = null;
 
 // Mọi đề đã lấy đủ ảnh và không đang chờ/lỗi AI (xem CATALOG_ANSWER_SOURCES)
 async function usableExams(): Promise<UsableExam[]> {
@@ -67,6 +69,30 @@ async function usableExams(): Promise<UsableExam[]> {
   return list;
 }
 
+// Đề chưa đủ ảnh (kể cả đề chỉ có tệp đính kèm), nhóm theo môn. Đề này không hiện trong danh mục cho đến khi đủ ảnh.
+async function noImageThreads(): Promise<Map<string, Set<string>>> {
+  if (noImageCache && Date.now() - noImageCache.at < CACHE_MS) return noImageCache.byCode;
+  const gen = generation;
+  const [exams, counts] = await Promise.all([
+    prisma.exam.findMany({ select: { id: true, threadId: true, title: true, subjectCode: true, totalQuestions: true } }),
+    prisma.examQuestion.groupBy({ by: ["examId", "isReference"], _count: { _all: true } }),
+  ]);
+  const all = new Map<string, number>();
+  const real = new Map<string, number>();
+  for (const c of counts) {
+    all.set(c.examId, (all.get(c.examId) ?? 0) + c._count._all);
+    if (!c.isReference) real.set(c.examId, c._count._all);
+  }
+  const byCode = new Map<string, Set<string>>();
+  for (const e of exams) {
+    const code = subjectOfExam(e);
+    if (!e.threadId || !code || ((real.get(e.id) ?? 0) > 0 && (all.get(e.id) ?? 0) >= e.totalQuestions)) continue;
+    byCode.set(code, (byCode.get(code) ?? new Set<string>()).add(e.threadId));
+  }
+  if (gen === generation) noImageCache = { at: Date.now(), byCode };
+  return byCode;
+}
+
 // Toàn bộ (thread, môn) của danh mục FuOverflow, chỉ hai cột nên nhẹ; dùng để đếm số đề mỗi môn
 async function fuoThreads() {
   if (fuoCache && Date.now() - fuoCache.at < CACHE_MS) return fuoCache.threads;
@@ -79,7 +105,7 @@ async function fuoThreads() {
 /** Bỏ đệm của Kho đề (gọi sau khi admin tải/cập nhật đề) để đề mới hiện ngay, không đợi hết CACHE_MS. */
 export function invalidateCatalogCache() {
   generation++;
-  examCache = fuoCache = latestCache = overviewCache = null;
+  examCache = noImageCache = fuoCache = latestCache = overviewCache = null;
 }
 
 
@@ -189,15 +215,16 @@ export const catalogService = {
   /** Đề của một môn: gộp danh mục FuOverflow với đề hệ thống, lọc theo loại, từ khoá và kỳ, mới nhất trước, phân trang. */
   async exams(code: string, query: PaginationQuery & { q?: string; term?: string; kind?: ExamKind }, userId: string | null) {
     const subject = code.toUpperCase();
-    const [fuo, ours] = await Promise.all([
+    const [fuo, ours, hidden] = await Promise.all([
       prisma.fuoThread.findMany({ where: { subjectCode: subject }, select: { threadId: true, title: true, postedAt: true, replies: true, kind: true } }),
       usableExams().then((list) => list.filter((e) => e.code === subject)),
+      noImageThreads().then((m) => m.get(subject) ?? new Set<string>()), // đề chưa đủ ảnh: ẩn, không hiện như đề "chưa lấy"
     ]);
     const mine = userId && ours.length ? new Set((await prisma.userExam.findMany({ where: { userId, examId: { in: ours.map((e) => e.id) } }, select: { examId: true } })).map((o) => o.examId)) : new Set<string>();
     const have = new Map(ours.map((e) => [e.threadId, e]));
 
     const merged = new Map<string, CatalogItem>();
-    for (const t of fuo) merged.set(t.threadId, { examId: null, threadId: t.threadId, title: t.title, postedAt: t.postedAt, replies: t.replies, term: termOf(t.title), status: "fetch", questions: null, kind: t.kind });
+    for (const t of fuo) if (!hidden.has(t.threadId)) merged.set(t.threadId,{ examId: null, threadId: t.threadId, title: t.title, postedAt: t.postedAt, replies: t.replies, term: termOf(t.title), status: "fetch", questions: null, kind: t.kind });
     for (const e of ours) {
       // Đề cũ chưa có loại (trước khi điền lúc khởi động) đều được lấy qua nhãn "Đề Thi FE"
       const base = merged.get(e.threadId) ?? { examId: null, threadId: e.threadId, title: e.title, postedAt: null, replies: 0, term: termOf(e.title), status: "fetch" as CatalogStatus, questions: null, kind: e.kind ?? "FE" };
