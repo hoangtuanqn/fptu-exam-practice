@@ -6,6 +6,7 @@ import { errorHandler, notFoundHandler } from "./middlewares/error.middlewares";
 import { examFilesRouter } from "./middlewares/examFiles.middlewares";
 import rootRouter from "./routes/root.routes";
 import { isAttachmentStaticPath } from "./utils/attachment";
+import { isContributionStaticPath } from "./utils/exam-contribution";
 import { isFlashcardStaticPath } from "./utils/flashcard";
 
 // Tách app khỏi việc listen để dễ test
@@ -30,6 +31,8 @@ export const createApp = () => {
       if (isAttachmentStaticPath(req.path)) return notFoundHandler(req, res, next);
       // Ảnh flashcard chỉ phát qua /api/v1/flashcards/images (link ký): không cho đoán URL tĩnh để qua mặt khoá Pro
       if (isFlashcardStaticPath(req.path)) return notFoundHandler(req, res, next);
+      // Ảnh đóng góp đề thi chỉ admin xem qua /api/v1/admin/exam-contributions/:id/images/:index
+      if (isContributionStaticPath(req.path)) return notFoundHandler(req, res, next);
       res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
       next();
     },

@@ -11,6 +11,10 @@
       "changes": [
         {
           "type": "new",
+          "text": "Đóng góp đề thi: gửi ảnh đề của môn học (tối đa 100 ảnh), hoàn toàn miễn phí, không cần đáp án. Đề được admin duyệt trước khi dùng"
+        },
+        {
+          "type": "new",
           "text": "Ưu đãi kỳ mới: mua gói Pro trọn kỳ với giá giảm trong thời gian có hạn, mỗi tài khoản một lần"
         },
         {

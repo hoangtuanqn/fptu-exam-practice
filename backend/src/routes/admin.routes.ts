@@ -9,6 +9,8 @@ import { adminSettingController } from "../controllers/admin.setting.controllers
 import { adminAiController } from "../controllers/admin.ai.controllers";
 import { adminAnswerReportController } from "../controllers/admin.answer-report.controllers";
 import { adminExplanationFeedbackController } from "../controllers/admin.explanation-feedback.controllers";
+import { adminExamContributionController } from "../controllers/admin.exam-contribution.controllers";
+import { contributionImageParam, listContributionsQuery, reviewContributionBody } from "../rules/requests/exam-contribution.request";
 import { adminExamCommentController } from "../controllers/admin.exam-comment.controllers";
 import { bulkReviewCommentsBody, listAdminCommentsQuery, reviewCommentBody } from "../rules/requests/exam-comment.request";
 import { adminReferralController } from "../controllers/admin.referral.controllers";
@@ -172,6 +174,10 @@ adminRouter.get("/answer-reports", validate(listReportsQuery, "query"), adminAns
 adminRouter.post("/answer-reports/:id/approve", validate(uuidParam, "params"), validate(reviewReportBody), adminAnswerReportController.approve);
 adminRouter.post("/answer-reports/:id/reject", validate(uuidParam, "params"), validate(reviewReportBody), adminAnswerReportController.reject);
 adminRouter.post("/answer-reports/:id/resolve", validate(uuidParam, "params"), adminAnswerReportController.resolve);
+adminRouter.get("/exam-contributions", validate(listContributionsQuery, "query"), adminExamContributionController.list);
+adminRouter.get("/exam-contributions/:id/images/:index", validate(contributionImageParam, "params"), adminExamContributionController.image);
+adminRouter.post("/exam-contributions/:id/approve", validate(uuidParam, "params"), validate(reviewContributionBody), adminExamContributionController.approve);
+adminRouter.post("/exam-contributions/:id/reject", validate(uuidParam, "params"), validate(reviewContributionBody), adminExamContributionController.reject);
 adminRouter.get("/exam-comments", validate(listAdminCommentsQuery, "query"), adminExamCommentController.list);
 adminRouter.get("/exam-comments/summary", adminExamCommentController.summary);
 adminRouter.post("/exam-comments/bulk", validate(bulkReviewCommentsBody), adminExamCommentController.bulkReview);

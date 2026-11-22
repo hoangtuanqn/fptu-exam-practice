@@ -1,11 +1,11 @@
 import { useSyncExternalStore } from "react";
 import { adminApi, type ReviewCounts } from "@/features/admin/api/admin.api";
 
-// Số báo cáo đáp án và đánh giá lời giải AI chưa xử lý, hiện thành badge ở menu quản trị.
+// Số báo cáo đáp án, đánh giá lời giải AI và đề đóng góp chưa xử lý, hiện thành badge ở menu quản trị.
 // Hỏi lại định kỳ khi tab đang mở; các trang gọi refreshReviewCounts() ngay sau khi xử lý một mục.
 const POLL_MS = 60_000;
 
-let counts: ReviewCounts = { reports: 0, feedback: 0 };
+let counts: ReviewCounts = { reports: 0, feedback: 0, contributions: 0 };
 const listeners = new Set<() => void>();
 let stop: (() => void) | null = null;
 let latest = 0; // chỉ nhận kết quả của lần hỏi mới nhất, tránh phản hồi cũ đến sau ghi đè số mới
@@ -15,8 +15,9 @@ export async function refreshReviewCounts() {
   try {
     const next = await adminApi.reviewCounts();
     if (mine !== latest) return;
-    if (next.reports === counts.reports && next.feedback === counts.feedback) return;
-    counts = { reports: next.reports ?? 0, feedback: next.feedback ?? 0 };
+    const fresh = { reports: next.reports ?? 0, feedback: next.feedback ?? 0, contributions: next.contributions ?? 0 };
+    if (fresh.reports === counts.reports && fresh.feedback === counts.feedback && fresh.contributions === counts.contributions) return;
+    counts = fresh;
     listeners.forEach((fn) => fn());
   } catch {
     /* giữ số cũ, lần sau hỏi lại */

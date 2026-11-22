@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
-import { Bookmark, Crown, FileText, Flame, Layers, NotebookPen, BookOpen, ListChecks, GraduationCap, LayoutDashboard, UserRound, Wallet, Receipt, Gift, UserPlus, ShoppingBag } from "lucide-react";
+import { Bookmark, Crown, FileText, Flame, Layers, NotebookPen, BookOpen, ListChecks, GraduationCap, LayoutDashboard, UserRound, Wallet, Receipt, Gift, UserPlus, ShoppingBag, ImageUp } from "lucide-react";
 import { PanelLayout, type NavItem } from "@/shared/layout/PanelLayout";
 import { BottomNav } from "@/shared/layout/BottomNav";
 import { Loading } from "@/shared/ui/Feedback";
@@ -61,6 +61,7 @@ const FlashcardSubjectPage = lazy(() => import("@/features/flashcard/FlashcardSu
 const MaterialsPage = lazy(() => import("@/features/materials/MaterialsPage"));
 const MaterialResultPage = lazy(() => import("@/features/materials/MaterialResultPage"));
 const ReviewPracticePage = lazy(() => import("@/features/review/ReviewPracticePage"));
+const ContributePage = lazy(() => import("@/features/exam-contribution/ContributePage"));
 const MyReportsPage = lazy(() => import("@/features/account/pages/MyReportsPage"));
 const ReferralPage = lazy(() => import("@/features/account/pages/ReferralPage"));
 const GiftCodePage = lazy(() => import("@/features/account/pages/GiftCodePage"));
@@ -79,6 +80,7 @@ const AttemptDetailPage = lazy(() => import("@/features/history/pages/AttemptDet
 const ACCOUNT_NAV: NavItem[] = [
   { to: "/account", label: "Tổng quan", icon: LayoutDashboard, end: true },
   { to: "/account/exams", label: "Kho đề", icon: BookOpen, group: "Luyện đề" },
+  { to: "/account/contribute", label: "Đóng góp đề thi", icon: ImageUp, group: "Luyện đề" },
   { to: "/account/review", label: "Sổ câu sai", icon: NotebookPen, group: "Ôn tập" },
   { to: "/account/saved", label: "Câu đã lưu", icon: Bookmark, group: "Ôn tập" },
   { to: "/account/frequent", label: "Câu hay ra", icon: Flame, group: "Ôn tập" },
@@ -180,6 +182,7 @@ export default function App() {
             <Route path="saved" element={<SavedPage />} />
             <Route path="pe" element={<Navigate to="/" replace />} />
             <Route path="reports" element={<MyReportsPage />} />
+            <Route path="contribute" element={<ContributePage />} />
             <Route path="grades" element={<GradesPage />} />
             <Route path="referral" element={<ReferralPage />} />
             <Route path="giftcode" element={<GiftCodePage />} />

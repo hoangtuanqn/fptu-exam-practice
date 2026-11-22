@@ -1,6 +1,6 @@
 import { lazy } from "react";
 import { Navigate, Route } from "react-router-dom";
-import { BookMarked, Link2, MailPlus, Activity, ShieldCheck as QualityIcon, MessagesSquare, ShoppingBag, Megaphone, Bot, ClipboardList, DatabaseZap, ListPlus, FileText, History, SlidersHorizontal, Wallet, Gift, MessageSquareWarning, UserPlus, Landmark, LayoutDashboard, Receipt, Settings, ThumbsUp, Users } from "lucide-react";
+import { BookMarked, Link2, MailPlus, Activity, ShieldCheck as QualityIcon, MessagesSquare, ShoppingBag, Megaphone, Bot, ClipboardList, DatabaseZap, ListPlus, FileText, History, SlidersHorizontal, Wallet, Gift, ImageUp, MessageSquareWarning, UserPlus, Landmark, LayoutDashboard, Receipt, Settings, ThumbsUp, Users } from "lucide-react";
 import type { NavItem } from "@/shared/layout/PanelLayout";
 
 /**
@@ -12,6 +12,7 @@ import type { NavItem } from "@/shared/layout/PanelLayout";
  * Menu và đường dẫn khai báo ở đây, thêm trang mới chỉ cần sửa file này.
  */
 const AdminCourseraPage = lazy(() => import("@/features/coursera/AdminCourseraPage"));
+const AdminContributionsPage = lazy(() => import("@/features/exam-contribution/AdminContributionsPage"));
 const DashboardPage = lazy(() => import("./overview/DashboardPage"));
 const UsersPage = lazy(() => import("./users/UsersPage"));
 const UserDetailPage = lazy(() => import("./users/UserDetailPage"));
@@ -60,6 +61,7 @@ export const ADMIN_NAV: NavItem[] = [
   { to: "/admin/exams", label: "Đề thi", icon: FileText, group: "Nội dung & AI" },
   { to: "/admin/reports", label: "Báo cáo đáp án", icon: MessageSquareWarning, group: "Nội dung & AI" },
   { to: "/admin/explanation-feedback", label: "Đánh giá lời giải AI", icon: ThumbsUp, group: "Nội dung & AI" },
+  { to: "/admin/contributions", label: "Đề đóng góp", icon: ImageUp, group: "Nội dung & AI" },
   { to: "/admin/link-rewards", label: "Vượt link", icon: Link2, group: "Nội dung & AI" },
   { to: "/admin/subjects", label: "Quản lý môn học", icon: BookMarked, group: "Nội dung & AI" },
   { to: "/admin/crawler", label: "Cấu hình lấy đề", icon: DatabaseZap, group: "Nội dung & AI" },
@@ -96,6 +98,7 @@ export const adminRoutes = (
     <Route path="exams/:id" element={<ExamEditPage />} />
     <Route path="reports" element={<ReportsPage />} />
     <Route path="explanation-feedback" element={<FeedbackPage />} />
+    <Route path="contributions" element={<AdminContributionsPage />} />
     <Route path="crawler" element={<CrawlerPage />} />
     <Route path="fuo-sources" element={<FuoSourcesPage />} />
     <Route path="ai" element={<AiPage />} />
