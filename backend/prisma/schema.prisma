@@ -78,6 +78,7 @@ model User {
   savedQuestions     SavedQuestion[]
   examComments       ExamComment[]
   examContributions  ExamContribution[]
+  userNotices        UserNotice[]
   referredBy         User?                @relation("Referral", fields: [referredById], references: [id], onDelete: SetNull)
   referrals          User[]               @relation("Referral")
   rewardsAsReferrer  ReferralReward[]     @relation("RewardReferrer")
@@ -997,6 +998,25 @@ model AdminNotice {
   @@index([important, createdAt])
   @@index([createdAt])
   @@map("admin_notices")
+}
+
+// User notification bell: one row per notice per user (wallet changes, system announcements)
+model UserNotice {
+  id        String    @id @default(uuid(7)) @db.Char(36)
+  userId    String    @map("user_id") @db.Char(36)
+  kind      String    @db.VarChar(40) // wallet.deposit, wallet.signup_bonus, system...
+  level     String    @db.VarChar(10) // info | success | warning
+  title     String    @db.VarChar(200)
+  body      String?   @db.VarChar(500)
+  link      String?   @db.VarChar(200) // internal page path, starts with "/"
+  createdAt DateTime  @default(now()) @map("created_at")
+  readAt    DateTime? @map("read_at")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([userId, readAt])
+  @@index([readAt]) // nightly cleanup of old read notices
+  @@map("user_notices")
 }
 
 // Chu de do AI suy ra tu noi dung syllabus cho mon khong co ten chuong. Luu lai de moi de cua mon dung cung mot bo chu de. source_hash doi thi suy lai.
