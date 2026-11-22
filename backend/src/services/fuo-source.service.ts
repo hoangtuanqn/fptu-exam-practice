@@ -130,14 +130,16 @@ export const fuoSourceService = {
   // Một link của lượt nạp. Lỗi đăng nhập FuOverflow (sau khi đã thử đăng nhập lại) được ném ra để worker dừng lượt.
   // `commentsAt`: lần gần nhất một lượt nạp đã lấy bình luận của thread (đề có sẵn chỉ lấy lại khi quá hạn hoặc có câu mới).
   // Thread chưa có đề: lượt nạp thường chỉ xếp link đã có đề (queueForRun), nên link chưa có đề chỉ đến từ fetchMissing. Lấy chậm,
-  // không AI (bulk), không tự đăng nhập lại khi bị 401/403: lỗi ném thẳng để worker dừng lượt ngay.
+  // không AI (bulk). Cookie hết hạn giữa chừng: đăng nhập lại bằng tài khoản đã lưu rồi chạy lại link (withSession),
+  // chỉ khi đăng nhập lại cũng không được thì lỗi mới ném ra để worker dừng lượt.
   process: async (threadId: string, createdById: string | null, commentsAt: Date | null) => {
     // Đề dở dang (lần bulk trước bị ngắt, vd. khởi động lại) cũng đi đường bulk; lượt thường chỉ xếp link có đề nên không bị ảnh hưởng
     const exam = await examRepository.findByThreadId(threadId);
     if (!exam || !(await examRepository.isComplete(exam))) {
-      await fuoSessionService.ensureCookie();
-      if (!(await crawlerSettingService.get()).cookie) throw new Error(FUO_AUTH_MESSAGE, { cause: new FuoAuthError("no cookie") });
-      const { examId } = await examImportService.run({ threadId, refresh: false, userId: createdById, bulk: true, noComments: true }, { onReady: noop, onStage: noop });
+      const { examId } = await fuoSessionService.withSession(async () => {
+        if (!(await crawlerSettingService.get()).cookie) throw new Error(FUO_AUTH_MESSAGE, { cause: new FuoAuthError("no cookie") });
+        return examImportService.run({ threadId, refresh: false, userId: createdById, bulk: true, noComments: true }, { onReady: noop, onStage: noop });
+      });
       return { examId, result: "IMPORTED" as const, addedQuestions: 0, commentsRefreshed: false };
     }
     return fuoSessionService.withSession(async () => {
