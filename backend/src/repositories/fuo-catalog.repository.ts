@@ -66,6 +66,9 @@ export const fuoCatalogRepository = {
     }
   },
 
+  findThread: (threadId: string) =>
+    prisma.fuoThread.findUnique({ where: { threadId }, select: { threadId: true, subjectCode: true, title: true, postedAt: true, kind: true } }),
+
   // Bài đã lưu (để chỉ ghi bài mới hoặc đã đổi)
   async findThreads(threadIds: string[]): Promise<CatalogThreadRow[]> {
     const out: CatalogThreadRow[] = [];
