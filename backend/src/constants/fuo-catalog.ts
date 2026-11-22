@@ -7,7 +7,6 @@ export const FUO_CATALOG_COOLDOWNS_MAX = 3; // số lần phải nghỉ dài tro
 export const FUO_CATALOG_NEW_SUBJECTS_SHOWN = 100; // số môn có đề mới trả về trong trạng thái lượt quét
 
 // Client FuOverflow ẩn danh của lượt quét (không cookie, không tài khoản) và bộ giới hạn AIMD dùng chung trong tiến trình
-export const FUO_ANON_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"; // UA trình duyệt phổ thông, không gắn tài khoản nào
 export const FUO_ANON_TIMEOUT_MS = 30_000; // mỗi request
 export const FUO_ANON_MAX_ATTEMPTS = 4; // lỗi mạng/bị hạn chế thì thử lại tối đa chừng này lần (không thử lại 404 hay trang cần đăng nhập)
 export const FUO_ANON_RETRY_BACKOFF_MS = [500, 1500, 4000]; // chờ trước lần thử lại thứ 2, 3, 4 (cộng thêm ngẫu nhiên)

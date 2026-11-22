@@ -1,4 +1,5 @@
 import { FUO_HOST } from "../../constants/crawler";
+import { FUO_BROWSER_HEADERS } from "../../constants/fuo-http";
 
 const BASE = `https://${FUO_HOST}`;
 const TIMEOUT_MS = 30_000;
@@ -51,9 +52,9 @@ function csrfOf(html: string) {
  * Đăng nhập XenForo của FuOverflow bằng email + mật khẩu, trả về chuỗi cookie mới (xf_user, xf_session, + cookie Cloudflare giữ lại).
  * Không ghi mật khẩu ra log. Không vượt được thử thách Cloudflare/2FA: gặp thì ném FuoLoginError có hướng dẫn.
  */
-export async function loginFuo(opts: { email: string; password: string; userAgent: string; baseCookie: string }): Promise<string> {
+export async function loginFuo(opts: { email: string; password: string; baseCookie: string }): Promise<string> {
   const jar = seedJar(opts.baseCookie);
-  const common = { "user-agent": opts.userAgent, "accept-language": "vi,en-US;q=0.9,en;q=0.8" };
+  const common = FUO_BROWSER_HEADERS;
 
   let page: Response;
   try {

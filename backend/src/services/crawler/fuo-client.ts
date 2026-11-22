@@ -1,4 +1,5 @@
 import type { CrawlerConfig } from "../../constants/crawler";
+import { FUO_BROWSER_HEADERS } from "../../constants/fuo-http";
 import { sleep } from "../../utils/sleep";
 
 // Cookie hết hạn / chưa đăng nhập: server FuOverflow trả trang đăng nhập thay cho ảnh
@@ -31,9 +32,7 @@ export interface FuoClient {
 // stopOnRateLimit: 429 ném FuoRateLimitError ngay thay vì thử lại (lượt lấy đề hàng loạt của admin)
 export function createFuoClient(config: CrawlerConfig, { stopOnRateLimit = false } = {}): FuoClient {
   const baseHeaders: Record<string, string> = {
-    accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-    "accept-language": "vi,en-US;q=0.9,en;q=0.8",
-    "user-agent": config.userAgent,
+    ...FUO_BROWSER_HEADERS, // UA cố định (cf_clearance gắn với UA này), không lấy từ cấu hình
     cookie: config.cookie,
     referer: config.referer,
   };

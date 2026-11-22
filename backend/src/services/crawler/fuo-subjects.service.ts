@@ -1,6 +1,7 @@
 import * as cheerio from "cheerio";
 import { prisma } from "../../configs/prisma";
 import { FUO_HOST } from "../../constants/crawler";
+import { FUO_BROWSER_HEADERS } from "../../constants/fuo-http";
 import { SUBJECT_CODE } from "./fuo-forum.service";
 
 /**
@@ -10,7 +11,6 @@ import { SUBJECT_CODE } from "./fuo-forum.service";
  */
 export const URL_SUBJECTS = `https://${FUO_HOST}/categories/subjects/`;
 export const MIN_SUBJECTS = 20; // đọc được ít môn hơn thế: trang đã đổi giao diện
-const UA = "Mozilla/5.0 (compatible; FEPassBot/1.0; +https://fepass.top)";
 const SEMESTER_HREF = /\/categories\/semester-(\d)\/?$/;
 
 export interface SubjectSemesters {
@@ -45,7 +45,7 @@ export function parseSubjectSemesters(html: string): SubjectSemesters {
 }
 
 export async function fetchSubjectSemesters(): Promise<SubjectSemesters> {
-  const res = await fetch(URL_SUBJECTS, { headers: { "user-agent": UA, "accept-language": "vi,en;q=0.8" }, signal: AbortSignal.timeout(30_000) });
+  const res = await fetch(URL_SUBJECTS, { headers: FUO_BROWSER_HEADERS, signal: AbortSignal.timeout(30_000) });
   if (!res.ok) throw new Error(`FuOverflow trả HTTP ${res.status}`);
   const data = parseSubjectSemesters(await res.text());
   // Trang đổi giao diện thì không đọc được gì: báo lỗi chứ không coi như "không có môn nào"

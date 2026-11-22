@@ -10,8 +10,8 @@ import {
   FUO_ANON_RETRY_AFTER_MAX_MS,
   FUO_ANON_RETRY_BACKOFF_MS,
   FUO_ANON_TIMEOUT_MS,
-  FUO_ANON_USER_AGENT,
 } from "../../constants/fuo-catalog";
+import { FUO_BROWSER_HEADERS } from "../../constants/fuo-http";
 import { type AdaptiveLimiter, type Outcome, createAdaptiveLimiter, parseRetryAfter } from "../../utils/adaptive-limiter";
 import { sleep } from "../../utils/sleep";
 import { isChallengePage, isLoginPage } from "./fuo-forum.service";
@@ -35,11 +35,7 @@ export const isLoginRequired = (err: unknown) => err instanceof FuoLoginRequired
 const RETRY = new Set([408, 425, 500, 502]); // lỗi tạm thời của máy chủ: thử lại, không coi là bị hạn chế
 const CONGESTED = new Set([429, 503, 504]); // bị hạn chế/quá tải: giảm số request cùng lúc
 
-const HEADERS: Record<string, string> = {
-  accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-  "accept-language": "vi,en-US;q=0.9,en;q=0.8",
-  "user-agent": FUO_ANON_USER_AGENT,
-};
+const HEADERS: Record<string, string> = FUO_BROWSER_HEADERS; // không cookie, không tài khoản
 
 const cooldownListeners: ((until: number) => void)[] = [];
 

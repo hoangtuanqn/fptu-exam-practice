@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { afterEach, describe, it } from "node:test";
-import { FUO_ANON_USER_AGENT } from "../src/constants/fuo-catalog";
+import { FUO_USER_AGENT } from "../src/constants/fuo-http";
 import { FUO_LOGIN_REQUIRED_MESSAGE, FuoLoginRequiredError, createAnonymousFuoClient, isLoginRequired } from "../src/services/crawler/fuo-anon-client";
 import { type AdaptiveLimiterOptions, createAdaptiveLimiter, createStreak, parseRetryAfter } from "../src/utils/adaptive-limiter";
 
@@ -128,7 +128,7 @@ describe("anonymous FuOverflow client", () => {
     assert.equal(calls[0]!.get("cookie"), null);
     assert.equal(calls[0]!.get("referer"), null);
     assert.equal(calls[0]!.get("authorization"), null);
-    assert.equal(calls[0]!.get("user-agent"), FUO_ANON_USER_AGENT);
+    assert.equal(calls[0]!.get("user-agent"), FUO_USER_AGENT);
   });
 
   it("a login page, a login redirect or a plain 403 is 'login required' (no retry)", async () => {
