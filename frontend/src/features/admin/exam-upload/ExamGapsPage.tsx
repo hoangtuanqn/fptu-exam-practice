@@ -21,6 +21,7 @@ import { SubjectCombobox } from "@/features/subject/SubjectCombobox";
 import { subjectApi } from "@/features/subject/subject.api";
 import { examUploadApi, KIND_LABEL, type ExamGap, type ExamGapItem, type ExamKind } from "./exam-upload.api";
 import { ExamUploadForm, type UploadTarget } from "./ExamUploadForm";
+import { FetchMissingCard } from "./FetchMissingCard";
 
 const GAP: Record<ExamGap, [string, Tone]> = {
   no_exam: ["Chưa có đề", "danger"],
@@ -88,6 +89,14 @@ export default function ExamGapsPage() {
       <Card>
         <div className="space-y-3 border-b border-outline-variant p-4">
           <Segmented<ExamGap | ""> label="Lọc theo phần còn thiếu" value={gap} onChange={(v) => setUrl({ gap: v, page: "1" })} options={tabs} />
+          <FetchMissingCard
+            noExam={gap === "no_exam" ? s?.noExam : undefined}
+            filters={{ ...(kind && { kind }), ...(url.subject && { subject: url.subject }), ...(q && { q }) }}
+            onDone={() => {
+              list.reload();
+              summary.reload();
+            }}
+          />
           <div className="grid gap-3 sm:grid-cols-[1fr_14rem_10rem]">
             <div className="relative self-end">
               <Search size={16} aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
