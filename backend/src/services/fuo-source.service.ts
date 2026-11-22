@@ -113,7 +113,7 @@ export const fuoSourceService = {
   /**
    * "Lấy hết đề còn thiếu" (trang Đề còn thiếu, trả về ngay): thêm mọi bài chưa có đề theo bộ lọc của trang, đăng từ
    * FUO_SOURCE_FETCH_MISSING_SINCE, vào danh sách link rồi xếp vào lượt nạp (lượt đang chạy, hoặc lượt mới). Chỉ lấy ảnh và bình luận,
-   * không nhờ AI (xem process).
+   * không lấy bình luận, không nhờ AI (xem process).
    */
   async fetchMissing(adminId: string, filter: ExamGapFilter) {
     const threadIds = await examGapRepository.missingThreadIds(filter, FUO_SOURCE_FETCH_MISSING_SINCE);
@@ -135,8 +135,8 @@ export const fuoSourceService = {
     if (!exam || !(await examRepository.isComplete(exam))) {
       await fuoSessionService.ensureCookie();
       if (!(await crawlerSettingService.get()).cookie) throw new Error(FUO_AUTH_MESSAGE, { cause: new FuoAuthError("no cookie") });
-      const { examId } = await examImportService.run({ threadId, refresh: false, userId: createdById, bulk: true }, { onReady: noop, onStage: noop });
-      return { examId, result: "IMPORTED" as const, addedQuestions: 0, commentsRefreshed: true };
+      const { examId } = await examImportService.run({ threadId, refresh: false, userId: createdById, bulk: true, noComments: true }, { onReady: noop, onStage: noop });
+      return { examId, result: "IMPORTED" as const, addedQuestions: 0, commentsRefreshed: false };
     }
     return fuoSessionService.withSession(async () => {
       if (!(await crawlerSettingService.get()).cookie) throw new Error(FUO_AUTH_MESSAGE, { cause: new FuoAuthError("no cookie") });

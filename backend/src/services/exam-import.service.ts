@@ -47,7 +47,7 @@ export interface ImportHooks {
 // Đề cần lấy: job lấy đề (crawl_jobs) hoặc lượt nạp dữ liệu mới của admin (fuo_source_urls)
 // `bulk`: lượt "Lấy hết đề còn thiếu" của admin: không nhờ AI (đề để DEFAULT, AI giải khi có người mở hoặc admin bấm giải),
 // chạy chậm (slowCrawlConfig), dừng ngay khi bị 429, giữ ảnh đã tải khi lỗi để lần sau không tải lại
-export type ImportTarget = Pick<CrawlJob, "threadId" | "refresh" | "userId"> & { bulk?: boolean };
+export type ImportTarget = Pick<CrawlJob, "threadId" | "refresh" | "userId"> & { bulk?: boolean; noComments?: boolean }; // noComments: chỉ lấy ảnh và tệp, không lấy bình luận
 
 // Mọi lượt lấy/cập nhật cùng một thread chạy lần lượt (job người dùng, lượt nạp của admin), không xoá hay ghi đè đề của nhau
 export const withThreadLock = createKeyLock();
@@ -204,7 +204,7 @@ const importer = {
             ? `Đang tải ảnh ${imagesDone}/${total}`
             : filesDone < files.length
               ? `Đang tải tệp đính kèm ${filesDone + 1}/${files.length}`
-              : `Đang lấy bình luận ${commentsDone}/${total}`,
+              : job.noComments ? "Đang hoàn tất" : `Đang lấy bình luận ${commentsDone}/${total}`,
         );
 
       // Giới hạn số request chạy cùng lúc; mỗi luồng nghỉ requestDelayMs giữa hai request để không bị chặn.
@@ -245,7 +245,7 @@ const importer = {
           await rest();
         }),
       );
-      const commentTasks = thread.images.map((image, i) =>
+      const commentTasks = job.noComments ? [] : thread.images.map((image, i) =>
         limit(async () => {
           if (aborted) return;
           comments[i] = await collectComments(client, image, { rethrowAuth: job.bulk }).catch(stop);
@@ -284,8 +284,7 @@ const importer = {
 
       const tFetch = Date.now() - t0 - tThread;
       await stage("Đang hoàn tất", true);
-      const withComments = thread.images.map((image, i) => comments[i] ?? { image, comments: [] });
-      if (!filesOnly) await writeCommentsFile(dir, { title: thread.title, url: sourceUrl }, withComments);
+      if (!filesOnly && !job.noComments) await writeCommentsFile(dir, { title: thread.title, url: sourceUrl }, thread.images.map((image, i) => comments[i] ?? { image, comments: [] }));
       if (!attachmentsSaved) await examAttachmentRepository.replace(examId, attachmentRows(kept));
       if (refreshing) {
         await examRepository.finishRefresh(examId, { title: thread.title, sourceUrl, author: thread.author, postedAt: thread.postedAt, total, kind: thread.kind, description: thread.description });
