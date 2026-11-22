@@ -81,7 +81,7 @@ export function initRealtime(server: HttpServer) {
     if (actor.isAdmin) void socket.join(ADMIN_ROOM); // admin tự nhận thông báo mới, không cần đăng ký
     if (isMember(actor.owner)) void socket.join([userRoom(actor.owner.userId), MEMBERS_ROOM]); // thành viên tự nhận thông báo của mình
 
-    presence.add(socket.id, isMember(actor.owner) ? actor.owner.userId : null);
+    presence.add(socket.id, isMember(actor.owner) ? actor.owner.userId : actor.owner.guestId, isMember(actor.owner));
     socket.on(EVENTS.presencePage, (page: unknown) => presence.setPage(socket.id, page));
     socket.on("disconnect", () => presence.remove(socket.id));
 

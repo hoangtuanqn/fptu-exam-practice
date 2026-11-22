@@ -4,7 +4,7 @@ import { realtimeHub } from "./hub";
  * Ai đang online và đang ở trang nào, tính từ chính các kết nối socket (không ai phải hỏi định kỳ).
  * Chỉ nằm trong RAM của một tiến trình: shortcut: chạy một instance PM2, đổi sang io.fetchSockets() hoặc Redis khi chạy nhiều instance.
  */
-type Entry = { userId: string | null; page: string }; // userId null = khách
+type Entry = { id: string; member: boolean; page: string }; // id = userId (thành viên) hoặc guestId (khách)
 const sockets = new Map<string, Entry>();
 
 const PAGE_RE = /^\/[\w\-./:]{0,99}$/;
@@ -22,15 +22,15 @@ const notify = () => {
 };
 
 export const presence = {
-  add(socketId: string, userId: string | null) {
-    sockets.set(socketId, { userId, page: "" });
+  add(socketId: string, id: string, member: boolean) {
+    sockets.set(socketId, { id, member, page: "" });
     notify();
   },
 
   setPage(socketId: string, raw: unknown) {
     const e = sockets.get(socketId);
-    if (!e || typeof raw !== "string" || !PAGE_RE.test(raw)) return;
-    e.page = raw;
+    if (!e) return;
+    e.page = typeof raw === "string" && PAGE_RE.test(raw) ? raw : "?"; // đường dẫn lạ: đừng để trang cũ hiện sai
     notify();
   },
 
@@ -41,11 +41,11 @@ export const presence = {
   // Thành viên: mỗi người một dòng, kèm các trang đang mở (nhiều tab). Khách chỉ đếm.
   snapshot() {
     const members = new Map<string, Set<string>>();
-    let guests = 0;
-    for (const { userId, page } of sockets.values()) {
-      if (!userId) guests++;
-      else (members.get(userId) ?? members.set(userId, new Set()).get(userId)!).add(page || "?");
+    const guests = new Set<string>();
+    for (const { id, member, page } of sockets.values()) {
+      if (!member) guests.add(id);
+      else (members.get(id) ?? members.set(id, new Set()).get(id)!).add(page || "?");
     }
-    return { guests, members: [...members].map(([userId, pages]) => ({ userId, pages: [...pages] })) };
+    return { guests: guests.size, members: [...members].map(([userId, pages]) => ({ userId, pages: [...pages] })) };
   },
 };
