@@ -10,12 +10,16 @@ export interface QuoteResult {
   title?: string | null;
 }
 
+// Đề cần lấy: link FuOverflow, hoặc mã đề đã có sẵn trong hệ thống (đề tải tay không có link FuOverflow)
+export type ImportTarget = { url: string } | { examId: string };
+const targetOf = (t: string | ImportTarget): ImportTarget => (typeof t === "string" ? { url: t } : t);
+
 export const examImportApi = {
-  submit: (url: string, subject?: string, captchaToken?: string) =>
-    http.post<SubmitResult>("/crawl-jobs", { url, ...(subject && { subject }), ...(captchaToken && { captchaToken }) }),
+  submit: (target: string | ImportTarget, subject?: string, captchaToken?: string) =>
+    http.post<SubmitResult>("/crawl-jobs", { ...targetOf(target), ...(subject && { subject }), ...(captchaToken && { captchaToken }) }),
   price: () => http.get<{ price: number; guestLimit?: number; guestRemaining?: number }>("/crawl-jobs/price"),
   // Phí thực tế của lần lấy này (0 nếu người dùng đã lấy đề này trước đó)
-  quote: (url: string, subject?: string) => http.get<QuoteResult>("/crawl-jobs/quote", { url, ...(subject && { subject }) }),
+  quote: (target: string | ImportTarget, subject?: string) => http.get<QuoteResult>("/crawl-jobs/quote", { ...targetOf(target), ...(subject && { subject }) }),
   job: (id: number) => http.get<CrawlJob>(`/crawl-jobs/${id}`),
   exam: (id: string) => http.get<ImportedExam>(`/exams/${id}`),
   // Hỏi lại trong lúc AI phân tích đáp án (nhẹ hơn tải cả đề)

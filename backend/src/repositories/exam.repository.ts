@@ -32,6 +32,7 @@ export interface NewExam {
 
 export const examRepository = {
   findByThreadId: (threadId: string) => prisma.exam.findUnique({ where: { threadId } }),
+  findById: (id: string) => prisma.exam.findUnique({ where: { id } }),
 
   // Đáp án đúng của từng câu, dùng để chấm bài
   findQuestionsForGrading: (examId: string) =>

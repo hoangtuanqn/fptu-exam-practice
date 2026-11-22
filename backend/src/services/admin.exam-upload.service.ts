@@ -26,6 +26,7 @@ import { baseName, parseAnswersJson, planUploadNumbers } from "../utils/exam-upl
 import { resolveInside } from "../utils/exam-zip";
 import { threadUrl } from "../utils/fuo-url";
 import { toMeta } from "../utils/pagination";
+import { invalidateCatalogCache } from "./catalog.service";
 import { examSolveService } from "./exam-solve.service";
 import { imagePathOf, withThreadLock } from "./exam-import.service";
 
@@ -108,7 +109,9 @@ async function result(examId: string, created: boolean, p: Plan, replaced: numbe
   };
 }
 
+// Đề vừa tải/cập nhật: báo realtime và bỏ đệm Kho đề để đề hiện ngay trong danh sách theo môn
 const published = (examId: string) => {
+  invalidateCatalogCache();
   void realtimeHub.publishExamQuestions(examId);
   void realtimeHub.publishExam(examId);
 };
