@@ -293,6 +293,7 @@ export interface QuestionChange {
 
 export interface PresenceData {
   guests: number;
+  total: number; // tổng thành viên online (danh sách có thể bị cắt bớt)
   users: { userId: string; fullName: string; email: string; pages: string[] }[];
 }
 

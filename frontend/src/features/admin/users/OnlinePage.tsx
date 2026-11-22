@@ -19,7 +19,7 @@ export default function OnlinePage() {
     <div className="space-y-6">
       <PageHeader eyebrow="Người dùng" title="Đang online" description="Thành viên và khách đang mở trang web, kèm trang họ đang xem. Mở nhiều tab thì hiện nhiều trang." />
       <StatGrid>
-        <StatCard label="Thành viên online" value={data.users.length} tone="emerald" />
+        <StatCard label="Thành viên online" value={data.total} tone="emerald" />
         <StatCard label="Khách online" value={data.guests} tone="slate" />
       </StatGrid>
       <Card>
