@@ -44,7 +44,7 @@ export function FetchMissingCard({ noExam, filters, onDone }: Props) {
           <ul className="list-disc space-y-1 pl-5">
             <li>Chỉ tải ảnh và bình luận của đề, không gọi AI nên đề chưa có đáp án.</li>
             <li>Chỉ lấy các đề đăng từ năm 2024 trở đi, nên số đề được xếp hàng có thể ít hơn số trên nút. Thông báo sau khi bấm sẽ cho biết số thật.</li>
-            <li>Chạy nền từng đề một, chậm để không bị FuOverflow chặn. Hàng nghìn đề có thể mất nhiều giờ hoặc vài ngày.</li>
+            <li>Chạy nền vài đề cùng lúc, vẫn nghỉ giữa các đề để không bị FuOverflow chặn. Hàng nghìn đề có thể mất nhiều giờ hoặc vài ngày.</li>
             <li>Có thể đóng trang, việc lấy đề vẫn tiếp tục.</li>
             <li>Cần cookie FuOverflow còn hạn trong cấu hình lấy đề.</li>
           </ul>
