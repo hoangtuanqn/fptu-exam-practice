@@ -11,6 +11,10 @@
       "changes": [
         {
           "type": "new",
+          "text": "Chuông thông báo: xem ngay mọi biến động số dư (nhận credit, nạp tiền, trừ phí...) và thông báo từ hệ thống. Mở chuông là các tin đang hiển thị tự được đánh dấu đã đọc"
+        },
+        {
+          "type": "new",
           "text": "Đóng góp đề thi: gửi ảnh đề của môn học (tối đa 100 ảnh), hoàn toàn miễn phí, không cần đáp án. Đề được admin duyệt trước khi dùng"
         },
         {
