@@ -1,5 +1,5 @@
 // Danh sách link đề FuOverflow do admin dán vào và lượt "nạp dữ liệu mới" chạy nền trên toàn bộ danh sách
-export const FUO_SOURCE_CONCURRENCY = 1; // số link xử lý cùng lúc (máy chủ 1 nhân, không dồn request sang FuOverflow)
+export const FUO_SOURCE_CONCURRENCY = 3; // số link xử lý cùng lúc (vừa phải: mỗi luồng vẫn nghỉ giữa các link, không dồn request sang FuOverflow)
 export const FUO_SOURCE_PAUSE_MS = 5000; // nghỉ giữa hai link liên tiếp, ngoài nhịp requestDelayMs của FuoClient
 export const FUO_SOURCE_BUSY_WAIT_MS = 5000; // có job lấy đề của người dùng đang chờ/chạy: đợi chừng này rồi kiểm tra lại
 export const FUO_SOURCE_COMMENT_REFRESH_DAYS = 7; // đề có sẵn không thêm câu: chỉ lấy lại bình luận khi lần lấy trước cũ hơn chừng này
