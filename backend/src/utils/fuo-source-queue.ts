@@ -1,5 +1,5 @@
 import type { CrawlerConfig } from "../constants/crawler";
-import { FUO_SOURCE_FETCH_MISSING_DELAY_MS } from "../constants/fuo-source";
+import { FUO_SOURCE_FETCH_MISSING_IMAGE_CONCURRENCY, FUO_SOURCE_FETCH_MISSING_DELAY_MS } from "../constants/fuo-source";
 import { threadUrl } from "./fuo-url";
 
 /**
@@ -9,9 +9,9 @@ import { threadUrl } from "./fuo-url";
 export const catalogSourceRows = (found: { threadId: string; examId: string | null }[], now: Date) =>
   found.map(({ threadId, examId }) => ({ threadId, url: threadUrl(threadId), ...(examId && { status: "DONE" as const, examId, processedAt: now }) }));
 
-// "Lấy hết đề còn thiếu": 1 luồng, nghỉ ít nhất FUO_SOURCE_FETCH_MISSING_DELAY_MS giữa hai request (admin đặt chậm hơn thì giữ)
+// "Lấy hết đề còn thiếu": ảnh trong một đề tải song song (FUO_SOURCE_FETCH_MISSING_IMAGE_CONCURRENCY); nghỉ giữa request lấy theo cấu hình admin nếu lớn hơn FUO_SOURCE_FETCH_MISSING_DELAY_MS
 export const slowCrawlConfig = (config: CrawlerConfig): CrawlerConfig => ({
   ...config,
-  concurrency: 1,
+  concurrency: FUO_SOURCE_FETCH_MISSING_IMAGE_CONCURRENCY,
   requestDelayMs: Math.max(config.requestDelayMs, FUO_SOURCE_FETCH_MISSING_DELAY_MS),
 });
