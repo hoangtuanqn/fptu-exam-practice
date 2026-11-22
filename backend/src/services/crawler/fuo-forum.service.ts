@@ -67,10 +67,12 @@ export function parseForumPage(html: string): ForumPage {
   return { isForum: $("html").attr("data-template") === "forum_view" || $(".structItemContainer").length > 0, rows, lastPage };
 }
 
-/** Trang chặn của Cloudflare hoặc trang đăng nhập thay cho trang cần đọc: coi như lỗi phiên FuOverflow. */
-export function looksBlocked(html: string): boolean {
-  const $ = cheerio.load(html);
-  const title = clean($("title").text()).toLowerCase();
-  const template = $("html").attr("data-template");
-  return title.includes("just a moment") || title.includes("attention required") || $("#challenge-form, .cf-error-details").length > 0 || template === "login";
-}
+// Đọc bằng regex (không dựng cây HTML) vì client ẩn danh kiểm tra mọi trang HTML trả về; máy chủ 1 nhân
+const CHALLENGE = /<title>\s*(just a moment|attention required)|id=["']challenge-form["']|class=["']cf-error-details/i;
+const LOGIN_PAGE = /<html[^>]*\sdata-template=["']login["']/i;
+
+/** Trang thử thách/chặn của Cloudflare (bị hạn chế tốc độ, không phải lỗi đăng nhập). */
+export const isChallengePage = (html: string) => CHALLENGE.test(html);
+
+/** Trang đăng nhập của XenForo (khách không có quyền xem cũng nhận trang này) thay cho trang cần đọc. */
+export const isLoginPage = (html: string) => LOGIN_PAGE.test(html);
