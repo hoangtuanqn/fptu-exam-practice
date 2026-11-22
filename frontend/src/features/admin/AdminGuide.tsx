@@ -24,6 +24,7 @@ const DESC: Record<string, string> = {
   "/admin/subjects": "Thêm, sửa, sắp xếp môn học",
   "/admin/fuo-sources": "Danh sách nguồn đề từ FuOverflow và quét đề mới",
   "/admin/crawler": "Cấu hình cách hệ thống lấy đề",
+  "/admin/online": "Ai đang online và đang xem trang nào",
   "/admin/crawl-jobs": "Lịch sử các lần lấy đề của người dùng",
   "/admin/reports": "Người dùng báo đáp án sai, cần xử lý",
   "/admin/explanation-feedback": "Đánh giá tốt/xấu của người dùng về lời giải AI",
