@@ -12,6 +12,7 @@ export const EVENTS = {
   jobUpdate: "job:update", // tiến độ lấy đề
   adminNotice: "admin:notice", // (chỉ admin) thông báo mới về hành vi người dùng
   fuoSources: "admin:fuo-sources", // (chỉ admin) tiến độ lượt nạp dữ liệu FuOverflow, cùng dạng GET /admin/fuo-sources/status
+  examUpload: "admin:exam-upload", // (chính admin đã gửi) lượt tải đề chạy nền vừa xong/lỗi, cùng dạng một mục của GET /admin/exam-upload/jobs
   presence: "admin:presence", // (chỉ admin) có người vào/ra/đổi trang: không kèm dữ liệu, tải lại GET /admin/presence
   presencePage: "presence:page", // gửi lên server: trang đang xem
   userNotice: "user:notice", // (chính thành viên đó) thông báo mới, cùng dạng một mục của GET /notifications

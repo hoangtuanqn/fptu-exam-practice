@@ -45,6 +45,19 @@ export interface CreateExamInput extends UploadInput {
   threadId?: string;
 }
 
+export type UploadJobStatus = "QUEUED" | "RUNNING" | "DONE" | "FAILED";
+
+// Một lượt tải đề chạy nền (202 của ?async=1 và GET /admin/exam-upload/jobs). `result` chỉ có khi DONE, `error` khi FAILED
+export interface UploadJob {
+  uploadId?: string; // thiếu khi máy chủ cũ trả kết quả xử lý ngay
+  kind: "create" | "update";
+  title: string;
+  status: UploadJobStatus;
+  files: number;
+  error: string | null;
+  result: { id: string; questions: number; answered: number } | null;
+}
+
 // Trường chữ đặt trước ảnh (máy chủ đọc được khi đang nhận ảnh). Gửi nguyên tệp (tên Qn.webp, không nén lại): máy chủ lấy số câu từ tên tệp
 function uploadForm({ images, ansJson }: UploadInput, fields: Record<string, string | undefined> = {}) {
   const form = new FormData();
@@ -59,9 +72,10 @@ export const examUploadApi = {
   summary: () => http.get<ExamGapSummary>("/admin/exam-gaps/summary"),
   create: ({ title, subjectCode, kind, threadId, ...rest }: CreateExamInput) => {
     const form = uploadForm(rest, { title: title.trim(), subjectCode, kind, threadId });
-    return sendForm<{ id: string; title: string; questions: number; answered: number }>("POST", "/admin/exams/upload", form);
+    return sendForm<UploadJob>("POST", "/admin/exams/upload?async=1", form);
   },
   addImages: (examId: string, input: UploadInput) => {
-    return sendForm<{ id: string; questions: number; answered: number }>("POST", `/admin/exams/${encodeURIComponent(examId)}/images`, uploadForm(input));
+    return sendForm<UploadJob>("POST", `/admin/exams/${encodeURIComponent(examId)}/images?async=1`, uploadForm(input));
   },
+  jobs: () => http.get<UploadJob[]>("/admin/exam-upload/jobs"),
 };

@@ -1,7 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import { ExternalLink, FilePlus2, Pencil, Search, SearchCheck } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
 import { useClampPage } from "@/shared/hooks/useClampPage";
 import { useUrlSearch } from "@/shared/hooks/useUrlSearch";
@@ -21,6 +20,8 @@ import { SubjectCombobox } from "@/features/subject/SubjectCombobox";
 import { subjectApi } from "@/features/subject/subject.api";
 import { examUploadApi, KIND_LABEL, type ExamGap, type ExamGapItem, type ExamKind } from "./exam-upload.api";
 import { ExamUploadForm, type UploadTarget } from "./ExamUploadForm";
+import { UploadJobsCard } from "./UploadJobsCard";
+import { useUploadJobs } from "./useUploadJobs";
 
 const GAP: Record<ExamGap, [string, Tone]> = {
   no_exam: ["Chưa có đề", "danger"],
@@ -36,7 +37,6 @@ const targetOf = (g: ExamGapItem): UploadTarget =>
 
 // Đề còn thiếu thông tin (chưa có đề, chưa có ảnh, chưa có đáp án) để admin biết cần bổ sung gì
 export default function ExamGapsPage() {
-  const toast = useToast();
   const [url, setUrl] = useUrlState({ gap: "", kind: "", subject: "", q: "", page: "1" });
   const gap = (url.gap in GAP ? url.gap : "") as ExamGap | "";
   const kind = (KINDS.includes(url.kind as ExamKind) ? url.kind : "") as ExamKind | "";
@@ -46,6 +46,10 @@ export default function ExamGapsPage() {
 
   const list = useApi(() => examUploadApi.gaps({ gap, kind, subject: url.subject, q, page }), [gap, kind, url.subject, q, page]);
   const summary = useApi(() => examUploadApi.summary(), []);
+  const jobs = useUploadJobs(() => {
+    list.reload();
+    summary.reload();
+  });
   const subjects = useApi(() => subjectApi.subjects(), []);
   useClampPage(list.data?.meta, setPage);
   const [open, setOpen] = useState<{ item: ExamGapItem; target: UploadTarget } | null>(null);
@@ -85,6 +89,7 @@ export default function ExamGapsPage() {
   return (
     <>
       <PageHeader eyebrow="Quản trị" title="Đề cần bổ sung" description="Đề còn thiếu ảnh hoặc đáp án, và bài trên FuOverflow chưa có đề. Bấm Bổ sung để tải thư mục đề lên." />
+      <UploadJobsCard jobs={jobs.jobs} className="mb-4" />
       <Card>
         <div className="space-y-3 border-b border-outline-variant p-4">
           <Segmented<ExamGap | ""> label="Lọc theo phần còn thiếu" value={gap} onChange={(v) => setUrl({ gap: v, page: "1" })} options={tabs} />
@@ -172,11 +177,9 @@ export default function ExamGapsPage() {
                 busy.current = b;
               }}
               onCancel={close}
-              onDone={(r) => {
+              onDone={(job) => {
                 setOpen(null);
-                toast.success(`Đã lưu đề: ${r.questions} câu, ${r.answered} câu có đáp án`);
-                list.reload();
-                summary.reload();
+                jobs.add(job);
               }}
             />
           </div>
