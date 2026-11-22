@@ -284,6 +284,41 @@ export const examRepository = {
       { timeout: 60_000 },
     ),
 
+  // Admin tải đề bằng tay: đề + các câu hiện có (số câu, ảnh) để xếp số câu và xoá ảnh cũ sau khi thay
+  findUploadTarget: (db: Db, id: string) =>
+    db.exam.findUnique({
+      where: { id },
+      select: { id: true, threadId: true, title: true, totalQuestions: true, answerSource: true, questions: { orderBy: { number: "asc" }, select: { number: true, imagePath: true } } },
+    }),
+
+  createUploaded: (db: Db, data: { threadId: string; title: string; subjectCode: string; sourceUrl: string; postedAt: Date | null; kind: ExamKind; totalQuestions: number; answerSource: AnswerSource; createdById: string }) =>
+    db.exam.create({ data, select: { id: true } }),
+
+  setUploadedInfo: (db: Db, id: string, data: { title?: string; subjectCode?: string; kind?: ExamKind; postedAt?: Date | null; totalQuestions: number; answerSource: AnswerSource; aiReport?: null }) =>
+    db.exam.update({ where: { id }, data, select: { id: true } }),
+
+  /**
+   * Ghi ảnh tải tay theo số câu (một câu INSERT ... ON DUPLICATE KEY): câu mới được tạo, câu đã có chỉ đổi ảnh (giữ tên, đáp án, chủ đề).
+   * Câu bị thay ảnh: bỏ dấu vân tay ảnh, embedding và lời giải AI (viết cho ảnh cũ). Đáp án trong `answers` ghi đè đáp án cũ.
+   */
+  async saveUploadedQuestions(db: Db, examId: string, rows: { number: number; name: string; imagePath: string }[], replaced: number[], answers: [number, string][]) {
+    const values = rows.map((q) => Prisma.sql`(${examId}, ${q.number}, ${q.name}, ${q.imagePath}, '', '')`);
+    await db.$executeRaw`
+      INSERT INTO exam_questions (exam_id, number, name, image_path, source_image, answer)
+      VALUES ${Prisma.join(values)} AS new
+      ON DUPLICATE KEY UPDATE image_path = new.image_path, source_image = new.source_image, image_hash = NULL`;
+    if (answers.length) {
+      const cases = answers.map(([n, a]) => Prisma.sql`WHEN ${n} THEN ${a}`);
+      await db.$executeRaw`UPDATE exam_questions SET answer = CASE number ${Prisma.join(cases, " ")} END WHERE exam_id = ${examId} AND number IN (${Prisma.join(answers.map(([n]) => n))})`;
+    }
+    const stale = [...new Set([...replaced, ...answers.map(([n]) => n)])];
+    if (stale.length) await db.questionExplanation.deleteMany({ where: { examId, questionNumber: { in: stale } } });
+    if (replaced.length) await db.questionEmbedding.deleteMany({ where: { question: { examId, number: { in: replaced } } } });
+  },
+
+  // Đề dở dang được điền bằng tay với đủ 1..N: bỏ các câu thừa của lượt lấy đề cũ
+  dropQuestionsAfter: (db: Db, examId: string, total: number) => db.examQuestion.deleteMany({ where: { examId, number: { gt: total } } }),
+
   // Cập nhật đáp án cả đề (sau khi AI giải lại): chạy trong một transaction
   // `references`: số câu mà AI cho là tài liệu tham khảo (trang công thức...). Mỗi lần giải đặt lại cờ cho cả đề.
   updateAnswers: (examId: string, answers: string[], source: AnswerSource, report: string | null, references: number[] = []) =>
