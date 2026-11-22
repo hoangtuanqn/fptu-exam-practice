@@ -101,6 +101,11 @@ export const realtimeHub = {
     io?.to(MEMBERS_ROOM).emit(EVENTS.userNoticeSync);
   },
 
+  // Lượt tải đề chạy nền vừa xong hoặc lỗi: chỉ báo cho admin đã gửi (mọi tab của người đó)
+  publishExamUpload(adminId: string, job: unknown) {
+    io?.to(userRoom(adminId)).emit(EVENTS.examUpload, job);
+  },
+
   // Ai đang online vừa đổi: chỉ báo "có thay đổi", admin tự tải lại danh sách
   publishPresence() {
     io?.to(ADMIN_ROOM).emit(EVENTS.presence);

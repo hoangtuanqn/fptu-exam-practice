@@ -9,7 +9,7 @@ import { Input, Select } from "@/shared/ui/Input";
 import { SubjectCombobox } from "@/features/subject/SubjectCombobox";
 import { subjectApi } from "@/features/subject/subject.api";
 import { MAX_TOTAL_BYTES } from "@/features/exam-contribution/limits";
-import { examUploadApi, KIND_LABEL, type ExamKind } from "./exam-upload.api";
+import { examUploadApi, KIND_LABEL, type ExamKind, type UploadJob } from "./exam-upload.api";
 import { ansPathOf, checkFolder, findRoot, type FolderCheck, type FolderEntry } from "./folder";
 import { FolderPicker } from "./FolderPicker";
 import { FolderPreview } from "./FolderPreview";
@@ -18,19 +18,13 @@ export type UploadTarget =
   | { mode: "create"; title?: string; subjectCode?: string | null; kind?: ExamKind | null; threadId?: string }
   | { mode: "update"; examId: string; title: string; questions: number };
 
-export interface UploadResult {
-  id: string;
-  questions: number;
-  answered: number;
-}
-
 const KINDS = Object.keys(KIND_LABEL) as ExamKind[];
 const FIELDS = ["title", "subjectCode", "kind", "images", "answers", "threadId"];
 
 // Tải đề từ một thư mục (images/Qn.webp + ans.json): tạo đề mới, hoặc bổ sung/thay ảnh cho đề đã có
 interface Props {
   target: UploadTarget;
-  onDone: (r: UploadResult) => void;
+  onDone: (job: UploadJob) => void; // máy chủ đã nhận đề, xử lý tiếp chạy nền
   onBusy?: (busy: boolean) => void;
   onCancel?: () => void; // có thì hiện nút Huỷ (dùng trong hộp thoại)
 }

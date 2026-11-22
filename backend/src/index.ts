@@ -17,6 +17,14 @@ import { startCreditExpiry } from "./jobs/credit-expiry.cron";
 import { startSimilarityCron } from "./jobs/similarity.cron";
 import { startMaterialWorker } from "./jobs/material.worker";
 import { startMaterialCleanupCron } from "./jobs/material-cleanup.cron";
+import { examUploadQueue } from "./jobs/exam-upload.queue";
+
+// Hàng đợi tải đề chạy nền nằm trong RAM nên đã mất khi tắt server: dọn tệp tạm còn sót trước khi nhận yêu cầu
+try {
+  examUploadQueue.clearStaged();
+} catch (err) {
+  console.error("[exam-upload] không dọn được tệp tạm:", (err as Error).message);
+}
 
 const server = http.createServer(createApp());
 initRealtime(server); // kênh realtime (socket.io) dùng chung cổng với API
