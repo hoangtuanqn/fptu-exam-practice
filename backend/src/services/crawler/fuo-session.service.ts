@@ -24,7 +24,7 @@ async function doLogin(force: boolean): Promise<LoginResult> {
   lastAttemptAt = Date.now();
 
   try {
-    const cookie = await loginFuo({ email: config.loginEmail, password: config.loginPassword, userAgent: config.userAgent, baseCookie: config.cookie });
+    const cookie = await loginFuo({ email: config.loginEmail, password: config.loginPassword, baseCookie: config.cookie });
     await save({ cookie, loginLastAt: new Date().toISOString(), loginLastError: "" });
     console.log("[fuo-session] đã đăng nhập FuOverflow và làm mới cookie");
     return { ok: true };
