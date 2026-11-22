@@ -16,3 +16,6 @@ export function onePerUser(message: string): RequestHandler {
     next();
   };
 }
+
+// Admin tải đề bằng tay (tạo đề và cập nhật ảnh dùng CHUNG một khoá): mỗi admin một lần tải đang chạy, không giữ nhiều thân 300 MB trong RAM
+export const oneExamUploadPerAdmin = onePerUser("Bạn đang có một lần tải đề khác, hãy đợi nó xong rồi gửi tiếp.");

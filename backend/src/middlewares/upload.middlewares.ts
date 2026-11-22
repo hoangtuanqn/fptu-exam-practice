@@ -1,6 +1,7 @@
 import multer from "multer";
 import type { Request, Response, NextFunction, RequestHandler } from "express";
 import { CONTRIBUTION_MAX_FILE_BYTES, CONTRIBUTION_MAX_FILE_MB, CONTRIBUTION_MAX_IMAGES, CONTRIBUTION_MAX_REQUEST_BYTES } from "../constants/exam-contribution";
+import { EXAM_UPLOAD_ANSWERS_MAX_CHARS, EXAM_UPLOAD_MAX_FILE_BYTES, EXAM_UPLOAD_MAX_IMAGES, EXAM_UPLOAD_MAX_REQUEST_BYTES } from "../constants/exam-upload";
 import { MATERIAL_MAX_FILE_BYTES, MATERIAL_MAX_FILE_MB } from "../constants/materials";
 import { HTTP_STATUS } from "../constants/httpStatus";
 import { AppError } from "../rules/error";
@@ -69,17 +70,31 @@ const CONTRIBUTION_MULTER_MESSAGES: Partial<Record<multer.ErrorCode, string>> = 
   LIMIT_FILE_SIZE: `Mỗi ảnh tối đa ${CONTRIBUTION_MAX_FILE_MB} MB`,
   LIMIT_FILE_COUNT: `Mỗi lần gửi tối đa ${CONTRIBUTION_MAX_IMAGES} ảnh`,
   LIMIT_UNEXPECTED_FILE: `Mỗi lần gửi tối đa ${CONTRIBUTION_MAX_IMAGES} ảnh`,
+  LIMIT_FIELD_VALUE: "Nội dung một trường quá dài (ví dụ tệp đáp án)",
 };
 
-export const uploadContributionImages: RequestHandler = (req, res, next) => {
-  const length = Number(req.headers["content-length"]);
-  if (!Number.isFinite(length) || length <= 0) return next(new AppError("Không đọc được ảnh tải lên. Hãy chọn lại ảnh rồi thử lại.", 400));
-  if (length > CONTRIBUTION_MAX_REQUEST_BYTES) return next(new AppError("Tổng dung lượng ảnh quá lớn. Hãy chia thành nhiều lần gửi.", HTTP_STATUS.PAYLOAD_TOO_LARGE));
-  contributionUpload(req, res, (err: unknown) => {
-    if (!err) return next();
-    if (err instanceof multer.MulterError) {
-      return next(new AppError(CONTRIBUTION_MULTER_MESSAGES[err.code] ?? "Không đọc được ảnh tải lên. Hãy chọn lại ảnh rồi thử lại.", 400));
-    }
-    next(err);
-  });
-};
+// Chặn tổng dung lượng theo Content-Length trước khi multer đọc thân vào RAM, rồi đổi lỗi multer thành lời nhắn tiếng Việt
+const withBodyCap =
+  (parse: RequestHandler, maxBytes: number): RequestHandler =>
+  (req, res, next) => {
+    const length = Number(req.headers["content-length"]);
+    if (!Number.isFinite(length) || length <= 0) return next(new AppError("Không đọc được ảnh tải lên. Hãy chọn lại ảnh rồi thử lại.", 400));
+    if (length > maxBytes) return next(new AppError("Tổng dung lượng ảnh quá lớn. Hãy chia thành nhiều lần gửi.", HTTP_STATUS.PAYLOAD_TOO_LARGE));
+    parse(req, res, (err: unknown) => {
+      if (!err) return next();
+      if (err instanceof multer.MulterError) {
+        return next(new AppError(CONTRIBUTION_MULTER_MESSAGES[err.code] ?? "Không đọc được ảnh tải lên. Hãy chọn lại ảnh rồi thử lại.", 400));
+      }
+      next(err);
+    });
+  };
+
+export const uploadContributionImages = withBodyCap(contributionUpload, CONTRIBUTION_MAX_REQUEST_BYTES);
+
+// ---- Admin tải đề bằng tay: field "images" (Q1.webp...) + trường "answers" (nội dung ans.json). Service kiểm tra tên và byte đầu WebP ----
+const examImagesUpload = multer({
+  storage,
+  limits: { fileSize: EXAM_UPLOAD_MAX_FILE_BYTES, files: EXAM_UPLOAD_MAX_IMAGES, fields: 10, fieldSize: EXAM_UPLOAD_ANSWERS_MAX_CHARS },
+}).array("images", EXAM_UPLOAD_MAX_IMAGES);
+
+export const uploadExamImages = withBodyCap(examImagesUpload, EXAM_UPLOAD_MAX_REQUEST_BYTES);
