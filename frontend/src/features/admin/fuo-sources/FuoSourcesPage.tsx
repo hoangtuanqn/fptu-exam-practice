@@ -12,7 +12,7 @@ import { useFuoSourcesStatus } from "./useFuoSourcesStatus";
 
 const FILTERS: FuoSourceStatus[] = ["NEW", "QUEUED", "RUNNING", "DONE", "FAILED"];
 
-// Nguồn đề FuOverflow (chỉ admin): bấm một nút để quét FuOverflow để tìm đề mới và cập nhật đề đã đổi (đề mới chỉ tải khi có người mở), chạy nền; dán link là tuỳ chọn
+// Nguồn đề FuOverflow (chỉ admin): bấm một nút để quét FuOverflow tìm tên đề mới (chạy nền, đề chỉ tải khi có người mở); dán link là tuỳ chọn
 export default function FuoSourcesPage() {
   const [url, setUrl] = useUrlState({ status: "", page: "1" });
   const status = url.status as FuoSourceStatus | "";
@@ -23,13 +23,13 @@ export default function FuoSourcesPage() {
   const run = live.status?.run;
   const counts = live.status?.counts;
   // Tải lại bảng khi một link vừa xong/lỗi, lượt đổi trạng thái hoặc có link mới được lưu
-  const changed = `${run?.id}:${run?.status}:${(run?.done ?? 0) + (run?.failed ?? 0)}:${counts?.total}`;
+  const changed = `${run?.id}:${run?.status}:${(run?.done ?? 0) + (run?.failed ?? 0)}:${counts?.total}:${live.status?.scan?.status}`;
   const list = useApi(() => fuoSourcesApi.list(page, status), [page, status, changed]);
   useClampPage(list.data?.meta, setPage);
 
   return (
     <>
-      <PageHeader title="Nguồn đề" description="Bấm Load dữ liệu mới để tìm đề mới trên FuOverflow (đề mới, kể cả link dán, chỉ được tải khi có người mở) và cập nhật đề đã có." />
+      <PageHeader title="Nguồn đề" description="Bấm Load dữ liệu mới để tìm tên các đề mới trên FuOverflow. Đề mới, kể cả link dán, chỉ được tải khi có người mở." />
       <div className="space-y-4">
         <QueryBoundary query={{ ...live.query, data: live.status }}>
           {(s) => <RunCard status={s} running={live.running} onStatus={live.set} />}

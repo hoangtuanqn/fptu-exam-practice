@@ -108,7 +108,7 @@ export const PRIVATE_PAGES: Record<string, PageSeo> = {
   "/admin/subjects": { title: "Quản trị: quản lý môn học", description: "Xem và chỉnh kỳ, chương, syllabus của từng môn." },
   "/admin/link-rewards": { title: "Quản trị: vượt link", description: "Cấu hình và số liệu vượt link nhận lượt giải thích miễn phí." },
   "/admin/crawler": { title: "Quản trị: cấu hình lấy đề", description: "Thiết lập bộ lấy đề từ FuOverflow." },
-  "/admin/fuo-sources": { title: "Quản trị: nguồn đề", description: "Danh sách link đề FuOverflow, tải đề mới và cập nhật đề đã có." },
+  "/admin/fuo-sources": { title: "Quản trị: nguồn đề", description: "Danh sách link đề FuOverflow và tìm đề mới trên FuOverflow." },
   "/admin/ai": { title: "Quản trị: AI giải đáp án", description: "Thiết lập mô hình AI giải đáp án và giải thích." },
   "/admin/funnel": { title: "Quản trị: phễu người dùng", description: "Người đăng ký đi được tới đâu: lấy đề, nộp bài, nạp tiền, mua Pro." },
   "/admin/quality": { title: "Quản trị: chất lượng đề", description: "Câu nhiều người sai và đáp án có thể sai theo bài làm thực tế." },

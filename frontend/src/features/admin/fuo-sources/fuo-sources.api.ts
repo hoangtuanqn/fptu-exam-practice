@@ -35,9 +35,10 @@ export interface FuoSourceRun {
 
 export type FuoSourceCounts = Record<FuoSourceStatus | "total", number>;
 
-// Lượt quét danh mục FuOverflow của "Load dữ liệu mới" (chạy trước lượt nạp). null khi không chạy/không dừng giữa chừng.
+// Lượt quét danh mục FuOverflow của "Load dữ liệu mới": chỉ tìm tên đề mới, không tải đề. null khi chưa quét lần nào.
 export interface FuoSourceScan {
-  status: "RUNNING" | "NEEDS_AUTH" | "FAILED";
+  status: "RUNNING" | "NEEDS_AUTH" | "FAILED" | "DONE"; // DONE: backend cũ không trả
+
   subjectsTotal: number;
   subjectsDone: number;
   subjectsFailed: number;
@@ -45,6 +46,11 @@ export interface FuoSourceScan {
   threadsNew: number;
   threadsUpdated: number;
   lastError: string | null;
+  // Các trường dưới đây backend cũ chưa có
+  finishedAt?: string | null;
+  newBySubject?: { code: string; threadsNew: number }[]; // môn có đề mới, nhiều nhất trước (có thể bị cắt, xem subjectsWithNew)
+  subjectsWithNew?: number;
+  coolingDownUntil?: string | null; // FuOverflow đang hạn chế truy cập: tạm nghỉ tới lúc này rồi tự chạy tiếp
 }
 
 export interface FuoSourcesStatus {
