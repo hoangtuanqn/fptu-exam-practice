@@ -385,6 +385,7 @@ export const adminApi = {
     body?: string;
     link?: string;
     level?: AdminNotice["level"];
+    key?: string; // cùng key khi gửi lại: server chỉ gửi tiếp cho người chưa nhận, không gửi trùng
   }) => http.post<{ sent: number }>("/admin/system-notices", body),
   subjects: () => http.get<{ subjects: SubjectRow[] }>("/admin/subjects"),
   subject: (code: string) =>

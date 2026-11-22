@@ -16,6 +16,7 @@ import { Button, buttonClass } from "@/shared/ui/Button";
 import { UserMenu } from "@/shared/layout/UserMenu";
 import { SiteNav } from "@/shared/layout/SiteNav";
 import { ThemeToggle } from "@/shared/theme/ThemeToggle";
+import { UserNoticeBell } from "@/features/notifications/UserNoticeBell"; // component công khai của feature thông báo
 
 // Nút "Hướng dẫn": chưa từng mở thì có chấm nhấp nháy gợi ý bấm vào (mở một lần là thôi)
 const HELP_SEEN_KEY = "practice_help_seen";
@@ -214,6 +215,10 @@ export function Header({
             <span className="mx-1 hidden h-6 w-px bg-slate-200 sm:block" />
           </>
         )}
+        {/* Đang làm bài trên điện thoại: ẩn như nút giao diện để cụm nút không tràn */}
+        <span className={loaded ? "contents max-sm:hidden" : "contents"}>
+          <UserNoticeBell />
+        </span>
         <ThemeToggle className={loaded ? "max-sm:hidden" : ""} />
         <UserMenu />
       </div>
