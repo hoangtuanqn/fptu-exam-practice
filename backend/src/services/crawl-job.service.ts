@@ -1,6 +1,7 @@
 import { PRO_BENEFITS } from "../constants/plan";
 import { planService } from "./plan.service";
 import type { CrawlJob, ExamKind } from "@prisma/client";
+import { CATALOG_ANSWER_SOURCES } from "../constants/exam";
 import { PE_PRICE } from "../constants/pe";
 import { fuoCatalogRepository } from "../repositories/fuo-catalog.repository";
 import { prisma } from "../configs/prisma";
@@ -12,8 +13,9 @@ import { HTTP_STATUS } from "../constants/httpStatus";
 import { AppError } from "../rules/error";
 import type { ImportExamBody } from "../rules/requests/crawl.request";
 import { isMember, type Actor } from "../utils/actor";
+import { isManualThreadId } from "../utils/exam-upload";
 import { parseThreadId, threadUrl } from "../utils/fuo-url";
-import { subjectCodeFromTitle } from "../utils/subject-code";
+import { subjectCodeFromTitle, subjectOfExam } from "../utils/subject-code";
 import { startOfVnDay } from "../utils/time";
 import { EXAM_REFRESH_RETRY_HOURS, EXAM_STALE_AFTER_DAYS, FUO_LINK_INVALID } from "../constants/crawler";
 import { crawlerSettingService } from "./crawler-setting.service";
@@ -33,15 +35,21 @@ export const GUEST_LIMIT_MESSAGE =
 
 const HOUR_MS = 60 * 60 * 1000;
 
-// Bài chưa có trong hệ thống: đọc thử trang đầu trên FuOverflow, sai nhãn/không tồn tại thì báo lỗi NGAY, trước khi trừ phí
+export const EXAM_NOT_READY = "Không tìm thấy đề này hoặc đề chưa sẵn sàng. Hãy tải lại Kho đề rồi thử lại.";
+// Có mã EXAM_NOT_READY để giao diện nhận ra và tải lại Kho đề
+const notReady = () => new AppError(EXAM_NOT_READY, HTTP_STATUS.NOT_FOUND, undefined, "EXAM_NOT_READY");
+
+// Bài chưa có trong hệ thống: đọc thử trang đầu trên FuOverflow, sai nhãn/không tồn tại thì báo lỗi NGAY, trước khi trừ phí.
+// Đề tải tay ("m<hex>") không có bài để đọc thử hay crawl: chưa đủ (vừa bị sửa dở) thì 404, không bao giờ tạo lượt lấy.
 async function assertThreadAccepted(threadId: string) {
+  if (isManualThreadId(threadId)) throw notReady();
   const check = await threadPreflight.check(threadId);
   if (check && !check.ok) throw new AppError(check.message, HTTP_STATUS.UNPROCESSABLE_ENTITY);
 }
 
 // Đề PE có giá riêng. Loại đề lấy từ đề đã có trong hệ thống, không có thì từ bài trên FuOverflow (đã nhớ sẵn khi kiểm tra), rồi tới danh mục
 async function fetchPriceOf(threadId: string, found: { kind: ExamKind | null } | null) {
-  let kind = found?.kind ?? null;
+  let kind = found?.kind ?? (isManualThreadId(threadId) ? "FE" : null); // đề tải tay không có bài trên FuOverflow để đọc thử
   if (!kind) {
     const check = await threadPreflight.check(threadId);
     kind = check?.ok ? check.kind : ((await fuoCatalogRepository.findThreads([threadId]))[0]?.kind ?? null);
@@ -49,27 +57,41 @@ async function fetchPriceOf(threadId: string, found: { kind: ExamKind | null } |
   return kind === "PE" ? PE_PRICE : (await crawlerSettingService.get()).fetchPrice;
 }
 
-// Tạo bộ đề theo chương: đề phải đúng môn đã chọn. Đề đã có trong hệ thống thì so theo tiêu đề của nó, đề mới thì theo tiêu đề bài trên FuOverflow.
+// Tạo bộ đề theo chương: đề phải đúng môn đã chọn. Đề đã có trong hệ thống thì theo môn của nó (mã đã lưu, rồi tiêu đề), đề mới thì theo tiêu đề bài trên FuOverflow.
 // Không kết luận được (chưa đọc được bài) thì không cho đi tiếp, vì nếu sai môn thì người dùng đã bị trừ phí.
-async function assertSubject(subject: string | undefined, threadId: string, examTitle: string | null) {
+async function assertSubject(subject: string | undefined, threadId: string, exam: { subjectCode: string | null; title: string } | null) {
   if (!subject) return;
   // Môn chưa có tên chương thì không làm được bộ đề theo chương: chặn trước khi trừ phí (và ghi báo cáo cho admin)
   const ready = await subjectService.chapterSetReady(subject);
   if (!ready.ok) throw new AppError(ready.message!, HTTP_STATUS.UNPROCESSABLE_ENTITY);
-  let title = examTitle;
-  if (title === null) {
+  let code: string | null;
+  if (exam) code = subjectOfExam(exam);
+  else {
     const check = await threadPreflight.check(threadId);
     if (!check) throw new AppError("Chưa kiểm tra được môn của bài này, bạn thử lại sau ít phút nhé", HTTP_STATUS.SERVICE_UNAVAILABLE);
     if (!check.ok) throw new AppError(check.message, HTTP_STATUS.UNPROCESSABLE_ENTITY);
-    title = check.title;
+    code = subjectCodeFromTitle(check.title);
   }
-  const code = subjectCodeFromTitle(title);
   if (!code) throw new AppError("Không xác định được môn học của bài này từ tiêu đề, nên không thể tạo bộ đề theo chương", HTTP_STATUS.UNPROCESSABLE_ENTITY);
   if (code !== subject) throw new AppError(`Bài này là đề môn ${code}, không phải môn ${subject} bạn đã chọn`, HTTP_STATUS.UNPROCESSABLE_ENTITY);
 }
 
-const isStale = (exam: { createdAt: Date; refreshedAt: Date | null }) =>
-  Date.now() - (exam.refreshedAt ?? exam.createdAt).getTime() > EXAM_STALE_AFTER_DAYS * 24 * HOUR_MS;
+// Đề tải tay ("m<hex>") không có bài FuOverflow để lấy lại: không bao giờ làm mới
+const isStale = (exam: { threadId: string; createdAt: Date; refreshedAt: Date | null }) =>
+  !isManualThreadId(exam.threadId) && Date.now() - (exam.refreshedAt ?? exam.createdAt).getTime() > EXAM_STALE_AFTER_DAYS * 24 * HOUR_MS;
+
+// Đề cần lấy: theo link FuOverflow, hoặc theo mã đề (chỉ đề đã có đủ trong hệ thống; đề tải tay không có link FuOverflow)
+async function targetOf({ url, examId }: ImportExamBody) {
+  if (examId) {
+    const found = await examRepository.findById(examId);
+    // Chỉ đề đang bày trong Kho đề (không phải đề chờ/lỗi AI) và đã đủ câu
+    if (!found || !CATALOG_ANSWER_SOURCES.includes(found.answerSource) || !(await examRepository.isComplete(found))) throw notReady();
+    return { threadId: found.threadId, found };
+  }
+  const threadId = url ? parseThreadId(url) : null;
+  if (!threadId) throw new AppError(FUO_LINK_INVALID); // đã được validate, giữ để thu hẹp kiểu
+  return { threadId, found: undefined };
+}
 
 export const crawlJobService = {
   // Phí mỗi lần lấy đề, để giao diện báo trước cho người dùng
@@ -83,17 +105,18 @@ export const crawlJobService = {
 
   // Phí thực tế của lần lấy này. Đề người này đã lấy về kho trước đó thì miễn phí (chỉ mở lại, không crawl);
   // đề đang có lượt lấy chưa xong của chính họ cũng không trừ thêm. Khách không bị tính phí.
-  async quote(actor: Actor, { url, subject }: ImportExamBody) {
+  async quote(actor: Actor, body: ImportExamBody) {
     const { owner } = actor;
-    const threadId = parseThreadId(url);
-    if (!threadId) throw new AppError(FUO_LINK_INVALID);
+    const { subject } = body;
+    const target = await targetOf(body);
+    const { threadId } = target;
     const active = await crawlJobRepository.findActive(threadId, owner);
-    const found = await examRepository.findByThreadId(threadId);
+    const found = target.found ?? (await examRepository.findByThreadId(threadId));
     const price = isMember(owner) ? await fetchPriceOf(threadId, found) : 0;
     const exam = found && (await examRepository.isComplete(found)) ? found : null;
     const owned = !!exam && (await userExamRepository.has(owner, exam.id));
     if (!exam && !active) await assertThreadAccepted(threadId); // đề phải lấy mới: bài sai thì không cho tới bước xác nhận phí
-    await assertSubject(subject, threadId, exam?.title ?? null);
+    await assertSubject(subject, threadId, exam);
     const pro = isMember(owner) && PRO_BENEFITS.freeFetch && (await planService.isPro(owner.userId));
     const free = isMember(owner) && price > 0 && (pro || owned || !!active);
     return { price, fee: free ? 0 : price, free, reason: free ? (pro ? ("pro" as const) : owned ? ("owned" as const) : ("in-progress" as const)) : null, title: owned ? exam.title : null };
@@ -107,10 +130,11 @@ export const crawlJobService = {
    * - đề đã có trong DB (cùng thread ID, dù link khác) -> thêm vào thư viện, không crawl lại
    * - ngược lại -> tạo job và đánh thức worker nền
    */
-  async submit(actor: Actor, { url, subject }: ImportExamBody) {
+  async submit(actor: Actor, body: ImportExamBody) {
     const { owner } = actor;
-    const threadId = parseThreadId(url);
-    if (!threadId) throw new AppError(FUO_LINK_INVALID); // đã được validate, giữ để thu hẹp kiểu
+    const { subject } = body;
+    const target = await targetOf(body);
+    const { threadId } = target;
 
     const active = await crawlJobRepository.findActive(threadId, owner);
     if (active) return { existed: false as const, job: toJobDto(active), charged: 0 };
@@ -122,11 +146,11 @@ export const crawlJobService = {
     }
 
     // Khách chưa có ví nên không bị tính phí
-    const found = await examRepository.findByThreadId(threadId);
+    const found = target.found ?? (await examRepository.findByThreadId(threadId));
     // Đề đang được lấy dở dang thì chưa dùng được: xếp hàng như đề mới (lượt chạy sẽ lấy lại cho đủ)
     const exam = found && (await examRepository.isComplete(found)) ? found : null;
     if (!exam) await assertThreadAccepted(threadId); // chặn trước khi trừ phí (xem thread-preflight.service)
-    await assertSubject(subject, threadId, exam?.title ?? null);
+    await assertSubject(subject, threadId, exam);
     // Đã có đề này trong kho của mình thì mở lại miễn phí
     const alreadyOwned = isMember(owner) && !!exam && (await userExamRepository.has(owner, exam.id));
     // Pro: lấy đề không bị trừ phí (vẫn tính là thành viên, vẫn lưu vào kho)
