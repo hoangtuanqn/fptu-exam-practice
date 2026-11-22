@@ -78,6 +78,9 @@ export const userRepository = {
   update: async (id: string, data: { fullName?: string; avatarPath?: string | null; role?: Role; status?: UserStatus; emailVerifiedAt?: Date | null }) =>
     fresh(id, await prisma.user.update({ where: { id }, data, select: publicUserSelect })),
 
+  // Tên hiển thị của một nhóm thành viên (trang "đang online")
+  findNames: (ids: string[]) => prisma.user.findMany({ where: { id: { in: ids } }, select: { id: true, fullName: true, email: true } }),
+
   countByStatus: () => prisma.user.groupBy({ by: ["status"], _count: { _all: true } }),
 
   // Lần hoạt động gần nhất (không có trong publicUserSelect nên không cần xoá cache xác thực)
