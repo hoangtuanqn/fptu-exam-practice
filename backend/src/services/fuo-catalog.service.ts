@@ -6,7 +6,7 @@ import { type CatalogThreadRow, fuoCatalogRepository } from "../repositories/fuo
 import { fuoSourceRepository } from "../repositories/fuo-source.repository";
 import { AppError } from "../rules/error";
 import { EXAM_KINDS } from "../utils/exam-kind";
-import { diffCatalogRows, pageHasNews } from "../utils/fuo-catalog-diff";
+import { diffCatalogRows, takeNewUntilKnown } from "../utils/fuo-catalog-diff";
 import { createAnonymousFuoClient } from "./crawler/fuo-anon-client";
 import { type ForumRow, forumUrl, parseForumPage } from "./crawler/fuo-forum.service";
 import { MIN_SUBJECTS, URL_SUBJECTS, parseSubjectSemesters } from "./crawler/fuo-subjects.service";
@@ -89,8 +89,8 @@ export const fuoCatalogService = {
 
   /**
    * Mọi bài của một môn: trang 1 (để biết số trang), rồi các trang còn lại cùng lúc. Bài trùng giữa các trang chỉ tính một lần.
-   * `incremental`: tải từng đợt FUO_CATALOG_INCREMENTAL_BATCH trang, xét theo thứ tự và dừng ở trang đầu tiên không có bài mới
-   * hay đã đổi so với bản đã lưu (các trang sau trang đó không được tính; môn chưa quét lần nào thì vẫn đi hết).
+   * `incremental`: đọc bài theo thứ tự; bài chưa có trong kho là bài mới, gặp bài đầu tiên đã có trong kho thì dừng
+   * (các bài sau không tính). Môn chưa quét lần nào thì không có bài nào trong kho nên đọc hết.
    */
   async crawlSubject(code: string, opts: { incremental?: boolean } = {}) {
     const first = await fuoCatalogService.fetchPage(forumUrl(code));
@@ -99,17 +99,19 @@ export const fuoCatalogService = {
     // XenForo có thể chuyển /forums/PRO192/ sang địa chỉ khác: các trang sau dựng từ địa chỉ cuối cùng
     const base = first.url.replace(/[?#].*$/, "").replace(/\/page-\d+\/?$/, "").replace(/\/?$/, "/");
     const pages = Math.min(page1.lastPage, FUO_CATALOG_MAX_PAGES);
-    const rows = new Map<string, ForumRow>(page1.rows.map((r) => [r.threadId, r]));
-    const unchanged = async (list: ForumRow[]) =>
-      !!opts.incremental && !pageHasNews(await fuoCatalogRepository.findThreads(list.map((r) => r.threadId)), list.map((r) => toCatalogRow(code, r)));
+    const rows = new Map<string, ForumRow>();
+    // Đọc một danh sách bài theo thứ tự; trả về true khi phải dừng (quét tăng dần gặp bài đã có)
+    const take = async (list: ForumRow[]) => {
+      const known = new Set(opts.incremental ? (await fuoCatalogRepository.findThreads(list.map((r) => r.threadId))).map((t) => t.threadId) : []);
+      const { fresh, stop } = takeNewUntilKnown(known, list);
+      for (const r of fresh) if (!rows.has(r.threadId)) rows.set(r.threadId, r);
+      return stop;
+    };
     const batch = opts.incremental ? FUO_CATALOG_INCREMENTAL_BATCH : FUO_CATALOG_MAX_PAGES;
-    for (let p = 2, stop = await unchanged(page1.rows); p <= pages && !stop; p += batch) {
+    for (let p = 2, stop = await take(page1.rows); p <= pages && !stop; p += batch) {
       const numbers = Array.from({ length: Math.min(batch, pages - p + 1) }, (_, i) => p + i);
       const lists = await Promise.all(numbers.map(async (n) => parseForumPage((await fuoCatalogService.fetchPage(`${base}page-${n}`)).html).rows));
-      for (const list of lists) {
-        for (const r of list) if (!rows.has(r.threadId)) rows.set(r.threadId, r);
-        if ((stop = await unchanged(list))) break;
-      }
+      for (const list of lists) if ((stop = await take(list))) break;
     }
     return { pages, rows: [...rows.values()] };
   },
