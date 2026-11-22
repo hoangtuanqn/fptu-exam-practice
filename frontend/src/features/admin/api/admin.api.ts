@@ -53,6 +53,7 @@ export interface AdminNotice {
 export interface ReviewCounts {
   reports: number;
   feedback: number;
+  contributions?: number; // máy chủ cũ chưa gửi
 }
 
 /** "true" | "false" lọc theo đã giải quyết, rỗng = tất cả */

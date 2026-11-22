@@ -8,7 +8,7 @@ import { refreshReviewCounts, useReviewCounts } from "@/features/admin/review-co
 // Khung trang quản trị: menu kèm badge số báo cáo đáp án và đánh giá AI chưa xử lý
 export function AdminLayout() {
   const { pathname } = useLocation();
-  const { reports, feedback } = useReviewCounts();
+  const { reports, feedback, contributions = 0 } = useReviewCounts();
   useEffect(() => void refreshReviewCounts(), [pathname]);
 
   const items = useMemo(
@@ -18,9 +18,11 @@ export function AdminLayout() {
           ? { ...it, badge: { count: reports, label: `${reports} báo cáo chưa xử lý` } }
           : it.to === "/admin/explanation-feedback"
             ? { ...it, badge: { count: feedback, label: `${feedback} đánh giá chưa xử lý` } }
-            : it,
+            : it.to === "/admin/contributions"
+              ? { ...it, badge: { count: contributions, label: `${contributions} đề chờ duyệt` } }
+              : it,
       ),
-    [reports, feedback],
+    [reports, feedback, contributions],
   );
 
   return <PanelLayout title="Quản trị" items={items} collapsible actions={<NoticeBell />} />;
