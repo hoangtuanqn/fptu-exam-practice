@@ -2,10 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BookOpen, Loader2, Play } from "lucide-react";
 import { ConfirmFetchDialog } from "@/features/exam-import/components/ConfirmFetchDialog";
-import { examImportApi } from "@/features/exam-import/exam-import.api";
+import { examImportApi, type ImportTarget } from "@/features/exam-import/exam-import.api";
 import { examOpenPath } from "@/features/exam-import/types";
 import { useExamImport } from "@/features/exam-import/useExamImport";
 import { useAuth } from "@/features/auth/AuthContext";
+import { ApiError } from "@/shared/api/client";
 import { errorMessage } from "@/shared/api/errors";
 import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
@@ -58,6 +59,10 @@ function SubjectChooser({ onPick, compact }: { onPick: (code: string) => void; c
   );
 }
 
+// Đề hệ thống đã có sẵn (kể cả đề admin tải tay, không có link FuOverflow): gửi mã đề thay cho link
+const isReady = (e: CatalogItem) => e.status === "ready" && !!e.examId;
+const targetOf = (e: CatalogItem): ImportTarget => (isReady(e) && e.examId ? { examId: e.examId } : { url: fuoThreadUrl(e.threadId) });
+
 const priceOf = (d: { price: number; pePrice?: number }, e: CatalogItem) => (e.kind === "PE" ? (d.pePrice ?? d.price) : d.price);
 
 function ExamList({ code, onBack, compact }: { code: string; onBack: () => void; compact: boolean }) {
@@ -90,11 +95,12 @@ function ExamList({ code, onBack, compact }: { code: string; onBack: () => void;
     setQuoting(item.threadId);
     try {
       // Hỏi phí thực tế và kiểm tra trước khi trừ tiền (đúng nhãn, đúng môn); miễn phí (Pro, đã sở hữu) thì lấy luôn
-      const quote = await examImportApi.quote(fuoThreadUrl(item.threadId), code);
-      if (quote.free) void job.start(fuoThreadUrl(item.threadId), code);
+      const quote = await examImportApi.quote(targetOf(item), code);
+      if (quote.free) void job.start(targetOf(item), code);
       else setConfirm({ item, fee: quote.fee });
     } catch (err) {
       toast.error(errorMessage(err, "Chưa lấy được đề này"));
+      if (err instanceof ApiError && err.code === "EXAM_NOT_READY") list.reload(); // đề vừa bị gỡ/chưa đủ: tải lại danh sách cho đúng trạng thái
     } finally {
       setQuoting(null);
     }
@@ -159,7 +165,7 @@ function ExamList({ code, onBack, compact }: { code: string; onBack: () => void;
 
       {confirm && (
         <ConfirmFetchDialog
-          url={fuoThreadUrl(confirm.item.threadId)}
+          url={isReady(confirm.item) ? undefined : fuoThreadUrl(confirm.item.threadId)}
           fee={confirm.fee}
           pro={isPro(user)}
           balance={user ? user.balance : null}
@@ -167,7 +173,7 @@ function ExamList({ code, onBack, compact }: { code: string; onBack: () => void;
           onConfirm={() => {
             const item = confirm.item;
             setConfirm(null);
-            void job.start(fuoThreadUrl(item.threadId), code);
+            void job.start(targetOf(item), code);
           }}
         />
       )}

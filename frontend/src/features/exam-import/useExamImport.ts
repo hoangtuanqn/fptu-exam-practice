@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { errorMessage } from "@/shared/api/errors";
 import { useLeaveWarning } from "@/shared/hooks/useLeaveWarning";
+import type { ImportTarget } from "./exam-import.api";
 import { importExam } from "./importExam";
 import type { ImportedExam } from "./types";
 
@@ -27,7 +28,7 @@ export function useExamImport() {
     };
   }, []);
 
-  const start = useCallback(async (url: string, subject?: string, captchaToken?: string) => {
+  const start = useCallback(async (target: string | ImportTarget, subject?: string, captchaToken?: string) => {
     abort.current.abort();
     abort.current = new AbortController();
     const mine = ++runId.current;
@@ -45,7 +46,7 @@ export function useExamImport() {
     };
 
     try {
-      const loaded = await importExam(url, subject, (s) => !stale() && setStage(s), abort.current.signal, captchaToken);
+      const loaded = await importExam(target, subject, (s) => !stale() && setStage(s), abort.current.signal, captchaToken);
       if (stale()) return;
       setExam(loaded);
       setPhase("done");

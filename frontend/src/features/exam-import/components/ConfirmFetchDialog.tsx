@@ -11,7 +11,7 @@ import { formatCredit, formatDate } from "@/shared/utils/formatters";
 import { proDaysLeft } from "@/shared/utils/pro";
 
 interface Props {
-  url: string;
+  url?: string; // link FuOverflow; không có với đề hệ thống đã có sẵn (lấy theo mã đề)
   fee: number; // phí lần lấy này (0 = miễn phí)
   pro?: boolean; // đang dùng gói Pro: thay hộp thoại trừ tiền bằng thông báo được miễn phí
   balance: number | null; // số dư của thành viên; null = khách
@@ -41,9 +41,11 @@ export function ConfirmFetchDialog({ url, fee, pro = false, balance, captcha = f
             Lần lấy đề này <b className="text-on-surface">miễn phí</b>, không bị trừ credit. Pro còn <b className="text-on-surface">{proDaysLeft(user)} ngày</b>
             {user.proExpiresAt ? ` (đến ${formatDate(user.proExpiresAt)})` : ""}.
           </p>
-          <div className="mt-4 truncate rounded-lg border border-outline-variant bg-surface-container px-3 py-2 text-left text-xs text-on-surface-variant" title={url}>
-            {url}
-          </div>
+          {url && (
+            <div className="mt-4 truncate rounded-lg border border-outline-variant bg-surface-container px-3 py-2 text-left text-xs text-on-surface-variant" title={url}>
+              {url}
+            </div>
+          )}
           <ModalActions>
             <Button grow onClick={onCancel}>
               Hủy
@@ -70,9 +72,11 @@ export function ConfirmFetchDialog({ url, fee, pro = false, balance, captcha = f
         </div>
       ) : (
         <>
-          <div className="mt-4 truncate rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600" title={url}>
-            {url}
-          </div>
+          {url && (
+            <div className="mt-4 truncate rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600" title={url}>
+              {url}
+            </div>
+          )}
 
           <div className="mt-4">
             <ChargeSummary amount={fee} balance={balance} freeNote={isGuest ? "Khách được lấy miễn phí 1 đề mỗi ngày, lần này sẽ dùng hết lượt hôm nay." : undefined} />
