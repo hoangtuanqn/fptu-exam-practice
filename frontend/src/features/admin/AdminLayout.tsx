@@ -2,6 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { PanelLayout } from "@/shared/layout/PanelLayout";
 import { ADMIN_NAV } from "@/features/admin/admin.routes";
+import { AdminGuide } from "@/features/admin/AdminGuide";
 import { NoticeBell } from "@/features/admin/notices/NoticeBell";
 import { refreshReviewCounts, useReviewCounts } from "@/features/admin/review-counts.store";
 
@@ -25,5 +26,5 @@ export function AdminLayout() {
     [reports, feedback, contributions],
   );
 
-  return <PanelLayout title="Quản trị" items={items} collapsible actions={<NoticeBell />} />;
+  return <PanelLayout title="Quản trị" items={items} collapsible actions={<><AdminGuide /><NoticeBell /></>} />;
 }
