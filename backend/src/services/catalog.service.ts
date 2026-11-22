@@ -1,9 +1,11 @@
+import { CATALOG_ANSWER_SOURCES } from "../constants/exam";
 import { PE_PRICE } from "../constants/pe";
 import type { ExamKind } from "@prisma/client";
 import { prisma } from "../configs/prisma";
+import { catalogOrder } from "../utils/catalog-order";
 import { EXAM_KINDS } from "../utils/exam-kind";
 import { toMeta, type PaginationQuery } from "../utils/pagination";
-import { subjectCodeFromTitle } from "../utils/subject-code";
+import { subjectCodeFromTitle, subjectOfExam } from "../utils/subject-code";
 import { termOf, termRank } from "../utils/term";
 import { crawlerSettingService } from "./crawler-setting.service";
 
@@ -33,7 +35,7 @@ export interface CatalogItem {
   title: string;
   postedAt: Date | null;
   replies: number;
-  term: string | null; // kỳ học suy ra từ tên đề, ví dụ SU26
+  term: string | null; // kỳ học suy ra từ tên đề, ví dụ SU26 (chỉ theo tên đề)
   status: CatalogStatus;
   questions: number | null; // chỉ biết với đề hệ thống đã có
   kind: ExamKind; // FE, PE, QUIZ, OTHER (theo nhãn FuOverflow, rồi tên đề)
@@ -41,12 +43,15 @@ export interface CatalogItem {
 
 let examCache: { at: number; exams: UsableExam[] } | null = null;
 let fuoCache: { at: number; threads: { threadId: string; subjectCode: string }[] } | null = null;
+// Tăng mỗi lần bỏ đệm: lượt đọc bắt đầu trước khi bỏ đệm thì không được ghi đè đệm bằng dữ liệu cũ
+let generation = 0;
 
-// Mọi đề dùng được ngay: đã có đáp án (AI hoặc chỉnh tay) và đã lấy đủ ảnh
+// Mọi đề đã lấy đủ ảnh và không đang chờ/lỗi AI (xem CATALOG_ANSWER_SOURCES)
 async function usableExams(): Promise<UsableExam[]> {
   if (examCache && Date.now() - examCache.at < CACHE_MS) return examCache.exams;
+  const gen = generation;
   const [exams, counts] = await Promise.all([
-    prisma.exam.findMany({ where: { answerSource: { in: ["AI", "MANUAL"] } }, select: { id: true, threadId: true, title: true, subjectCode: true, totalQuestions: true, createdAt: true, kind: true } }),
+    prisma.exam.findMany({ where: { answerSource: { in: CATALOG_ANSWER_SOURCES } }, select: { id: true, threadId: true, title: true, subjectCode: true, totalQuestions: true, createdAt: true, kind: true } }),
     prisma.examQuestion.groupBy({ by: ["examId", "isReference"], _count: { _all: true } }),
   ]);
   const all = new Map<string, number>(); // tất cả ảnh đã lưu (gồm tài liệu tham khảo): so với totalQuestions để biết đã lấy đủ chưa
@@ -57,17 +62,24 @@ async function usableExams(): Promise<UsableExam[]> {
   }
   const list = exams
     .filter((e) => (real.get(e.id) ?? 0) > 0 && (all.get(e.id) ?? 0) >= e.totalQuestions)
-    .map((e) => ({ id: e.id, threadId: e.threadId, title: e.title, questions: real.get(e.id) ?? 0, createdAt: e.createdAt, code: e.subjectCode ?? subjectCodeFromTitle(e.title), kind: e.kind }));
-  examCache = { at: Date.now(), exams: list };
+    .map((e) => ({ id: e.id, threadId: e.threadId, title: e.title, questions: real.get(e.id) ?? 0, createdAt: e.createdAt, code: subjectOfExam(e), kind: e.kind }));
+  if (gen === generation) examCache = { at: Date.now(), exams: list };
   return list;
 }
 
 // Toàn bộ (thread, môn) của danh mục FuOverflow, chỉ hai cột nên nhẹ; dùng để đếm số đề mỗi môn
 async function fuoThreads() {
   if (fuoCache && Date.now() - fuoCache.at < CACHE_MS) return fuoCache.threads;
+  const gen = generation;
   const threads = await prisma.fuoThread.findMany({ select: { threadId: true, subjectCode: true } });
-  fuoCache = { at: Date.now(), threads };
+  if (gen === generation) fuoCache = { at: Date.now(), threads };
   return threads;
+}
+
+/** Bỏ đệm của Kho đề (gọi sau khi admin tải/cập nhật đề) để đề mới hiện ngay, không đợi hết CACHE_MS. */
+export function invalidateCatalogCache() {
+  generation++;
+  examCache = fuoCache = latestCache = overviewCache = null;
 }
 
 
@@ -97,6 +109,7 @@ export const catalogService = {
   /** Các đề mới đăng gần đây nhất trên FuOverflow (mọi môn), để trang chủ cho thấy kho đề luôn được cập nhật. Chỉ có mô tả, không có ảnh. */
   async latest(): Promise<LatestItem[]> {
     if (latestCache && Date.now() - latestCache.at < CACHE_MS) return latestCache.items;
+    const gen = generation;
     const rows = await prisma.fuoThread.findMany({
       where: { postedAt: { not: null } },
       orderBy: { postedAt: "desc" },
@@ -104,7 +117,7 @@ export const catalogService = {
       select: { threadId: true, subjectCode: true, title: true, postedAt: true, kind: true },
     });
     const items = rows.map((r) => ({ threadId: r.threadId, subjectCode: r.subjectCode, title: r.title, postedAt: r.postedAt!, term: termOf(r.title), kind: r.kind }));
-    latestCache = { at: Date.now(), items };
+    if (gen === generation) latestCache = { at: Date.now(), items };
     return items;
   },
 
@@ -129,6 +142,7 @@ export const catalogService = {
   /** Số liệu thật cho trang Thư viện đề thi: tổng môn/đề và phân theo kỳ học (0-9, rồi chưa phân loại). Đệm vài phút. */
   async overview(): Promise<LibraryOverview> {
     if (overviewCache && Date.now() - overviewCache.at < CACHE_MS) return overviewCache.data;
+    const gen = generation;
     const [rows, fuo, exams, kindRows] = await Promise.all([
       this.subjects(),
       fuoThreads(),
@@ -156,7 +170,7 @@ export const catalogService = {
       bySemester: [...bucket.values()],
       byKind,
     };
-    overviewCache = { at: Date.now(), data };
+    if (gen === generation) overviewCache = { at: Date.now(), data };
     return data;
   },
 
@@ -209,8 +223,7 @@ export const catalogService = {
     const needle = query.q?.trim().toLowerCase();
     const filtered = all
       .filter((i) => (!needle || i.title.toLowerCase().includes(needle)) && (!query.term || i.term === query.term))
-      // Kỳ mới trước; cùng kỳ thì bài đăng sau trước (thread ID tăng theo thời gian nên dùng được cả cho đề không có ngày đăng)
-      .sort((a, b) => (b.term ? termRank(b.term) : 0) - (a.term ? termRank(a.term) : 0) || (BigInt(b.threadId) > BigInt(a.threadId) ? 1 : -1));
+      .sort(catalogOrder);
 
     const start = (query.page - 1) * query.limit;
     const [info, cfg] = await Promise.all([prisma.subject.findUnique({ where: { code: subject }, select: { name: true, semester: true } }), crawlerSettingService.get()]);
