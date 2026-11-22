@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, it } from "node:test";
 import type { FuoClient } from "../src/services/crawler/fuo-client";
-import { looksBlocked, parseCount, parseForumPage } from "../src/services/crawler/fuo-forum.service";
+import { isChallengePage, isLoginPage, parseCount, parseForumPage } from "../src/services/crawler/fuo-forum.service";
 import { parseSubjectSemesters } from "../src/services/crawler/fuo-subjects.service";
 import { collectThread, extractDescription, extractLabel, isOutsideSubjectForums } from "../src/services/crawler/thread-scraper.service";
 import { classifyKind } from "../src/utils/exam-kind";
@@ -44,9 +44,9 @@ describe("FuOverflow forum page parser", () => {
 
   it("a page without the thread list is not a forum page; Cloudflare and login pages look blocked", () => {
     assert.equal(parseForumPage("<html data-template='error'><body>Oops</body></html>").isForum, false);
-    assert.equal(looksBlocked("<html><head><title>Just a moment...</title></head></html>"), true);
-    assert.equal(looksBlocked("<html data-template='login'><head><title>Log in</title></head></html>"), true);
-    assert.equal(looksBlocked(FIXTURE), false);
+    assert.equal(isChallengePage("<html><head><title>Just a moment...</title></head></html>"), true);
+    assert.equal(isLoginPage("<html lang='vi' data-template='login'><head><title>Log in</title></head></html>"), true);
+    assert.equal(isChallengePage(FIXTURE) || isLoginPage(FIXTURE), false);
   });
 
   it("reply counts: plain numbers and XenForo short forms", () => {

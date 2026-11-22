@@ -5,6 +5,7 @@ import { fuoCatalogRepository } from "../repositories/fuo-catalog.repository";
 import { fuoSourceRepository } from "../repositories/fuo-source.repository";
 import { parseSourceLines } from "../utils/fuo-source-lines";
 import { type PaginationQuery, toMeta } from "../utils/pagination";
+import { anonFuoLimiter } from "./crawler/fuo-anon-client";
 import { FUO_AUTH_MESSAGE, FuoAuthError } from "./crawler/fuo-client";
 import { fuoSessionService } from "./crawler/fuo-session.service";
 import { crawlerSettingService } from "./crawler-setting.service";
@@ -15,7 +16,7 @@ import { fuoCatalogService } from "./fuo-catalog.service";
 const STATUSES: FuoSourceStatus[] = ["NEW", "QUEUED", "RUNNING", "DONE", "FAILED"];
 const noop = async () => undefined;
 const listeners: (() => void)[] = [];
-const SCAN_SHOWN = ["RUNNING", "NEEDS_AUTH", "FAILED"]; // lượt quét của "Load dữ liệu mới" hiện ở trang nguồn đề khi đang chạy hoặc dừng
+const SCAN_SHOWN = ["RUNNING", "NEEDS_AUTH", "FAILED", "DONE"]; // lượt quét của "Load dữ liệu mới" hiện ở trang nguồn đề (đang chạy, dừng, hoặc kết quả lần gần nhất)
 
 const toRunDto = (run: FuoSourceRun, running: number) => ({
   id: run.id,
@@ -32,7 +33,8 @@ const toRunDto = (run: FuoSourceRun, running: number) => ({
 });
 
 /**
- * Danh sách link đề FuOverflow của admin và lượt "nạp dữ liệu mới" (chạy nền ở jobs/fuo-source.worker).
+ * Danh sách link đề FuOverflow của admin và lượt "nạp dữ liệu mới" (chạy nền ở jobs/fuo-source.worker, cần cookie FuOverflow).
+ * Nút "Load dữ liệu mới" giờ chỉ quét danh mục (ẩn danh) để ghi tên đề mới; lượt nạp chỉ bắt đầu qua startImport.
  * Đề chưa có: nhập qua đúng luồng lấy đề (examImportService, kể cả việc nhờ AI giải như mọi đề mới).
  * Đề đã có: cập nhật êm qua examMergeService (chỉ thêm, không gọi AI).
  */
@@ -59,6 +61,8 @@ export const fuoSourceService = {
     const total = STATUSES.reduce((n, s) => n + counts[s], 0);
     // Lượt quét thủ công ở trang danh mục đang chạy cũng hiện (nút đang bị khoá); lượt dừng/lỗi chỉ hiện với lượt của nút này
     const scanRun = latestScan && SCAN_SHOWN.includes(latestScan.status) && (latestScan.autoImport || latestScan.status === "RUNNING") ? latestScan : null;
+    const [newBySubject, subjectsWithNew] = scanRun ? await fuoCatalogRepository.findNewBySubject(scanRun.id) : [[], 0];
+    const cooldownUntil = anonFuoLimiter.state().cooldownUntil;
     const scan = scanRun && {
       status: scanRun.status,
       subjectsTotal: scanRun.subjectsTotal,
@@ -68,13 +72,17 @@ export const fuoSourceService = {
       threadsNew: scanRun.threadsNew,
       threadsUpdated: scanRun.threadsUpdated,
       lastError: scanRun.lastError,
+      finishedAt: scanRun.finishedAt,
+      newBySubject, // môn có đề mới ở lượt này (nhiều nhất trước), tối đa FUO_CATALOG_NEW_SUBJECTS_SHOWN
+      subjectsWithNew, // tổng số môn có đề mới
+      coolingDownUntil: scanRun.status === "RUNNING" && cooldownUntil > Date.now() ? new Date(cooldownUntil) : null, // FuOverflow đang hạn chế: tạm nghỉ tới lúc này
     };
     return { run: latest ? toRunDto(latest, counts.RUNNING) : null, counts: { total, ...counts }, scan };
   },
 
   /**
-   * "Load dữ liệu mới" (trả về ngay, chạy nền): quét tăng dần danh mục FuOverflow mọi môn, xong thì worker quét gọi afterScan để nạp
-   * đề mới và đề đã đổi. Đang có lượt nạp hoặc lượt quét chạy thì trả trạng thái (started=false), không tạo thêm.
+   * "Load dữ liệu mới" (trả về ngay, chạy nền): quét tăng dần danh mục FuOverflow mọi môn bằng client ẩn danh, chỉ ghi tên/thông tin
+   * đề mới vào kho đề (fuo_threads); không tải hay nạp đề. Đang có lượt nạp hoặc lượt quét chạy thì trả trạng thái (started=false).
    */
   async start(adminId: string) {
     const started = !(await fuoSourceRepository.findActiveRun()) && (await fuoCatalogService.begin(adminId, true));
@@ -82,11 +90,14 @@ export const fuoSourceService = {
     return { started, ...(await this.status()) };
   },
 
+  /** Sau lượt quét của "Load dữ liệu mới": ghi các bài FE của danh mục đã có đề vào danh sách link (không bắt đầu lượt nạp). */
+  afterScan: () => fuoSourceRepository.addCatalogThreads(),
+
   /**
-   * Sau lượt quét của "Load dữ liệu mới": thêm bài FE mới của danh mục vào danh sách link rồi bắt đầu lượt nạp (link mới, link lỗi,
-   * link có bài đã đổi). Lượt gần nhất dừng vì cần đăng nhập FuOverflow thì chạy tiếp lượt đó thay vì làm lại từ đầu.
+   * Bắt đầu lượt nạp (link mới, link lỗi, link có bài đã đổi; cần cookie FuOverflow). Lượt gần nhất dừng vì cần đăng nhập thì chạy
+   * tiếp lượt đó. Hiện chưa có nút nào gọi: "Load dữ liệu mới" không còn tự nạp vì việc tải đề cần đăng nhập.
    */
-  async afterScan(adminId: string | null) {
+  async startImport(adminId: string | null) {
     await fuoSourceRepository.addCatalogThreads();
     if (!(await fuoSourceRepository.findActiveRun())) {
       const latest = await fuoSourceRepository.findLatestRun();

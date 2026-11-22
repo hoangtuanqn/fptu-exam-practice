@@ -1,6 +1,6 @@
 import { type ExamKind, Prisma } from "@prisma/client";
 import { prisma } from "../configs/prisma";
-import { FUO_CATALOG_FAILURES_SHOWN, FUO_CATALOG_WRITE_CHUNK } from "../constants/fuo-catalog";
+import { FUO_CATALOG_FAILURES_SHOWN, FUO_CATALOG_NEW_SUBJECTS_SHOWN, FUO_CATALOG_WRITE_CHUNK } from "../constants/fuo-catalog";
 
 const isUniqueViolation = (err: unknown) => err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002";
 
@@ -85,7 +85,7 @@ export const fuoCatalogRepository = {
     prisma.$transaction(
       async (tx) => {
         for (const part of chunks([...data.added, ...data.changed])) await upsertThreads(tx, part);
-        await tx.fuoCatalogSubject.update({ where: { id: subjectId }, data: { status: "DONE", pages: data.pages, threads: data.found, lastError: null, crawledAt: new Date() } });
+        await tx.fuoCatalogSubject.update({ where: { id: subjectId }, data: { status: "DONE", pages: data.pages, threads: data.found, threadsNew: data.added.length, lastError: null, crawledAt: new Date() } });
         return tx.fuoCatalogRun.update({
           where: { id: runId },
           data: { subjectsDone: { increment: 1 }, threadsFound: { increment: data.found }, threadsNew: { increment: data.added.length }, threadsUpdated: { increment: data.changed.length } },
@@ -115,7 +115,16 @@ export const fuoCatalogRepository = {
       select: { code: true, lastError: true, crawledAt: true },
     }),
 
-  finishRun: (runId: string, status: "DONE" | "NEEDS_AUTH" | "FAILED", lastError?: string) =>
+  // Môn của lượt có bài mới, nhiều nhất trước (dùng index lastRunId + status); kèm tổng số môn có bài mới để không cắt danh sách âm thầm
+  findNewBySubject: (runId: string) => {
+    const where = { lastRunId: runId, status: "DONE" as const, threadsNew: { gt: 0 } };
+    return Promise.all([
+      prisma.fuoCatalogSubject.findMany({ where, orderBy: [{ threadsNew: "desc" }, { code: "asc" }], take: FUO_CATALOG_NEW_SUBJECTS_SHOWN, select: { code: true, threadsNew: true } }),
+      prisma.fuoCatalogSubject.count({ where }),
+    ]);
+  },
+
+  finishRun: (runId: string, status: "DONE" | "FAILED", lastError?: string) =>
     prisma.fuoCatalogRun.update({ where: { id: runId }, data: { status, activeLock: null, finishedAt: new Date(), ...(lastError && { lastError }) } }),
 
   // Tổng của danh mục: số môn có bài, số bài, số bài theo loại (đếm trên index nên nhẹ)
