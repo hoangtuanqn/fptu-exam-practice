@@ -4,7 +4,9 @@ import { FUO_SOURCE_INSERT_CHUNK } from "../constants/fuo-source";
 import { catalogSourceRows } from "../utils/fuo-source-queue";
 import { type PaginationQuery, toSkipTake } from "../utils/pagination";
 
-const isUniqueViolation = (err: unknown) => err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002";
+const QUEUE_TX_TIMEOUT_MS = 60_000; // xếp hàng nghìn link theo từng phần trong một transaction (mặc định của Prisma chỉ 5 giây)
+// P2034: hai lần bấm cùng lúc có thể bị MySQL huỷ một bên vì deadlock; coi như lần sau thua khoá
+const isUniqueViolation = (err: unknown) => err instanceof Prisma.PrismaClientKnownRequestError && (err.code === "P2002" || err.code === "P2034");
 
 const URL_SELECT = {
   id: true,
@@ -99,6 +101,48 @@ export const fuoSourceRepository = {
         throw err;
       }),
 
+  /**
+   * "Lấy hết đề còn thiếu": xếp các link của `threadIds` (đã thêm vào danh sách) vào lượt đang chạy, hoặc tạo lượt mới nếu chưa có.
+   * Link mới/lỗi được xếp lại; link còn chờ của lượt khác (vd. lượt dừng vì cần đăng nhập) chuyển sang lượt này; link đã xong bỏ qua.
+   * Không có link nào cần lấy thì không tạo lượt. Hai lần bấm cùng lúc: active_lock unique, lần sau nhận started=false, queued=0.
+   */
+  queueMissing: (threadIds: string[], createdById: string) =>
+    prisma
+      .$transaction(async (tx) => {
+        // Khoá dòng lượt đang chạy: finishRun cũng khoá dòng này nên lượt không kết thúc giữa chừng mà bỏ sót link vừa xếp
+        const [locked] = await tx.$queryRaw<{ id: string }[]>`SELECT id FROM fuo_source_runs WHERE active_lock = 1 FOR UPDATE`;
+        const active = locked ?? null;
+        const run = active ?? (await tx.fuoSourceRun.create({ data: { activeLock: true, createdById } }));
+        let queued = 0;
+        for (let i = 0; i < threadIds.length; i += FUO_SOURCE_INSERT_CHUNK) {
+          const { count } = await tx.fuoSourceUrl.updateMany({
+            where: {
+              threadId: { in: threadIds.slice(i, i + FUO_SOURCE_INSERT_CHUNK) },
+              status: { in: ["NEW", "QUEUED", "FAILED"] },
+              OR: [{ lastRunId: null }, { lastRunId: { not: run.id } }],
+            },
+            data: { status: "QUEUED", lastRunId: run.id },
+          });
+          queued += count;
+        }
+        // Link còn chờ của lượt khác (dừng vì cần đăng nhập, bộ lọc khác...) cũng do lượt này chạy: tính vào tổng cho khớp
+        const adopted = await tx.fuoSourceUrl.updateMany({
+          where: { status: "QUEUED", OR: [{ lastRunId: null }, { lastRunId: { not: run.id } }] },
+          data: { lastRunId: run.id },
+        });
+        queued += adopted.count;
+        if (!active && queued === 0) {
+          await tx.fuoSourceRun.delete({ where: { id: run.id } });
+          return { started: false, queued: 0 };
+        }
+        await tx.fuoSourceRun.update({ where: { id: run.id }, data: { total: { increment: queued } } });
+        return { started: !active, queued };
+      }, { timeout: QUEUE_TX_TIMEOUT_MS })
+      .catch((err: unknown) => {
+        if (isUniqueViolation(err)) return { started: false, queued: 0 };
+        throw err;
+      }),
+
   // Nhận link kế tiếp đang chờ; điều kiện status nằm trong UPDATE nên hai luồng không nhận trùng
   async claimNext() {
     for (;;) {
@@ -150,6 +194,12 @@ export const fuoSourceRepository = {
   // Tiến trình tắt giữa chừng: link đang chạy dở được xếp lại hàng
   requeueRunning: () => prisma.fuoSourceUrl.updateMany({ where: { status: "RUNNING" }, data: { status: "QUEUED" } }),
 
+  // DONE mà còn link chờ (vừa được queueMissing xếp vào) thì chưa kết thúc: trả null để worker chạy tiếp lượt này.
+  // Khoá dòng lượt trước khi đếm (queueMissing giữ cùng khoá) nên không có link nào bị xếp vào lượt đã xong.
   finishRun: (runId: string, status: "DONE" | "NEEDS_AUTH", lastError?: string) =>
-    prisma.fuoSourceRun.update({ where: { id: runId }, data: { status, activeLock: null, finishedAt: new Date(), ...(lastError && { lastError }) } }),
+    prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM fuo_source_runs WHERE id = ${runId} FOR UPDATE`;
+      if (status === "DONE" && (await tx.fuoSourceUrl.count({ where: { status: "QUEUED" } })) > 0) return null;
+      return tx.fuoSourceRun.update({ where: { id: runId }, data: { status, activeLock: null, finishedAt: new Date(), ...(lastError && { lastError }) } });
+    }),
 };

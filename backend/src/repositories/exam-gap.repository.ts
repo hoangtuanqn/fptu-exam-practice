@@ -94,6 +94,13 @@ export const examGapRepository = {
     return { items, total: num(count[0]?.n) };
   },
 
+  // Mọi bài chưa có đề theo bộ lọc của trang, đăng từ `since` (bài chưa rõ ngày vẫn tính): cho "Lấy hết đề còn thiếu", mới nhất trước
+  async missingThreadIds(f: ExamGapFilter, since: Date) {
+    const rows = await prisma.$queryRaw<{ threadId: string }[]>`
+      SELECT m.threadId FROM (${missingExams(f)}) m WHERE m.postedAt IS NULL OR m.postedAt >= ${since} ORDER BY m.postedAt IS NULL, m.postedAt DESC`;
+    return rows.map((r) => r.threadId);
+  },
+
   async summary(f: ExamGapFilter) {
     const [row] = await prisma.$queryRaw<{ noExam: bigint; noImages: unknown; noAnswers: unknown }[]>`
       SELECT (SELECT COUNT(*) FROM (${missingExams(f)}) m) AS noExam,
