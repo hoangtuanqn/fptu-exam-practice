@@ -1,6 +1,6 @@
 import * as cheerio from "cheerio";
 import { textOf } from "../../utils/html";
-import type { FuoClient } from "./fuo-client";
+import { FUO_AUTH_MESSAGE, FuoAuthError, type FuoClient, FuoRateLimitError } from "./fuo-client";
 import type { ImageRef, QuestionComments, ScrapedComment } from "./types";
 
 const MAX_COMMENT_PAGES = 20;
@@ -44,12 +44,15 @@ export async function fetchMediaComments(client: FuoClient, mediaUrl: string): P
 /**
  * Bình luận của một câu (ảnh). Lỗi thì trả danh sách rỗng: bình luận chỉ là phụ, không làm hỏng cả đề.
  */
-export async function collectComments(client: FuoClient, image: ImageRef): Promise<QuestionComments> {
+// `rethrowAuth` (lượt bulk của admin): cookie hết hạn thì làm hỏng lần lấy đề (link về hàng chờ) thay vì ra đề không có bình luận
+export async function collectComments(client: FuoClient, image: ImageRef, { rethrowAuth = false } = {}): Promise<QuestionComments> {
   let comments: ScrapedComment[] = [];
   if (image.mediaUrl) {
     try {
       comments = await fetchMediaComments(client, image.mediaUrl);
-    } catch {
+    } catch (err) {
+      if (err instanceof FuoRateLimitError) throw err; // bị giới hạn: dừng cả lượt, không lấy tiếp các câu sau
+      if (rethrowAuth && err instanceof FuoAuthError) throw new Error(FUO_AUTH_MESSAGE, { cause: err });
       /* bình luận chỉ là phụ, bỏ qua */
     }
   }

@@ -2,6 +2,7 @@ import { FUO_SOURCE_BUSY_WAIT_MS, FUO_SOURCE_CONCURRENCY, FUO_SOURCE_ERROR_MAX, 
 import { realtimeHub } from "../realtime/hub";
 import { fuoSourceRepository } from "../repositories/fuo-source.repository";
 import { adminNoticeService } from "../services/admin-notice.service";
+import { isFuoRateLimited } from "../services/crawler/fuo-client";
 import { isFuoAuthFailure } from "../services/crawler/fuo-session.service";
 import { fuoSourceService } from "../services/fuo-source.service";
 import { sleep } from "../utils/sleep";
@@ -18,7 +19,8 @@ const publish = () =>
 
 // Chạy hết các link của lượt đang chạy, FUO_SOURCE_CONCURRENCY link một lúc. Lỗi đăng nhập: dừng lượt (NEEDS_AUTH), link đó về hàng chờ.
 async function runOnce(run: { id: string; createdById: string | null }) {
-  let authError: string | null = null;
+  let authError: string | null = null; // lỗi đăng nhập hoặc 429 (FuOverflow giới hạn): dừng lượt ngay
+  let rateLimited = false;
   const work = async () => {
     while (!authError) {
       // Người dùng đang chờ lấy đề: nhường FuOverflow cho họ, chưa nhận link mới (link chưa nhận vẫn QUEUED)
@@ -33,8 +35,9 @@ async function runOnce(run: { id: string; createdById: string | null }) {
         await fuoSourceRepository.succeed(run.id, source.id, await fuoSourceService.process(source.threadId, run.createdById, source.commentsAt));
       } catch (err) {
         const message = ((err as Error).message || "Lỗi không xác định").slice(0, FUO_SOURCE_ERROR_MAX);
-        if (isFuoAuthFailure(err)) {
+        if (isFuoAuthFailure(err) || isFuoRateLimited(err)) {
           authError = message;
+          rateLimited = isFuoRateLimited(err);
           await fuoSourceRepository.requeue(source.id);
         } else {
           await fuoSourceRepository.fail(run.id, source.id, message);
@@ -48,10 +51,16 @@ async function runOnce(run: { id: string; createdById: string | null }) {
   await Promise.all(Array.from({ length: FUO_SOURCE_CONCURRENCY }, work));
 
   const done = await fuoSourceRepository.finishRun(run.id, authError ? "NEEDS_AUTH" : "DONE", authError ?? undefined);
+  if (!done) return; // có link vừa được xếp vào lượt: lượt vẫn chạy, drain gọi lại runOnce
   publish();
   console.log(`[fuo-source] lượt ${run.id} ${done.status}: ${done.done}/${done.total} xong (${done.imported} mới, ${done.updated} cập nhật), ${done.failed} lỗi`);
   if (authError) {
-    adminNoticeService.push("fetch.failed", { title: "Nạp dữ liệu FuOverflow tạm dừng: cần đăng nhập lại", body: `${authError} Sau khi cập nhật, bấm nạp dữ liệu mới để chạy tiếp.`, link: ADMIN_PAGE });
+    adminNoticeService.push(
+      "fetch.failed",
+      rateLimited
+        ? { title: "Nạp dữ liệu FuOverflow tạm dừng: FuOverflow đang giới hạn truy cập", body: authError, link: ADMIN_PAGE }
+        : { title: "Nạp dữ liệu FuOverflow tạm dừng: cần đăng nhập lại", body: `${authError} Sau khi cập nhật, bấm nạp dữ liệu mới để chạy tiếp.`, link: ADMIN_PAGE },
+    );
   } else {
     const sum = await fuoSourceRepository.runSummary(run.id);
     adminNoticeService.push("fetch.done", {

@@ -18,7 +18,7 @@ import { adminGiftCodeController } from "../controllers/admin.gift-code.controll
 import { adminCrawlerController } from "../controllers/admin.crawler.controllers";
 import { adminFuoSourceController } from "../controllers/admin.fuo-source.controllers";
 import { adminFuoCatalogController } from "../controllers/admin.fuo-catalog.controllers";
-import { addFuoSourcesBody, listFuoSourcesQuery } from "../rules/requests/fuo-source.request";
+import { addFuoSourcesBody, fetchMissingBody, listFuoSourcesQuery } from "../rules/requests/fuo-source.request";
 import { adminHistoryController } from "../controllers/admin.history.controllers";
 import { adminAccountController } from "../controllers/admin.account.controllers";
 import { adminMarketingController } from "../controllers/admin.marketing.controllers";
@@ -153,6 +153,7 @@ adminRouter.get("/fuo-sources", validate(listFuoSourcesQuery, "query"), adminFuo
 adminRouter.post("/fuo-sources", validate(addFuoSourcesBody), adminFuoSourceController.add);
 adminRouter.get("/fuo-sources/status", adminFuoSourceController.status);
 adminRouter.post("/fuo-sources/runs", adminFuoSourceController.start);
+adminRouter.post("/fuo-sources/fetch-missing", validate(fetchMissingBody), adminFuoSourceController.fetchMissing);
 
 // Lượt quét toàn bộ danh mục FuOverflow (mọi môn, mọi bài; chạy nền, admin tự bấm)
 adminRouter.get("/fuo-catalog/status", adminFuoCatalogController.status);

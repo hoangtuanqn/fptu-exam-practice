@@ -72,4 +72,7 @@ export const fuoSourcesApi = {
   list: (page: number, status: FuoSourceStatus | "") => http.list<FuoSource>("/admin/fuo-sources", { page, status, limit: PAGE_SIZE }),
   status: () => http.get<FuoSourcesStatus>("/admin/fuo-sources/status"),
   start: () => http.post<FuoSourcesStatus & { started: boolean }>("/admin/fuo-sources/runs"),
+  // Lấy nền mọi đề "Chưa có đề" (theo bộ lọc nếu có). started=false, queued>0: đã thêm vào lượt đang chạy
+  fetchMissing: (filters: { kind?: string; subject?: string; q?: string }) =>
+    http.post<FuoSourcesStatus & { started: boolean; queued: number }>("/admin/fuo-sources/fetch-missing", filters),
 };
