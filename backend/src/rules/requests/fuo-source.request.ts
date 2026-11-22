@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { FUO_SOURCE_MAX_CHARS, FUO_SOURCE_MAX_LINES } from "../../constants/fuo-source";
 import { paginationQuery } from "../../utils/pagination";
+import { examGapFilter } from "./exam-upload.request";
 
 // Khối văn bản admin dán vào, mỗi dòng một link (từng dòng được kiểm ở service để báo lỗi theo dòng)
 export const addFuoSourcesBody = z.object({
@@ -14,6 +15,9 @@ export const addFuoSourcesBody = z.object({
 export const listFuoSourcesQuery = paginationQuery.extend({
   status: z.enum(["NEW", "QUEUED", "RUNNING", "DONE", "FAILED"]).optional(),
 });
+
+// "Lấy hết đề còn thiếu": cùng bộ lọc với trang Đề còn thiếu (kind, subject, q); không gửi body = mọi bài
+export const fetchMissingBody = examGapFilter.default({});
 
 export type AddFuoSourcesBody = z.infer<typeof addFuoSourcesBody>;
 export type ListFuoSourcesQuery = z.infer<typeof listFuoSourcesQuery>;
