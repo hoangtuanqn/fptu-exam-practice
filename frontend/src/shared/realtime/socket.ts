@@ -23,13 +23,24 @@ function getSocket(): Socket {
     transports: ["websocket", "polling"],
   });
   // Server không nhớ phòng sau khi mất kết nối: vào lại tất cả phòng đang theo dõi
-  socket.on("connect", () => rooms.forEach((r) => join(socket!, r.kind, r.id)));
+  socket.on("connect", () => {
+    rooms.forEach((r) => join(socket!, r.kind, r.id));
+    if (currentPage) socket!.emit(EVENTS.presencePage, currentPage);
+  });
   // Token hết hạn lúc nối lại: server từ chối và không tự thử lại. Làm mới token rồi nối lại.
   socket.on("connect_error", (err) => {
     if (err.message !== "unauthorized" || !tokenStore.get()) return;
     void refreshAccessToken().then((r) => r === "ok" && socket?.connect());
   });
   return socket;
+}
+
+let currentPage = "";
+/** Báo cho server trang đang xem (để admin biết ai đang ở đâu). Gửi lại mỗi lần (tái) kết nối. */
+export function reportPage(page: string) {
+  currentPage = page;
+  const s = getSocket();
+  if (s.connected) s.emit(EVENTS.presencePage, page);
 }
 
 export const isRealtimeConnected = () => socket?.connected ?? false;
