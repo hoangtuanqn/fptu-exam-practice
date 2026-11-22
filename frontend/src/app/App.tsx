@@ -33,6 +33,7 @@ function PracticeRoute() {
   return <PracticePage examId={isUuid(examId) ? examId : undefined} />;
 }
 import { GuestOnly, RequireAuth } from "@/features/auth/guards";
+import { UserNoticeBell } from "@/features/notifications/UserNoticeBell";
 
 // Panel tách riêng thành chunk: người chỉ luyện đề không phải tải code của panel
 import { PageMeta } from "@/shared/seo/PageMeta";
@@ -71,6 +72,7 @@ const PlanPage = lazy(() => import("@/features/plan/PlanPage"));
 const GradesPage = lazy(() => import("@/features/grade/GradesPage"));
 const CourseraPage = lazy(() => import("@/features/coursera/CourseraPage"));
 const ProfilePage = lazy(() => import("@/features/account/pages/ProfilePage"));
+const NotificationsPage = lazy(() => import("@/features/notifications/NotificationsPage"));
 
 const AttemptsPage = lazy(() => import("@/features/history/pages/AttemptsPage"));
 const AttemptReviewPage = lazy(() => import("@/features/history/pages/AttemptReviewPage"));
@@ -165,7 +167,7 @@ export default function App() {
         <Route element={<RequireAuth />}>
           {/* Nút Làm đề / Tải đề PE của tiện ích Chrome mở trang này */}
           <Route path="/fetch" element={<FetchLinkPage />} />
-          <Route path="/account" element={<PanelLayout title="Tài khoản" items={ACCOUNT_NAV} notice={<AccountPromoBar />} bottomNav />}>
+          <Route path="/account" element={<PanelLayout title="Tài khoản" items={ACCOUNT_NAV} notice={<AccountPromoBar />} actions={<UserNoticeBell />} bottomNav />}>
             <Route index element={<OverviewPage />} />
             <Route path="attempts" element={<AttemptsPage />} />
             <Route path="attempts/:id" element={<AttemptDetailPage />} />
@@ -190,6 +192,7 @@ export default function App() {
             <Route path="nhan-luot" element={<ClaimTurnPage />} />
             <Route path="coursera" element={<CourseraPage />} />
             <Route path="profile" element={<ProfilePage />} />
+            <Route path="notifications" element={<NotificationsPage />} />
           </Route>
         </Route>
 

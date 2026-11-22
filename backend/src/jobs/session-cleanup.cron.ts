@@ -3,6 +3,7 @@ import { practiceSessionService } from "../services/practice-session.service";
 import { emailVerificationRepository } from "../repositories/email-verification.repository";
 import { passwordResetRepository } from "../repositories/password-reset.repository";
 import { refreshTokenService } from "../services/refresh-token.service";
+import { userNoticeService } from "../services/user-notice.service";
 
 // Mỗi đêm 3:45 (giờ máy chủ) xoá các lượt làm bài đã cũ để bảng không phình dần
 export const startSessionCleanup = () => {
@@ -16,6 +17,8 @@ export const startSessionCleanup = () => {
       const resets = await passwordResetRepository.deleteExpired();
       const verifies = await emailVerificationRepository.deleteExpired();
       if (resets + verifies > 0) console.log(`[session-cleanup] đã xoá ${resets} token đặt lại mật khẩu và ${verifies} token xác minh email hết hạn`);
+      const notices = await userNoticeService.cleanup(); // thông báo cũ trong chuông của thành viên
+      if (notices.read + notices.unread > 0) console.log(`[session-cleanup] đã xoá ${notices.read} thông báo đã đọc cũ và ${notices.unread} thông báo chưa đọc quá cũ`);
     } catch (err) {
       console.error("[session-cleanup]", (err as Error).message);
     }

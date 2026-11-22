@@ -19,7 +19,8 @@ import { inputClass } from "@/shared/ui/Input";
 import { Segmented } from "@/shared/ui/Segmented";
 import { Pagination } from "@/shared/ui/Table";
 import { formatDateTime } from "@/shared/utils/formatters";
-import { CATEGORY_LABEL, LEVEL, timeAgo } from "./notices.shared";
+import { NOTICE_LEVEL as LEVEL, timeAgo } from "@/shared/ui/NotificationBell";
+import { CATEGORY_LABEL } from "./notices.shared";
 import {
   refreshNoticeCounts,
   useNoticeCounts,

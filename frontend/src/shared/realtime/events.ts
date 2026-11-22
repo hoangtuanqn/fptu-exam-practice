@@ -12,6 +12,7 @@ export const EVENTS = {
   jobUpdate: "job:update", // tiến độ lấy đề
   adminNotice: "admin:notice", // (chỉ admin) thông báo mới về hành vi người dùng
   fuoSources: "admin:fuo-sources", // (chỉ admin) tiến độ lượt nạp dữ liệu FuOverflow, cùng dạng GET /admin/fuo-sources/status
+  userNotice: "user:notice", // (chính thành viên đó) thông báo mới, cùng dạng một mục của GET /notifications
 } as const;
 
 export type RoomKind = "exam" | "job";

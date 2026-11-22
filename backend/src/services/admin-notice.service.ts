@@ -125,6 +125,12 @@ export const adminNoticeService = {
     return { updated: count };
   },
 
+  /** Đánh dấu đã đọc theo danh sách id (chỉ những cái còn chưa đọc). */
+  async readIds(ids: string[]) {
+    const { count } = await prisma.adminNotice.updateMany({ where: { id: { in: ids }, readAt: null }, data: { readAt: new Date() } });
+    return { updated: count };
+  },
+
   /** Xóa các thông báo đã đọc (dọn danh sách). */
   async deleteRead() {
     const { count } = await prisma.adminNotice.deleteMany({ where: { readAt: { not: null } } });

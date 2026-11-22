@@ -13,9 +13,12 @@ export const EVENTS = {
   adminNotice: "admin:notice", // server -> client (chỉ admin): có thông báo mới về hành vi người dùng
   fuoCatalog: "admin:fuo-catalog", // server -> client (chỉ admin): tiến độ lượt quét danh mục FuOverflow, cùng dạng GET /admin/fuo-catalog/status
   fuoSources: "admin:fuo-sources", // server -> client (chỉ admin): tiến độ lượt nạp dữ liệu FuOverflow, cùng dạng GET /admin/fuo-sources/status
+  userNotice: "user:notice", // server -> client (chính thành viên đó): thông báo mới, cùng dạng một mục của GET /notifications
 } as const;
 
 export type RoomKind = "exam" | "job";
 // Phòng của mọi admin đang online: nhận thông báo mới ngay
 export const ADMIN_ROOM = "admins";
+// Phòng riêng của một thành viên (tự vào khi kết nối, không đăng ký qua "subscribe")
+export const userRoom = (userId: string) => `user:${userId}`;
 export const roomOf = (kind: RoomKind, id: string | number) => `${kind}:${id}`;

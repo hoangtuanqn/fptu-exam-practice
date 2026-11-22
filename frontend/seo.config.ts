@@ -85,6 +85,7 @@ export const PRIVATE_PAGES: Record<string, PageSeo> = {
   "/account/giftcode": { title: "Nhập giftcode", description: "Nhập mã quà tặng để nhận thêm credit vào tài khoản." },
   "/account/transactions": { title: "Lịch sử giao dịch", description: "Toàn bộ biến động credit: nạp, thưởng, mua đề và hoàn tiền." },
   "/account/profile": { title: "Hồ sơ cá nhân", description: "Đổi ảnh đại diện, tên hiển thị, mật khẩu và kết nối đăng nhập." },
+  "/account/notifications": { title: "Thông báo", description: "Các thông báo gửi tới tài khoản của bạn." },
 
   "/admin": { title: "Quản trị: tổng quan", description: "Số liệu tổng quan hệ thống dành cho quản trị viên." },
   "/admin/users": { title: "Quản trị: thành viên", description: "Danh sách và quản lý thành viên." },
@@ -113,6 +114,7 @@ export const PRIVATE_PAGES: Record<string, PageSeo> = {
   "/admin/quality": { title: "Quản trị: chất lượng đề", description: "Câu nhiều người sai và đáp án có thể sai theo bài làm thực tế." },
   "/admin/chatbot": { title: "Quản trị: chatbot hỗ trợ", description: "Cấu hình trợ lý Cóc Pass." },
   "/admin/marketing": { title: "Quản trị: email marketing", description: "Bật tắt các chiến dịch thư gợi ý và gửi thư mẫu." },
+  "/admin/system-notices": { title: "Quản trị: gửi thông báo", description: "Gửi thông báo hệ thống tới mọi người dùng." },
 };
 
 // Trang có tham số trên đường dẫn (khớp theo mẫu)

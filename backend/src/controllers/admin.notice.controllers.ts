@@ -3,7 +3,9 @@ import { getValidated } from "../middlewares/validate.middlewares";
 import type { UuidParam } from "../rules/requests/admin.request";
 import type { ListNoticesQuery, ReadAllNoticesBody, SetNoticeReadBody } from "../rules/requests/admin-notice.request";
 import { ResponseClient } from "../rules/response";
+import type { ReadNoticeIdsBody, SystemNoticeBody } from "../rules/requests/user-notice.request";
 import { adminNoticeService } from "../services/admin-notice.service";
+import { userNoticeService } from "../services/user-notice.service";
 
 export const adminNoticeController = {
   async list(_req: Request, res: Response) {
@@ -26,6 +28,17 @@ export const adminNoticeController = {
   async readAll(_req: Request, res: Response) {
     const { updated } = await adminNoticeService.readAll(getValidated<ReadAllNoticesBody>(res));
     res.json(new ResponseClient({ message: updated ? `Đã đánh dấu ${updated} thông báo là đã đọc` : "Không còn thông báo chưa đọc", data: { updated } }));
+  },
+
+  async readIds(_req: Request, res: Response) {
+    const { ids } = getValidated<ReadNoticeIdsBody>(res);
+    res.json(new ResponseClient({ data: await adminNoticeService.readIds(ids) }));
+  },
+
+  // Thông báo hệ thống gửi vào chuông của mọi thành viên đang hoạt động
+  async broadcastSystem(_req: Request, res: Response) {
+    const { sent } = await userNoticeService.broadcast(getValidated<SystemNoticeBody>(res));
+    res.json(new ResponseClient({ message: `Đã gửi thông báo tới ${sent} thành viên`, data: { sent } }));
   },
 
   async deleteRead(_req: Request, res: Response) {
