@@ -3,9 +3,14 @@
 const NAMES: Record<string, string> = { SPRING: "SP", SUMMER: "SU", FALL: "FA", SP: "SP", SU: "SU", FA: "FA" };
 const TERM = /(?<![A-Za-z0-9])(SPRING|SUMMER|FALL|SP|SU|FA)\s?-?\s?(?:20)?(\d{2})(?!\d)/i;
 
+// Gõ nhầm kỳ Fall: "FE25", "F24" (F/FE dính liền 2 số năm) = FA25, FA24. "- FE" (loại đề, không có số ngay sau) không phải kỳ.
+const FALL_TYPO = /(?<![A-Za-z0-9])FE?(\d{2})(?!\d)/i;
+
 export const termOf = (title: string) => {
   const m = title.match(TERM);
-  return m ? `${NAMES[m[1]!.toUpperCase()]}${m[2]}` : null;
+  if (m) return `${NAMES[m[1]!.toUpperCase()]}${m[2]}`;
+  const typo = title.match(FALL_TYPO);
+  return typo ? `FA${typo[1]}` : null;
 };
 
 // Kỳ mới hơn xếp trước: năm lớn hơn, cùng năm thì FA (cuối năm) > SU > SP
