@@ -51,6 +51,11 @@ import { listFeedbackQuery } from "../rules/requests/explanation.request";
 import { listReportsQuery, reviewReportBody } from "../rules/requests/answer-report.request";
 import { createGiftCodeBody, listGiftCodesQuery, updateGiftCodeBody } from "../rules/requests/gift-code.request";
 import { validate } from "../middlewares/validate.middlewares";
+import { drainBeforeError } from "../middlewares/drain.middlewares";
+import { oneExamUploadPerAdmin } from "../middlewares/single-flight.middlewares";
+import { uploadExamImages } from "../middlewares/upload.middlewares";
+import { adminExamUploadController } from "../controllers/admin.exam-upload.controllers";
+import { examGapFilter, examGapsQuery, updateExamImagesBody, uploadExamBody } from "../rules/requests/exam-upload.request";
 import { paginationQuery } from "../utils/pagination";
 import { adjustBalanceBody, uuidParam, listUsersQuery, questionParam, renameExamBody, resetPasswordBody, updateExamQuestionsBody, updateUserBody } from "../rules/requests/admin.request";
 
@@ -156,6 +161,12 @@ adminRouter.get("/settings/ai", adminAiController.getSettings);
 adminRouter.put("/settings/ai", validate(updateAiBody), adminAiController.updateSettings);
 
 adminRouter.get("/exams", validate(paginationQuery, "query"), adminAiController.listExams);
+// Tải đề bằng tay (thư mục images/Q<số>.webp + ans.json): tạo đề / cập nhật ảnh của đề có sẵn; mỗi admin một lần tải đang chạy
+adminRouter.post("/exams/upload", oneExamUploadPerAdmin, uploadExamImages, validate(uploadExamBody), adminExamUploadController.upload);
+adminRouter.post("/exams/:id/images", validate(uuidParam, "params"), oneExamUploadPerAdmin, uploadExamImages, validate(updateExamImagesBody), adminExamUploadController.updateImages);
+// Đề còn thiếu (chưa có đề / thiếu ảnh / thiếu đáp án)
+adminRouter.get("/exam-gaps", validate(examGapsQuery, "query"), adminExamUploadController.gaps);
+adminRouter.get("/exam-gaps/summary", validate(examGapFilter, "query"), adminExamUploadController.gapSummary);
 adminRouter.get("/exams/:id", validate(uuidParam, "params"), adminAiController.examDetail);
 adminRouter.patch("/exams/:id", validate(uuidParam, "params"), validate(renameExamBody), adminAiController.renameExam);
 adminRouter.delete("/exams/:id", validate(uuidParam, "params"), adminAiController.removeExam);
@@ -193,5 +204,8 @@ adminRouter.get("/settings/referral", adminReferralController.getSettings);
 adminRouter.put("/settings/referral", validate(updateReferralBody), adminReferralController.updateSettings);
 adminRouter.get("/referrals/summary", adminReferralController.summary);
 adminRouter.get("/referrals", validate(paginationQuery, "query"), adminReferralController.list);
+
+// Lỗi trả sớm ở route nhận tệp (409 single-flight, 400 tham số): đọc bỏ thân trước khi trả lời để nginx không báo 502
+adminRouter.use(drainBeforeError);
 
 export default adminRouter;
