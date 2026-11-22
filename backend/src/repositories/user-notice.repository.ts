@@ -47,8 +47,9 @@ export const userNoticeRepository = {
       .findMany({ where: { status: "ACTIVE", ...(afterId && { id: { gt: afterId } }) }, select: { id: true }, orderBy: { id: "asc" }, take })
       .then((rows) => rows.map((r) => r.id)),
 
-  async createForUsers(userIds: string[], data: NoticeData) {
-    const { count } = await prisma.userNotice.createMany({ data: userIds.map((userId) => ({ ...data, userId })) });
+  // Unique (user_id, dedupe_key): người đã có thông báo cùng khoá thì bỏ qua; count = số dòng thật sự ghi thêm
+  async createForUsers(userIds: string[], data: NoticeData, dedupeKey: string) {
+    const { count } = await prisma.userNotice.createMany({ data: userIds.map((userId) => ({ ...data, userId, dedupeKey })), skipDuplicates: true });
     return count;
   },
 
