@@ -10,6 +10,7 @@ import { examAttachmentRepository } from "../repositories/exam-attachment.reposi
 import { examRepository, isDuplicateThread } from "../repositories/exam.repository";
 import { attachmentFileName } from "../utils/attachment";
 import { threadUrl } from "../utils/fuo-url";
+import { slowCrawlConfig } from "../utils/fuo-source-queue";
 import { createKeyLock } from "../utils/key-lock";
 import { createLimiter } from "../utils/limiter";
 import { sleep } from "../utils/sleep";
@@ -44,12 +45,15 @@ export interface ImportHooks {
 }
 
 // Đề cần lấy: job lấy đề (crawl_jobs) hoặc lượt nạp dữ liệu mới của admin (fuo_source_urls)
-export type ImportTarget = Pick<CrawlJob, "threadId" | "refresh" | "userId">;
+// `bulk`: lượt "Lấy hết đề còn thiếu" của admin: không nhờ AI (đề để DEFAULT, AI giải khi có người mở hoặc admin bấm giải),
+// chạy chậm (slowCrawlConfig), dừng ngay khi bị 429, giữ ảnh đã tải khi lỗi để lần sau không tải lại
+export type ImportTarget = Pick<CrawlJob, "threadId" | "refresh" | "userId"> & { bulk?: boolean };
 
 // Mọi lượt lấy/cập nhật cùng một thread chạy lần lượt (job người dùng, lượt nạp của admin), không xoá hay ghi đè đề của nhau
 export const withThreadLock = createKeyLock();
 
 const removeDir = (dir: string) => fs.rm(dir, { recursive: true, force: true });
+const fileExists = (file: string) => fs.access(file).then(() => true, () => false);
 
 const removeStaleFiles = async (dir: string, keep: Set<string>) => {
   const names = await fs.readdir(dir).catch(() => [] as string[]);
@@ -86,13 +90,14 @@ const importer = {
       } else {
         // Lần lấy trước bị ngắt giữa chừng (ví dụ server khởi động lại): bỏ phần dở dang rồi lấy lại từ đầu
         await examRepository.deleteById(existing.id);
-        await removeDir(path.join(storageDir, EXAM_STORAGE_DIR, job.threadId));
+        if (!job.bulk) await removeDir(path.join(storageDir, EXAM_STORAGE_DIR, job.threadId));
       }
     }
 
-    const config = await crawlerSettingService.get();
-    if (!config.cookie) throw new Error("Chưa cấu hình cookie FuOverflow. Admin hãy nhập ở Quản trị → Cấu hình lấy đề.");
-    const client = createFuoClient(config);
+    const saved = await crawlerSettingService.get();
+    if (!saved.cookie) throw new Error("Chưa cấu hình cookie FuOverflow. Admin hãy nhập ở Quản trị → Cấu hình lấy đề.");
+    const config = job.bulk ? slowCrawlConfig(saved) : saved;
+    const client = createFuoClient(config, { stopOnRateLimit: job.bulk });
 
     const t0 = Date.now();
     await stage("Đang đọc thread", true);
@@ -130,8 +135,9 @@ const importer = {
         createdById: job.userId ?? undefined,
         totalQuestions: total,
         // Đề chỉ có tệp: MANUAL để không bao giờ chờ/gọi AI (không có câu nào để chấm nên không ảnh hưởng thống kê)
-        answerSource: filesOnly ? "MANUAL" : useAi && !practical ? "PENDING" : "FAILED",
-        aiReport: filesOnly ? undefined : practical ? PE_REPORT : useAi ? undefined : AI_OFF_REPORT,
+        // bulk: DEFAULT (chưa giải, chỉ xem) giống đề admin tải lên chưa có đáp án; không bao giờ PENDING nên không kẹt "AI đang giải"
+        answerSource: filesOnly ? "MANUAL" : practical ? "FAILED" : job.bulk ? "DEFAULT" : useAi ? "PENDING" : "FAILED",
+        aiReport: filesOnly ? undefined : practical ? PE_REPORT : job.bulk || useAi ? undefined : AI_OFF_REPORT,
         kind: thread.kind,
         description: thread.description,
       });
@@ -205,12 +211,20 @@ const importer = {
       // Ảnh xếp hàng trước bình luận nên các câu hiện ra sớm nhất có thể.
       const limit = createLimiter(Math.max(1, config.concurrency));
       const rest = () => (config.requestDelayMs > 0 ? sleep(config.requestDelayMs) : Promise.resolve());
+      // Tệp/bình luận chỉ ném lỗi khi phải dừng (đăng nhập, 429): các tác vụ còn lại không gửi thêm request
+      const stop = (err: unknown): never => {
+        aborted = true;
+        throw err;
+      };
 
       const imageTasks = thread.images.map((image, i) =>
         limit(async () => {
           if (aborted) return;
+          // bulk: ảnh đã tải ở lần lỗi trước (ghi atomic nên tệp có là tệp đủ) thì dùng lại, không gọi FuOverflow
+          // shortcut: dùng lại theo tên ảnh, không so nội dung; bài đổi ảnh giữa hai lần thì admin làm mới đề đó
+          const onDisk = job.bulk && (await fileExists(path.join(imagesDir, `${image.fileBase}.webp`)));
           try {
-            downloaded[i] = await downloadImage(client, image, imagesDir);
+            downloaded[i] = onDisk ? { image, file: `${image.fileBase}.webp` } : await downloadImage(client, image, imagesDir);
           } catch (err) {
             aborted = true; // thiếu một ảnh là đề không dùng được: dừng các tác vụ còn lại
             throw err;
@@ -218,7 +232,7 @@ const importer = {
           imagesDone++;
           await progress();
           await flush();
-          await rest();
+          if (!onDisk) await rest();
         }),
       );
       // Tệp hỏng/quá lớn thì bỏ qua (null); chỉ lỗi đăng nhập mới dừng cả lượt
@@ -226,7 +240,7 @@ const importer = {
         limit(async () => {
           if (aborted) return;
           await progress();
-          savedFiles[i] = await downloadAttachment(client, file, fileName, filesDir, fileBudget);
+          savedFiles[i] = await downloadAttachment(client, file, fileName, filesDir, fileBudget).catch(stop);
           filesDone++;
           await rest();
         }),
@@ -234,7 +248,7 @@ const importer = {
       const commentTasks = thread.images.map((image, i) =>
         limit(async () => {
           if (aborted) return;
-          comments[i] = await collectComments(client, image);
+          comments[i] = await collectComments(client, image, { rethrowAuth: job.bulk }).catch(stop);
           commentsDone++;
           await progress();
           await rest();
@@ -285,6 +299,8 @@ const importer = {
         if (refreshing) await examRepository.updateAnswers(examId, [], "MANUAL", null); // đề cũ có ảnh, nay chỉ còn tệp
       } else if (practical) {
         if (refreshing) await examRepository.updateAnswers(examId, Array<string>(total).fill(""), "FAILED", PE_REPORT);
+      } else if (job.bulk) {
+        // không gọi AI: đề giữ DEFAULT (đã ghi lúc tạo)
       } else if (aiNow) {
         if (refreshing || exam.answerSource !== "PENDING") await examRepository.markPending(examId); // làm mới: bỏ đáp án cũ, giải lại từ đầu
         examSolveService.enqueue(examId);
@@ -300,7 +316,7 @@ const importer = {
       // Người dùng đã mở đề thì báo để họ thoát ra, rồi gỡ đề dở dang và thư mục ảnh
       if (ready) realtimeHub.publishExamFailed(examId, (err as Error).message);
       await examRepository.deleteById(examId).catch(() => undefined);
-      await removeDir(dir);
+      if (!job.bulk) await removeDir(dir); // bulk: giữ ảnh đã tải cho lần chạy lại
       throw err;
     }
   },
