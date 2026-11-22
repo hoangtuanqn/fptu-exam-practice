@@ -115,8 +115,10 @@ export const fuoSourceService = {
    * FUO_SOURCE_FETCH_MISSING_SINCE, vào danh sách link rồi xếp vào lượt nạp (lượt đang chạy, hoặc lượt mới). Chỉ lấy ảnh và bình luận,
    * không lấy bình luận, không nhờ AI (xem process).
    */
-  async fetchMissing(adminId: string, filter: ExamGapFilter) {
-    const threadIds = await examGapRepository.missingThreadIds(filter, FUO_SOURCE_FETCH_MISSING_SINCE);
+  async fetchMissing(adminId: string, filter: ExamGapFilter, pickedIds?: string[]) {
+    const missing = await examGapRepository.missingThreadIds(filter, FUO_SOURCE_FETCH_MISSING_SINCE);
+    const picked = pickedIds && new Set(pickedIds); // chỉ các đề admin đã tick (vẫn phải còn thiếu theo điều kiện trên)
+    const threadIds = picked ? missing.filter((id) => picked.has(id)) : missing;
     for (let i = 0; i < threadIds.length; i += FUO_SOURCE_INSERT_CHUNK) {
       await fuoSourceRepository.addMany(threadIds.slice(i, i + FUO_SOURCE_INSERT_CHUNK).map((threadId) => ({ threadId, url: threadUrl(threadId) })));
     }

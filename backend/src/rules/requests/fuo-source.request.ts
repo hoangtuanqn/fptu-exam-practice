@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { FUO_SOURCE_MAX_CHARS, FUO_SOURCE_MAX_LINES } from "../../constants/fuo-source";
+import { FUO_SOURCE_MAX_CHARS, FUO_SOURCE_MAX_LINES, FUO_SOURCE_PICK_MAX } from "../../constants/fuo-source";
 import { paginationQuery } from "../../utils/pagination";
 import { examGapFilter } from "./exam-upload.request";
 
@@ -17,7 +17,9 @@ export const listFuoSourcesQuery = paginationQuery.extend({
 });
 
 // "Lấy hết đề còn thiếu": cùng bộ lọc với trang Đề còn thiếu (kind, subject, q); không gửi body = mọi bài
-export const fetchMissingBody = examGapFilter.default({});
+// threadIds: các đề admin đã tick trong popup; không có thì lấy mọi đề còn thiếu theo bộ lọc
+export const fetchMissingBody = examGapFilter.extend({ threadIds: z.array(z.string().regex(/^\d{1,18}$/, "ID bài FuOverflow không hợp lệ")).max(FUO_SOURCE_PICK_MAX).optional() }).default({});
+export type FetchMissingBody = z.infer<typeof fetchMissingBody>;
 
 export type AddFuoSourcesBody = z.infer<typeof addFuoSourcesBody>;
 export type ListFuoSourcesQuery = z.infer<typeof listFuoSourcesQuery>;

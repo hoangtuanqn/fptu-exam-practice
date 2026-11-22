@@ -12,4 +12,5 @@ export const FUO_SOURCE_INVALID_LINE = "Không phải link bài viết FuOverflo
 // "Lấy hết đề còn thiếu": chỉ bài đăng từ ngày này (giờ Việt Nam; bài chưa rõ ngày vẫn lấy), mỗi request nghỉ ít nhất chừng này, 1 luồng
 export const FUO_SOURCE_FETCH_MISSING_SINCE = new Date("2024-01-01T00:00:00+07:00");
 export const FUO_SOURCE_FETCH_MISSING_DELAY_MS = 1500;
+export const FUO_SOURCE_PICK_MAX = 500; // số đề tối đa admin tick trong popup "Lấy tất cả đề chưa có" mỗi lần bấm
 export const FUO_SOURCE_WAIT_STAGE = "Đang chờ cập nhật đề"; // job của người dùng chờ lượt nạp của admin đang giữ cùng thread
