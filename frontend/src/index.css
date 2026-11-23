@@ -27,6 +27,23 @@
   .md-drawer-in-right { animation: none; }
 }
 
+/* Đổi sáng/tối: chỉ dùng vòng tròn lan từ nút (ThemeContext), tắt cross-fade mặc định của trình duyệt */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+@keyframes theme-icon-in {
+  from { opacity: 0; transform: rotate(-120deg) scale(0.4); }
+  to { opacity: 1; transform: none; }
+}
+.theme-icon-in {
+  animation: theme-icon-in 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .theme-icon-in { animation: none; }
+}
+
 @theme {
   /* CẢ HỆ THỐNG CHỈ DÙNG INTER (nhúng từ Google Fonts trong index.html). Mọi họ phông đều trỏ về Inter: các class font-serif, font-display,
      font-mono cũ và thẻ <code>/<pre>/<kbd> (Tailwind mặc định dùng phông monospace) đều ra Inter. Không thêm phông khác (xem BRAND.md). */
