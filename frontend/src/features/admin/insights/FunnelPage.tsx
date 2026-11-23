@@ -2,6 +2,7 @@ import { useUrlState } from "@/shared/hooks/useUrlState";
 import { useApi } from "@/shared/hooks/useApi";
 import { Card, CardHeader, PageHeader, StatCard, StatGrid } from "@/shared/ui/Card";
 import { ErrorBox, Loading } from "@/shared/ui/Feedback";
+import { SkeletonBlock } from "@/shared/ui/Skeleton";
 import { Segmented } from "@/shared/ui/Segmented";
 import { insightsApi } from "./insights.api";
 
@@ -20,20 +21,11 @@ const pct = (n: number, of: number) => (of > 0 ? `${Math.round((n / of) * 100)}%
 export default function FunnelPage() {
   const [url, setUrl] = useUrlState({ days: "30" });
   const days = [7, 30, 90].includes(Number(url.days)) ? Number(url.days) : 30;
-  const { data, error, loading, reload } = useApi(() => insightsApi.funnel(days), [days]);
+  const { data, error, reload } = useApi(() => insightsApi.funnel(days), [days]);
   const prompts = useApi(() => insightsApi.prompts(days), [days]).data;
 
-  if (loading && !data) return <Loading />;
-  if (error || !data) return <ErrorBox message={error ?? "Không có dữ liệu"} onRetry={reload} />;
-
-  const base = data.steps[0]?.count ?? 0;
-  const { crawl, deposits, practice } = data;
-  const crawlTotal = crawl.done + crawl.failed;
-  const depTotal = deposits.paid + deposits.pending + deposits.expired;
-
-  return (
-    <div className="space-y-6">
-      <PageHeader
+  const header = (
+        <PageHeader
         eyebrow="Phân tích"
         title="Phễu người dùng"
         description="Trong số người đăng ký ở kỳ đã chọn, bao nhiêu người đi tới từng bước. Chỗ tụt mạnh nhất là chỗ nên sửa trước."
@@ -45,7 +37,20 @@ export default function FunnelPage() {
             onChange={(v) => setUrl({ days: v })}
           />
         }
-      />
+        />
+  );
+  // Chờ dữ liệu: giữ tiêu đề, phần số liệu hiện skeleton
+  if (!data && !error) return <div className="space-y-6">{header}<SkeletonBlock lines={8} /></div>;
+  if (error || !data) return <ErrorBox message={error ?? "Không có dữ liệu"} onRetry={reload} />;
+
+  const base = data.steps[0]?.count ?? 0;
+  const { crawl, deposits, practice } = data;
+  const crawlTotal = crawl.done + crawl.failed;
+  const depTotal = deposits.paid + deposits.pending + deposits.expired;
+
+  return (
+    <div className="space-y-6">
+      {header}
 
       <Card>
         <CardHeader title="Từ đăng ký đến trả tiền" description={`Người đăng ký trong ${days} ngày gần đây (không tính quản trị viên)`} />
