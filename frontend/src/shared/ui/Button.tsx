@@ -34,7 +34,7 @@ export function buttonClass({ variant = "outlined", size = "md", grow = false, c
   const key = variant === "danger" ? null : ((ALIAS as Record<string, string>)[variant] ?? variant);
   const textVariant = key === "text";
   return [
-    "md-state md-motion md-label-large inline-flex shrink-0 select-none items-center justify-center gap-2 whitespace-nowrap rounded-full",
+    "md-state md-motion md-label-large inline-flex shrink-0 select-none items-center justify-center gap-2 whitespace-nowrap rounded-full active:scale-[0.97] motion-reduce:active:scale-100",
     "after:absolute after:inset-x-0 after:content-[''] disabled:pointer-events-none",
     SIZES[size],
     textVariant ? "!px-3" : "",
@@ -81,7 +81,7 @@ export function IconButton({
       aria-label={label}
       title={label}
       aria-pressed={selected}
-      className={`md-state md-motion ${positioned ? "" : "relative"} inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full after:absolute after:-inset-1 after:content-[''] disabled:pointer-events-none ${
+      className={`md-state md-motion ${positioned ? "" : "relative"} inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full after:absolute after:-inset-1 after:content-[''] active:scale-90 motion-reduce:active:scale-100 disabled:pointer-events-none ${
         selected && variant === "standard" ? "text-primary" : ICON_VARIANTS[variant]
       } ${className}`}
       {...props}
@@ -103,7 +103,7 @@ export function Fab({
     <button
       type="button"
       aria-label={extended ? undefined : label}
-      className={`md-state md-motion md-label-large inline-flex h-14 items-center justify-center gap-3 rounded-m3-lg bg-primary-container text-on-primary-container shadow-m3-3 ${
+      className={`md-state md-motion md-label-large inline-flex h-14 items-center justify-center gap-3 rounded-m3-lg bg-primary-container text-on-primary-container shadow-m3-3 hover:-translate-y-0.5 active:scale-95 motion-reduce:transform-none ${
         extended ? "px-4" : "w-14"
       } ${className}`}
       {...props}
