@@ -45,7 +45,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input({ l
   const describedBy = error || hint ? `${inputId}-support` : undefined;
   return (
     <div>
-      <div className={`group relative rounded-t-m3-xs bg-surface-container-highest md-motion ${props.disabled ? "opacity-[0.38]" : ""}`}>
+      {/* Lớp phủ hover kiểu M3 nằm dưới chữ (-z-10 trong ngữ cảnh isolate), không chặn click */}
+      <div className={`group relative isolate rounded-t-m3-xs bg-surface-container-highest md-motion before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-t-m3-xs before:bg-on-surface before:opacity-0 before:content-[''] hover:before:opacity-[0.08] ${props.disabled ? "opacity-[0.38]" : ""}`}>
         <input
           ref={ref}
           id={inputId}
@@ -60,7 +61,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input({ l
         {label && (
           <label
             htmlFor={inputId}
-            className={`md-body-medium pointer-events-none absolute left-4 top-4 origin-left text-on-surface-variant md-motion peer-focus:top-1.5 peer-focus:text-xs peer-[:not(:placeholder-shown)]:top-1.5 peer-[:not(:placeholder-shown)]:text-xs ${
+            className={`md-body-medium pointer-events-none absolute left-4 top-4 origin-left text-on-surface-variant md-motion peer-focus:-translate-y-2.5 peer-focus:scale-75 peer-[:not(:placeholder-shown)]:-translate-y-2.5 peer-[:not(:placeholder-shown)]:scale-75 ${
               error ? "!text-error" : "peer-focus:text-primary"
             }`}
           >
@@ -71,13 +72,13 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input({ l
         {/* Đường kẻ dưới: 1dp (outline), dày lên 2dp màu primary khi focus */}
         <span
           aria-hidden
-          className={`pointer-events-none absolute inset-x-0 bottom-0 h-px md-motion peer-hover:h-0.5 peer-focus:h-0.5 ${
+          className={`pointer-events-none absolute inset-x-0 bottom-0 h-px origin-bottom md-motion peer-hover:scale-y-[2] peer-focus:scale-y-[2] ${
             error ? "bg-error" : "bg-on-surface-variant peer-focus:bg-primary"
           }`}
         />
       </div>
       {(error || hint) && (
-        <p id={describedBy} role={error ? "alert" : undefined} className={`md-body-small mt-1 px-4 ${error ? "text-error" : "text-on-surface-variant"}`}>
+        <p id={describedBy} role={error ? "alert" : undefined} className={`md-body-small mt-1 animate-fade-up px-4 ${error ? "text-error" : "text-on-surface-variant"}`}>
           {error ?? hint}
         </p>
       )}
