@@ -7,7 +7,7 @@ description: Checklist for deploying the backend/frontend and importing data on 
 
 Production holds real users and money. Do nothing here unless the user asked for it in the current message. If a tool call to production is blocked, do not work around it: give the user the exact commands to run themselves.
 
-Connection details (host, user, key) are NOT stored in this repo. They are in the user's SSH setup and `deploy/README.md`.
+Connection details (host, user, key) are NOT stored in this repo. The real production server is described in `workspace/vps2.md` (git-ignored, local only): read it before ANY SSH or deploy, and never take a server address from git history or old docs. If the target looks different from that file (OS, specs, `pm2` shows `fepass-api` stopped), stop and ask.
 
 ## Before deploying
 
