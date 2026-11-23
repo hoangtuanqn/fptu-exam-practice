@@ -11,7 +11,7 @@ import { formatDate, formatDateTime, formatMoney, initials } from "@/shared/util
 const QUICK = [
   { to: "/admin/users", label: "Quản lý thành viên", note: "Phân quyền, khoá, chỉnh số dư" },
   { to: "/admin/sepay", label: "Cấu hình SePay", note: "Token, tài khoản nhận, cron đối soát" },
-  { to: "/admin/crawler", label: "Cấu hình lấy đề", note: "Cookie FuOverflow và giá lấy đề" },
+  { to: "/admin/exam-upload", label: "Tải đề lên", note: "Thêm đề mới từ thư mục ảnh" },
   { to: "/admin/ai", label: "AI giải đáp án", note: "Khóa Claude, model, mức suy luận" },
   { to: "/admin/bank-transactions", label: "Giao dịch ngân hàng", note: "Đối chiếu tiền vào chưa khớp" },
 ];

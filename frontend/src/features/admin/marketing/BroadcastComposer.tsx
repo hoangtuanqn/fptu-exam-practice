@@ -30,7 +30,7 @@ async function promoTemplate(): Promise<Partial<Form> | null> {
     subject: `Ưu đãi kỳ ${p.term}: Pro ${plan.months} tháng chỉ ${vnd(p.price)}`,
     body: [
       `Kỳ ${p.term} sắp bắt đầu. Từ nay tới hết ngày ${end}, gói Pro ${plan.months} tháng chỉ còn ${vnd(p.price)} thay vì ${vnd(p.originalPrice)} (giảm ${p.percentOff}%).`,
-      "Với Pro, bạn lấy đề FuOverflow không bị trừ credit, xem giải thích AI cho mọi câu, ôn Sổ câu sai không giới hạn và xem đủ Câu hay ra của từng môn.",
+      "Với Pro, bạn lấy đề không bị trừ credit, xem giải thích AI cho mọi câu, ôn Sổ câu sai không giới hạn và xem đủ Câu hay ra của từng môn.",
       `Mỗi tài khoản được mua giá ưu đãi một lần. Sau ngày ${end}, giá trở lại ${vnd(p.originalPrice)}.`,
       ...(plan.ticket ? [`Chưa muốn dùng ngay? Bạn có thể mua vé Pro bây giờ để giữ giá, rồi kích hoạt khi vào kỳ (trong ${plan.ticket.validDays} ngày).`] : []),
     ].join("\n\n"),

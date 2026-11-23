@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import { ExternalLink, FilePlus2, Pencil, Search, SearchCheck } from "lucide-react";
+import { FilePlus2, Pencil, Search, SearchCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useApi } from "@/shared/hooks/useApi";
 import { useClampPage } from "@/shared/hooks/useClampPage";
@@ -14,7 +14,6 @@ import { Modal, ModalTitle } from "@/shared/ui/Modal";
 import { QueryBoundary } from "@/shared/ui/QueryBoundary";
 import { Segmented } from "@/shared/ui/Segmented";
 import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
-import { fuoThreadUrl } from "@/shared/utils/fuo-link";
 import { formatDate } from "@/shared/utils/formatters";
 import { SubjectCombobox } from "@/features/subject/SubjectCombobox";
 import { subjectApi } from "@/features/subject/subject.api";
@@ -22,21 +21,17 @@ import { examUploadApi, KIND_LABEL, type ExamGap, type ExamGapItem, type ExamKin
 import { ExamUploadForm, type UploadTarget } from "./ExamUploadForm";
 import { UploadJobsCard } from "./UploadJobsCard";
 import { useUploadJobs } from "./useUploadJobs";
-import { FetchMissingCard } from "./FetchMissingCard";
 
-const GAP: Record<ExamGap, [string, Tone]> = {
-  no_exam: ["Chưa có đề", "danger"],
+const GAP: Partial<Record<ExamGap, [string, Tone]>> = {
   no_images: ["Chưa có ảnh", "warning"],
   no_answers: ["Chưa có đáp án", "info"],
 };
 const KINDS = Object.keys(KIND_LABEL) as ExamKind[];
 
 const targetOf = (g: ExamGapItem): UploadTarget =>
-  g.examId && g.gap !== "no_exam"
-    ? { mode: "update", examId: g.examId, title: g.title, questions: g.questions ?? 0 }
-    : { mode: "create", title: g.title, subjectCode: g.subjectCode, kind: g.kind, threadId: g.threadId };
+  g.examId ? { mode: "update", examId: g.examId, title: g.title, questions: g.questions ?? 0 } : { mode: "create", title: g.title, subjectCode: g.subjectCode, kind: g.kind };
 
-// Đề còn thiếu thông tin (chưa có đề, chưa có ảnh, chưa có đáp án) để admin biết cần bổ sung gì
+// Đề còn thiếu thông tin (chưa có ảnh, chưa có đáp án) để admin biết cần bổ sung gì
 export default function ExamGapsPage() {
   const [url, setUrl] = useUrlState({ gap: "", kind: "", subject: "", q: "", page: "1" });
   const gap = (url.gap in GAP ? url.gap : "") as ExamGap | "";
@@ -63,19 +58,18 @@ export default function ExamGapsPage() {
   const s = summary.data;
   const tabs: { value: ExamGap | ""; label: string }[] = [
     { value: "", label: "Tất cả" },
-    { value: "no_exam", label: `Chưa có đề${count(s?.noExam)}` },
     { value: "no_images", label: `Chưa có ảnh${count(s?.noImages)}` },
     { value: "no_answers", label: `Chưa có đáp án${count(s?.noAnswers)}` },
   ];
 
-  const badge = (g: ExamGapItem) => (GAP[g.gap] ? <Badge tone={GAP[g.gap][1]}>{GAP[g.gap][0]}</Badge> : null);
+  const badge = (g: ExamGapItem) => {
+    const v = GAP[g.gap];
+    return v ? <Badge tone={v[1]}>{v[0]}</Badge> : null;
+  };
   const progress = (g: ExamGapItem) => (g.examId && g.questions > 0 ? `${g.answered ?? 0}/${g.questions} câu có đáp án` : null);
   const meta = (g: ExamGapItem) => [g.subjectCode, g.kind ? KIND_LABEL[g.kind] : null, g.postedAt ? formatDate(g.postedAt) : null].filter(Boolean).join(" · ");
   const actions = (g: ExamGapItem) => (
     <div className="flex items-center justify-end gap-1">
-      <a href={g.sourceUrl ?? fuoThreadUrl(g.threadId)} target="_blank" rel="noopener noreferrer" aria-label={`Mở bài ${g.title} trên FuOverflow`} title="Mở bài trên FuOverflow" className={buttonClass({ variant: "text", size: "sm", className: "!px-2" })}>
-        <ExternalLink size={16} aria-hidden />
-      </a>
       {g.examId && (
         <Link to={`/admin/exams/${g.examId}`} aria-label={`Sửa đề ${g.title}`} title="Sửa đề" className={buttonClass({ variant: "text", size: "sm", className: "!px-2" })}>
           <Pencil size={16} aria-hidden />
@@ -89,19 +83,11 @@ export default function ExamGapsPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Quản trị" title="Đề cần bổ sung" description="Đề còn thiếu ảnh hoặc đáp án, và bài trên FuOverflow chưa có đề. Bấm Bổ sung để tải thư mục đề lên." />
+      <PageHeader eyebrow="Quản trị" title="Đề cần bổ sung" description="Đề còn thiếu ảnh hoặc đáp án. Bấm Bổ sung để tải thư mục đề lên." />
       <UploadJobsCard jobs={jobs.jobs} className="mb-4" />
       <Card>
         <div className="space-y-3 border-b border-outline-variant p-4">
           <Segmented<ExamGap | ""> label="Lọc theo phần còn thiếu" value={gap} onChange={(v) => setUrl({ gap: v, page: "1" })} options={tabs} />
-          <FetchMissingCard
-            noExam={gap === "no_exam" ? s?.noExam : undefined}
-            filters={{ ...(kind && { kind }), ...(url.subject && { subject: url.subject }), ...(q && { q }) }}
-            onDone={() => {
-              list.reload();
-              summary.reload();
-            }}
-          />
           <div className="grid gap-3 sm:grid-cols-[1fr_14rem_10rem]">
             <div className="relative self-end">
               <Search size={16} aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
@@ -127,7 +113,7 @@ export default function ExamGapsPage() {
               <>
                 <ul className="divide-y divide-outline-variant md:hidden">
                   {data.items.map((g) => (
-                    <li key={g.threadId} className="space-y-2 px-4 py-3">
+                    <li key={g.examId ?? g.threadId} className="space-y-2 px-4 py-3">
                       <div className="md-title-small break-words text-on-surface">{g.title}</div>
                       <div className="md-body-small flex flex-wrap items-center gap-2 text-on-surface-variant">
                         {badge(g)}
@@ -152,7 +138,7 @@ export default function ExamGapsPage() {
                     </Thead>
                     <tbody>
                       {data.items.map((g) => (
-                        <Tr key={g.threadId}>
+                        <Tr key={g.examId ?? g.threadId}>
                           <Td className="max-w-xs">
                             <div className="truncate font-medium text-on-surface" title={g.title}>
                               {g.title}

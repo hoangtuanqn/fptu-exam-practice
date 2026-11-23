@@ -2,7 +2,7 @@ import { http, sendForm } from "@/shared/api/client";
 import { PAGE_SIZE } from "@/shared/api/pagination";
 
 export type ExamKind = "FE" | "PE" | "QUIZ" | "OTHER";
-export type ExamGap = "no_exam" | "no_images" | "no_answers";
+export type ExamGap = "no_exam" | "no_images" | "no_answers"; // no_exam: chỉ còn ở máy chủ cũ, giao diện không lọc theo
 
 export const KIND_LABEL: Record<ExamKind, string> = { FE: "FE", PE: "PE", QUIZ: "QUIZ", OTHER: "Khác" };
 
@@ -13,7 +13,6 @@ export interface ExamGapItem {
   subjectCode: string | null;
   kind: ExamKind | null;
   postedAt: string | null;
-  sourceUrl: string | null;
   questions: number;
   answered: number;
   gap: ExamGap;
@@ -42,7 +41,6 @@ export interface CreateExamInput extends UploadInput {
   title: string;
   subjectCode: string;
   kind: ExamKind;
-  threadId?: string;
 }
 
 export type UploadJobStatus = "QUEUED" | "RUNNING" | "DONE" | "FAILED";
@@ -70,8 +68,8 @@ function uploadForm({ images, ansJson }: UploadInput, fields: Record<string, str
 export const examUploadApi = {
   gaps: (f: GapFilter) => http.list<ExamGapItem>("/admin/exam-gaps", { gap: f.gap, kind: f.kind, subject: f.subject, q: f.q, page: f.page, limit: PAGE_SIZE }),
   summary: () => http.get<ExamGapSummary>("/admin/exam-gaps/summary"),
-  create: ({ title, subjectCode, kind, threadId, ...rest }: CreateExamInput) => {
-    const form = uploadForm(rest, { title: title.trim(), subjectCode, kind, threadId });
+  create: ({ title, subjectCode, kind, ...rest }: CreateExamInput) => {
+    const form = uploadForm(rest, { title: title.trim(), subjectCode, kind });
     return sendForm<UploadJob>("POST", "/admin/exams/upload?async=1", form);
   },
   addImages: (examId: string, input: UploadInput) => {

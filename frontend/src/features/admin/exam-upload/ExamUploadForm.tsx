@@ -15,11 +15,11 @@ import { FolderPicker } from "./FolderPicker";
 import { FolderPreview } from "./FolderPreview";
 
 export type UploadTarget =
-  | { mode: "create"; title?: string; subjectCode?: string | null; kind?: ExamKind | null; threadId?: string }
+  | { mode: "create"; title?: string; subjectCode?: string | null; kind?: ExamKind | null }
   | { mode: "update"; examId: string; title: string; questions: number };
 
 const KINDS = Object.keys(KIND_LABEL) as ExamKind[];
-const FIELDS = ["title", "subjectCode", "kind", "images", "answers", "threadId"];
+const FIELDS = ["title", "subjectCode", "kind", "images", "answers"];
 
 // Tải đề từ một thư mục (images/Qn.webp + ans.json): tạo đề mới, hoặc bổ sung/thay ảnh cho đề đã có
 interface Props {
@@ -82,7 +82,7 @@ export function ExamUploadForm({ target, onDone, onBusy, onCancel }: Props) {
     const input = { images: check.items.map((i) => i.file), ansJson: folder.ansJson };
     void submit.run(async () => {
       const r = create
-        ? await examUploadApi.create({ ...input, title, subjectCode, kind, threadId: target.threadId })
+        ? await examUploadApi.create({ ...input, title, subjectCode, kind })
         : await examUploadApi.addImages(target.examId, input);
       onDone(r);
     });

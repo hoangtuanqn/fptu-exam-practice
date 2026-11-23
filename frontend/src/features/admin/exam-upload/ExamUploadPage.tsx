@@ -4,7 +4,7 @@ import { ExamUploadForm } from "./ExamUploadForm";
 import { UploadJobsCard } from "./UploadJobsCard";
 import { useUploadJobs } from "./useUploadJobs";
 
-// Tải một đề mới từ thư mục ảnh + ans.json, không gắn với bài trên FuOverflow. Máy chủ nhận đề rồi xử lý nền
+// Tải một đề mới từ thư mục ảnh + ans.json. Máy chủ nhận đề rồi xử lý nền
 export default function ExamUploadPage() {
   const jobs = useUploadJobs();
   const [round, setRound] = useState(0); // đổi key để form trống lại, tải được đề khác ngay

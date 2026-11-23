@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Copy, Download, ExternalLink, FileText, Loader2, Sparkles } from "lucide-react";
+import { Copy, Download, FileText, Loader2, Sparkles } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { adminApi } from "@/features/admin/api/admin.api";
 import { useToast } from "@/shared/context/ToastContext";
@@ -134,16 +134,6 @@ export default function ExamsPage() {
       </div>
     );
 
-  // Thread trên FuOverflow: bấm mở bài gốc ở tab mới (để biết đề này là đề nào trên FuO)
-  const threadLink = (e: AdminExam) =>
-    e.sourceUrl ? (
-      <a href={e.sourceUrl} target="_blank" rel="noreferrer" onClick={(ev) => ev.stopPropagation()} title="Mở bài gốc trên FuOverflow" className="inline-flex items-center gap-1 text-brand-700 hover:underline">
-        {e.threadId} <ExternalLink size={12} />
-      </a>
-    ) : (
-      <span>{e.threadId}</span>
-    );
-
   // Thao tác gọn: các nút biểu tượng (xem chi tiết/sửa là bấm vào dòng đề)
   const iconBtn = "inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:opacity-40";
   const action = (e: AdminExam) => {
@@ -192,7 +182,7 @@ export default function ExamsPage() {
                   <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
                     {answersChip(e)}
                     <Badge tone={SOURCE[e.answerSource][1]}>{SOURCE[e.answerSource][0]}</Badge>
-                    <span>{threadLink(e)}</span>
+                    <span>{e.threadId}</span>
                   </div>
                   {errorLine(e)}
                   {action(e)}
@@ -219,7 +209,7 @@ export default function ExamsPage() {
                         </Link>
                         {errorLine(e)}
                       </Td>
-                      <Td className="whitespace-nowrap text-slate-500">{threadLink(e)}</Td>
+                      <Td className="whitespace-nowrap text-slate-500">{e.threadId}</Td>
                       <Td className="text-right tabular-nums">{e.totalQuestions}</Td>
                       <Td>{answersChip(e)}</Td>
                       <Td>

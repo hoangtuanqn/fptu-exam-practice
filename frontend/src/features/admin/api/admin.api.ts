@@ -1,5 +1,6 @@
 import type {
   AccountSettings,
+  CrawlerSettings,
   LinkRewardAdmin,
   PromoSettings,
   AdminAttempt,
@@ -20,7 +21,6 @@ import type {
   ReportStatus,
   GiftCodeRedemption,
   AiEffort,
-  CrawlerAdminConfig,
   DashboardOverview,
   DepositOrder,
   DepositStatus,
@@ -74,7 +74,6 @@ export interface SubjectRow {
   chapters: { total: number; named: number; hasNames: boolean };
   inferredChapters: number; // số chương AI đã suy và lưu (0 = chưa suy)
   exams: number; // đề đang có trong hệ thống
-  fuoThreads: number; // đề biết trên FuOverflow (kho đề)
 }
 
 export interface SubjectDetail {
@@ -85,7 +84,6 @@ export interface SubjectDetail {
   minPassMark: number | null;
   syllabusId: string | null;
   exams: number;
-  fuoThreads: number;
   chapters: { number: number; title: string; topics: string[] }[];
   inferred: {
     topics: { label: string; hint: string }[];
@@ -126,18 +124,6 @@ export interface SepayForm {
   orderExpireMinutes: number;
   cronEnabled: boolean;
   cronExpression: string;
-}
-
-export interface CrawlerForm {
-  cookie?: string;
-  loginEmail: string;
-  loginPassword?: string;
-  userAgent: string;
-  referer: string;
-  requestDelayMs: number;
-  concurrency: number;
-  webpQuality: number;
-  fetchPrice: number;
 }
 
 export interface AiForm {
@@ -236,16 +222,12 @@ export interface QuestionResolve {
   answer: string; // ví dụ "C" hoặc "A C"; rỗng nếu không có
   notQuestion: boolean; // AI cho rằng ảnh này không phải câu hỏi
   report: string;
-  commentsRefreshed?: boolean; // đã lấy lại bình luận của câu này từ FuOverflow trước khi giải
-  commentsCount?: number | null; // số bình luận lấy được
-  commentsNote?: string | null; // lý do không lấy lại được (vẫn giải bằng bình luận đã lưu)
 }
 
 export interface ExamAdminDetail {
   id: string;
   title: string;
   threadId: string;
-  sourceUrl: string;
   totalQuestions: number;
   answerSource: AnswerSource;
   aiReport: string | null;
@@ -412,6 +394,9 @@ export const adminApi = {
   accountSettings: () => http.get<AccountSettings>("/admin/settings/account"),
   saveAccountSettings: (body: AccountSettings) =>
     http.put<AccountSettings>("/admin/settings/account", body),
+  crawlerSettings: () => http.get<CrawlerSettings>("/admin/settings/crawler"),
+  saveCrawlerSettings: (body: CrawlerSettings) =>
+    http.put<CrawlerSettings>("/admin/settings/crawler", body),
   linkRewardSettings: () =>
     http.get<LinkRewardAdmin>("/admin/settings/link-reward"),
   saveLinkRewardSettings: (body: {
@@ -490,12 +475,6 @@ export const adminApi = {
   sepayConfig: () => http.get<SepayAdminConfig>("/admin/settings/sepay"),
   saveSepayConfig: (body: SepayForm) =>
     http.put<SepayAdminConfig>("/admin/settings/sepay", body),
-  crawlerConfig: () => http.get<CrawlerAdminConfig>("/admin/settings/crawler"),
-  saveCrawlerConfig: (body: CrawlerForm) =>
-    http.put<CrawlerAdminConfig>("/admin/settings/crawler", body),
-  // Đăng nhập FuOverflow bằng tài khoản đã lưu để lấy cookie mới
-  crawlerLogin: () =>
-    http.post<CrawlerAdminConfig>("/admin/settings/crawler/login"),
   aiConfig: () => http.get<AiAdminConfig>("/admin/settings/ai"),
   saveAiConfig: (body: AiForm) =>
     http.put<AiAdminConfig>("/admin/settings/ai", body),
