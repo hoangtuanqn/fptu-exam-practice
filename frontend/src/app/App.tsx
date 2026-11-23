@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { PanelLayout, type NavItem } from "@/shared/layout/PanelLayout";
 import { NAV_ICON } from "@/shared/layout/navIcons";
@@ -40,44 +40,83 @@ import { UserNoticeBell } from "@/features/notifications/UserNoticeBell";
 import { PageMeta } from "@/shared/seo/PageMeta";
 import { ScrollToTop } from "@/shared/layout/ScrollToTop";
 import { GoogleTagManager } from "@/shared/analytics/GoogleTagManager";
-const ChatWidget = lazy(() => import("@/features/chat/ChatWidget"));
+// Các trang lazy gom một chỗ để App tải sẵn khi trình duyệt rảnh (chuyển trang không phải chờ tải code)
+const routePages = {
+  ChatWidget: () => import("@/features/chat/ChatWidget"),
+  ClaimTurnPage: () => import("@/features/link-reward/ClaimTurnPage"),
+  PublicDepositPage: () => import("@/features/account/pages/PublicDepositPage"),
+  UnsubscribePage: () => import("@/features/marketing/UnsubscribePage"),
+  OverviewPage: () => import("@/features/account/pages/OverviewPage"),
+  DepositPage: () => import("@/features/account/pages/DepositPage"),
+  TransactionsPage: () => import("@/features/account/pages/TransactionsPage"),
+  ExamStorePage: () => import("@/features/exam-store/ExamStorePage"),
+  ReviewPage: () => import("@/features/review/ReviewPage"),
+  SavedPage: () => import("@/features/saved/SavedPage"),
+  ExamViewPage: () => import("@/features/exam-view/ExamViewPage"),
+  ExamPreviewPage: () => import("@/features/exam-preview/ExamPreviewPage"),
+  FetchLinkPage: () => import("@/features/exam-import/FetchLinkPage"),
+  SubjectPage: () => import("@/features/landing/SubjectPage"),
+  PublicCatalogPage: () => import("@/features/exam-store/PublicCatalogPage"),
+  FrequentPage: () => import("@/features/frequent/FrequentPage"),
+  FlashcardSubjectsPage: () => import("@/features/flashcard/FlashcardSubjectsPage"),
+  FlashcardSubjectPage: () => import("@/features/flashcard/FlashcardSubjectPage"),
+  MaterialsPage: () => import("@/features/materials/MaterialsPage"),
+  MaterialResultPage: () => import("@/features/materials/MaterialResultPage"),
+  ReviewPracticePage: () => import("@/features/review/ReviewPracticePage"),
+  ContributePage: () => import("@/features/exam-contribution/ContributePage"),
+  MyReportsPage: () => import("@/features/account/pages/MyReportsPage"),
+  ReferralPage: () => import("@/features/account/pages/ReferralPage"),
+  GiftCodePage: () => import("@/features/account/pages/GiftCodePage"),
+  FeaturesPage: () => import("@/features/landing/FeaturesPage"),
+  ChangelogPage: () => import("@/features/changelog/ChangelogPage"),
+  PlanPage: () => import("@/features/plan/PlanPage"),
+  GradesPage: () => import("@/features/grade/GradesPage"),
+  CourseraPage: () => import("@/features/coursera/CourseraPage"),
+  ProfilePage: () => import("@/features/account/pages/ProfilePage"),
+  NotificationsPage: () => import("@/features/notifications/NotificationsPage"),
+  AttemptsPage: () => import("@/features/history/pages/AttemptsPage"),
+  AttemptReviewPage: () => import("@/features/history/pages/AttemptReviewPage"),
+  AttemptDetailPage: () => import("@/features/history/pages/AttemptDetailPage"),
+};
+
+const ChatWidget = lazy(routePages.ChatWidget);
 // Thư viện thành phần M3 (chỉ khi chạy npm run dev)
 const M3Gallery = import.meta.env.DEV ? lazy(() => import("@/features/design-system/M3Gallery")) : null;
-const ClaimTurnPage = lazy(() => import("@/features/link-reward/ClaimTurnPage"));
-const PublicDepositPage = lazy(() => import("@/features/account/pages/PublicDepositPage"));
-const UnsubscribePage = lazy(() => import("@/features/marketing/UnsubscribePage"));
-const OverviewPage = lazy(() => import("@/features/account/pages/OverviewPage"));
-const DepositPage = lazy(() => import("@/features/account/pages/DepositPage"));
-const TransactionsPage = lazy(() => import("@/features/account/pages/TransactionsPage"));
-const ExamStorePage = lazy(() => import("@/features/exam-store/ExamStorePage"));
-const ReviewPage = lazy(() => import("@/features/review/ReviewPage"));
-const SavedPage = lazy(() => import("@/features/saved/SavedPage"));
-const ExamViewPage = lazy(() => import("@/features/exam-view/ExamViewPage"));
-const ExamPreviewPage = lazy(() => import("@/features/exam-preview/ExamPreviewPage"));
-const FetchLinkPage = lazy(() => import("@/features/exam-import/FetchLinkPage"));
-const SubjectPage = lazy(() => import("@/features/landing/SubjectPage"));
-const PublicCatalogPage = lazy(() => import("@/features/exam-store/PublicCatalogPage"));
-const FrequentPage = lazy(() => import("@/features/frequent/FrequentPage"));
-const FlashcardSubjectsPage = lazy(() => import("@/features/flashcard/FlashcardSubjectsPage"));
-const FlashcardSubjectPage = lazy(() => import("@/features/flashcard/FlashcardSubjectPage"));
-const MaterialsPage = lazy(() => import("@/features/materials/MaterialsPage"));
-const MaterialResultPage = lazy(() => import("@/features/materials/MaterialResultPage"));
-const ReviewPracticePage = lazy(() => import("@/features/review/ReviewPracticePage"));
-const ContributePage = lazy(() => import("@/features/exam-contribution/ContributePage"));
-const MyReportsPage = lazy(() => import("@/features/account/pages/MyReportsPage"));
-const ReferralPage = lazy(() => import("@/features/account/pages/ReferralPage"));
-const GiftCodePage = lazy(() => import("@/features/account/pages/GiftCodePage"));
-const FeaturesPage = lazy(() => import("@/features/landing/FeaturesPage"));
-const ChangelogPage = lazy(() => import("@/features/changelog/ChangelogPage"));
-const PlanPage = lazy(() => import("@/features/plan/PlanPage"));
-const GradesPage = lazy(() => import("@/features/grade/GradesPage"));
-const CourseraPage = lazy(() => import("@/features/coursera/CourseraPage"));
-const ProfilePage = lazy(() => import("@/features/account/pages/ProfilePage"));
-const NotificationsPage = lazy(() => import("@/features/notifications/NotificationsPage"));
+const ClaimTurnPage = lazy(routePages.ClaimTurnPage);
+const PublicDepositPage = lazy(routePages.PublicDepositPage);
+const UnsubscribePage = lazy(routePages.UnsubscribePage);
+const OverviewPage = lazy(routePages.OverviewPage);
+const DepositPage = lazy(routePages.DepositPage);
+const TransactionsPage = lazy(routePages.TransactionsPage);
+const ExamStorePage = lazy(routePages.ExamStorePage);
+const ReviewPage = lazy(routePages.ReviewPage);
+const SavedPage = lazy(routePages.SavedPage);
+const ExamViewPage = lazy(routePages.ExamViewPage);
+const ExamPreviewPage = lazy(routePages.ExamPreviewPage);
+const FetchLinkPage = lazy(routePages.FetchLinkPage);
+const SubjectPage = lazy(routePages.SubjectPage);
+const PublicCatalogPage = lazy(routePages.PublicCatalogPage);
+const FrequentPage = lazy(routePages.FrequentPage);
+const FlashcardSubjectsPage = lazy(routePages.FlashcardSubjectsPage);
+const FlashcardSubjectPage = lazy(routePages.FlashcardSubjectPage);
+const MaterialsPage = lazy(routePages.MaterialsPage);
+const MaterialResultPage = lazy(routePages.MaterialResultPage);
+const ReviewPracticePage = lazy(routePages.ReviewPracticePage);
+const ContributePage = lazy(routePages.ContributePage);
+const MyReportsPage = lazy(routePages.MyReportsPage);
+const ReferralPage = lazy(routePages.ReferralPage);
+const GiftCodePage = lazy(routePages.GiftCodePage);
+const FeaturesPage = lazy(routePages.FeaturesPage);
+const ChangelogPage = lazy(routePages.ChangelogPage);
+const PlanPage = lazy(routePages.PlanPage);
+const GradesPage = lazy(routePages.GradesPage);
+const CourseraPage = lazy(routePages.CourseraPage);
+const ProfilePage = lazy(routePages.ProfilePage);
+const NotificationsPage = lazy(routePages.NotificationsPage);
 
-const AttemptsPage = lazy(() => import("@/features/history/pages/AttemptsPage"));
-const AttemptReviewPage = lazy(() => import("@/features/history/pages/AttemptReviewPage"));
-const AttemptDetailPage = lazy(() => import("@/features/history/pages/AttemptDetailPage"));
+const AttemptsPage = lazy(routePages.AttemptsPage);
+const AttemptReviewPage = lazy(routePages.AttemptReviewPage);
+const AttemptDetailPage = lazy(routePages.AttemptDetailPage);
 
 // Thanh bên của người dùng, xếp theo việc người học làm: tìm và làm đề -> ôn tập -> xem kết quả -> ví và Pro -> hồ sơ
 const ACCOUNT_NAV: NavItem[] = [
@@ -108,6 +147,12 @@ function CatalogRedirect() {
 }
 
 export default function App() {
+  // Tải sẵn code các trang khi rảnh: bấm sang tab mới thì hiện ngay, không có khoảng trống chờ
+  useEffect(() => {
+    const run = () => Object.values(routePages).forEach((load) => void load());
+    const id = window.requestIdleCallback ? window.requestIdleCallback(run) : window.setTimeout(run, 1500);
+    return () => (window.cancelIdleCallback ? window.cancelIdleCallback(id) : clearTimeout(id));
+  }, []);
   return (
     <Suspense fallback={<PageSkeleton />}>
       <PageMeta />
