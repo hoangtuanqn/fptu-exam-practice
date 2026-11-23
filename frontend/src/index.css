@@ -44,6 +44,29 @@
   .theme-icon-in { animation: none; }
 }
 
+/* Nút đặc: dải sáng mờ quét qua khi rê chuột (nền gradient đặt trên màu nền, không đụng tới chữ) */
+.btn-sheen {
+  background-image: linear-gradient(105deg, transparent 40%, rgb(255 255 255 / 0.35) 50%, transparent 60%);
+  background-size: 250% 100%;
+  background-position: 130% 0;
+  background-repeat: no-repeat;
+  /* Liệt kê đủ thuộc tính của .md-motion, vì rule này đứng sau và sẽ ghi đè transition của nó */
+  transition:
+    background-position 0.9s ease,
+    background-color var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard),
+    color var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard),
+    border-color var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard),
+    box-shadow var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard),
+    transform var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+}
+.btn-sheen:hover:not(:disabled) {
+  background-position: -30% 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn-sheen { transition: none; }
+  .btn-sheen:hover:not(:disabled) { background-position: 130% 0; }
+}
+
 @theme {
   /* CẢ HỆ THỐNG CHỈ DÙNG INTER (nhúng từ Google Fonts trong index.html). Mọi họ phông đều trỏ về Inter: các class font-serif, font-display,
      font-mono cũ và thẻ <code>/<pre>/<kbd> (Tailwind mặc định dùng phông monospace) đều ra Inter. Không thêm phông khác (xem BRAND.md). */
