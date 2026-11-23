@@ -47,7 +47,7 @@ Bad: `update stuff`, `fix bug`, `Feat: Thêm tab mới`, `feat: add tab and fix 
 - One PR per branch, opened only when the task is done. Title follows the commit style (English). Body: 2-5 short English bullets (what, why, how it was verified, anything not verified).
 - Push with `git push -u origin HEAD`. Do not force-push shared branches.
 - Do not merge unless the user says to. When asked to merge several PRs, merge in dependency order and resolve conflicts by keeping both sides.
-- Never commit: `.env*`, exported data files (`fuo-catalog-*.json`, `flm-syllabus-*.json`), `.codegraph/`, build output, personal paths, IPs or keys.
+- Never commit: `.env*`, exported data files (`flm-syllabus-*.json`), `.codegraph/`, build output, personal paths, IPs or keys.
 
 ## 5. Checklist before every commit
 

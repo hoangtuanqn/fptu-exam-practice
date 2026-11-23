@@ -28,7 +28,7 @@ cd ~/app && bash deploy/backup-db.sh && bash deploy/deploy.sh
 
 If `deploy/nginx-api.conf` changed (e.g. the `/api/v1/exam-contributions` or admin exam upload `/api/v1/admin/exams/upload|<id>/images` body size), copy it to the nginx site, run `sudo nginx -t` and `sudo systemctl reload nginx`; otherwise these uploads still get 413 from nginx.
 
-### Destructive migrations (0078, 0079, 0080, 0081 and any later one marked DESTRUCTIVE)
+### Destructive migrations (0078, 0079, 0080, 0081, 0091 and any later one marked DESTRUCTIVE)
 
 `deploy.sh` migrates while the old build is still serving, and the old build writes the old (INT) ids into tables that are being converted. So for these migrations:
 
@@ -38,6 +38,7 @@ If `deploy/nginx-api.conf` changed (e.g. the `/api/v1/exam-contributions` or adm
 4. Ship the frontend zip right after the backend: the old frontend gets 422 from the new backend until it is replaced.
 5. If it fails half-way, do not re-run: restore the dump, follow the rollback notes in the header, redeploy the previous backend and frontend builds.
 
+`0091_drop_fuoverflow` drops the `fuo_*` tables: before it, `crawl_jobs` must have no QUEUED/RUNNING row (the worker that finished or refunded them was removed); see the migration header.
 `0082_fuo_source_urls` is NOT destructive (it only adds two tables), but it must be applied after 0081.
 `0084_exam_comments` is NOT destructive (it only adds the `exam_comments` table) and applies after 0083.
 
@@ -49,7 +50,7 @@ If `deploy/nginx-api.conf` changed (e.g. the `/api/v1/exam-contributions` or adm
 2. The user uploads the zip to the hosting and purges the Cloudflare cache. Claude does not do this.
 3. If `seo.subjects.json` should include new subjects, run `npm run export:subjects` in `backend` against a DB that has them, commit the file, then build.
 
-## Data imports (FuOverflow catalog, FLM syllabus)
+## Data imports (FLM syllabus)
 
 Follow `tools/HUONG-DAN.md`. Always `--dry-run` first, back up the DB before the real run, delete the temporary file from the VPS afterwards.
 

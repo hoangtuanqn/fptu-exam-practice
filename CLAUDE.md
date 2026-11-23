@@ -1,10 +1,10 @@
 # FEPass (practice-fe-fptu)
 
-Web app for FPT University students to practise FE exams: import exams from FuOverflow, AI answers/explanations, scoring, spaced-repetition review, topic reports, Pro plan, credit wallet.
+Web app for FPT University students to practise FE exams: exam bank, AI answers/explanations, scoring, spaced-repetition review, topic reports, Pro plan, credit wallet.
 
 - `backend/`: Express + Prisma (MySQL), PM2 on a VPS. Layers: `routes -> controllers -> services -> repositories -> prisma`, validators in `rules/requests`, shared pieces in `middlewares/`, `utils/`, `constants/`.
 - `frontend/`: React + Vite + Tailwind, Material 3 classes (`md-*`). One folder per feature in `src/features/<name>` (pages + `<name>.api.ts`), shared code in `src/shared` (`ui`, `hooks`, `api`, `utils`, `layout`). Alias `@/` = `src/`.
-- `tools/`: internal Chrome extensions (FuOverflow catalog, FLM syllabus) + `tools/HUONG-DAN.md`.
+- `tools/`: internal Chrome extensions (FLM syllabus) + `tools/HUONG-DAN.md`.
 - `deploy/`: VPS scripts. `chrome-extension/`: the public extension.
 
 ## Rules that always apply
