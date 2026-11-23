@@ -432,18 +432,19 @@ export const adminApi = {
       limit: PAGE_SIZE,
     }),
 
-  explanationFeedback: (page: number, helpful: "up" | "down" | "", resolved: ResolvedFilter = "") =>
-    http.list<ExplanationFeedbackAdmin>("/admin/explanation-feedback", { page, limit: PAGE_SIZE, helpful, resolved }),
+  explanationFeedback: (page: number, helpful: "up" | "down" | "", resolved: ResolvedFilter = "", q = "") =>
+    http.list<ExplanationFeedbackAdmin>("/admin/explanation-feedback", { page, limit: PAGE_SIZE, helpful, resolved, q }),
   resolveFeedback: (id: string) =>
     http.post<ExplanationFeedbackAdmin>(`/admin/explanation-feedback/${id}/resolve`),
   reviewCounts: () => http.get<ReviewCounts>("/admin/review-counts"),
   explanationFeedbackSummary: () => http.get<{ up: number; down: number }>("/admin/explanation-feedback/summary"),
-  answerReports: (page: number, status: ReportStatus | "", resolved: ResolvedFilter = "") =>
+  answerReports: (page: number, status: ReportStatus | "", resolved: ResolvedFilter = "", q = "") =>
     http.list<AnswerReportAdmin>("/admin/answer-reports", {
       page,
       limit: PAGE_SIZE,
       status,
       resolved,
+      q,
     }),
   approveReport: (id: string, body: { note?: string }) =>
     http.post<unknown>(`/admin/answer-reports/${id}/approve`, body),

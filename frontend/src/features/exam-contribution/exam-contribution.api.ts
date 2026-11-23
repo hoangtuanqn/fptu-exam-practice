@@ -41,7 +41,7 @@ export const contributionApi = {
   mine: (page = 1) => http.list<MyContribution>("/exam-contributions/mine", { page, limit: PAGE_SIZE }),
 
   // ----- Admin
-  list: (page: number, status: ContributionStatus | "") => http.list<AdminContribution>("/admin/exam-contributions", { page, limit: PAGE_SIZE, status }),
+  list: (page: number, status: ContributionStatus | "", q = "") => http.list<AdminContribution>("/admin/exam-contributions", { page, limit: PAGE_SIZE, status, q }),
   // Ảnh thứ `n` (đếm từ 1). Cần token admin nên hiển thị qua ProtectedImg (fetch có header rồi blob), không dùng thẳng làm src
   imageUrl: (id: string, n: number) => `${BASE}/admin/exam-contributions/${encodeURIComponent(id)}/images/${n}`,
   approve: (id: string, note?: string) => http.post(`/admin/exam-contributions/${encodeURIComponent(id)}/approve`, { note }),
