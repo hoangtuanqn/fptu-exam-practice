@@ -478,8 +478,8 @@ export const adminApi = {
   aiConfig: () => http.get<AiAdminConfig>("/admin/settings/ai"),
   saveAiConfig: (body: AiForm) =>
     http.put<AiAdminConfig>("/admin/settings/ai", body),
-  exams: (page: number) =>
-    http.list<AdminExam>("/admin/exams", { page, limit: PAGE_SIZE }),
+  exams: (page: number, filter: { q?: string; kind?: string; source?: string } = {}) =>
+    http.list<AdminExam>("/admin/exams", { page, limit: PAGE_SIZE, ...filter }),
   renameExam: (id: string, title: string) =>
     http.patch<ExamAdminDetail>(`/admin/exams/${id}`, { title }),
   deleteExam: (id: string) => http.delete(`/admin/exams/${id}`),
