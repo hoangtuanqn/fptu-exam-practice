@@ -20,6 +20,7 @@ import { fuoCatalogService } from "./fuo-catalog.service";
 const STATUSES: FuoSourceStatus[] = ["NEW", "QUEUED", "RUNNING", "DONE", "FAILED"];
 const noop = async () => undefined;
 const listeners: (() => void)[] = [];
+let stopping = false; // admin bấm "Dừng": worker không nhận đề mới, đề đang lấy xong thì lượt kết thúc
 const SCAN_SHOWN = ["RUNNING", "NEEDS_AUTH", "FAILED", "DONE"]; // lượt quét của "Load dữ liệu mới" hiện ở trang nguồn đề (đang chạy, dừng, hoặc kết quả lần gần nhất)
 
 const toRunDto = (run: FuoSourceRun, running: number) => ({
@@ -81,7 +82,7 @@ export const fuoSourceService = {
       subjectsWithNew, // tổng số môn có đề mới
       coolingDownUntil: scanRun.status === "RUNNING" && cooldownUntil > Date.now() ? new Date(cooldownUntil) : null, // FuOverflow đang hạn chế: tạm nghỉ tới lúc này
     };
-    return { run: latest ? toRunDto(latest, counts.RUNNING) : null, counts: { total, ...counts }, scan };
+    return { run: latest ? toRunDto(latest, counts.RUNNING) : null, counts: { total, ...counts }, scan, stopping };
   },
 
   /**
@@ -115,8 +116,10 @@ export const fuoSourceService = {
    * FUO_SOURCE_FETCH_MISSING_SINCE, vào danh sách link rồi xếp vào lượt nạp (lượt đang chạy, hoặc lượt mới). Chỉ lấy ảnh và bình luận,
    * không lấy bình luận, không nhờ AI (xem process).
    */
-  async fetchMissing(adminId: string, filter: ExamGapFilter) {
-    const threadIds = await examGapRepository.missingThreadIds(filter, FUO_SOURCE_FETCH_MISSING_SINCE);
+  async fetchMissing(adminId: string, filter: ExamGapFilter, pickedIds?: string[]) {
+    const missing = await examGapRepository.missingThreadIds(filter, FUO_SOURCE_FETCH_MISSING_SINCE);
+    const picked = pickedIds && new Set(pickedIds); // chỉ các đề admin đã tick (vẫn phải còn thiếu theo điều kiện trên)
+    const threadIds = picked ? missing.filter((id) => picked.has(id)) : missing;
     for (let i = 0; i < threadIds.length; i += FUO_SOURCE_INSERT_CHUNK) {
       await fuoSourceRepository.addMany(threadIds.slice(i, i + FUO_SOURCE_INSERT_CHUNK).map((threadId) => ({ threadId, url: threadUrl(threadId) })));
     }
@@ -128,14 +131,16 @@ export const fuoSourceService = {
   // Một link của lượt nạp. Lỗi đăng nhập FuOverflow (sau khi đã thử đăng nhập lại) được ném ra để worker dừng lượt.
   // `commentsAt`: lần gần nhất một lượt nạp đã lấy bình luận của thread (đề có sẵn chỉ lấy lại khi quá hạn hoặc có câu mới).
   // Thread chưa có đề: lượt nạp thường chỉ xếp link đã có đề (queueForRun), nên link chưa có đề chỉ đến từ fetchMissing. Lấy chậm,
-  // không AI (bulk), không tự đăng nhập lại khi bị 401/403: lỗi ném thẳng để worker dừng lượt ngay.
+  // không AI (bulk). Cookie hết hạn giữa chừng: đăng nhập lại bằng tài khoản đã lưu rồi chạy lại link (withSession),
+  // chỉ khi đăng nhập lại cũng không được thì lỗi mới ném ra để worker dừng lượt.
   process: async (threadId: string, createdById: string | null, commentsAt: Date | null) => {
     // Đề dở dang (lần bulk trước bị ngắt, vd. khởi động lại) cũng đi đường bulk; lượt thường chỉ xếp link có đề nên không bị ảnh hưởng
     const exam = await examRepository.findByThreadId(threadId);
     if (!exam || !(await examRepository.isComplete(exam))) {
-      await fuoSessionService.ensureCookie();
-      if (!(await crawlerSettingService.get()).cookie) throw new Error(FUO_AUTH_MESSAGE, { cause: new FuoAuthError("no cookie") });
-      const { examId } = await examImportService.run({ threadId, refresh: false, userId: createdById, bulk: true, noComments: true }, { onReady: noop, onStage: noop });
+      const { examId } = await fuoSessionService.withSession(async () => {
+        if (!(await crawlerSettingService.get()).cookie) throw new Error(FUO_AUTH_MESSAGE, { cause: new FuoAuthError("no cookie") });
+        return examImportService.run({ threadId, refresh: false, userId: createdById, bulk: true, noComments: true }, { onReady: noop, onStage: noop });
+      });
       return { examId, result: "IMPORTED" as const, addedQuestions: 0, commentsRefreshed: false };
     }
     return fuoSessionService.withSession(async () => {
@@ -145,6 +150,16 @@ export const fuoSourceService = {
       const { examId } = await examImportService.run({ threadId, refresh: false, userId: createdById }, { onReady: noop, onStage: noop });
       return { examId, result: "IMPORTED" as const, addedQuestions: 0, commentsRefreshed: true }; // lấy đề mới đã lấy cả bình luận
     });
+  },
+
+  // Dừng lượt sau khi đề đang lấy xong (không nhận đề mới). Không có lượt đang chạy thì không làm gì.
+  async stop() {
+    if (await fuoSourceRepository.findActiveRun()) stopping = true;
+    return this.status(); // status() đã có trường stopping
+  },
+  isStopping: () => stopping,
+  clearStop: () => {
+    stopping = false;
   },
 
   // Có job lấy đề của người dùng đang chờ/chạy: lượt nạp nhường FuOverflow cho họ

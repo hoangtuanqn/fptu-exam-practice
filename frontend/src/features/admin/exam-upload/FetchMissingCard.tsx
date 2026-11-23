@@ -4,10 +4,10 @@ import { Link } from "react-router-dom";
 import { errorMessage } from "@/shared/api/errors";
 import { useToast } from "@/shared/context/ToastContext";
 import { Button } from "@/shared/ui/Button";
-import { useConfirm } from "@/shared/ui/ConfirmDialog";
 import { LinearProgress, Spinner } from "@/shared/ui/Feedback";
 import { fuoSourcesApi } from "@/features/admin/fuo-sources/fuo-sources.api";
 import { useFuoSourcesStatus } from "@/features/admin/fuo-sources/useFuoSourcesStatus";
+import { FetchMissingPicker } from "./FetchMissingPicker";
 
 interface Props {
   noExam: number | undefined; // chỉ truyền ở tab "Chưa có đề": có số > 0 mới hiện nút; tiến độ thì hiện ở mọi tab
@@ -17,12 +17,12 @@ interface Props {
 
 const LINK = "md-label-large inline-flex min-h-10 items-center text-primary underline underline-offset-2";
 
-// Nút "Lấy tất cả đề chưa có" + tiến độ lượt lấy đề chạy nền (cập nhật qua realtime, mất kết nối thì hỏi định kỳ)
+// Nút "Lấy tất cả đề chưa có" mở popup chọn đề, rồi xếp vào lượt chạy nền; kèm tiến độ lượt (realtime, mất kết nối thì hỏi định kỳ)
 export function FetchMissingCard({ noExam, filters, onDone }: Props) {
   const toast = useToast();
-  const { confirm, confirmDialog } = useConfirm();
   const { status, set } = useFuoSourcesStatus();
   const [busy, setBusy] = useState(false);
+  const [picking, setPicking] = useState(false);
   const [startedHere, setStartedHere] = useState(false);
   const run = status?.run;
 
@@ -32,30 +32,11 @@ export function FetchMissingCard({ noExam, filters, onDone }: Props) {
     prev.current = run?.status;
   }, [run?.status, onDone]);
 
-  const fetchAll = async (ask: boolean) => {
-    if (
-      ask &&
-      !(await confirm({
-        title: "Lấy tất cả đề chưa có?",
-        tone: "primary",
-        icon: DownloadCloud,
-        confirmLabel: "Bắt đầu lấy",
-        message: (
-          <ul className="list-disc space-y-1 pl-5">
-            <li>Chỉ tải ảnh và tệp đính kèm của đề, không lấy bình luận, không gọi AI nên đề chưa có đáp án.</li>
-            <li>Chỉ lấy các đề đăng từ năm 2024 trở đi, nên số đề được xếp hàng có thể ít hơn số trên nút. Thông báo sau khi bấm sẽ cho biết số thật.</li>
-            <li>Chạy nền vài đề cùng lúc, vẫn nghỉ giữa các đề để không bị FuOverflow chặn. Hàng nghìn đề có thể mất nhiều giờ hoặc vài ngày.</li>
-            <li>Có thể đóng trang, việc lấy đề vẫn tiếp tục.</li>
-            <li>Cần cookie FuOverflow còn hạn trong cấu hình lấy đề.</li>
-          </ul>
-        ),
-      }))
-    )
-      return;
+  // threadIds: các đề đã tick; undefined = mọi đề còn thiếu theo bộ lọc (tiếp tục lượt dừng cũng dùng cách này)
+  const runFetch = async (threadIds?: string[]) => {
     setBusy(true);
     try {
-      // Tiếp tục cũng gửi bộ lọc hiện tại: link còn chờ của lượt dừng luôn được nhận lại, không nở thêm cả kho
-      const r = await fuoSourcesApi.fetchMissing(filters);
+      const r = await fuoSourcesApi.fetchMissing({ ...filters, ...(threadIds && { threadIds }) });
       set(r);
       setStartedHere(true);
       toast.success(
@@ -70,14 +51,36 @@ export function FetchMissingCard({ noExam, filters, onDone }: Props) {
 
   const showRun = run && (run.status !== "DONE" || startedHere);
   const finished = run ? run.done + run.failed : 0;
+  const stopping = !!status?.stopping;
+
+  const stopRun = async () => {
+    try {
+      const r = await fuoSourcesApi.stop();
+      set(r);
+      toast.success(r.stopping ? "Sẽ dừng sau khi đề đang lấy xong" : "Không có lượt nào đang chạy");
+    } catch (err) {
+      toast.error(errorMessage(err, "Chưa dừng được lượt, thử lại sau"));
+    }
+  };
 
   return (
     <>
       {!!noExam && noExam > 0 && (
-        <Button variant="primary" onClick={() => void fetchAll(true)} disabled={busy}>
+        <Button variant="primary" onClick={() => setPicking(true)} disabled={busy}>
           {busy ? <Spinner size={18} className="text-current" /> : <DownloadCloud size={18} aria-hidden />}
           Lấy tất cả đề chưa có ({noExam.toLocaleString("vi-VN")})
         </Button>
+      )}
+      {picking && (
+        <FetchMissingPicker
+          filters={filters}
+          busy={busy}
+          onClose={() => setPicking(false)}
+          onStart={(threadIds) => {
+            setPicking(false);
+            void runFetch(threadIds);
+          }}
+        />
       )}
       {showRun && (
         <div className="space-y-2 rounded-m3-sm bg-surface-container-high px-4 py-3">
@@ -85,6 +88,13 @@ export function FetchMissingCard({ noExam, filters, onDone }: Props) {
           <p aria-live="polite" className="md-body-medium tabular-nums text-on-surface">
             {run.status === "DONE" ? "Đã lấy xong" : run.status === "RUNNING" ? "Đang lấy đề" : "Tạm dừng"}: {finished}/{run.total} đề · {run.imported} đề mới · {run.failed} lỗi
           </p>
+          {run.status === "RUNNING" && (
+            <div className="flex flex-wrap items-center gap-3">
+              <Button size="sm" variant="outlined" onClick={() => void stopRun()} disabled={stopping}>
+                {stopping ? "Đang chờ đề hiện tại xong rồi dừng" : "Dừng sau đề hiện tại"}
+              </Button>
+            </div>
+          )}
           {run.status === "NEEDS_AUTH" && (
             <div role="alert" className="md-body-medium space-y-2 rounded-m3-sm bg-error-container px-4 py-3 text-on-error-container">
               <p>{run.lastError || "Tạm dừng vì đăng nhập FuOverflow lỗi hoặc FuOverflow đang hạn chế truy cập."}</p>
@@ -93,7 +103,7 @@ export function FetchMissingCard({ noExam, filters, onDone }: Props) {
                 <Link to="/admin/crawler" className={LINK}>
                   Mở cấu hình lấy đề
                 </Link>
-                <Button size="sm" variant="primary" onClick={() => void fetchAll(false)} disabled={busy}>
+                <Button size="sm" variant="primary" onClick={() => void runFetch()} disabled={busy}>
                   Tiếp tục
                 </Button>
               </div>
@@ -104,7 +114,6 @@ export function FetchMissingCard({ noExam, filters, onDone }: Props) {
           </Link>
         </div>
       )}
-      {confirmDialog}
     </>
   );
 }

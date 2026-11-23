@@ -1,8 +1,7 @@
 import type { Request, Response } from "express";
 import { HTTP_STATUS } from "../constants/httpStatus";
 import { getValidated } from "../middlewares/validate.middlewares";
-import type { ExamGapFilter } from "../rules/requests/exam-upload.request";
-import type { AddFuoSourcesBody, ListFuoSourcesQuery } from "../rules/requests/fuo-source.request";
+import type { AddFuoSourcesBody, FetchMissingBody, ListFuoSourcesQuery } from "../rules/requests/fuo-source.request";
 import { ResponseClient } from "../rules/response";
 import { fuoSourceService } from "../services/fuo-source.service";
 
@@ -30,8 +29,15 @@ export const adminFuoSourceController = {
 
   // "Lấy hết đề còn thiếu": trả về ngay (202), lượt nạp chạy nền
   async fetchMissing(req: Request, res: Response) {
-    const data = await fuoSourceService.fetchMissing(req.user!.id, getValidated<ExamGapFilter>(res));
+    const { threadIds, ...filter } = getValidated<FetchMissingBody>(res);
+    const data = await fuoSourceService.fetchMissing(req.user!.id, filter, threadIds);
     const message = data.started ? `Đã bắt đầu lấy ${data.queued} đề còn thiếu` : data.queued ? `Đã thêm ${data.queued} đề vào lượt nạp đang chạy` : "Không có đề nào cần lấy thêm";
     res.status(HTTP_STATUS.ACCEPTED).json(new ResponseClient({ message, data }));
+  },
+
+  // Dừng lượt sau khi đề đang lấy xong
+  async stop(_req: Request, res: Response) {
+    const data = await fuoSourceService.stop();
+    res.json(new ResponseClient({ message: data.stopping ? "Sẽ dừng sau khi đề đang lấy xong" : "Không có lượt nào đang chạy", data }));
   },
 };

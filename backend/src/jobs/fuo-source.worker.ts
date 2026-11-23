@@ -22,7 +22,7 @@ async function runOnce(run: { id: string; createdById: string | null }) {
   let authError: string | null = null; // lỗi đăng nhập hoặc 429 (FuOverflow giới hạn): dừng lượt ngay
   let rateLimited = false;
   const work = async () => {
-    while (!authError) {
+    while (!authError && !fuoSourceService.isStopping()) {
       // Người dùng đang chờ lấy đề: nhường FuOverflow cho họ, chưa nhận link mới (link chưa nhận vẫn QUEUED)
       if (await fuoSourceService.userImportsWaiting()) {
         await sleep(FUO_SOURCE_BUSY_WAIT_MS);
@@ -45,12 +45,14 @@ async function runOnce(run: { id: string; createdById: string | null }) {
         }
       }
       publish();
-      if (!authError) await sleep(FUO_SOURCE_PAUSE_MS);
+      if (!authError && !fuoSourceService.isStopping()) await sleep(FUO_SOURCE_PAUSE_MS);
     }
   };
   await Promise.all(Array.from({ length: FUO_SOURCE_CONCURRENCY }, work));
 
-  const done = await fuoSourceRepository.finishRun(run.id, authError ? "NEEDS_AUTH" : "DONE", authError ?? undefined);
+  const stopped = fuoSourceService.isStopping();
+  const done = await fuoSourceRepository.finishRun(run.id, authError ? "NEEDS_AUTH" : "DONE", authError ?? (stopped ? "Đã dừng theo yêu cầu của admin" : undefined), stopped);
+  fuoSourceService.clearStop();
   if (!done) return; // có link vừa được xếp vào lượt: lượt vẫn chạy, drain gọi lại runOnce
   publish();
   console.log(`[fuo-source] lượt ${run.id} ${done.status}: ${done.done}/${done.total} xong (${done.imported} mới, ${done.updated} cập nhật), ${done.failed} lỗi`);
