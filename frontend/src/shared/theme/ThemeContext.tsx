@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { flushSync } from "react-dom";
 
 // Chủ đề giao diện: "system" theo prefers-color-scheme của hệ điều hành, hoặc ép "light" / "dark". Lưu ở trình duyệt.
 export type ThemeMode = "system" | "light" | "dark";
@@ -8,8 +9,11 @@ interface ThemeApi {
   mode: ThemeMode;
   /** Chủ đề đang hiển thị thực tế (đã giải quyết "system") */
   resolved: "light" | "dark";
-  setMode: (m: ThemeMode) => void;
+  /** origin: vị trí nút bấm (clientX/clientY) để nền mới lan tròn từ đó */
+  setMode: (m: ThemeMode, origin?: { x: number; y: number }) => void;
 }
+
+type VTDocument = Document & { startViewTransition?: (cb: () => void) => { ready: Promise<void> } };
 
 const ThemeContext = createContext<ThemeApi | null>(null);
 
@@ -46,14 +50,33 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return () => mq.removeEventListener("change", on);
   }, []);
 
-  const setMode = useCallback((m: ThemeMode) => {
+  const setMode = useCallback((m: ThemeMode, origin?: { x: number; y: number }) => {
     try {
       if (m === "system") localStorage.removeItem(KEY);
       else localStorage.setItem(KEY, m);
     } catch {
       /* trình duyệt chặn lưu trữ: vẫn đổi được cho phiên hiện tại */
     }
-    setModeState(m);
+    const doc = document as VTDocument;
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (!doc.startViewTransition || reduce || !origin) {
+      setModeState(m);
+      return;
+    }
+    // Chụp ảnh màn cũ, đổi chủ đề, rồi vòng tròn mới mở rộng từ nút bấm ra toàn màn hình
+    const t = doc.startViewTransition(() => {
+      flushSync(() => {
+        apply(m);
+        setModeState(m);
+      });
+    });
+    t.ready.then(() => {
+      const r = Math.hypot(Math.max(origin.x, innerWidth - origin.x), Math.max(origin.y, innerHeight - origin.y));
+      document.documentElement.animate(
+        { clipPath: [`circle(0px at ${origin.x}px ${origin.y}px)`, `circle(${r}px at ${origin.x}px ${origin.y}px)`] },
+        { duration: 650, easing: "cubic-bezier(0.4, 0, 0.2, 1)", pseudoElement: "::view-transition-new(root)" }
+      );
+    });
   }, []);
 
   const value = useMemo<ThemeApi>(() => ({ mode, resolved: mode === "system" ? (sysDark ? "dark" : "light") : mode, setMode }), [mode, sysDark, setMode]);
