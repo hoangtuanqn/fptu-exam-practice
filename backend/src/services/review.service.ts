@@ -7,6 +7,7 @@ import { toMeta, toSkipTake, type PaginationQuery } from "../utils/pagination";
 import { subjectCodeFromTitle } from "../utils/subject-code";
 import { afterCorrect, afterWrong, doubtfulStart, sameAnswers } from "../utils/review-schedule";
 import type { GradedQuestion } from "./grading.service";
+import { badgeService } from "./badge.service";
 import { studyService } from "./study.service";
 
 // Chỉ ôn những câu của đề đã có đáp án chắc chắn (AI giải xong hoặc chỉnh tay); đề đang chờ AI hay lỗi thì chưa chấm được
@@ -155,6 +156,7 @@ export const reviewService = {
     else data = { lastReviewedAt: now }; // đúng nhưng chưa đến hạn (ôn thêm): giữ nguyên lịch
     const updated = await prisma.reviewItem.update({ where: { id }, data });
     await studyService.bump(userId, { reviews: 1 }).catch(() => undefined);
+    void badgeService.evaluateThrottled(userId);
     return { correct, correctAnswers, box: updated.box, mastered: updated.mastered, nextReviewAt: updated.nextReviewAt };
   },
 

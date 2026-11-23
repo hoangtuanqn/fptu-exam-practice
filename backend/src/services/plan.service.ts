@@ -11,6 +11,7 @@ import { AppError } from "../rules/error";
 import { isProUntil } from "../utils/pro";
 import { DAY_MS, vnDate } from "../utils/time";
 import { adminNoticeService } from "./admin-notice.service";
+import { badgeService } from "./badge.service";
 import { notificationService } from "./notification.service";
 import { promoSettingService } from "./promo-setting.service";
 import { walletService } from "./wallet.service";
@@ -140,6 +141,7 @@ export const planService = {
     });
     notificationService.proPurchased({ userId, planName: plan.name, duration, price, renewed: result.renewed, expiresAt: result.proExpiresAt, balanceAfter: result.balanceAfter });
     userCache.invalidate(userId); // đã commit: lần xác thực sau thấy ngay gói Pro mới
+    void badgeService.evaluate(userId);
     adminNoticeService.push("plan.purchased", { title: `${result.renewed ? "Gia hạn" : "Mua"} gói ${plan.name} ${duration}`, body: `${price.toLocaleString("vi-VN")} credit`, userId, link: "/admin/purchases" });
     return { ...result, user: await userRepository.findById(userId) };
   },
@@ -188,6 +190,7 @@ export const planService = {
       return extendPro(tx, userId, ticket.plan as PlanCode, ticket.price, now);
     });
     userCache.invalidate(userId);
+    void badgeService.evaluate(userId);
     return { ...result, user: await userRepository.findById(userId) };
   },
 

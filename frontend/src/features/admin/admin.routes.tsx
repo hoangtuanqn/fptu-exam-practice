@@ -1,6 +1,6 @@
 import { lazy } from "react";
 import { Navigate, Route } from "react-router-dom";
-import { BellRing, BookMarked, Link2, MailPlus, Activity, ShieldCheck as QualityIcon, MessagesSquare, ShoppingBag, Megaphone, Bot, ClipboardList, FileText, FileUp, FolderSearch, History, SlidersHorizontal, Wallet, Gift, ImageUp, MessageSquareWarning, UserPlus, Landmark, LayoutDashboard, Radio, Receipt, Settings, ThumbsUp, Users } from "lucide-react";
+import { Award, BellRing, BookMarked, Link2, MailPlus, Activity, ShieldCheck as QualityIcon, MessagesSquare, ShoppingBag, Megaphone, Bot, ClipboardList, FileText, FileUp, FolderSearch, History, SlidersHorizontal, Wallet, Gift, ImageUp, MessageSquareWarning, UserPlus, Landmark, LayoutDashboard, Radio, Receipt, Settings, ThumbsUp, Users } from "lucide-react";
 import type { NavItem } from "@/shared/layout/PanelLayout";
 
 /**
@@ -43,6 +43,7 @@ const OnlinePage = lazy(() => import("./users/OnlinePage"));
 const FunnelPage = lazy(() => import("./insights/FunnelPage"));
 const QualityPage = lazy(() => import("./insights/QualityPage"));
 const MarketingPage = lazy(() => import("./marketing/MarketingPage"));
+const AdminBadgesPage = lazy(() => import("./badges/AdminBadgesPage"));
 
 export const ADMIN_NAV: NavItem[] = [
   { to: "/admin", label: "Tổng quan", icon: LayoutDashboard, end: true, group: "Chung" },
@@ -51,6 +52,7 @@ export const ADMIN_NAV: NavItem[] = [
   { to: "/admin/referrals", label: "Giới thiệu", icon: UserPlus, group: "Người dùng" },
   { to: "/admin/account-settings", label: "Cấu hình đăng ký", icon: SlidersHorizontal, group: "Người dùng" },
   { to: "/admin/attempts", label: "Lịch sử làm bài", icon: ClipboardList, group: "Người dùng" },
+  { to: "/admin/badges", label: "Huy hiệu", icon: Award, group: "Người dùng" },
   { to: "/admin/deposits", label: "Lệnh nạp tiền", icon: Receipt, group: "Tài chính" },
   { to: "/admin/bank-transactions", label: "Giao dịch ngân hàng", icon: Landmark, group: "Tài chính" },
   { to: "/admin/wallet", label: "Biến động số dư", icon: Wallet, group: "Tài chính" },
@@ -96,6 +98,7 @@ export const adminRoutes = (
     <Route path="wallet" element={<WalletHistoryPage />} />
     <Route path="crawl-jobs" element={<CrawlJobsPage />} />
     <Route path="attempts" element={<AttemptsPage />} />
+    <Route path="badges" element={<AdminBadgesPage />} />
     <Route path="deposits" element={<DepositsPage />} />
     <Route path="bank-transactions" element={<BankTransactionsPage />} />
     <Route path="gift-codes" element={<GiftCodesPage />} />

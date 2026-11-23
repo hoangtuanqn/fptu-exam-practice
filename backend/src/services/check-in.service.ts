@@ -4,6 +4,7 @@ import { CHECKIN_BONUS, CHECKIN_CYCLE_DAYS, CHECKIN_DAILY } from "../constants/c
 import type { Db } from "../repositories/wallet.repository";
 import { AppError } from "../rules/error";
 import { DAY_MS, vnDate } from "../utils/time";
+import { badgeService } from "./badge.service";
 import { walletService } from "./wallet.service";
 
 // Credit nhận được ở ngày thứ `cycleDay` của vòng (ngày cuối vòng có thêm thưởng chuỗi)
@@ -46,7 +47,7 @@ export const checkInService = {
   /** Nhận thưởng hôm nay. Mỗi ngày một lần (ràng buộc duy nhất userId + ngày chặn cả khi bấm hai lần cùng lúc). */
   async claim(userId: string) {
     try {
-      return await prisma.$transaction(async (tx) => {
+      const result = await prisma.$transaction(async (tx) => {
         const { today, claimedToday, streak, cycleDay } = await snapshot(userId, tx);
         if (claimedToday) throw AppError.conflict("Hôm nay bạn đã điểm danh rồi, qua 0h quay lại nhé");
         const amount = rewardOf(cycleDay);
@@ -66,6 +67,8 @@ export const checkInService = {
           balanceAfter: entry.balanceAfter,
         };
       });
+      void badgeService.evaluate(userId);
+      return result;
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") throw AppError.conflict("Hôm nay bạn đã điểm danh rồi, qua 0h quay lại nhé");
       throw err;

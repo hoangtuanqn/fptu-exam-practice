@@ -1,4 +1,5 @@
 import { adminNoticeService } from "./admin-notice.service";
+import { badgeService } from "./badge.service";
 import { examAttemptRepository } from "../repositories/exam-attempt.repository";
 import { EXAM_NOT_FOUND, NO_QUESTIONS_MESSAGE } from "../constants/exam";
 import { examRepository } from "../repositories/exam.repository";
@@ -46,6 +47,7 @@ export const attemptService = {
     // Sổ câu sai và chuỗi ngày học: việc phụ, lỗi ở đây không được làm mất bài đã nộp
     const userId = actor.owner.userId;
     adminNoticeService.push("attempt.finished", { title: "Nộp bài: {exam}", examId, body: `${grade.correct}/${grade.totalGraded} câu đúng, điểm ${grade.score}`, userId, link: "/admin/attempts" });
+    void badgeService.evaluate(userId);
     let review = { added: 0, capped: 0 };
     try {
       review = await reviewService.recordAttempt(userId, examId, grade.items, body.flagged ?? [], !!perks.unlimitedReview);

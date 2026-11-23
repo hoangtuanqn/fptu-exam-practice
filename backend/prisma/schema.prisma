@@ -79,6 +79,7 @@ model User {
   examComments       ExamComment[]
   examContributions  ExamContribution[]
   userNotices        UserNotice[]
+  badges             UserBadge[]
   referredBy         User?                @relation("Referral", fields: [referredById], references: [id], onDelete: SetNull)
   referrals          User[]               @relation("Referral")
   rewardsAsReferrer  ReferralReward[]     @relation("RewardReferrer")
@@ -1459,4 +1460,21 @@ model ExamContribution {
   @@index([status, createdAt]) // admin queue and pending badge
   @@index([userId, createdAt]) // "my contributions" and the pending limit per user
   @@map("exam_contributions")
+}
+
+// Learner badges: catalog lives in src/constants/badges.ts, this table keeps only the earned state.
+// tier = highest tier reached (1..3), never lowered. The unique key also serves lookups by user.
+model UserBadge {
+  id            Int      @id @default(autoincrement())
+  userId        String   @map("user_id") @db.Char(36)
+  badgeKey      String   @map("badge_key") @db.VarChar(40)
+  tier          Int      @db.TinyInt
+  pinned        Boolean  @default(false) // shown on the user's own profile (max 3, checked in the service)
+  earnedAt      DateTime @default(now()) @map("earned_at")
+  tierUpdatedAt DateTime @default(now()) @map("tier_updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeKey])
+  @@map("user_badges")
 }

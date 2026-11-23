@@ -5,6 +5,7 @@ import { reviewApi } from "@/features/review/review.api";
 import { ReadinessCard } from "@/features/review/ReadinessCard";
 import { StudyStreakCard } from "@/features/review/StudyStreakCard";
 import { userApi } from "@/features/account/api/user.api";
+import { PinnedBadges } from "@/features/badges/PinnedBadges";
 import { TransactionTable } from "@/features/account/components/TransactionTable";
 import { useAuth } from "@/features/auth/AuthContext";
 import { ResumeList } from "@/features/practice-session/ResumeList";
@@ -76,6 +77,7 @@ export default function OverviewPage() {
             Xin chào, <span className="marker">{user.fullName}</span>
           </h1>
           {facts.length > 0 && <p className="md-body-medium mt-1.5 text-on-surface-variant">{facts.join(" · ")}</p>}
+          <PinnedBadges />
         </div>
         <Link to="/" className={buttonClass({ variant: "primary", className: "medium:hidden" })}>
           <PenLine size={16} /> Vào luyện đề

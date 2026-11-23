@@ -5,6 +5,7 @@ import { AppError } from "../rules/error";
 import { isMember, type Actor } from "../utils/actor";
 import { fileUrlOf } from "../utils/file-url";
 import { emptyStoredCard, ratingFromResult, scheduleReview, type Grade } from "../utils/fsrs";
+import { badgeService } from "./badge.service";
 import { examService } from "./exam.service";
 
 // Lịch ôn FSRS theo từng câu (bảng user_question_cards), tách biệt với Sổ câu sai Leitner (review.service).
@@ -27,7 +28,7 @@ export const fsrsReviewService = {
     if (!question || question.isReference || !USABLE.has(question.exam.answerSource)) throw AppError.notFound("Không tìm thấy câu hỏi");
     await examService.assertAccess(actor, question.examId); // đề ngoài kho của mình: 404 như mọi API đề khác
 
-    return fsrsCardRepository.review(userId, questionId, emptyStoredCard(now), (current) => {
+    const result = await fsrsCardRepository.review(userId, questionId, emptyStoredCard(now), (current) => {
       const { card, log } = scheduleReview(current, rating, now);
       return {
         card,
@@ -46,6 +47,8 @@ export const fsrsReviewService = {
         result: { questionId, rating, due: card.due, state: card.state, scheduledDays: card.scheduledDays, reps: card.reps, lapses: card.lapses },
       };
     });
+    void badgeService.evaluateThrottled(userId);
+    return result;
   },
 
   /** Body của POST /reviews: có `rating` thì dùng luôn, có `correct` + `seconds` thì suy ra mức nhớ. */

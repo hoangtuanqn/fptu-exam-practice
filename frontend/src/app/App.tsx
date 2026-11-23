@@ -74,6 +74,7 @@ const routePages = {
   GradesPage: () => import("@/features/grade/GradesPage"),
   CourseraPage: () => import("@/features/coursera/CourseraPage"),
   ProfilePage: () => import("@/features/account/pages/ProfilePage"),
+  BadgesPage: () => import("@/features/badges/BadgesPage"),
   NotificationsPage: () => import("@/features/notifications/NotificationsPage"),
   AttemptsPage: () => import("@/features/history/pages/AttemptsPage"),
   AttemptReviewPage: () => import("@/features/history/pages/AttemptReviewPage"),
@@ -112,6 +113,7 @@ const PlanPage = lazy(routePages.PlanPage);
 const GradesPage = lazy(routePages.GradesPage);
 const CourseraPage = lazy(routePages.CourseraPage);
 const ProfilePage = lazy(routePages.ProfilePage);
+const BadgesPage = lazy(routePages.BadgesPage);
 const NotificationsPage = lazy(routePages.NotificationsPage);
 
 const AttemptsPage = lazy(routePages.AttemptsPage);
@@ -136,6 +138,7 @@ const ACCOUNT_NAV: NavItem[] = [
   { to: "/account/giftcode", label: "Mã quà tặng", icon: NAV_ICON.giftcode, group: "Ưu đãi" },
   { to: "/account/referral", label: "Giới thiệu bạn bè", icon: NAV_ICON.referral, group: "Ưu đãi" },
   { to: "/account/coursera", label: "Đặt đơn Coursera", icon: NAV_ICON.coursera, group: "Dịch vụ" },
+  { to: "/account/badges", label: "Huy hiệu", icon: NAV_ICON.badges, group: "Tài khoản" },
   { to: "/account/profile", label: "Hồ sơ", icon: NAV_ICON.profile, group: "Tài khoản" },
 ];
 
@@ -242,6 +245,7 @@ export default function App() {
             <Route path="nhan-luot" element={<ClaimTurnPage />} />
             <Route path="coursera" element={<CourseraPage />} />
             <Route path="profile" element={<ProfilePage />} />
+            <Route path="badges" element={<BadgesPage />} />
             <Route path="notifications" element={<NotificationsPage />} />
           </Route>
         </Route>

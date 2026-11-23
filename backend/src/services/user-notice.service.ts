@@ -5,7 +5,9 @@ import {
   USER_NOTICE_KEEP_READ_DAYS,
   USER_NOTICE_KEEP_UNREAD_DAYS,
   USER_NOTICE_PUSH_CHECK_MS,
+  type UserNoticeLevel,
 } from "../constants/user-notice";
+import { prisma } from "../configs/prisma";
 import { realtimeHub } from "../realtime/hub";
 import { userNoticeRepository, type UserNoticeRow } from "../repositories/user-notice.repository";
 import type { Db } from "../repositories/wallet.repository";
@@ -47,6 +49,13 @@ export const userNoticeService = {
       console.error("[user-notice] không ghi được thông báo ví", entry.userId, entry.type, (err as Error).message);
       return null;
     }
+  },
+
+  /** Thông báo lẻ cho một người, ghi ngoài transaction (đã commit nên đẩy realtime ngay). */
+  async notify(userId: string, data: { kind: string; level: UserNoticeLevel; title: string; body?: string | null; link?: string | null }) {
+    const row = await userNoticeRepository.create(prisma, userId, data);
+    pushAfterCommit(prisma, userId, row);
+    return row;
   },
 
   async list(userId: string, query: PaginationQuery) {

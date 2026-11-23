@@ -35,5 +35,6 @@ export const NAV_ICON = {
   referral: img("referral"),
   coursera: img("coursera"),
   profile: img("profile"),
+  badges: img("badges"),
   home: img("home"),
 } as const;

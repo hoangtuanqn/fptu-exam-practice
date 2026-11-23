@@ -56,4 +56,6 @@ export const examContributionRepository = {
   },
 
   countPending: () => prisma.examContribution.count({ where: { status: "PENDING" } }),
+
+  findUserId: (id: string) => prisma.examContribution.findUnique({ where: { id }, select: { userId: true } }),
 };

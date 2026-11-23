@@ -6,6 +6,7 @@ import { signToken } from "../utils/jwt";
 import { hashPassword } from "../utils/password";
 import { accountSettingService } from "./account-setting.service";
 import { avatarService } from "./avatar.service";
+import { badgeService } from "./badge.service";
 import { adminNoticeService } from "./admin-notice.service";
 import { notificationService } from "./notification.service";
 import { referralService } from "./referral.service";
@@ -95,6 +96,7 @@ export const socialAuthService = {
     notificationService.welcome(user);
     adminNoticeService.push("user.registered", { title: "Tài khoản mới đăng ký", body: `Đăng ký bằng ${profile.provider === "google" ? "Google" : "GitHub"}`, userId: user.id, link: `/admin/users/${user.id}` });
     referralService.notify(notices);
+    void badgeService.evaluateWithReferrer(user.id); // tài khoản mạng xã hội đã xác minh email ngay khi tạo
     await adoptPicture(user.id, profile.provider, profile.picture);
     return { token: signToken(user.id), user: (await userRepository.findById(user.id)) ?? user, created: true };
   },
