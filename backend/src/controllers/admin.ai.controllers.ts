@@ -1,12 +1,11 @@
 import type { Request, Response } from "express";
 import { HTTP_STATUS } from "../constants/httpStatus";
 import { getValidated } from "../middlewares/validate.middlewares";
-import type { QuestionParam, RenameExamBody, UpdateExamQuestionsBody, UuidParam } from "../rules/requests/admin.request";
+import type { ListAdminExamsQuery, QuestionParam, RenameExamBody, UpdateExamQuestionsBody, UuidParam } from "../rules/requests/admin.request";
 import type { UpdateAiBody } from "../rules/requests/setting.request";
 import { ResponseClient } from "../rules/response";
 import { adminExamService } from "../services/admin.exam.service";
 import { aiSettingService } from "../services/ai-setting.service";
-import type { PaginationQuery } from "../utils/pagination";
 
 export const adminAiController = {
   async getSettings(_req: Request, res: Response) {
@@ -19,7 +18,7 @@ export const adminAiController = {
   },
 
   async listExams(_req: Request, res: Response) {
-    const { items, meta } = await adminExamService.list(getValidated<PaginationQuery>(res, "query"));
+    const { items, meta } = await adminExamService.list(getValidated<ListAdminExamsQuery>(res, "query"));
     res.json(new ResponseClient({ data: items, meta }));
   },
 

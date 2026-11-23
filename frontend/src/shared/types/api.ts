@@ -104,6 +104,8 @@ export interface AdminExam {
   threadId: string;
   totalQuestions: number;
   answerSource: AnswerSource;
+  kind?: "FE" | "PE" | "QUIZ" | "OTHER" | null;
+  subjectCode?: string | null;
   createdAt: string;
   solving: boolean; // AI đang giải lại
   solveError: string | null; // lần giải lại gần nhất bị lỗi
