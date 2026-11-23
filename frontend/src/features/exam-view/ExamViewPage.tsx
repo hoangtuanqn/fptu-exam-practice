@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { FileSearch, Play } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
-import { examImportApi } from "@/features/exam-import/exam-import.api";
-import { isFilesOnly, type ExamQuestionsPayload, type ImportedExam } from "@/features/exam-import/types";
+import { examApi } from "@/features/exam/exam.api";
+import { isFilesOnly, type ExamQuestionsPayload, type ImportedExam } from "@/features/exam/types";
 import { AttachmentList } from "@/features/exam-attachments/AttachmentList";
 import { LoadingMoreBanner } from "@/features/practice/components/quiz/LoadingMoreBanner";
 import { useExamAttachmentsLive } from "@/features/practice/hooks/useExamAttachmentsLive";
@@ -44,7 +44,7 @@ export default function ExamViewPage() {
   const query = useApi(async () => {
     if (!valid) return { exam: null };
     try {
-      return { exam: await examImportApi.exam(examId) };
+      return { exam: await examApi.exam(examId) };
     } catch (err) {
       if (err instanceof ApiError && err.status === 404) return { exam: null };
       throw err;

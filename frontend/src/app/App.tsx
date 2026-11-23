@@ -56,7 +56,6 @@ const routePages = {
   SavedPage: () => import("@/features/saved/SavedPage"),
   ExamViewPage: () => import("@/features/exam-view/ExamViewPage"),
   ExamPreviewPage: () => import("@/features/exam-preview/ExamPreviewPage"),
-  FetchLinkPage: () => import("@/features/exam-import/FetchLinkPage"),
   SubjectPage: () => import("@/features/landing/SubjectPage"),
   PublicCatalogPage: () => import("@/features/exam-store/PublicCatalogPage"),
   FrequentPage: () => import("@/features/frequent/FrequentPage"),
@@ -95,7 +94,6 @@ const ReviewPage = lazy(routePages.ReviewPage);
 const SavedPage = lazy(routePages.SavedPage);
 const ExamViewPage = lazy(routePages.ExamViewPage);
 const ExamPreviewPage = lazy(routePages.ExamPreviewPage);
-const FetchLinkPage = lazy(routePages.FetchLinkPage);
 const SubjectPage = lazy(routePages.SubjectPage);
 const PublicCatalogPage = lazy(routePages.PublicCatalogPage);
 const FrequentPage = lazy(routePages.FrequentPage);
@@ -217,8 +215,8 @@ export default function App() {
         <Route path="/unsubscribe" element={<UnsubscribePage />} />
 
         <Route element={<RequireAuth />}>
-          {/* Nút Làm đề / Tải đề PE của tiện ích Chrome mở trang này */}
-          <Route path="/fetch" element={<FetchLinkPage />} />
+          {/* Đường dẫn cũ của tiện ích Chrome: đưa về Kho đề */}
+          <Route path="/fetch" element={<Navigate to="/account/exams" replace />} />
           <Route path="/account" element={<PanelLayout title="Tài khoản" items={ACCOUNT_NAV} notice={<AccountPromoBar />} actions={<UserNoticeBell />} bottomNav />}>
             <Route index element={<OverviewPage />} />
             <Route path="attempts" element={<AttemptsPage />} />

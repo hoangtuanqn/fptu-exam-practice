@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { BookOpen, Eye, History } from "lucide-react";
 import { useOnLibraryChanged } from "@/features/exam-store/libraryEvents";
-import { examOpenPath } from "@/features/exam-import/types";
+import { examOpenPath } from "@/features/exam/types";
 import { examLibraryApi, sizeText, type LibraryExam } from "@/features/exam-store/exam-library.api";
 import { ExamKindBadge } from "@/features/exam-store/ExamKindBadge";
 import { ResumeList } from "@/features/practice-session/ResumeList";

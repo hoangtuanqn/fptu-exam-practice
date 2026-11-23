@@ -1,7 +1,7 @@
 import { ProtectedImg } from "@/shared/ui/ProtectedImg";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, BookOpen, Check, ClipboardPaste, Download, ExternalLink, Loader2, Pencil, RotateCcw, Save, Search, Sparkles, Trash2, X } from "lucide-react";
+import { ArrowLeft, BookOpen, Check, ClipboardPaste, Download, Loader2, Pencil, RotateCcw, Save, Search, Sparkles, Trash2, X } from "lucide-react";
 import { adminApi, type ExamAdminDetail, type ExamQuestionAdmin, type QuestionChange, type QuestionResolve } from "@/features/admin/api/admin.api";
 import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
@@ -201,7 +201,7 @@ function DeleteExamDialog({ exam, onClose }: { exam: ExamAdminDetail; onClose: (
       ) : (
         <p className="mt-3 text-sm text-slate-500">Chưa ai dùng đề này nên xoá không ảnh hưởng thành viên nào.</p>
       )}
-      <p className="mt-3 text-xs text-slate-500">Xoá cả ảnh câu hỏi trên máy chủ. Sau đó có thể lấy lại đề này từ FuOverflow như đề mới.</p>
+      <p className="mt-3 text-xs text-slate-500">Xoá cả ảnh câu hỏi trên máy chủ.</p>
       <ModalActions>
         <Button grow onClick={onClose} disabled={busy}>
           Huỷ
@@ -255,7 +255,7 @@ function QuestionCard({ q, answer, isReference, dirty, disabled, solving, aiNote
             type="button"
             onClick={onSolve}
             disabled={disabled || solving}
-            title="Lấy lại bình luận của câu này từ FuOverflow rồi nhờ AI giải lại (chỉ gợi ý, bấm Lưu mới ghi)"
+            title="Nhờ AI giải lại câu này (chỉ gợi ý, bấm Lưu mới ghi)"
             className="inline-flex items-center gap-1.5 rounded-md border border-brand-200 bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-800 transition hover:border-brand-400 disabled:opacity-50"
           >
             {solving ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />}
@@ -382,7 +382,7 @@ export default function ExamEditPage() {
   };
 
   async function solveOne(q: ExamQuestionAdmin) {
-    if (!(await confirm({ title: `Giải lại câu ${q.number} bằng AI?`, message: "App sẽ lấy lại bình luận của câu này từ FuOverflow rồi gọi AI giải một lần (tốn một lượt gọi AI). Kết quả chỉ là gợi ý điền vào bản nháp, bạn bấm Lưu mới ghi.", confirmLabel: "Giải lại" }))) return;
+    if (!(await confirm({ title: `Giải lại câu ${q.number} bằng AI?`, message: "App sẽ gọi AI giải câu này một lần (tốn một lượt gọi AI). Kết quả chỉ là gợi ý điền vào bản nháp, bạn bấm Lưu mới ghi.", confirmLabel: "Giải lại" }))) return;
     setSolvingNo(q.number);
     try {
       const r = await adminApi.resolveQuestion(examId, q.number);
@@ -390,8 +390,7 @@ export default function ExamEditPage() {
       if (r.notQuestion) toast.error(`Câu ${q.number}: AI cho rằng đây không phải câu hỏi`);
       else if (r.answer) {
         patch(q.number, { answer: normalize(r.answer) }); // chỉ điền vào bản nháp, admin duyệt rồi bấm Lưu
-        toast.success(`Câu ${q.number}: AI gợi ý ${r.answer}${r.commentsRefreshed ? ` (đã lấy lại ${r.commentsCount ?? 0} bình luận)` : ""}`);
-        if (r.commentsNote) toast.error(`Câu ${q.number}: ${r.commentsNote}`);
+        toast.success(`Câu ${q.number}: AI gợi ý ${r.answer}`);
       } else toast.error(`Câu ${q.number}: AI chưa đưa ra được đáp án`);
     } catch (err) {
       toast.error(errorMessage(err));
@@ -487,11 +486,6 @@ export default function ExamEditPage() {
               <span>
                 · có đáp án {answered}/{gradable.length}
               </span>
-              {data.sourceUrl && (
-                <a href={data.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-brand-700 hover:underline">
-                  <ExternalLink size={13} /> Xem đề này trên FuOverflow
-                </a>
-              )}
               <Link to={`/exam/${data.id}`} className="inline-flex items-center gap-1 text-brand-700 hover:underline">
                 <BookOpen size={13} /> Mở làm thử
               </Link>

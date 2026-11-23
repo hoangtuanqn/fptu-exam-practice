@@ -16,7 +16,7 @@ const load = async () => ({
 });
 const hasStatus = (status: number) => (error: unknown) => (error as { status?: number }).status === status;
 const files = (buf: Buffer, ...n: number[]) => n.map((x) => ({ buffer: buf, originalname: `Q${x}.webp` }));
-const body = (extra: Record<string, string | undefined> = {}) => ({ title: "TST101 manual", subjectCode: "TST101", kind: undefined, threadId: undefined, answers: undefined, ...extra }) as never;
+const body = (extra: Record<string, string | undefined> = {}) => ({ title: "TST101 manual", subjectCode: "TST101", kind: undefined, answers: undefined, ...extra }) as never;
 
 describe("admin exam upload + gaps (throwaway MySQL)", { skip: DB_TESTS_ENABLED ? false : DB_SKIP_REASON }, () => {
   let db: ThrowawayDb;
@@ -31,13 +31,6 @@ describe("admin exam upload + gaps (throwaway MySQL)", { skip: DB_TESTS_ENABLED 
     webp = await sharp({ create: { width: 40, height: 20, channels: 3, background: "#fff" } }).webp().toBuffer();
     big = await sharp({ create: { width: 3000, height: 600, channels: 3, background: "#000" } }).webp().toBuffer();
     png = await sharp({ create: { width: 10, height: 10, channels: 3, background: "#fff" } }).png().toBuffer();
-    await m.prisma.fuoThread.createMany({
-      data: [
-        { threadId: "9001", subjectCode: "TST101", title: "TST101 FA25 FE", kind: "FE", postedAt: new Date("2026-01-02") },
-        { threadId: "9002", subjectCode: "TST101", title: "TST101 PE", kind: "PE", postedAt: new Date("2026-01-03") },
-        { threadId: "9003", subjectCode: "TST202", title: "TST202 quiz", kind: "QUIZ", postedAt: null },
-      ],
-    });
   });
   after(async () => {
     await m?.prisma.$disconnect();
@@ -46,6 +39,7 @@ describe("admin exam upload + gaps (throwaway MySQL)", { skip: DB_TESTS_ENABLED 
   });
 
   let manualId = "";
+  let feId = "";
 
   it("creates a manual exam: numbers from names, valid webp kept byte for byte, big one shrunk, answers from ans.json", async () => {
     const answers = JSON.stringify({ "Q1.webp": ["B"], "Q2.webp": ["c", "a"], "Q9.webp": ["A"] });
@@ -70,7 +64,6 @@ describe("admin exam upload + gaps (throwaway MySQL)", { skip: DB_TESTS_ENABLED 
     await assert.rejects(m.service.create(admin, body(), files(png, 1)), hasStatus(400)); // không phải webp
     await assert.rejects(m.service.create(admin, body({ answers: '{"Q1.webp":["Z"]}' }), files(webp, 1)), hasStatus(400));
     await assert.rejects(m.service.create(admin, body({ title: undefined }), files(webp, 1)), hasStatus(400));
-    await assert.rejects(m.service.create(admin, body({ threadId: "123456" }), files(webp, 1)), hasStatus(404));
     // ảnh hỏng ở cuối: các ảnh đã ghi trước đó bị xoá
     const count = await m.prisma.exam.count();
     await assert.rejects(m.service.create(admin, body(), [...files(webp, 1), { buffer: Buffer.from("RIFF0000WEBPjunk"), originalname: "Q2.webp" }]), hasStatus(400));
@@ -93,38 +86,36 @@ describe("admin exam upload + gaps (throwaway MySQL)", { skip: DB_TESTS_ENABLED 
     assert.equal(await m.prisma.questionExplanation.count({ where: { examId: manualId } }), 0);
   });
 
-  it("attaches to a catalog thread; a complete exam answers 409, an incomplete shell is filled in place", async () => {
-    const r = await m.service.create(admin, body({ threadId: "9001", title: undefined }), files(webp, 1, 2));
-    assert.deepEqual([r.threadId, r.title, r.answerSource, r.answered], ["9001", "TST101 FA25 FE", "DEFAULT", 0]);
-    const exam = await m.prisma.exam.findUniqueOrThrow({ where: { id: r.id } });
-    assert.equal(exam.sourceUrl, "https://fuoverflow.com/threads/9001/");
-    await assert.rejects(m.service.create(admin, body({ threadId: "9001" }), files(webp, 1)), (e: { status?: number; data?: { examId?: string } }) => e.status === 409 && e.data?.examId === r.id);
-
-    const shell = await m.prisma.exam.create({ data: { threadId: "9002", title: "TST101 PE", sourceUrl: "https://fuoverflow.com/threads/9002/", totalQuestions: 5, answerSource: "PENDING", kind: "PE" } });
-    await m.prisma.examQuestion.createMany({ data: [1, 2, 3].map((number) => ({ examId: shell.id, number, name: `old${number}`, imagePath: `exams/9002/images/old${number}.webp`, sourceImage: "x", answer: "" })) });
-    const filled = await m.service.create(admin, body({ threadId: "9002", answers: '{"Q1.webp":["A"]}' }), files(webp, 1, 2));
-    assert.deepEqual([filled.id, filled.created, filled.totalQuestions, filled.questions, filled.replaced, filled.answerSource], [shell.id, false, 2, 2, [1, 2], "MANUAL"]);
+  it("creates a second manual exam without answers as DEFAULT", async () => {
+    const r = await m.service.create(admin, body({ title: "TST101 FA25 FE" }), files(webp, 1, 2));
+    assert.match(r.threadId, /^m[0-9a-f]{12}$/);
+    assert.deepEqual([r.title, r.answerSource, r.answered], ["TST101 FA25 FE", "DEFAULT", 0]);
+    feId = r.id;
   });
 
   it("lists gaps with one query per page and a summary that matches", async () => {
-    // 9003: chưa có đề. 9001: đủ ảnh, chưa có đáp án. Đề tải tay: đủ ảnh, đủ đáp án (Q3 trống -> vẫn thiếu đáp án)
+    // Đề cũ dở dang (thiếu ảnh): no_images. feId: đủ ảnh, chưa có đáp án. Đề tải tay: Q3 trống -> vẫn thiếu đáp án
+    const shell = await m.prisma.exam.create({ data: { threadId: "9002", title: "TST101 PE", subjectCode: "TST101", sourceUrl: "", totalQuestions: 5, answerSource: "PENDING", kind: "PE" } });
+    await m.prisma.examQuestion.createMany({ data: [1, 2, 3].map((number) => ({ examId: shell.id, number, name: `old${number}`, imagePath: `exams/9002/images/old${number}.webp`, sourceImage: "x", answer: "" })) });
     const all = await m.service.gaps({ gap: "all", page: 1, limit: 20 } as never);
-    const byThread = new Map(all.items.map((i) => [i.threadId, i]));
-    assert.equal(byThread.get("9003")?.gap, "no_exam");
-    assert.equal(byThread.get("9003")?.sourceUrl, "https://fuoverflow.com/threads/9003/");
-    assert.equal(byThread.get("9001")?.gap, "no_answers");
-    const manual = [...byThread.values()].find((i) => i.examId === manualId);
+    const byId = new Map(all.items.map((i) => [i.examId, i]));
+    assert.equal(byId.get(shell.id)?.gap, "no_images");
+    assert.equal(byId.get(feId)?.gap, "no_answers");
+    const manual = byId.get(manualId);
     assert.deepEqual([manual?.gap, manual?.questions, manual?.answered, manual?.sourceUrl], ["no_answers", 4, 3, null]);
     assert.equal(all.meta.total, all.items.length);
+    assert.ok(all.items.every((i) => i.examId !== null));
 
-    const onlyQuiz = await m.service.gaps({ gap: "all", kind: "QUIZ", page: 1, limit: 20 } as never);
-    assert.deepEqual(onlyQuiz.items.map((i) => i.threadId), ["9003"]);
+    const onlyPe = await m.service.gaps({ gap: "all", kind: "PE", page: 1, limit: 20 } as never);
+    assert.deepEqual(onlyPe.items.map((i) => i.examId), [shell.id]);
     const searched = await m.service.gaps({ gap: "no_answers", q: "FA25", page: 1, limit: 20 } as never);
-    assert.deepEqual(searched.items.map((i) => i.threadId), ["9001"]);
+    assert.deepEqual(searched.items.map((i) => i.examId), [feId]);
     const noImages = await m.service.gaps({ gap: "no_images", page: 1, limit: 20 } as never);
-    assert.equal(noImages.meta.total, 0);
+    assert.equal(noImages.meta.total, 1);
+    const noExam = await m.service.gaps({ gap: "no_exam", page: 1, limit: 20 } as never);
+    assert.deepEqual([noExam.items.length, noExam.meta.total], [0, 0]); // giữ bộ lọc cũ, luôn rỗng
 
     const summary = await m.service.gapSummary({});
-    assert.deepEqual(summary, { noExam: 1, noImages: 0, noAnswers: all.items.filter((i) => i.gap === "no_answers").length });
+    assert.deepEqual(summary, { noExam: 0, noImages: 1, noAnswers: all.items.filter((i) => i.gap === "no_answers").length });
   });
 });

@@ -13,7 +13,7 @@ export const EXAM_UPLOAD_KEEP_MAX_BYTES = 3 * 1024 * 1024;
 export const EXAM_UPLOAD_WEBP_QUALITY = 80;
 export const EXAM_UPLOAD_INPUT_MAX_PIXELS = 50_000_000; // chặn ảnh "bom giải nén"
 
-// Đề tải tay không gắn bài FuOverflow: threadId = "m" + 12 ký tự hex (vừa VarChar(20), không bao giờ trùng ID số của FuOverflow)
+// Đề tải tay: threadId = "m" + 12 ký tự hex (vừa VarChar(20), không trùng threadId dạng số của các đề cũ)
 export const MANUAL_THREAD_PREFIX = "m";
 export const MANUAL_THREAD_HEX_BYTES = 6;
 

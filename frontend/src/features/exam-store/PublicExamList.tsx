@@ -7,7 +7,7 @@ import { Empty } from "@/shared/ui/Feedback";
 import { QueryBoundary } from "@/shared/ui/QueryBoundary";
 import { Pagination } from "@/shared/ui/Table";
 import { formatCredit, formatDate } from "@/shared/utils/formatters";
-import { examOpenPath } from "@/features/exam-import/types";
+import { examOpenPath } from "@/features/exam/types";
 import { catalogApi, type CatalogItem } from "./catalog.api";
 import { NewExamBadge } from "./NewExamBadge";
 import { ExamKindBadge } from "./ExamKindBadge";
@@ -17,7 +17,7 @@ import { ExamFilterBar, useExamListQuery } from "./ExamFilterBar";
 
 // Danh sách đề của một môn cho khách xem (trang Kho đề công khai và trang từng môn), không có khung ngoài: nơi dùng tự bọc Card.
 // Chỉ có thông tin mô tả: tên, kỳ, ngày, số câu.
-// Bấm lấy đề: khách đi đăng ký rồi quay lại Kho đề của môn này; thành viên vào thẳng Kho đề trong tài khoản (có xác nhận phí như cũ).
+// Bấm mở đề: khách đi đăng ký rồi quay lại Kho đề của môn này; thành viên vào thẳng Kho đề trong tài khoản (có xác nhận phí như cũ).
 export function PublicExamList({ code, pageSize }: { code: string; pageSize?: number }) {
   const { user } = useAuth();
   const query = useExamListQuery();
@@ -31,16 +31,18 @@ export function PublicExamList({ code, pageSize }: { code: string; pageSize?: nu
         <ExamFilterBar query={query} terms={list.data?.terms} />
       </div>
       <QueryBoundary query={list}>
-        {(data) =>
-          data.items.length === 0 ? (
+        {(res) => {
+          // Chỉ hiện đề đã có trong hệ thống (máy chủ cũ còn trả mục chưa có đề)
+          const data = { ...res, items: res.items.filter((e) => !!e.examId) };
+          return data.items.length === 0 ? (
             <Empty icon={BookOpen} title={data.total > 0 ? "Không có đề nào khớp" : "Chưa có đề nào của môn này"}>
-              {data.total > 0 ? "Thử bỏ bộ lọc hoặc đổi từ khoá." : "Danh mục đề của môn này chưa được cập nhật."}
+              {data.total > 0 ? "Thử bỏ bộ lọc hoặc đổi từ khoá." : "Môn này chưa có đề, bạn quay lại sau nhé."}
             </Empty>
           ) : (
             <>
               <ul className="divide-y divide-outline-variant">
                 {data.items.map((e) => (
-                  <li key={e.threadId} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 py-3.5 transition hover:bg-surface-container-low/70">
+                  <li key={e.examId} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 py-3.5 transition hover:bg-surface-container-low/70">
                     {e.term && <span className="md-label-medium w-14 shrink-0 rounded-full bg-primary-container/70 px-2.5 py-1 text-center text-on-primary-container">{e.term}</span>}
                     <div className="min-w-0 flex-1">
                       <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
@@ -60,8 +62,8 @@ export function PublicExamList({ code, pageSize }: { code: string; pageSize?: nu
               </ul>
               <Pagination meta={data.meta} onPage={(p) => setUrl({ page: String(p) })} />
             </>
-          )
-        }
+          );
+        }}
       </QueryBoundary>
     </div>
   );

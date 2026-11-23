@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { examImportApi } from "@/features/exam-import/exam-import.api";
+import { examApi } from "@/features/exam/exam.api";
 import type { ChapterWaitStage } from "./ChapterWaitBanner";
 import type { PickedExam } from "./types";
 
@@ -35,7 +35,7 @@ export function useChapterTopics(exams: PickedExam[]) {
       if (requested.current.has(id)) continue;
       requested.current.add(id);
       patch(id, { status: "loading", stage: "labeling", topicOf: new Map() });
-      examImportApi
+      examApi
         .exam(id)
         .then((full) => {
           if (!alive) return;
@@ -70,7 +70,7 @@ export function useChapterTopics(exams: PickedExam[]) {
           const track = tracking.current.get(id) ?? { tries: 0, startedAt: Date.now() };
           tracking.current.set(id, track);
           try {
-            const r = await examImportApi.answers(id);
+            const r = await examApi.answers(id);
             if (!alive) return;
             if (r.answers.some((a) => a.topic)) return give(id, new Map(r.answers.map((a) => [a.number, a.topic ?? null] as [number, string | null])));
             if (r.status === "FAILED") return give(id, new Map());

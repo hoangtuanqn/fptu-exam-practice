@@ -47,7 +47,7 @@ export function ProPlans({ plan, promo, label, newExpiry, onBuy }: Props) {
               <p className="mt-3 flex flex-wrap items-end gap-x-3 gap-y-1">
                 {promo && <s className="mb-1 text-xl font-semibold tabular-nums text-on-surface-variant">{vnd(promo.originalPrice)}</s>}
                 <span className="text-5xl font-black leading-none tabular-nums tracking-tight text-on-surface">{vnd(price)}</span>
-                <span className="mb-1 rounded-full bg-[#ff4d4d] px-2.5 py-1 text-xs font-extrabold text-white">-{promo ? promo.percentOff : plan.savingsPercent}%</span>
+                {promo && <span className="mb-1 rounded-full bg-[#ff4d4d] px-2.5 py-1 text-xs font-extrabold text-white">-{promo.percentOff}%</span>}
               </p>
               {promo && (
                 <div className="mt-2 space-y-0.5">
@@ -59,10 +59,7 @@ export function ProPlans({ plan, promo, label, newExpiry, onBuy }: Props) {
                   </p>
                 </div>
               )}
-              <p className="md-body-medium mt-2 text-on-surface-variant">
-                ≈ {vnd(proPerDay)}/ngày · FuOverflow VIP cùng thời hạn: <s>{vnd(plan.fuoPrice)}</s>
-              </p>
-              <p className="md-label-large mt-1 text-primary">Bạn giữ lại {vnd(plan.savings)}</p>
+              <p className="md-body-medium mt-2 text-on-surface-variant">≈ {vnd(proPerDay)}/ngày</p>
               <ul className="mt-4 space-y-2.5">
                 {PRO_POINTS.map((t) => (
                   <li key={t} className="md-body-medium flex items-start gap-2.5 text-on-surface">

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { ExamAttachment, ExamAttachmentsPayload } from "@/features/exam-import/types";
+import type { ExamAttachment, ExamAttachmentsPayload } from "@/features/exam/types";
 import { EVENTS } from "@/shared/realtime/events";
 import { subscribeRoom } from "@/shared/realtime/socket";
 

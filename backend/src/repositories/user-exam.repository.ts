@@ -10,7 +10,7 @@ export const userExamRepository = {
   add: (owner: Owner, examId: string, db: Db = prisma) =>
     db.userExam.createMany({ data: [{ ...whereOf(owner), examId }], skipDuplicates: true }),
 
-  // Đề (theo thread FuOverflow) có trong kho của chủ này không: một truy vấn, không cần tra id đề trước
+  // Đề (theo threadId) có trong kho của chủ này không: một truy vấn, không cần tra id đề trước
   hasThread: async (owner: Owner, threadId: string) => !!(await prisma.userExam.findFirst({ where: { ...whereOf(owner), exam: { threadId } }, select: { id: true } })),
 
   has: async (owner: Owner, examId: string) => !!(await prisma.userExam.findFirst({ where: { ...whereOf(owner), examId }, select: { id: true } })),
@@ -30,8 +30,7 @@ export const userExamRepository = {
   },
 
   // Chuyển toàn bộ đề của khách sang tài khoản (đã có thì bỏ qua) rồi xoá bản của khách, trong một transaction.
-  // Các lượt lấy đề đang chờ/đang chạy cũng được chuyển sang tài khoản: job xong sau đó sẽ đưa đề vào kho của tài khoản
-  // (không thì đề rơi vào kho của khách và người dùng không thấy). Lượt đã xong giữ nguyên để còn đếm giới hạn ngày của khách.
+  // Lượt lấy đề của khách giữ nguyên để còn đếm giới hạn ngày của khách.
   claimGuest: (userId: string, guestId: string) =>
     prisma.$transaction(async (tx) => {
       const rows = await tx.userExam.findMany({ where: { guestId }, select: { examId: true } });
@@ -39,12 +38,8 @@ export const userExamRepository = {
         await tx.userExam.createMany({ data: rows.map((r) => ({ userId, examId: r.examId })), skipDuplicates: true });
         await tx.userExam.deleteMany({ where: { guestId } });
       }
-      const jobs = await tx.crawlJob.updateMany({
-        where: { guestId, userId: null, status: { in: ["QUEUED", "RUNNING"] } },
-        data: { userId, guestId: null },
-      });
       // Các lượt làm dở của khách cũng về tài khoản, để đăng nhập xong vẫn làm tiếp được
       await tx.practiceSession.updateMany({ where: { guestId, userId: null }, data: { userId, guestId: null } });
-      return { exams: rows.length, jobs: jobs.count };
+      return rows.length;
     }),
 };

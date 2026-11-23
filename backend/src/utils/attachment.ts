@@ -1,10 +1,9 @@
 import path from "node:path";
-import { ATTACHMENT_NAME_MAX, EXAM_FILES_DIR, EXAM_STORAGE_DIR } from "../constants/crawler";
-import { sanitizeName, uniqueName } from "./filename";
+import { EXAM_FILES_DIR, EXAM_STORAGE_DIR } from "../constants/crawler";
 
 export type AttachmentKind = "pdf" | "archive" | "text" | "video" | "audio" | "other";
 
-// Đuôi tệp FuOverflow cho đính kèm (ảnh đi đường riêng). Đuôi khác bị bỏ qua khi lấy đề.
+// Đuôi tệp đính kèm được phép (ảnh đi đường riêng)
 const TYPES: Record<string, { mime: string; kind: AttachmentKind }> = {
   pdf: { mime: "application/pdf", kind: "pdf" },
   zip: { mime: "application/zip", kind: "archive" },
@@ -35,19 +34,6 @@ const extOf = (name: string) => path.extname(name).slice(1).toLowerCase();
 export const attachmentType = (name: string) => TYPES[extOf(name)] ?? null;
 
 export const attachmentKind = (name: string): AttachmentKind => attachmentType(name)?.kind ?? "other";
-
-/**
- * Tên lưu trên đĩa từ tên trên thread: chỉ một tầng (không có / \ ..), không bắt đầu bằng dấu chấm, cắt ngắn, không trùng
- * trong `used`, giữ đuôi gốc (viết thường). null nếu đuôi không được phép.
- */
-export function attachmentFileName(name: string, used: Set<string>): string | null {
-  const ext = extOf(name);
-  if (!TYPES[ext]) return null;
-  const base = sanitizeName(name.slice(0, -(ext.length + 1)), "")
-    .replace(/^[.\s]+/, "")
-    .slice(0, ATTACHMENT_NAME_MAX);
-  return `${uniqueName(base || "file", used)}.${ext}`;
-}
 
 const ATTACHMENTS_PATH = new RegExp(`^/${EXAM_STORAGE_DIR}/[^/]+/${EXAM_FILES_DIR}(/|$)`, "i");
 

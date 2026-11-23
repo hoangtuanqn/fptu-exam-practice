@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import { examImportApi } from "@/features/exam-import/exam-import.api";
+import { examApi } from "@/features/exam/exam.api";
 import { historyApi } from "@/features/history/history.api";
 import { Header } from "@/features/practice/components/Header";
 import { QuizWorkspace } from "@/features/practice/components/quiz/QuizWorkspace";
@@ -25,7 +25,7 @@ export default function AttemptReviewPage() {
     historyApi
       .get(id)
       .then(async (attempt) => {
-        const exam = await examImportApi.exam(attempt.exam.id);
+        const exam = await examApi.exam(attempt.exam.id);
         if (stale) return;
         const answers = Object.fromEntries(attempt.details.map((d) => [d.number, d.chosen]));
         const items = exam.questions.filter((q) => !q.isReference);

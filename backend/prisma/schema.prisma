@@ -103,7 +103,7 @@ enum CourseraOrderStatus {
 model CourseraCourse {
   id        String @id @default(uuid(7)) @db.Char(36)
   title     String   @db.VarChar(255)
-  // Optional: the FuOverflow catalog has no Coursera link; many NULLs are allowed under the unique index
+  // Optional: some subjects have no Coursera link; many NULLs are allowed under the unique index
   url       String?  @unique @db.VarChar(500)
   code      String?  @unique @db.VarChar(32)
   isActive  Boolean  @default(true) @map("is_active")
@@ -212,8 +212,8 @@ model Setting {
 enum TransactionType {
   DEPOSIT
   ADMIN_ADJUST
-  CRAWL_CHARGE // trá»« phĂ­ láº¥y Ä‘á» tá»« FuOverflow
-  CRAWL_REFUND // hoĂ n phĂ­ khi láº¥y Ä‘á» tháº¥t báº¡i
+  CRAWL_CHARGE // fee for opening an exam into the library
+  CRAWL_REFUND // refund of CRAWL_CHARGE (historic rows; no current refund flow)
   GIFT_CODE // nháº­n credit tá»« giftcode
   REPORT_REWARD // thÆ°á»Ÿng khi bĂ¡o cĂ¡o Ä‘Ă¡p Ă¡n sai Ä‘Æ°á»£c xĂ¡c nháº­n
   EXPLAIN_CHARGE // phĂ­ xem lá»i giáº£i thĂ­ch AI cá»§a má»™t cĂ¢u
@@ -263,7 +263,7 @@ model DailyCheckIn {
   @@map("daily_check_ins")
 }
 
-// Äá» thi láº¥y tá»« FuOverflow. `threadId` lĂ  chá»¯ kĂ½ cá»§a Ä‘á»: nháº­p láº¡i cĂ¹ng thread (dĂ¹ link khĂ¡c) khĂ´ng táº¡o báº£n má»›i
+// Exam (FE, PE, Quiz...). `threadId` is the exam identity key: one row per threadId (uploaded exams use "m<hex>")
 model Exam {
   id             String    @id @default(uuid(7)) @db.Char(36)
   threadId       String    @unique @map("thread_id") @db.VarChar(20)
@@ -278,7 +278,7 @@ model Exam {
   createdById    String?      @map("created_by_id") @db.Char(36)
   createdAt      DateTime  @default(now()) @map("created_at")
   subjectCode    String?   @map("subject_code") @db.VarChar(20) // subject code taken from the title (PRO192...); null = no code found. Set on import/rename, filled at boot for old rows
-  kind           ExamKind? // FE, PE, QUIZ or OTHER from the FuOverflow label/title, set on import; null = old row not classified yet (filled at boot)
+  kind           ExamKind? // FE, PE, QUIZ or OTHER inferred from the title, set on import or upload; null = old row not classified yet (filled at boot)
   description    String?   @db.Text // first post of the thread as plain text (truncated), shown on the exam detail page
   refreshedAt    DateTime? @map("refreshed_at") // láº§n lĂ m má»›i gáº§n nháº¥t (láº¥y láº¡i áº£nh, bĂ¬nh luáº­n, giáº£i láº¡i Ä‘Ă¡p Ă¡n); null = chÆ°a tá»«ng
 
@@ -853,23 +853,6 @@ model SubjectChapter {
   @@map("subject_chapters")
 }
 
-// Danh muc de thi FE tren FuOverflow (chi ten de, nhap tu file JSON do tools/fuo-crawler xuat ra): de Kho de hien du de.
-// Anh de chi duoc lay khi nguoi dung bam lay va dong y tru phi.
-model FuoThread {
-  threadId    String    @id @map("thread_id") @db.VarChar(20)
-  subjectCode String    @map("subject_code") @db.VarChar(20)
-  title       String    @db.VarChar(255)
-  postedAt    DateTime? @map("posted_at")
-  replies     Int       @default(0)
-  kind        ExamKind  @default(OTHER) // from the FuOverflow label, then title tokens
-  label       String?   @db.VarChar(60) // raw FuOverflow label text ("De Thi FE"...); null = no label
-  syncedAt    DateTime  @default(now()) @map("synced_at") // last insert or change (unchanged rows are not rewritten by the catalog run)
-
-  @@index([subjectCode, postedAt])
-  @@index([kind])
-  @@map("fuo_threads")
-}
-
 enum ExamKind {
   FE
   PE
@@ -1406,66 +1389,6 @@ model MarketingBroadcast {
   @@map("marketing_broadcasts")
 }
 
-enum FuoSourceStatus {
-  NEW
-  QUEUED
-  RUNNING
-  DONE
-  FAILED
-}
-
-enum FuoSourceResult {
-  IMPORTED // exam did not exist: imported through the normal import path
-  UPDATED // existing exam: new questions or attachments appended (comments refreshed)
-  UNCHANGED // existing exam: nothing new
-  ORDER_CHANGED // existing exam: thread images no longer match stored questions, questions left alone
-}
-
-enum FuoSourceRunStatus {
-  RUNNING
-  DONE
-  NEEDS_AUTH // stopped on a FuOverflow login failure; the next start resumes it
-}
-
-// FuOverflow exam threads pasted by admins. A "load new data" run imports missing exams and appends new data to existing ones.
-model FuoSourceUrl {
-  id          String           @id @default(uuid(7)) @db.Char(36)
-  threadId    String           @unique @map("thread_id") @db.VarChar(20) // same value as exams.thread_id
-  url         String           @db.VarChar(500) // link as pasted (trimmed)
-  status      FuoSourceStatus  @default(NEW)
-  result      FuoSourceResult? // outcome of the last successful processing
-  examId      String?          @map("exam_id") @db.Char(36) // soft reference to exams.id (no FK, exams table unchanged)
-  lastRunId   String?          @map("last_run_id") @db.Char(36)
-  lastError   String?          @map("last_error") @db.Text
-  processedAt DateTime?        @map("processed_at")
-  addedQuestions Int          @default(0) @map("added_questions") // questions appended by the last processing (0 otherwise)
-  commentsAt  DateTime?        @map("comments_refreshed_at") // last time a run re-fetched comments of this thread
-  createdAt   DateTime         @default(now()) @map("created_at")
-  updatedAt   DateTime         @updatedAt @map("updated_at")
-
-  @@index([status, updatedAt]) // claim next QUEUED, admin list filtered by status
-  @@index([updatedAt]) // admin list, newest change first
-  @@map("fuo_source_urls")
-}
-
-// One "load new data" run over every stored URL (background, one URL at a time)
-model FuoSourceRun {
-  id          String             @id @default(uuid(7)) @db.Char(36)
-  status      FuoSourceRunStatus @default(RUNNING)
-  activeLock  Boolean?           @unique @map("active_lock") // true only while RUNNING: at most one running run
-  total       Int                @default(0)
-  done        Int                @default(0) // processed without error
-  failed      Int                @default(0)
-  imported    Int                @default(0)
-  updated     Int                @default(0)
-  lastError   String?            @map("last_error") @db.Text
-  createdById String?            @map("created_by_id") @db.Char(36) // admin who started it (soft reference)
-  createdAt   DateTime           @default(now()) @map("created_at")
-  finishedAt  DateTime?          @map("finished_at")
-
-  @@map("fuo_source_runs")
-}
-
 enum ExamCommentStatus {
   PENDING
   APPROVED
@@ -1492,58 +1415,6 @@ model ExamComment {
   @@index([status, createdAt]) // admin queue
   @@index([userId, createdAt]) // rate limit and duplicate check
   @@map("exam_comments")
-}
-
-enum FuoCatalogRunStatus {
-  RUNNING
-  DONE
-  NEEDS_AUTH // stopped on a FuOverflow login/Cloudflare failure; the next start resumes it
-  FAILED // the subject index could not be read
-}
-
-enum FuoCatalogSubjectStatus {
-  QUEUED
-  RUNNING
-  DONE
-  FAILED
-}
-
-// One admin run over the whole FuOverflow catalog: every subject forum, every thread (metadata only)
-model FuoCatalogRun {
-  id             String              @id @default(uuid(7)) @db.Char(36)
-  status         FuoCatalogRunStatus @default(RUNNING)
-  activeLock     Boolean?            @unique @map("active_lock") // true only while RUNNING: at most one running run
-  subjectsTotal  Int                 @default(0) @map("subjects_total") // 0 = subject index not read yet
-  subjectsDone   Int                 @default(0) @map("subjects_done")
-  subjectsFailed Int                 @default(0) @map("subjects_failed")
-  threadsFound   Int                 @default(0) @map("threads_found")
-  threadsNew     Int                 @default(0) @map("threads_new")
-  threadsUpdated Int                 @default(0) @map("threads_updated")
-  autoImport     Boolean             @default(false) @map("auto_import") // started by "load new data": incremental scan, records new threads only (no import)
-  lastError      String?             @map("last_error") @db.Text
-  createdById    String?             @map("created_by_id") @db.Char(36) // admin who started it (soft reference)
-  createdAt      DateTime            @default(now()) @map("created_at")
-  finishedAt     DateTime?           @map("finished_at")
-
-  @@map("fuo_catalog_runs")
-}
-
-// Subject forums found on the FuOverflow index and their crawl state in the latest run
-model FuoCatalogSubject {
-  id        String                  @id @default(uuid(7)) @db.Char(36)
-  code      String                  @unique @db.VarChar(20)
-  status    FuoCatalogSubjectStatus @default(QUEUED)
-  lastRunId String?                 @map("last_run_id") @db.Char(36)
-  pages     Int                     @default(0)
-  threads   Int                     @default(0)
-  threadsNew Int                    @default(0) @map("threads_new") // new threads found by the last run of this subject
-  lastError String?                 @map("last_error") @db.Text
-  crawledAt DateTime?               @map("crawled_at")
-  createdAt DateTime                @default(now()) @map("created_at")
-  updatedAt DateTime                @updatedAt @map("updated_at")
-
-  @@index([lastRunId, status])
-  @@map("fuo_catalog_subjects")
 }
 
 // Flashcard of a subject: one question image (storage/flashcards/<SUBJECT CODE>/Q<number>.webp) plus its answer.

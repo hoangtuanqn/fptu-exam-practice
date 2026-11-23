@@ -117,15 +117,8 @@ export type UpdateReferralBody = z.infer<typeof updateReferralBody>;
 
 export type UpdateAiBody = z.infer<typeof updateAiBody>;
 
+// Phí mở đề (các trường khác giao diện cũ còn gửi bị bỏ qua)
 export const updateCrawlerBody = z.object({
-  cookie: z.string().trim().max(8000).optional(), // để trống = giữ cookie cũ
-  loginEmail: z.string().trim().max(200).default(""),
-  loginPassword: z.string().max(200).optional(), // để trống = giữ mật khẩu cũ
-  userAgent: z.string().trim().max(500),
-  referer: z.string().trim().max(500),
-  requestDelayMs: z.number().int().min(0).max(5000),
-  concurrency: z.number().int().min(1, "Tối thiểu 1").max(8, "Tối đa 8"),
-  webpQuality: z.number().int().min(30).max(100),
   fetchPrice: z.number().int().min(0).max(1_000_000),
 });
 

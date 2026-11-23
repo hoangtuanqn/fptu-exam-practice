@@ -1,6 +1,6 @@
 import { lazy } from "react";
 import { Navigate, Route } from "react-router-dom";
-import { BellRing, BookMarked, Link2, MailPlus, Activity, ShieldCheck as QualityIcon, MessagesSquare, ShoppingBag, Megaphone, Bot, ClipboardList, DatabaseZap, ListPlus, FileText, FileUp, FolderSearch, History, SlidersHorizontal, Wallet, Gift, ImageUp, MessageSquareWarning, UserPlus, Landmark, LayoutDashboard, Radio, Receipt, Settings, ThumbsUp, Users } from "lucide-react";
+import { BellRing, BookMarked, Link2, MailPlus, Activity, ShieldCheck as QualityIcon, MessagesSquare, ShoppingBag, Megaphone, Bot, ClipboardList, FileText, FileUp, FolderSearch, History, SlidersHorizontal, Wallet, Gift, ImageUp, MessageSquareWarning, UserPlus, Landmark, LayoutDashboard, Radio, Receipt, Settings, ThumbsUp, Users } from "lucide-react";
 import type { NavItem } from "@/shared/layout/PanelLayout";
 
 /**
@@ -8,7 +8,7 @@ import type { NavItem } from "@/shared/layout/PanelLayout";
  *   overview/  Tổng quan
  *   users/     Thành viên, giới thiệu
  *   finance/   Lệnh nạp, giao dịch ngân hàng, giftcode, cấu hình SePay
- *   content/   Đề thi, báo cáo đáp án, cấu hình lấy đề, AI giải đáp án
+ *   content/   Đề thi, báo cáo đáp án, AI giải đáp án
  * Menu và đường dẫn khai báo ở đây, thêm trang mới chỉ cần sửa file này.
  */
 const AdminCourseraPage = lazy(() => import("@/features/coursera/AdminCourseraPage"));
@@ -32,8 +32,6 @@ const ExamsPage = lazy(() => import("./content/ExamsPage"));
 const ExamEditPage = lazy(() => import("./content/ExamEditPage"));
 const ExamUploadPage = lazy(() => import("./exam-upload/ExamUploadPage"));
 const ExamGapsPage = lazy(() => import("./exam-upload/ExamGapsPage"));
-const CrawlerPage = lazy(() => import("./content/CrawlerPage"));
-const FuoSourcesPage = lazy(() => import("./fuo-sources/FuoSourcesPage"));
 const ReportsPage = lazy(() => import("./content/ReportsPage"));
 const FeedbackPage = lazy(() => import("./content/FeedbackPage"));
 const ChatbotPage = lazy(() => import("./content/ChatbotPage"));
@@ -64,8 +62,6 @@ export const ADMIN_NAV: NavItem[] = [
   { to: "/admin/exam-gaps", label: "Đề cần bổ sung", icon: FolderSearch, group: "Kho đề" },
   { to: "/admin/contributions", label: "Đề đóng góp", icon: ImageUp, group: "Kho đề" },
   { to: "/admin/subjects", label: "Quản lý môn học", icon: BookMarked, group: "Kho đề" },
-  { to: "/admin/fuo-sources", label: "Nguồn đề", icon: ListPlus, group: "Kho đề" },
-  { to: "/admin/crawler", label: "Cấu hình lấy đề", icon: DatabaseZap, group: "Kho đề" },
   { to: "/admin/crawl-jobs", label: "Lịch sử lấy đề", icon: History, group: "Kho đề" },
   { to: "/admin/reports", label: "Báo cáo đáp án", icon: MessageSquareWarning, group: "Chất lượng & AI" },
   { to: "/admin/explanation-feedback", label: "Đánh giá lời giải AI", icon: ThumbsUp, group: "Chất lượng & AI" },
@@ -111,13 +107,13 @@ export const adminRoutes = (
     <Route path="reports" element={<ReportsPage />} />
     <Route path="explanation-feedback" element={<FeedbackPage />} />
     <Route path="contributions" element={<AdminContributionsPage />} />
-    <Route path="crawler" element={<CrawlerPage />} />
-    <Route path="fuo-sources" element={<FuoSourcesPage />} />
     <Route path="ai" element={<AiPage />} />
     <Route path="chatbot" element={<ChatbotPage />} />
     <Route path="funnel" element={<FunnelPage />} />
     <Route path="quality" element={<QualityPage />} />
     {/* Địa chỉ cũ */}
     <Route path="settings" element={<Navigate to="/admin/sepay" replace />} />
+    <Route path="crawler" element={<Navigate to="/admin/crawl-jobs" replace />} />
+    <Route path="fuo-sources" element={<Navigate to="/admin/exam-upload" replace />} />
   </>
 );

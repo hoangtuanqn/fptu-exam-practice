@@ -1,16 +1,21 @@
-import { DatabaseZap } from "lucide-react";
+import { useState, type FormEvent } from "react";
+import { DatabaseZap, Loader2 } from "lucide-react";
 import { adminApi } from "@/features/admin/api/admin.api";
 import { UserCell, UserFilterChip } from "@/features/admin/shared";
+import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
 import { useClampPage } from "@/shared/hooks/useClampPage";
+import { useSubmit } from "@/shared/hooks/useSubmit";
 import { useUrlSearch } from "@/shared/hooks/useUrlSearch";
 import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
-import type { AdminCrawlJob, CrawlJobStatus } from "@/shared/types/api";
+import type { AdminCrawlJob, CrawlerSettings, CrawlJobStatus } from "@/shared/types/api";
 import { Badge, type Tone } from "@/shared/ui/Badge";
+import { Button } from "@/shared/ui/Button";
 import { ExpandableText } from "@/shared/ui/ExpandableText";
-import { Card, PageHeader } from "@/shared/ui/Card";
+import { Card, CardHeader, PageHeader } from "@/shared/ui/Card";
+import { Input } from "@/shared/ui/Input";
 import { SearchBox } from "@/shared/ui/SearchBox";
-import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
+import { Empty, ErrorBox, FormError, Loading } from "@/shared/ui/Feedback";
 import { Segmented } from "@/shared/ui/Segmented";
 import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
 import { formatCredit, formatDateTime } from "@/shared/utils/formatters";
@@ -24,7 +29,43 @@ const STATUS: Record<CrawlJobStatus, [string, Tone]> = {
 
 const Who = ({ job }: { job: AdminCrawlJob }) => (job.user ? <UserCell user={job.user} /> : <span className="text-slate-500">{job.guest ? "Khách (chưa đăng nhập)" : "—"}</span>);
 
-// Lịch sử lấy đề từ FuOverflow: ai lấy, đề nào, kết quả, phí đã trừ và lỗi nếu có
+function FetchPriceForm({ initial, onSaved }: { initial: CrawlerSettings; onSaved: () => void }) {
+  const toast = useToast();
+  const { run, loading, error, fieldErrors } = useSubmit();
+  const [fetchPrice, setFetchPrice] = useState(String(initial.fetchPrice ?? 0));
+
+  const onSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    void run(async () => {
+      await adminApi.saveCrawlerSettings({ fetchPrice: Number(fetchPrice) });
+      toast.success("Đã lưu phí mở đề");
+      onSaved();
+    });
+  };
+
+  return (
+    <Card>
+      <CardHeader title="Phí mở đề" description="Số credit trừ mỗi lần thành viên mở một đề chưa có trong kho của mình. Đề PE có giá riêng." />
+      <form onSubmit={onSubmit} className="max-w-md space-y-5 p-5" noValidate>
+        <FormError message={error} />
+        <Input
+          label="Phí mỗi đề (credit)"
+          inputMode="numeric"
+          value={fetchPrice}
+          onChange={(e) => setFetchPrice(e.target.value.replace(/\D/g, "").slice(0, 7))}
+          error={fieldErrors.fetchPrice}
+          hint="0 = miễn phí. Thành viên Pro không bị trừ phí."
+        />
+        <Button variant="primary" type="submit" disabled={loading || fetchPrice === ""}>
+          {loading && <Loader2 size={16} className="animate-spin" />}
+          Lưu phí
+        </Button>
+      </form>
+    </Card>
+  );
+}
+
+// Lịch sử lấy đề (dữ liệu cũ): ai lấy, đề nào, kết quả, phí đã trừ và lỗi nếu có
 export default function CrawlJobsPage() {
   const [url, setUrl] = useUrlState({ q: "", status: "", userId: "", page: "1" });
   const status = url.status as CrawlJobStatus | "";
@@ -37,10 +78,19 @@ export default function CrawlJobsPage() {
   const { data, error, loading, reload } = useApi(() => adminApi.crawlJobs({ page, search: q, status, userId: url.userId }), [page, q, status, url.userId]);
   useClampPage(data?.meta, setPage);
   const who = url.userId ? data?.items.find((j) => j.user)?.user : undefined;
+  const settings = useApi(() => adminApi.crawlerSettings(), []);
 
   return (
     <>
-      <PageHeader title="Lịch sử lấy đề" description="Các lượt lấy đề từ FuOverflow của thành viên và khách." />
+      <PageHeader title="Lịch sử lấy đề" description="Phí mở đề và các lượt lấy đề trước đây của thành viên và khách." />
+      <div className="space-y-6">
+      {settings.data ? (
+        <FetchPriceForm key={JSON.stringify(settings.data)} initial={settings.data} onSaved={settings.reload} />
+      ) : settings.loading ? (
+        <Loading />
+      ) : (
+        <ErrorBox message={settings.error ?? "Không tải được phí mở đề"} onRetry={settings.reload} />
+      )}
       <Card>
         <div className="flex flex-wrap items-center gap-3 border-b border-slate-100 p-4">
           <SearchBox value={search} onChange={setSearch} placeholder="Tìm theo tên hoặc email" label="Tìm thành viên" />
@@ -117,6 +167,7 @@ export default function CrawlJobsPage() {
           <Empty icon={DatabaseZap} title="Chưa có lượt lấy đề nào" />
         )}
       </Card>
+      </div>
     </>
   );
 }

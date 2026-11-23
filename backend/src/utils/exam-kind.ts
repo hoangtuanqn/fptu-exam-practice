@@ -11,5 +11,5 @@ const kindOfText = (text: string | null | undefined): ExamKind | null => {
   return m[1] ? "FE" : m[2] ? "PE" : "QUIZ";
 };
 
-/** Loại bài trên FuOverflow: nhãn trước ("Đề Thi FE", "Đề Thi PE", "Quiz"...), không rõ thì đến từ khoá trong tên bài, còn lại OTHER. */
+/** Loại đề: nhãn trước ("Đề Thi FE", "Đề Thi PE", "Quiz"...), không rõ thì đến từ khoá trong tên bài, còn lại OTHER. */
 export const classifyKind = (label: string | null | undefined, title: string): ExamKind => kindOfText(label) ?? kindOfText(title) ?? "OTHER";

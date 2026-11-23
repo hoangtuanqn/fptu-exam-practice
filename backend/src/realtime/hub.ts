@@ -1,14 +1,12 @@
 import type { Server } from "socket.io";
-import { crawlJobRepository } from "../repositories/crawl-job.repository";
 import { examAttachmentRepository } from "../repositories/exam-attachment.repository";
 import { examRepository } from "../repositories/exam.repository";
-import { toJobDto } from "../services/crawl-job.dto";
 import { toAnswersPayload } from "../utils/exam-answers";
 import { fileUrlOf, toAttachmentDto } from "../utils/file-url";
 import { ADMIN_ROOM, EVENTS, MEMBERS_ROOM, roomOf, userRoom, type RoomKind } from "./events";
 
 /**
- * Điểm phát sự kiện realtime cho phần còn lại của server. Dịch vụ nghiệp vụ chỉ gọi `publishExam` / `publishJob`,
+ * Điểm phát sự kiện realtime cho phần còn lại của server. Dịch vụ nghiệp vụ chỉ gọi các hàm `publish...`,
  * không biết gì về socket. Chưa khởi tạo (ví dụ khi test) hoặc không có ai đang theo dõi thì không làm gì cả.
  */
 let io: Server | null = null;
@@ -36,12 +34,6 @@ export const attachmentsPayload = async (examId: string) => ({
   examId,
   attachments: (await examAttachmentRepository.list(examId)).map((a) => toAttachmentDto(examId, a)),
 });
-
-export const jobPayload = async (jobId: number) => {
-  const job = await crawlJobRepository.findById(jobId);
-  if (!job) return null;
-  return toJobDto(job, job.status === "QUEUED" ? await crawlJobRepository.countAhead(job.id) : 0);
-};
 
 export const realtimeHub = {
   attach(server: Server) {
@@ -75,12 +67,6 @@ export const realtimeHub = {
     io.to(roomOf("exam", examId)).emit(EVENTS.examTopics, { examId, state, topics });
   },
 
-  // Lấy đề thất bại sau khi người dùng đã mở đề: báo để họ thoát ra
-  publishExamFailed(examId: string, message: string) {
-    if (!io) return;
-    io.to(roomOf("exam", examId)).emit(EVENTS.examFailed, { examId, message });
-  },
-
   // Thông báo mới cho admin (đã ghi DB): đẩy cho các admin đang mở trang quản trị
   publishAdminNotice(notice: unknown) {
     io?.to(ADMIN_ROOM).emit(EVENTS.adminNotice, notice);
@@ -109,22 +95,5 @@ export const realtimeHub = {
   // Ai đang online vừa đổi: chỉ báo "có thay đổi", admin tự tải lại danh sách
   publishPresence() {
     io?.to(ADMIN_ROOM).emit(EVENTS.presence);
-  },
-
-  // Tiến độ lượt quét danh mục FuOverflow: đẩy cho các admin đang online
-  publishFuoCatalog(status: unknown) {
-    io?.to(ADMIN_ROOM).emit(EVENTS.fuoCatalog, status);
-  },
-
-  // Tiến độ lượt nạp dữ liệu FuOverflow: đẩy cho các admin đang online
-  publishFuoSources(status: unknown) {
-    io?.to(ADMIN_ROOM).emit(EVENTS.fuoSources, status);
-  },
-
-  // Tiến độ lấy đề vừa đổi (sang bước mới, xong, hoặc lỗi)
-  async publishJob(jobId: number) {
-    if (!io || !hasListeners("job", jobId)) return;
-    const payload = await jobPayload(jobId).catch(() => null);
-    if (payload) io.to(roomOf("job", jobId)).emit(EVENTS.jobUpdate, payload);
   },
 };

@@ -101,7 +101,7 @@ export function useQuiz() {
     setPending({ questions: parsed, title: folderName, examId: null, answerSource: null, total: parsed.length, references: [] });
   }
 
-  // Đề đã có sẵn câu hỏi (nhập từ link FuOverflow): cũng chờ xác nhận như đề mở từ thư mục
+  // Đề đã có sẵn câu hỏi (mở từ Kho đề): cũng chờ xác nhận như đề mở từ thư mục
   function loadExam(examQuestions: Question[], examTitle: string, id: string, source: AnswerSource = "AI", examTotal = examQuestions.length) {
     setNotFound(false);
     const split = splitReferences(examQuestions);

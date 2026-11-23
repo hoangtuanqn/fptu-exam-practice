@@ -177,7 +177,6 @@ function DialogBody({
       <Facts
         items={[
           ["Đề trong hệ thống", d.exams],
-          ["Đề trên kho đề", d.fuoThreads],
           ["Điểm qua môn", d.minPassMark ?? "—"],
           ["Mã syllabus", d.syllabusId ?? "—"],
         ]}
@@ -433,7 +432,6 @@ function SubjectsTable({ initial }: { initial: SubjectRow[] }) {
               <Th>Tín chỉ</Th>
               <Th>Chương</Th>
               <Th>Đề trong hệ thống</Th>
-              <Th>Đề trên kho</Th>
             </Thead>
             <tbody>
               {shown.map((s) => {
@@ -472,7 +470,6 @@ function SubjectsTable({ initial }: { initial: SubjectRow[] }) {
                         : s.chapters.total}
                     </Td>
                     <Td className="tabular-nums">{s.exams}</Td>
-                    <Td className="tabular-nums">{s.fuoThreads}</Td>
                   </Tr>
                 );
               })}

@@ -2,7 +2,6 @@ import type { Server as HttpServer } from "node:http";
 import { Server, type Socket } from "socket.io";
 import { env } from "../configs/env";
 import { userRepository } from "../repositories/user.repository";
-import { crawlJobService } from "../services/crawl-job.service";
 import { topicLabelerService } from "../services/ai/topic-labeler.service";
 import { examService } from "../services/exam.service";
 import { uuidSchema } from "../rules/requests/admin.request";
@@ -10,10 +9,10 @@ import { isMember, type Actor } from "../utils/actor";
 import { verifyToken } from "../utils/jwt";
 import { ADMIN_ROOM, EVENTS, MEMBERS_ROOM, SOCKET_PATH, roomOf, userRoom, type RoomKind } from "./events";
 import { presence } from "./presence";
-import { attachmentsPayload, examPayload, jobPayload, questionsPayload, realtimeHub } from "./hub";
+import { attachmentsPayload, examPayload, questionsPayload, realtimeHub } from "./hub";
 
 const GUEST_ID = /^[A-Za-z0-9-]{16,64}$/;
-const KINDS: RoomKind[] = ["exam", "job"];
+const KINDS: RoomKind[] = ["exam"];
 
 // Cùng quy tắc với middleware identify: có token thì phải hợp lệ, không thì cần guestId
 async function identifySocket(auth: Record<string, unknown>): Promise<Actor> {
@@ -29,38 +28,25 @@ async function identifySocket(auth: Record<string, unknown>): Promise<Actor> {
   return { owner: { guestId }, isAdmin: false };
 }
 
-// Id phòng hợp lệ theo loại: đề = UUID (chữ thường như trong DB), job = số nguyên dương. Sai thì null.
-export const parseRoomId = (kind: RoomKind, raw: unknown): string | number | null => {
-  if (kind === "exam") {
-    const r = uuidSchema.safeParse(raw);
-    return r.success ? r.data : null;
-  }
-  const n = Number(raw);
-  return Number.isInteger(n) && n > 0 ? n : null;
+// Id phòng hợp lệ: đề = UUID (chữ thường như trong DB). Sai thì null.
+export const parseRoomId = (_kind: RoomKind, raw: unknown): string | null => {
+  const r = uuidSchema.safeParse(raw);
+  return r.success ? r.data : null;
 };
 
-// Vào phòng của một đề/job (chỉ khi có quyền xem) rồi gửi ngay trạng thái hiện tại để không lỡ sự kiện nào
-async function subscribe(socket: Socket, actor: Actor, kind: RoomKind, rawId: string | number) {
-  if (kind === "exam") {
-    const id = String(rawId);
-    await examService.assertAccess(actor, id);
-    await socket.join(roomOf(kind, id));
-    const payload = await examPayload(id);
-    if (payload) socket.emit(EVENTS.examAnswers, payload);
-    // Gửi các câu đã có để không lỡ câu nào tải xong trước khi vào phòng (kể cả khi đề vừa đủ câu: giao diện còn đang thiếu)
-    const loaded = await questionsPayload(id);
-    if (loaded) socket.emit(EVENTS.examQuestions, loaded);
-    // Tệp đính kèm ghi xong trước khi vào phòng (hoặc lúc mất kết nối) thì gửi luôn
-    const files = await attachmentsPayload(id);
-    if (files.attachments.length) socket.emit(EVENTS.examAttachments, files);
-    if (topicLabelerService.isRunning(id)) socket.emit(EVENTS.examTopics, { examId: id, state: "running", topics: [] });
-  } else {
-    const id = Number(rawId);
-    await crawlJobService.getForActor(id, actor); // ném lỗi nếu không phải job của người này
-    await socket.join(roomOf(kind, id));
-    const payload = await jobPayload(id);
-    if (payload) socket.emit(EVENTS.jobUpdate, payload);
-  }
+// Vào phòng của một đề (chỉ khi có quyền xem) rồi gửi ngay trạng thái hiện tại để không lỡ sự kiện nào
+async function subscribe(socket: Socket, actor: Actor, kind: RoomKind, id: string) {
+  await examService.assertAccess(actor, id);
+  await socket.join(roomOf(kind, id));
+  const payload = await examPayload(id);
+  if (payload) socket.emit(EVENTS.examAnswers, payload);
+  // Gửi các câu đã có để không lỡ câu nào tải xong trước khi vào phòng (kể cả khi đề vừa đủ câu: giao diện còn đang thiếu)
+  const loaded = await questionsPayload(id);
+  if (loaded) socket.emit(EVENTS.examQuestions, loaded);
+  // Tệp đính kèm ghi xong trước khi vào phòng (hoặc lúc mất kết nối) thì gửi luôn
+  const files = await attachmentsPayload(id);
+  if (files.attachments.length) socket.emit(EVENTS.examAttachments, files);
+  if (topicLabelerService.isRunning(id)) socket.emit(EVENTS.examTopics, { examId: id, state: "running", topics: [] });
 }
 
 export function initRealtime(server: HttpServer) {

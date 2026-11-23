@@ -130,7 +130,7 @@ Tài khoản → Điểm FAP cho biết điểm trung bình từng học kỳ, d
 ## Gói Pro
 Gói Pro (trang `/pro`) mở rộng quyền lợi: không giới hạn lượt mở đề, giải thích AI, xem đầy đủ Câu hay ra, thống kê theo chủ đề và luyện riêng phần yếu, Sổ câu sai không giới hạn số câu. Giá và thời hạn hiện hành nằm ở khối live_facts (khi câu hỏi nhắc tới giá) và ở trang Gói Pro. Điểm FAP và lịch thi dùng được ở mọi gói.
 
-Có hai gói, cùng quyền lợi: Pro (dài hạn, theo tháng, tiết kiệm hơn so với mua VIP trực tiếp trên FuOverflow) và Pro Nước rút (ngắn hạn theo ngày, rẻ, hợp với người chỉ cần ôn gấp trước kỳ thi). Trả bằng credit trong ví, một lần, không tự gia hạn. Mua khi gói đang còn hạn thì thời gian được cộng dồn.
+Có hai gói, cùng quyền lợi: Pro (dài hạn, theo tháng) và Pro Nước rút (ngắn hạn theo ngày, rẻ, hợp với người chỉ cần ôn gấp trước kỳ thi). Trả bằng credit trong ví, một lần, không tự gia hạn. Mua khi gói đang còn hạn thì thời gian được cộng dồn.
 
 ## Gói Nước rút
 Gói Pro Nước rút (mua ở trang `/pro`) có đủ quyền lợi Pro nhưng chỉ trong một số ngày ngắn với giá thấp, phù hợp khi kỳ thi đã gần. Muốn dùng dài hơn thì mua gói Pro. Số ngày và giá hiện hành xem ở khối live_facts.

@@ -1,33 +1,22 @@
-# FePass: tiện ích Chrome cho FuOverflow
+# FePass: tiện ích Chrome đồng bộ điểm FAP
 
-Thêm nút **“Làm đề thi trên fepass.top”** (kèm phí, ví dụ `500đ`) cạnh các bài có nhãn **Đề Thi FE**, và nút **“Tải đề PE”** cạnh bài **Đề Thi PE** trên FuOverflow:
-
-- Trang danh sách: `https://fuoverflow.com/forums/OSG202/`
-- Trang chi tiết bài: `https://fuoverflow.com/threads/osg202-su26-re.7168/`
-
-Bấm nút sẽ mở `fepass.top` ở tab mới và hiện hộp **xác nhận lấy đề** (số credit sẽ bị trừ, số dư hiện tại, số dư sau khi trừ).
-**Chỉ khi người dùng bấm “Trả …” mới bị trừ credit.** Đề đã lấy trước đó thì mở lại miễn phí; đề lỗi được hoàn phí như bình thường.
+Đồng bộ điểm và lịch thi trên FAP (khi sinh viên tự bật) để fepass.top gợi ý điểm cần đạt cho từng môn.
 
 ## Cài đặt (chế độ nhà phát triển)
 
 1. Mở `chrome://extensions`, bật **Developer mode** (góc trên bên phải).
 2. Bấm **Load unpacked** và chọn thư mục `chrome-extension` này.
-3. Vào một chuyên mục FuOverflow có đề FE, nút xuất hiện cạnh tiêu đề bài.
 
-Sửa code xong chỉ cần bấm nút tải lại (⟳) ở thẻ tiện ích trong `chrome://extensions`, rồi tải lại trang FuOverflow.
+Sửa code xong chỉ cần bấm nút tải lại (⟳) ở thẻ tiện ích trong `chrome://extensions`.
 
 ## Cách hoạt động
 
 | File | Việc |
 |---|---|
-| `manifest.json` | Manifest V3. Chỉ chạy trên `fuoverflow.com`; quyền: `storage`, và gọi API `api.fepass.top` (cùng `localhost` để chạy thử). |
-| `content.js`, `content.css` | Quét trang, tìm bài có nhãn “Đề Thi FE” (danh sách `.structItem-title`, trang bài `h1.p-title-value`), chèn nút. Có theo dõi thay đổi DOM để nút vẫn hiện khi trang nạp thêm nội dung. |
-| `background.js` | Lấy phí lấy đề từ `GET /api/v1/crawl-jobs/price` (endpoint công khai) và nhớ 10 phút. Gọi ở đây vì trang FuOverflow không được phép gọi chéo tên miền. |
-| `popup.html/js/css` | Popup: thẻ Điểm FAP (trạng thái, nút Đồng bộ ngay, xoá dữ liệu đã đọc), công tắc thông báo trên FAP; mục “Nâng cao” để trỏ sang môi trường chạy thử. Hỗ trợ chế độ tối. |
+| `manifest.json` | Manifest V3. Chạy trên `fap.fpt.edu.vn` và fepass.top; quyền: `storage`, `alarms`, và gọi API `api.fepass.top` (cùng `localhost` để chạy thử). |
+| `background.js` | Kiểm tra bản mới mỗi ngày và cập nhật dấu “!” trên biểu tượng. |
+| `popup.html/js/css` | Popup: thẻ Điểm FAP (trạng thái, nút Đồng bộ ngay, xoá dữ liệu đã đọc); mục “Nâng cao” để trỏ sang môi trường local. |
 | `shared.js` | Cấu hình mặc định + kiểm tra địa chỉ (chỉ `https`, hoặc `http://localhost`). |
-
-Cả hai nút (“Làm đề” cho Đề Thi FE, “Tải đề PE” cho Đề Thi PE) trỏ tới: `https://fepass.top/fetch?link=<link bài>&src=ext`.
-Phía website (`frontend/src/features/exam-import/FetchLinkPage.tsx`) hỏi phí và mở hộp xác nhận; người dùng bấm xác nhận mới bị trừ credit (đề đã có trong kho thì mở luôn). Lấy xong: đề FE mở trang làm bài, đề PE mở trang xem trước `/exam/<id>/preview` (có nút Download All tải mọi tài nguyên trong một file zip).
 
 ## Đồng bộ điểm FAP (từ bản 1.4.0)
 
@@ -48,17 +37,16 @@ Chỉ hoạt động khi sinh viên tự bật **Đồng bộ điểm FAP** ở 
 - Thông báo trên FAP vẽ bằng Shadow DOM (CSS của FAP không ảnh hưởng). Nút ✕ lưu `fapNoticeUntil` (24 giờ) để ẩn; lỗi và tiến độ vẫn hiện khi sinh viên chủ động bấm Đồng bộ ngay.
 - `site.js` đọc thời điểm website đã gửi điểm (`localStorage fepass.grades.uploadedAt`) và lưu `fapUploadedAt` để popup hiện “Đã gửi lên FePass”.
 - `background.js`: dấu “!” trên biểu tượng khi có bản mới hoặc điểm đã đọc quá 14 ngày.
-- Đồng bộ điểm không còn phụ thuộc công tắc “Nút làm đề trên FuOverflow”.
 - **Công tắc đồng bộ trong popup:** extension không có token nên không tự đổi cài đặt trên máy chủ. Popup gửi tin `fepass:set-sync` tới tab fepass.top đang mở; `site.js` phát sự kiện `fepass:set-sync` cho website (`GradeBridgeHost`), website gọi API rồi trả `fepass:set-sync-result`. Không có tab nào trả lời thì popup mở `/account/grades?sync=on|off` và website hỏi xác nhận. Tắt luôn có bước xác nhận vì dữ liệu đã lưu bị xoá.
 - Website chạy cầu nối ở mọi trang (không chỉ trang Điểm FAP), nên điểm tự gửi lên khi có bất kỳ tab FePass nào đang mở.
 
 ## Quyền riêng tư
 
-Tiện ích không đọc nội dung bài viết ngoài tiêu đề/nhãn, không lưu tài khoản hay mật khẩu. Trên FuOverflow chỉ gọi một endpoint công khai để lấy giá. Điểm FAP chỉ được đọc khi sinh viên bật đồng bộ, và chỉ gửi lên tài khoản fepass.top của chính họ.
+Tiện ích không lưu tài khoản hay mật khẩu. Điểm FAP chỉ được đọc khi sinh viên bật đồng bộ, và chỉ gửi lên tài khoản fepass.top của chính họ.
 
 ## Chạy thử với máy local
 
-Mở popup > Nâng cao, đặt **Địa chỉ website** `http://localhost:5173` và **Địa chỉ API** `http://localhost:8000` (đổi theo cổng backend của bạn), bấm Lưu. Nút trên FuOverflow sẽ trỏ về website local.
+Mở popup > Nâng cao, đặt **Địa chỉ website** `http://localhost:5173` và **Địa chỉ API** `http://localhost:8000` (đổi theo cổng backend của bạn), bấm Lưu. Tiện ích sẽ làm việc với website local.
 
 ## Đưa lên Chrome Web Store (tùy chọn)
 

@@ -1,8 +1,7 @@
-import { BadgeCheck, CalendarClock, Check, Crown, ShieldCheck, Wallet } from "lucide-react";
+import { CalendarClock, Check, Crown, ShieldCheck, Wallet } from "lucide-react";
 import { logos } from "@/shared/brand/brand";
 import { formatDate } from "@/shared/utils/formatters";
 import type { PlanInfo } from "../plan.api";
-import { vnd } from "./money";
 import { DARK_GOLD, GOLD_GLOSS } from "@/shared/ui/gold";
 
 interface Props {
@@ -34,12 +33,6 @@ export function ProHero({ plan, pro, daysLeft, expiresAt }: Props) {
             Lấy đề và xem giải thích AI <b className="text-white">không bị tính phí</b> trong suốt thời hạn Pro. Trả một lần, không tự gia hạn.
           </p>
 
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-2 expanded:justify-start">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#ffc61f]/50 bg-gradient-to-b from-[#ffc61f]/25 to-[#ffc61f]/10 px-3 py-1.5 text-sm font-bold text-[#ffe58a] shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] backdrop-blur">
-              <BadgeCheck size={16} /> Rẻ hơn {vnd(plan.savings)} so với FuOverflow VIP
-            </span>
-          </div>
-
           <p className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-[#fff6dc]/65 expanded:justify-start">
             <span className="inline-flex items-center gap-1"><ShieldCheck size={13} /> Trả một lần</span>
             <span className="inline-flex items-center gap-1"><Check size={13} /> Không tự gia hạn</span>
@@ -63,7 +56,6 @@ export function ProHero({ plan, pro, daysLeft, expiresAt }: Props) {
             <img src={logos.mark} alt="" className="relative mx-auto w-52 drop-shadow-[0_18px_30px_rgba(0,0,0,0.5)]" draggable={false} />
             <Crown size={70} strokeWidth={1.6} className="absolute -top-8 left-1/2 -translate-x-1/2 -rotate-6 fill-[#ffc61f] text-[#ffe58a] drop-shadow-[0_6px_14px_rgba(255,198,31,0.6)]" />
           </div>
-          <div className="absolute -left-3 top-16 rotate-[-6deg] rounded-xl bg-white px-3 py-1.5 text-sm font-extrabold text-[#3a2600] shadow-xl">-{vnd(plan.savings)}</div>
           <div className="absolute -right-2 bottom-12 rotate-[5deg] rounded-xl bg-[#ff4d4d] px-3 py-1.5 text-sm font-extrabold text-white shadow-xl">{plan.months} tháng</div>
         </div>
       </div>

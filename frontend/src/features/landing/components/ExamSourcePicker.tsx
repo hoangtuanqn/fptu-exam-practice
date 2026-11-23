@@ -1,6 +1,6 @@
 import { MyExams } from "@/features/exam-store/MyExams";
 import type { PickFolder } from "@/features/practice/components/FolderInput";
-import type { ImportedExam } from "@/features/exam-import/types";
+import type { ImportedExam } from "@/features/exam/types";
 import { LatestExamsStrip, PICK_SECTION_ID } from "./LatestExamsStrip";
 import { PickExamTab } from "./PickExamTab";
 

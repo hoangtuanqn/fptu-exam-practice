@@ -7,7 +7,7 @@ import ChapterSetPage from "@/features/chapter-set/ChapterSetPage";
 
 type Tab = "mine" | "subject" | "chapters";
 
-// Kho đề: "Của tôi" (đề đã lấy, lượt làm dở) và "Theo môn" (toàn bộ đề FE của từng môn trên FuOverflow, lấy khi cần)
+// Kho đề: "Của tôi" (đề đã lấy, lượt làm dở) và "Theo môn" (các đề hệ thống đã có của từng môn)
 export default function ExamStorePage() {
   const [url, setUrl] = useUrlState({ tab: "mine", subject: "", term: "", q: "", page: "1" });
   const tab: Tab = url.tab === "subject" || url.tab === "chapters" ? url.tab : "mine";
@@ -18,7 +18,7 @@ export default function ExamStorePage() {
       <PageHeader
         eyebrow="Luyện đề"
         title="Kho đề"
-        description={tab === "mine" ? "Các đề bạn đã lấy. Bấm vào một đề để làm, lượt đang dở được lưu để làm tiếp." : "Toàn bộ đề FE của từng môn. Chỉ khi bạn bấm lấy và đồng ý, hệ thống mới tải ảnh đề và trừ phí."}
+        description={tab === "mine" ? "Các đề bạn đã lấy. Bấm vào một đề để làm, lượt đang dở được lưu để làm tiếp." : "Các đề đã có của từng môn. Đề có phí chỉ trừ credit khi bạn bấm mở và đồng ý."}
       />
       )}
       <Segmented

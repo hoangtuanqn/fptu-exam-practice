@@ -4,7 +4,6 @@ export const PRO_PLAN = {
   name: "Pro",
   months: 4,
   price: 99_000, // credit (1 credit = 1đ)
-  fuoPrice: 192_000, // giá mua trực tiếp gói VIP trên FuOverflow cho cùng thời hạn, dùng để tính mức tiết kiệm
 } as const;
 
 // Gói Nước rút: cùng quyền lợi Pro nhưng ngắn hạn và rẻ, cho người chỉ cần ôn gấp trước kỳ thi
@@ -20,9 +19,9 @@ export type PlanCode = (typeof PLAN_CODES)[number];
 
 // Quyền lợi của Pro (bật/tắt từng mục ở đây; giao diện đọc từ /plan nên luôn khớp)
 export const PRO_BENEFITS = {
-  freeFetch: true, // lấy đề FuOverflow không bị trừ phí
+  freeFetch: true, // mở đề không bị trừ phí
   freeExplain: true, // xem giải thích AI mọi câu không bị trừ phí
-  freePe: true, // tải bộ tài nguyên đề PE không bị trừ phí
+  freePe: false, // đã bỏ: không còn tải bộ tài nguyên đề PE (giữ khoá cho giao diện cũ)
   topicReport: true, // báo cáo điểm mạnh/yếu đầy đủ theo chủ đề và luyện đúng phần yếu (gói thường chỉ thấy chủ đề yếu nhất)
   frequentQuestions: true, // xem toàn bộ "Câu hay ra" của môn (gói thường chỉ xem FREQUENT_FREE_LIMIT câu đầu)
   unlimitedReview: true, // Sổ câu sai không giới hạn số câu (gói thường tối đa REVIEW_FREE_LIMIT)

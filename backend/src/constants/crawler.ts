@@ -1,49 +1,16 @@
+// Cấu hình mở đề (lưu ở bảng settings, khoá "crawler.<tên>")
 export interface CrawlerConfig {
-  cookie: string; // cookie đăng nhập FuOverflow (ảnh gốc yêu cầu đăng nhập)
-  loginEmail: string; // tài khoản FuOverflow để tự đăng nhập lấy cookie mới khi phiên hết hạn
-  loginPassword: string; // không bao giờ trả ra giao diện
-  loginLastAt: string; // lần đăng nhập tự động gần nhất (ISO), rỗng = chưa có
-  loginLastError: string; // lỗi của lần đó, rỗng = thành công
-  userAgent: string; // phải trùng User-Agent của trình duyệt đã lấy cookie
-  referer: string;
-  requestDelayMs: number; // nghỉ giữa các request liên tiếp của cùng một luồng để không bị chặn
-  concurrency: number; // số request tải ảnh/bình luận chạy cùng lúc (1 = lần lượt)
-  webpQuality: number; // chất lượng WebP khi chuyển ảnh
-  fetchPrice: number; // phí (VND) mỗi lần lấy đề từ FuOverflow, 0 = miễn phí
+  fetchPrice: number; // phí (credit) mỗi lần mở một đề chưa có trong kho, 0 = miễn phí
 }
 
 export const CRAWLER_DEFAULTS: CrawlerConfig = {
-  cookie: "",
-  loginEmail: "",
-  loginPassword: "",
-  loginLastAt: "",
-  loginLastError: "",
-  userAgent: "",
-  referer: "https://fuoverflow.com/",
-  requestDelayMs: 300,
-  concurrency: 4,
-  webpQuality: 80,
   fetchPrice: 0,
 };
 
 export const CRAWLER_KEY_PREFIX = "crawler.";
 
-export const FUO_HOST = "fuoverflow.com";
-// Link đề sai dạng: chỉ rõ dạng đúng để người dùng tự sửa
-export const FUO_LINK_INVALID = "Link chưa đúng dạng link bài viết FuOverflow. Hãy mở bài đề trên FuOverflow rồi sao chép link trên thanh địa chỉ, ví dụ: https://fuoverflow.com/threads/ten-de.1234/";
-
-// Đáp án tạm cho mọi câu cho tới khi có logic xác định đáp án đúng từ bình luận
-
 // Thư mục của một đề trong STORAGE_DIR: exams/<threadId>/ gồm images/<tên>.webp và comments.txt
 export const EXAM_STORAGE_DIR = "exams";
-// Đề nằm trong hệ thống quá chừng này ngày (≈ 4 tháng) thì lần lấy kế tiếp sẽ làm mới: lấy lại ảnh, bình luận và giải lại đáp án
-export const EXAM_STALE_AFTER_DAYS = 120;
-// Làm mới thất bại thì chưa thử lại ngay (tránh dồn request sang FuOverflow mỗi lần có người lấy đề)
-export const EXAM_REFRESH_RETRY_HOURS = 24;
-
 export const EXAM_IMAGES_DIR = "images";
 // Tệp đính kèm không phải ảnh (pdf, zip, video...): lưu nguyên bản ở exams/<threadId>/files/
 export const EXAM_FILES_DIR = "files";
-export const ATTACHMENT_MAX_BYTES = 50 * 1024 * 1024; // mỗi tệp; lớn hơn thì bỏ qua tệp đó (không hỏng cả đề)
-export const ATTACHMENT_TOTAL_MAX_BYTES = 200 * 1024 * 1024; // cả đề
-export const ATTACHMENT_NAME_MAX = 120; // độ dài tên lưu trên đĩa (không đuôi), filePath trong DB tối đa 255

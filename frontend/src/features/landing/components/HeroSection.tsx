@@ -1,5 +1,5 @@
 import { Sparkles } from "lucide-react";
-import type { ImportedExam } from "@/features/exam-import/types";
+import type { ImportedExam } from "@/features/exam/types";
 import type { PickFolder } from "@/features/practice/components/FolderInput";
 import { brand } from "@/shared/brand/brand";
 import { ExamSourcePicker } from "./ExamSourcePicker";

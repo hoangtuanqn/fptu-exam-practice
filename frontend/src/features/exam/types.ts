@@ -1,19 +1,5 @@
 import type { AnswerSource, Question } from "@/features/practice/types";
 
-export type CrawlJobStatus = "QUEUED" | "RUNNING" | "DONE" | "FAILED";
-
-export interface CrawlJob {
-  id: number;
-  status: CrawlJobStatus;
-  stage: string | null; // bước đang làm, ví dụ "Đang tải ảnh 12/50"
-  error: string | null;
-  examId: string | null;
-  ahead: number; // số lượt phía trước trong hàng đợi (khi QUEUED)
-}
-
-// POST /crawl-jobs: đề đã có thì trả examId ngay, chưa có thì trả job để theo dõi
-export type SubmitResult = { existed: true; examId: string; title: string; free?: boolean } | { existed: false; job: CrawlJob };
-
 // Loại đề; máy chủ cũ không trả về thì coi là FE
 export type ExamKind = "FE" | "PE" | "QUIZ" | "OTHER";
 
@@ -22,7 +8,7 @@ export interface ImportedExam {
   title: string;
   kind?: ExamKind;
   answerStatus: AnswerSource; // PENDING = AI đang phân tích đáp án
-  totalQuestions: number; // lớn hơn questions.length = đề còn đang được lấy về, các câu sau đến qua socket
+  totalQuestions: number; // lớn hơn questions.length = đề còn đang được xử lý, các câu sau đến qua socket
   questions: Question[];
   attachments?: ExamAttachment[]; // tệp không phải ảnh (pdf, zip...); máy chủ cũ không trả về. Đề chỉ có tệp thì questions rỗng
 }

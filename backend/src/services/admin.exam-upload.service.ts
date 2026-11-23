@@ -19,18 +19,21 @@ import { examUploadQueue } from "../jobs/exam-upload.queue";
 import { realtimeHub } from "../realtime/hub";
 import { examGapRepository } from "../repositories/exam-gap.repository";
 import { examRepository, isDuplicateThread, type AnswerSource } from "../repositories/exam.repository";
-import { fuoCatalogRepository } from "../repositories/fuo-catalog.repository";
 import { AppError } from "../rules/error";
 import type { ExamGapFilter, ExamGapsQuery, UpdateExamImagesBody, UploadExamBody } from "../rules/requests/exam-upload.request";
 import { isWebpSignature } from "../utils/exam-contribution";
 import { baseName, parseAnswersJson, planUploadNumbers } from "../utils/exam-upload";
 import { resolveInside } from "../utils/exam-zip";
-import { threadUrl } from "../utils/fuo-url";
+import { createKeyLock } from "../utils/key-lock";
 import type { StagedFile } from "../utils/upload-queue";
 import { toMeta } from "../utils/pagination";
 import { invalidateCatalogCache } from "./catalog.service";
 import { examSolveService } from "./exam-solve.service";
-import { imagePathOf, withThreadLock } from "./exam-import.service";
+
+// Mọi lượt ghi cùng một đề (theo threadId) chạy lần lượt, không xoá hay ghi đè ảnh của nhau
+const withThreadLock = createKeyLock();
+// Đường dẫn ảnh lưu trong DB, tương đối so với STORAGE_DIR (luôn dùng "/"): exams/<threadId>/images/<tên>.webp
+const imagePathOf = (threadId: string, file: string) => `${EXAM_STORAGE_DIR}/${threadId}/${EXAM_IMAGES_DIR}/${file}`;
 
 type MemFile = Pick<Express.Multer.File, "buffer" | "originalname">;
 type File = MemFile | StagedFile; // trong RAM (gửi thẳng) hoặc tệp tạm trên đĩa (chạy nền)
@@ -130,26 +133,19 @@ const published = (examId: string) => {
   void realtimeHub.publishExam(examId);
 };
 
-/** Phần kiểm tra nhanh trước khi nhận việc (tên ảnh, đáp án, bài danh mục, đề đã đủ, AI đang giải): lỗi thì trả 400/404/409 ngay */
+/** Phần kiểm tra nhanh trước khi nhận việc (tiêu đề, tên ảnh, đáp án): lỗi thì trả 400 ngay */
 async function prepareCreate(body: UploadExamBody, files: MemFile[]) {
-  const thread = body.threadId ? await fuoCatalogRepository.findThread(body.threadId) : null;
-  if (body.threadId && !thread) throw AppError.notFound("Không tìm thấy bài này trong danh mục FuOverflow");
-  const title = body.title ?? thread?.title;
+  const title = body.title;
   if (!title) throw invalid("Vui lòng nhập tiêu đề đề thi", "title");
   const p = plan(files, 0, body.answers);
   checkSignatures(files);
-  if (thread) {
-    const existing = await examRepository.findByThreadId(thread.threadId);
-    if (existing && (await examRepository.isComplete(existing))) throw examExists(existing.id);
-    if (existing && examSolveService.isBusy(existing.id)) throw solving();
-  }
-  const threadId = thread?.threadId ?? `${MANUAL_THREAD_PREFIX}${randomBytes(MANUAL_THREAD_HEX_BYTES).toString("hex")}`;
-  const info = { title, subjectCode: body.subjectCode, kind: body.kind ?? thread?.kind ?? "FE", postedAt: thread?.postedAt ?? null };
-  return { thread, threadId, title, p, info };
+  const threadId = `${MANUAL_THREAD_PREFIX}${randomBytes(MANUAL_THREAD_HEX_BYTES).toString("hex")}`;
+  const info = { title, subjectCode: body.subjectCode, kind: body.kind ?? "FE", postedAt: null };
+  return { threadId, title, p, info };
 }
 
 /** Ghi đề trong khoá của threadId; kiểm tra lại mọi điều kiện vì trạng thái có thể đã đổi từ lúc nhận việc */
-function runCreate(adminId: string, { thread, threadId, p, info }: Awaited<ReturnType<typeof prepareCreate>>, files: File[]) {
+function runCreate(adminId: string, { threadId, p, info }: Awaited<ReturnType<typeof prepareCreate>>, files: File[]) {
   const total = p.numbers.length;
   const answerSource: AnswerSource = p.answers.size ? "MANUAL" : "DEFAULT";
   return withThreadLock(threadId, async () => {
@@ -167,7 +163,7 @@ function runCreate(adminId: string, { thread, threadId, p, info }: Awaited<Retur
         async (tx) => {
           const id = existing
             ? (await examRepository.setUploadedInfo(tx, existing.id, { ...info, totalQuestions: total, answerSource, aiReport: null })).id
-            : (await examRepository.createUploaded(tx, { ...info, threadId, sourceUrl: thread ? threadUrl(threadId) : "", totalQuestions: total, answerSource, createdById: adminId })).id;
+            : (await examRepository.createUploaded(tx, { ...info, threadId, sourceUrl: "",totalQuestions: total, answerSource, createdById: adminId })).id;
           if (existing) await examRepository.dropQuestionsAfter(tx, id, total);
           await examRepository.saveUploadedQuestions(tx, id, rows, replaced, [...p.answers]);
           return id;
@@ -231,10 +227,8 @@ function runUpdate(adminId: string, id: string, threadId: string, body: UpdateEx
 
 export const adminExamUploadService = {
   /**
-   * Tạo đề từ thư mục ảnh tải tay (Q1..QN.webp, đủ 1..N) + ans.json. Gắn bài của danh mục (threadId) thì lấy link, ngày, loại, tiêu đề
-   * mặc định từ bài đó; không gắn thì threadId tự sinh "m<hex>" và sourceUrl rỗng (giao diện ẩn link khi rỗng).
+   * Tạo đề từ thư mục ảnh tải tay (Q1..QN.webp, đủ 1..N) + ans.json. threadId tự sinh "m<hex>" và sourceUrl rỗng (giao diện ẩn link khi rỗng).
    * Có đáp án ít nhất một câu: MANUAL; không có: DEFAULT (chưa có đáp án, không gọi AI ở đây).
-   * Đã có đề cùng threadId: dở dang thì điền vào đề đó (giữ id, bỏ câu thừa), đủ rồi thì 409.
    */
   async create(adminId: string, body: UploadExamBody, files: MemFile[]) {
     return runCreate(adminId, await prepareCreate(body, files), files);
@@ -267,8 +261,7 @@ export const adminExamUploadService = {
   async gaps(query: ExamGapsQuery) {
     const { gap, kind, subject, q, page, limit } = query;
     const { items, total } = await examGapRepository.list(gap, { kind, subject, q }, { page, limit });
-    // Bài chưa có đề: link bài trên FuOverflow dựng từ threadId như mọi chỗ khác; đề tải tay không có link (null)
-    return { items: items.map((i) => ({ ...i, sourceUrl: i.sourceUrl ?? (i.examId ? null : threadUrl(i.threadId)) })), meta: toMeta({ page, limit }, total) };
+    return { items, meta: toMeta({ page, limit }, total) };
   },
 
   gapSummary: (filter: ExamGapFilter) => examGapRepository.summary(filter),

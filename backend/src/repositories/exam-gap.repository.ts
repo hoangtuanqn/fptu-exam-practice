@@ -21,19 +21,12 @@ export interface ExamGapRow {
 const containing = (q: string) => `%${q.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
 
 // shortcut: tìm theo tên là LIKE '%q%' (quét bảng, vài chục nghìn dòng vẫn nhanh); chậm thì thêm FULLTEXT trên title
-const filters = (alias: "t" | "e", f: ExamGapFilter) => {
+const filters = (alias: "e", f: ExamGapFilter) => {
   const col = (name: string) => Prisma.raw(`${alias}.${name}`);
   return Prisma.sql`${f.kind ? Prisma.sql` AND ${col("kind")} = ${f.kind}` : Prisma.empty}${f.subject ? Prisma.sql` AND ${col("subject_code")} = ${f.subject}` : Prisma.empty}${
     f.q ? Prisma.sql` AND ${col("title")} LIKE ${containing(f.q)}` : Prisma.empty
   }`;
 };
-
-// Bài trong danh mục chưa có đề: NOT EXISTS dùng unique index exams.thread_id; lọc môn dùng index (subject_code, posted_at)
-const missingExams = (f: ExamGapFilter) => Prisma.sql`
-  SELECT t.thread_id AS threadId, NULL AS examId, t.title, t.subject_code AS subjectCode, t.kind, t.posted_at AS postedAt, NULL AS sourceUrl,
-    0 AS totalQuestions, 0 AS questions, 0 AS answered, 'no_exam' AS gap
-  FROM fuo_threads t
-  WHERE NOT EXISTS (SELECT 1 FROM exams e WHERE e.thread_id = t.thread_id)${filters("t", f)}`;
 
 /**
  * Đề còn thiếu ảnh hoặc đáp án. Điều kiện CASE là bản SQL của classifyExamGap (utils/exam-upload.ts): sửa một chỗ thì sửa cả hai.
@@ -66,13 +59,8 @@ const num = (v: unknown) => Number(v ?? 0);
 
 export const examGapRepository = {
   async list(gap: "all" | ExamGap, f: ExamGapFilter, page: PaginationQuery) {
-    const parts: Prisma.Sql[] = [];
-    if (gap === "all" || gap === "no_exam") parts.push(missingExams(f));
-    if (gap !== "no_exam") parts.push(examsWithGaps(f, gap === "all" ? null : gap));
-    const union = Prisma.join(
-      parts.map((p) => Prisma.sql`(${p})`),
-      " UNION ALL ",
-    );
+    if (gap === "no_exam") return { items: [] as ExamGapRow[], total: 0 }; // chỉ còn đề có trong hệ thống
+    const union = examsWithGaps(f, gap === "all" ? null : gap);
     const { skip, take } = toSkipTake(page);
     const [rows, count] = await Promise.all([
       prisma.$queryRaw<Record<string, unknown>[]>`SELECT * FROM (${union}) u ORDER BY u.postedAt IS NULL, u.postedAt DESC, u.threadId DESC LIMIT ${take} OFFSET ${skip}`,
@@ -94,18 +82,10 @@ export const examGapRepository = {
     return { items, total: num(count[0]?.n) };
   },
 
-  // Mọi bài chưa có đề theo bộ lọc của trang, đăng từ `since` (bài chưa rõ ngày vẫn tính): cho "Lấy hết đề còn thiếu", mới nhất trước
-  async missingThreadIds(f: ExamGapFilter, since: Date) {
-    const rows = await prisma.$queryRaw<{ threadId: string }[]>`
-      SELECT m.threadId FROM (${missingExams(f)}) m WHERE m.postedAt IS NULL OR m.postedAt >= ${since} ORDER BY m.postedAt IS NULL, m.postedAt DESC`;
-    return rows.map((r) => r.threadId);
-  },
-
   async summary(f: ExamGapFilter) {
-    const [row] = await prisma.$queryRaw<{ noExam: bigint; noImages: unknown; noAnswers: unknown }[]>`
-      SELECT (SELECT COUNT(*) FROM (${missingExams(f)}) m) AS noExam,
-        COALESCE(SUM(x.gap = 'no_images'), 0) AS noImages, COALESCE(SUM(x.gap = 'no_answers'), 0) AS noAnswers
+    const [row] = await prisma.$queryRaw<{ noImages: unknown; noAnswers: unknown }[]>`
+      SELECT COALESCE(SUM(x.gap = 'no_images'), 0) AS noImages, COALESCE(SUM(x.gap = 'no_answers'), 0) AS noAnswers
       FROM (${examsWithGaps(f, null)}) x`;
-    return { noExam: num(row?.noExam), noImages: num(row?.noImages), noAnswers: num(row?.noAnswers) };
+    return { noExam: 0, noImages: num(row?.noImages), noAnswers: num(row?.noAnswers) }; // noExam: giữ trường cho giao diện cũ
   },
 };

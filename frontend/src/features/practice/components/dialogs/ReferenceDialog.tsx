@@ -2,7 +2,7 @@ import { openImageHandler } from "@/shared/api/protectedImage";
 import { ProtectedImg } from "@/shared/ui/ProtectedImg";
 import { BookOpen, ExternalLink } from "lucide-react";
 import { AttachmentList } from "@/features/exam-attachments/AttachmentList";
-import type { ExamAttachment } from "@/features/exam-import/types";
+import type { ExamAttachment } from "@/features/exam/types";
 import type { Question } from "@/features/practice/types.ts";
 import { Button } from "@/shared/ui/Button";
 import { Modal, ModalActions, ModalTitle } from "@/shared/ui/Modal";

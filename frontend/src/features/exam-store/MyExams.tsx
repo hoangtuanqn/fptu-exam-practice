@@ -2,8 +2,8 @@ import { useState } from "react";
 import { errorMessage } from "@/shared/api/errors";
 import { Link } from "react-router-dom";
 import { Loader2 } from "lucide-react";
-import { examImportApi } from "@/features/exam-import/exam-import.api";
-import type { ImportedExam } from "@/features/exam-import/types";
+import { examApi } from "@/features/exam/exam.api";
+import type { ImportedExam } from "@/features/exam/types";
 import { ResumeList } from "@/features/practice-session/ResumeList";
 import { formatScore } from "@/features/practice/utils/format";
 import { useAuth } from "@/features/auth/AuthContext";
@@ -33,7 +33,7 @@ export function MyExams({ onOpen }: Props) {
   async function open(id: string) {
     setOpeningId(id);
     try {
-      onOpen(await examImportApi.exam(id));
+      onOpen(await examApi.exam(id));
     } catch (err) {
       toast.error(errorMessage(err, "Không mở được đề này"));
     } finally {

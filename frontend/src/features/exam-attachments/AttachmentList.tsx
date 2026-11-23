@@ -1,5 +1,5 @@
 import { Download, ExternalLink, File, FileArchive, FileText, Film, Music, type LucideIcon } from "lucide-react";
-import type { ExamAttachment } from "@/features/exam-import/types";
+import type { ExamAttachment } from "@/features/exam/types";
 import { buttonClass } from "@/shared/ui/Button";
 import { formatBytes } from "@/shared/utils/formatters";
 

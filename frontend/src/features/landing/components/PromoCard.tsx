@@ -103,9 +103,6 @@ export function PromoCard() {
               </div>
             ))}
           </dl>
-          <p className="mt-2 text-xs italic text-on-surface-variant">
-            Không cần nâng cấp VIP bên FuOverflow.
-          </p>
 
           <Link
             to="/register"

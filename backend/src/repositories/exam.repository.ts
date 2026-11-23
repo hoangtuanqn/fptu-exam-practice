@@ -149,7 +149,7 @@ export const examRepository = {
     };
   },
 
-  // Đề được tạo TRƯỚC khi có ảnh: câu hỏi thêm dần qua addQuestions, `totalQuestions` là tổng số ảnh sẽ có.
+  // Đề tạo trước khi có câu hỏi, `totalQuestions` là tổng số ảnh sẽ có.
   // Đề chỉ coi là đủ khi số câu đã lưu bằng totalQuestions (isComplete).
   createShell: (data: Omit<NewExam, "questions"> & { totalQuestions: number }) =>
     prisma.exam.create({
@@ -168,41 +168,6 @@ export const examRepository = {
         description: data.description,
       },
     }),
-
-  addQuestions: (examId: string, questions: NewExam["questions"]) =>
-    prisma.examQuestion.createMany({ data: questions.map((q) => ({ ...q, examId })), skipDuplicates: true }),
-
-  // Làm mới đề: ghi đè từng câu theo số câu (giữ nguyên id đề và đáp án cũ cho tới khi giải xong lại)
-  // Một câu INSERT ... ON DUPLICATE KEY cho cả đề (thay vì mỗi câu một lượt upsert): câu đã có chỉ đổi ảnh/tên, giữ đáp án cũ
-  async upsertQuestions(examId: string, questions: NewExam["questions"]) {
-    if (questions.length === 0) return;
-    const rows = questions.map((q) => Prisma.sql`(${examId}, ${q.number}, ${q.name}, ${q.imagePath}, ${q.sourceImage}, ${q.mediaUrl ?? null}, ${q.answer})`);
-    await prisma.$executeRaw`
-      INSERT INTO exam_questions (exam_id, number, name, image_path, source_image, media_url, answer)
-      VALUES ${Prisma.join(rows)} AS new
-      ON DUPLICATE KEY UPDATE name = new.name, image_path = new.image_path, source_image = new.source_image, media_url = COALESCE(new.media_url, exam_questions.media_url)`;
-  },
-
-  // Làm mới xong phần lấy dữ liệu: cập nhật thông tin đề, bỏ các câu thừa (thread bớt ảnh) và lời giải thích cũ
-  finishRefresh: (examId: string, data: { title: string; sourceUrl: string; author?: string; postedAt?: string; total: number; kind: ExamKind; description: string | null }) =>
-    prisma.$transaction([
-      prisma.exam.update({
-        where: { id: examId },
-        data: {
-          title: data.title,
-          subjectCode: subjectCodeFromTitle(data.title),
-          sourceUrl: data.sourceUrl,
-          author: data.author,
-          postedAt: parseSiteTime(data.postedAt),
-          totalQuestions: data.total,
-          kind: data.kind,
-          description: data.description,
-          refreshedAt: new Date(),
-        },
-      }),
-      prisma.examQuestion.deleteMany({ where: { examId, number: { gt: data.total } } }),
-      prisma.questionExplanation.deleteMany({ where: { examId } }),
-    ]),
 
   // Điền mã môn cho các đề cũ chưa có (chạy lúc khởi động, an toàn khi chạy lại). Đề không có mã trong tên vẫn để null.
   async backfillSubjectCodes() {
@@ -230,21 +195,7 @@ export const examRepository = {
     return rows.length;
   },
 
-  // Nạp dữ liệu mới cho đề có sẵn: loại và mô tả theo thread hiện tại
-  setThreadInfo: (examId: string, data: { kind: ExamKind; description: string | null }) => prisma.exam.update({ where: { id: examId }, data, select: { id: true } }),
-
   countQuestions: (examId: string) => prisma.examQuestion.count({ where: { examId } }),
-
-  // Nạp dữ liệu mới cho đề có sẵn: ảnh gốc từng câu để so với thread hiện tại (theo số câu)
-  findQuestionSources: (examId: string) =>
-    prisma.examQuestion.findMany({ where: { examId }, orderBy: { number: "asc" }, select: { number: true, name: true, sourceImage: true, mediaUrl: true } }),
-
-  // Thêm các câu mới ở cuối đề và nâng tổng số câu, cùng một transaction. Không đụng câu đã có (đáp án, lời giải thích giữ nguyên).
-  appendQuestions: (examId: string, questions: NewExam["questions"], total: number) =>
-    prisma.$transaction([
-      prisma.examQuestion.createMany({ data: questions.map((q) => ({ ...q, examId })), skipDuplicates: true }),
-      prisma.exam.updateMany({ where: { id: examId, totalQuestions: { lt: total } }, data: { totalQuestions: total } }),
-    ]),
 
   // Đề chỉ có tệp (0 câu) coi là xong khi đã ghi tệp đính kèm (ghi một lần ở cuối lượt lấy đề)
   isComplete: async (exam: { id: string; totalQuestions: number }) =>
