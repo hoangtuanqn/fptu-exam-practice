@@ -57,7 +57,6 @@ export const PUBLIC_PAGES: Record<string, PageSeo> = {
 
 // Trang không cho lên Google (cần đăng nhập, riêng tư, hoặc không có nội dung). Khoá là đường dẫn.
 export const PRIVATE_PAGES: Record<string, PageSeo> = {
-  "/search": { title: "Tìm kiếm", description: "Tìm môn học, tên đề thi và flashcard tại FEPass." },
   "/account/coursera": { title: "Đặt đơn Coursera", description: "Tìm khóa học, đặt đơn Coursera và theo dõi tiến độ xử lý tại FEPass." },
   "/admin/coursera": { title: "Quản trị: Coursera", description: "Quản lý danh mục khóa học và xử lý đơn Coursera của thành viên." },
   "/forgot-password": { title: "Quên mật khẩu", description: "Nhập email để nhận liên kết đặt lại mật khẩu tài khoản Luyện thi FE FPTU." },

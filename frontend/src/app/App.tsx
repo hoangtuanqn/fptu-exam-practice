@@ -22,6 +22,7 @@ import { FreeTurnNotice } from "@/features/link-reward/FreeTurnNotice";
 import { WhatsNewDialog } from "@/features/changelog/WhatsNewDialog";
 import PracticePage from "@/features/practice/PracticePage";
 import { SemesterPromoBar } from "@/features/plan/SemesterPromoBar";
+import { SearchProvider } from "@/features/search/GlobalSearch";
 
 // Không hiện ưu đãi khi đang luyện câu sai (màn làm bài)
 function AccountPromoBar() {
@@ -57,7 +58,6 @@ const routePages = {
   FetchLinkPage: () => import("@/features/exam-import/FetchLinkPage"),
   SubjectPage: () => import("@/features/landing/SubjectPage"),
   PublicCatalogPage: () => import("@/features/exam-store/PublicCatalogPage"),
-  SearchPage: () => import("@/features/search/SearchPage"),
   FrequentPage: () => import("@/features/frequent/FrequentPage"),
   FlashcardSubjectsPage: () => import("@/features/flashcard/FlashcardSubjectsPage"),
   FlashcardSubjectPage: () => import("@/features/flashcard/FlashcardSubjectPage"),
@@ -97,7 +97,6 @@ const ExamPreviewPage = lazy(routePages.ExamPreviewPage);
 const FetchLinkPage = lazy(routePages.FetchLinkPage);
 const SubjectPage = lazy(routePages.SubjectPage);
 const PublicCatalogPage = lazy(routePages.PublicCatalogPage);
-const SearchPage = lazy(routePages.SearchPage);
 const FrequentPage = lazy(routePages.FrequentPage);
 const FlashcardSubjectsPage = lazy(routePages.FlashcardSubjectsPage);
 const FlashcardSubjectPage = lazy(routePages.FlashcardSubjectPage);
@@ -156,6 +155,7 @@ export default function App() {
     return () => (window.cancelIdleCallback ? window.cancelIdleCallback(id) : clearTimeout(id));
   }, []);
   return (
+    <SearchProvider>
     <Suspense fallback={<PageSkeleton />}>
       <PageMeta />
       <ScrollToTop />
@@ -183,8 +183,6 @@ export default function App() {
         <Route path="/features" element={<FeaturesPage />} />
         {/* Kho đề công khai: khách xem môn và đề trước khi đăng ký */}
         <Route path="/kho-de" element={<PublicCatalogPage />} />
-        {/* Kết quả của ô tìm kiếm trên header: môn, đề, flashcard */}
-        <Route path="/search" element={<SearchPage />} />
         {/* Trang giới thiệu từng môn (SEO): /mon/pro192 */}
         <Route path="/mon/:code" element={<SubjectPage />} />
         {/* Flashcard theo môn: danh sách môn công khai, xem thẻ phải đăng nhập */}
@@ -256,5 +254,6 @@ export default function App() {
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Suspense>
+    </SearchProvider>
   );
 }
