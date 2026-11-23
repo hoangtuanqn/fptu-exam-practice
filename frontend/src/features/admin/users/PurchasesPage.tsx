@@ -106,7 +106,7 @@ export default function PurchasesPage() {
     <>
       <PageHeader title="Lịch sử mua" description="Ai đã mở khóa trọn bộ lời giải hay mua lẻ từng câu." />
       <Card>
-        <div className="flex flex-wrap items-center gap-3 border-b border-slate-100 p-4">
+        <div className="panel-filter-row">
           <Segmented
             label="Loại giao dịch"
             value={kind}

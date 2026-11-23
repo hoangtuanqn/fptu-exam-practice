@@ -90,7 +90,7 @@ export function ExplainBundleBanner({ bundle, unitPrice, collapsed, onCollapse, 
       <span aria-hidden className="bundle-orb pointer-events-none absolute -bottom-20 left-10 h-48 w-48 rounded-full bg-accent/20 blur-3xl [animation-delay:-3s]" />
 
 
-      <button onClick={onCollapse} aria-label="Thu gọn" title="Thu gọn" className="absolute right-2 top-2 z-10 rounded-md p-1 text-white/50 transition hover:bg-surface-container-lowest/10 hover:text-white">
+      <button onClick={onCollapse} aria-label="Thu gọn" title="Thu gọn" className="panel-hit absolute right-2 top-2 z-10 rounded-md p-1 text-white/50 transition hover:bg-surface-container-lowest/10 hover:text-white">
         <X size={14} />
       </button>
 

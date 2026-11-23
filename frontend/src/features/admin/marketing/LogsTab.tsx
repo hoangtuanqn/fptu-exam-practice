@@ -21,10 +21,11 @@ const FALLBACK: Record<string, string> = { winback: "Gọi quay lại", pro_upse
 
 function Yes({ on, label }: { on: boolean; label: string }) {
   return on ? (
-    <>
+    // relative: chữ ẩn (absolute) nằm trong khung cuộn của bảng, không kéo rộng cả trang
+    <span className="relative inline-flex">
       <Check size={18} className="text-success" aria-hidden />
       <span className="sr-only">{label}</span>
-    </>
+    </span>
   ) : (
     <span className="text-on-surface-variant" aria-hidden>
       –

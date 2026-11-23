@@ -62,7 +62,7 @@ export function PaymentPanel({ code, onClose }: { code: string; onClose: () => v
   if (notOwner) {
     return (
       <div className="space-y-3">
-        <button onClick={onClose} className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800">
+        <button onClick={onClose} className="panel-back-link">
           <ArrowLeft size={16} /> Quay lại
         </button>
         <PublicDepositView
@@ -115,7 +115,7 @@ export function PaymentPanel({ code, onClose }: { code: string; onClose: () => v
   return (
     <Card>
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
-        <button onClick={onClose} className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800">
+        <button onClick={onClose} className="panel-back-link">
           <ArrowLeft size={16} /> Quay lại
         </button>
         <span className="inline-flex items-center gap-1 text-xs text-slate-500">

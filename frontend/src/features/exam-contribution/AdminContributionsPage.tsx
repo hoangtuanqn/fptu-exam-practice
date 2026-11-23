@@ -89,7 +89,7 @@ export default function AdminContributionsPage() {
                   <Th>Người gửi</Th>
                   <Th>Trạng thái</Th>
                   <Th>Gửi lúc</Th>
-                  <Th>
+                  <Th className="relative">
                     <span className="sr-only">Thao tác</span>
                   </Th>
                 </Thead>

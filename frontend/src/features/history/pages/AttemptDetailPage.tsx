@@ -32,7 +32,7 @@ export default function AttemptDetailPage() {
   if (loading && !data)
     return (
       <>
-        <Link to="/account/attempts" className="mb-4 inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800">
+        <Link to="/account/attempts" className="panel-back-link mb-4">
           <ArrowLeft size={15} /> Lịch sử làm bài
         </Link>
         <SkeletonBlock lines={6} />
@@ -46,7 +46,7 @@ export default function AttemptDetailPage() {
 
   return (
     <>
-      <Link to="/account/attempts" className="mb-4 inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800">
+      <Link to="/account/attempts" className="panel-back-link mb-4">
         <ArrowLeft size={15} /> Lịch sử làm bài
       </Link>
 

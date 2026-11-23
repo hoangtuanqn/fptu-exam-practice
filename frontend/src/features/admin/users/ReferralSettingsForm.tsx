@@ -43,7 +43,7 @@ export function ReferralSettingsForm({ initial, onSaved }: { initial: ReferralSe
       <form onSubmit={onSubmit} className="space-y-5 p-5" noValidate>
         <FormError message={error} />
 
-        <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 p-4">
+        <div className="panel-setting-row">
           <div>
             <div className="text-sm font-medium text-slate-800">Bật chương trình giới thiệu</div>
             <div className="text-xs text-slate-500">Tắt thì không ai nhận thưởng hay hoa hồng mới. Liên kết giới thiệu vẫn hoạt động.</div>

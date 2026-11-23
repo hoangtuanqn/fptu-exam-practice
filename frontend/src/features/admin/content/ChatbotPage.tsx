@@ -70,7 +70,7 @@ function Settings({ data, onSaved }: { data: ChatbotAdmin; onSaved: () => void }
       />
       <form onSubmit={submit} className="space-y-5 p-5" noValidate>
         <FormError message={error} />
-        <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 p-4">
+        <div className="panel-setting-row">
           <div>
             <div className="text-sm font-medium text-slate-800">Bật chatbot hỗ trợ</div>
             <div className="text-xs text-slate-500">Tắt thì bong bóng “Hỏi trợ lý” biến mất khỏi website.</div>
