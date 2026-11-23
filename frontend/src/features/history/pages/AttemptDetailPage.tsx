@@ -12,6 +12,7 @@ import { Badge } from "@/shared/ui/Badge";
 import { buttonClass } from "@/shared/ui/Button";
 import { Card, CardHeader } from "@/shared/ui/Card";
 import { ErrorBox, Loading } from "@/shared/ui/Feedback";
+import { SkeletonBlock } from "@/shared/ui/Skeleton";
 import { ScoreRing } from "@/shared/ui/ScoreRing";
 import { formatDateTime } from "@/shared/utils/formatters";
 
@@ -28,7 +29,15 @@ export default function AttemptDetailPage() {
   const { data, error, loading, reload } = useApi(() => historyApi.get(id), [id]);
   const [filter, setFilter] = useState<Filter>("all");
 
-  if (loading && !data) return <Loading />;
+  if (loading && !data)
+    return (
+      <>
+        <Link to="/account/attempts" className="mb-4 inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800">
+          <ArrowLeft size={15} /> Lịch sử làm bài
+        </Link>
+        <SkeletonBlock lines={6} />
+      </>
+    );
   if (error || !data) return <ErrorBox message={error ?? "Không tải được bài làm"} onRetry={reload} />;
 
   const passed = data.score >= PASS_SCORE;

@@ -16,6 +16,7 @@ import { Button } from "@/shared/ui/Button";
 import { Card } from "@/shared/ui/Card";
 import { CopyButton } from "@/shared/ui/CopyButton";
 import { ErrorBox, FormError, Loading } from "@/shared/ui/Feedback";
+import { SkeletonBlock } from "@/shared/ui/Skeleton";
 import { Input, Select } from "@/shared/ui/Input";
 import { useConfirm } from "@/shared/ui/ConfirmDialog";
 
@@ -74,7 +75,15 @@ export default function UserDetailPage() {
   const userId = id ?? "";
   const { data, error, loading, reload } = useApi(() => adminApi.user(userId), [userId]);
   if (!isUuid(userId)) return <ErrorBox message="Thành viên không hợp lệ" />;
-  if (loading && !data) return <Loading />;
+  if (loading && !data)
+    return (
+      <>
+        <Link to="/admin/users" className="mb-4 inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800">
+          <ArrowLeft size={15} /> Danh sách thành viên
+        </Link>
+        <SkeletonBlock lines={8} />
+      </>
+    );
   if (error || !data) return <ErrorBox message={error ?? "Không tải được thành viên"} onRetry={reload} />;
   return <UserDetail key={data.id} initial={data} />;
 }

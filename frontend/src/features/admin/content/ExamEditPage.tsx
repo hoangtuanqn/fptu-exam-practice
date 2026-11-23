@@ -10,6 +10,7 @@ import { Badge, type Tone } from "@/shared/ui/Badge";
 import { Button } from "@/shared/ui/Button";
 import { Card } from "@/shared/ui/Card";
 import { ErrorBox, Loading } from "@/shared/ui/Feedback";
+import { SkeletonBlock } from "@/shared/ui/Skeleton";
 import { Modal, ModalActions, ModalTitle } from "@/shared/ui/Modal";
 import { Segmented } from "@/shared/ui/Segmented";
 import { errorMessage } from "@/shared/api/errors";
@@ -449,7 +450,15 @@ export default function ExamEditPage() {
   }
 
   if (!isUuid(examId)) return <ErrorBox message="Đề không hợp lệ" />;
-  if (loading && !data) return <Loading />;
+  if (loading && !data)
+    return (
+      <>
+        <Link to="/admin/exams" className="mb-4 inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800">
+          <ArrowLeft size={15} /> Danh sách đề
+        </Link>
+        <SkeletonBlock lines={6} />
+      </>
+    );
   if (error || !data) return <ErrorBox message={error ?? "Không tải được đề"} onRetry={reload} />;
 
   const locked = data.solving;
