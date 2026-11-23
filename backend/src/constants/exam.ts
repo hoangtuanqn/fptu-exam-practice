@@ -2,9 +2,10 @@
 // Cùng điều kiện với frequent-questions.service và review.service.
 export const USABLE_ANSWER_SOURCES = ["AI", "MANUAL"] as const;
 
-// Đề đủ ảnh được bày trong Kho đề theo môn: thêm DEFAULT (đề tải tay chưa có đáp án, đề lấy lúc AI tắt). Mở đề DEFAULT thì
-// AI giải lần đầu (nếu bật), không thì chỉ xem được kèm lời nhắn; không bao giờ lộ đáp án tạm. PENDING/FAILED không bày.
-export const CATALOG_ANSWER_SOURCES = [...USABLE_ANSWER_SOURCES, "DEFAULT"];
+// Đề đủ ảnh được bày trong Kho đề theo môn: thêm DEFAULT (đề tải tay chưa có đáp án, đề lấy lúc AI tắt) và FAILED (AI giải lỗi,
+// đáp án để trống). Mở đề DEFAULT/FAILED thì AI giải lại (nếu bật), không thì chỉ xem được kèm lời nhắn; không bao giờ lộ đáp án tạm.
+// PENDING (đang giải) không bày.
+export const CATALOG_ANSWER_SOURCES = [...USABLE_ANSWER_SOURCES, "DEFAULT", "FAILED"];
 
 // Đề làm bài được (luyện tập/thi) và được hỏi AI: đề FE từ chừng này câu; cùng mốc với MIN_PLAYABLE_QUESTIONS ở frontend
 export const MIN_PLAYABLE_QUESTIONS = 20;

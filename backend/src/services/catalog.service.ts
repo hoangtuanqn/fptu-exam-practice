@@ -10,7 +10,7 @@ import { subjectCodeFromTitle, subjectOfExam } from "../utils/subject-code";
 import { termOf, termRank } from "../utils/term";
 import { crawlerSettingService } from "./crawler-setting.service";
 
-// Kho đề theo môn: chỉ các đề đã có trong hệ thống (đủ ảnh, không đang chờ/lỗi AI).
+// Kho đề theo môn: chỉ các đề đã có trong hệ thống (đủ ảnh, không đang chờ AI).
 // Mỗi đề có một trạng thái: "owned" (đã trong kho của bạn) hoặc "ready" (mở ngay). "fetch" giữ trong kiểu cho giao diện cũ, không còn trả về.
 // Chỉ trả thông tin mô tả (tên, ngày, số câu); ảnh câu hỏi chỉ xem được sau khi mở đề.
 
@@ -46,7 +46,7 @@ let examCache: { at: number; exams: UsableExam[] } | null = null;
 // Tăng mỗi lần bỏ đệm: lượt đọc bắt đầu trước khi bỏ đệm thì không được ghi đè đệm bằng dữ liệu cũ
 let generation = 0;
 
-// Mọi đề đã lấy đủ ảnh và không đang chờ/lỗi AI (xem CATALOG_ANSWER_SOURCES)
+// Mọi đề đã lấy đủ ảnh và không đang chờ AI (xem CATALOG_ANSWER_SOURCES)
 async function usableExams(): Promise<UsableExam[]> {
   if (examCache && Date.now() - examCache.at < CACHE_MS) return examCache.exams;
   const gen = generation;
