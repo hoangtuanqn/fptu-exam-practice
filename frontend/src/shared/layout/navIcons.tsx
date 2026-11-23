@@ -1,0 +1,39 @@
+import type { ComponentType } from "react";
+
+// Icon menu dạng ảnh WEBP 3D màu vàng (public/icons/nav). Cùng cỡ và cùng cách gọi với icon lucide: <Icon size={20} className="..." />
+export type NavIconComponent = ComponentType<{ size?: number; className?: string }>;
+
+const img =
+  (name: string): NavIconComponent =>
+  ({ size = 24, className = "" }) => (
+    <img
+      src={`/icons/nav/${name}.webp`}
+      width={size}
+      height={size}
+      alt=""
+      aria-hidden
+      draggable={false}
+      decoding="async"
+      className={`shrink-0 select-none ${className}`}
+    />
+  );
+
+export const NAV_ICON = {
+  overview: img("overview"),
+  library: img("library"),
+  contribute: img("contribute"),
+  review: img("review"),
+  saved: img("saved"),
+  frequent: img("frequent"),
+  flashcard: img("flashcard"),
+  attempts: img("attempts"),
+  grades: img("grades"),
+  pro: img("pro"),
+  deposit: img("deposit"),
+  transactions: img("transactions"),
+  giftcode: img("giftcode"),
+  referral: img("referral"),
+  coursera: img("coursera"),
+  profile: img("profile"),
+  home: img("home"),
+} as const;

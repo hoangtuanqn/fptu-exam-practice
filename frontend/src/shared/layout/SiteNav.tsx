@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { BookOpen, Crown, Layers, Menu, ShoppingBag } from "lucide-react";
+import { Menu } from "lucide-react";
 import { IconButton } from "@/shared/ui/Button";
+import { NAV_ICON } from "./navIcons";
 
 // Điều hướng chính dùng chung cho header trang chủ, /features, /kho-de, /pro. Từ màn hình vừa trở lên hiện thành hàng; 600-767px gom vào nút menu;
 // điện thoại (<600px) dùng thanh điều hướng dưới (BottomNav) nên không có nút này.
@@ -32,16 +33,16 @@ export function SiteNav() {
     </div>
     <nav aria-label="Điều hướng chính" className="hidden min-w-0 flex-1 items-center justify-center gap-1 px-4 md:flex">
       <Link to="/kho-de" className={cls("/kho-de")} aria-current={pathname === "/kho-de" ? "page" : undefined}>
-        <BookOpen size={18} /> Kho đề
+        <NAV_ICON.library size={26} /> Kho đề
       </Link>
       <Link to="/flashcard" className={cls("/flashcard")} aria-current={pathname === "/flashcard" ? "page" : undefined}>
-        <Layers size={18} /> Flashcard
+        <NAV_ICON.flashcard size={26} /> Flashcard
       </Link>
       <Link to="/account/coursera" className={cls("/account/coursera")} aria-current={pathname === "/account/coursera" ? "page" : undefined}>
-        <ShoppingBag size={18} /> Coursera
+        <NAV_ICON.coursera size={26} /> Coursera
       </Link>
       <Link to="/pro" className={cls("/pro")} aria-current={pathname === "/pro" ? "page" : undefined}>
-        <Crown size={18} className="text-[#f0a800]" /> Gói Pro
+        <NAV_ICON.pro size={26} /> Gói Pro
       </Link>
     </nav>
     </>
