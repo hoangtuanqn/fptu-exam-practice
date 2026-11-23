@@ -37,3 +37,11 @@ export const NAV_ICON = {
   profile: img("profile"),
   home: img("home"),
 } as const;
+
+// Bản tông vàng cho thanh điều hướng trên header
+export const NAV_ICON_GOLD = {
+  library: img("library-gold"),
+  flashcard: img("flashcard-gold"),
+  coursera: img("coursera-gold"),
+  pro: img("pro-gold"),
+} as const;
