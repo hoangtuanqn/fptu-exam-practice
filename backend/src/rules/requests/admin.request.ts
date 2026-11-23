@@ -13,6 +13,14 @@ export const listUsersQuery = paginationQuery.extend({
   status: z.enum(["ACTIVE", "BANNED"]).optional(),
 });
 
+// Danh sách đề của admin: tìm theo tên / mã môn / threadId, lọc theo loại đề và nguồn đáp án
+export const listAdminExamsQuery = paginationQuery.extend({
+  q: z.string().trim().max(100).optional(),
+  kind: z.enum(["FE", "PE", "QUIZ", "OTHER"]).optional(),
+  source: z.enum(["PENDING", "FAILED", "DEFAULT", "AI", "MANUAL"]).optional(),
+});
+export type ListAdminExamsQuery = z.infer<typeof listAdminExamsQuery>;
+
 export const updateUserBody = z
   .object({
     fullName: z.string().trim().min(2).max(100),

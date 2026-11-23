@@ -8,6 +8,9 @@ import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
 import type { AdminExam, AnswerSource } from "@/shared/types/api";
 import { Badge, type Tone } from "@/shared/ui/Badge";
 import { Button } from "@/shared/ui/Button";
+import { SearchBox } from "@/shared/ui/SearchBox";
+import { Segmented } from "@/shared/ui/Segmented";
+import { useUrlSearch } from "@/shared/hooks/useUrlSearch";
 import { Card, PageHeader } from "@/shared/ui/Card";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { Modal, ModalActions, ModalTitle } from "@/shared/ui/Modal";
@@ -63,9 +66,11 @@ export default function ExamsPage() {
   const toast = useToast();
   const navigate = useNavigate();
   const { confirm, confirmDialog } = useConfirm();
-  const [url, setUrl] = useUrlState({ page: "1" });
+  const [url, setUrl] = useUrlState({ page: "1", q: "", kind: "", source: "" });
   const page = toPage(url.page);
-  const { data, error, loading, reload } = useApi(() => adminApi.exams(page), [page]);
+  const [search, setSearch, q] = useUrlSearch(url.q, setUrl);
+  const { kind, source } = url;
+  const { data, error, loading, reload } = useApi(() => adminApi.exams(page, { q, kind, source }), [page, q, kind, source]);
   useClampPage(data?.meta, (p) => setUrl({ page: String(p) }));
   const [report, setReport] = useState<string | null>(null);
   const [fullError, setFullError] = useState<{ title: string; text: string } | null>(null); // lỗi AI đang xem toàn văn
@@ -158,6 +163,34 @@ export default function ExamsPage() {
       {confirmDialog}
       <PageHeader eyebrow="Quản trị" title="Đề thi" description="Bấm vào một đề để xem và sửa đáp án. Mục Có đáp án đỏ là đề đang thiếu." />
       <Card>
+        <div className="flex flex-wrap gap-3 border-b border-slate-100 p-4">
+          <SearchBox value={search} onChange={setSearch} placeholder="Tìm theo tên đề, mã môn hoặc thread" label="Tìm đề thi" />
+          <Segmented
+            label="Lọc theo loại đề"
+            value={kind}
+            onChange={(v) => setUrl({ kind: v, page: "1" })}
+            options={[
+              { value: "", label: "Mọi loại" },
+              { value: "FE", label: "FE" },
+              { value: "PE", label: "PE" },
+              { value: "QUIZ", label: "Quiz" },
+              { value: "OTHER", label: "Khác" },
+            ]}
+          />
+          <Segmented
+            label="Lọc theo nguồn đáp án"
+            value={source}
+            onChange={(v) => setUrl({ source: v, page: "1" })}
+            options={[
+              { value: "", label: "Mọi đáp án" },
+              { value: "AI", label: "AI giải" },
+              { value: "MANUAL", label: "Chỉnh tay" },
+              { value: "DEFAULT", label: "Chưa có" },
+              { value: "FAILED", label: "AI lỗi" },
+              { value: "PENDING", label: "Đang giải" },
+            ]}
+          />
+        </div>
         {loading && !data ? (
           <Loading shape="table" />
         ) : error ? (
@@ -225,7 +258,7 @@ export default function ExamsPage() {
             <Pagination meta={data.meta} onPage={(p) => setUrl({ page: String(p) })} />
           </>
         ) : (
-          <Empty icon={FileText} title="Chưa có đề nào" />
+          <Empty icon={FileText} title={q || kind || source ? "Không có đề nào khớp bộ lọc" : "Chưa có đề nào"} />
         )}
       </Card>
 

@@ -123,14 +123,22 @@ export const examRepository = {
   findReport: (id: string) =>
     prisma.exam.findUnique({ where: { id }, select: { id: true, title: true, threadId: true, answerSource: true, aiReport: true } }),
 
-  async listAll(query: PaginationQuery) {
+  async listAll(query: PaginationQuery & { q?: string; kind?: ExamKind; source?: string }) {
+    const { q, kind, source } = query;
+    const where: Prisma.ExamWhereInput = {
+      answerSource: source,
+      // Đề cũ chưa phân loại (kind null) tính là FE, cùng quy tắc với danh mục
+      ...(kind && (kind === "FE" ? { OR: [{ kind: "FE" }, { kind: null }] } : { kind })),
+      ...(q && { AND: [{ OR: [{ title: { contains: q } }, { threadId: { contains: q } }, { subjectCode: { contains: q } }] }] }),
+    };
     const [items, total] = await Promise.all([
       prisma.exam.findMany({
-        select: { id: true, title: true, threadId: true, sourceUrl: true, totalQuestions: true, answerSource: true, createdAt: true },
+        where,
+        select: { id: true, title: true, threadId: true, sourceUrl: true, totalQuestions: true, answerSource: true, createdAt: true, kind: true, subjectCode: true },
         orderBy: { id: "desc" },
         ...toSkipTake(query),
       }),
-      prisma.exam.count(),
+      prisma.exam.count({ where }),
     ]);
     // Số câu cần chấm (không tính tài liệu tham khảo) và số câu đã có đáp án, theo từng đề của trang này: admin thấy ngay đề nào thiếu
     const ids = items.map((e) => e.id);
