@@ -20,6 +20,7 @@ export interface NoticeListFilter {
   status?: "unread" | "all";
   important?: boolean;
   category?: NoticeCategory;
+  q?: string;
 }
 
 const toDto = (r: Row) => ({
@@ -43,6 +44,7 @@ const whereOf = (f: NoticeListFilter): Prisma.AdminNoticeWhereInput => ({
   ...(f.status === "unread" && { readAt: null }),
   ...(f.important !== undefined && { important: f.important }),
   ...(f.category && { kind: { in: kindsOf(f.category) } }),
+  ...(f.q && { OR: [{ title: { contains: f.q } }, { body: { contains: f.q } }] }),
 });
 
 const recent = new Map<string, number>(); // khóa lỗi -> lúc báo gần nhất (chống báo lặp)

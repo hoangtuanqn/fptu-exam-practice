@@ -45,9 +45,9 @@ export const marketingBroadcastService = {
     return view(b);
   },
 
-  async list(query: PaginationQuery) {
+  async list(query: PaginationQuery & { q?: string }) {
     const { skip, take } = toSkipTake(query);
-    const { items, total } = await broadcastRepository.list(skip, take);
+    const { items, total } = await broadcastRepository.list(skip, take, query.q);
     const counts = await marketingRepository.broadcastCounts(items.map((b) => b.id));
     return { items: items.map((b) => view(b, counts.get(b.id))), total };
   },

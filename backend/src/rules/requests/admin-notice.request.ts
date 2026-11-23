@@ -9,7 +9,7 @@ const filter = {
   category: z.enum(categories).optional(),
 };
 
-export const listNoticesQuery = paginationQuery.extend({ status: z.enum(["unread", "all"]).default("unread"), ...filter });
+export const listNoticesQuery = paginationQuery.extend({ status: z.enum(["unread", "all"]).default("unread"), q: z.string().trim().max(100).optional(), ...filter }); // q: tiêu đề hoặc nội dung
 export const readAllNoticesBody = z.object({ important: z.boolean().optional(), category: z.enum(categories).optional() });
 export const setNoticeReadBody = z.object({ read: z.boolean("Trạng thái không hợp lệ") });
 
