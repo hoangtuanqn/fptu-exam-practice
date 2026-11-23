@@ -2,6 +2,8 @@
 @import "./styles/m3-tokens.css";
 @import "./styles/m3-tailwind.css";
 @import "./styles/m3-base.css";
+@import "./styles/site.css";
+@import "./styles/panel.css";
 
 /* Thanh điều hướng dưới trên điện thoại (BottomNav): --bottom-nav-h là chiều cao của nó (0 khi không có thanh),
    dùng để đẩy nội dung và các nút nổi (toast, chat, thanh mua) lên trên. Màn đang làm đề gắn data-no-bottom-nav để ẩn thanh. */
