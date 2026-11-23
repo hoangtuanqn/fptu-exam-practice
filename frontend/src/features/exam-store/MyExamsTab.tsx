@@ -58,7 +58,7 @@ export function MyExamsTab() {
       <ResumeList limit={10} className="mb-5" />
       <Card>
         {loading && !data ? (
-          <Loading />
+          <Loading shape="table" />
         ) : error ? (
           <ErrorBox message={error} onRetry={reload} />
         ) : data && data.items.length > 0 ? (

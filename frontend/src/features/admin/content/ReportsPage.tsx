@@ -75,7 +75,7 @@ export default function ReportsPage() {
         </div>
 
         {loading && !data ? (
-          <Loading />
+          <Loading shape="table" />
         ) : error ? (
           <ErrorBox message={error} onRetry={reload} />
         ) : data && items.length > 0 ? (

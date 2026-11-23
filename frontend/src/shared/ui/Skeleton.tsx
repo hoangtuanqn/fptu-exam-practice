@@ -32,6 +32,24 @@ export function SkeletonList({ rows = 4, label = "Đang tải…" }: { rows?: nu
   );
 }
 
+// Chờ tải cho bảng: các dòng nhiều cột (cột đầu rộng, cột cuối ngắn), giống dòng bảng thật
+export function SkeletonTable({ rows = 6, label = "Đang tải…" }: { rows?: number; label?: string }) {
+  return (
+    <SkeletonWrap label={label}>
+      <div className="divide-y divide-outline-variant/40">
+        {Array.from({ length: rows }, (_, i) => (
+          <div key={i} className="flex items-center gap-6 px-6 py-4">
+            <Skeleton className="h-3.5 w-1/4" />
+            <Skeleton className="hidden h-3.5 w-1/6 sm:block" />
+            <Skeleton className="hidden h-3.5 w-1/5 sm:block" />
+            <Skeleton className="ml-auto h-3.5 w-16" />
+          </div>
+        ))}
+      </div>
+    </SkeletonWrap>
+  );
+}
+
 // Chờ tải cho khối nội dung đơn (thẻ số liệu, đoạn văn, form): các thanh có độ dài khác nhau
 export function SkeletonBlock({ lines = 3, label = "Đang tải…" }: { lines?: number; label?: string }) {
   return (

@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { CircleAlert, Inbox } from "lucide-react";
 import { Button } from "./Button";
-import { SkeletonList } from "./Skeleton";
+import { SkeletonList, SkeletonTable } from "./Skeleton";
 
 // Chỉ báo tiến trình tròn không xác định (M3): cung chạy quay, màu primary
 export function Spinner({ className = "", size = 20 }: { className?: string; size?: number }) {
@@ -42,8 +42,8 @@ export function LinearProgress({ value, label = "Tiến độ" }: { value?: numb
 }
 
 // Khối chờ tải dùng cho cả trang/khối nội dung: skeleton thay vì spinner, để bố cục không nhảy khi có dữ liệu
-export function Loading({ label = "Đang tải…" }: { label?: string }) {
-  return <SkeletonList label={label} />;
+export function Loading({ label = "Đang tải…", shape = "list" }: { label?: string; shape?: "list" | "table" }) {
+  return shape === "table" ? <SkeletonTable label={label} /> : <SkeletonList label={label} />;
 }
 
 export function ErrorBox({ message, onRetry }: { message: string; onRetry?: () => void }) {

@@ -42,7 +42,7 @@ export default function BankTransactionsPage() {
         </div>
 
         {loading && !data ? (
-          <Loading />
+          <Loading shape="table" />
         ) : error ? (
           <ErrorBox message={error} onRetry={reload} />
         ) : data && data.items.length > 0 ? (

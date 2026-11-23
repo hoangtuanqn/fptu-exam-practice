@@ -28,7 +28,7 @@ export default function ReferralsPage() {
         {settings.data ? (
           <ReferralSettingsForm key={JSON.stringify(settings.data)} initial={settings.data} onSaved={() => { settings.reload(); summary.reload(); }} />
         ) : settings.loading ? (
-          <Loading />
+          <Loading shape="table" />
         ) : (
           <ErrorBox message={settings.error ?? "Không tải được cấu hình"} onRetry={settings.reload} />
         )}
@@ -44,7 +44,7 @@ export default function ReferralsPage() {
         <Card>
           <CardHeader title="Danh sách được giới thiệu" />
           {list.loading && !list.data ? (
-            <Loading />
+            <Loading shape="table" />
           ) : list.error ? (
             <ErrorBox message={list.error} onRetry={list.reload} />
           ) : list.data && list.data.items.length > 0 ? (

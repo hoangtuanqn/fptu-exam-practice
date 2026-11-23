@@ -169,7 +169,7 @@ export default function ExamsPage() {
       <PageHeader eyebrow="Quản trị" title="Đề thi" description="Bấm vào một đề để xem và sửa đáp án. Mục Có đáp án đỏ là đề đang thiếu." />
       <Card>
         {loading && !data ? (
-          <Loading />
+          <Loading shape="table" />
         ) : error ? (
           <ErrorBox message={error} onRetry={reload} />
         ) : data && data.items.length > 0 ? (

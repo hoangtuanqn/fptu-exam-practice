@@ -107,7 +107,7 @@ export default function GiftCodePage() {
         <Card>
           <CardHeader title="Mã đã nhập" />
           {history.loading && !history.data ? (
-            <Loading />
+            <Loading shape="table" />
           ) : history.error ? (
             <ErrorBox message={history.error} onRetry={history.reload} />
           ) : history.data && history.data.items.length > 0 ? (
