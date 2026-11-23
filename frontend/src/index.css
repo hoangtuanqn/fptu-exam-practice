@@ -16,6 +16,35 @@
 :root:has([data-no-bottom-nav]) [data-bottom-nav] {
   display: none;
 }
+/* Skeleton (chờ tải): nền xám nhạt, một dải sáng quét qua nhẹ; người dùng bật giảm chuyển động thì chỉ còn nền tĩnh */
+.md-skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--md-sys-color-surface-container-high);
+}
+.md-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.35), transparent);
+  transform: translateX(-100%);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .md-skeleton::after {
+    animation: md-skeleton-sweep 1.6s ease-in-out infinite;
+  }
+}
+/* Vỏ skeleton: ẩn 150ms rồi hiện mờ dần, tải nhanh thì không kịp nháy */
+.md-skeleton-wrap {
+  animation: md-skeleton-in 0.3s ease-out 0.15s both;
+}
+@keyframes md-skeleton-in {
+  from { opacity: 0; }
+}
+@keyframes md-skeleton-sweep {
+  to { transform: translateX(100%); }
+}
+
 /* Ngăn "Thêm" của thanh điều hướng dưới trượt vào từ cạnh phải */
 @keyframes md-drawer-in-right {
   from { transform: translateX(100%); }

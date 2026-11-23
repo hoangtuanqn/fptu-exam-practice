@@ -3,7 +3,7 @@ import { Navigate, Route, Routes, useLocation, useParams } from "react-router-do
 import { PanelLayout, type NavItem } from "@/shared/layout/PanelLayout";
 import { NAV_ICON } from "@/shared/layout/navIcons";
 import { BottomNav } from "@/shared/layout/BottomNav";
-import { Loading } from "@/shared/ui/Feedback";
+import { PageSkeleton } from "@/shared/ui/Skeleton";
 import { isUuid } from "@/shared/utils/uuid";
 import LoginPage from "@/features/auth/pages/LoginPage";
 import RegisterPage from "@/features/auth/pages/RegisterPage";
@@ -109,7 +109,7 @@ function CatalogRedirect() {
 
 export default function App() {
   return (
-    <Suspense fallback={<Loading />}>
+    <Suspense fallback={<PageSkeleton />}>
       <PageMeta />
       <ScrollToTop />
       <GoogleTagManager />
