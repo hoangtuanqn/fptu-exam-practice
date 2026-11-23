@@ -39,7 +39,7 @@ export default function WalletHistoryPage() {
       <Card>
         <div className="flex flex-wrap items-center gap-3 border-b border-slate-100 p-4">
           <div className="relative min-w-52 flex-1">
-            <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
             <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Tìm theo tên hoặc email" aria-label="Tìm thành viên" className={`${inputClass()} pl-9`} />
           </div>
           <select
@@ -75,7 +75,7 @@ export default function WalletHistoryPage() {
                     {t.user.fullName} · {t.user.email}
                   </div>
                   {t.note && <div className="mt-0.5 text-xs text-slate-500">{t.note}</div>}
-                  <div className="mt-0.5 text-xs text-slate-400">
+                  <div className="mt-0.5 text-xs text-slate-500">
                     {formatDateTime(t.createdAt)} · số dư {formatCredit(t.balanceAfter)}
                   </div>
                 </li>

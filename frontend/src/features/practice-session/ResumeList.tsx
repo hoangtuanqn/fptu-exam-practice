@@ -77,7 +77,7 @@ export function ResumeList({ limit = 5, className = "" }: Props) {
                 </span>
                 <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
                   <span
-                    className={`rounded px-1.5 py-0.5 text-[11px] font-semibold ${
+                    className={`rounded px-1.5 py-0.5 text-xs font-semibold ${
                       s.mode === "EXAM"
                         ? "bg-amber-100 text-amber-800"
                         : "bg-brand-100 text-brand-800"
@@ -88,7 +88,7 @@ export function ResumeList({ limit = 5, className = "" }: Props) {
                   <span>
                     {s.answered}/{s.exam.totalQuestions} câu · {formatDuration(s.elapsedSec)}
                   </span>
-                  <span className="hidden text-slate-400 sm:inline">· {formatDateTime(s.updatedAt)}</span>
+                  <span className="hidden text-slate-500 sm:inline">· {formatDateTime(s.updatedAt)}</span>
                 </span>
                 {/* Progress bar */}
                 <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-slate-100">
@@ -111,7 +111,7 @@ export function ResumeList({ limit = 5, className = "" }: Props) {
                 onClick={() => remove(s)}
                 title="Xoá lượt làm này"
                 aria-label="Xoá lượt làm này"
-                className="shrink-0 rounded-lg p-2 text-slate-300 transition hover:bg-rose-50 hover:text-rose-500"
+                className="shrink-0 rounded-lg p-2 text-slate-500 transition hover:bg-rose-50 hover:text-rose-500"
               >
                 <Trash2 size={15} />
               </button>

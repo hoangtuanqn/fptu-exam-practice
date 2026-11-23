@@ -166,7 +166,7 @@ export default function ChatbotPage() {
             <Card className="p-4">
               <div className="text-xs text-slate-500">Câu hỏi hôm nay</div>
               <div className="mt-1 text-2xl font-semibold tabular-nums">{data.stats.today}</div>
-              <div className="text-xs text-slate-400">tổng cộng {data.stats.total}</div>
+              <div className="text-xs text-slate-500">tổng cộng {data.stats.total}</div>
             </Card>
             <Card className="p-4">
               <div className="text-xs text-slate-500">Tri thức</div>
@@ -193,11 +193,11 @@ export default function ChatbotPage() {
                 ].map(([label, value]) => (
                   <div key={label as string}>
                     <div className="text-xl font-semibold tabular-nums">{(value as number).toLocaleString("vi-VN")}</div>
-                    <div className="text-xs text-slate-400">{label}</div>
+                    <div className="text-xs text-slate-500">{label}</div>
                   </div>
                 ))}
               </div>
-              <div className="mt-2 text-xs text-slate-400">“Đọc từ cache” cao so với “đầu vào mới” là prompt hệ thống đang được dùng lại với giá rẻ. “Bị cắt” nên bằng 0; nếu không, tăng trần token.</div>
+              <div className="mt-2 text-xs text-slate-500">“Đọc từ cache” cao so với “đầu vào mới” là prompt hệ thống đang được dùng lại với giá rẻ. “Bị cắt” nên bằng 0; nếu không, tăng trần token.</div>
             </Card>
           )}
 
@@ -205,7 +205,7 @@ export default function ChatbotPage() {
             <div className="min-w-0">
               <div className="text-xs text-slate-500">Câu trả lời lưu sẵn (cache)</div>
               <div className="mt-1 text-2xl font-semibold tabular-nums">{data.cache.entries} câu</div>
-              <div className="text-xs text-slate-400">
+              <div className="text-xs text-slate-500">
                 Hôm nay trả từ cache {data.cache.today}/{data.stats.today} lượt, tổng {data.cache.total}/{data.stats.total}. Mỗi lượt như vậy không tốn token.
               </div>
             </div>
@@ -227,7 +227,7 @@ export default function ChatbotPage() {
                 {data.stats.unmatched.map((q, i) => (
                   <li key={i} className="flex items-start justify-between gap-4 px-5 py-3 text-sm">
                     <span className="min-w-0 break-words text-slate-800">{q.question}</span>
-                    <span className="shrink-0 text-xs text-slate-400">{formatDateTime(q.createdAt)}</span>
+                    <span className="shrink-0 text-xs text-slate-500">{formatDateTime(q.createdAt)}</span>
                   </li>
                 ))}
               </ul>

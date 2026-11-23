@@ -57,7 +57,7 @@ export default function ReferralsPage() {
                       <span className="shrink-0 whitespace-nowrap text-sm font-semibold tabular-nums text-emerald-700">+{formatCredit(r.earned)}</span>
                     </div>
                     <div className="truncate text-xs text-slate-500">{r.email}</div>
-                    <div className="truncate text-xs text-slate-400">
+                    <div className="truncate text-xs text-slate-500">
                       Giới thiệu bởi {r.referrer?.fullName ?? "—"} · {formatDate(r.joinedAt)}
                     </div>
                   </li>

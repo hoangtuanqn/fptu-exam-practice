@@ -23,7 +23,7 @@ export function CopyButton({ text, label = "Sao chép" }: { text: string; label?
       onClick={copy}
       aria-label={label}
       title={label}
-      className="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+      className="inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-700"
     >
       {done ? <Check size={15} className="text-emerald-600" /> : <Copy size={15} />}
     </button>

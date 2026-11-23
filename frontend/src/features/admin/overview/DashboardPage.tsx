@@ -101,7 +101,7 @@ export default function DashboardPage() {
             <ul className="divide-y divide-slate-200">
               {users.data.items.slice(0, 5).map((u) => (
                 <li key={u.id} className="flex items-center gap-3 px-5 py-3">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-900 text-[11px] font-semibold text-white">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white">
                     {initials(u.fullName)}
                   </span>
                   <div className="min-w-0 flex-1">
@@ -128,7 +128,7 @@ export default function DashboardPage() {
                   <div className="text-sm font-medium text-slate-900">{label}</div>
                   <div className="text-xs text-slate-500">{note}</div>
                 </div>
-                <ArrowRight size={15} className="text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-slate-900" />
+                <ArrowRight size={15} className="text-slate-500 transition group-hover:translate-x-0.5 group-hover:text-slate-900" />
               </Link>
             </li>
           ))}

@@ -53,7 +53,7 @@ export function ResultUpgradeCard({ wrong }: { wrong: number }) {
         {promo && (
           <>
             {" "}
-            <s>{formatMoney(promo.originalPrice)}</s> <b className="rounded-full bg-[#ff4d4d] px-1.5 py-0.5 text-[11px] text-white">-{promo.percentOff}%</b>
+            <s>{formatMoney(promo.originalPrice)}</s> <b className="rounded-full bg-[#ff4d4d] px-1.5 py-0.5 text-xs text-white">-{promo.percentOff}%</b>
           </>
         )}{" "}
         (khoảng {formatMoney(perDay)}/ngày), xem giải thích không giới hạn. FuOverflow VIP cùng thời hạn là {formatMoney(plan.fuoPrice)}.

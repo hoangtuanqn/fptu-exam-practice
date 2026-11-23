@@ -40,7 +40,7 @@ export default function UsersPage() {
       <Card>
         <div className="flex flex-wrap gap-3 border-b border-slate-100 p-4">
           <div className="relative min-w-52 flex-1">
-            <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -92,7 +92,7 @@ export default function UsersPage() {
                     </div>
                     <div className="shrink-0 text-right">
                       <div className="whitespace-nowrap text-sm font-semibold tabular-nums text-slate-900">{formatCredit(u.balance)}</div>
-                      <div className="text-xs text-slate-400">{formatDate(u.createdAt)}</div>
+                      <div className="text-xs text-slate-500">{formatDate(u.createdAt)}</div>
                     </div>
                   </button>
                 </li>

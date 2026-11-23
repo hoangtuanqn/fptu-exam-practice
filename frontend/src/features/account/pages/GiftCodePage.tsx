@@ -117,7 +117,7 @@ export default function GiftCodePage() {
                   <li key={r.id} className="flex items-center justify-between gap-3 px-4 py-3">
                     <div className="min-w-0">
                       <div className="truncate text-sm font-medium text-slate-900">{r.code}</div>
-                      <div className="text-xs text-slate-400">{formatDateTime(r.createdAt)}</div>
+                      <div className="text-xs text-slate-500">{formatDateTime(r.createdAt)}</div>
                     </div>
                     <span className="shrink-0 whitespace-nowrap text-sm font-semibold tabular-nums text-emerald-700">+{formatCredit(r.amount)}</span>
                   </li>

@@ -35,7 +35,7 @@ export function FeatureShowcase({ standalone = false }: { standalone?: boolean }
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
                         <span className="md-title-small text-on-surface">{f.title}</span>
                         {f.pro && (
-                          <span title="Gói Pro không giới hạn lượt dùng mục này" className="inline-flex items-center gap-0.5 rounded-full bg-gradient-to-b from-[#ffd75e] to-[#f0a800] px-1.5 py-px text-[10px] font-bold leading-4 text-[#3a2600]">
+                          <span title="Gói Pro không giới hạn lượt dùng mục này" className="inline-flex items-center gap-0.5 rounded-full bg-gradient-to-b from-[#ffd75e] to-[#f0a800] px-1.5 py-px text-xs font-bold leading-4 text-[#3a2600]">
                             <Crown size={9} strokeWidth={2.6} /> PRO không giới hạn
                           </span>
                         )}

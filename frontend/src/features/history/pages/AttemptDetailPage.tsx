@@ -54,7 +54,7 @@ export default function AttemptDetailPage() {
         <div className="flex flex-col items-center gap-6 sm:flex-row">
           <ScoreRing value={data.score / MAX_SCORE} tone={data.totalGraded === 0 ? "neutral" : passed ? "success" : "danger"}>
             <span className="font-serif text-4xl font-semibold leading-none text-slate-900">{formatScore(data.score)}</span>
-            <span className="mt-1 text-xs text-slate-400">/ {MAX_SCORE}</span>
+            <span className="mt-1 text-xs text-slate-500">/ {MAX_SCORE}</span>
           </ScoreRing>
 
           <div className="min-w-0 flex-1 text-center sm:text-left">

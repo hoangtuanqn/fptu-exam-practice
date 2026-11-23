@@ -88,7 +88,7 @@ export function MyExamsTab() {
                           Xem lịch sử
                         </span>
                       )}
-                      <span className="text-xs text-slate-400">Thêm {formatDate(e.addedAt)}</span>
+                      <span className="text-xs text-slate-500">Thêm {formatDate(e.addedAt)}</span>
                     </div>
                   </Link>
                   <ViewLink examId={e.id} />

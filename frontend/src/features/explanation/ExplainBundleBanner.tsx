@@ -53,8 +53,8 @@ export function ExplainBundleBanner({ bundle, unitPrice, collapsed, onCollapse, 
         <span className="truncate">Mở khóa mọi giải thích · {formatCredit(bundle.price)}</span>
       </span>
       <span className="flex shrink-0 items-center gap-1.5">
-        <span className="rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-bold text-white">-{bundle.discountPercent}%</span>
-        <span className="rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-bold text-brand-900">Mua</span>
+        <span className="rounded-full bg-rose-500 px-1.5 py-0.5 text-xs font-bold text-white">-{bundle.discountPercent}%</span>
+        <span className="rounded-full bg-amber-500 px-2 py-0.5 text-xs font-bold text-brand-900">Mua</span>
       </span>
     </button>
   );
@@ -69,8 +69,8 @@ export function ExplainBundleBanner({ bundle, unitPrice, collapsed, onCollapse, 
       >
         <Sparkles size={14} className="promo-twinkle text-amber-500" />
         Mở khóa mọi giải thích · {formatCredit(bundle.price)}
-        <span className="rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-bold text-white">-{bundle.discountPercent}%</span>
-        <span className="rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-bold text-brand-900">Mua ngay</span>
+        <span className="rounded-full bg-rose-500 px-1.5 py-0.5 text-xs font-bold text-white">-{bundle.discountPercent}%</span>
+        <span className="rounded-full bg-amber-500 px-2 py-0.5 text-xs font-bold text-brand-900">Mua ngay</span>
       </button>
       </>
     );
@@ -110,13 +110,13 @@ export function ExplainBundleBanner({ bundle, unitPrice, collapsed, onCollapse, 
           <div className="text-right leading-tight">
             <div className="flex items-center justify-end gap-1.5">
               <span className="text-xs text-white/50 line-through decoration-rose-300/80">{nf.format(bundle.original)}</span>
-              <span className="rounded bg-rose-500 px-1 py-0.5 text-[10px] font-bold">-{bundle.discountPercent}%</span>
+              <span className="rounded bg-rose-500 px-1 py-0.5 text-xs font-bold">-{bundle.discountPercent}%</span>
             </div>
             <div className="flex items-baseline justify-end gap-1">
               <span className="bg-gradient-to-b from-amber-200 to-amber-400 bg-clip-text text-xl font-extrabold tabular-nums text-transparent">{nf.format(shown)}</span>
               <span className="text-xs font-medium text-amber-200">credit</span>
             </div>
-            <div className="text-[11px] text-emerald-300">Tiết kiệm {nf.format(saved)}</div>
+            <div className="text-xs text-emerald-300">Tiết kiệm {nf.format(saved)}</div>
           </div>
           <button
             onClick={onUnlock}

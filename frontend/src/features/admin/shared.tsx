@@ -11,7 +11,7 @@ export interface UserRef {
 
 // Tên + email của một thành viên; bấm vào để mở trang quản lý thành viên
 export function UserCell({ user }: { user: UserRef | null }) {
-  if (!user) return <span className="text-slate-400">—</span>;
+  if (!user) return <span className="text-slate-500">—</span>;
   return (
     <Link to={`/admin/users/${user.id}`} className="block min-w-0 hover:underline">
       <div className="truncate font-medium text-slate-800">{user.fullName}</div>

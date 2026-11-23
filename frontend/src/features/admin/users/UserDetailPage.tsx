@@ -23,11 +23,11 @@ import { useConfirm } from "@/shared/ui/ConfirmDialog";
 function Stat({ icon, label, value, hint }: { icon: ReactNode; label: string; value: ReactNode; hint?: string }) {
   return (
     <div className="rounded-2xl border border-slate-100 bg-slate-50/70 px-3.5 py-3">
-      <div className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-slate-400">
+      <div className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-slate-500">
         {icon} {label}
       </div>
       <div className="mt-0.5 text-lg font-semibold tabular-nums text-slate-900">{value}</div>
-      {hint && <div className="text-xs text-slate-400">{hint}</div>}
+      {hint && <div className="text-xs text-slate-500">{hint}</div>}
     </div>
   );
 }
@@ -207,7 +207,7 @@ function UserDetail({ initial }: { initial: User }) {
               <Badge tone={current.role === "ADMIN" ? "info" : "neutral"}>{current.role === "ADMIN" ? "Quản trị" : "Thành viên"}</Badge>
               <Badge tone={current.status === "ACTIVE" ? "success" : "danger"}>{current.status === "ACTIVE" ? "Hoạt động" : "Bị khoá"}</Badge>
               <Badge tone={current.emailVerifiedAt ? "success" : "warning"}>{current.emailVerifiedAt ? "Email đã xác minh" : "Chưa xác minh email"}</Badge>
-              <span className="text-xs text-slate-400">#{current.id} · tham gia {formatDate(current.createdAt)}</span>
+              <span className="text-xs text-slate-500">#{current.id} · tham gia {formatDate(current.createdAt)}</span>
             </div>
           </div>
         </div>
@@ -292,7 +292,7 @@ function UserDetail({ initial }: { initial: User }) {
               </div>
               <ConfirmButton label="Đặt lại" confirmLabel="Bấm lần nữa để xác nhận" icon={pwd.loading ? <Loader2 size={15} className="animate-spin" /> : <KeyRound size={15} />} onConfirm={resetPassword} disabled={pwd.loading || pwdTooShort || adminOther} />
             </div>
-            {adminOther && <p className="mt-2 text-xs text-slate-400">Không đặt lại mật khẩu của quản trị viên khác.</p>}
+            {adminOther && <p className="mt-2 text-xs text-slate-500">Không đặt lại mật khẩu của quản trị viên khác.</p>}
             {issued && (
               <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
                 <p className="text-xs font-medium text-emerald-800">Mật khẩu mới (chỉ hiện một lần, hãy gửi cho thành viên):</p>
@@ -325,7 +325,7 @@ function UserDetail({ initial }: { initial: User }) {
             <Button variant="primary" disabled={login.loading || !canImpersonate} onClick={loginAs}>
               {login.loading ? <Loader2 size={15} className="animate-spin" /> : <LogIn size={15} />} Đăng nhập thay
             </Button>
-            {!canImpersonate && <p className="mt-2 text-xs text-slate-400">{isSelf ? "Đây là tài khoản của bạn." : current.role === "ADMIN" ? "Không đăng nhập thay quản trị viên khác." : "Tài khoản đang bị khoá, hãy mở khoá trước."}</p>}
+            {!canImpersonate && <p className="mt-2 text-xs text-slate-500">{isSelf ? "Đây là tài khoản của bạn." : current.role === "ADMIN" ? "Không đăng nhập thay quản trị viên khác." : "Tài khoản đang bị khoá, hãy mở khoá trước."}</p>}
           </Panel>
         </div>
       </div>

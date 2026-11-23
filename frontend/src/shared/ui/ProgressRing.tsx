@@ -17,7 +17,7 @@ export function ProgressRing({ value, label, size = 48, color = "text-primary" }
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" strokeWidth={stroke} className="stroke-surface-container-highest" />
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" strokeWidth={stroke} strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - v)} className={`stroke-current ${color}`} />
       </svg>
-      <span className="absolute text-[11px] font-bold tabular-nums text-on-surface">{label}</span>
+      <span className="absolute text-xs font-bold tabular-nums text-on-surface">{label}</span>
     </span>
   );
 }

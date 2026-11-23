@@ -130,7 +130,7 @@ export function AvatarUpload() {
       {/* Text hướng dẫn */}
       <div>
         <p className="text-sm font-medium text-slate-700">Ảnh đại diện</p>
-        <p className="mt-0.5 text-xs text-slate-400">JPG, PNG hoặc WebP · tối đa 5 MB</p>
+        <p className="mt-0.5 text-xs text-slate-500">JPG, PNG hoặc WebP · tối đa 5 MB</p>
         <button
           type="button"
           onClick={() => !busy && inputRef.current?.click()}

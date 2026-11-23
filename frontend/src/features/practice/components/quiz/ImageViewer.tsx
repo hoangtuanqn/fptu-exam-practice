@@ -49,7 +49,7 @@ export function ImageViewer({
       {/* Thanh công cụ */}
       <div className="relative z-10 flex h-14 shrink-0 items-center justify-between gap-3 px-5 text-white">
         <div className="font-serif text-lg font-semibold">
-          Câu {question.number} <span className="font-sans text-sm font-normal text-slate-400">/ {total}</span>
+          Câu {question.number} <span className="font-sans text-sm font-normal text-slate-500">/ {total}</span>
         </div>
         {timer && <ExamTimer left={timer.left} limit={timer.limit} onDark />}
         <div className="flex items-center gap-3">

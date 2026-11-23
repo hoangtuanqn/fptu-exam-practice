@@ -66,7 +66,7 @@ export function SocialLogin({ verb = "Tiếp tục" }: { verb?: string }) {
           <FormError message={error} />
         </div>
       )}
-      <div className="my-5 flex items-center gap-3 text-xs uppercase tracking-wider text-slate-400" aria-hidden>
+      <div className="my-5 flex items-center gap-3 text-xs uppercase tracking-wider text-slate-500" aria-hidden>
         <span className="h-px flex-1 bg-slate-200" />
         hoặc
         <span className="h-px flex-1 bg-slate-200" />

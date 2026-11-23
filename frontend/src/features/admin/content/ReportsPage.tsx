@@ -96,7 +96,7 @@ export default function ReportsPage() {
                     <div className="text-xs text-slate-600">
                       {r.currentAnswer} → <b className="text-emerald-700">{r.proposedAnswer}</b>
                     </div>
-                    <div className="truncate text-xs text-slate-400">
+                    <div className="truncate text-xs text-slate-500">
                       {r.user.fullName} · {formatDateTime(r.createdAt)}
                     </div>
                   </button>

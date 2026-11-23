@@ -72,14 +72,14 @@ function Stepper({ status, completed, done }: { status: CheckInStatus; completed
                 : "bg-gradient-to-br from-brand-500 to-accent text-brand-900 ring-4 ring-brand-500/30"
               : last
                 ? "bg-amber-100 text-amber-500"
-                : "bg-slate-100 text-slate-400";
+                : "bg-slate-100 text-slate-500";
         return (
           <li key={d} className="relative flex flex-1 flex-col items-center">
             {d > 1 && <span aria-hidden className={`absolute right-1/2 top-[17px] h-0.5 w-full -translate-y-1/2 rounded-full ${d <= completed ? "bg-emerald-400" : "bg-slate-200"}`} />}
             <span className={`relative z-10 flex h-[34px] w-[34px] items-center justify-center rounded-full text-xs font-bold transition ${node} ${state === "done" && d === completed && done ? "ci-pop" : ""}`}>
               {state === "done" ? <Check size={18} strokeWidth={3} /> : last ? <Gift size={17} /> : state === "today" ? <Coins size={16} /> : d}
             </span>
-            <span className={`mt-1.5 text-[11px] font-semibold tabular-nums ${state === "done" ? "text-emerald-600" : last ? "text-amber-600" : state === "today" ? "text-brand-700" : "text-slate-400"}`}>
+            <span className={`mt-1.5 text-xs font-semibold tabular-nums ${state === "done" ? "text-emerald-600" : last ? "text-amber-600" : state === "today" ? "text-brand-700" : "text-slate-500"}`}>
               +{fmt(last ? status.dailyAmount + status.bonus : status.dailyAmount)}
             </span>
           </li>
@@ -110,7 +110,7 @@ export function CheckInView({ status, result, claiming, onClaim, onClose }: Prop
   return (
     <Modal onClose={onClose}>
       <div className="relative">
-        <button type="button" onClick={onClose} aria-label="Đóng" title="Đóng" className="absolute -right-1 -top-1 z-10 rounded-full p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700">
+        <button type="button" onClick={onClose} aria-label="Đóng" title="Đóng" className="absolute -right-1 -top-1 z-10 rounded-full p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
           <X size={18} />
         </button>
 
@@ -164,7 +164,7 @@ export function CheckInView({ status, result, claiming, onClaim, onClose }: Prop
                 {claiming ? <Loader2 size={18} className="animate-spin" /> : <Gift size={18} />}
                 Nhận {fmt(status.todayAmount)} credit
               </Button>
-              <button type="button" onClick={onClose} disabled={claiming} className="mt-2.5 w-full text-center text-sm text-slate-400 transition hover:text-slate-600 disabled:opacity-50">
+              <button type="button" onClick={onClose} disabled={claiming} className="mt-2.5 w-full text-center text-sm text-slate-500 transition hover:text-slate-600 disabled:opacity-50">
                 Để sau
               </button>
             </>

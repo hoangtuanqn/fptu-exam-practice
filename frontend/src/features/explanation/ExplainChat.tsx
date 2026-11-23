@@ -122,7 +122,7 @@ export function ExplainChat({ examId, questionNumber }: Props) {
       >
         <MessageCircleQuestion size={17} className="shrink-0 text-brand-700" />
         <span className="flex-1">Chưa hiểu? Hỏi AI về câu này</span>
-        <ChevronDown size={16} className="shrink-0 text-slate-400" />
+        <ChevronDown size={16} className="shrink-0 text-slate-500" />
       </button>
     );
   }
@@ -134,13 +134,13 @@ export function ExplainChat({ examId, questionNumber }: Props) {
       <header className="flex items-center gap-2 border-b border-slate-100 py-1.5 pl-3.5 pr-1.5">
         <h3 className="flex-1 text-sm font-semibold text-slate-900">Hỏi AI về câu này</h3>
         {quota?.unlimited ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-b from-[#ffd75e] to-[#f0a800] px-2 py-0.5 text-[11px] font-bold text-[#3a2600]">
+          <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-b from-[#ffd75e] to-[#f0a800] px-2 py-0.5 text-xs font-bold text-[#3a2600]">
             <Crown size={11} /> Hỏi không giới hạn
           </span>
         ) : (
-          free && <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">Còn {quota.remaining}/{quota.limit} lượt hôm nay</span>
+          free && <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">Còn {quota.remaining}/{quota.limit} lượt hôm nay</span>
         )}
-        <button type="button" onClick={() => setOpen(false)} aria-expanded aria-label="Thu gọn hỏi AI" title="Thu gọn" className="flex h-10 w-10 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700">
+        <button type="button" onClick={() => setOpen(false)} aria-expanded aria-label="Thu gọn hỏi AI" title="Thu gọn" className="flex h-10 w-10 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
           <X size={16} />
         </button>
       </header>
@@ -255,19 +255,19 @@ export function ExplainChat({ examId, questionNumber }: Props) {
                 }
               }}
               placeholder="Bạn chưa hiểu chỗ nào?"
-              className="max-h-32 min-h-[2.5rem] min-w-0 flex-1 resize-none bg-transparent py-1.5 text-sm leading-5 text-slate-800 placeholder:text-slate-400 focus:outline-none disabled:opacity-60"
+              className="max-h-32 min-h-[2.5rem] min-w-0 flex-1 resize-none bg-transparent py-1.5 text-sm leading-5 text-slate-800 placeholder:text-slate-500 focus:outline-none disabled:opacity-60"
             />
             <button
               type="submit"
               disabled={busy || !input.trim()}
               aria-label="Gửi câu hỏi"
               title="Gửi"
-              className="mb-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-on-primary transition hover:brightness-110 disabled:bg-slate-200 disabled:text-slate-400"
+              className="mb-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-on-primary transition hover:brightness-110 disabled:bg-slate-200 disabled:text-slate-500"
             >
               <ArrowUp size={17} strokeWidth={2.5} />
             </button>
           </div>
-          <div className="mt-1.5 flex gap-2 px-1 text-[11px] leading-snug text-slate-400">
+          <div className="mt-1.5 flex gap-2 px-1 text-xs leading-snug text-slate-500">
             <span className="flex-1">AI có thể sai, hãy đối chiếu với tài liệu môn học.</span>
             {input.length >= MAX_CHARS - 200 && (
               <span aria-live="polite" className={input.length >= MAX_CHARS ? "text-rose-600" : ""}>

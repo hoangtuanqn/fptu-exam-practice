@@ -4,7 +4,7 @@ import { isNewTerm } from "./term";
 export function NewExamBadge({ term }: { term: string | null }) {
   if (!isNewTerm(term)) return null;
   return (
-    <span title={`Đề kỳ ${term}`} className="shrink-0 rounded bg-warning-container px-1.5 py-0.5 text-[11px] font-semibold leading-none text-on-warning-container">
+    <span title={`Đề kỳ ${term}`} className="shrink-0 rounded bg-warning-container px-1.5 py-0.5 text-xs font-semibold leading-none text-on-warning-container">
       Đề mới
     </span>
   );

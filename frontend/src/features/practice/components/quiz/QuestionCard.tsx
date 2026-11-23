@@ -62,7 +62,7 @@ export function QuestionCard({
         <div className="flex shrink-0 items-center justify-between gap-2 border-b border-slate-200 px-3 py-1.5 sm:px-4 lg:flex-wrap lg:gap-x-3 lg:gap-y-1.5">
           <div className="flex min-w-0 flex-1 items-center gap-x-3 gap-y-1 lg:flex-wrap">
             <h2 className="hidden whitespace-nowrap text-base font-semibold text-slate-900 lg:block">
-              Câu {number} <span className="font-sans text-sm font-normal text-slate-400">/ {total}</span>
+              Câu {number} <span className="font-sans text-sm font-normal text-slate-500">/ {total}</span>
             </h2>
             {/* Chỉ báo "Chọn nhiều" (hoặc chưa biết) cho khỏi chọn thiếu; câu chọn một thì khỏi nhắc */}
             {(question.answerPending || isMultiple(question)) && <QuestionKindBadge question={question} short />}

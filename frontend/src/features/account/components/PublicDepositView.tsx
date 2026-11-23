@@ -113,7 +113,7 @@ export function PublicDepositView({ code, note }: { code: string; note?: ReactNo
       </div>
 
       <div className="flex items-start gap-2 border-t border-slate-100 bg-slate-50/60 px-5 py-3 text-xs text-slate-500">
-        <ShieldCheck size={15} className="mt-0.5 shrink-0 text-slate-400" />
+        <ShieldCheck size={15} className="mt-0.5 shrink-0 text-slate-500" />
         <span>
           {note ?? "Thông tin người tạo lệnh được ẩn để bảo mật. Bạn chỉ xem được số tiền, trạng thái và thông tin chuyển khoản."}
         </span>

@@ -122,7 +122,7 @@ export default function ReferralPage() {
                     <div className="min-w-0">
                       <div className="truncate text-sm font-medium text-slate-900">{m.name}</div>
                       <div className="truncate text-xs text-slate-500">{m.email}</div>
-                      <div className="text-xs text-slate-400">Tham gia {formatDate(m.joinedAt)}</div>
+                      <div className="text-xs text-slate-500">Tham gia {formatDate(m.joinedAt)}</div>
                     </div>
                     <span className="shrink-0 whitespace-nowrap text-sm font-semibold tabular-nums text-emerald-700">+{formatCredit(m.earned)}</span>
                   </li>
