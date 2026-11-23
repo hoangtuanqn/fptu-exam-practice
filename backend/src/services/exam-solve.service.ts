@@ -6,7 +6,6 @@ import { AI_REPORT_FAILED_PREFIX, aiReady, AI_RETRY_COOLDOWN_MS } from "../const
 import { EXAM_STORAGE_DIR } from "../constants/crawler";
 import { AI_NOT_SOLVABLE_MESSAGE, isAiSolvable } from "../constants/exam";
 import { realtimeHub } from "../realtime/hub";
-import { compactCommentsText } from "./crawler/comments-file.service";
 import { examRepository } from "../repositories/exam.repository";
 import { solveExam } from "./ai/exam-solver.service";
 import { topicLabelerService } from "./ai/topic-labeler.service";
@@ -52,11 +51,8 @@ async function run(examId: string) {
   try {
     const ai = await aiSettingService.get();
     const dir = path.join(storageDir, EXAM_STORAGE_DIR, exam.threadId);
-    const rawComments = await fs.readFile(path.join(dir, "comments.txt"), "utf-8").catch(() => null);
-    const commentsText = rawComments ? compactCommentsText(rawComments) : null; // bản gọn cho AI, tệp gốc giữ nguyên
     const solved = await solveExam(ai, {
       title: exam.title,
-      commentsText,
       // imagePath trong DB đúng với cả đề cũ (ảnh nằm thẳng trong thư mục) lẫn đề mới (thư mục images/)
       questions: exam.questions.map((q) => ({ number: q.number, name: q.name, file: path.join(storageDir, q.imagePath) })),
     });

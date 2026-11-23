@@ -10,7 +10,7 @@ export interface ChatMessage {
   content: string;
 }
 
-export interface QuestionChatInput extends Omit<ExplainInput, "commentsText"> {
+export interface QuestionChatInput extends ExplainInput {
   explanation: string; // lời giải đã lưu mà người học đã đọc
   messages: ChatMessage[]; // hội thoại đến giờ, tin cuối là của người học
 }

@@ -11,7 +11,6 @@ export interface ExplainInput {
   questionNumber: number;
   imageFile: string; // đường dẫn tuyệt đối tới ảnh câu hỏi
   correctAnswer: string; // ví dụ "C" hoặc "A C"
-  commentsText: string | null; // bình luận của câu này (đã rút gọn), nếu có
 }
 
 type QuestionContext = Pick<ExplainInput, "examTitle" | "subjectCode" | "subjectName" | "questionNumber" | "imageFile" | "correctAnswer">;
@@ -30,12 +29,11 @@ export async function questionContextBlocks(input: QuestionContext): Promise<Cla
   ];
 }
 
-/** Nhờ Claude giải thích một câu hỏi (ảnh + đáp án chính thức + bình luận nếu có). Trả về văn bản tiếng Việt. */
+/** Nhờ Claude giải thích một câu hỏi (ảnh + đáp án chính thức). Trả về văn bản tiếng Việt. */
 export async function explainQuestion(config: AiConfig, input: ExplainInput): Promise<string> {
   if (!config.anthropicApiKey) throw new Error("Chưa cấu hình khóa Anthropic");
 
   const content = await questionContextBlocks(input);
-  if (input.commentsText) content.push({ type: "text", text: `<comments>\n${input.commentsText}\n</comments>` });
   content.push({ type: "text", text: "Explain this question following your instructions." });
 
   // Model đôi khi vẫn viết LaTeX dù prompt cấm: đổi sang chữ Unicode trước khi lưu và trả về

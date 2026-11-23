@@ -1,10 +1,8 @@
 import path from "node:path";
 import { AI_BATCH_SIZE, AI_MAX_PARALLEL_CALLS, AI_MIN_SOLVED_RATIO, type AiConfig } from "../../constants/ai";
 import { createLimiter } from "../../utils/limiter";
-import { commentsOfQuestion } from "../crawler/comments-file.service";
 import { buildSystem, resolveModuleKey, subjectCodeOf } from "../../prompts";
 import { askClaude, type ClaudeContent, type UsageInfo } from "./claude.client";
-import { tallyOfComments } from "./comment-tally";
 import { loadImageForAi } from "./image";
 
 export interface SolveQuestion {
@@ -16,7 +14,6 @@ export interface SolveQuestion {
 export interface SolveInput {
   title: string;
   questions: SolveQuestion[];
-  commentsText: string | null; // nội dung comments.txt (nếu có)
   moduleKey?: string; // module prompt chọn tường minh (từ UI / metadata); bỏ trống thì nhận diện từ tiêu đề rồi tới _default
 }
 
@@ -147,7 +144,7 @@ const callLimit = createLimiter(AI_MAX_PARALLEL_CALLS);
 
 interface BatchItem {
   label: number; // số ghi trên nhãn ảnh gửi cho Claude (đánh số lại từ 1 trong mỗi lượt gọi)
-  name: string; // tên ảnh, dùng để tìm bình luận của câu
+  name: string; // tên ảnh
   file: string;
 }
 
@@ -155,23 +152,12 @@ interface Context {
   config: AiConfig;
   moduleKey: string;
   title: string;
-  commentsText: string | null;
   deps: SolverDeps;
 }
 
-/** Một lần gọi Claude cho một nhóm ảnh: gửi ảnh + bình luận của đúng các câu đó, đọc lại theo cấu trúc cố định. */
+/** Một lần gọi Claude cho một nhóm ảnh, đọc lại theo cấu trúc cố định. */
 async function askOnce(ctx: Context, items: BatchItem[]): Promise<ClaudeOutput> {
   const n = items.length;
-  // Chỉ gửi bình luận của các câu trong nhóm: ít token hơn và Claude không bị phân tâm bởi câu khác
-  const sections = items
-    .map((it) => {
-      const text = commentsOfQuestion(ctx.commentsText, it.name);
-      if (!text) return null;
-      const tally = tallyOfComments(text); // đếm đáp án trong bình luận bằng code (xác định), không bắt model tự đếm
-      return `## ${it.name}${tally ? `\n[tally: ${tally}]` : ""}\n${text}`;
-    })
-    .filter(Boolean);
-  const batchComments = sections.length ? sections.join("\n\n") : null;
   const subject = subjectCodeOf(ctx.title);
 
   const content: ClaudeContent[] = [
@@ -188,18 +174,7 @@ Number of images (N): ${n}
     content.push({ type: "text", text: `Question ${it.label} (file ${path.basename(it.file)}):` });
     content.push({ type: "image", source: { type: "base64", media_type: image.mediaType, data: image.data } });
   }
-  content.push({
-    type: "text",
-    text: batchComments
-      ? `<comments>
-${batchComments}
-</comments>
-
-Solve all ${n} items following your instructions.`
-      : `There are no forum comments for these items, so solve everything yourself.
-
-Solve all ${n} items following your instructions.`,
-  });
+  content.push({ type: "text", text: `Solve all ${n} items following your instructions.` });
 
   // System chỉ gồm nội dung tĩnh (base + module + khối tính năng) để cache; mọi thứ theo từng đề nằm trong `content` ở trên
   const system = buildSystem("solve", ctx.moduleKey, { webSearch: ctx.config.useSearch });
@@ -277,7 +252,7 @@ export async function solveExam(config: AiConfig, input: SolveInput, deps: Solve
   const n = input.questions.length;
   if (n === 0) throw new Error("Đề không có câu nào");
 
-  const ctx: Context = { config, moduleKey: resolveModuleKey("solve", { explicit: input.moduleKey, title: input.title }), title: input.title, commentsText: input.commentsText, deps };
+  const ctx: Context = { config, moduleKey: resolveModuleKey("solve", { explicit: input.moduleKey, title: input.title }), title: input.title, deps };
   const parts = Math.ceil(n / AI_BATCH_SIZE);
   const size = Math.ceil(n / parts);
   const jobs = Array.from({ length: parts }, (_, p) => {

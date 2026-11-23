@@ -24,7 +24,6 @@ src/
   middlewares/   auth, phân quyền, validate, rate limit, xử lý lỗi
   controllers/   đọc request đã validate → gọi service → trả response
   services/      nghiệp vụ (đăng nhập, ví, nạp tiền, đối soát SePay, nhập đề)
-    crawler/     đọc comments.txt của đề để gửi cho AI
   repositories/  truy vấn Prisma, không chứa nghiệp vụ
   rules/         zod schema của request, AppError, ResponseClient
   jobs/          cron job đối soát SePay, các worker nền
@@ -115,8 +114,8 @@ An toàn tiền bạc:
 
 ## Thư mục đề và AI giải đáp án
 
-- **Thư mục mỗi đề** (`STORAGE_DIR/exams/<threadId>/`): `images/Q1.webp...`, `comments.txt` (bình luận đã lưu của các đề cũ, nếu có), và khi AI giải xong thêm `ans.txt` (mỗi dòng một câu) và `ai-report.md`. **Bình luận không lưu vào DB** (bảng `exam_comments` đã bỏ ở migration `0011`). Đề lấy trước khi có bản này vẫn để ảnh thẳng trong `exams/<threadId>/` (đường dẫn ảnh lưu trong DB nên vẫn hiển thị đúng).
-- **AI (Claude):** bật ở Quản trị → AI giải đáp án (hoặc đặt `ANTHROPIC_API_KEY` trong `.env`), mặc định model `claude-haiku-5-5` (rẻ nhất; đổi sang Sonnet/Opus nếu cần chính xác hơn). Khi giải đề, worker gửi cho Claude: prompt hệ thống tiếng Anh chia khối bằng thẻ XML theo module: `prompts/base.md` (chung) + `prompts/modules/<MÃ MÔN>.md` (chọn theo mã môn ở đầu tiêu đề đề thi, ví dụ `MAD101 - SU26 - RE`; không có thì `_default`), xem `prompts/README.md` (cố định nên được prompt caching; bình luận được rút gọn kèm bảng đếm đáp án, ảnh quá lớn được thu nhỏ về 1280 px trước khi gửi) + toàn bộ ảnh có nhãn số câu + `comments.txt`. Kỹ thuật: suy luận thích ứng (adaptive thinking) với mức `effort` chỉnh được, structured outputs (JSON schema: báo cáo + đáp án từng câu kèm loại câu và độ tin cậy; câu thiếu được thử lại riêng, chịu lỗi từng phần), tra web tùy chọn (`web_search`, tối đa 5 lượt/đề). Kết quả lưu vào `exam_questions.answer`; báo cáo (kèm các câu Claude chưa chắc) ở `exams.ai_report`.
+- **Thư mục mỗi đề** (`STORAGE_DIR/exams/<threadId>/`): `images/Q1.webp...`, và khi AI giải xong thêm `ans.txt` (mỗi dòng một câu) và `ai-report.md`. **Bình luận không lưu vào DB** (bảng `exam_comments` đã bỏ ở migration `0011`). Đề lấy trước khi có bản này vẫn để ảnh thẳng trong `exams/<threadId>/` (đường dẫn ảnh lưu trong DB nên vẫn hiển thị đúng).
+- **AI (Claude):** bật ở Quản trị → AI giải đáp án (hoặc đặt `ANTHROPIC_API_KEY` trong `.env`), mặc định model `claude-haiku-5-5` (rẻ nhất; đổi sang Sonnet/Opus nếu cần chính xác hơn). Khi giải đề, worker gửi cho Claude: prompt hệ thống tiếng Anh chia khối bằng thẻ XML theo module: `prompts/base.md` (chung) + `prompts/modules/<MÃ MÔN>.md` (chọn theo mã môn ở đầu tiêu đề đề thi, ví dụ `MAD101 - SU26 - RE`; không có thì `_default`), xem `prompts/README.md` (cố định nên được prompt caching; ảnh quá lớn được thu nhỏ về 1280 px trước khi gửi) + toàn bộ ảnh có nhãn số câu. Kỹ thuật: suy luận thích ứng (adaptive thinking) với mức `effort` chỉnh được, structured outputs (JSON schema: báo cáo + đáp án từng câu kèm loại câu và độ tin cậy; câu thiếu được thử lại riêng, chịu lỗi từng phần), tra web tùy chọn (`web_search`, tối đa 5 lượt/đề). Kết quả lưu vào `exam_questions.answer`; báo cáo (kèm các câu Claude chưa chắc) ở `exams.ai_report`.
 - Có thể bật tra Google (grounding) theo bước 4 của prompt. Khóa gửi qua header, không nằm trong URL/log.
 - Người dùng không bị trừ thêm phí vì AI.
 - `GET /admin/exams`, `POST /admin/exams/:id/solve` (chạy nền, trả 202), `GET /admin/exams/:id/report`: trang **Đề thi** của quản trị để xem nguồn đáp án và nhờ AI giải lại (dùng cho đề cũ hoặc khi AI lỗi). Đề đã có đáp án rồi (người dùng lấy lại) thì không giải lại.

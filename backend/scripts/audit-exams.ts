@@ -19,7 +19,6 @@ import path from "node:path";
 import { prisma } from "../src/configs/prisma";
 import { storageDir } from "../src/configs/env";
 import { EXAM_IMAGES_DIR, EXAM_STORAGE_DIR } from "../src/constants/crawler";
-import { answersInComment } from "../src/services/ai/comment-tally";
 
 type Level = "ERROR" | "WARN" | "INFO";
 interface Issue {
@@ -35,27 +34,9 @@ const onlyExam = args.includes("--exam") ? (args[args.indexOf("--exam") + 1] ?? 
 const ANSWER_FORMAT = /^[A-Z]( [A-Z]){0,7}$/; // "C" hoặc "A C D"; cho phép tối đa 8 đáp án
 const SOLVED = new Set(["AI", "MANUAL"]); // nguồn đáp án dùng được; DEFAULT/FAILED/PENDING là chưa có đáp án thật
 const MIN_IMAGE_BYTES = 500;
-const CONSENSUS_MIN_VOTES = 3;
-const CONSENSUS_MIN_SHARE = 0.7;
 
 const list = (nums: number[], max = 12) => (nums.length > max ? `${nums.slice(0, max).join(", ")}… (+${nums.length - max})` : nums.join(", "));
 const norm = (a: string) => a.trim().toUpperCase().split(/[^A-Z]+/).filter(Boolean).sort().join(" ");
-
-// Bình luận theo từng câu trong comments.txt: "## Q12  (5 bình luận)" rồi mỗi bình luận một dòng "[...] tác giả (#id): nội dung"
-function parseComments(text: string) {
-  const byName = new Map<string, string[]>();
-  for (const part of text.split(/^## /m).slice(1)) {
-    const lines = part.split("\n");
-    const name = lines[0]!.trim().split(/\s+/)[0]!;
-    const bodies: string[] = [];
-    for (const l of lines.slice(1)) {
-      const m = l.match(/^\[[^\]]*\] .*? \(#\d+\): ?(.*)$/);
-      if (m) bodies.push(m[1]!);
-    }
-    byName.set(name, bodies);
-  }
-  return byName;
-}
 
 const readText = (p: string) => fs.readFile(p, "utf-8").catch(() => null);
 
@@ -156,30 +137,6 @@ async function main() {
     if (unsure) add("WARN", "AI_UNSURE", `AI ghi nhận chưa chắc ở câu: ${unsure}`);
     const noAns = /No usable answer was obtained for questions: ([^\n]*?)\./.exec(report_)?.[1];
     if (noAns && blank.length === 0) add("WARN", "AI_STALE", `Báo cáo AI nói có câu thiếu đáp án (${noAns}) nhưng DB đã có đủ (có thể đã sửa tay)`);
-
-    // ---- Đối chiếu với bình luận đã lưu (số đông bình luận nêu cùng một đáp án nhưng khác DB)
-    const commentsText = await readText(path.join(dir, "comments.txt"));
-    if (commentsText === null) add("WARN", "NO_COMMENTS", "Không có comments.txt (không đối chiếu được với bình luận)");
-    else {
-      const byName = parseComments(commentsText);
-      const odd: string[] = [];
-      for (const q of answered) {
-        const votes = new Map<string, number>();
-        let n = 0;
-        for (const body of byName.get(q.name) ?? []) {
-          const letters = answersInComment(body);
-          if (!letters) continue;
-          n++;
-          const k = letters.join(" ");
-          votes.set(k, (votes.get(k) ?? 0) + 1);
-        }
-        const top = [...votes.entries()].sort((a, b) => b[1] - a[1])[0];
-        if (top && n >= CONSENSUS_MIN_VOTES && top[1] / n >= CONSENSUS_MIN_SHARE && top[0] !== norm(q.answer)) {
-          odd.push(`câu ${q.number}: DB ${norm(q.answer)}, bình luận ${top[0]} (${top[1]}/${n})`);
-        }
-      }
-      if (odd.length) add("WARN", "ANS_VS_COMMENTS", `${odd.length} câu có đáp án lệch số đông bình luận: ${odd.slice(0, 6).join("; ")}${odd.length > 6 ? "…" : ""}`);
-    }
 
     // ---- ans.txt (bản đáp án lưu cạnh ảnh): chỉ so để biết, nguồn đúng là DB
     const ansTxt = await readText(path.join(dir, "ans.txt"));

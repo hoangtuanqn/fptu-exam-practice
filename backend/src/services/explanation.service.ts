@@ -1,13 +1,11 @@
 import { PRO_BENEFITS } from "../constants/plan";
 import { planService } from "./plan.service";
-import fs from "node:fs/promises";
 import path from "node:path";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../configs/prisma";
 import { storageDir } from "../configs/env";
 import { aiReady } from "../constants/ai";
 import { activePromoEnd, promoExpired, type PromoConfig } from "../constants/promo";
-import { EXAM_STORAGE_DIR } from "../constants/crawler";
 import { EXAM_NOT_FOUND } from "../constants/exam";
 import { explanationRepository } from "../repositories/explanation.repository";
 import { examRepository } from "../repositories/exam.repository";
@@ -21,7 +19,6 @@ import { explanationFeedbackService } from "./explanation-feedback.service";
 import { explainQuestion } from "./ai/question-explainer.service";
 import { aiSettingService } from "./ai-setting.service";
 import { promoSettingService } from "./promo-setting.service";
-import { commentsOfQuestion, compactCommentsText } from "./crawler/comments-file.service";
 import { examService } from "./exam.service";
 import { linkRewardService } from "./link-reward.service";
 import { walletService } from "./wallet.service";
@@ -192,14 +189,12 @@ export const explanationService = {
     if (running) return running;
 
     const job = (async () => {
-      const raw = await fs.readFile(path.join(storageDir, EXAM_STORAGE_DIR, question.exam.threadId, "comments.txt"), "utf-8").catch(() => null);
       const content = await explainQuestion(ai, {
         examTitle: question.exam.title,
         ...(await subjectOfExam(question.exam)),
         questionNumber,
         imageFile: path.join(storageDir, question.imagePath),
         correctAnswer: question.answer,
-        commentsText: commentsOfQuestion(raw ? compactCommentsText(raw) : null, question.name),
       });
       await explanationRepository.save({ examId, questionNumber, content, model: ai.claudeModel });
       return content;

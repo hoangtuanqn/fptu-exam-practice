@@ -212,7 +212,7 @@ export const examRepository = {
       select: { totalQuestions: true, questions: { orderBy: { number: "asc" }, select: { number: true, imagePath: true, answer: true } } },
     }),
 
-  // Đề + câu hỏi được ghi trong một transaction: hoặc đủ, hoặc không có gì. (Bình luận lưu ở file comments.txt, không lưu DB)
+  // Đề + câu hỏi được ghi trong một transaction: hoặc đủ, hoặc không có gì.
   create: (data: NewExam) =>
     prisma.$transaction(
       async (tx) => {
