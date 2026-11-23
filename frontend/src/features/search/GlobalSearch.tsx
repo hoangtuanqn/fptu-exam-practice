@@ -13,6 +13,7 @@ import { Search } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useApi } from "@/shared/hooks/useApi";
 import { useDebounce } from "@/shared/hooks/useDebounce";
+import { IconButton } from "@/shared/ui/Button";
 import { Kbd } from "@/shared/ui/Kbd";
 import { Modal } from "@/shared/ui/Modal";
 import { SkeletonList } from "@/shared/ui/Skeleton";
@@ -58,22 +59,18 @@ export function SearchTrigger() {
         type="button"
         onClick={open}
         aria-label={`Tìm kiếm (${KEY})`}
-        className="md-motion hidden h-10 w-44 items-center gap-2 rounded-full border border-outline-variant bg-surface-container-low px-3.5 text-sm text-on-surface-variant hover:border-on-surface/60 sm:flex lg:w-60"
+        className="site-search-field md-motion"
       >
         <Search size={18} aria-hidden className="shrink-0" />
         <span className="flex-1 truncate text-left">Tìm kiếm…</span>
-        <span className="hidden lg:block">
+        <span className="hidden 2xl:block">
           <Kbd>{KEY}</Kbd>
         </span>
       </button>
-      <button
-        type="button"
-        onClick={open}
-        aria-label="Tìm kiếm"
-        className="md-state md-motion flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant sm:hidden"
-      >
+      {/* Dưới 1280px header chật: chỉ còn biểu tượng */}
+      <IconButton label="Tìm kiếm" onClick={open} className="xl:hidden">
         <Search size={20} />
-      </button>
+      </IconButton>
     </>
   );
 }

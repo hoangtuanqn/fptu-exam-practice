@@ -1,6 +1,6 @@
 import { lazy } from "react";
 import { Navigate, Route } from "react-router-dom";
-import { Award, BellRing, BookMarked, Link2, MailPlus, Activity, ShieldCheck as QualityIcon, MessagesSquare, ShoppingBag, Megaphone, Bot, ClipboardList, FileText, FileUp, FolderSearch, History, SlidersHorizontal, Wallet, Gift, ImageUp, MessageSquareWarning, UserPlus, Landmark, LayoutDashboard, Radio, Receipt, Settings, ThumbsUp, Users } from "lucide-react";
+import { NAV_ICON } from "@/shared/layout/navIcons";
 import type { NavItem } from "@/shared/layout/PanelLayout";
 
 /**
@@ -46,36 +46,36 @@ const MarketingPage = lazy(() => import("./marketing/MarketingPage"));
 const AdminBadgesPage = lazy(() => import("./badges/AdminBadgesPage"));
 
 export const ADMIN_NAV: NavItem[] = [
-  { to: "/admin", label: "Tổng quan", icon: LayoutDashboard, end: true, group: "Chung" },
-  { to: "/admin/users", label: "Thành viên", icon: Users, group: "Người dùng" },
-  { to: "/admin/online", label: "Đang online", icon: Radio, group: "Người dùng" },
-  { to: "/admin/referrals", label: "Giới thiệu", icon: UserPlus, group: "Người dùng" },
-  { to: "/admin/account-settings", label: "Cấu hình đăng ký", icon: SlidersHorizontal, group: "Người dùng" },
-  { to: "/admin/attempts", label: "Lịch sử làm bài", icon: ClipboardList, group: "Người dùng" },
-  { to: "/admin/badges", label: "Huy hiệu", icon: Award, group: "Người dùng" },
-  { to: "/admin/deposits", label: "Lệnh nạp tiền", icon: Receipt, group: "Tài chính" },
-  { to: "/admin/bank-transactions", label: "Giao dịch ngân hàng", icon: Landmark, group: "Tài chính" },
-  { to: "/admin/wallet", label: "Biến động số dư", icon: Wallet, group: "Tài chính" },
-  { to: "/admin/purchases", label: "Lịch sử mua", icon: ShoppingBag, group: "Tài chính" },
-  { to: "/admin/gift-codes", label: "Giftcode", icon: Gift, group: "Tài chính" },
-  { to: "/admin/sepay", label: "Cấu hình SePay", icon: Settings, group: "Tài chính" },
-  { to: "/admin/exams", label: "Đề thi", icon: FileText, group: "Kho đề" },
-  { to: "/admin/exam-upload", label: "Tải đề lên", icon: FileUp, group: "Kho đề" },
-  { to: "/admin/exam-gaps", label: "Đề cần bổ sung", icon: FolderSearch, group: "Kho đề" },
-  { to: "/admin/contributions", label: "Đề đóng góp", icon: ImageUp, group: "Kho đề" },
-  { to: "/admin/subjects", label: "Quản lý môn học", icon: BookMarked, group: "Kho đề" },
-  { to: "/admin/crawl-jobs", label: "Lịch sử lấy đề", icon: History, group: "Kho đề" },
-  { to: "/admin/reports", label: "Báo cáo đáp án", icon: MessageSquareWarning, group: "Chất lượng & AI" },
-  { to: "/admin/explanation-feedback", label: "Đánh giá lời giải AI", icon: ThumbsUp, group: "Chất lượng & AI" },
-  { to: "/admin/quality", label: "Chất lượng đề", icon: QualityIcon, group: "Chất lượng & AI" },
-  { to: "/admin/ai", label: "AI giải đáp án", icon: Bot, group: "Chất lượng & AI" },
-  { to: "/admin/chatbot", label: "Chatbot hỗ trợ", icon: MessagesSquare, group: "Chất lượng & AI" },
-  { to: "/admin/funnel", label: "Phễu người dùng", icon: Activity, group: "Tăng trưởng" },
-  { to: "/admin/promotions", label: "Ưu đãi & khuyến mãi", icon: Megaphone, group: "Tăng trưởng" },
-  { to: "/admin/marketing", label: "Email marketing", icon: MailPlus, group: "Tăng trưởng" },
-  { to: "/admin/system-notices", label: "Gửi thông báo", icon: BellRing, group: "Tăng trưởng" },
-  { to: "/admin/link-rewards", label: "Vượt link", icon: Link2, group: "Tăng trưởng" },
-  { to: "/admin/coursera", label: "Coursera", icon: ShoppingBag, group: "Tăng trưởng" },
+  { to: "/admin", label: "Tổng quan", icon: NAV_ICON.overview, end: true, group: "Chung" },
+  { to: "/admin/users", label: "Thành viên", icon: NAV_ICON.users, group: "Người dùng" },
+  { to: "/admin/online", label: "Đang online", icon: NAV_ICON.online, group: "Người dùng" },
+  { to: "/admin/referrals", label: "Giới thiệu", icon: NAV_ICON.referral, group: "Người dùng" },
+  { to: "/admin/account-settings", label: "Cấu hình đăng ký", icon: NAV_ICON.sliders, group: "Người dùng" },
+  { to: "/admin/attempts", label: "Lịch sử làm bài", icon: NAV_ICON.attempts, group: "Người dùng" },
+  { to: "/admin/badges", label: "Huy hiệu", icon: NAV_ICON.badges, group: "Người dùng" },
+  { to: "/admin/deposits", label: "Lệnh nạp tiền", icon: NAV_ICON.deposit, group: "Tài chính" },
+  { to: "/admin/bank-transactions", label: "Giao dịch ngân hàng", icon: NAV_ICON.bank, group: "Tài chính" },
+  { to: "/admin/wallet", label: "Biến động số dư", icon: NAV_ICON.transactions, group: "Tài chính" },
+  { to: "/admin/purchases", label: "Lịch sử mua", icon: NAV_ICON.bag, group: "Tài chính" },
+  { to: "/admin/gift-codes", label: "Giftcode", icon: NAV_ICON.giftcode, group: "Tài chính" },
+  { to: "/admin/sepay", label: "Cấu hình SePay", icon: NAV_ICON.settings, group: "Tài chính" },
+  { to: "/admin/exams", label: "Đề thi", icon: NAV_ICON.exam, group: "Kho đề" },
+  { to: "/admin/exam-upload", label: "Tải đề lên", icon: NAV_ICON.upload, group: "Kho đề" },
+  { to: "/admin/exam-gaps", label: "Đề cần bổ sung", icon: NAV_ICON.searchDoc, group: "Kho đề" },
+  { to: "/admin/contributions", label: "Đề đóng góp", icon: NAV_ICON.contribute, group: "Kho đề" },
+  { to: "/admin/subjects", label: "Quản lý môn học", icon: NAV_ICON.library, group: "Kho đề" },
+  { to: "/admin/crawl-jobs", label: "Lịch sử lấy đề", icon: NAV_ICON.history, group: "Kho đề" },
+  { to: "/admin/reports", label: "Báo cáo đáp án", icon: NAV_ICON.report, group: "Chất lượng & AI" },
+  { to: "/admin/explanation-feedback", label: "Đánh giá lời giải AI", icon: NAV_ICON.thumb, group: "Chất lượng & AI" },
+  { to: "/admin/quality", label: "Chất lượng đề", icon: NAV_ICON.quality, group: "Chất lượng & AI" },
+  { to: "/admin/ai", label: "AI giải đáp án", icon: NAV_ICON.bot, group: "Chất lượng & AI" },
+  { to: "/admin/chatbot", label: "Chatbot hỗ trợ", icon: NAV_ICON.chat, group: "Chất lượng & AI" },
+  { to: "/admin/funnel", label: "Phễu người dùng", icon: NAV_ICON.funnel, group: "Tăng trưởng" },
+  { to: "/admin/promotions", label: "Ưu đãi & khuyến mãi", icon: NAV_ICON.megaphone, group: "Tăng trưởng" },
+  { to: "/admin/marketing", label: "Email marketing", icon: NAV_ICON.mail, group: "Tăng trưởng" },
+  { to: "/admin/system-notices", label: "Gửi thông báo", icon: NAV_ICON.bell, group: "Tăng trưởng" },
+  { to: "/admin/link-rewards", label: "Vượt link", icon: NAV_ICON.link, group: "Tăng trưởng" },
+  { to: "/admin/coursera", label: "Coursera", icon: NAV_ICON.coursera, group: "Tăng trưởng" },
 ];
 
 // Các route con của /admin

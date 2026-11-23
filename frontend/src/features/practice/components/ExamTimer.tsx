@@ -31,7 +31,7 @@ export function ExamTimer({ left, limit, onDark = false }: Props) {
         onDark ? "border-white/20 bg-white/10" : "border-outline-variant bg-surface-container-lowest"
       }`}
     >
-      <Clock size={15} className={`shrink-0 ${urgent ? (onDark ? tone.onDark : tone.text) : onDark ? "text-slate-500" : "text-brand-700"}`} aria-hidden />
+      <Clock size={15} className={`shrink-0 max-[359px]:hidden ${urgent ? (onDark ? tone.onDark : tone.text) : onDark ? "text-slate-500" : "text-brand-700"}`} aria-hidden />
       <span className={`min-w-[3.4rem] text-center text-base font-bold leading-none tabular-nums ${tone.blink} ${onDark ? tone.onDark : tone.text}`}>{formatDuration(left)}</span>
       <div
         role="progressbar"
@@ -39,7 +39,7 @@ export function ExamTimer({ left, limit, onDark = false }: Props) {
         aria-valuemin={0}
         aria-valuemax={limit}
         aria-valuenow={Math.max(0, left)}
-        className={`h-2 w-10 overflow-hidden rounded-full sm:w-24 ${onDark ? "bg-white/20" : "bg-outline-variant/40"}`}
+        className={`h-2 w-16 overflow-hidden rounded-full max-sm:hidden lg:w-24 ${onDark ? "bg-white/20" : "bg-outline-variant/40"}`}
       >
         <div className={`h-full rounded-full ${tone.bar} transition-[width,background-color] duration-1000 ease-linear`} style={{ width: `${percentOf(left, limit)}%` }} />
       </div>

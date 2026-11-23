@@ -47,8 +47,8 @@ export function ImageViewer({
     <div className="fixed inset-0 z-50 flex flex-col bg-scrim/90 backdrop-blur-sm lg:flex-row">
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       {/* Thanh công cụ */}
-      <div className="relative z-10 flex h-14 shrink-0 items-center justify-between gap-3 px-5 text-white">
-        <div className="font-serif text-lg font-semibold">
+      <div className="relative z-10 flex h-14 shrink-0 items-center justify-between gap-2 px-3 text-white sm:gap-3 sm:px-5">
+        <div className="shrink-0 whitespace-nowrap font-serif text-lg font-semibold">
           Câu {question.number} <span className="font-sans text-sm font-normal text-slate-500">/ {total}</span>
         </div>
         {timer && <ExamTimer left={timer.left} limit={timer.limit} onDark />}

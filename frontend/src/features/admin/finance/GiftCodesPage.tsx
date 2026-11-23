@@ -77,7 +77,7 @@ export default function GiftCodesPage() {
         }
       />
       <Card>
-        <div className="flex flex-wrap items-center gap-3 border-b border-slate-100 p-4">
+        <div className="panel-filter-row">
           <label className="relative min-w-0 flex-1 sm:max-w-xs">
             <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
             <input

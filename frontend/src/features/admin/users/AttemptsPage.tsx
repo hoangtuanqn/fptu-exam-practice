@@ -35,7 +35,7 @@ export default function AttemptsPage() {
     <>
       <PageHeader title="Lịch sử làm bài" description="Các lần nộp bài của thành viên." />
       <Card>
-        <div className="flex flex-wrap items-center gap-3 border-b border-slate-100 p-4">
+        <div className="panel-filter-row">
           <SearchBox value={search} onChange={setSearch} placeholder="Tìm theo tên hoặc email" label="Tìm thành viên" />
           <Segmented
             label="Lọc theo chế độ"

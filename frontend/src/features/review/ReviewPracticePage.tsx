@@ -157,7 +157,7 @@ export default function ReviewPracticePage() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-3">
+    <div data-hide-chat className="mx-auto max-w-3xl space-y-3">
       <div className="flex items-center justify-between gap-3">
         <Link to="/account/review" className={buttonClass({ variant: "text", size: "sm" })}>
           <ArrowLeft size={16} /> Thoát

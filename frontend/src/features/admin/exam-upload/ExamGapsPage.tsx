@@ -132,7 +132,7 @@ export default function ExamGapsPage() {
                       <Th>Loại</Th>
                       <Th>Đăng lúc</Th>
                       <Th>Còn thiếu</Th>
-                      <Th>
+                      <Th className="relative">
                         <span className="sr-only">Thao tác</span>
                       </Th>
                     </Thead>

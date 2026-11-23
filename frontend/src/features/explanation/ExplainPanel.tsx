@@ -95,7 +95,7 @@ export function ExplainPanel({ examId, questionNumber, useFreeTurn, firstTime, o
     <aside
       aria-label={`Lời giải thích câu ${questionNumber}`}
       style={{ "--panel-w": `${resize.width}px` } as CSSProperties}
-      className="fixed inset-x-0 bottom-0 z-30 flex max-h-[58dvh] flex-col rounded-t-2xl border-t border-slate-200 bg-surface-container-lowest shadow-[0_-8px_30px_rgba(15,23,42,0.12)] lg:relative lg:z-auto lg:max-h-none lg:min-h-0 lg:w-[var(--panel-w)] lg:shrink-0 lg:rounded-none lg:border-l lg:border-t-0 lg:shadow-none"
+      className="panel-explain-sheet"
     >
       {/* Tay kéo ở mép trái (chỉ màn hình rộng): kéo sang trái để rộng ra, sang phải để hẹp lại; nhấp đúp về mặc định */}
       <div
@@ -121,7 +121,7 @@ export function ExplainPanel({ examId, questionNumber, useFreeTurn, firstTime, o
           </span>
           Giải thích câu {questionNumber}
         </h2>
-        <button onClick={onClose} aria-label="Đóng lời giải thích" title="Đóng lời giải thích" className="rounded-md p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
+        <button onClick={onClose} aria-label="Đóng lời giải thích" title="Đóng lời giải thích" className="panel-hit relative rounded-md p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
           <X size={18} />
         </button>
       </header>

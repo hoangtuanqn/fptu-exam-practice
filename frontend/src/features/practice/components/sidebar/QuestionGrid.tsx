@@ -45,7 +45,7 @@ export function QuestionGrid({ questions, answers, checked, flagged, submitted, 
                 title={`Câu ${q.number}: ${name}`}
                 aria-label={`Câu ${q.number}, ${name}${flagged[q.number] ? ", đã đánh dấu" : ""}`}
                 onClick={() => onSelect(i)}
-                className={`md-state md-motion md-label-large relative flex h-10 w-full items-center justify-center rounded-m3-sm border ${cls} ${
+                className={`md-state md-motion md-label-large relative flex h-11 w-full items-center lg:h-10 justify-center rounded-m3-sm border ${cls} ${
                   i === current ? "ring-2 ring-primary ring-offset-2 ring-offset-surface" : ""
                 }`}
               >
@@ -59,7 +59,7 @@ export function QuestionGrid({ questions, answers, checked, flagged, submitted, 
           <span
             key={`loading-${k}`}
             aria-hidden
-            className="md-label-large flex h-10 w-full animate-pulse items-center justify-center rounded-m3-sm border border-dashed border-outline-variant text-outline"
+            className="md-label-large flex h-11 w-full animate-pulse lg:h-10 items-center justify-center rounded-m3-sm border border-dashed border-outline-variant text-outline"
           >
             {questions.length + k + 1}
           </span>

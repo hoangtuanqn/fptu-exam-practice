@@ -73,7 +73,7 @@ export default function ChangelogPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-surface">
-      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-outline-variant bg-surface/90 px-3 backdrop-blur sm:px-4">
+      <header className="site-header">
         <Link to="/" title={brand.company}>
           <Logo variant="full" className="h-10" />
         </Link>

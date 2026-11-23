@@ -45,7 +45,7 @@ export function AiConfigForm({ initial, onSaved }: { initial: AiAdminConfig; onS
       <form onSubmit={onSubmit} className="space-y-5 p-5" noValidate>
         <FormError message={error} />
 
-        <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 p-4">
+        <div className="panel-setting-row">
           <div>
             <div className="text-sm font-medium text-slate-800">Bật AI giải đề khi lấy đề</div>
             <div className="text-xs text-slate-500">Tắt thì đề mới chưa có đáp án (chỉ xem được). Có thể nhờ AI giải lại sau ở trang Đề thi.</div>
@@ -99,7 +99,7 @@ export function AiConfigForm({ initial, onSaved }: { initial: AiAdminConfig; onS
           hint="Người dùng trả phí này mỗi lần xem lời giải thích AI của một câu (mỗi câu trả một lần, xem lại miễn phí). Lời giải được lưu để dùng chung. Đặt 0 để miễn phí."
         />
 
-        <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 p-4">
+        <div className="panel-setting-row">
           <div>
             <div className="text-sm font-medium text-slate-800">Cho Claude tra web khi không chắc</div>
             <div className="text-xs text-slate-500">Tối đa 5 lượt tìm kiếm mỗi đề, tính thêm phí theo lượt tìm và làm chậm hơn.</div>

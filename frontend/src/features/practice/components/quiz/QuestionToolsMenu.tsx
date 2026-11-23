@@ -31,7 +31,7 @@ export function QuestionToolsMenu({ onZoom, onReport, reported, autoNext, onTogg
         aria-haspopup="menu"
         aria-label="Công cụ khác của câu hỏi"
         title="Phóng to, cỡ ảnh, báo cáo"
-        className="relative flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-surface-container-lowest text-slate-500 transition hover:border-slate-400 hover:text-slate-800"
+        className="panel-q-tool"
       >
         <MoreHorizontal size={18} />
       </button>

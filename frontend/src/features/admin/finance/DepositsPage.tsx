@@ -26,7 +26,7 @@ export default function DepositsPage() {
     <>
       <PageHeader title="Lệnh nạp tiền" description="Tất cả lệnh nạp do thành viên tạo." />
       <Card>
-        <div className="flex flex-wrap items-center gap-3 border-b border-slate-100 p-4">
+        <div className="panel-filter-row">
           <Segmented
             label="Lọc theo trạng thái"
             value={status}

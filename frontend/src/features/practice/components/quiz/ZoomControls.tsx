@@ -15,6 +15,8 @@ interface Props {
 export function ZoomControls({ zoom, canZoomIn, canZoomOut, onZoomIn, onZoomOut, onReset, onClose }: Props) {
   return (
     <div className="flex items-center gap-1">
+      {/* Điện thoại: chỉ giữ nút Đóng cho thanh không tràn (phóng to bằng chạm vào ảnh hoặc hai ngón tay) */}
+      <div className="flex items-center gap-1 max-sm:hidden">
       <ToolButton onClick={onZoomOut} disabled={!canZoomOut} label="Thu nhỏ">
         <ZoomOut size={18} />
       </ToolButton>
@@ -29,6 +31,7 @@ export function ZoomControls({ zoom, canZoomIn, canZoomOut, onZoomIn, onZoomOut,
         <ZoomIn size={18} />
       </ToolButton>
       <div className="mx-2 h-5 w-px bg-surface-container-lowest/20" />
+      </div>
       <ToolButton onClick={onClose} label="Đóng (Esc)">
         <X size={20} />
       </ToolButton>
@@ -42,7 +45,7 @@ function ToolButton(props: { children: ReactNode; label: string; onClick: () => 
       onClick={props.onClick}
       disabled={props.disabled}
       title={props.label}
-      className="rounded-md p-2 text-slate-200 hover:bg-surface-container-lowest/10 disabled:opacity-30"
+      className="relative rounded-md p-2 text-slate-200 after:absolute after:-inset-1 after:content-[''] hover:bg-surface-container-lowest/10 disabled:opacity-30"
     >
       {props.children}
     </button>

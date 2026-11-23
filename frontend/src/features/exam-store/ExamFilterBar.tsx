@@ -32,12 +32,12 @@ export function ExamFilterBar({ query, terms }: Props) {
         <input value={typed} onChange={(e) => setTyped(e.target.value)} placeholder="Tìm trong các đề của môn" aria-label="Tìm đề" className={`${inputClass()} !h-10 pl-9 pr-3`} />
       </label>
       {terms && terms.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Lọc theo kỳ">
-          <button type="button" onClick={() => setUrl({ term: "", page: "1" })} className={`h-8 rounded-full border px-3 text-sm ${!url.term ? "border-transparent bg-secondary-container text-on-secondary-container" : "border-outline-variant text-on-surface"}`}>
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-3" role="group" aria-label="Lọc theo kỳ">
+          <button type="button" onClick={() => setUrl({ term: "", page: "1" })} aria-pressed={!url.term} className="site-chip text-sm">
             Tất cả
           </button>
           {terms.map((t) => (
-            <button key={t.term} type="button" onClick={() => setUrl({ term: t.term, page: "1" })} className={`h-8 rounded-full border px-3 text-sm ${url.term === t.term ? "border-transparent bg-secondary-container text-on-secondary-container" : "border-outline-variant text-on-surface"}`}>
+            <button key={t.term} type="button" onClick={() => setUrl({ term: t.term, page: "1" })} aria-pressed={url.term === t.term} className="site-chip text-sm">
               {t.term} <span className="text-xs text-on-surface-variant">{t.count}</span>
             </button>
           ))}

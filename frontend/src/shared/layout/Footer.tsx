@@ -10,7 +10,8 @@ export function Footer() {
 
   return (
     <footer className="mt-auto shrink-0 border-t border-outline-variant bg-surface-container-low">
-      <div className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-4 sm:flex-row sm:px-6 sm:py-6 sm:items-center sm:justify-between sm:gap-8">
+      {/* sm:pr-28: chừa chỗ cho linh vật trợ lý nổi ở góc phải dưới để không che nút Facebook */}
+      <div className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-4 sm:flex-row sm:px-6 sm:pr-28 sm:py-6 sm:items-center sm:justify-between sm:gap-8">
         <div className="flex items-center gap-3 sm:gap-4">
           <a
             href={home}

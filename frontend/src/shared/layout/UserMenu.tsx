@@ -59,7 +59,7 @@ export function UserMenu() {
 
   if (!user) {
     return (
-      <div className="flex items-center gap-1">
+      <div className="flex shrink-0 items-center gap-1">
         <Link to="/login" className={buttonClass({ variant: "text" })}>
           Đăng nhập
         </Link>
@@ -82,10 +82,10 @@ export function UserMenu() {
         aria-label="Menu tài khoản"
         title="Menu tài khoản"
         aria-expanded={open}
-        className="md-state md-motion relative flex h-12 items-center gap-2 rounded-full pl-1 pr-2 after:absolute after:inset-0 after:content-['']"
+        className="md-state md-motion relative flex h-12 shrink-0 items-center gap-2 rounded-full pl-1 pr-2 after:absolute after:inset-0 after:content-['']"
       >
         <UserAvatar avatarPath={user.avatarPath} alt={user.fullName} className="h-9 w-9" />
-        <span className="hidden min-w-0 flex-col items-start text-left sm:flex">
+        <span className="hidden min-w-0 flex-col items-start text-left lg:flex">
           <span className="md-label-large flex max-w-[11rem] items-center gap-1.5 text-on-surface">
             <span className="truncate">{user.fullName}</span>
             {isPro(user) && <ProBadge />}
@@ -103,7 +103,7 @@ export function UserMenu() {
           role="menu"
           aria-label="Menu tài khoản"
           onKeyDown={onMenuKey}
-          className="md-enter absolute right-0 top-full z-50 mt-1 w-72 overflow-hidden rounded-m3-sm bg-surface-container py-2 text-on-surface shadow-m3-2"
+          className="site-menu md-enter right-0 w-72"
         >
           <div className="flex items-center gap-3 px-4 pb-2 pt-1">
             <UserAvatar avatarPath={user.avatarPath} alt={user.fullName} className="h-10 w-10" />

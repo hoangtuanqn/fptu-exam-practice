@@ -238,8 +238,8 @@ function QuestionCard({ q, answer, isReference, dirty, disabled, solving, aiNote
 
   return (
     <div id={`q-${q.number}`} className={`overflow-hidden rounded-2xl border bg-surface-container-lowest shadow-soft transition ${dirty ? "border-amber-300 ring-2 ring-amber-100" : missing ? "border-rose-200" : "border-slate-200"}`}>
-      <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-4 py-2.5">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-4 py-2.5">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="font-serif text-lg font-semibold text-slate-900">Câu {q.number}</span>
           {isReference && <Badge tone="warning">Tài liệu tham khảo</Badge>}
           {dirty && <Badge tone="info">Đã sửa</Badge>}
@@ -452,7 +452,7 @@ export default function ExamEditPage() {
   if (loading && !data)
     return (
       <>
-        <Link to="/admin/exams" className="mb-4 inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800">
+        <Link to="/admin/exams" className="panel-back-link mb-4">
           <ArrowLeft size={15} /> Danh sách đề
         </Link>
         <SkeletonBlock lines={6} />
@@ -473,7 +473,7 @@ export default function ExamEditPage() {
     <>
       {confirmDialog}
       <div className="mb-4">
-        <Link to="/admin/exams" className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800">
+        <Link to="/admin/exams" className="panel-back-link">
           <ArrowLeft size={15} /> Danh sách đề
         </Link>
         <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
@@ -592,7 +592,7 @@ export default function ExamEditPage() {
         <Modal onClose={() => setZoom(null)} wide>
           <div className="flex items-center justify-between">
             <ModalTitle icon={BookOpen}>Câu {zoom.number}</ModalTitle>
-            <button onClick={() => setZoom(null)} aria-label="Đóng" title="Đóng" className="rounded-md p-1 text-slate-500 hover:bg-slate-100">
+            <button onClick={() => setZoom(null)} aria-label="Đóng" title="Đóng" className="panel-hit relative rounded-md p-1 text-slate-500 hover:bg-slate-100">
               <X size={18} />
             </button>
           </div>

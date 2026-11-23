@@ -100,7 +100,7 @@ export function ExamPickStep({ subject, picked, onChange, onNext, onBack }: Prop
           )}
         </section>
 
-        <div className="sticky bottom-0 -mx-5 -mb-5 flex flex-col gap-3 rounded-b-m3-md border-t border-outline-variant bg-surface-container-lowest px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div data-hide-chat className="sticky bottom-0 -mx-5 -mb-5 flex flex-col gap-3 rounded-b-m3-md border-t border-outline-variant bg-surface-container-lowest px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
             <p className="md-label-large text-on-surface">Đã chọn {picked.length} đề{full ? ` (tối đa ${MAX_PICK})` : ""}</p>
             {picked.length > 0 && (
@@ -108,7 +108,7 @@ export function ExamPickStep({ subject, picked, onChange, onNext, onBack }: Prop
                 {picked.map((p) => (
                   <li key={p.id} className="md-label-small inline-flex max-w-[16rem] items-center gap-1 rounded-full bg-secondary-container py-0.5 pl-2.5 pr-1 text-on-secondary-container">
                     <span className="truncate">{p.title}</span>
-                    <button type="button" onClick={() => toggle(p)} aria-label={`Bỏ chọn ${p.title}`} className="rounded-full p-0.5 hover:bg-on-secondary-container/10">
+                    <button type="button" onClick={() => toggle(p)} aria-label={`Bỏ chọn ${p.title}`} className="panel-hit relative rounded-full p-0.5 hover:bg-on-secondary-container/10">
                       <X size={12} />
                     </button>
                   </li>

@@ -79,8 +79,8 @@ export function QuestionCard({
                 aria-pressed={!!saved}
                 aria-label={saved ? "Bỏ lưu câu này" : "Lưu câu này để ôn lại"}
                 title={saved ? "Bỏ lưu câu này" : "Lưu câu này để ôn lại (xem ở Câu đã lưu)"}
-                className={`flex h-9 w-9 items-center justify-center rounded-md border transition ${
-                  saved ? "border-primary bg-primary-container text-on-primary-container" : "border-slate-200 bg-surface-container-lowest text-slate-500 hover:border-slate-400 hover:text-slate-800"
+                className={`panel-q-tool ${
+                  saved ? "border-primary bg-primary-container text-on-primary-container" : ""
                 }`}
               >
                 <Bookmark size={18} className={saved ? "fill-current" : ""} />
@@ -93,8 +93,8 @@ export function QuestionCard({
               aria-pressed={flagged}
               aria-label="Đánh dấu xem lại"
               title="Đánh dấu xem lại (M)"
-              className={`flex h-9 w-9 items-center justify-center rounded-md border transition ${
-                flagged ? "border-warning bg-warning-container text-on-warning-container" : "border-slate-200 bg-surface-container-lowest text-slate-500 hover:border-slate-400 hover:text-slate-800"
+              className={`panel-q-tool ${
+                flagged ? "border-warning bg-warning-container text-on-warning-container" : ""
               }`}
             >
               <Flag size={18} className={flagged ? "fill-current" : ""} />
@@ -142,7 +142,7 @@ export function QuestionCard({
             <ChevronLeft size={16} />
             Trước
           </Button>
-          <div className="flex min-h-10 items-center justify-center">{status}</div>
+          <div className="flex min-h-10 min-w-0 items-center justify-center">{status}</div>
           <NextButton hasNext={hasNext} onNext={onNext} onSubmit={onSubmit} className="!min-h-11 !px-3" />
         </div>
       </section>
