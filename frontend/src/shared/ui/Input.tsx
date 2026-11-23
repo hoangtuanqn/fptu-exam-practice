@@ -5,7 +5,7 @@ import { IconButton } from "./Button";
 // Ô nhập thô (không nhãn nổi) dùng khi cần tự bố cục: kiểu outlined của M3 (viền outline, focus đổi sang primary dày 2dp)
 const RAW =
   "md-body-medium h-12 w-full rounded-m3-xs border bg-transparent px-4 text-on-surface placeholder:text-on-surface-variant outline-none md-motion " +
-  "focus:border-primary focus:shadow-[inset_0_0_0_1px_var(--md-sys-color-primary)] disabled:border-on-surface/12 disabled:text-on-surface/38";
+  "hover:bg-on-surface/[0.04] focus:border-primary focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--md-sys-color-primary)_18%,transparent)] disabled:border-on-surface/12 disabled:text-on-surface/38";
 
 export const inputClass = (error?: string) => `${RAW} ${error ? "border-error shadow-[inset_0_0_0_1px_var(--md-sys-color-error)]" : "border-outline hover:border-on-surface"}`;
 
