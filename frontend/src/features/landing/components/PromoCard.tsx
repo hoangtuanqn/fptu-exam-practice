@@ -13,10 +13,10 @@ function ExamPaper() {
       className="relative w-full max-w-[19rem] rotate-2 rounded-md border border-outline-variant bg-surface-container-lowest p-5 shadow-[0_1px_0_var(--md-sys-color-outline-variant),0_24px_44px_-20px_rgba(70,45,0,0.6)]"
     >
       <div className="flex items-baseline justify-between border-b border-outline-variant pb-2 font-display">
-        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">
+        <span className="text-xs font-bold uppercase tracking-[0.2em] text-on-surface-variant">
           Đề thi thử
         </span>
-        <span className="text-[10px] text-on-surface-variant">Mã đề 01</span>
+        <span className="text-xs text-on-surface-variant">Mã đề 01</span>
       </div>
 
       <div className="mt-4 space-y-1.5">
@@ -30,7 +30,7 @@ function ExamPaper() {
           return (
             <li key={o} className="flex items-center gap-2.5">
               <span
-                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border font-display text-[10px] font-semibold ${
+                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border font-display text-xs font-semibold ${
                   right
                     ? "border-emerald-600 text-emerald-600 ring-2 ring-emerald-500/25"
                     : "border-outline-variant text-on-surface-variant"
@@ -81,7 +81,7 @@ export function PromoCard() {
       <div aria-hidden className="h-1.5 bg-gradient-to-r from-[#ffd75e] via-[#ffc61f] to-[#e89a00]" />
       <div className="grid sm:grid-cols-[1.1fr_1fr]">
         <div className="p-5 sm:p-8">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">
             Ưu đãi dành cho sinh viên
           </p>
 

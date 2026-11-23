@@ -107,7 +107,7 @@ export default function GiftCodePage() {
         <Card>
           <CardHeader title="Mã đã nhập" />
           {history.loading && !history.data ? (
-            <Loading />
+            <Loading shape="table" />
           ) : history.error ? (
             <ErrorBox message={history.error} onRetry={history.reload} />
           ) : history.data && history.data.items.length > 0 ? (
@@ -117,7 +117,7 @@ export default function GiftCodePage() {
                   <li key={r.id} className="flex items-center justify-between gap-3 px-4 py-3">
                     <div className="min-w-0">
                       <div className="truncate text-sm font-medium text-slate-900">{r.code}</div>
-                      <div className="text-xs text-slate-400">{formatDateTime(r.createdAt)}</div>
+                      <div className="text-xs text-slate-500">{formatDateTime(r.createdAt)}</div>
                     </div>
                     <span className="shrink-0 whitespace-nowrap text-sm font-semibold tabular-nums text-emerald-700">+{formatCredit(r.amount)}</span>
                   </li>

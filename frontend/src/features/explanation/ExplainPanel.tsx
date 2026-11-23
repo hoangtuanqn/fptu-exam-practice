@@ -121,7 +121,7 @@ export function ExplainPanel({ examId, questionNumber, useFreeTurn, firstTime, o
           </span>
           Giải thích câu {questionNumber}
         </h2>
-        <button onClick={onClose} aria-label="Đóng lời giải thích" title="Đóng lời giải thích" className="rounded-md p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700">
+        <button onClick={onClose} aria-label="Đóng lời giải thích" title="Đóng lời giải thích" className="rounded-md p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700">
           <X size={18} />
         </button>
       </header>
@@ -168,7 +168,7 @@ export function ExplainPanel({ examId, questionNumber, useFreeTurn, firstTime, o
       </div>
 
       {phase === "done" && (
-        <footer className="shrink-0 border-t border-slate-100 px-4 py-2 text-xs text-slate-400">
+        <footer className="shrink-0 border-t border-slate-100 px-4 py-2 text-xs text-slate-500">
           Lời giải do AI tạo, có thể chưa hoàn toàn chính xác. Thấy đáp án sai? Dùng nút “Báo cáo”.
         </footer>
       )}

@@ -31,7 +31,7 @@ export function ExamTimer({ left, limit, onDark = false }: Props) {
         onDark ? "border-white/20 bg-white/10" : "border-outline-variant bg-surface-container-lowest"
       }`}
     >
-      <Clock size={15} className={`shrink-0 ${urgent ? (onDark ? tone.onDark : tone.text) : onDark ? "text-slate-300" : "text-brand-700"}`} aria-hidden />
+      <Clock size={15} className={`shrink-0 ${urgent ? (onDark ? tone.onDark : tone.text) : onDark ? "text-slate-500" : "text-brand-700"}`} aria-hidden />
       <span className={`min-w-[3.4rem] text-center text-base font-bold leading-none tabular-nums ${tone.blink} ${onDark ? tone.onDark : tone.text}`}>{formatDuration(left)}</span>
       <div
         role="progressbar"

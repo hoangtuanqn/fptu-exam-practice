@@ -169,14 +169,25 @@ export default function ExamsPage() {
       <PageHeader eyebrow="Quản trị" title="Đề thi" description="Bấm vào một đề để xem và sửa đáp án. Mục Có đáp án đỏ là đề đang thiếu." />
       <Card>
         {loading && !data ? (
-          <Loading />
+          <Loading shape="table" />
         ) : error ? (
           <ErrorBox message={error} onRetry={reload} />
         ) : data && data.items.length > 0 ? (
           <>
             <ul className="divide-y divide-slate-100 md:hidden">
               {data.items.map((e) => (
-                <li key={e.id} className="space-y-2 px-4 py-3" onClick={() => navigate(`/admin/exams/${e.id}`)}>
+                <li
+                  key={e.id}
+                  className="space-y-2 px-4 py-3 focus-visible:bg-slate-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
+                  tabIndex={0}
+                  onClick={() => navigate(`/admin/exams/${e.id}`)}
+                  onKeyDown={(ev) => {
+                    if (ev.target === ev.currentTarget && (ev.key === "Enter" || ev.key === " ")) {
+                      ev.preventDefault();
+                      navigate(`/admin/exams/${e.id}`);
+                    }
+                  }}
+                >
                   <div className="truncate text-sm font-medium text-slate-900">{e.title}</div>
                   <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
                     {answersChip(e)}

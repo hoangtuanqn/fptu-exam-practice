@@ -96,7 +96,7 @@ export function PaymentPanel({ code, onClose }: { code: string; onClose: () => v
   if (status === "EXPIRED" || !payment || left === 0) {
     return (
       <Card className="flex flex-col items-center gap-3 px-6 py-12 text-center">
-        <TimerOff size={40} className="text-slate-400" />
+        <TimerOff size={40} className="text-slate-500" />
         <h2 className="font-serif text-xl font-semibold text-slate-900">Lệnh nạp đã hết hạn</h2>
         <p className="max-w-sm text-sm text-slate-500">
           Nếu bạn đã chuyển khoản đúng nội dung, tiền vẫn được ghi nhận khi hệ thống đối soát. Chưa chuyển thì hãy tạo

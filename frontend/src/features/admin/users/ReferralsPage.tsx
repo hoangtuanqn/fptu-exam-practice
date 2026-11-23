@@ -28,7 +28,7 @@ export default function ReferralsPage() {
         {settings.data ? (
           <ReferralSettingsForm key={JSON.stringify(settings.data)} initial={settings.data} onSaved={() => { settings.reload(); summary.reload(); }} />
         ) : settings.loading ? (
-          <Loading />
+          <Loading shape="table" />
         ) : (
           <ErrorBox message={settings.error ?? "Không tải được cấu hình"} onRetry={settings.reload} />
         )}
@@ -44,7 +44,7 @@ export default function ReferralsPage() {
         <Card>
           <CardHeader title="Danh sách được giới thiệu" />
           {list.loading && !list.data ? (
-            <Loading />
+            <Loading shape="table" />
           ) : list.error ? (
             <ErrorBox message={list.error} onRetry={list.reload} />
           ) : list.data && list.data.items.length > 0 ? (
@@ -57,7 +57,7 @@ export default function ReferralsPage() {
                       <span className="shrink-0 whitespace-nowrap text-sm font-semibold tabular-nums text-emerald-700">+{formatCredit(r.earned)}</span>
                     </div>
                     <div className="truncate text-xs text-slate-500">{r.email}</div>
-                    <div className="truncate text-xs text-slate-400">
+                    <div className="truncate text-xs text-slate-500">
                       Giới thiệu bởi {r.referrer?.fullName ?? "—"} · {formatDate(r.joinedAt)}
                     </div>
                   </li>

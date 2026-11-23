@@ -39,7 +39,7 @@ export function GiftCodeRedemptionsDialog({ gift, onClose }: { gift: GiftCode; o
                   </div>
                   <div className="shrink-0 text-right">
                     <div className="text-sm font-semibold tabular-nums text-emerald-700">+{formatCredit(r.amount)}</div>
-                    <div className="text-xs text-slate-400">{formatDateTime(r.createdAt)}</div>
+                    <div className="text-xs text-slate-500">{formatDateTime(r.createdAt)}</div>
                   </div>
                 </li>
               ))}

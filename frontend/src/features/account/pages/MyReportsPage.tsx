@@ -27,7 +27,7 @@ export default function MyReportsPage() {
       <PageHeader title="Báo cáo đáp án" description={`Mỗi báo cáo được xác nhận chính xác nhận ${formatCredit(REPORT_REWARD)}. Gửi báo cáo ngay trong lúc xem kết quả từng câu.`} />
       <Card>
         {loading && !data ? (
-          <Loading />
+          <Loading shape="table" />
         ) : error ? (
           <ErrorBox message={error} onRetry={reload} />
         ) : data && data.items.length > 0 ? (

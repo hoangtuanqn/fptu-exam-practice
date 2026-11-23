@@ -58,7 +58,7 @@ export function MyExamsTab() {
       <ResumeList limit={10} className="mb-5" />
       <Card>
         {loading && !data ? (
-          <Loading />
+          <Loading shape="table" />
         ) : error ? (
           <ErrorBox message={error} onRetry={reload} />
         ) : data && data.items.length > 0 ? (
@@ -88,7 +88,7 @@ export function MyExamsTab() {
                           Xem lịch sử
                         </span>
                       )}
-                      <span className="text-xs text-slate-400">Thêm {formatDate(e.addedAt)}</span>
+                      <span className="text-xs text-slate-500">Thêm {formatDate(e.addedAt)}</span>
                     </div>
                   </Link>
                   <ViewLink examId={e.id} />

@@ -14,7 +14,7 @@ const TEXT: Record<Outcome, string> = {
   correct: "text-emerald-700",
   wrong: "text-rose-700",
   skipped: "text-slate-500",
-  ungraded: "text-slate-400",
+  ungraded: "text-slate-500",
 };
 
 const show = (list: string[]) => (list.length ? list.join(", ") : "—");

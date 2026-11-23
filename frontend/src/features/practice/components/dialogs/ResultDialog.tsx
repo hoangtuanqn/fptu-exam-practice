@@ -58,7 +58,7 @@ export function ResultDialog({ result, topicSummary = null, elapsed, savable, an
               <span className="font-serif text-4xl font-semibold leading-none text-slate-900">
                 {formatScore(result.score)}
               </span>
-              <span className="mt-1 text-xs text-slate-400">/ {MAX_SCORE}</span>
+              <span className="mt-1 text-xs text-slate-500">/ {MAX_SCORE}</span>
             </ScoreRing>
           </div>
         )}
@@ -150,7 +150,7 @@ function TopicBreakdown({ summary }: { summary: Exclude<TopicSummary, null> }) {
               <div className="flex items-start justify-between gap-3 text-sm">
                 <span className="min-w-0 break-words text-slate-800">
                   {t.topic}
-                  {weak && <span className="ml-2 rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-700">Cần ôn</span>}
+                  {weak && <span className="ml-2 rounded-full bg-rose-100 px-2 py-0.5 text-xs font-semibold text-rose-700">Cần ôn</span>}
                 </span>
                 <span className="shrink-0 tabular-nums text-xs text-slate-500">
                   {t.correct}/{t.total} câu

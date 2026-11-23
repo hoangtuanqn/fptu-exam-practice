@@ -198,7 +198,7 @@ export default function DepositPage() {
       {activeCode ? (
         <PaymentPanel code={activeCode} onClose={closePayment} />
       ) : info.loading ? (
-        <Loading />
+        <Loading shape="table" />
       ) : info.error ? (
         <ErrorBox message={info.error} onRetry={info.reload} />
       ) : (
@@ -333,7 +333,7 @@ export default function DepositPage() {
       <Card className="mt-6">
         <CardHeader title="Lệnh nạp gần đây" />
         {orders.loading && !orders.data ? (
-          <Loading />
+          <Loading shape="table" />
         ) : orders.error ? (
           <ErrorBox message={orders.error} onRetry={orders.reload} />
         ) : orders.data && orders.data.items.length > 0 ? (

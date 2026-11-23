@@ -81,7 +81,7 @@ export function MyExams({ onOpen }: Props) {
                   ) : hasDone ? (
                     <ProgressRing value={score / 10} label={formatScore(score)} size={48} color={tone} />
                   ) : (
-                    <span className="flex h-[48px] w-[48px] shrink-0 items-center justify-center rounded-full bg-slate-100 text-[10px] font-semibold uppercase text-slate-400">
+                    <span className="flex h-[48px] w-[48px] shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold uppercase text-slate-500">
                       mới
                     </span>
                   )}

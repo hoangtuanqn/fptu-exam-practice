@@ -8,6 +8,7 @@ import { Badge } from "@/shared/ui/Badge";
 import { buttonClass } from "@/shared/ui/Button";
 import { Card, CardHeader, PageHeader } from "@/shared/ui/Card";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
+import { SkeletonBlock } from "@/shared/ui/Skeleton";
 import { insightsApi } from "./insights.api";
 import { isUuid } from "@/shared/utils/uuid";
 
@@ -58,7 +59,15 @@ function ExamList({ onOpen }: { onOpen: (id: string) => void }) {
 
 function ExamDetail({ id, onBack }: { id: string; onBack: () => void }) {
   const { data, error, loading, reload } = useApi(() => insightsApi.examQuestions(id), [id]);
-  if (loading && !data) return <Loading />;
+  if (loading && !data)
+    return (
+      <div className="space-y-6">
+        <button type="button" onClick={onBack} className={buttonClass({ variant: "text", size: "sm" })}>
+          <ArrowLeft size={16} /> Danh sách đề
+        </button>
+        <SkeletonBlock lines={6} />
+      </div>
+    );
   if (error || !data) return <ErrorBox message={error ?? "Không có dữ liệu"} onRetry={reload} />;
   const flagged = data.questions.filter((q) => q.suspicious).length;
 

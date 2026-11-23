@@ -22,6 +22,7 @@ import { formatCredit } from "@/shared/utils/formatters";
 import type { NavIconComponent } from "./navIcons";
 import { NavIndicator, useNavIndicator } from "./NavIndicator";
 import { PageSkeleton } from "@/shared/ui/Skeleton";
+import { ErrorBoundary } from "@/shared/ui/ErrorBoundary";
 import { Footer } from "./Footer";
 import { UserMenu } from "./UserMenu";
 import { UserAvatar } from "@/shared/ui/UserAvatar";
@@ -411,9 +412,11 @@ export function PanelLayout({
             className="animate-fade-up mx-auto w-full max-w-7xl"
           >
             {/* Chunk của trang đang tải: chỉ thay phần nội dung, sidebar và tiêu đề giữ nguyên */}
-            <Suspense fallback={<PageSkeleton />}>
-              <Outlet />
-            </Suspense>
+            <ErrorBoundary resetKey={pathname}>
+              <Suspense fallback={<PageSkeleton />}>
+                <Outlet />
+              </Suspense>
+            </ErrorBoundary>
           </div>
         </main>
         <Footer />

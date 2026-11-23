@@ -18,13 +18,13 @@ export function TransactionTable({ items }: { items: WalletTransaction[] }) {
             <div className="min-w-0">
               <div className="text-sm font-medium text-slate-800">{TRANSACTION_LABEL[t.type]}</div>
               {t.note && <div className="truncate text-xs text-slate-500">{t.note}</div>}
-              <div className="mt-0.5 text-xs text-slate-400">{formatDateTime(t.createdAt)}</div>
+              <div className="mt-0.5 text-xs text-slate-500">{formatDateTime(t.createdAt)}</div>
             </div>
             <div className="shrink-0 text-right">
               <div className={`whitespace-nowrap text-sm font-semibold tabular-nums ${t.amount >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
                 {formatCreditSigned(t.amount)}
               </div>
-              <div className="whitespace-nowrap text-xs tabular-nums text-slate-400">{formatCredit(t.balanceAfter)}</div>
+              <div className="whitespace-nowrap text-xs tabular-nums text-slate-500">{formatCredit(t.balanceAfter)}</div>
             </div>
           </li>
         ))}

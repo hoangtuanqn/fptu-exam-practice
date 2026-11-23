@@ -10,6 +10,7 @@ import { Badge, type Tone } from "@/shared/ui/Badge";
 import { Button } from "@/shared/ui/Button";
 import { Card } from "@/shared/ui/Card";
 import { ErrorBox, Loading } from "@/shared/ui/Feedback";
+import { SkeletonBlock } from "@/shared/ui/Skeleton";
 import { Modal, ModalActions, ModalTitle } from "@/shared/ui/Modal";
 import { Segmented } from "@/shared/ui/Segmented";
 import { errorMessage } from "@/shared/api/errors";
@@ -122,7 +123,7 @@ function TitleEditor({ examId, title, onSaved }: { examId: string; title: string
           }}
           aria-label="Đổi tên đề"
           title="Đổi tên đề"
-          className="mt-1 rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+          className="mt-1 rounded-md p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
         >
           <Pencil size={16} />
         </button>
@@ -289,12 +290,12 @@ function QuestionCard({ q, answer, isReference, dirty, disabled, solving, aiNote
                 );
               })}
               {picked.length > 0 && (
-                <button type="button" disabled={disabled} onClick={onClear} className="ml-1 inline-flex items-center gap-1 text-xs text-slate-400 hover:text-rose-600">
+                <button type="button" disabled={disabled} onClick={onClear} className="ml-1 inline-flex items-center gap-1 text-xs text-slate-500 hover:text-rose-600">
                   <X size={12} /> Xoá
                 </button>
               )}
             </div>
-            <p className="mt-1.5 text-xs text-slate-400">Bấm nhiều chữ cho câu có nhiều đáp án đúng.</p>
+            <p className="mt-1.5 text-xs text-slate-500">Bấm nhiều chữ cho câu có nhiều đáp án đúng.</p>
           </div>
         )}
         {aiNote && (
@@ -449,7 +450,15 @@ export default function ExamEditPage() {
   }
 
   if (!isUuid(examId)) return <ErrorBox message="Đề không hợp lệ" />;
-  if (loading && !data) return <Loading />;
+  if (loading && !data)
+    return (
+      <>
+        <Link to="/admin/exams" className="mb-4 inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800">
+          <ArrowLeft size={15} /> Danh sách đề
+        </Link>
+        <SkeletonBlock lines={6} />
+      </>
+    );
   if (error || !data) return <ErrorBox message={error ?? "Không tải được đề"} onRetry={reload} />;
 
   const locked = data.solving;
@@ -589,7 +598,7 @@ export default function ExamEditPage() {
         <Modal onClose={() => setZoom(null)} wide>
           <div className="flex items-center justify-between">
             <ModalTitle icon={BookOpen}>Câu {zoom.number}</ModalTitle>
-            <button onClick={() => setZoom(null)} aria-label="Đóng" title="Đóng" className="rounded-md p-1 text-slate-400 hover:bg-slate-100">
+            <button onClick={() => setZoom(null)} aria-label="Đóng" title="Đóng" className="rounded-md p-1 text-slate-500 hover:bg-slate-100">
               <X size={18} />
             </button>
           </div>

@@ -41,7 +41,7 @@ export function AuthLayout({ title, subtitle, children }: { title: string; subti
           </ul>
         </div>
 
-        <p className="relative text-xs text-slate-400">Phát triển bởi {brand.company}</p>
+        <p className="relative text-xs text-slate-500">Phát triển bởi {brand.company}</p>
       </aside>
 
       <div className="flex min-h-screen flex-col">

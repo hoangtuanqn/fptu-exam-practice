@@ -42,7 +42,7 @@ export default function AttemptsPage() {
       )}
       <Card>
         {loading && !data ? (
-          <Loading />
+          <Loading shape="table" />
         ) : error ? (
           <ErrorBox message={error} onRetry={reload} />
         ) : (

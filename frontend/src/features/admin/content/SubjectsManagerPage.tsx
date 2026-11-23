@@ -118,7 +118,7 @@ function SubjectDialog({
           }}
         />
       ) : detail.loading ? (
-        <Loading />
+        <Loading shape="table" />
       ) : (
         <ErrorBox
           message={detail.error ?? "Không tải được môn này"}
@@ -521,7 +521,7 @@ export default function SubjectsManagerPage() {
       {list.data ? (
         <SubjectsTable initial={list.data.subjects} />
       ) : list.loading ? (
-        <Loading />
+        <Loading shape="table" />
       ) : (
         <ErrorBox
           message={list.error ?? "Không tải được danh sách môn"}

@@ -42,7 +42,7 @@ export default function DepositsPage() {
         </div>
 
         {loading && !data ? (
-          <Loading />
+          <Loading shape="table" />
         ) : error ? (
           <ErrorBox message={error} onRetry={reload} />
         ) : data && data.items.length > 0 ? (
@@ -59,7 +59,7 @@ export default function DepositsPage() {
                     <span className="shrink-0 whitespace-nowrap text-sm font-semibold tabular-nums">{formatMoney(o.amount)}</span>
                   </div>
                   <div className="mt-0.5 truncate text-xs text-slate-500">{o.user?.email}</div>
-                  <div className="mt-0.5 text-xs text-slate-400">
+                  <div className="mt-0.5 text-xs text-slate-500">
                     {formatDateTime(o.createdAt)}{o.paidAt ? ` · thanh toán ${formatDateTime(o.paidAt)}` : ""}
                   </div>
                 </li>

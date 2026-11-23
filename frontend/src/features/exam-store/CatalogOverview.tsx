@@ -5,6 +5,7 @@ import { SubjectSearchInput } from "@/features/subject/SubjectSearchInput";
 import { SubjectTile } from "@/features/subject/SubjectTile";
 import { Button } from "@/shared/ui/Button";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
+import { SkeletonList } from "@/shared/ui/Skeleton";
 import { Segmented } from "@/shared/ui/Segmented";
 import type { LibraryOverview } from "./catalog.api";
 import type { SubjectsQuery } from "./PublicSubjectBrowser";
@@ -34,7 +35,13 @@ export function CatalogOverview({ subjects, overview, onPick }: { subjects: Subj
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [all, q, sort, url.ky]);
 
-  if (subjects.loading && !all) return <Loading />;
+  if (subjects.loading && !all)
+    return (
+      <div className="space-y-5">
+        <SubjectSearchInput value={q} onChange={setQ} />
+        <SkeletonList rows={6} />
+      </div>
+    );
   if (subjects.error) return <ErrorBox message={subjects.error} onRetry={subjects.reload} />;
 
   const shown = list.slice(0, limit);

@@ -42,7 +42,7 @@ export default function BankTransactionsPage() {
         </div>
 
         {loading && !data ? (
-          <Loading />
+          <Loading shape="table" />
         ) : error ? (
           <ErrorBox message={error} onRetry={reload} />
         ) : data && data.items.length > 0 ? (
@@ -55,7 +55,7 @@ export default function BankTransactionsPage() {
                     <BankTxBadge value={t.status} />
                   </div>
                   <div className="mt-1 break-words text-xs text-slate-700">{t.content || "—"}</div>
-                  <div className="mt-0.5 text-xs text-slate-400">
+                  <div className="mt-0.5 text-xs text-slate-500">
                     {t.gateway ?? "—"} · {formatDateTime(t.transactionAt)}
                   </div>
                 </li>

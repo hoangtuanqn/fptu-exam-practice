@@ -219,7 +219,7 @@ export default function ChatWidget() {
               <div className="text-xs text-slate-500">Hướng dẫn dùng FEPass</div>
             </div>
             {messages.length > 1 && (
-              <button onClick={() => setMessages([GREETING])} aria-label="Bắt đầu lại" title="Bắt đầu lại" className="rounded-full p-2 text-slate-400 transition hover:bg-amber-100 hover:text-slate-700">
+              <button onClick={() => setMessages([GREETING])} aria-label="Bắt đầu lại" title="Bắt đầu lại" className="rounded-full p-2 text-slate-500 transition hover:bg-amber-100 hover:text-slate-700">
                 <RotateCcw size={15} />
               </button>
             )}
@@ -236,7 +236,7 @@ export default function ChatWidget() {
               }}
               aria-label={wide ? "Thu nhỏ khung chat" : "Phóng to khung chat"}
               title={wide ? "Thu nhỏ khung chat" : "Phóng to khung chat"}
-              className="hidden rounded-full p-2 text-slate-400 transition hover:bg-amber-100 hover:text-slate-700 sm:block"
+              className="hidden rounded-full p-2 text-slate-500 transition hover:bg-amber-100 hover:text-slate-700 sm:block"
             >
               {wide ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
             </button>
@@ -246,7 +246,7 @@ export default function ChatWidget() {
                 setOpen(false);
               }}
               aria-label="Đóng" title="Đóng"
-              className="rounded-full p-2 text-slate-400 transition hover:bg-amber-100 hover:text-slate-700"
+              className="rounded-full p-2 text-slate-500 transition hover:bg-amber-100 hover:text-slate-700"
             >
               <X size={17} />
             </button>
@@ -258,7 +258,7 @@ export default function ChatWidget() {
                 <div key={i} className="flex flex-col items-end gap-1">
                   <div className={`max-w-[82%] whitespace-pre-wrap [overflow-wrap:anywhere] rounded-2xl rounded-br-md px-3.5 py-2 text-[14px] leading-relaxed text-on-primary ${m.failed ? "bg-primary/60" : "bg-primary"}`}>{m.content}</div>
                   {m.failed && (
-                    <div className="flex max-w-[90%] items-center gap-1.5 text-[11px] text-rose-600">
+                    <div className="flex max-w-[90%] items-center gap-1.5 text-xs text-rose-600">
                       <span className="min-w-0 text-right [overflow-wrap:anywhere]">{m.failed}</span>
                       <button onClick={() => retry(i)} disabled={busy} className="flex shrink-0 items-center gap-1 rounded-full px-1.5 py-0.5 font-semibold ring-1 ring-rose-200 transition hover:bg-rose-50 disabled:opacity-50">
                         <RotateCcw size={11} /> Gửi lại
@@ -315,18 +315,18 @@ export default function ChatWidget() {
                 }}
                 placeholder="Nhắn cho Cóc Pass…"
                 aria-label="Tin nhắn"
-                className="max-h-44 min-h-[2rem] flex-1 resize-none bg-transparent py-1.5 text-[14px] leading-5 text-slate-800 placeholder:text-slate-400 focus:outline-none disabled:opacity-60"
+                className="max-h-44 min-h-[2rem] flex-1 resize-none bg-transparent py-1.5 text-[14px] leading-5 text-slate-800 placeholder:text-slate-500 focus:outline-none disabled:opacity-60"
               />
               <button
                 type="submit"
                 disabled={busy || !input.trim()}
                 aria-label="Gửi" title="Gửi"
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-400 text-[#3a2600] transition hover:bg-amber-500 disabled:bg-slate-200 disabled:text-slate-400"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-400 text-[#3a2600] transition hover:bg-amber-500 disabled:bg-slate-200 disabled:text-slate-500"
               >
                 <ArrowUp size={17} strokeWidth={2.5} />
               </button>
             </div>
-            <p className="mt-2 px-2 text-center text-[11px] leading-snug text-slate-400">Cóc Pass chỉ hướng dẫn cách dùng web, không giải bài và không thao tác thay bạn.</p>
+            <p className="mt-2 px-2 text-center text-xs leading-snug text-slate-500">Cóc Pass chỉ hướng dẫn cách dùng web, không giải bài và không thao tác thay bạn.</p>
           </form>
         </div>
       )}

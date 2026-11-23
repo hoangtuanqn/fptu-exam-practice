@@ -4,6 +4,7 @@ import { PanelLayout, type NavItem } from "@/shared/layout/PanelLayout";
 import { NAV_ICON } from "@/shared/layout/navIcons";
 import { BottomNav } from "@/shared/layout/BottomNav";
 import { PageSkeleton } from "@/shared/ui/Skeleton";
+import { ErrorBoundary } from "@/shared/ui/ErrorBoundary";
 import { isUuid } from "@/shared/utils/uuid";
 import LoginPage from "@/features/auth/pages/LoginPage";
 import RegisterPage from "@/features/auth/pages/RegisterPage";
@@ -148,6 +149,7 @@ function CatalogRedirect() {
 }
 
 export default function App() {
+  const { pathname } = useLocation();
   // Tải sẵn code các trang khi rảnh: bấm sang tab mới thì hiện ngay, không có khoảng trống chờ
   useEffect(() => {
     const run = () => Object.values(routePages).forEach((load) => void load());
@@ -168,6 +170,7 @@ export default function App() {
       <WhatsNewDialog />
       <ChatWidget />
       <BottomNav more={ACCOUNT_NAV} />
+      <ErrorBoundary resetKey={pathname}>
       <Routes>
         <Route path="/" element={<PracticeRoute />} />
         <Route path="/exam/:examId" element={<PracticeRoute />} />
@@ -253,6 +256,7 @@ export default function App() {
 
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
+      </ErrorBoundary>
     </Suspense>
     </SearchProvider>
   );
