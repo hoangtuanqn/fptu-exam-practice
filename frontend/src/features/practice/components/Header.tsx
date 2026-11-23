@@ -92,6 +92,8 @@ export function Header({
   const waiting = !submitted && !!submitLocked; // chờ đáp án: giờ chưa chạy
   const left = timeLimitSec ? Math.max(0, timeLimitSec - elapsed) : null; // thời gian còn lại (chỉ khi thi có giới hạn)
   const showLeft = isExam && left !== null && !submitted && !waiting;
+  // Đồng hồ chiếm nhiều chỗ: cụm tài khoản chờ tới xl mới hiện, còn lại tới lg
+  const accountHidden = showLeft ? "max-xl:hidden" : "max-lg:hidden";
 
   return (
     <header className="z-30 flex h-16 shrink-0 items-center justify-between gap-2 border-b border-outline-variant bg-surface px-2 sm:px-4">
@@ -107,15 +109,15 @@ export function Header({
           {/* Đang làm bài trên điện thoại: chỉ mascot cho đỡ chật, để logo không bị chip đồng hồ và nút che mất */}
           {loaded ? (
             <>
-              <Logo variant="mark" className="h-9 sm:hidden" />
-              <Logo variant="full" className="hidden h-11 sm:block" />
+              <Logo variant="mark" className="h-9 lg:hidden" />
+              <Logo variant="full" className="hidden h-11 lg:block" />
             </>
           ) : (
             <Logo variant="full" className="h-10 sm:h-11" />
           )}
         </Link>
-        <span className="hidden h-5 w-px shrink-0 bg-slate-200 sm:block" />
-        <div className="hidden truncate text-base font-semibold tracking-tight text-slate-900 sm:block">
+        <span className={`hidden h-5 w-px shrink-0 bg-slate-200 ${loaded ? "md:block" : "sm:block"}`} />
+        <div className={`hidden truncate text-base font-semibold tracking-tight text-slate-900 ${loaded ? "md:block" : "sm:block"}`}>
           {loaded && title ? title : brand.product}
         </div>
       </div>
@@ -126,7 +128,7 @@ export function Header({
         <SiteNav />
       )}
 
-      <div className="flex min-w-0 items-center justify-end gap-1.5 sm:shrink-0 sm:gap-2">
+      <div className="flex min-w-0 items-center justify-end gap-1 sm:shrink-0 sm:gap-2">
         {loaded && (
           <>
             {/* Tài liệu tham khảo: đứng đầu cụm nút bên phải, luôn có chữ (không chỉ biểu tượng) vì người làm bài cần tới nó thường xuyên */}
@@ -139,8 +141,8 @@ export function Header({
                 className="!px-3 sm:!px-4"
               >
                 <BookOpen size={16} />
-                Tài liệu
-                <span className="md-label-small hidden rounded-full bg-primary px-1.5 tabular-nums text-on-primary sm:inline">{referenceCount}</span>
+                <span className="max-sm:hidden">Tài liệu</span>
+                <span className="md-label-small rounded-full bg-primary px-1.5 tabular-nums text-on-primary max-[359px]:hidden">{referenceCount}</span>
               </Button>
             )}
 
@@ -148,7 +150,7 @@ export function Header({
             {(isExam || waiting) && (
               <span
                 title={waiting ? "Giờ làm bài sẽ bắt đầu tính khi đề có đáp án" : undefined}
-                className={`inline-flex items-center gap-2 rounded-xl border px-2.5 py-1.5 text-sm transition sm:px-3 ${showLeft ? "max-sm:hidden" : ""} ${
+                className={`inline-flex min-w-0 items-center gap-2 rounded-xl border px-2.5 py-1.5 text-sm transition sm:px-3 ${showLeft ? "max-xl:hidden" : ""} ${
                   submitted
                     ? "border-slate-200 bg-slate-50 text-slate-500"
                     : waiting
@@ -156,12 +158,12 @@ export function Header({
                       : `border-brand-200 bg-brand-50 text-brand-800 ${flash ? "scale-105 shadow-card ring-2 ring-brand-400" : ""}`
                 }`}
               >
-                <Icon size={15} />
+                <Icon size={15} className="shrink-0" />
                 <span className="hidden sm:inline">{label}</span>
                 {waiting && (
                   <>
                     <span className="hidden h-4 w-px bg-current opacity-20 sm:block" />
-                    <span className="whitespace-nowrap">
+                    <span className="truncate">
                       Chờ đáp án{isExam && <span className="max-sm:hidden"> · chưa tính giờ</span>}
                     </span>
                   </>
@@ -213,16 +215,16 @@ export function Header({
                 Nộp bài
               </Button>
             )}
-            <span className="mx-1 hidden h-6 w-px bg-slate-200 sm:block" />
+            <span className={`mx-1 hidden h-6 w-px bg-slate-200 ${showLeft ? "xl:block" : "lg:block"}`} />
           </>
         )}
-        {/* Đang làm bài trên điện thoại: ẩn như nút giao diện để cụm nút không tràn */}
+        {/* Đang làm bài: ẩn thông báo, giao diện khi thanh chưa đủ rộng để cụm nút không tràn đè lên đồng hồ */}
         {!loaded && <SearchTrigger />}
-        <span className={loaded ? "contents max-sm:hidden" : "contents"}>
+        <span className={loaded ? `contents ${accountHidden}` : "contents"}>
           <UserNoticeBell />
         </span>
-        <ThemeToggle className={loaded ? "max-sm:hidden" : ""} />
-        <UserMenu />
+        <ThemeToggle className={loaded ? accountHidden : ""} />
+        <UserMenu /> {/* luôn hiện: dưới lg chỉ còn ảnh đại diện, menu có đổi giao diện và số dư */}
       </div>
     </header>
   );

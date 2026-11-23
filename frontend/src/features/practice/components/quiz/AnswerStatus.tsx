@@ -41,9 +41,10 @@ function Result({ right, correct }: { right: boolean; correct: string[] }) {
   const tone = right ? "bg-success-container text-on-success-container" : "bg-error-container text-on-error-container";
 
   return (
-    <div role="status" className={`md-label-large flex h-10 items-center gap-2 rounded-m3-sm px-3 ${tone}`}>
-      <Icon size={18} className="shrink-0" />
-      <span className="whitespace-nowrap">
+    <div role="status" className={`md-label-large flex h-10 min-w-0 items-center gap-2 rounded-m3-sm px-3 ${tone}`}>
+      <Icon size={18} className="shrink-0 max-[359px]:hidden" />
+      {/* Hẹp quá thì xuống hai dòng (vừa khung cao 40dp) thay vì tràn đè lên nút Trước / Tiếp */}
+      <span className="min-w-0 leading-tight">
         {right ? (
           "Chính xác"
         ) : (

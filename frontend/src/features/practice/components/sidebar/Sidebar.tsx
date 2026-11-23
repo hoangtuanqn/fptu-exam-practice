@@ -48,7 +48,7 @@ export function Sidebar({ quiz, onSubmit }: { quiz: Quiz; onSubmit?: () => void 
         onClick={toggle}
         aria-expanded={open}
         title="Danh sách câu"
-        className="md-state md-label-medium relative inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-outline-variant bg-secondary-container px-3 py-1 text-on-secondary-container shadow-sm hover:shadow-md lg:flex-col lg:gap-1 lg:rounded-2xl lg:px-2.5 lg:py-3"
+        className="md-state md-label-medium panel-qlist-toggle"
       >
         {!seen && (
           <span aria-hidden className="absolute -right-1 -top-1 flex h-3 w-3 lg:right-auto lg:left-[calc(100%-1.25rem)] lg:top-2">
