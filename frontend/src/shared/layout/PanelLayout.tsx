@@ -47,7 +47,7 @@ function NavBadge({ badge, className = "" }: { badge?: NavItem["badge"]; classNa
     <>
       <span
         aria-hidden
-        className={`md-label-small flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full bg-error px-1 tabular-nums text-on-error ${className}`}
+        className={`md-label-small panel-nav-badge ${className}`}
       >
         {badge.count > 99 ? "99+" : badge.count}
       </span>
@@ -122,7 +122,7 @@ export function DrawerContent({
         <Link
           to="/"
           onClick={onNavigate}
-          className="md-state md-motion md-label-large flex h-14 items-center justify-center gap-3 rounded-m3-lg bg-primary-container text-on-primary-container shadow-m3-1"
+          className="md-state md-motion md-label-large panel-drawer-cta"
         >
           <PenLine size={20} /> Vào luyện đề
         </Link>
@@ -142,7 +142,7 @@ export function DrawerContent({
                     type="button"
                     aria-expanded={isOpen}
                     onClick={() => toggle(sec.group!)}
-                    className={`md-state md-motion md-title-small flex h-10 w-full items-center justify-between rounded-full px-4 text-on-surface-variant ${si === 0 ? "mt-1" : "mt-1.5"}`}
+                    className={`md-state md-motion md-title-small panel-nav-group ${si === 0 ? "mt-1" : "mt-1.5"}`}
                   >
                     <span>{sec.group}</span>
                     <span className="flex items-center gap-2">
@@ -338,7 +338,7 @@ export function PanelLayout({
       )}
 
       {/* medium: rail */}
-      <aside className="sticky top-0 hidden h-screen shrink-0 border-r border-outline-variant bg-surface medium:block expanded:hidden">
+      <aside className="panel-rail">
         <Rail title={title} items={items} />
       </aside>
 
@@ -347,7 +347,7 @@ export function PanelLayout({
         ref={drawer}
         tabIndex={-1}
         aria-label={title}
-        className={`md-motion fixed inset-y-0 left-0 z-50 w-[min(22.5rem,85vw)] rounded-r-m3-xl bg-surface-container-low outline-none medium:hidden expanded:sticky expanded:top-0 expanded:z-20 expanded:block expanded:h-screen expanded:w-72 expanded:translate-x-0 expanded:rounded-none expanded:border-r expanded:border-outline-variant expanded:bg-surface ${
+        className={`md-motion panel-drawer expanded:translate-x-0 ${
           open ? "translate-x-0 shadow-m3-3" : "-translate-x-full"
         }`}
       >
@@ -368,7 +368,7 @@ export function PanelLayout({
 
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Thanh ứng dụng trên cùng (small top app bar, cao 64dp) */}
-        <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between gap-2 bg-surface px-2 sm:px-4 expanded:px-6">
+        <header className="panel-topbar">
           <div className="flex min-w-0 items-center gap-1">
             {!bottomNav && (
               <IconButton
@@ -389,7 +389,7 @@ export function PanelLayout({
               <Link
                 to="/account/deposit"
                 title="Nạp thêm credit"
-                className="md-state md-motion md-label-large mr-1 hidden h-8 items-center gap-2 rounded-m3-sm border border-outline px-3 text-on-surface-variant sm:flex"
+                className="md-state md-motion md-label-large panel-credit-chip"
               >
                 <Wallet size={16} />
                 <span className="tabular-nums text-on-surface">
@@ -398,7 +398,8 @@ export function PanelLayout({
               </Link>
             )}
             {actions}
-            <ThemeToggle />
+            {/* Điện thoại: chọn giao diện đã có trong menu tài khoản, bỏ nút này để tiêu đề trang còn chỗ */}
+            <ThemeToggle className="max-sm:hidden" />
             <UserMenu />
           </div>
         </header>
@@ -406,7 +407,7 @@ export function PanelLayout({
         <VerifyEmailNotice />
         {notice}
 
-        <main className="flex-1 px-4 pb-6 pt-2 sm:px-6 expanded:px-8 expanded:pb-8">
+        <main className="panel-main">
           <div
             key={pathname}
             className="animate-fade-up mx-auto w-full max-w-7xl"
