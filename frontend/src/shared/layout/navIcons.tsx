@@ -1,13 +1,13 @@
 import type { ComponentType } from "react";
 
-// Icon menu dạng ảnh WEBP 3D màu vàng (public/icons/nav). Cùng cỡ và cùng cách gọi với icon lucide: <Icon size={20} className="..." />
+// Icon menu dạng ảnh SVG 3D nhiều màu (public/icons/nav). Cùng cỡ và cùng cách gọi với icon lucide: <Icon size={20} className="..." />
 export type NavIconComponent = ComponentType<{ size?: number; className?: string }>;
 
 const img =
   (name: string): NavIconComponent =>
   ({ size = 24, className = "" }) => (
     <img
-      src={`/icons/nav/${name}.webp`}
+      src={`/icons/nav/${name}.svg`}
       width={size}
       height={size}
       alt=""
