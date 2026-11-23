@@ -22,6 +22,7 @@ export const createReportBody = z.object({
 export const listReportsQuery = paginationQuery.extend({
   status: z.enum(["PENDING", "APPROVED", "REJECTED"]).optional(),
   resolved: resolvedFilter,
+  q: z.string().trim().max(100).optional(), // tên đề hoặc email/tên người báo cáo
 });
 
 export const reviewReportBody = z.object({

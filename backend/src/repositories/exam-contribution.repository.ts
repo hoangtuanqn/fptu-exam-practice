@@ -38,8 +38,12 @@ export const examContributionRepository = {
   },
 
   // Admin: lọc theo trạng thái thì sắp theo (status, created_at) cho đúng index
-  async listAdmin(query: PaginationQuery, status?: ContributionStatus) {
-    const where = { status };
+  async listAdmin(query: PaginationQuery & { q?: string }, status?: ContributionStatus) {
+    const { q } = query;
+    const where: Prisma.ExamContributionWhereInput = {
+      status,
+      ...(q && { OR: [{ title: { contains: q } }, { subjectCode: { contains: q } }, { user: { email: { contains: q } } }] }),
+    };
     const [items, total] = await Promise.all([
       prisma.examContribution.findMany({ where, select: adminSelect, orderBy: [...newestFirst(!!status)], ...toSkipTake(query) }),
       prisma.examContribution.count({ where }),

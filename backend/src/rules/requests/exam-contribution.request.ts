@@ -22,6 +22,7 @@ export const createContributionBody = z.object({
 
 export const listContributionsQuery = paginationQuery.extend({
   status: z.enum(["PENDING", "APPROVED", "REJECTED", ""]).optional().transform((s) => s || undefined),
+  q: z.string().trim().max(100).optional(), // tiêu đề, mã môn hoặc email người gửi
 });
 
 export const reviewContributionBody = z.object({

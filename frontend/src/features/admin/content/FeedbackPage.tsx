@@ -11,6 +11,8 @@ import { useToast } from "@/shared/context/ToastContext";
 import { Button } from "@/shared/ui/Button";
 import { Markdown } from "@/shared/ui/Markdown";
 import { useApi } from "@/shared/hooks/useApi";
+import { SearchBox } from "@/shared/ui/SearchBox";
+import { useUrlSearch } from "@/shared/hooks/useUrlSearch";
 import { useClampPage } from "@/shared/hooks/useClampPage";
 import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
 import { Card, PageHeader } from "@/shared/ui/Card";
@@ -33,12 +35,13 @@ const reasonLabel = (v: string | null) => FEEDBACK_REASONS.find((r) => r.value =
 
 // Đánh giá 👍/👎 của người dùng về lời giải AI: mặc định hiện các đánh giá chưa tốt, kèm lời giải để đọc ngay và sửa prompt
 export default function FeedbackPage() {
-  const [url, setUrl] = useUrlState({ helpful: "down", page: "1" });
+  const [url, setUrl] = useUrlState({ helpful: "down", page: "1", q: "" });
+  const [search, setSearch, q] = useUrlSearch(url.q, setUrl);
   const toast = useToast();
   const filter = (Object.prototype.hasOwnProperty.call(QUERY, url.helpful) ? url.helpful : "down") as Filter;
   const page = toPage(url.page);
   const setPage = (p: number) => setUrl({ page: String(p) });
-  const { data, error, loading, reload } = useApi(() => adminApi.explanationFeedback(page, ...QUERY[filter]), [page, filter]);
+  const { data, error, loading, reload } = useApi(() => adminApi.explanationFeedback(page, ...QUERY[filter], q), [page, filter, q]);
   // Dòng vừa giải quyết hiện ngay kết quả server trả về; tải lại danh sách thì bỏ
   const [patched, setPatched] = useState<Record<string, ExplanationFeedbackAdmin>>({});
   useEffect(() => setPatched({}), [data]);
@@ -73,7 +76,8 @@ export default function FeedbackPage() {
         </p>
       )}
       <Card>
-        <div className="border-b border-slate-100 p-4">
+        <div className="flex flex-wrap gap-3 border-b border-slate-100 p-4">
+          <SearchBox value={search} onChange={setSearch} placeholder="Tìm theo tên đề, email hoặc nhận xét" label="Tìm đánh giá" />
           <Segmented<Filter>
             label="Lọc theo đánh giá"
             value={filter}
@@ -147,7 +151,7 @@ export default function FeedbackPage() {
             <Pagination meta={data.meta} onPage={setPage} />
           </div>
         ) : (
-          <Empty icon={ThumbsDown} title={filter === "down" ? "Không có đánh giá chưa tốt nào cần xử lý" : "Chưa có đánh giá nào"} />
+          <Empty icon={ThumbsDown} title={q ? "Không có đánh giá nào khớp từ khoá" : filter === "down" ? "Không có đánh giá chưa tốt nào cần xử lý" : "Chưa có đánh giá nào"} />
         )}
       </Card>
     </>

@@ -2,6 +2,8 @@ import { useState } from "react";
 import { ImageUp, SearchCheck } from "lucide-react";
 import { refreshReviewCounts } from "@/features/admin/review-counts.store";
 import { useApi } from "@/shared/hooks/useApi";
+import { SearchBox } from "@/shared/ui/SearchBox";
+import { useUrlSearch } from "@/shared/hooks/useUrlSearch";
 import { useClampPage } from "@/shared/hooks/useClampPage";
 import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
 import { Button } from "@/shared/ui/Button";
@@ -24,11 +26,12 @@ const FILTERS: { value: Filter; label: string }[] = [
 
 // Đề thành viên đóng góp: mặc định hiện đề chờ duyệt
 export default function AdminContributionsPage() {
-  const [url, setUrl] = useUrlState({ status: "PENDING", page: "1" });
+  const [url, setUrl] = useUrlState({ status: "PENDING", page: "1", q: "" });
+  const [search, setSearch, q] = useUrlSearch(url.q, setUrl);
   const status = (FILTERS.some((f) => f.value === url.status) ? url.status : "PENDING") as Filter;
   const page = toPage(url.page);
   const setPage = (p: number) => setUrl({ page: String(p) });
-  const { data, error, loading, reload } = useApi(() => contributionApi.list(page, status), [page, status]);
+  const { data, error, loading, reload } = useApi(() => contributionApi.list(page, status, q), [page, status, q]);
   useClampPage(data?.meta, setPage);
   const [selected, setSelected] = useState<AdminContribution | null>(null);
   const items = data?.items ?? [];
@@ -53,7 +56,8 @@ export default function AdminContributionsPage() {
     <>
       <PageHeader title="Đề đóng góp" description="Ảnh đề thành viên gửi lên. Xem ảnh rồi duyệt hoặc từ chối; từ chối sẽ xoá ảnh." />
       <Card>
-        <div className="border-b border-outline-variant p-4">
+        <div className="flex flex-wrap gap-3 border-b border-outline-variant p-4">
+          <SearchBox value={search} onChange={setSearch} placeholder="Tìm theo tiêu đề, mã môn hoặc email" label="Tìm đề đóng góp" />
           <Segmented<Filter> label="Lọc theo trạng thái" value={status} onChange={(v) => setUrl({ status: v, page: "1" })} options={FILTERS} />
         </div>
 
@@ -119,7 +123,7 @@ export default function AdminContributionsPage() {
             <Pagination meta={data.meta} onPage={setPage} />
           </div>
         ) : (
-          <Empty icon={ImageUp} title={status === "PENDING" ? "Không có đề nào chờ duyệt" : "Không có đề nào"} />
+          <Empty icon={ImageUp} title={q ? "Không có đề nào khớp từ khoá" : status === "PENDING" ? "Không có đề nào chờ duyệt" : "Không có đề nào"} />
         )}
       </Card>
 

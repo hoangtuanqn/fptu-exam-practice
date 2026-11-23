@@ -31,8 +31,13 @@ export const explanationFeedbackRepository = {
     }),
 
   // Danh sách cho admin, mới nhất trước. helpful: true = chỉ 👍, false = chỉ 👎, undefined = tất cả; resolved tương tự
-  async listAdmin(query: PaginationQuery, helpful?: boolean, resolved?: boolean) {
-    const where: Prisma.ExplanationFeedbackWhereInput = { helpful, resolvedAt: resolved === undefined ? undefined : resolved ? { not: null } : null };
+  async listAdmin(query: PaginationQuery & { q?: string }, helpful?: boolean, resolved?: boolean) {
+    const { q } = query;
+    const where: Prisma.ExplanationFeedbackWhereInput = {
+      helpful,
+      resolvedAt: resolved === undefined ? undefined : resolved ? { not: null } : null,
+      ...(q && { OR: [{ exam: { title: { contains: q } } }, { user: { email: { contains: q } } }, { comment: { contains: q } }] }),
+    };
     const [items, total] = await Promise.all([
       prisma.explanationFeedback.findMany({ where, orderBy: [{ updatedAt: "desc" }, { id: "desc" }], ...toSkipTake(query), select: adminSelect }),
       prisma.explanationFeedback.count({ where }),
