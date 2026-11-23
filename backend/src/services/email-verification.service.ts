@@ -11,6 +11,7 @@ import type { ChangeEmailBody } from "../rules/requests/user.request";
 import { INVALID_VERIFY } from "../rules/requests/auth.request";
 import { waitText } from "../utils/format";
 import { comparePassword } from "../utils/password";
+import { badgeService } from "./badge.service";
 import { notificationService } from "./notification.service";
 
 const INVALID = INVALID_VERIFY;
@@ -93,6 +94,7 @@ export const emailVerificationService = {
 
     // Lần xác minh đầu tiên: gửi thư chào mừng. Đổi email: báo cho địa chỉ cũ để phát hiện nếu không phải mình.
     if (!before.emailVerifiedAt) notificationService.welcome({ email: record.email, fullName: before.fullName });
+    if (!before.emailVerifiedAt) void badgeService.evaluateWithReferrer(record.userId);
     if (changing) notificationService.emailChanged({ oldEmail: before.email, newEmail: record.email, name: before.fullName });
     return { email: record.email };
   },

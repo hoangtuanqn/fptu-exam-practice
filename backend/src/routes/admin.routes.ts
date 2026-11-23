@@ -36,6 +36,7 @@ import { updateChatSettingsBody } from "../rules/requests/chat.request";
 import { adminPromoController } from "../controllers/admin.promo.controllers";
 import { adminLibraryController } from "../controllers/admin.library.controllers";
 import { adminNoticeController } from "../controllers/admin.notice.controllers";
+import { badgeController } from "../controllers/badge.controllers";
 import { listNoticesQuery, readAllNoticesBody, setNoticeReadBody } from "../rules/requests/admin-notice.request";
 import { readNoticeIdsBody, systemNoticeBody } from "../rules/requests/user-notice.request";
 import { idempotent } from "../middlewares/idempotency.middlewares";
@@ -95,6 +96,7 @@ adminRouter.post("/notices/read-ids", validate(readNoticeIdsBody), adminNoticeCo
 adminRouter.post("/system-notices", validate(systemNoticeBody), idempotent, adminNoticeController.broadcastSystem);
 adminRouter.delete("/notices/read", adminNoticeController.deleteRead);
 adminRouter.patch("/notices/:id", validate(uuidParam, "params"), validate(setNoticeReadBody), adminNoticeController.setRead);
+adminRouter.get("/badges", badgeController.stats); // số người giữ từng huy hiệu theo cấp
 adminRouter.get("/subjects", adminSubjectController.list);
 adminRouter.get("/subjects/:code", validate(subjectCodeOnlyParam, "params"), adminSubjectController.detail);
 adminRouter.patch("/subjects/:code", validate(subjectCodeOnlyParam, "params"), validate(updateSubjectBody), adminSubjectController.update);

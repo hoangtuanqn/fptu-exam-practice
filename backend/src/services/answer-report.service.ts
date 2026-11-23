@@ -13,6 +13,7 @@ import { startOfVnDay } from "../utils/time";
 import { toMeta, type PaginationQuery } from "../utils/pagination";
 import { examService } from "./exam.service";
 import { adminNoticeService } from "./admin-notice.service";
+import { badgeService } from "./badge.service";
 import { notificationService } from "./notification.service";
 import { walletService } from "./wallet.service";
 
@@ -109,6 +110,7 @@ export const answerReportService = {
     });
 
     void realtimeHub.publishExam(result.report.examId); // người đang mở đề thấy đáp án mới
+    void badgeService.evaluate(result.report.userId);
     notificationService.reportApproved({
       userId: result.report.userId,
       examTitle: result.report.exam.title,

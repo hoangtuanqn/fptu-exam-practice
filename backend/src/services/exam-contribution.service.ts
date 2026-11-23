@@ -15,6 +15,7 @@ import { HTTP_STATUS } from "../constants/httpStatus";
 import { examContributionRepository } from "../repositories/exam-contribution.repository";
 import { subjectRepository } from "../repositories/subject.repository";
 import { AppError } from "../rules/error";
+import { badgeService } from "./badge.service";
 import type { CreateContributionBody, ListContributionsQuery, ReviewContributionBody } from "../rules/requests/exam-contribution.request";
 import { contributionDirRel, contributionFileName, contributionImageRel, isAllowedImageSignature } from "../utils/exam-contribution";
 import { resolveInside } from "../utils/exam-zip";
@@ -103,6 +104,7 @@ export const examContributionService = {
 
   async approve(adminId: string, id: string, { note }: ReviewContributionBody) {
     if (!(await examContributionRepository.review(id, { status: "APPROVED", reviewNote: note, reviewedById: adminId }))) throw notPending();
+    void examContributionRepository.findUserId(id).then((r) => r && badgeService.evaluate(r.userId)).catch(() => undefined);
     return { id, status: "APPROVED" as const };
   },
 

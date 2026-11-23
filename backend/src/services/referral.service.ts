@@ -8,6 +8,7 @@ import { AppError } from "../rules/error";
 import type { Db } from "../repositories/wallet.repository";
 import { maskEmail } from "../utils/mask";
 import { toMeta, type PaginationQuery } from "../utils/pagination";
+import { badgeService } from "./badge.service";
 import { notificationService } from "./notification.service";
 import { referralSettingService } from "./referral-setting.service";
 import { walletService } from "./wallet.service";
@@ -114,6 +115,7 @@ export const referralService = {
       return this.grantSignupRewards(tx, user, owner.id);
     });
     this.notify(notices);
+    void badgeService.evaluate(owner.id);
     return { bonus: notices.find((n) => n.kind === "signup")?.amount ?? 0 };
   },
 
