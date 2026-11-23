@@ -1,6 +1,6 @@
 /**
- * Import the Coursera course catalog from a JSON array (FuOverflow course search export) into coursera_courses.
- * Items: { course_id, course_code, course_name, course_price, ... }. Matched by code; the FUO point price is used 1:1 as wallet credit.
+ * Import the Coursera course catalog from a JSON array (course search export) into coursera_courses.
+ * Items: { course_id, course_code, course_name, course_price, ... }. Matched by code; the point price is used 1:1 as wallet credit.
  *
  *   npm run import:coursera-courses -- --file=<path to courses.json> --dry-run   read only, print the counts
  *   npm run import:coursera-courses -- --file=<path to courses.json>             write

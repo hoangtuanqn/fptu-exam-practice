@@ -24,10 +24,10 @@ src/
   middlewares/   auth, phân quyền, validate, rate limit, xử lý lỗi
   controllers/   đọc request đã validate → gọi service → trả response
   services/      nghiệp vụ (đăng nhập, ví, nạp tiền, đối soát SePay, nhập đề)
-    crawler/     scraper FuOverflow (thread, bình luận, tải ảnh WebP), không biết gì về Express hay DB
+    crawler/     đọc comments.txt của đề để gửi cho AI
   repositories/  truy vấn Prisma, không chứa nghiệp vụ
   rules/         zod schema của request, AppError, ResponseClient
-  jobs/          cron job đối soát SePay, worker nền crawl đề
+  jobs/          cron job đối soát SePay, các worker nền
   seeders/       tạo admin đầu tiên
 ```
 
@@ -43,7 +43,7 @@ Response: `{ status, message, data, meta? }`. Gửi token bằng header `Authori
 | Auth | `POST /auth/register`, `POST /auth/login`, `GET /auth/me` |
 | User | `GET/PATCH /users/me`, `PATCH /users/me/password`, `GET /users/me/transactions` |
 | Nạp tiền | `GET /deposits/info`, `POST /deposits {amount}`, `GET /deposits`, `GET /deposits/:id` |
-| Đề thi | `POST /crawl-jobs {url}`, `GET /crawl-jobs/:id` |
+| Đề thi | `POST /crawl-jobs {examId}`, `GET /crawl-jobs/quote`, `GET /crawl-jobs/price` |
 | Thư viện | `GET /exams` (đề của tôi), `GET /exams/:id`, `POST /exams/:id/attempts {mode, durationSec, answers}` |
 | Lịch sử | `GET /attempts?examId=`, `GET /attempts/:id` (chi tiết từng câu) |
 | Admin | `GET /admin/dashboard` |
@@ -65,15 +65,12 @@ An toàn tiền bạc:
 - Chiếm lệnh, ghi giao dịch và cộng ví nằm trong một DB transaction; một bước lỗi thì cả ba huỷ.
 - Số dư đổi bằng `increment` ở DB và mọi thay đổi đều có một dòng trong `wallet_transactions`.
 
-## Nhập đề từ FuOverflow
+## Mở đề
 
-1. Admin nhập cookie đăng nhập FuOverflow ở `PUT /admin/settings/crawler` (ảnh gốc chỉ tải được khi đã đăng nhập; cookie gắn với IP và User-Agent nên User-Agent phải trùng trình duyệt đã lấy cookie).
-2. User gọi `POST /crawl-jobs {url}`. Chữ ký của đề là **thread ID** lấy từ link, nên mọi biến thể link (`?utm=`, `/page-2`, `/latest`, `/threads/7094/`) cùng ra một đề.
-   - Đề đã có trong DB → trả `200 {existed: true, examId}`, không crawl lại.
-   - Đang có lượt crawl cùng thread → dùng lại lượt đó.
-   - Ngược lại tạo `crawl_jobs` (QUEUED), trả `202` ngay.
-3. Worker nền (`jobs/crawl.worker.ts`) lấy từng job: đọc thread → tải ảnh, đổi WebP vào `STORAGE_DIR/exams/<threadId>/` → lấy bình luận → ghi `exams`, `exam_questions`, `exam_comments` trong một transaction. Mỗi bước cập nhật `crawl_jobs.stage` để client hiển thị. Server tắt giữa chừng thì job `RUNNING` được xếp lại khi khởi động.
-4. Client poll `GET /crawl-jobs/:id` đến khi `DONE`, rồi `GET /exams/:id` (ảnh phục vụ tại `/api/v1/files/...`).
+Đề có trong hệ thống do admin tải lên (`POST /admin/exams/upload`). Người dùng mở đề từ Kho đề theo môn:
+
+1. `GET /crawl-jobs/price` và `GET /crawl-jobs/quote?examId=...`: phí mở đề (`crawler.fetchPrice` trong settings, đề PE giá riêng), miễn phí nếu đề đã trong kho hoặc là Pro.
+2. `POST /crawl-jobs {examId}`: trừ phí (`CRAWL_CHARGE`) và thêm đề vào kho trong cùng một transaction, trả `200 {existed: true, examId}`. Khách miễn phí, một lượt mỗi ngày (ghi ở `crawl_jobs`).
 
 Đáp án: do AI (Claude) giải sau khi lấy đề và lưu vào `exam_questions.answer`. Không có đáp án giả: đề chưa có đáp án (`answer_source` = `PENDING` hoặc `FAILED`) chỉ xem được, chưa làm bài được. Lý do AI lỗi lưu ở `exams.ai_report` và `storage/exams/<threadId>/ai-error.log`.
 
@@ -86,15 +83,14 @@ An toàn tiền bạc:
 
 ## Phí lấy đề
 
-- Admin đặt `fetchPrice` (VND) ở `PUT /admin/settings/crawler`; `0` = miễn phí. `GET /crawl-jobs/price` cho giao diện báo trước.
-- Mỗi lần `POST /crawl-jobs` bị trừ phí, **kể cả đề đã có sẵn** (mở lại từ "Đề của tôi" thì không phải lấy nên không trừ). Trừ tiền và tạo job/thêm vào thư viện nằm trong một DB transaction; không đủ số dư thì `402` và không tạo gì.
-- Người đang có job cùng thread chưa xong gửi lại link thì dùng lại job đó, không trừ thêm.
-- Job lỗi (cookie hết hạn, thread không có ảnh...) được hoàn đúng số tiền đã trừ (`crawl_jobs.charged_amount`), chỉ một lần nhờ điều kiện `status = RUNNING` ở DB. Sổ cái ví có hai loại `CRAWL_CHARGE` và `CRAWL_REFUND`.
+- Admin đặt `fetchPrice` (credit) ở `PUT /admin/settings/crawler`; `0` = miễn phí. `GET /crawl-jobs/price` cho giao diện báo trước.
+- Mỗi lần `POST /crawl-jobs` mở một đề chưa có trong kho thì bị trừ phí (đề đã trong kho hoặc Pro thì miễn phí). Trừ tiền và thêm vào thư viện nằm trong một DB transaction; không đủ số dư thì `402` và không tạo gì.
+- Sổ cái ví dùng loại `CRAWL_CHARGE`; `CRAWL_REFUND` chỉ còn ở các dòng cũ.
 
 ## Khách (chưa đăng nhập) lấy đề
 
-- Trình duyệt tự sinh `guest_id` (localStorage) và gửi header `X-Guest-Id` trong mọi request. Khách dùng `POST /crawl-jobs`, `GET /crawl-jobs/:id`, `GET /exams`, `GET /exams/:id` (middleware `identify`: có token thì phải hợp lệ, không có thì cần `X-Guest-Id`).
-- Đề khách lấy nằm trong kho riêng `user_exams.guest_id`; job của khách có `crawl_jobs.guest_id`. Khách **không bị tính phí** (chưa có ví) nhưng chỉ được **1 lượt lấy đề mỗi ngày** (reset 0h giờ Việt Nam, tính cả khi đề đã có sẵn, lượt lỗi không tính), đếm theo `guest_id` từ bảng `crawl_jobs`; hết lượt trả `429` kèm lời mời đăng ký. Thêm lớp chặn theo IP 5 lượt/ngày để chống việc xoá dữ liệu trình duyệt đổi ID khách. Thành viên: mỗi lần lấy trừ phí, giới hạn 10 lượt/giờ/IP.
+- Trình duyệt tự sinh `guest_id` (localStorage) và gửi header `X-Guest-Id` trong mọi request. Khách dùng `POST /crawl-jobs`, `GET /exams`, `GET /exams/:id` (middleware `identify`: có token thì phải hợp lệ, không có thì cần `X-Guest-Id`).
+- Đề khách lấy nằm trong kho riêng `user_exams.guest_id`; lượt mở đề của khách ghi ở `crawl_jobs.guest_id`. Khách **không bị tính phí** (chưa có ví) nhưng chỉ được **1 lượt lấy đề mỗi ngày** (reset 0h giờ Việt Nam), đếm theo `guest_id` từ bảng `crawl_jobs`; hết lượt trả `429` kèm lời mời đăng ký. Thêm lớp chặn theo IP 5 lượt/ngày để chống việc xoá dữ liệu trình duyệt đổi ID khách. Thành viên: mỗi lần lấy trừ phí, giới hạn 10 lượt/giờ/IP.
 - Lịch sử làm bài chỉ cho thành viên. Khách nộp bài thì client giữ bài lại, và sau khi đăng ký/đăng nhập: `POST /exams/claim` chuyển các đề của `guest_id` về tài khoản (đã có thì bỏ qua) rồi bài vừa làm được lưu vào lịch sử.
 - `guest_id` chỉ là danh tính ẩn danh theo trình duyệt, không phải thông tin bí mật: ai biết ID thì xem được kho đề của ID đó. Xoá dữ liệu trình duyệt thì mất kho đề chưa nhận về tài khoản.
 
@@ -114,24 +110,22 @@ An toàn tiền bạc:
 ## Liên kết riêng (deep link)
 
 - **Lệnh nạp:** địa chỉ theo **mã nạp** ngẫu nhiên (`NAPK3F9X2QA`), không dùng ID tăng dần để khỏi lộ số lượng lệnh. `GET /deposits/:code` chỉ trả lệnh của chính người gọi. `GET /public/deposits/:code` **không cần đăng nhập** và chỉ trả mã, số tiền, trạng thái, thời hạn, thông tin tài khoản nhận (khi còn chờ); **không có ID, tên hay email** của người tạo; giới hạn 40 lượt/phút/IP chống dò mã. Frontend: `/deposit/:code` (khách xem bản rút gọn; đã đăng nhập thì chuyển sang `/account/deposit/:code`, nếu không phải chủ lệnh vẫn chỉ thấy bản rút gọn).
-- **Đề:** `GET /exams/thread/:threadId` (mã thread FuOverflow, vốn công khai). Frontend `/exam/:threadId` mở đề, `/exam/:threadId?mode=exam|practice` vào thẳng chế độ. Không có đề và có đề nhưng không nằm trong kho của người xem đều trả cùng một lỗi 404.
-- Trang và bộ lọc của các danh sách (`?page=2&status=PAID&q=...`) nằm trên URL nên tải lại hoặc gửi liên kết vẫn giữ nguyên. `/?url=<link FuOverflow>` điền sẵn ô nhập link (không tự lấy đề vì có tính phí).
+- **Đề:** `GET /exams/thread/:threadId` (threadId của đề). Frontend `/exam/:threadId` mở đề, `/exam/:threadId?mode=exam|practice` vào thẳng chế độ. Không có đề và có đề nhưng không nằm trong kho của người xem đều trả cùng một lỗi 404.
+- Trang và bộ lọc của các danh sách (`?page=2&status=PAID&q=...`) nằm trên URL nên tải lại hoặc gửi liên kết vẫn giữ nguyên.
 
 ## Thư mục đề và AI giải đáp án
 
-- **Thư mục mỗi đề** (`STORAGE_DIR/exams/<threadId>/`): `images/Q1.webp...`, `comments.txt` (bình luận FuOverflow, định dạng như crawl-fu), và khi AI giải xong thêm `ans.txt` (mỗi dòng một câu) và `ai-report.md`. **Bình luận không lưu vào DB** (bảng `exam_comments` đã bỏ ở migration `0011`). Đề lấy trước khi có bản này vẫn để ảnh thẳng trong `exams/<threadId>/` (đường dẫn ảnh lưu trong DB nên vẫn hiển thị đúng).
-- **AI (Claude):** bật ở Quản trị → AI giải đáp án (hoặc đặt `ANTHROPIC_API_KEY` trong `.env`), mặc định model `claude-haiku-5-5` (rẻ nhất; đổi sang Sonnet/Opus nếu cần chính xác hơn). Mỗi đề **mới** lấy về, worker gửi cho Claude: prompt hệ thống tiếng Anh chia khối bằng thẻ XML theo module: `prompts/base.md` (chung) + `prompts/modules/<MÃ MÔN>.md` (chọn theo mã môn ở đầu tiêu đề đề thi, ví dụ `MAD101 - SU26 - RE`; không có thì `_default`), xem `prompts/README.md` (cố định nên được prompt caching; bình luận được rút gọn kèm bảng đếm đáp án, ảnh quá lớn được thu nhỏ về 1280 px trước khi gửi) + toàn bộ ảnh có nhãn số câu + `comments.txt`. Kỹ thuật: suy luận thích ứng (adaptive thinking) với mức `effort` chỉnh được, structured outputs (JSON schema: báo cáo + đáp án từng câu kèm loại câu và độ tin cậy; câu thiếu được thử lại riêng, chịu lỗi từng phần), tra web tùy chọn (`web_search`, tối đa 5 lượt/đề). Kết quả lưu vào `exam_questions.answer`; báo cáo (kèm các câu Claude chưa chắc) ở `exams.ai_report`.
+- **Thư mục mỗi đề** (`STORAGE_DIR/exams/<threadId>/`): `images/Q1.webp...`, `comments.txt` (bình luận đã lưu của các đề cũ, nếu có), và khi AI giải xong thêm `ans.txt` (mỗi dòng một câu) và `ai-report.md`. **Bình luận không lưu vào DB** (bảng `exam_comments` đã bỏ ở migration `0011`). Đề lấy trước khi có bản này vẫn để ảnh thẳng trong `exams/<threadId>/` (đường dẫn ảnh lưu trong DB nên vẫn hiển thị đúng).
+- **AI (Claude):** bật ở Quản trị → AI giải đáp án (hoặc đặt `ANTHROPIC_API_KEY` trong `.env`), mặc định model `claude-haiku-5-5` (rẻ nhất; đổi sang Sonnet/Opus nếu cần chính xác hơn). Khi giải đề, worker gửi cho Claude: prompt hệ thống tiếng Anh chia khối bằng thẻ XML theo module: `prompts/base.md` (chung) + `prompts/modules/<MÃ MÔN>.md` (chọn theo mã môn ở đầu tiêu đề đề thi, ví dụ `MAD101 - SU26 - RE`; không có thì `_default`), xem `prompts/README.md` (cố định nên được prompt caching; bình luận được rút gọn kèm bảng đếm đáp án, ảnh quá lớn được thu nhỏ về 1280 px trước khi gửi) + toàn bộ ảnh có nhãn số câu + `comments.txt`. Kỹ thuật: suy luận thích ứng (adaptive thinking) với mức `effort` chỉnh được, structured outputs (JSON schema: báo cáo + đáp án từng câu kèm loại câu và độ tin cậy; câu thiếu được thử lại riêng, chịu lỗi từng phần), tra web tùy chọn (`web_search`, tối đa 5 lượt/đề). Kết quả lưu vào `exam_questions.answer`; báo cáo (kèm các câu Claude chưa chắc) ở `exams.ai_report`.
 - Có thể bật tra Google (grounding) theo bước 4 của prompt. Khóa gửi qua header, không nằm trong URL/log.
 - Người dùng không bị trừ thêm phí vì AI.
 - `GET /admin/exams`, `POST /admin/exams/:id/solve` (chạy nền, trả 202), `GET /admin/exams/:id/report`: trang **Đề thi** của quản trị để xem nguồn đáp án và nhờ AI giải lại (dùng cho đề cũ hoặc khi AI lỗi). Đề đã có đáp án rồi (người dùng lấy lại) thì không giải lại.
-- **Không bắt người dùng chờ AI (giao hàng từng phần):** lấy đề xong (tải hết ảnh + comments) là đề được lưu và mở ngay với `answer_source = PENDING` (đáp án rỗng, chưa chấm được). AI giải **nền** qua hàng đợi riêng (`services/exam-solve.service.ts`, tối đa 2 đề cùng lúc, tách khỏi worker crawl nên các lượt lấy đề khác không phải chờ). Giao diện hiện "AI đang phân tích đáp án…" và hỏi `GET /exams/:id/answers` mỗi 5 giây; có đáp án thì gắn vào bài đang làm, câu đã chọn giữ nguyên. Trong lúc chờ mọi câu tạm cho chọn nhiều (chưa biết loại câu).
+- **Không bắt người dùng chờ AI:** đề đang chờ AI mở được ngay với `answer_source = PENDING` (đáp án rỗng, chưa chấm được). AI giải **nền** qua hàng đợi riêng (`services/exam-solve.service.ts`, tối đa 2 đề cùng lúc). Giao diện hiện "AI đang phân tích đáp án…" và hỏi `GET /exams/:id/answers` mỗi 5 giây; có đáp án thì gắn vào bài đang làm, câu đã chọn giữ nguyên. Trong lúc chờ mọi câu tạm cho chọn nhiều (chưa biết loại câu).
 - **Chấm điểm:** nộp bài lúc AI chưa xong thì bảng điểm hiển thị đang chờ rồi tự chuyển sang điểm thật; bài chỉ được lưu vào lịch sử khi đã có đáp án (server cũng từ chối `409` nếu gửi sớm, để không ghi điểm sai).
 - **Phục hồi:** server tắt giữa chừng thì khi khởi động các đề còn `PENDING` được xếp lại hàng. AI lỗi: đề chuyển sang đáp án tạm `A` (`DEFAULT`) để không ai chờ mãi, lý do ghi ở `ai_report`; giải lại ở trang Đề thi của quản trị.
 
-## Lấy đề nhanh và hiện dần
+## AI giải đề dài
 
-- Ảnh và bình luận được tải song song (`crawler.concurrency`, mặc định 4, chỉnh ở Quản trị → Cấu hình lấy đề); mỗi luồng nghỉ `requestDelayMs` giữa hai request. Request lỗi tạm thời (mạng, 5xx, 429) được thử lại tối đa 3 lần; ảnh nguồn đã là WebP thì ghi thẳng.
-- Đề được tạo ngay sau khi đọc thread (`totalQuestions` = số ảnh) và các câu ghi dần theo thứ tự. Có 2 ảnh đầu là job có `examId`, người dùng mở đề được ngay; các câu sau đến qua socket sự kiện `exam:questions`. Lấy đề lỗi giữa chừng thì đề bị gỡ và báo `exam:failed`.
 - AI giải đề dài theo lô (`AI_BATCH_SIZE` = 12 câu), gọi song song, mỗi lô chỉ kèm bình luận của các câu trong lô; tổng số lần gọi cùng lúc tối đa `AI_MAX_PARALLEL_CALLS`.
-- Log `[crawl]` và `[ai]` ghi thời gian từng giai đoạn để đo.
+- Log `[ai]` ghi thời gian từng giai đoạn để đo.
 

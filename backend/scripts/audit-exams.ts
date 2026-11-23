@@ -157,7 +157,7 @@ async function main() {
     const noAns = /No usable answer was obtained for questions: ([^\n]*?)\./.exec(report_)?.[1];
     if (noAns && blank.length === 0) add("WARN", "AI_STALE", `Báo cáo AI nói có câu thiếu đáp án (${noAns}) nhưng DB đã có đủ (có thể đã sửa tay)`);
 
-    // ---- Đối chiếu với bình luận trên FuOverflow (số đông bình luận nêu cùng một đáp án nhưng khác DB)
+    // ---- Đối chiếu với bình luận đã lưu (số đông bình luận nêu cùng một đáp án nhưng khác DB)
     const commentsText = await readText(path.join(dir, "comments.txt"));
     if (commentsText === null) add("WARN", "NO_COMMENTS", "Không có comments.txt (không đối chiếu được với bình luận)");
     else {
