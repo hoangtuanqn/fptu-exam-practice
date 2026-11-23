@@ -1,4 +1,4 @@
-import { Search, ShoppingBag } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 import { adminApi } from "@/features/admin/api/admin.api";
 import { UserCell, UserFilterChip } from "@/features/admin/shared";
 import { useApi } from "@/shared/hooks/useApi";
@@ -7,8 +7,8 @@ import { useUrlSearch } from "@/shared/hooks/useUrlSearch";
 import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
 import { Badge } from "@/shared/ui/Badge";
 import { Card, PageHeader } from "@/shared/ui/Card";
+import { SearchBox } from "@/shared/ui/SearchBox";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
-import { inputClass } from "@/shared/ui/Input";
 import { Segmented } from "@/shared/ui/Segmented";
 import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
 import { formatCredit, formatDateTime } from "@/shared/utils/formatters";
@@ -33,7 +33,7 @@ export default function PurchasesPage() {
   const who = url.userId ? (cur.data?.items[0] as { user?: { fullName: string } } | undefined)?.user?.fullName : undefined;
 
   let body;
-  if (cur.loading && !cur.data) body = <Loading />;
+  if (cur.loading && !cur.data) body = <Loading shape="table" />;
   else if (cur.error) body = <ErrorBox message={cur.error} onRetry={cur.reload} />;
   else if (!cur.data || cur.data.items.length === 0) body = <Empty icon={ShoppingBag} title="Chưa có giao dịch nào" />;
   else if (kind === "unlock" && unlock.data) {
@@ -116,10 +116,7 @@ export default function PurchasesPage() {
               { value: "single", label: "Giải thích mua lẻ" },
             ]}
           />
-          <div className="relative min-w-52 flex-1">
-            <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Tìm theo tên hoặc email" aria-label="Tìm thành viên" className={`${inputClass()} pl-9`} />
-          </div>
+          <SearchBox value={search} onChange={setSearch} placeholder="Tìm theo tên hoặc email" label="Tìm thành viên" />
           <UserFilterChip userId={url.userId} label={who} onClear={() => setUrl({ userId: "", page: "1" })} />
         </div>
         <div className={cur.loading && cur.data ? "overflow-x-auto opacity-60 transition" : "overflow-x-auto transition"}>{body}</div>

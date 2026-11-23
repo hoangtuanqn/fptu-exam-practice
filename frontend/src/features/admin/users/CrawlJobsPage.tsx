@@ -1,4 +1,4 @@
-import { DatabaseZap, Search } from "lucide-react";
+import { DatabaseZap } from "lucide-react";
 import { adminApi } from "@/features/admin/api/admin.api";
 import { UserCell, UserFilterChip } from "@/features/admin/shared";
 import { useApi } from "@/shared/hooks/useApi";
@@ -9,8 +9,8 @@ import type { AdminCrawlJob, CrawlJobStatus } from "@/shared/types/api";
 import { Badge, type Tone } from "@/shared/ui/Badge";
 import { ExpandableText } from "@/shared/ui/ExpandableText";
 import { Card, PageHeader } from "@/shared/ui/Card";
+import { SearchBox } from "@/shared/ui/SearchBox";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
-import { inputClass } from "@/shared/ui/Input";
 import { Segmented } from "@/shared/ui/Segmented";
 import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
 import { formatCredit, formatDateTime } from "@/shared/utils/formatters";
@@ -43,10 +43,7 @@ export default function CrawlJobsPage() {
       <PageHeader title="Lịch sử lấy đề" description="Các lượt lấy đề từ FuOverflow của thành viên và khách." />
       <Card>
         <div className="flex flex-wrap items-center gap-3 border-b border-slate-100 p-4">
-          <div className="relative min-w-52 flex-1">
-            <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Tìm theo tên hoặc email" aria-label="Tìm thành viên" className={`${inputClass()} pl-9`} />
-          </div>
+          <SearchBox value={search} onChange={setSearch} placeholder="Tìm theo tên hoặc email" label="Tìm thành viên" />
           <Segmented
             label="Lọc theo trạng thái"
             value={status}
@@ -63,7 +60,7 @@ export default function CrawlJobsPage() {
         </div>
 
         {loading && !data ? (
-          <Loading />
+          <Loading shape="table" />
         ) : error ? (
           <ErrorBox message={error} onRetry={reload} />
         ) : data && data.items.length > 0 ? (

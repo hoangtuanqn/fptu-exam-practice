@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { inputClass } from "@/shared/ui/Input";
 import { Search } from "lucide-react";
 import { useDebounce } from "@/shared/hooks/useDebounce";
 import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
@@ -28,7 +29,7 @@ export function ExamFilterBar({ query, terms }: Props) {
     <>
       <label className="relative block">
         <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
-        <input value={typed} onChange={(e) => setTyped(e.target.value)} placeholder="Tìm trong các đề của môn" aria-label="Tìm đề" className="md-motion h-10 w-full rounded-m3-md border border-outline-variant bg-surface-container-lowest pl-9 pr-3 text-sm outline-none hover:border-on-surface/60 focus:border-primary focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--md-sys-color-primary)_18%,transparent)]" />
+        <input value={typed} onChange={(e) => setTyped(e.target.value)} placeholder="Tìm trong các đề của môn" aria-label="Tìm đề" className={`${inputClass()} !h-10 pl-9 pr-3`} />
       </label>
       {terms && terms.length > 0 && (
         <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Lọc theo kỳ">
