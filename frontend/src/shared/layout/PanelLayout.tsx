@@ -28,8 +28,6 @@ import { UserAvatar } from "@/shared/ui/UserAvatar";
 import { Fab, IconButton } from "@/shared/ui/Button";
 import { ThemeToggle } from "@/shared/theme/ThemeToggle";
 import { VerifyEmailNotice } from "@/features/verify-email/VerifyEmailNotice";
-// Ô tìm kiếm chung (dialog nằm trong feature search): nút đặt trên header
-import { SearchButton } from "@/features/search/GlobalSearch";
 
 export interface NavItem {
   to: string;
@@ -398,7 +396,6 @@ export function PanelLayout({
                 </span>
               </Link>
             )}
-            <SearchButton />
             {actions}
             <ThemeToggle />
             <UserMenu />

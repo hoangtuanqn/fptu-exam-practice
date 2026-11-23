@@ -16,6 +16,7 @@ import { Button, buttonClass } from "@/shared/ui/Button";
 import { UserMenu } from "@/shared/layout/UserMenu";
 import { SiteNav } from "@/shared/layout/SiteNav";
 import { ThemeToggle } from "@/shared/theme/ThemeToggle";
+import { SearchTrigger } from "@/features/search/GlobalSearch";
 import { UserNoticeBell } from "@/features/notifications/UserNoticeBell"; // component công khai của feature thông báo
 
 // Nút "Hướng dẫn": chưa từng mở thì có chấm nhấp nháy gợi ý bấm vào (mở một lần là thôi)
@@ -216,6 +217,7 @@ export function Header({
           </>
         )}
         {/* Đang làm bài trên điện thoại: ẩn như nút giao diện để cụm nút không tràn */}
+        {!loaded && <SearchTrigger />}
         <span className={loaded ? "contents max-sm:hidden" : "contents"}>
           <UserNoticeBell />
         </span>

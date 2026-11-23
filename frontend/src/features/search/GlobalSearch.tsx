@@ -3,13 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import { useApi } from "@/shared/hooks/useApi";
 import { useDebounce } from "@/shared/hooks/useDebounce";
-import { IconButton } from "@/shared/ui/Button";
+import { Kbd } from "@/shared/ui/Kbd";
 import { Modal } from "@/shared/ui/Modal";
 import { SkeletonList } from "@/shared/ui/Skeleton";
 import { searchApi } from "./search.api";
 
-// Ô tìm kiếm chung: nút kính lúp trên header mở hộp thoại, Ctrl+K (⌘K) mở từ bất cứ đâu.
+// Tìm kiếm chung kiểu palette: ô nhỏ trên header (hoặc Ctrl+K / ⌘K) mở popup ở phía trên, gõ để tìm môn, đề, flashcard.
 const SearchContext = createContext<{ open: () => void } | null>(null);
+
+const MIN_CHARS = 2; // ít hơn thì chưa gọi máy chủ
 
 export function SearchProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -34,13 +36,27 @@ export function SearchProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// Nút kính lúp đặt trên header (trang panel và trang công khai)
-export function SearchButton() {
-  const ctx = useContext(SearchContext);
+// Ô nhỏ đặt trên header, trông như ô nhập nhưng bấm vào là mở popup. Điện thoại header chật nên chỉ còn biểu tượng.
+export function SearchTrigger() {
+  const open = useContext(SearchContext)?.open;
   return (
-    <IconButton label="Tìm kiếm (Ctrl+K)" onClick={() => ctx?.open()}>
-      <Search size={20} />
-    </IconButton>
+    <>
+      <button
+        type="button"
+        onClick={open}
+        aria-label="Tìm kiếm (Ctrl+K)"
+        className="md-motion hidden h-10 w-44 items-center gap-2 rounded-full border border-outline-variant bg-surface-container-low px-3.5 text-sm text-on-surface-variant hover:border-on-surface/60 sm:flex lg:w-60"
+      >
+        <Search size={18} aria-hidden className="shrink-0" />
+        <span className="flex-1 truncate text-left">Tìm kiếm…</span>
+        <span className="hidden lg:block">
+          <Kbd>Ctrl K</Kbd>
+        </span>
+      </button>
+      <button type="button" onClick={open} aria-label="Tìm kiếm" className="md-state md-motion flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant sm:hidden">
+        <Search size={20} />
+      </button>
+    </>
   );
 }
 
@@ -56,11 +72,12 @@ function SearchDialog({ onClose }: { onClose: () => void }) {
   const navigate = useNavigate();
   const [text, setText] = useState("");
   const q = useDebounce(text.trim(), 250); // chờ ngừng gõ một nhịp rồi mới gọi máy chủ
-  const { data, error, loading } = useApi(() => (q ? searchApi.query(q) : Promise.resolve(null)), [q]);
+  const ready = q.length >= MIN_CHARS;
+  const { data, error, loading } = useApi(() => (ready ? searchApi.query(q) : Promise.resolve(null)), [q]);
   const [active, setActive] = useState(0);
 
   const options = useMemo<Option[]>(() => {
-    if (!data) return [];
+    if (!ready || !data) return [];
     return [
       ...data.subjects.map((s) => ({
         key: `s-${s.code}`,
@@ -84,7 +101,7 @@ function SearchDialog({ onClose }: { onClose: () => void }) {
         to: `/flashcard/${encodeURIComponent(f.code)}`,
       })),
     ];
-  }, [data]);
+  }, [data, ready]);
 
   // Kết quả mới thì quay về mục đầu tiên
   useEffect(() => setActive(0), [data]);
@@ -108,64 +125,65 @@ function SearchDialog({ onClose }: { onClose: () => void }) {
     }
   };
 
+  const note = "px-3 py-8 text-center text-sm text-on-surface-variant";
   return (
-    <Modal onClose={onClose} maxWidth="40rem">
-      <div className="p-4 sm:p-5">
-        <h2 className="sr-only">Tìm kiếm</h2>
-        <label className="relative block">
-          <Search size={20} aria-hidden className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant" />
-          <input
-            autoFocus
-            role="combobox"
-            aria-label="Tìm môn học, tên đề, flashcard"
-            aria-expanded={options.length > 0}
-            aria-controls="search-results"
-            aria-autocomplete="list"
-            aria-activedescendant={options[idx] ? `search-opt-${idx}` : undefined}
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={onKeyDown}
-            placeholder="Tìm môn, tên đề, flashcard…"
-            className="h-12 w-full rounded-full border border-outline-variant bg-surface-container-low pl-12 pr-4 text-base outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-on-surface-variant focus:border-primary focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--md-sys-color-primary)_18%,transparent)]"
-          />
-        </label>
+    <Modal onClose={onClose} maxWidth="max-w-2xl" top flush>
+      <h2 className="sr-only">Tìm kiếm</h2>
+      <div className="flex items-center gap-3 border-b border-outline-variant px-5">
+        <Search size={22} aria-hidden className="shrink-0 text-on-surface-variant" />
+        <input
+          autoFocus
+          role="combobox"
+          aria-label="Tìm môn học, tên đề, flashcard"
+          aria-expanded={options.length > 0}
+          aria-controls="search-results"
+          aria-autocomplete="list"
+          aria-activedescendant={options[idx] ? `search-opt-${idx}` : undefined}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={onKeyDown}
+          maxLength={60}
+          placeholder="Tìm môn, đề, flashcard…"
+          className="h-16 min-w-0 flex-1 bg-transparent text-lg text-on-surface outline-none placeholder:text-on-surface-variant"
+        />
+        <Kbd>Esc</Kbd>
+      </div>
 
-        <div className="mt-3 max-h-[60vh] overflow-y-auto">
-          {!q ? (
-            <p className="px-3 py-6 text-center text-sm text-on-surface-variant">Gõ mã môn (ví dụ PRO192), tên đề hoặc tên flashcard.</p>
-          ) : error && !data ? (
-            <p role="alert" className="px-3 py-6 text-center text-sm text-error">{error}</p>
-          ) : loading && !data ? (
-            <SkeletonList rows={3} label="Đang tìm…" />
-          ) : data && options.length === 0 ? (
-            <p className="px-3 py-6 text-center text-sm text-on-surface-variant">Không có kết quả cho “{q}”.</p>
-          ) : (
-            <ul id="search-results" role="listbox" aria-label="Kết quả tìm kiếm" className={`transition-opacity duration-200 ${loading ? "opacity-60" : ""}`}>
-              {options.map((o, i) => (
-                <Fragment key={o.key}>
-                  {(i === 0 || options[i - 1].group !== o.group) && (
-                    <li role="presentation" className="px-3 pb-1 pt-3 text-xs font-medium uppercase tracking-wide text-on-surface-variant">
-                      {o.group}
-                    </li>
-                  )}
-                  <li
-                    id={`search-opt-${i}`}
-                    role="option"
-                    aria-selected={i === idx}
-                    onMouseEnter={() => setActive(i)}
-                    onClick={() => go(o.to)}
-                    className={`flex cursor-pointer items-center justify-between gap-3 rounded-m3-sm px-3 py-2.5 transition-colors duration-150 ${
-                      i === idx ? "bg-secondary-container text-on-secondary-container" : "text-on-surface"
-                    }`}
-                  >
-                    <span className="min-w-0 truncate text-sm font-medium">{o.label}</span>
-                    {o.hint && <span className="shrink-0 text-xs text-on-surface-variant">{o.hint}</span>}
+      <div className="max-h-[60vh] overflow-y-auto p-2">
+        {!ready ? (
+          <p className={note}>Nhập ít nhất {MIN_CHARS} ký tự để tìm</p>
+        ) : error && !data ? (
+          <p role="alert" className={`${note} !text-error`}>{error}</p>
+        ) : loading && !data ? (
+          <SkeletonList rows={3} label="Đang tìm…" />
+        ) : data && options.length === 0 ? (
+          <p className={note}>Không có kết quả cho “{q}”</p>
+        ) : (
+          <ul id="search-results" role="listbox" aria-label="Kết quả tìm kiếm" className={`transition-opacity duration-200 ${loading ? "opacity-60" : ""}`}>
+            {options.map((o, i) => (
+              <Fragment key={o.key}>
+                {(i === 0 || options[i - 1].group !== o.group) && (
+                  <li role="presentation" className="px-3 pb-1 pt-3 text-xs font-medium uppercase tracking-wide text-on-surface-variant">
+                    {o.group}
                   </li>
-                </Fragment>
-              ))}
-            </ul>
-          )}
-        </div>
+                )}
+                <li
+                  id={`search-opt-${i}`}
+                  role="option"
+                  aria-selected={i === idx}
+                  onMouseEnter={() => setActive(i)}
+                  onClick={() => go(o.to)}
+                  className={`flex cursor-pointer items-center justify-between gap-3 rounded-m3-sm px-3 py-2.5 transition-colors duration-150 ${
+                    i === idx ? "bg-secondary-container text-on-secondary-container" : "text-on-surface"
+                  }`}
+                >
+                  <span className="min-w-0 truncate text-sm font-medium">{o.label}</span>
+                  {o.hint && <span className="shrink-0 text-xs text-on-surface-variant">{o.hint}</span>}
+                </li>
+              </Fragment>
+            ))}
+          </ul>
+        )}
       </div>
     </Modal>
   );

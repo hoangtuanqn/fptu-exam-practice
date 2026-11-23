@@ -6,8 +6,8 @@ import { SiteNav } from "./SiteNav";
 import { UserMenu } from "./UserMenu";
 // Ngoại lệ đã biết (giống UserMenu): layout dùng chung lấy chuông từ feature
 import { UserNoticeBell } from "@/features/notifications/UserNoticeBell";
-// Ô tìm kiếm chung: nút trên header, dialog nằm trong feature search
-import { SearchButton } from "@/features/search/GlobalSearch";
+// Ô tìm kiếm trên header: nằm trong feature search (ngoại lệ đã biết như UserNoticeBell)
+import { SearchTrigger } from "@/features/search/GlobalSearch";
 
 // Header của các trang công khai ngoài trang chủ (/features, /pro): giống header trang chủ (logo, tên, điều hướng, giao diện, tài khoản)
 export function SiteHeader() {
@@ -22,7 +22,7 @@ export function SiteHeader() {
       </div>
       <SiteNav />
       <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-        <SearchButton />
+        <SearchTrigger />
         <UserNoticeBell />
         <ThemeToggle />
         <UserMenu />
