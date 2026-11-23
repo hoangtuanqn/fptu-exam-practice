@@ -4,7 +4,7 @@ import { ResponseClient } from "../rules/response";
 import type { UpdateReferralBody } from "../rules/requests/setting.request";
 import { referralService } from "../services/referral.service";
 import { referralSettingService } from "../services/referral-setting.service";
-import type { PaginationQuery } from "../utils/pagination";
+import type { ListAdminReferralsQuery } from "../rules/requests/referral.request";
 
 export const adminReferralController = {
   async getSettings(_req: Request, res: Response) {
@@ -20,7 +20,7 @@ export const adminReferralController = {
   },
 
   async list(_req: Request, res: Response) {
-    const { items, meta } = await referralService.adminList(getValidated<PaginationQuery>(res, "query"));
+    const { items, meta } = await referralService.adminList(getValidated<ListAdminReferralsQuery>(res, "query"));
     res.json(new ResponseClient({ data: items, meta }));
   },
 };

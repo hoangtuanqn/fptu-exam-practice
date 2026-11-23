@@ -9,10 +9,12 @@ export const createDepositBody = z.object({
 export const listDepositsQuery = paginationQuery.extend({
   status: z.enum(["PENDING", "PAID", "EXPIRED"]).optional(),
   userId: uuidSchema.optional(), // chỉ admin được dùng
+  q: z.string().trim().max(60).optional(), // admin: mã nạp hoặc email/tên thành viên
 });
 
 export const listBankTxQuery = paginationQuery.extend({
   status: z.enum(["MATCHED", "UNMATCHED"]).optional(),
+  q: z.string().trim().max(60).optional(), // nội dung chuyển khoản hoặc mã giao dịch
 });
 
 // Mã nạp có tiền tố (chữ cái) + 8 ký tự chữ-số, ví dụ NAPK3F9X2QA

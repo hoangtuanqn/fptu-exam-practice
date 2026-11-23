@@ -58,8 +58,13 @@ export const referralRepository = {
   },
 
   // Admin: mọi cặp người giới thiệu - người được giới thiệu
-  async listAll(query: PaginationQuery) {
-    const where: Prisma.UserWhereInput = { referredById: { not: null } };
+  async listAll(query: PaginationQuery & { q?: string }) {
+    const { q } = query;
+    const person = (field: "email" | "fullName") => ({ [field]: { contains: q } });
+    const where: Prisma.UserWhereInput = {
+      referredById: { not: null },
+      ...(q && { OR: [person("email"), person("fullName"), { referredBy: person("email") }, { referredBy: person("fullName") }] }),
+    };
     const [items, total] = await Promise.all([
       prisma.user.findMany({
         where,

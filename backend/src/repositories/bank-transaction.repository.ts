@@ -21,8 +21,9 @@ export const bankTransactionRepository = {
 
   create: (db: Db, data: Prisma.BankTransactionUncheckedCreateInput) => db.bankTransaction.create({ data }),
 
-  async list(query: PaginationQuery, status?: BankTxStatus) {
-    const where: Prisma.BankTransactionWhereInput = { status };
+  async list(query: PaginationQuery & { q?: string }, status?: BankTxStatus) {
+    const { q } = query;
+    const where: Prisma.BankTransactionWhereInput = { status, ...(q && { OR: [{ content: { contains: q } }, { sepayId: { contains: q } }] }) };
     const [items, total] = await Promise.all([
       prisma.bankTransaction.findMany({
         where,
