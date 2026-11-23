@@ -28,8 +28,8 @@ export function Modal({ children, onClose, wide = false, blur = false, maxWidth,
       heading.id ||= `modal-title-${++modalTitleSeq}`;
       node.setAttribute("aria-labelledby", heading.id);
     }
-    // Đưa focus vào hộp: ưu tiên phần tử có autoFocus, không thì khung hộp
-    (node?.querySelector<HTMLElement>("[autofocus]") ?? node)?.focus({ preventScroll: true });
+    // Đưa focus vào hộp: React đã tự focus phần tử autoFocus lúc mount (không tạo thuộc tính [autofocus]) thì giữ nguyên, không thì khung hộp
+    if (!node?.contains(document.activeElement)) (node?.querySelector<HTMLElement>("[autofocus]") ?? node)?.focus({ preventScroll: true });
 
     const onKey = (e: KeyboardEvent) => {
       if (openModals[openModals.length - 1] !== token) return;
