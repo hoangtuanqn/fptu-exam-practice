@@ -1,6 +1,5 @@
 import { env } from "../configs/env";
 import { userRepository } from "../repositories/user.repository";
-import { threadUrl } from "../utils/fuo-url";
 import { EMAIL_VERIFICATION_EXPIRES_HOURS } from "../constants/email-verification";
 import { MAIL_BRAND } from "../constants/mail";
 import type { CourseraOrderEmailInput } from "../mail/templates/coursera-notice";
@@ -14,31 +13,9 @@ const notify = (label: string, job: () => Promise<void>) => {
   void job().catch((err: Error) => console.error(`[mail] không gửi được thư "${label}": ${err.message}`));
 };
 
-// Thư "trừ phí lấy đề" được hoãn một lúc: nếu lượt lấy lỗi và hoàn phí ngay trong khoảng này thì bỏ cả hai thư (tránh spam).
-// Giữ trong bộ nhớ nên khởi động lại server trong lúc chờ thì thư trừ phí đó không được gửi (số dư vẫn đúng, xem ở lịch sử ví).
-const CHARGE_MAIL_DELAY_MS = 90_000;
-type FetchCharge = { userId: string; amount: number; balanceAfter: number; threadId: string; examTitle?: string };
-const pendingChargeMails = new Map<number, NodeJS.Timeout>();
+type FetchCharge = { userId: string; amount: number; balanceAfter: number; examId: string; examTitle: string };
 
 export const notificationService = {
-  fetchChargedLater(jobId: number, n: FetchCharge) {
-    const timer = setTimeout(() => {
-      pendingChargeMails.delete(jobId);
-      notificationService.fetchCharged(n);
-    }, CHARGE_MAIL_DELAY_MS);
-    timer.unref();
-    pendingChargeMails.set(jobId, timer);
-  },
-
-  /** Hoàn phí khi thư trừ phí còn chưa gửi: huỷ thư đó và trả true (không cần gửi thư hoàn phí nữa). */
-  cancelPendingCharge(jobId: number) {
-    const timer = pendingChargeMails.get(jobId);
-    if (!timer) return false;
-    clearTimeout(timer);
-    pendingChargeMails.delete(jobId);
-    return true;
-  },
-
   // Người dùng vừa tạo lệnh nạp: gửi thông tin chuyển khoản để họ có sẵn trong hộp thư
   depositCreated(n: {
     userId: string;
@@ -87,8 +64,8 @@ export const notificationService = {
       if (!user) return;
       await mailService.sendFetchCharged(user.email, {
         name: user.fullName,
-        examLabel: n.examTitle ?? `Thread #${n.threadId}`,
-        examUrl: threadUrl(n.threadId),
+        examLabel: n.examTitle,
+        examUrl: `${env.CLIENT_URL}/exam/${n.examId}`,
         amount: n.amount,
         balanceAfter: n.balanceAfter,
         at: new Date(),
@@ -188,23 +165,6 @@ export const notificationService = {
       const user = await userRepository.findById(n.userId);
       if (!user) return;
       await mailService.sendProPurchased(user.email, { name: user.fullName, ...n, at: new Date(), proUrl: `${env.CLIENT_URL}/pro` });
-    });
-  },
-
-  // Lấy đề lỗi và đã hoàn phí (gọi SAU khi transaction hoàn phí đã commit)
-  fetchRefunded(n: { userId: string; amount: number; balanceAfter: number; threadId: string }) {
-    notify("hoàn phí lấy đề", async () => {
-      const user = await userRepository.findById(n.userId);
-      if (!user) return;
-      await mailService.sendRefund(user.email, {
-        name: user.fullName,
-        examLabel: `Thread #${n.threadId}`,
-        examUrl: threadUrl(n.threadId),
-        amount: n.amount,
-        balanceAfter: n.balanceAfter,
-        at: new Date(),
-        walletUrl: walletUrl(),
-      });
     });
   },
 

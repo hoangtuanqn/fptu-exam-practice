@@ -71,18 +71,18 @@ async function priceFor(tx: Prisma.TransactionClient, userId: string, code: Plan
 }
 
 export const planService = {
-  // Thông tin gói để hiện trang bán hàng; mức tiết kiệm luôn tính từ giá, không lưu cứng
+  // Thông tin gói để hiện trang bán hàng
   info() {
-    const { price, fuoPrice, months } = PRO_PLAN;
-    const savings = Math.max(0, fuoPrice - price);
+    const { price, months } = PRO_PLAN;
     return {
       code: PRO_PLAN.code,
       name: PRO_PLAN.name,
       months,
       price,
-      fuoPrice,
-      savings,
-      savingsPercent: fuoPrice > 0 ? Math.round((savings / fuoPrice) * 100) : 0,
+      // Không còn giá gốc để so sánh: giữ các trường ở 0 cho giao diện cũ
+      fuoPrice: 0,
+      savings: 0,
+      savingsPercent: 0,
       pricePerMonth: Math.round(price / months),
       benefits: PRO_BENEFITS,
       sprint: { code: SPRINT_PLAN.code, name: SPRINT_PLAN.name, days: SPRINT_PLAN.days, price: SPRINT_PLAN.price },

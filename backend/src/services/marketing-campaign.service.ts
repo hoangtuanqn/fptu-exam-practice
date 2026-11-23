@@ -66,7 +66,7 @@ const url = CLICK_PLACEHOLDER;
 const planOffer = () => {
   const info = planService.info();
   return {
-    pro: { name: info.name, months: info.months, price: info.price, perDay: Math.round(info.price / (info.months * 30)), fuoPrice: info.fuoPrice, savingsPercent: info.savingsPercent },
+    pro: { name: info.name, months: info.months, price: info.price, perDay: Math.round(info.price / (info.months * 30)) },
     sprint: info.sprint,
   };
 };

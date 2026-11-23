@@ -108,7 +108,7 @@ export const examService = {
   // Vừa đăng ký/đăng nhập: đề khách đã lấy trên trình duyệt này chuyển về tài khoản
   async claimGuestLibrary(userId: string, guestId: string | undefined) {
     if (!guestId) return { claimed: 0, jobs: 0 };
-    const { exams, jobs } = await userExamRepository.claimGuest(userId, guestId);
-    return { claimed: exams, jobs };
+    // jobs giữ trong phản hồi cho client cũ; không còn lượt lấy đề chạy nền để chuyển
+    return { claimed: await userExamRepository.claimGuest(userId, guestId), jobs: 0 };
   },
 };

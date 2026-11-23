@@ -114,7 +114,7 @@ export const examSolveService = {
 
   /**
    * Đề cũ còn đáp án tạm (lấy lúc AI chưa bật): lần đầu có người mở thì nhờ AI giải, dùng ảnh và bình luận đã lưu
-   * nên không cần lấy lại từ FuOverflow. Tiết kiệm token: chỉ giải khi có người mở, mỗi đề một lần (lỗi rồi thì
+   * nên không cần lấy lại gì. Tiết kiệm token: chỉ giải khi có người mở, mỗi đề một lần (lỗi rồi thì
    * không tự thử lại cho tới khi khởi động lại server hoặc admin bấm giải lại). Trả về true nếu đề vừa chuyển sang chờ AI.
    */
   async upgradeIfNeeded(examId: string) {

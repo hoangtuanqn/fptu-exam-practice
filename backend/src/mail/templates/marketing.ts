@@ -1,6 +1,6 @@
 import { MAIL_BRAND } from "../../constants/mail";
 import { PRO_BENEFITS } from "../../constants/plan";
-import { formatCredit, formatDateTimeVN, formatMoney } from "../../utils/format";
+import { formatCredit, formatDateTimeVN } from "../../utils/format";
 import { button, details, esc, list, note, p, renderLayout, signature } from "../layout";
 
 // Thư marketing tự động (win-back, mời Pro, nhắc hết hạn Pro). Chỉ dùng số liệu thật của người nhận, không khan hiếm giả, không đếm ngược.
@@ -101,7 +101,7 @@ export interface UpsellInput extends Base {
   spent: number; // credit đã trả lẻ trong `spentDays` ngày (đã trừ hoàn)
   spentDays: number;
   daysToExam: number | null;
-  pro: { name: string; months: number; price: number; perDay: number; fuoPrice: number; savingsPercent: number };
+  pro: { name: string; months: number; price: number; perDay: number };
   sprint: { name: string; days: number; price: number };
   url: string;
 }
@@ -111,7 +111,6 @@ export function renderUpsell(i: UpsellInput): MarketingMail {
   if (i.daysToExam !== null) lines.push(i.daysToExam === 0 ? "Hôm nay là buổi thi gần nhất của bạn." : `Còn ${i.daysToExam} ngày đến buổi thi gần nhất của bạn.`);
   if (i.spent > 0) lines.push(`${i.spentDays} ngày qua bạn đã trả lẻ ${formatCredit(i.spent)} cho việc mở đề và giải thích AI.`);
   const offer = `Gói ${i.pro.name} ${i.pro.months} tháng giá ${formatCredit(i.pro.price)} (khoảng ${formatCredit(i.pro.perDay)} mỗi ngày). Trong thời hạn gói, những việc này không mất thêm credit.`;
-  const fuo = i.pro.savingsPercent > 0 ? `Rẻ hơn ${i.pro.savingsPercent}% so với mua VIP FuOverflow cùng thời hạn (${formatMoney(i.pro.fuoPrice)}).` : "";
   const sprint = `Chỉ cần ôn gấp trước kỳ thi? Gói ${i.sprint.name} ${i.sprint.days} ngày giá ${formatCredit(i.sprint.price)}.`;
   const rows = [
     ...(i.spent > 0 ? [{ label: `Bạn đã trả lẻ (${i.spentDays} ngày)`, value: esc(formatCredit(i.spent)) }] : []),
@@ -123,8 +122,8 @@ export function renderUpsell(i: UpsellInput): MarketingMail {
     subject: i.spent > 0 ? `Bạn đã trả lẻ ${formatCredit(i.spent)} trong ${i.spentDays} ngày qua` : `Ôn thi không lo hết credit với gói ${i.pro.name}`,
     title: `Gói ${i.pro.name} có hợp với bạn?`,
     preheader: lines[0] ?? offer,
-    blocks: [...lines.map((l) => p(esc(l))), p(esc(offer)), details(rows), ...(fuo ? [p(esc(fuo))] : []), p(esc(sprint)), button("Xem các gói", i.url)],
-    textLines: [...lines, offer, ...(fuo ? [fuo] : []), sprint, "", `Xem các gói: ${i.url}`],
+    blocks: [...lines.map((l) => p(esc(l))), p(esc(offer)), details(rows), p(esc(sprint)), button("Xem các gói", i.url)],
+    textLines: [...lines, offer, sprint, "", `Xem các gói: ${i.url}`],
     why: WHY_ACCOUNT,
   });
 }
@@ -160,7 +159,7 @@ export function renderBroadcast(i: BroadcastInput): MarketingMail {
 
 // ---------- Pro sắp hết hạn
 
-// Quyền lợi đang bật trong PRO_BENEFITS, viết cho người dùng. Tải đề PE đã bỏ khỏi giao diện nên không nêu trong thư.
+// Quyền lợi đang bật trong PRO_BENEFITS, viết cho người dùng (mục đã tắt không nêu trong thư)
 const BENEFIT_LABELS: Record<keyof typeof PRO_BENEFITS, string> = {
   freeFetch: "Mở đề không mất credit",
   freeExplain: "Xem giải thích AI mọi câu không mất credit",
@@ -169,7 +168,7 @@ const BENEFIT_LABELS: Record<keyof typeof PRO_BENEFITS, string> = {
   frequentQuestions: "Xem toàn bộ Câu hay ra của môn",
   unlimitedReview: "Sổ câu sai không giới hạn số câu",
 };
-export const proBenefitLines = () => (Object.keys(PRO_BENEFITS) as (keyof typeof PRO_BENEFITS)[]).filter((k) => PRO_BENEFITS[k] && k !== "freePe").map((k) => BENEFIT_LABELS[k]);
+export const proBenefitLines = () => (Object.keys(PRO_BENEFITS) as (keyof typeof PRO_BENEFITS)[]).filter((k) => PRO_BENEFITS[k]).map((k) => BENEFIT_LABELS[k]);
 
 export interface ExpiryInput extends Base {
   expiresAt: Date;

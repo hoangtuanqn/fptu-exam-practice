@@ -10,16 +10,16 @@ const blankToUndefined = (v: unknown) => (typeof v === "string" && v.trim() === 
 const answersField = z.preprocess(blankToUndefined, z.string().max(EXAM_UPLOAD_ANSWERS_MAX_CHARS, "Tệp đáp án quá lớn").optional());
 
 export const uploadExamBody = z.object({
-  // Bắt buộc khi không gắn bài của danh mục (gắn bài thì mặc định lấy tiêu đề của bài)
+  // Tuỳ chọn ở đây để lỗi trả đúng trường title (kiểm tra ở service)
   title: z.preprocess(blankToUndefined, z.string().trim().max(255, "Tiêu đề tối đa 255 ký tự").optional()),
   subjectCode: subjectCodeSchema.transform((s) => s.toUpperCase()),
   kind: z.preprocess(blankToUndefined, z.enum(EXAM_KINDS, "Loại đề không hợp lệ").optional()),
-  threadId: z.preprocess(blankToUndefined, z.string().trim().regex(/^\d{1,18}$/, "ID bài FuOverflow không hợp lệ").optional()),
   answers: answersField,
 });
 
 export const updateExamImagesBody = z.object({ answers: answersField });
 
+// "no_exam" vẫn nhận để giao diện cũ không lỗi 400; luôn trả rỗng (không còn danh mục bài ngoài hệ thống)
 export const EXAM_GAPS = ["all", "no_exam", "no_images", "no_answers"] as const;
 
 export const examGapFilter = z.object({

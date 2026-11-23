@@ -37,7 +37,7 @@ const ACCOUNT_TOOLS: Anthropic.Tool[] = [
 const RECENT_EXAMS_TOOL: Anthropic.Tool = {
   name: "recent_exams",
   description:
-    "Exams of one subject code (e.g. PRO192) known to FEPass, newest first. By default only the current and previous semester. status: ready/owned = open now in FEPass, fetch = not fetched yet (costs credit). Set recent=false or term (e.g. FA25) for older exams.",
+    "Exams of one subject code (e.g. PRO192) known to FEPass, newest first. By default only the current and previous semester. status: ready/owned = open now in FEPass. Set recent=false or term (e.g. FA25) for older exams.",
   input_schema: {
     type: "object",
     properties: {
@@ -248,8 +248,7 @@ async function recentExams(input: Record<string, unknown>, userId: string | null
     limit: Number.isInteger(n) ? Math.min(10, Math.max(1, n)) : 6,
     offset: Number.isInteger(o) ? Math.max(0, o) : 0,
   });
-  const updated = await prisma.fuoThread.aggregate({ where: { subjectCode: subject }, _max: { syncedAt: true } });
-  return { subject, total: data.total, matched: picked.matched, price: data.price, catalogUpdatedAt: updated._max.syncedAt?.toISOString().slice(0, 10) ?? null, ...(picked.note && { note: picked.note }), items: picked.rows };
+  return { subject, total: data.total, matched: picked.matched, ...(picked.note && { note: picked.note }), items: picked.rows };
 }
 
 /** Chạy một công cụ. Lỗi hay tên lạ trả về thông báo ngắn để Claude nói lại với người dùng, không làm hỏng cuộc trò chuyện. */

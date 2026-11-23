@@ -6,7 +6,7 @@ import { type CatalogExamsQuery, catalogExamsQuery } from "../rules/requests/cat
 import { ResponseClient } from "../rules/response";
 import { catalogService } from "../services/catalog.service";
 
-// Kho đề theo môn: danh sách đề FE, PE, Quiz... (FuOverflow + hệ thống). Khách cũng xem được danh sách; lấy đề thì đi qua luồng lấy đề thông thường (có phí như cũ).
+// Kho đề theo môn: danh sách đề FE, PE, Quiz... có trong hệ thống. Khách cũng xem được danh sách.
 const catalogRouter = Router();
 catalogRouter.use(makeLimiter({ limit: 90 }));
 catalogRouter.use(identify);

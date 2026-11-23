@@ -2,9 +2,6 @@ import http from "node:http";
 import { createApp } from "./app";
 import { env } from "./configs/env";
 import { prisma } from "./configs/prisma";
-import { startCrawlWorker } from "./jobs/crawl.worker";
-import { startFuoSourceWorker } from "./jobs/fuo-source.worker";
-import { startFuoCatalogWorker } from "./jobs/fuo-catalog.worker";
 import { knowledgeService } from "./services/knowledge.service";
 import { examSolveService } from "./services/exam-solve.service";
 import { examRepository } from "./repositories/exam.repository";
@@ -45,9 +42,6 @@ server.listen(env.PORT, () => {
   startMaterialWorker().catch((err) => console.error("Không khởi động được hàng đợi phân tích slide:", err.message));
   // Nạp tài liệu hướng dẫn của chatbot (chỉ tạo embedding cho mục mới/đã sửa nên các lần khởi động sau gần như không tốn gì)
   knowledgeService.reindex().then((r) => console.log(`[chat] tri thức: ${r.total} mục, ${r.embedded} có embedding${r.warning ? ` (${r.warning})` : ""}`)).catch((err) => console.error("[chat] không nạp được tri thức:", err.message));
-  startCrawlWorker().catch((err) => console.error("Không khởi động được crawl worker:", err.message));
-  startFuoSourceWorker(); // chạy tiếp lượt nạp dữ liệu FuOverflow dở dang (lỗi DB được bắt bên trong)
-  startFuoCatalogWorker(); // chạy tiếp lượt quét danh mục FuOverflow dở dang (lỗi DB được bắt bên trong)
   examSolveService
     .recoverPending()
     .then((n) => n > 0 && console.log(`[ai] xếp lại ${n} đề đang chờ AI giải`))

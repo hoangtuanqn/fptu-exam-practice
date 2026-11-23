@@ -1,4 +1,4 @@
-import { EXAM_UPLOAD_NAMES_SHOWN, MANUAL_THREAD_PREFIX } from "../constants/exam-upload";
+import { EXAM_UPLOAD_NAMES_SHOWN } from "../constants/exam-upload";
 
 // Admin tải đề lên bằng tay: thư mục images/Q<số>.webp + ans.json {"Q1.webp": ["B"], "Q2.webp": ["A", "C"]}. Logic thuần, không DB.
 
@@ -75,7 +75,7 @@ export type ExamGap = "no_exam" | "no_images" | "no_answers";
 
 /**
  * Đề còn thiếu gì (null = đủ). Câu SQL ở exam-gap.repository viết đúng điều kiện này, giữ hai chỗ khớp nhau.
- * - no_exam: bài trong danh mục FuOverflow chưa có đề nào cùng threadId.
+ * - no_exam: không còn dùng (trước đây là bài ngoài hệ thống chưa có đề), giữ trong kiểu để API cũ không lỗi.
  * - no_images: số câu đã lưu < totalQuestions, hoặc đề 0 câu mà cũng không có tệp đính kèm.
  * - no_answers: có ảnh đủ nhưng còn câu cần chấm (không phải tài liệu tham khảo) chưa có đáp án thật: nguồn đáp án không phải
  *   AI/MANUAL (DEFAULT là đáp án tạm, PENDING/FAILED là chưa giải được) hoặc còn câu đáp án rỗng. Đề chỉ có tệp thì không thiếu đáp án.
@@ -85,8 +85,5 @@ export function classifyExamGap(e: { totalQuestions: number; questions: number; 
   if (e.graded > 0 && (!isRealAnswerSource(e.answerSource) || e.filled < e.graded)) return "no_answers";
   return null;
 }
-
-/** Đề admin tải tay không gắn bài FuOverflow (thread "m<hex>"): không bao giờ đọc thử, crawl hay làm mới từ FuOverflow. */
-export const isManualThreadId = (threadId: string) => threadId.startsWith(MANUAL_THREAD_PREFIX);
 
 export const isRealAnswerSource = (source: string) => source === "AI" || source === "MANUAL";

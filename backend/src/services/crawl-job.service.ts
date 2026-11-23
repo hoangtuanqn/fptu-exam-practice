@@ -1,9 +1,8 @@
 import { PRO_BENEFITS } from "../constants/plan";
 import { planService } from "./plan.service";
-import type { CrawlJob, ExamKind } from "@prisma/client";
+import type { ExamKind } from "@prisma/client";
 import { CATALOG_ANSWER_SOURCES } from "../constants/exam";
 import { PE_PRICE } from "../constants/pe";
-import { fuoCatalogRepository } from "../repositories/fuo-catalog.repository";
 import { prisma } from "../configs/prisma";
 import { crawlJobRepository } from "../repositories/crawl-job.repository";
 import { subjectService } from "./subject.service";
@@ -13,88 +12,44 @@ import { HTTP_STATUS } from "../constants/httpStatus";
 import { AppError } from "../rules/error";
 import type { ImportExamBody } from "../rules/requests/crawl.request";
 import { isMember, type Actor } from "../utils/actor";
-import { isManualThreadId } from "../utils/exam-upload";
-import { parseThreadId, threadUrl } from "../utils/fuo-url";
-import { subjectCodeFromTitle, subjectOfExam } from "../utils/subject-code";
+import { subjectOfExam } from "../utils/subject-code";
 import { startOfVnDay } from "../utils/time";
-import { EXAM_REFRESH_RETRY_HOURS, EXAM_STALE_AFTER_DAYS, FUO_LINK_INVALID } from "../constants/crawler";
 import { crawlerSettingService } from "./crawler-setting.service";
-import { threadPreflight } from "./crawler/thread-preflight.service";
-import { toJobDto } from "./crawl-job.dto";
 import { examService } from "./exam.service";
-import { adminNoticeService } from "./admin-notice.service";
 import { notificationService } from "./notification.service";
 import { walletService } from "./wallet.service";
-
-type Listener = () => void;
-const listeners: Listener[] = [];
 
 const GUEST_DAILY_LIMIT = 1;
 export const GUEST_LIMIT_MESSAGE =
   "Bạn đã hết lượt lấy đề miễn phí hôm nay. Đăng ký tài khoản để lấy thêm đề, lưu kho riêng và theo dõi lịch sử làm bài nhé!";
 
-const HOUR_MS = 60 * 60 * 1000;
-
 export const EXAM_NOT_READY = "Không tìm thấy đề này hoặc đề chưa sẵn sàng. Hãy tải lại Kho đề rồi thử lại.";
 // Có mã EXAM_NOT_READY để giao diện nhận ra và tải lại Kho đề
 const notReady = () => new AppError(EXAM_NOT_READY, HTTP_STATUS.NOT_FOUND, undefined, "EXAM_NOT_READY");
 
-// Bài chưa có trong hệ thống: đọc thử trang đầu trên FuOverflow, sai nhãn/không tồn tại thì báo lỗi NGAY, trước khi trừ phí.
-// Đề tải tay ("m<hex>") không có bài để đọc thử hay crawl: chưa đủ (vừa bị sửa dở) thì 404, không bao giờ tạo lượt lấy.
-async function assertThreadAccepted(threadId: string) {
-  if (isManualThreadId(threadId)) throw notReady();
-  const check = await threadPreflight.check(threadId);
-  if (check && !check.ok) throw new AppError(check.message, HTTP_STATUS.UNPROCESSABLE_ENTITY);
-}
+// Đề PE có giá riêng
+const fetchPriceOf = async (exam: { kind: ExamKind | null }) => (exam.kind === "PE" ? PE_PRICE : (await crawlerSettingService.get()).fetchPrice);
 
-// Đề PE có giá riêng. Loại đề lấy từ đề đã có trong hệ thống, không có thì từ bài trên FuOverflow (đã nhớ sẵn khi kiểm tra), rồi tới danh mục
-async function fetchPriceOf(threadId: string, found: { kind: ExamKind | null } | null) {
-  let kind = found?.kind ?? (isManualThreadId(threadId) ? "FE" : null); // đề tải tay không có bài trên FuOverflow để đọc thử
-  if (!kind) {
-    const check = await threadPreflight.check(threadId);
-    kind = check?.ok ? check.kind : ((await fuoCatalogRepository.findThreads([threadId]))[0]?.kind ?? null);
-  }
-  return kind === "PE" ? PE_PRICE : (await crawlerSettingService.get()).fetchPrice;
-}
-
-// Tạo bộ đề theo chương: đề phải đúng môn đã chọn. Đề đã có trong hệ thống thì theo môn của nó (mã đã lưu, rồi tiêu đề), đề mới thì theo tiêu đề bài trên FuOverflow.
-// Không kết luận được (chưa đọc được bài) thì không cho đi tiếp, vì nếu sai môn thì người dùng đã bị trừ phí.
-async function assertSubject(subject: string | undefined, threadId: string, exam: { subjectCode: string | null; title: string } | null) {
+// Tạo bộ đề theo chương: đề phải đúng môn đã chọn (mã đã lưu, rồi tiêu đề). Kiểm trước khi trừ phí.
+async function assertSubject(subject: string | undefined, exam: { subjectCode: string | null; title: string }) {
   if (!subject) return;
   // Môn chưa có tên chương thì không làm được bộ đề theo chương: chặn trước khi trừ phí (và ghi báo cáo cho admin)
   const ready = await subjectService.chapterSetReady(subject);
   if (!ready.ok) throw new AppError(ready.message!, HTTP_STATUS.UNPROCESSABLE_ENTITY);
-  let code: string | null;
-  if (exam) code = subjectOfExam(exam);
-  else {
-    const check = await threadPreflight.check(threadId);
-    if (!check) throw new AppError("Chưa kiểm tra được môn của bài này, bạn thử lại sau ít phút nhé", HTTP_STATUS.SERVICE_UNAVAILABLE);
-    if (!check.ok) throw new AppError(check.message, HTTP_STATUS.UNPROCESSABLE_ENTITY);
-    code = subjectCodeFromTitle(check.title);
-  }
+  const code = subjectOfExam(exam);
   if (!code) throw new AppError("Không xác định được môn học của bài này từ tiêu đề, nên không thể tạo bộ đề theo chương", HTTP_STATUS.UNPROCESSABLE_ENTITY);
   if (code !== subject) throw new AppError(`Bài này là đề môn ${code}, không phải môn ${subject} bạn đã chọn`, HTTP_STATUS.UNPROCESSABLE_ENTITY);
 }
 
-// Đề tải tay ("m<hex>") không có bài FuOverflow để lấy lại: không bao giờ làm mới
-const isStale = (exam: { threadId: string; createdAt: Date; refreshedAt: Date | null }) =>
-  !isManualThreadId(exam.threadId) && Date.now() - (exam.refreshedAt ?? exam.createdAt).getTime() > EXAM_STALE_AFTER_DAYS * 24 * HOUR_MS;
-
-// Đề cần lấy: theo link FuOverflow, hoặc theo mã đề (chỉ đề đã có đủ trong hệ thống; đề tải tay không có link FuOverflow)
-async function targetOf({ url, examId }: ImportExamBody) {
-  if (examId) {
-    const found = await examRepository.findById(examId);
-    // Chỉ đề đang bày trong Kho đề (không phải đề chờ/lỗi AI) và đã đủ câu
-    if (!found || !CATALOG_ANSWER_SOURCES.includes(found.answerSource) || !(await examRepository.isComplete(found))) throw notReady();
-    return { threadId: found.threadId, found };
-  }
-  const threadId = url ? parseThreadId(url) : null;
-  if (!threadId) throw new AppError(FUO_LINK_INVALID); // đã được validate, giữ để thu hẹp kiểu
-  return { threadId, found: undefined };
+// Chỉ đề đang bày trong Kho đề (không phải đề chờ/lỗi AI) và đã đủ câu
+async function examOf(examId: string) {
+  const exam = await examRepository.findById(examId);
+  if (!exam || !CATALOG_ANSWER_SOURCES.includes(exam.answerSource) || !(await examRepository.isComplete(exam))) throw notReady();
+  return exam;
 }
 
 export const crawlJobService = {
-  // Phí mỗi lần lấy đề, để giao diện báo trước cho người dùng
+  // Phí mở một đề, để giao diện báo trước cho người dùng
   // Khách còn kèm số lượt miễn phí còn lại hôm nay để giao diện báo trước (thay vì đợi hết lượt mới biết)
   async getPrice(actor?: Actor) {
     const price = (await crawlerSettingService.get()).fetchPrice;
@@ -103,135 +58,56 @@ export const crawlJobService = {
     return { price, pePrice: PE_PRICE, guestLimit: GUEST_DAILY_LIMIT, guestRemaining: Math.max(0, GUEST_DAILY_LIMIT - used) };
   },
 
-  // Phí thực tế của lần lấy này. Đề người này đã lấy về kho trước đó thì miễn phí (chỉ mở lại, không crawl);
-  // đề đang có lượt lấy chưa xong của chính họ cũng không trừ thêm. Khách không bị tính phí.
+  // Phí thực tế của lần mở này. Đề người này đã có trong kho thì miễn phí; Pro miễn phí. Khách không bị tính phí.
   async quote(actor: Actor, body: ImportExamBody) {
     const { owner } = actor;
-    const { subject } = body;
-    const target = await targetOf(body);
-    const { threadId } = target;
-    const active = await crawlJobRepository.findActive(threadId, owner);
-    const found = target.found ?? (await examRepository.findByThreadId(threadId));
-    const price = isMember(owner) ? await fetchPriceOf(threadId, found) : 0;
-    const exam = found && (await examRepository.isComplete(found)) ? found : null;
-    const owned = !!exam && (await userExamRepository.has(owner, exam.id));
-    if (!exam && !active) await assertThreadAccepted(threadId); // đề phải lấy mới: bài sai thì không cho tới bước xác nhận phí
-    await assertSubject(subject, threadId, exam);
+    const exam = await examOf(body.examId);
+    const price = isMember(owner) ? await fetchPriceOf(exam) : 0;
+    const owned = await userExamRepository.has(owner, exam.id);
+    await assertSubject(body.subject, exam);
     const pro = isMember(owner) && PRO_BENEFITS.freeFetch && (await planService.isPro(owner.userId));
-    const free = isMember(owner) && price > 0 && (pro || owned || !!active);
-    return { price, fee: free ? 0 : price, free, reason: free ? (pro ? ("pro" as const) : owned ? ("owned" as const) : ("in-progress" as const)) : null, title: owned ? exam.title : null };
+    const free = isMember(owner) && price > 0 && (pro || owned);
+    return { price, fee: free ? 0 : price, free, reason: free ? (pro ? ("pro" as const) : ("owned" as const)) : null, title: owned ? exam.title : null };
   },
 
   /**
-   * Nhận link đề. Mỗi lần lấy bị trừ phí (admin cấu hình), kể cả đề đã có sẵn trong hệ thống,
-   * trừ đề chính người này đã lấy về kho trước đó (mở lại miễn phí).
-   * Trừ tiền và ghi nhận (job hoặc thư viện) nằm trong cùng một transaction: không đủ tiền thì không có gì được tạo.
-   * - chính người này đang có lượt cùng thread chưa xong -> dùng lại lượt đó, không trừ thêm
-   * - đề đã có trong DB (cùng thread ID, dù link khác) -> thêm vào thư viện, không crawl lại
-   * - ngược lại -> tạo job và đánh thức worker nền
+   * Mở một đề có sẵn trong hệ thống: trừ phí (admin cấu hình, PE giá riêng) trừ khi đề đã trong kho của người này hoặc là Pro,
+   * rồi thêm vào kho. Trừ tiền và thêm vào kho nằm trong cùng một transaction: không đủ tiền thì không có gì được tạo.
    */
   async submit(actor: Actor, body: ImportExamBody) {
     const { owner } = actor;
-    const { subject } = body;
-    const target = await targetOf(body);
-    const { threadId } = target;
+    const exam = await examOf(body.examId);
+    const threadId = exam.threadId;
 
-    const active = await crawlJobRepository.findActive(threadId, owner);
-    if (active) return { existed: false as const, job: toJobDto(active), charged: 0 };
-
-    // Khách: miễn phí nhưng chỉ 1 lượt mỗi ngày (tính cả lúc đề đã có sẵn), hết lượt thì mời đăng ký
+    // Khách: miễn phí nhưng chỉ 1 lượt mỗi ngày, hết lượt thì mời đăng ký
     if (!isMember(owner)) {
       const used = await crawlJobRepository.countGuestFetchesSince(owner.guestId, startOfVnDay());
       if (used >= GUEST_DAILY_LIMIT) throw new AppError(GUEST_LIMIT_MESSAGE, HTTP_STATUS.TOO_MANY_REQUESTS);
     }
 
-    // Khách chưa có ví nên không bị tính phí
-    const found = target.found ?? (await examRepository.findByThreadId(threadId));
-    // Đề đang được lấy dở dang thì chưa dùng được: xếp hàng như đề mới (lượt chạy sẽ lấy lại cho đủ)
-    const exam = found && (await examRepository.isComplete(found)) ? found : null;
-    if (!exam) await assertThreadAccepted(threadId); // chặn trước khi trừ phí (xem thread-preflight.service)
-    await assertSubject(subject, threadId, exam);
+    await assertSubject(body.subject, exam);
     // Đã có đề này trong kho của mình thì mở lại miễn phí
-    const alreadyOwned = isMember(owner) && !!exam && (await userExamRepository.has(owner, exam.id));
-    // Pro: lấy đề không bị trừ phí (vẫn tính là thành viên, vẫn lưu vào kho)
+    const alreadyOwned = isMember(owner) && (await userExamRepository.has(owner, exam.id));
+    // Pro: mở đề không bị trừ phí (vẫn lưu vào kho)
     const isPro = isMember(owner) && PRO_BENEFITS.freeFetch && (await planService.isPro(owner.userId));
-    const fetchPrice = isMember(owner) && !alreadyOwned && !isPro ? await fetchPriceOf(threadId, found) : 0;
-
-    // Đề đã cũ quá hạn: người này vẫn mở được ngay bản hiện có, đồng thời xếp một lượt làm mới chạy nền
-    // (lấy lại ảnh + bình luận, giải lại đáp án). Chưa tạo thêm nếu đang làm mới hoặc vừa thất bại gần đây.
-    const refresh =
-      !!exam && isStale(exam) && !(await crawlJobRepository.hasRecentRefresh(threadId, new Date(Date.now() - EXAM_REFRESH_RETRY_HOURS * HOUR_MS)));
+    const fetchPrice = isMember(owner) && !alreadyOwned && !isPro ? await fetchPriceOf(exam) : 0;
 
     let balanceAfter: number | null = null; // số dư sau khi trừ phí, để báo qua email
     const result = await prisma.$transaction(async (tx) => {
       if (fetchPrice > 0 && isMember(owner)) {
-        const entry = await walletService.charge(tx, {
-          userId: owner.userId,
-          amount: fetchPrice,
-          type: "CRAWL_CHARGE",
-          note: `Lấy đề thread ${threadId}`,
-        });
+        const entry = await walletService.charge(tx, { userId: owner.userId, amount: fetchPrice, type: "CRAWL_CHARGE", note: `Lấy đề thread ${threadId}` });
         balanceAfter = entry.balanceAfter;
       }
-      if (exam) {
-        await examService.addToLibrary(owner, exam.id, tx);
-        if (refresh) {
-          // Lượt làm mới cũng là lượt ghi nhận cho khách (đếm giới hạn ngày); không tính phí
-          await crawlJobRepository.create({ threadId, ...owner, chargedAmount: 0, refresh: true, examId: exam.id }, tx);
-        } else if (!isMember(owner)) {
-          // Ghi lại lượt lấy của khách để đếm giới hạn ngày
-          await crawlJobRepository.create(
-            { threadId, ...owner, chargedAmount: 0, status: "DONE", examId: exam.id, finishedAt: new Date() },
-            tx,
-          );
-        }
-        return { existed: true as const, examId: exam.id, title: exam.title, charged: fetchPrice, free: alreadyOwned };
-      }
-      const job = await crawlJobRepository.create({ threadId, ...owner, chargedAmount: fetchPrice }, tx);
-      return { existed: false as const, job: toJobDto(job), charged: fetchPrice };
+      await examService.addToLibrary(owner, exam.id, tx);
+      // Ghi lại lượt mở của khách để đếm giới hạn ngày
+      if (!isMember(owner)) await crawlJobRepository.create({ threadId, ...owner, chargedAmount: 0, status: "DONE", examId: exam.id, finishedAt: new Date() }, tx);
+      return { existed: true as const, examId: exam.id, title: exam.title, charged: fetchPrice, free: alreadyOwned };
     });
 
     // Mỗi lần bị trừ phí đều báo qua email (sau khi transaction đã commit)
     if (isMember(owner) && fetchPrice > 0 && balanceAfter !== null) {
-      const charged = { userId: owner.userId, amount: fetchPrice, balanceAfter, threadId, examTitle: exam?.title };
-      // Có job thì chờ một lúc: lỗi và hoàn phí ngay thì không gửi cả hai thư
-      if (!result.existed) notificationService.fetchChargedLater(result.job.id, charged);
-      else notificationService.fetchCharged(charged);
+      notificationService.fetchCharged({ userId: owner.userId, amount: fetchPrice, balanceAfter, examId: exam.id, examTitle: exam.title });
     }
-
-    if (!result.existed || refresh) listeners.forEach((fn) => fn());
     return result;
   },
-
-  // Job lỗi: đánh dấu FAILED và hoàn đúng số tiền đã trừ, cùng một transaction
-  async fail(job: CrawlJob, message: string) {
-    const refunded = await prisma.$transaction(async (tx) => {
-      const claimed = await crawlJobRepository.markFailed(tx, job.id, message);
-      if (claimed && job.userId !== null && job.chargedAmount > 0) {
-        const entry = await walletService.applyChange(tx, {
-          userId: job.userId,
-          amount: job.chargedAmount,
-          type: "CRAWL_REFUND",
-          note: `Hoàn phí lấy đề thread ${job.threadId} (lỗi)`,
-        });
-        return { userId: job.userId, amount: job.chargedAmount, balanceAfter: entry.balanceAfter, threadId: job.threadId };
-      }
-      return null;
-    });
-    // Báo qua email sau khi transaction hoàn phí đã commit
-    if (refunded && !notificationService.cancelPendingCharge(job.id)) notificationService.fetchRefunded(refunded);
-    adminNoticeService.push("fetch.failed", { title: "Lấy đề lỗi", body: `Bài gốc: ${threadUrl(job.threadId)}
-${message}${refunded ? ` (đã hoàn ${refunded.amount} credit)` : ""}`, userId: job.userId, link: "/admin/crawl-jobs" });
-  },
-
-  // Chỉ chủ job (thành viên hoặc đúng khách đó, hoặc admin) được xem tiến độ
-  async getForActor(id: number, actor: Actor) {
-    const job = await crawlJobRepository.findById(id);
-    const mine = isMember(actor.owner) ? job?.userId === actor.owner.userId : job?.guestId === actor.owner.guestId;
-    if (!job || (!mine && !actor.isAdmin)) throw AppError.notFound("Không tìm thấy tiến trình");
-    return toJobDto(job, job.status === "QUEUED" ? await crawlJobRepository.countAhead(job.id) : 0);
-  },
-
-  // Worker đăng ký để được đánh thức khi có job mới
-  onEnqueued: (fn: Listener) => void listeners.push(fn),
 };

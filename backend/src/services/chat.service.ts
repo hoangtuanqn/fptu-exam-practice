@@ -10,9 +10,9 @@ import type { ChatBody } from "../rules/requests/chat.request";
 import type { Owner } from "../utils/actor";
 import { startOfVnDay } from "../utils/time";
 import { accountSettingService } from "./account-setting.service";
+import { crawlerSettingService } from "./crawler-setting.service";
 import { aiSettingService } from "./ai-setting.service";
 import { chatSettingService } from "./chat-setting.service";
-import { crawlerSettingService } from "./crawler-setting.service";
 import { chatToolsFor, toolStatus, runChatTool } from "./chat-tools.service";
 import { streamResponses, toResponsesTools, type ChatUpstream } from "./ai/chat-openai.client";
 import { chatCacheService, type Viewer } from "./chat-cache.service";
@@ -44,7 +44,7 @@ async function liveFacts() {
     promo.depositBonusTiers.length ? `Thưởng khi nạp: ${promo.depositBonusTiers.map((t) => `từ ${nf.format(t.min)} ₫ thưởng thêm ${t.percent}%`).join("; ")}.` : "Hiện không có thưởng khi nạp.",
     account.signupCredit > 0 ? `Tặng ${nf.format(account.signupCredit)} credit khi đăng ký tài khoản mới.` : "Không tặng credit khi đăng ký.",
     `Báo cáo đáp án đúng được thưởng ${nf.format(ANSWER_REPORT_REWARD)} credit.`,
-    `Gói ${PRO_PLAN.name}: ${nf.format(PRO_PLAN.price)} credit cho ${PRO_PLAN.months} tháng (mua trực tiếp gói VIP trên FuOverflow cùng thời hạn là ${nf.format(PRO_PLAN.fuoPrice)} ₫)${semesterPromoActive(promo) ? `; đang ưu đãi kỳ ${promo.semesterPromoTerm}: ${nf.format(promo.semesterPromoPrice)} credit tới ${new Date(promo.semesterPromoEndsAt).toLocaleDateString("vi-VN")}, mỗi tài khoản một lần` : ""}.`,
+    `Gói ${PRO_PLAN.name}: ${nf.format(PRO_PLAN.price)} credit cho ${PRO_PLAN.months} tháng${semesterPromoActive(promo) ? `; đang ưu đãi kỳ ${promo.semesterPromoTerm}: ${nf.format(promo.semesterPromoPrice)} credit tới ${new Date(promo.semesterPromoEndsAt).toLocaleDateString("vi-VN")}, mỗi tài khoản một lần` : ""}.`,
     `Gói ${SPRINT_PLAN.name}: ${nf.format(SPRINT_PLAN.price)} credit cho ${SPRINT_PLAN.days} ngày, cùng quyền lợi Pro, dành cho ôn gấp trước kỳ thi.`,
     `Vé Pro: mua trước, kích hoạt sau; chưa kích hoạt thì dùng được trong ${TICKET_VALID_DAYS} ngày, tối đa ${TICKET_MAX_OPEN} vé chưa kích hoạt mỗi tài khoản.`,
   ];
@@ -151,7 +151,7 @@ ${facts}
 
   /**
    * Trả lời dạng stream: mỗi đoạn chữ Claude sinh ra được đẩy ngay cho người dùng (onDelta).
-   * Thành viên có công cụ tra cứu dữ liệu của chính họ và tra đề trên FuOverflow, khách chỉ tra được danh sách đề FuOverflow: khi Claude gọi công cụ (stop_reason = tool_use) máy chủ chạy công cụ,
+   * Thành viên có công cụ tra cứu dữ liệu của chính họ và tra đề trong hệ thống, khách chỉ tra được danh sách đề: khi Claude gọi công cụ (stop_reason = tool_use) máy chủ chạy công cụ,
    * trả kết quả lại và Claude viết tiếp, tối đa CHAT_LIMITS[provider].maxToolTurns vòng. `signal` huỷ khi người dùng đóng khung chat giữa chừng.
    */
   async stream(owner: Owner, ip: string | undefined, body: ChatBody, h: { onStart: () => void; onDelta: (text: string) => void; onStatus: (text: string) => void; signal: AbortSignal }) {
@@ -208,7 +208,7 @@ ${facts}
     const messages: Anthropic.MessageParam[] = [...request.params.messages];
     const emit = h.onDelta;
     h = { ...h, onDelta: (t: string) => ((answer += t), emit(t)) };
-    const tools = chatToolsFor(userId); // thành viên: tra dữ liệu của mình + đề FuOverflow; khách: chỉ đề FuOverflow
+    const tools = chatToolsFor(userId); // thành viên: tra dữ liệu của mình + đề; khách: chỉ đề
     let produced = false;
     let separate = false; // sau một vòng công cụ, đoạn chữ mới cách đoạn trước một dòng trống
     let continued = false; // đã cho Claude viết tiếp sau khi chạm trần token chưa (chỉ một lần)
