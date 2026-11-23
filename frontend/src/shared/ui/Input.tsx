@@ -94,7 +94,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, Omit<InputProps, "trai
       ref={ref}
       type={visible ? "text" : "password"}
       trailing={
-        <IconButton label={visible ? "Ẩn mật khẩu" : "Hiện mật khẩu"} onClick={() => setVisible((v) => !v)} tabIndex={-1}>
+        <IconButton label={visible ? "Ẩn mật khẩu" : "Hiện mật khẩu"} onClick={() => setVisible((v) => !v)}>
           {visible ? <EyeOff size={20} /> : <Eye size={20} />}
         </IconButton>
       }
