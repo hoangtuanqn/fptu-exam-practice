@@ -125,14 +125,14 @@ describe("Coursera orders (throwaway MySQL)", { skip: DB_TESTS_ENABLED ? false :
   });
 
   it("searches by title or code, allows courses without a URL and snapshots an empty URL", async () => {
-    const course = await m.service.saveCourse({ title: "Imported FUO course", code: "FUO-CSE101", url: null, isActive: true });
-    await m.service.saveCourse({ title: "Second import", code: "FUO-CSE102", url: "", isActive: true }); // many NULL urls under the unique index
-    assert.equal(course.code, "FUO-CSE101");
+    const course = await m.service.saveCourse({ title: "Imported CRS course", code: "CRS-CSE101", url: null, isActive: true });
+    await m.service.saveCourse({ title: "Second import", code: "CRS-CSE102", url: "", isActive: true }); // many NULL urls under the unique index
+    assert.equal(course.code, "CRS-CSE101");
     assert.equal(course.url, null);
-    assert.equal((await m.service.courses({ ...page, q: "fuo-cse101" })).items[0]?.id, course.id);
-    assert.equal((await m.service.courses({ ...page, q: "imported fuo" })).items[0]?.id, course.id);
-    assert.equal((await m.service.courses({ ...page, q: "FUO-CSE" })).meta.total, 2);
-    await assert.rejects(m.service.saveCourse({ title: "Clash", code: "FUO-CSE101", isActive: true }), hasStatus(409));
+    assert.equal((await m.service.courses({ ...page, q: "crs-cse101" })).items[0]?.id, course.id);
+    assert.equal((await m.service.courses({ ...page, q: "imported crs" })).items[0]?.id, course.id);
+    assert.equal((await m.service.courses({ ...page, q: "CRS-CSE" })).meta.total, 2);
+    await assert.rejects(m.service.saveCourse({ title: "Clash", code: "CRS-CSE101", isActive: true }), hasStatus(409));
     const order = await m.service.createOrder(userId, { ...input(), courseId: course.id });
     assert.equal(order.courseUrl, "");
   });

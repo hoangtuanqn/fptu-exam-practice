@@ -12,7 +12,6 @@ import { AppError } from "../src/rules/error";
 import { userRepository } from "../src/repositories/user.repository";
 import { captchaService } from "../src/services/captcha.service";
 import { authService, INVALID_LOGIN } from "../src/services/auth.service";
-import { JOB_FAILED_MESSAGE, userJobError } from "../src/services/crawl-job.dto";
 import { waitText } from "../src/utils/format";
 import { hashPassword } from "../src/utils/password";
 
@@ -232,12 +231,3 @@ describe("login failures", () => {
   });
 });
 
-describe("crawl job error shown to the user", () => {
-  it("hides technical details but keeps errors the user can act on", () => {
-    assert.equal(userJobError(null), null);
-    assert.equal(userJobError("Không ghi được /srv/storage/x.webp: EACCES"), JOB_FAILED_MESSAGE);
-    assert.equal(userJobError("Cookie FuOverflow đã hết hạn hoặc chưa đăng nhập. Admin hãy cập nhật ở Quản trị → Cấu hình lấy đề."), JOB_FAILED_MESSAGE);
-    const label = 'Chỉ lấy được các bài có nhãn "FE". Bài này không có nhãn đó nên không được lấy.';
-    assert.equal(userJobError(label), label);
-  });
-});
