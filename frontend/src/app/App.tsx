@@ -22,6 +22,7 @@ import { FreeTurnNotice } from "@/features/link-reward/FreeTurnNotice";
 import { WhatsNewDialog } from "@/features/changelog/WhatsNewDialog";
 import PracticePage from "@/features/practice/PracticePage";
 import { SemesterPromoBar } from "@/features/plan/SemesterPromoBar";
+import { SearchProvider } from "@/features/search/GlobalSearch";
 
 // Không hiện ưu đãi khi đang luyện câu sai (màn làm bài)
 function AccountPromoBar() {
@@ -154,6 +155,7 @@ export default function App() {
     return () => (window.cancelIdleCallback ? window.cancelIdleCallback(id) : clearTimeout(id));
   }, []);
   return (
+    <SearchProvider>
     <Suspense fallback={<PageSkeleton />}>
       <PageMeta />
       <ScrollToTop />
@@ -252,5 +254,6 @@ export default function App() {
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Suspense>
+    </SearchProvider>
   );
 }

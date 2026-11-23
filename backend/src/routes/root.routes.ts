@@ -4,6 +4,7 @@ import adminRouter from "./admin.routes";
 import answerReportRouter from "./answer-report.routes";
 import attemptRouter from "./attempt.routes";
 import catalogRouter from "./catalog.routes";
+import searchRouter from "./search.routes";
 import checkInRouter from "./check-in.routes";
 import planRouter from "./plan.routes";
 import promptEventRouter from "./prompt-event.routes";
@@ -60,6 +61,7 @@ rootRouter.use("/pe", peRouter);
 rootRouter.use("/extension", extensionRouter);
 rootRouter.use("/chat", chatRouter);
 rootRouter.use("/catalog", catalogRouter);
+rootRouter.use("/search", searchRouter); // ô tìm kiếm chung trên header
 rootRouter.use("/public/reminder", reminderPublicRouter);
 rootRouter.use("/marketing", marketingRouter); // hủy nhận thư marketing (công khai)
 rootRouter.use("/subjects", subjectRouter);

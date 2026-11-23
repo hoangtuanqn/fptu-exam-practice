@@ -5,6 +5,14 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 
 export const subjectRepository = {
   findById: (id: string) => prisma.subject.findUnique({ where: { id }, select: SELECT }),
+  // Tìm môn theo mã hoặc tên (ô tìm kiếm chung)
+  search: (q: string, take: number) =>
+    prisma.subject.findMany({
+      where: { OR: [{ code: { contains: q.toUpperCase() } }, { name: { contains: q } }] },
+      orderBy: { code: "asc" },
+      take,
+      select: { code: true, name: true },
+    }),
 
   /** Một UUID là id, còn lại là mã môn (không phân biệt hoa thường). Dùng cho lệnh chạy tay. */
   findByIdOrCode: (ref: string) => (UUID_RE.test(ref.trim()) ? prisma.subject.findUnique({ where: { id: ref.trim().toLowerCase() }, select: SELECT }) : prisma.subject.findUnique({ where: { code: ref.trim().toUpperCase() }, select: SELECT })),

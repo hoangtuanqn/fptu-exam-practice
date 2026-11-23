@@ -3,6 +3,7 @@ import { PE_PRICE } from "../constants/pe";
 import type { ExamKind } from "@prisma/client";
 import { prisma } from "../configs/prisma";
 import { catalogOrder } from "../utils/catalog-order";
+import { foldText } from "../utils/search-text";
 import { EXAM_KINDS } from "../utils/exam-kind";
 import { toMeta, type PaginationQuery } from "../utils/pagination";
 import { subjectCodeFromTitle, subjectOfExam } from "../utils/subject-code";
@@ -132,6 +133,15 @@ export interface LibraryOverview {
 }
 
 export const catalogService = {
+  /** Đề có tên khớp từ khoá (mọi môn, chỉ đề dùng được), cho ô tìm kiếm chung. Lấy từ đệm, không truy vấn lại. */
+  async searchExams(q: string, limit: number) {
+    const needle = foldText(q);
+    return (await usableExams())
+      .filter((e) => foldText(e.title).includes(needle))
+      .slice(0, limit)
+      .map((e) => ({ examId: e.id, title: e.title, subjectCode: e.code, questions: e.questions, kind: e.kind }));
+  },
+
   /** Các đề mới đăng gần đây nhất trên FuOverflow (mọi môn), để trang chủ cho thấy kho đề luôn được cập nhật. Chỉ có mô tả, không có ảnh. */
   async latest(): Promise<LatestItem[]> {
     if (latestCache && Date.now() - latestCache.at < CACHE_MS) return latestCache.items;
