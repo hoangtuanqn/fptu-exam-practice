@@ -349,6 +349,7 @@ export const adminApi = {
       status: "unread" | "all";
       important?: boolean;
       category?: NoticeCategory;
+      q?: string;
     },
     limit = PAGE_SIZE,
   ) =>
@@ -358,6 +359,7 @@ export const adminApi = {
       status: filter.status,
       important: filter.important === undefined ? "" : String(filter.important),
       category: filter.category ?? "",
+      q: filter.q ?? "",
     }),
   noticeCounts: () => http.get<NoticeCounts>("/admin/notices/counts"),
   setNoticeRead: (id: string, read: boolean) =>
