@@ -13,7 +13,7 @@ const MAX_RESULTS = 6;
 function SubjectRow({ subject, onPick }: { subject: PickableSubject; onPick: () => void }) {
   const name = subject.name ?? "Môn học";
   return (
-    <button type="button" onClick={onPick} className="md-state flex w-full items-center gap-3 px-4 py-3 text-left">
+    <button type="button" onClick={onPick} className="md-state flex w-full items-center gap-3 px-4 py-3 text-left transition-colors duration-200 hover:bg-primary-container/30">
       <span className="md-title-small w-16 shrink-0 text-primary sm:w-20">{subject.code}</span>
       <span className="md-body-medium min-w-0 flex-1 truncate text-on-surface" title={name}>
         {name}
@@ -71,10 +71,11 @@ export function CompactSubjectPicker({ subjects, loading, error, onRetry, onPick
       ) : (
         chips.length > 0 && (
           <div>
-            <p className="md-label-large mb-2.5 text-center text-on-surface-variant">Môn có đề sẵn</p>
+            <p className="md-label-large mb-2.5 animate-fade-in text-center text-on-surface-variant">Môn có đề sẵn</p>
             <ul className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4">
-              {chips.map((s) => (
-                <li key={s.code}>
+              {chips.map((s, i) => (
+                // Ô xuất hiện lần lượt từ trái sang phải, từ trên xuống dưới
+                <li key={s.code} className="tile-in" style={{ animationDelay: `${i * 60}ms` }}>
                   <SubjectTile subject={s} onPick={() => onPick(s.code, s)} />
                 </li>
               ))}
