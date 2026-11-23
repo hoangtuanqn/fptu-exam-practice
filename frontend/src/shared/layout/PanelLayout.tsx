@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   Link,
   NavLink,
@@ -20,6 +20,8 @@ import { brand } from "@/shared/brand/brand";
 import { Logo } from "@/shared/brand/Logo";
 import { formatCredit } from "@/shared/utils/formatters";
 import type { NavIconComponent } from "./navIcons";
+import { NavIndicator, useNavIndicator } from "./NavIndicator";
+import { PageSkeleton } from "@/shared/ui/Skeleton";
 import { Footer } from "./Footer";
 import { UserMenu } from "./UserMenu";
 import { UserAvatar } from "@/shared/ui/UserAvatar";
@@ -82,6 +84,7 @@ export function DrawerContent({
   const { pathname } = useLocation();
   const cur = currentItem(items, pathname);
   const activeGroup = cur?.group;
+  const menu = useNavIndicator<HTMLElement>();
   // Chỉ nhóm chứa trang đang xem được mở sẵn; các nhóm khác thu lại cho menu gọn
   const [open, setOpen] = useState<Set<string>>(
     () => new Set(activeGroup ? [activeGroup] : []),
@@ -124,7 +127,8 @@ export function DrawerContent({
         </Link>
       </div>
 
-      <nav aria-label={title} className="flex-1 overflow-y-auto px-3 pb-4">
+      <nav ref={menu.ref} aria-label={title} className="relative flex-1 overflow-y-auto px-3 pb-4">
+        <NavIndicator box={menu.box} animate={menu.animate} />
         {sections.map((sec, si) => {
           const fold =
             collapsible && !!sec.group && sec.items.length > FOLD_OVER; // nhóm có nhãn thì xổ xuống/thu lại được
@@ -166,19 +170,17 @@ export function DrawerContent({
               {isOpen &&
                 sec.items.map((it) => {
                   const { to, label, icon: Icon, end } = it;
+                  const active = cur === it;
                   return (
                   <NavLink
                     key={to}
                     to={to}
                     end={end}
                     onClick={onNavigate}
-                    className={({ isActive }) =>
-                      `md-state md-motion md-label-large flex h-12 items-center gap-3 rounded-full px-4 ${fold ? "ml-2" : ""} ${
-                        isActive || cur === it
-                          ? "bg-secondary-container text-on-secondary-container"
-                          : "text-on-surface-variant"
-                      }`
-                    }
+                    data-nav-active={active || undefined}
+                    className={`md-state md-motion md-label-large relative flex h-12 items-center gap-3 rounded-full px-4 ${fold ? "ml-2" : ""} ${
+                      active ? "text-on-secondary-container" : "text-on-surface-variant"
+                    }`}
                   >
                     <Icon size={28} className="shrink-0" />
                     <span className="truncate">{label}</span>
@@ -225,6 +227,7 @@ export function DrawerContent({
 // Nút luyện đề là FAB (hành động chính duy nhất của khung này).
 function Rail({ title, items }: { title: string; items: NavItem[] }) {
   const cur = currentItem(items, useLocation().pathname);
+  const menu = useNavIndicator<HTMLElement>();
   return (
     <div className="flex h-full w-20 flex-col items-center">
       <Link to="/" title={`Về trang ${brand.product}`} className="mt-3 block">
@@ -241,9 +244,11 @@ function Rail({ title, items }: { title: string; items: NavItem[] }) {
         </Fab>
       </Link>
       <nav
+        ref={menu.ref}
         aria-label={title}
-        className="mt-3 flex w-full flex-1 flex-col items-center gap-1 overflow-y-auto pb-4"
+        className="relative mt-3 flex w-full flex-1 flex-col items-center gap-1 overflow-y-auto pb-4"
       >
+        <NavIndicator box={menu.box} animate={menu.animate} />
         {items.map((it) => {
           const { to, label, icon: Icon, end } = it;
           return (
@@ -252,14 +257,15 @@ function Rail({ title, items }: { title: string; items: NavItem[] }) {
             to={to}
             end={end}
             title={label}
-            className="group flex w-full flex-col items-center gap-1 px-1 py-1.5"
+            className="group relative flex w-full flex-col items-center gap-1 px-1 py-1.5"
           >
-            {({ isActive: active }) => {
-              const isActive = active || cur === it;
+            {() => {
+              const isActive = cur === it;
               return (
               <>
                 <span
-                  className={`md-state md-motion relative flex h-8 w-14 items-center justify-center rounded-full ${isActive ? "bg-secondary-container text-on-secondary-container" : "text-on-surface-variant"}`}
+                  data-nav-active={isActive || undefined}
+                  className={`md-state md-motion relative flex h-8 w-14 items-center justify-center rounded-full ${isActive ? "text-on-secondary-container" : "text-on-surface-variant"}`}
                 >
                   <Icon size={28} />
                   <NavBadge badge={it.badge} className="absolute left-8 top-0" />
@@ -404,7 +410,10 @@ export function PanelLayout({
             key={pathname}
             className="animate-fade-up mx-auto w-full max-w-7xl"
           >
-            <Outlet />
+            {/* Chunk của trang đang tải: chỉ thay phần nội dung, sidebar và tiêu đề giữ nguyên */}
+            <Suspense fallback={<PageSkeleton />}>
+              <Outlet />
+            </Suspense>
           </div>
         </main>
         <Footer />
