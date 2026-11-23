@@ -1,9 +1,11 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Ban, Eye, Loader2, Megaphone, Plus, Send, Square, X } from "lucide-react";
 import { errorMessage } from "@/shared/api/errors";
 import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
 import { useClampPage } from "@/shared/hooks/useClampPage";
+import { useDebounce } from "@/shared/hooks/useDebounce";
+import { SearchBox } from "@/shared/ui/SearchBox";
 import { Badge, type Tone } from "@/shared/ui/Badge";
 import { Button } from "@/shared/ui/Button";
 import { Card } from "@/shared/ui/Card";
@@ -33,7 +35,10 @@ export function BroadcastsTab() {
   const toast = useToast();
   const { confirm, confirmDialog } = useConfirm();
   const [page, setPage] = useState(1);
-  const list = useApi(() => marketingAdminApi.broadcasts(page), [page]);
+  const [search, setSearch] = useState("");
+  const q = useDebounce(search.trim());
+  useEffect(() => setPage(1), [q]);
+  const list = useApi(() => marketingAdminApi.broadcasts(page, q), [page, q]);
   useClampPage(list.data?.meta, setPage);
   const [busy, setBusy] = useState<string | null>(null);
   const [dialog, setDialog] = useState<Dialog | null>(null);
@@ -130,10 +135,13 @@ export function BroadcastsTab() {
         </Button>
       </div>
       <Card>
+        <div className="border-b border-slate-100 p-4">
+          <SearchBox value={search} onChange={setSearch} placeholder="Tìm theo tiêu đề hoặc nội dung thư" label="Tìm thông báo marketing" />
+        </div>
         <QueryBoundary query={list}>
           {({ items, meta }) =>
             items.length === 0 ? (
-              <Empty icon={Megaphone} title="Chưa có thông báo nào">
+              <Empty icon={Megaphone} title={q ? "Không có thông báo nào khớp từ khoá" : "Chưa có thông báo nào"}>
                 Soạn thông báo, xem thử rồi mới gửi cho mọi người.
               </Empty>
             ) : (

@@ -26,8 +26,9 @@ export const broadcastRepository = {
   // Đợt đang gửi (tối đa một: unique sending_lock)
   sending: () => prisma.marketingBroadcast.findUnique({ where: { sendingLock: true } }),
 
-  async list(skip: number, take: number) {
-    const [items, total] = await Promise.all([prisma.marketingBroadcast.findMany({ orderBy: { id: "desc" }, skip, take }), prisma.marketingBroadcast.count()]);
+  async list(skip: number, take: number, q?: string) {
+    const where: Prisma.MarketingBroadcastWhereInput | undefined = q ? { OR: [{ subject: { contains: q } }, { body: { contains: q } }] } : undefined;
+    const [items, total] = await Promise.all([prisma.marketingBroadcast.findMany({ where, orderBy: { id: "desc" }, skip, take }), prisma.marketingBroadcast.count({ where })]);
     return { items, total };
   },
 

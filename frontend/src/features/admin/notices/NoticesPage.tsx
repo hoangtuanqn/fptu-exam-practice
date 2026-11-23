@@ -10,6 +10,8 @@ import { errorMessage } from "@/shared/api/errors";
 import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
 import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
+import { SearchBox } from "@/shared/ui/SearchBox";
+import { useUrlSearch } from "@/shared/hooks/useUrlSearch";
 import { Badge } from "@/shared/ui/Badge";
 import { Button } from "@/shared/ui/Button";
 import { Card, PageHeader } from "@/shared/ui/Card";
@@ -105,7 +107,8 @@ export default function NoticesPage() {
   const { confirm, confirmDialog } = useConfirm();
   const counts = useNoticeCounts();
   const arrived = useNoticeVersion();
-  const [url, setUrl] = useUrlState({ tab: "unread", cat: "all", page: "1" });
+  const [url, setUrl] = useUrlState({ tab: "unread", cat: "all", page: "1", q: "" });
+  const [search, setSearch, q] = useUrlSearch(url.q, setUrl);
   const [busy, setBusy] = useState<string | null>(null);
 
   const tab: Tab =
@@ -120,8 +123,9 @@ export default function NoticesPage() {
         status: tab === "all" ? "all" : "unread",
         important: tab === "important" ? true : undefined,
         category,
+        q,
       }),
-    [page, tab, category, arrived],
+    [page, tab, category, q, arrived],
   );
 
   // Đang xem danh sách thì mọi thay đổi (đọc/xóa) cũng làm mới số đếm ở chuông
@@ -203,6 +207,7 @@ export default function NoticesPage() {
       />
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
+        <SearchBox value={search} onChange={setSearch} placeholder="Tìm theo tiêu đề hoặc nội dung" label="Tìm thông báo" />
         <Segmented
           label="Lọc thông báo"
           value={tab}
@@ -263,7 +268,9 @@ export default function NoticesPage() {
           <Empty
             icon={Bell}
             title={
-              tab === "unread"
+              q
+                ? "Không có thông báo nào khớp từ khoá"
+                : tab === "unread"
                 ? "Không còn thông báo chưa đọc"
                 : tab === "important"
                   ? "Không có thông báo quan trọng"

@@ -99,7 +99,7 @@ export const marketingAdminApi = {
   saveParams: (values: Partial<MarketingParamValues>) => http.put<MarketingParams>("/admin/marketing/params", values),
   resetParams: () => http.post<MarketingParams>("/admin/marketing/params/reset"),
   preview: (key: CampaignKey, step: number) => http.get<{ subject: string; html: string }>(`/admin/marketing/campaigns/${key}/preview`, { step }),
-  broadcasts: (page: number) => http.list<Broadcast>("/admin/marketing/broadcasts", { page, limit: PAGE_SIZE }),
+  broadcasts: (page: number, q = "") => http.list<Broadcast>("/admin/marketing/broadcasts", { page, limit: PAGE_SIZE, q }),
   createBroadcast: (body: BroadcastInput) => http.post<Broadcast>("/admin/marketing/broadcasts", body),
   estimateBroadcast: (id: string) => http.get<{ recipients: number; days: number }>(`/admin/marketing/broadcasts/${id}/estimate`),
   previewBroadcast: (id: string) => http.get<{ subject: string; html: string }>(`/admin/marketing/broadcasts/${id}/preview`),

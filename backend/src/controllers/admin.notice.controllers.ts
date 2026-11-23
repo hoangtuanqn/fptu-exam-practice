@@ -9,8 +9,8 @@ import { userNoticeService } from "../services/user-notice.service";
 
 export const adminNoticeController = {
   async list(_req: Request, res: Response) {
-    const { status, important, category, ...page } = getValidated<ListNoticesQuery>(res, "query");
-    const { items, meta } = await adminNoticeService.list(page, { status, important: important === undefined ? undefined : important === "true", category });
+    const { status, important, category, q, ...page } = getValidated<ListNoticesQuery>(res, "query");
+    const { items, meta } = await adminNoticeService.list(page, { status, important: important === undefined ? undefined : important === "true", category, q });
     res.json(new ResponseClient({ data: items, meta }));
   },
 

@@ -63,7 +63,7 @@ export const createBroadcastBody = z
 // Chữ xác nhận "GỬI" do service kiểm tra (thiếu hoặc sai là 400, không bắt đầu gì)
 export const startBroadcastBody = z.object({ confirm: z.unknown() }).partial().optional();
 
-export const listBroadcastsQuery = paginationQuery;
+export const listBroadcastsQuery = paginationQuery.extend({ q: z.string().trim().max(100).optional() }); // tiêu đề hoặc nội dung thư
 
 // Ngày theo giờ Việt Nam (YYYY-MM-DD) -> 0h ngày đó
 const vnDay = z
