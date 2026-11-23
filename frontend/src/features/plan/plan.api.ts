@@ -6,9 +6,6 @@ export interface PlanInfo {
   name: string;
   months: number;
   price: number; // credit
-  fuoPrice: number; // giá mua trực tiếp gói VIP trên FuOverflow, cùng thời hạn
-  savings: number;
-  savingsPercent: number;
   pricePerMonth: number;
   sprint: { code: string; name: string; days: number; price: number }; // gói Nước rút ngắn hạn
   ticket?: { validDays: number; maxOpen: number }; // vé Pro (mua trước, kích hoạt sau); máy chủ cũ chưa có thì không hiện lựa chọn này

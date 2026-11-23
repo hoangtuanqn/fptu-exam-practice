@@ -1,4 +1,4 @@
-import type { ExamKind } from "@/features/exam-import/types";
+import type { ExamKind } from "@/features/exam/types";
 
 const KINDS: Record<ExamKind, { label: string; cls: string }> = {
   FE: { label: "FE", cls: "bg-primary-container text-on-primary-container" },

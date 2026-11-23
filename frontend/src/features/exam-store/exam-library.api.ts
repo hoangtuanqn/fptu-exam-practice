@@ -1,6 +1,6 @@
 import { http } from "@/shared/api/client";
 import { PAGE_SIZE } from "@/shared/api/pagination";
-import type { ExamKind } from "@/features/exam-import/types";
+import type { ExamKind } from "@/features/exam/types";
 
 export interface LibraryExam {
   id: string;

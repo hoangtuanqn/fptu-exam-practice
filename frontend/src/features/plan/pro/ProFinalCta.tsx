@@ -15,7 +15,7 @@ export function ProFinalCta({ plan, label, onBuy }: { plan: PlanInfo; label: str
           <img src={logos.mark} alt="" className="pro-float relative mx-auto h-20 drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]" draggable={false} />
           <h2 className="relative mt-3 text-2xl font-extrabold">Sẵn sàng học không giới hạn?</h2>
           <p className="relative mt-1.5 text-sm text-[#fff6dc]/75">
-            {vnd(plan.price)} cho {plan.months} tháng, tiết kiệm {vnd(plan.savings)} so với FuOverflow VIP.
+            {vnd(plan.price)} cho {plan.months} tháng. Trả một lần, không tự gia hạn.
           </p>
           <button onClick={onBuy} className={`pro-cta md-label-large relative mt-5 inline-flex h-12 items-center gap-2 rounded-full px-8 font-extrabold ${GOLD_BUTTON}`}>
             <Crown size={18} /> {label}

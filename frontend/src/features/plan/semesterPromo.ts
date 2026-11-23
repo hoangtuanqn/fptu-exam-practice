@@ -57,8 +57,7 @@ export function usePlanPrices() {
 // Gói Pro với giá ưu đãi, để mọi chỗ hiện giá (và số tiền trừ) khớp nhau
 export const withPromo = (plan: PlanInfo, promo: ActivePromo | null): PlanInfo => {
   if (!promo) return plan;
-  const savings = Math.max(0, plan.fuoPrice - promo.price);
-  return { ...plan, price: promo.price, savings, savingsPercent: plan.fuoPrice > 0 ? Math.round((savings / plan.fuoPrice) * 100) : 0, pricePerMonth: Math.round(promo.price / plan.months) };
+  return { ...plan, price: promo.price, pricePerMonth: Math.round(promo.price / plan.months) };
 };
 
 // Lời mời ưu đãi kỳ mới (thanh thông báo, thẻ sau khi nộp bài): tối đa một lần mỗi ngày, dùng chung cho mọi vị trí

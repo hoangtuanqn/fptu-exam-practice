@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useToast } from "@/shared/context/ToastContext";
 import { Loader2, RotateCw, Sparkles, TriangleAlert } from "lucide-react";
-import { examImportApi } from "@/features/exam-import/exam-import.api";
+import { examApi } from "@/features/exam/exam.api";
 import type { AnswerSource } from "@/features/practice/types";
 import { formatDuration } from "@/features/practice/utils/format";
 import { errorMessage } from "@/shared/api/errors";
@@ -22,7 +22,7 @@ export function AnswerPendingBanner({ source, examId, onRetry }: { source: Answe
     if (!(await confirm({ title: "Nhờ AI giải lại đề này?", message: "AI sẽ phân tích lại cả đề, mất khoảng vài phút và tốn chi phí gọi AI của hệ thống (bạn không bị trừ credit). Có thể thử lại sau ít phút nếu lỗi vẫn còn.", confirmLabel: "Giải lại" }))) return;
     setRetrying(true);
     try {
-      await examImportApi.retrySolve(examId);
+      await examApi.retrySolve(examId);
       setSeconds(0);
       onRetry();
     } catch (e) {

@@ -1,10 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BookOpen, Loader2, Play } from "lucide-react";
-import { ConfirmFetchDialog } from "@/features/exam-import/components/ConfirmFetchDialog";
-import { examImportApi, type ImportTarget } from "@/features/exam-import/exam-import.api";
-import { examOpenPath } from "@/features/exam-import/types";
-import { useExamImport } from "@/features/exam-import/useExamImport";
+import { examApi } from "@/features/exam/exam.api";
+import { examOpenPath } from "@/features/exam/types";
 import { useAuth } from "@/features/auth/AuthContext";
 import { ApiError } from "@/shared/api/client";
 import { errorMessage } from "@/shared/api/errors";
@@ -16,12 +14,12 @@ import { Empty } from "@/shared/ui/Feedback";
 import { QueryBoundary } from "@/shared/ui/QueryBoundary";
 import { Pagination } from "@/shared/ui/Table";
 import { formatCredit, formatDate } from "@/shared/utils/formatters";
-import { fuoThreadUrl } from "@/shared/utils/fuo-link";
 import { isPro } from "@/shared/utils/pro";
 import { CompactSubjectPicker } from "@/features/subject/CompactSubjectPicker";
 import { SubjectCard } from "@/features/subject/SubjectCard";
 import { SubjectPicker } from "@/features/subject/SubjectPicker";
 import { catalogApi, type CatalogItem } from "./catalog.api";
+import { ConfirmOpenDialog } from "./ConfirmOpenDialog";
 import { ExamFilterBar, useExamListQuery } from "./ExamFilterBar";
 import { featuredSubjects } from "./featuredSubjects";
 import { NewExamBadge } from "./NewExamBadge";
@@ -29,7 +27,7 @@ import { ExamKindBadge } from "./ExamKindBadge";
 
 const COMPACT_PAGE_SIZE = 6; // trang chủ: chỉ vài đề mỗi trang để không đẩy các phần bên dưới đi quá xa
 
-// Kho đề > Theo môn: toàn bộ đề FE của một môn (danh mục FuOverflow + đề hệ thống đã có). Chỉ lấy ảnh khi người dùng bấm và đồng ý trừ phí.
+// Kho đề > Theo môn: các đề hệ thống đã có của một môn. Đề có phí chỉ trừ khi người dùng bấm và đồng ý.
 export function SubjectBrowser({ compact = false }: { compact?: boolean }) {
   const [url, setUrl] = useUrlState({ subject: "" });
   const code = url.subject.toUpperCase();
@@ -59,10 +57,6 @@ function SubjectChooser({ onPick, compact }: { onPick: (code: string) => void; c
   );
 }
 
-// Đề hệ thống đã có sẵn (kể cả đề admin tải tay, không có link FuOverflow): gửi mã đề thay cho link
-const isReady = (e: CatalogItem) => e.status === "ready" && !!e.examId;
-const targetOf = (e: CatalogItem): ImportTarget => (isReady(e) && e.examId ? { examId: e.examId } : { url: fuoThreadUrl(e.threadId) });
-
 const priceOf = (d: { price: number; pePrice?: number }, e: CatalogItem) => (e.kind === "PE" ? (d.pePrice ?? d.price) : d.price);
 
 function ExamList({ code, onBack, compact }: { code: string; onBack: () => void; compact: boolean }) {
@@ -74,35 +68,39 @@ function ExamList({ code, onBack, compact }: { code: string; onBack: () => void;
 
   const list = useApi(() => catalogApi.exams(code, { q: url.q, term: url.term, page, limit: compact ? COMPACT_PAGE_SIZE : undefined }), [code, url.q, url.term, page, compact, user?.id]);
   const d = list.data;
-  const job = useExamImport();
-  const [quoting, setQuoting] = useState<string | null>(null); // threadId đang hỏi phí
-  const [confirm, setConfirm] = useState<{ item: CatalogItem; fee: number } | null>(null);
-  const running = job.phase === "running";
-  const busy = running || quoting !== null;
+  const [busy, setBusy] = useState<string | null>(null); // examId đang hỏi phí / đang mở
+  const [confirm, setConfirm] = useState<{ examId: string; item: CatalogItem; fee: number } | null>(null);
 
-  // Lấy xong thì mở trang xem trước của đề; số dư vừa đổi nên tải lại
-  useEffect(() => {
-    if (job.exam) {
-      void refresh();
-      navigate(examOpenPath(job.exam));
+  const open = async (examId: string, item: CatalogItem) => {
+    setBusy(examId);
+    try {
+      await examApi.unlock(examId, code);
+      void refresh(); // số dư vừa đổi
+      navigate(examOpenPath({ id: examId, kind: item.kind, totalQuestions: item.questions }));
+    } catch (err) {
+      toast.error(errorMessage(err, "Chưa mở được đề này"));
+      if (err instanceof ApiError && err.code === "EXAM_NOT_READY") list.reload(); // đề vừa bị gỡ: tải lại danh sách cho đúng trạng thái
+    } finally {
+      setBusy(null);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [job.exam]);
+  };
 
   const pick = async (item: CatalogItem) => {
     if (!user) return void navigate("/login");
-    if (item.status === "owned" && item.examId) return void navigate(examOpenPath({ id: item.examId, kind: item.kind, totalQuestions: item.questions }));
-    setQuoting(item.threadId);
+    const examId = item.examId;
+    if (!examId) return;
+    if (item.status === "owned") return void navigate(examOpenPath({ id: examId, kind: item.kind, totalQuestions: item.questions }));
+    setBusy(examId);
     try {
-      // Hỏi phí thực tế và kiểm tra trước khi trừ tiền (đúng nhãn, đúng môn); miễn phí (Pro, đã sở hữu) thì lấy luôn
-      const quote = await examImportApi.quote(targetOf(item), code);
-      if (quote.free) void job.start(targetOf(item), code);
-      else setConfirm({ item, fee: quote.fee });
+      // Hỏi phí thực tế trước khi trừ tiền; miễn phí (Pro, đã sở hữu) thì mở luôn
+      const quote = await examApi.quote(examId, code);
+      if (quote.free) return void (await open(examId, item));
+      setConfirm({ examId, item, fee: quote.fee });
     } catch (err) {
-      toast.error(errorMessage(err, "Chưa lấy được đề này"));
-      if (err instanceof ApiError && err.code === "EXAM_NOT_READY") list.reload(); // đề vừa bị gỡ/chưa đủ: tải lại danh sách cho đúng trạng thái
+      toast.error(errorMessage(err, "Chưa mở được đề này"));
+      if (err instanceof ApiError && err.code === "EXAM_NOT_READY") list.reload();
     } finally {
-      setQuoting(null);
+      setBusy((b) => (b === examId ? null : b));
     }
   };
 
@@ -111,32 +109,21 @@ function ExamList({ code, onBack, compact }: { code: string; onBack: () => void;
       <SubjectCard title={`Môn ${code}`} onBack={onBack}>
         <div className="space-y-3 border-b border-outline-variant px-5 py-4">
           <ExamFilterBar query={query} terms={d?.terms} />
-          {running && (
-            <p className="flex items-center gap-2 rounded-m3-md bg-surface-container-low px-4 py-3 text-sm text-on-surface-variant" role="status">
-              <Loader2 size={16} className="animate-spin" /> {job.stage ?? "Đang lấy đề…"} Đề mới có thể mất vài phút, đừng đóng trang.
-            </p>
-          )}
-          {job.phase === "failed" && (
-            <p className="flex items-center justify-between gap-2 rounded-m3-md bg-error-container px-4 py-3 text-sm text-on-error-container" role="alert">
-              <span>{job.error ?? "Không lấy được đề này"} Nếu đã bị trừ credit, hệ thống tự hoàn lại.</span>
-              <Button size="sm" variant="text" onClick={job.reset}>
-                Đóng
-              </Button>
-            </p>
-          )}
         </div>
 
         <QueryBoundary query={list}>
-          {(data) =>
-            data.items.length === 0 ? (
+          {(res) => {
+            // Chỉ hiện đề đã có trong hệ thống (máy chủ cũ còn trả mục chưa có đề)
+            const data = { ...res, items: res.items.filter((e) => !!e.examId) };
+            return data.items.length === 0 ? (
               <Empty icon={BookOpen} title={data.total > 0 ? "Không có đề nào khớp" : "Chưa có đề nào của môn này"}>
-                {data.total > 0 ? "Thử bỏ bộ lọc hoặc đổi từ khoá." : "Danh mục đề của môn này chưa được cập nhật."}
+                {data.total > 0 ? "Thử bỏ bộ lọc hoặc đổi từ khoá." : "Môn này chưa có đề, bạn quay lại sau nhé."}
               </Empty>
             ) : (
               <>
                 <ul className="divide-y divide-outline-variant">
                   {data.items.map((e) => (
-                    <li key={e.threadId} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 py-3.5">
+                    <li key={e.examId} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 py-3.5">
                       <div className="min-w-0 flex-1">
                         <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
                           <ExamKindBadge kind={e.kind} />
@@ -149,8 +136,8 @@ function ExamList({ code, onBack, compact }: { code: string; onBack: () => void;
                           {e.questions !== null ? <span>{e.questions} câu</span> : null}
                         </p>
                       </div>
-                      <Button size="sm" variant="tonal" onClick={() => void pick(e)} disabled={busy}>
-                        {quoting === e.threadId ? <Loader2 size={15} className="animate-spin" /> : <Play size={15} />}
+                      <Button size="sm" variant="tonal" onClick={() => void pick(e)} disabled={busy !== null}>
+                        {busy === e.examId ? <Loader2 size={15} className="animate-spin" /> : <Play size={15} />}
                         {e.status !== "owned" && priceOf(data, e) > 0 && !isPro(user) ? formatCredit(priceOf(data, e)) : "Mở đề"}
                       </Button>
                     </li>
@@ -158,22 +145,20 @@ function ExamList({ code, onBack, compact }: { code: string; onBack: () => void;
                 </ul>
                 <Pagination meta={data.meta} onPage={(p) => setUrl({ page: String(p) })} />
               </>
-            )
-          }
+            );
+          }}
         </QueryBoundary>
       </SubjectCard>
 
-      {confirm && (
-        <ConfirmFetchDialog
-          url={isReady(confirm.item) ? undefined : fuoThreadUrl(confirm.item.threadId)}
+      {confirm && user && (
+        <ConfirmOpenDialog
           fee={confirm.fee}
-          pro={isPro(user)}
-          balance={user ? user.balance : null}
+          balance={user.balance}
           onCancel={() => setConfirm(null)}
           onConfirm={() => {
-            const item = confirm.item;
+            const { examId, item } = confirm;
             setConfirm(null);
-            void job.start(targetOf(item), code);
+            void open(examId, item);
           }}
         />
       )}

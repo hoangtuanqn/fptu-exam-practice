@@ -1,20 +1,20 @@
 import { http } from "@/shared/api/client";
 import type { PageMeta } from "@/shared/types/api";
-import type { ExamKind } from "@/features/exam-import/types";
+import type { ExamKind } from "@/features/exam/types";
 
 export interface CatalogSubject {
   code: string;
   name: string | null;
-  total: number; // tổng số đề FE đã biết (FuOverflow + hệ thống)
+  total: number; // tổng số đề của môn
   ready: number; // số đề hệ thống đã có sẵn ảnh và đáp án
   semester: number | null; // kỳ học 0-9, null = chưa phân loại
 }
 
-// owned = đã trong kho của bạn, ready = hệ thống đã có (mở ngay), fetch = chưa lấy (lấy từ FuOverflow, có thể mất phí)
+// owned = đã trong kho của bạn, ready = hệ thống đã có. "fetch" chỉ còn ở máy chủ cũ (mục chưa có đề, giao diện bỏ qua)
 export type CatalogStatus = "owned" | "ready" | "fetch";
 
 export interface CatalogItem {
-  examId: string | null; // ID đề trong hệ thống; null = chưa có, phải lấy về
+  examId: string | null; // ID đề trong hệ thống; null = mục chưa có đề của máy chủ cũ, không hiện
   threadId: string;
   title: string;
   postedAt: string | null;
@@ -30,14 +30,14 @@ export interface CatalogPage {
   meta: PageMeta;
   terms: { term: string; count: number }[];
   total: number; // tổng số đề của môn (trước khi lọc)
-  price: number; // phí lấy một đề chưa có trong kho của bạn (credit)
+  price: number; // phí mở một đề chưa có trong kho của bạn (credit)
   pePrice?: number; // đề PE có giá riêng; API cũ chưa có thì dùng price
   subject: { code: string; name: string | null; semester: number | null };
 }
 
 export interface LibraryOverview {
   subjects: number;
-  examsKnown: number; // đề biết (danh mục FuOverflow + hệ thống)
+  examsKnown: number; // tổng số đề của các môn
   examsReady: number; // đề đã có ảnh + đáp án, mở ngay
   bySemester: { semester: number | null; subjects: number; examsKnown: number; examsReady: number }[];
   byKind?: Record<ExamKind, number>; // số đề theo loại; máy chủ cũ chưa trả về

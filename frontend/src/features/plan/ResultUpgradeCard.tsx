@@ -13,7 +13,7 @@ const SURFACE = "result-upgrade";
 const MIN_WRONG = 3; // ít câu sai thì chưa cần mời
 
 // Lời mời ở bảng điểm sau khi nộp bài (lúc người dùng muốn biết "vì sao sai" nhất).
-// Chỉ so sánh giá thật: tổng giải thích lẻ của đúng số câu sai, giá Pro, giá FuOverflow VIP. Có nút bỏ qua; mỗi phiên một lần, tối đa 3 lần/tuần.
+// Chỉ so sánh giá thật: tổng giải thích lẻ của đúng số câu sai, giá Pro. Có nút bỏ qua; mỗi phiên một lần, tối đa 3 lần/tuần.
 export function ResultUpgradeCard({ wrong }: { wrong: number }) {
   const { user } = useAuth();
   const { flags, explainPrice } = useUpsell();
@@ -56,7 +56,7 @@ export function ResultUpgradeCard({ wrong }: { wrong: number }) {
             <s>{formatMoney(promo.originalPrice)}</s> <b className="rounded-full bg-[#ff4d4d] px-1.5 py-0.5 text-xs text-white">-{promo.percentOff}%</b>
           </>
         )}{" "}
-        (khoảng {formatMoney(perDay)}/ngày), xem giải thích không giới hạn. FuOverflow VIP cùng thời hạn là {formatMoney(plan.fuoPrice)}.
+        (khoảng {formatMoney(perDay)}/ngày), xem giải thích không giới hạn.
       </p>
       {promo && (
         <p className="mt-1 text-xs font-semibold text-amber-950">

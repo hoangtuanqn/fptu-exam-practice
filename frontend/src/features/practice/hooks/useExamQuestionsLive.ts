@@ -1,14 +1,15 @@
 import { useEffect, useRef } from "react";
-import { examImportApi } from "@/features/exam-import/exam-import.api";
-import type { ExamQuestionsPayload } from "@/features/exam-import/types";
+import { examApi } from "@/features/exam/exam.api";
+import type { ExamQuestionsPayload } from "@/features/exam/types";
 import { EVENTS } from "@/shared/realtime/events";
 import { isRealtimeConnected, onConnectionChange, subscribeRoom } from "@/shared/realtime/socket";
 
 const FALLBACK_POLL_MS = 3000; // chỉ dùng khi mất kết nối realtime
 
 /**
- * Đề đang được lấy về: nhận các câu mới ngay khi tải xong qua socket (và tin lấy đề thất bại).
- * Khi `enabled` là false thì không theo dõi gì. Mất kết nối thì tạm hỏi định kỳ cả đề (và dừng khi nối lại).
+ * Đề đang được lấy về: nhận các câu mới ngay khi tải xong qua socket.
+ * Khi `enabled` là false thì không theo dõi gì. Mất kết nối thì tạm hỏi định kỳ cả đề (và dừng khi nối lại);
+ * `onFailed` chạy khi hỏi định kỳ mà đề không còn.
  */
 export function useExamQuestionsLive(
   examId: string | null,
@@ -26,13 +27,12 @@ export function useExamQuestionsLive(
     let poll: ReturnType<typeof setInterval> | null = null;
 
     const receive = (p: ExamQuestionsPayload) => p.examId === examId && questionsRef.current(p);
-    const failed = (p: { examId: string; message: string }) => p.examId === examId && failedRef.current(p.message);
 
     const startPolling = () => {
       if (poll) return;
       poll = setInterval(() => {
         if (document.hidden) return;
-        void examImportApi
+        void examApi
           .exam(examId)
           .then((e) => receive({ examId, total: e.totalQuestions, questions: e.questions.map((q) => ({ number: q.number, imageUrl: q.imageUrl, correct: q.correct })) }))
           .catch(() => failedRef.current("Đề này không còn nữa, có thể việc lấy đề đã thất bại"));
@@ -44,14 +44,12 @@ export function useExamQuestionsLive(
     };
 
     const offQuestions = subscribeRoom<ExamQuestionsPayload>("exam", examId, EVENTS.examQuestions, receive);
-    const offFailed = subscribeRoom<{ examId: string; message: string }>("exam", examId, EVENTS.examFailed, failed);
     const offConn = onConnectionChange((connected) => (connected ? stopPolling() : startPolling()));
     if (!isRealtimeConnected()) startPolling();
 
     return () => {
       stopPolling();
       offQuestions();
-      offFailed();
       offConn();
     };
   }, [examId, enabled]);

@@ -42,7 +42,7 @@ export function ProTeaser() {
       </span>
       <span className="min-w-0 flex-1 text-sm leading-tight">
         <b className="text-[#ffc61f]">Pro {plan.months} tháng chỉ {vnd(plan.price)}</b>
-        <span className="block truncate text-xs text-[#fff6dc]/75">Tiết kiệm {vnd(plan.savings)} so với FuOverflow VIP</span>
+        <span className="block truncate text-xs text-[#fff6dc]/75">Trả một lần, không tự gia hạn</span>
       </span>
       <ArrowRight size={18} className="shrink-0 text-[#ffc61f] transition group-hover:translate-x-0.5" />
     </Link>

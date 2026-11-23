@@ -2,8 +2,8 @@ import { ProtectedImg } from "@/shared/ui/ProtectedImg";
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { BookOpen, Download, FileSearch, Loader2, Timer } from "lucide-react";
-import { examImportApi } from "@/features/exam-import/exam-import.api";
-import { canPractice, type ExamAttachment, type ExamQuestionsPayload, type ImportedExam } from "@/features/exam-import/types";
+import { examApi } from "@/features/exam/exam.api";
+import { canPractice, type ExamAttachment, type ExamQuestionsPayload, type ImportedExam } from "@/features/exam/types";
 import { downloadUrl, ICONS, OPENABLE } from "@/features/exam-attachments/AttachmentList";
 import { ExamKindBadge } from "@/features/exam-store/ExamKindBadge";
 import { NewExamBadge } from "@/features/exam-store/NewExamBadge";
@@ -36,7 +36,7 @@ export default function ExamPreviewPage() {
   const query = useApi(async () => {
     if (!valid) return { exam: null };
     try {
-      return { exam: await examImportApi.exam(examId) };
+      return { exam: await examApi.exam(examId) };
     } catch (err) {
       if (err instanceof ApiError && err.status === 404) return { exam: null };
       throw err;
@@ -102,7 +102,7 @@ function Preview({ exam }: { exam: ImportedExam }) {
   );
 
   const meta = [term && `Kỳ ${term}`, items > 0 && `${items} câu`, attachments.length > 0 && `${attachments.length} tệp đính kèm`].filter(Boolean).join(" · ");
-  // Ảnh các trang và tệp đính kèm nằm chung một lưới như bên FuOverflow (đề PE: tài liệu lên trước); tên hiển thị là tên tệp
+  // Ảnh các trang và tệp đính kèm nằm chung một lưới (đề PE: tài liệu lên trước); tên hiển thị là tên tệp
   const pageTiles = questions.map((q) => (
     <li key={`p${q.number}`}>
       <button type="button" onClick={() => setZoom(q)} aria-label={`Xem lớn ${fileName(q)}`} className={`${TILE} w-full`}>
@@ -184,7 +184,7 @@ function Preview({ exam }: { exam: ImportedExam }) {
   );
 }
 
-// Tên tệp ảnh của trang (phần cuối đường dẫn, bỏ query), hiện như bên FuOverflow
+// Tên tệp ảnh của trang (phần cuối đường dẫn, bỏ query)
 const fileName = (q: Question) => decodeURIComponent(q.imageUrl.split("?")[0]!.split("/").pop() ?? `Q${q.number}`);
 
 // Máy có chuột mới nhúng PDF làm hình xem trước: điện thoại thường không vẽ PDF trong khung, nên chỉ hiện biểu tượng và mở tab mới

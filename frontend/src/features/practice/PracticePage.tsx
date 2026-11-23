@@ -5,8 +5,8 @@ import { ApiError } from "@/shared/api/client";
 import { historyApi } from "@/features/history/history.api";
 import type { TopicSummary } from "@/features/history/types";
 import { pendingAttempt } from "@/features/guest-sync/pendingAttempt";
-import { examImportApi } from "@/features/exam-import/exam-import.api";
-import { canPractice, isFilesOnly, type ExamAttachment } from "@/features/exam-import/types";
+import { examApi } from "@/features/exam/exam.api";
+import { canPractice, isFilesOnly, type ExamAttachment } from "@/features/exam/types";
 import { FilesOnlyExam } from "@/features/exam-attachments/FilesOnlyExam";
 import { sessionApi } from "@/features/practice-session/session.api";
 import { useSessionSync } from "@/features/practice-session/useSessionSync";
@@ -227,7 +227,7 @@ export default function PracticePage({ examId }: Props) {
     const params = new URLSearchParams(location.search);
     const rawSession = params.get("session");
     const sessionId = isUuid(rawSession) ? rawSession : null; // có thì làm tiếp đúng lượt đó (id cũ dạng số thì bỏ qua)
-    Promise.all([examImportApi.exam(examId), sessionId ? sessionApi.get(sessionId).catch(() => null) : Promise.resolve(null)])
+    Promise.all([examApi.exam(examId), sessionId ? sessionApi.get(sessionId).catch(() => null) : Promise.resolve(null)])
       .then(([exam, saved]) => {
         if (stale) return;
         loadedFor.current = examId; // đã tải xong đề này

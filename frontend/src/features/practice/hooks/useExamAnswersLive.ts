@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
-import { examImportApi } from "@/features/exam-import/exam-import.api";
-import type { ExamAnswersPayload } from "@/features/exam-import/types";
+import { examApi } from "@/features/exam/exam.api";
+import type { ExamAnswersPayload } from "@/features/exam/types";
 import { EVENTS } from "@/shared/realtime/events";
 import { isRealtimeConnected, onConnectionChange, subscribeRoom } from "@/shared/realtime/socket";
 
@@ -23,7 +23,7 @@ export function useExamAnswersLive(examId: string | null, enabled: boolean, onUp
       if (poll) return;
       poll = setInterval(() => {
         if (document.hidden) return;
-        void examImportApi.answers(examId).then((r) => receive({ examId, ...r })).catch(() => undefined);
+        void examApi.answers(examId).then((r) => receive({ examId, ...r })).catch(() => undefined);
       }, FALLBACK_POLL_MS);
     };
     const stopPolling = () => {

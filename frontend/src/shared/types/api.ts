@@ -84,21 +84,6 @@ export interface SepayAdminConfig {
   apiTokenPreview: string;
 }
 
-export interface CrawlerAdminConfig {
-  userAgent: string;
-  referer: string;
-  requestDelayMs: number;
-  concurrency: number;
-  webpQuality: number;
-  fetchPrice: number;
-  hasCookie: boolean;
-  cookiePreview: string;
-  loginEmail: string;
-  hasLoginPassword: boolean;
-  loginLastAt: string; // lần tự đăng nhập gần nhất (ISO), rỗng = chưa có
-  loginLastError: string; // rỗng = lần đó thành công
-}
-
 export type AiEffort = "low" | "medium" | "high" | "xhigh" | "max";
 
 export interface AiAdminConfig {
@@ -122,7 +107,6 @@ export interface AdminExam {
   createdAt: string;
   solving: boolean; // AI đang giải lại
   solveError: string | null; // lần giải lại gần nhất bị lỗi
-  sourceUrl?: string; // bài gốc trên FuOverflow (máy chủ cũ không trả trường này)
   gradedQuestions?: number; // số câu cần chấm (không tính tài liệu tham khảo); máy chủ cũ không trả trường này
   answeredQuestions?: number; // trong đó số câu đã có đáp án
 }
@@ -361,6 +345,10 @@ export interface PublicOffers {
 
 export interface AccountSettings {
   signupCredit: number; // credit tặng mọi tài khoản mới khi đăng ký
+}
+
+export interface CrawlerSettings {
+  fetchPrice: number; // phí (credit) mở một đề chưa có trong kho, 0 = miễn phí
 }
 
 /** Cấu hình vượt link nhận lượt giải thích miễn phí (Quản trị → Vượt link) */

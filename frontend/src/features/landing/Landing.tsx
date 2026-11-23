@@ -1,4 +1,4 @@
-import type { ImportedExam } from "@/features/exam-import/types";
+import type { ImportedExam } from "@/features/exam/types";
 import { ExtensionBar } from "./components/ExtensionBar";
 import type { PickFolder } from "@/features/practice/components/FolderInput";
 import { SemesterPromoBar } from "@/features/plan/SemesterPromoBar";

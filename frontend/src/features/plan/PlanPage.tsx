@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Crown } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
-import { examImportApi } from "@/features/exam-import/exam-import.api";
+import { examApi } from "@/features/exam/exam.api";
 import { VerifyEmailNotice } from "@/features/verify-email/VerifyEmailNotice";
 import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
@@ -13,7 +13,6 @@ import { addMonths, isPro, proDaysLeft } from "@/shared/utils/pro";
 import { ActivateTicketDialog } from "./ActivateTicketDialog";
 import { planApi, type ProTicket } from "./plan.api";
 import { ProBenefits } from "./pro/ProBenefits";
-import { ProCompare } from "./pro/ProCompare";
 import { ProFaq } from "./pro/ProFaq";
 import { ProFinalCta } from "./pro/ProFinalCta";
 import { GOLD_BUTTON } from "@/shared/ui/gold";
@@ -33,7 +32,7 @@ export default function PlanPage() {
   const navigate = useNavigate();
   const toast = useToast();
   const info = usePlanInfo();
-  const fetchPrice = useApi(() => examImportApi.price(), []).data?.price ?? 0;
+  const fetchPrice = useApi(() => examApi.price(), []).data?.price ?? 0;
   const [open, setOpen] = useState<false | "pro" | "sprint">(false);
   const [openLater, setOpenLater] = useState(false); // mở hộp mua ở chế độ "giữ vé, dùng sau"
   const tickets = useApi(() => (user ? planApi.tickets() : Promise.resolve([] as ProTicket[])), [user?.id]);
@@ -107,7 +106,6 @@ export default function PlanPage() {
               <ProPlans plan={plan} promo={promo} label={label} newExpiry={addMonths(startsAt, plan.months)} onBuy={cta} />
             </div>
             <ProBenefits plan={plan} fetchPrice={fetchPrice} />
-            <ProCompare plan={plan} />
             <ProSteps plan={plan} />
             <ProFaq />
             <ProFinalCta plan={plan} label={label} onBuy={() => cta()} />
@@ -125,12 +123,12 @@ export default function PlanPage() {
           <div className="pro-rise flex items-center gap-3 rounded-full border border-[#ffc61f]/40 bg-[#1d1500]/95 py-2 pl-5 pr-2 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.6)] backdrop-blur">
             <div className="min-w-0 flex-1 leading-tight">
               <div className="truncate text-xs text-[#fff6dc]/70">
-                <span className="line-through">{vnd(promo?.originalPrice ?? plan.fuoPrice)}</span> · {promo ? (
+                {promo ? (
                   <>
-                    ưu đãi kỳ {promo.term} còn <PromoCountdown endsAt={promo.endsAt} />
+                    <span className="line-through">{vnd(promo.originalPrice)}</span> · ưu đãi kỳ {promo.term} còn <PromoCountdown endsAt={promo.endsAt} />
                   </>
                 ) : (
-                  `tiết kiệm ${vnd(plan.savings)}`
+                  "Trả một lần, không tự gia hạn"
                 )}
               </div>
               <div className="text-lg font-extrabold tabular-nums text-[#ffc61f]">
