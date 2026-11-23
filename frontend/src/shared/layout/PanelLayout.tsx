@@ -19,6 +19,7 @@ import { useAuth } from "@/features/auth/AuthContext";
 import { brand } from "@/shared/brand/brand";
 import { Logo } from "@/shared/brand/Logo";
 import { formatCredit } from "@/shared/utils/formatters";
+import type { NavIconComponent } from "./navIcons";
 import { Footer } from "./Footer";
 import { UserMenu } from "./UserMenu";
 import { UserAvatar } from "@/shared/ui/UserAvatar";
@@ -29,7 +30,7 @@ import { VerifyEmailNotice } from "@/features/verify-email/VerifyEmailNotice";
 export interface NavItem {
   to: string;
   label: string;
-  icon: LucideIcon;
+  icon: LucideIcon | NavIconComponent;
   end?: boolean;
   group?: string; // nhãn nhóm hiện phía trên mục đầu tiên của nhóm
   also?: string[]; // các trang con (hiện thành tab) cũng tô sáng mục này
@@ -179,7 +180,7 @@ export function DrawerContent({
                       }`
                     }
                   >
-                    <Icon size={20} className="shrink-0" />
+                    <Icon size={28} className="shrink-0" />
                     <span className="truncate">{label}</span>
                     <NavBadge badge={it.badge} className="ml-auto" />
                   </NavLink>
@@ -260,7 +261,7 @@ function Rail({ title, items }: { title: string; items: NavItem[] }) {
                 <span
                   className={`md-state md-motion relative flex h-8 w-14 items-center justify-center rounded-full ${isActive ? "bg-secondary-container text-on-secondary-container" : "text-on-surface-variant"}`}
                 >
-                  <Icon size={22} />
+                  <Icon size={28} />
                   <NavBadge badge={it.badge} className="absolute left-8 top-0" />
                 </span>
                 <span

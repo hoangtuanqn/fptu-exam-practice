@@ -1,23 +1,24 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { BookOpen, Crown, Home, ListChecks, Menu, NotebookPen, UserPlus, X, type LucideIcon } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { IconButton } from "@/shared/ui/Button";
 import { DrawerContent, type NavItem } from "./PanelLayout";
+import { NAV_ICON, type NavIconComponent } from "./navIcons";
 
-type Tab = { to: string; label: string; icon: LucideIcon; also?: string[] };
+type Tab = { to: string; label: string; icon: NavIconComponent; also?: string[] };
 
 const MEMBER_TABS: Tab[] = [
-  { to: "/", label: "Trang chủ", icon: Home },
-  { to: "/account/exams", label: "Kho đề", icon: BookOpen, also: ["/kho-de"] },
-  { to: "/account/review", label: "Ôn tập", icon: NotebookPen, also: ["/account/saved", "/account/frequent", "/flashcard"] },
-  { to: "/account/attempts", label: "Kết quả", icon: ListChecks, also: ["/account/reports", "/account/grades"] },
+  { to: "/", label: "Trang chủ", icon: NAV_ICON.home },
+  { to: "/account/exams", label: "Kho đề", icon: NAV_ICON.library, also: ["/kho-de"] },
+  { to: "/account/review", label: "Ôn tập", icon: NAV_ICON.review, also: ["/account/saved", "/account/frequent", "/flashcard"] },
+  { to: "/account/attempts", label: "Kết quả", icon: NAV_ICON.attempts, also: ["/account/reports", "/account/grades"] },
 ];
 const GUEST_TABS: Tab[] = [
-  { to: "/", label: "Trang chủ", icon: Home },
-  { to: "/kho-de", label: "Kho đề", icon: BookOpen },
-  { to: "/pro", label: "Gói Pro", icon: Crown },
-  { to: "/register", label: "Đăng ký", icon: UserPlus }, // Đăng nhập nằm ở header
+  { to: "/", label: "Trang chủ", icon: NAV_ICON.home },
+  { to: "/kho-de", label: "Kho đề", icon: NAV_ICON.library },
+  { to: "/pro", label: "Gói Pro", icon: NAV_ICON.pro },
+  { to: "/register", label: "Đăng ký", icon: NAV_ICON.referral }, // Đăng nhập nằm ở header
 ];
 
 // Chỉ hiện ở các trang duyệt nội dung; màn làm bài, đăng nhập, quản trị... không có thanh này.
@@ -68,7 +69,7 @@ export function BottomNav({ more }: { more: NavItem[] }) {
           return (
             <Link key={t.to} to={t.to} aria-current={on ? "page" : undefined} className="flex h-16 flex-1 flex-col items-center justify-center gap-1">
               <span className={pill(on)}>
-                <t.icon size={22} />
+                <t.icon size={30} />
               </span>
               <span className={label(on)}>{t.label}</span>
             </Link>

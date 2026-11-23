@@ -1,7 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
-import { Bookmark, Crown, FileText, Flame, Layers, NotebookPen, BookOpen, ListChecks, GraduationCap, LayoutDashboard, UserRound, Wallet, Receipt, Gift, UserPlus, ShoppingBag, ImageUp } from "lucide-react";
 import { PanelLayout, type NavItem } from "@/shared/layout/PanelLayout";
+import { NAV_ICON } from "@/shared/layout/navIcons";
 import { BottomNav } from "@/shared/layout/BottomNav";
 import { Loading } from "@/shared/ui/Feedback";
 import { isUuid } from "@/shared/utils/uuid";
@@ -81,23 +81,23 @@ const AttemptDetailPage = lazy(() => import("@/features/history/pages/AttemptDet
 
 // Thanh bên của người dùng, xếp theo việc người học làm: tìm và làm đề -> ôn tập -> xem kết quả -> ví và Pro -> hồ sơ
 const ACCOUNT_NAV: NavItem[] = [
-  { to: "/account", label: "Tổng quan", icon: LayoutDashboard, end: true },
-  { to: "/account/exams", label: "Kho đề", icon: BookOpen, group: "Luyện đề" },
-  { to: "/account/contribute", label: "Đóng góp đề thi", icon: ImageUp, group: "Luyện đề" },
-  { to: "/account/review", label: "Sổ câu sai", icon: NotebookPen, group: "Ôn tập" },
-  { to: "/account/saved", label: "Câu đã lưu", icon: Bookmark, group: "Ôn tập" },
-  { to: "/account/frequent", label: "Câu hay ra", icon: Flame, group: "Ôn tập" },
-  { to: "/flashcard", label: "Flashcard", icon: Layers, group: "Ôn tập" },
+  { to: "/account", label: "Tổng quan", icon: NAV_ICON.overview, end: true },
+  { to: "/account/exams", label: "Kho đề", icon: NAV_ICON.library, group: "Luyện đề" },
+  { to: "/account/contribute", label: "Đóng góp đề thi", icon: NAV_ICON.contribute, group: "Luyện đề" },
+  { to: "/account/review", label: "Sổ câu sai", icon: NAV_ICON.review, group: "Ôn tập" },
+  { to: "/account/saved", label: "Câu đã lưu", icon: NAV_ICON.saved, group: "Ôn tập" },
+  { to: "/account/frequent", label: "Câu hay ra", icon: NAV_ICON.frequent, group: "Ôn tập" },
+  { to: "/flashcard", label: "Flashcard", icon: NAV_ICON.flashcard, group: "Ôn tập" },
   // Tạm ẩn: { to: "/account/materials", label: "Phân tích slide", icon: FileText, group: "Ôn tập" },
-  { to: "/account/attempts", label: "Lịch sử làm bài", icon: ListChecks, group: "Kết quả", also: ["/account/reports"] },
-  { to: "/account/grades", label: "Điểm FAP", icon: GraduationCap, group: "Kết quả" },
-  { to: "/pro", label: "Gói Pro", icon: Crown, group: "Ví và Pro" },
-  { to: "/account/deposit", label: "Nạp credit", icon: Wallet, group: "Ví và Pro" },
-  { to: "/account/transactions", label: "Lịch sử giao dịch", icon: Receipt, group: "Ví và Pro" },
-  { to: "/account/giftcode", label: "Mã quà tặng", icon: Gift, group: "Ưu đãi" },
-  { to: "/account/referral", label: "Giới thiệu bạn bè", icon: UserPlus, group: "Ưu đãi" },
-  { to: "/account/coursera", label: "Đặt đơn Coursera", icon: ShoppingBag, group: "Dịch vụ" },
-  { to: "/account/profile", label: "Hồ sơ", icon: UserRound, group: "Tài khoản" },
+  { to: "/account/attempts", label: "Lịch sử làm bài", icon: NAV_ICON.attempts, group: "Kết quả", also: ["/account/reports"] },
+  { to: "/account/grades", label: "Điểm FAP", icon: NAV_ICON.grades, group: "Kết quả" },
+  { to: "/pro", label: "Gói Pro", icon: NAV_ICON.pro, group: "Ví và Pro" },
+  { to: "/account/deposit", label: "Nạp credit", icon: NAV_ICON.deposit, group: "Ví và Pro" },
+  { to: "/account/transactions", label: "Lịch sử giao dịch", icon: NAV_ICON.transactions, group: "Ví và Pro" },
+  { to: "/account/giftcode", label: "Mã quà tặng", icon: NAV_ICON.giftcode, group: "Ưu đãi" },
+  { to: "/account/referral", label: "Giới thiệu bạn bè", icon: NAV_ICON.referral, group: "Ưu đãi" },
+  { to: "/account/coursera", label: "Đặt đơn Coursera", icon: NAV_ICON.coursera, group: "Dịch vụ" },
+  { to: "/account/profile", label: "Hồ sơ", icon: NAV_ICON.profile, group: "Tài khoản" },
 ];
 
 // Đường dẫn cũ của Thư viện đề (và liên kết từ trang môn): chuyển sang Kho đề > Theo môn, giữ mã môn
