@@ -47,7 +47,7 @@ export const explainFeedbackBody = z
   })
   .strict();
 
-export const listFeedbackQuery = paginationQuery.extend({ helpful: z.enum(["up", "down"]).optional(), resolved: resolvedFilter });
+export const listFeedbackQuery = paginationQuery.extend({ helpful: z.enum(["up", "down"]).optional(), resolved: resolvedFilter, q: z.string().trim().max(100).optional() }); // tên đề, email hoặc nội dung nhận xét
 
 export const examIdParam = z.object({ examId: uuidSchema });
 

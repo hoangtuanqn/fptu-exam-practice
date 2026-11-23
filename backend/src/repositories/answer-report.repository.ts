@@ -43,8 +43,13 @@ export const answerReportRepository = {
   },
 
   // Admin: danh sách (chỉ các cột cần), người báo cáo kèm theo. resolved: true = đã giải quyết, false = chưa, undefined = tất cả
-  async listAdmin(query: PaginationQuery, status?: ReportStatus, resolved?: boolean) {
-    const where: Prisma.AnswerReportWhereInput = { status, resolvedAt: resolved === undefined ? undefined : resolved ? { not: null } : null };
+  async listAdmin(query: PaginationQuery & { q?: string }, status?: ReportStatus, resolved?: boolean) {
+    const { q } = query;
+    const where: Prisma.AnswerReportWhereInput = {
+      status,
+      resolvedAt: resolved === undefined ? undefined : resolved ? { not: null } : null,
+      ...(q && { OR: [{ exam: { title: { contains: q } } }, { user: { email: { contains: q } } }, { user: { fullName: { contains: q } } }] }),
+    };
     const [items, total] = await Promise.all([
       prisma.answerReport.findMany({ where, select: adminSelect, orderBy: { id: "desc" }, ...toSkipTake(query) }),
       prisma.answerReport.count({ where }),
