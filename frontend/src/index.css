@@ -17,6 +17,10 @@
   display: none;
 }
 /* Skeleton (chờ tải): nền xám nhạt, một dải sáng quét qua nhẹ; người dùng bật giảm chuyển động thì chỉ còn nền tĩnh */
+/* Cuộn tới một thẻ (phân trang) thì chừa chỗ cho thanh header cố định */
+section {
+  scroll-margin-top: 5rem;
+}
 .md-skeleton {
   position: relative;
   overflow: hidden;
