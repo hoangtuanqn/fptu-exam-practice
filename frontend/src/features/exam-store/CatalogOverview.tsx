@@ -100,7 +100,7 @@ function SemesterTabs({ overview, value, onChange }: { overview?: LibraryOvervie
     ...overview.bySemester.map((b) => ({ key: b.semester === null ? "none" : String(b.semester), label: b.semester === null ? "Chưa phân loại" : `Kỳ ${b.semester}`, count: b.subjects })),
   ];
   return (
-    <div role="tablist" aria-label="Lọc môn theo kỳ" className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:flex-wrap sm:px-0">
+    <div role="tablist" aria-label="Lọc môn theo kỳ" className="-mx-4 flex gap-x-1.5 gap-y-3 overflow-x-auto px-4 py-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:flex-wrap sm:px-0">
       {items.map((i) => {
         const on = value === i.key;
         return (
@@ -111,7 +111,7 @@ function SemesterTabs({ overview, value, onChange }: { overview?: LibraryOvervie
             aria-selected={on}
             disabled={i.count === 0 && !on}
             onClick={() => onChange(i.key)}
-            className={`md-state md-label-medium inline-flex h-7 shrink-0 items-center whitespace-nowrap rounded-full border px-3 disabled:opacity-40 ${on ? "border-transparent bg-secondary-container text-on-secondary-container" : "border-outline text-on-surface"}`}
+            className="site-chip md-state md-label-medium disabled:opacity-40"
           >
             {i.label}
           </button>

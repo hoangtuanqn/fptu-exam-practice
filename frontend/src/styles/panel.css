@@ -1,3 +1,75 @@
 /* Class thành phần cho khung tài khoản, panel, trang làm đề và trang quản trị (cùng nguyên tắc với site.css). */
 @layer components {
+  /* ---- Khung panel (PanelLayout): thanh trên, ngăn điều hướng, rail, vùng nội dung ---- */
+  .panel-topbar {
+    @apply sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between gap-2 bg-surface px-2 sm:px-4 expanded:px-6;
+  }
+  /* Chip số dư: số dư đã có trong menu tài khoản, chip chỉ hiện từ xl (dưới đó ngăn 288px bên trái + menu tài khoản đã chiếm gần hết thanh) */
+  .panel-credit-chip {
+    @apply mr-1 hidden h-8 items-center gap-2 rounded-m3-sm border border-outline px-3 text-on-surface-variant xl:flex;
+  }
+  /* compact: ngăn mở ra (modal) trượt từ trái; medium: ẩn (dùng rail); expanded: ngăn cố định.
+     Trạng thái mở/đóng (translate) để inline trong TSX: lớp utilities thắng lớp components nên expanded:translate-x-0 phải nằm cùng lớp đó */
+  .panel-drawer {
+    @apply fixed inset-y-0 left-0 z-50 w-[min(22.5rem,85vw)] rounded-r-m3-xl bg-surface-container-low outline-none medium:hidden;
+    @apply expanded:sticky expanded:top-0 expanded:z-20 expanded:block expanded:h-dvh expanded:w-72 expanded:rounded-none expanded:border-r expanded:border-outline-variant expanded:bg-surface;
+  }
+  .panel-rail {
+    @apply sticky top-0 hidden h-dvh shrink-0 border-r border-outline-variant bg-surface medium:block expanded:hidden;
+  }
+  .panel-drawer-cta {
+    @apply flex h-14 items-center justify-center gap-3 rounded-m3-lg bg-primary-container text-on-primary-container shadow-m3-1;
+  }
+  .panel-nav-group {
+    @apply flex h-10 w-full items-center justify-between rounded-full px-4 text-on-surface-variant;
+  }
+  .panel-nav-badge {
+    @apply flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full bg-error px-1 tabular-nums text-on-error;
+  }
+  .panel-main {
+    @apply min-w-0 flex-1 px-4 pb-6 pt-2 sm:px-6 expanded:px-8 expanded:pb-8;
+  }
+
+  /* ---- Mẫu lặp lại trong các trang panel ---- */
+  /* Nới vùng chạm của nút biểu tượng nhỏ lên khoảng 44px mà không đổi bố cục (phần tử phải có position: relative/absolute) */
+  .panel-hit {
+    @apply after:absolute after:-inset-2 after:content-[''];
+  }
+  /* Liên kết/nút "Quay lại" phía trên tiêu đề trang: đủ cao để bấm bằng ngón tay */
+  .panel-back-link {
+    @apply inline-flex min-h-11 items-center gap-1.5 text-sm text-on-surface-variant hover:text-on-surface lg:min-h-0;
+  }
+  /* Hàng bộ lọc trên đầu bảng: xuống dòng khi hẹp, không phần tử nào rộng hơn hàng */
+  .panel-filter-row {
+    @apply flex flex-wrap items-center gap-3 border-b border-surface-container p-4 *:max-w-full;
+  }
+  /* Hàng cài đặt: mô tả bên trái, công tắc bên phải */
+  .panel-setting-row {
+    @apply flex items-center justify-between gap-4 rounded-lg border border-outline-variant p-4;
+  }
+
+  /* ---- Màn làm đề ---- */
+  /* Nút công cụ vuông 36px ở đầu câu (lưu, đánh dấu, menu); vùng chạm 44px nhờ lớp after. Trạng thái bật: ghi đè màu bằng utility */
+  .panel-q-tool {
+    @apply relative flex h-9 w-9 items-center justify-center rounded-md border border-outline-variant bg-surface-container-lowest text-on-surface-variant transition;
+    @apply after:absolute after:-inset-1 after:content-[''] hover:border-outline hover:text-on-surface;
+  }
+  /* Nút "Câu 5/40": viên ngang trên điện thoại, viên dọc ở mép trái từ lg; vùng chạm cao 44px trên màn chạm */
+  .panel-qlist-toggle {
+    @apply relative inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-outline-variant bg-secondary-container px-3 py-1 text-on-secondary-container shadow-sm hover:shadow-md;
+    @apply after:absolute after:-inset-y-2 after:inset-x-0 after:content-[''] lg:flex-col lg:gap-1 lg:rounded-2xl lg:px-2.5 lg:py-3;
+  }
+  /* Lời giải AI: tấm trượt lên từ đáy (tối đa 58% màn hình) dưới lg; từ lg là cột bên phải, rộng theo --panel-w (kéo được) */
+  .panel-explain-sheet {
+    @apply fixed inset-x-0 bottom-0 z-30 flex max-h-[58dvh] flex-col rounded-t-2xl border-t border-outline-variant bg-surface-container-lowest shadow-[0_-8px_30px_rgba(15,23,42,0.12)];
+    @apply lg:relative lg:z-auto lg:max-h-none lg:min-h-0 lg:w-[var(--panel-w)] lg:shrink-0 lg:rounded-none lg:border-l lg:border-t-0 lg:shadow-none;
+  }
+}
+
+/* Nút chat nổi (mascot) góc phải dưới: ẩn ở màn làm đề (data-no-bottom-nav), chỉ dưới 840px, và khi trang có thanh/nút chính sát đáy (data-hide-chat),
+   để không che nút Tiếp, Nộp bài... Để ngoài @layer vì nút đặt display bằng utility (flex). */
+@media (width < 840px) {
+  :root:has([data-no-bottom-nav], [data-hide-chat]) .panel-chat-fab {
+    display: none;
+  }
 }

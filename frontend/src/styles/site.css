@@ -1,3 +1,40 @@
 /* Class thành phần cho header, trang chủ và các trang công khai. Dùng @apply với token chủ đề; thêm class mới vào đây thay vì lặp chuỗi class dài trong TSX. */
 @layer components {
+  /* ---- Header công khai. Các bậc bề rộng (không mục nào được xuống dòng hay đè nhau):
+     < 600 (compact): logo + nút biểu tượng, điều hướng nằm ở BottomNav.
+     600-1279: logo (+ tên sản phẩm từ 840) + nút menu gom điều hướng + tìm kiếm dạng biểu tượng + tài khoản.
+     >= 1280 (xl): đủ hàng điều hướng và ô tìm kiếm. ---- */
+  .site-header {
+    @apply sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between gap-2 border-b border-outline-variant bg-surface/90 px-2 backdrop-blur sm:px-4;
+  }
+  .site-header-brand {
+    @apply flex min-w-0 items-center gap-3;
+  }
+  /* Tên sản phẩm cạnh logo: chỉ hiện khi đủ chỗ, không bao giờ xuống dòng */
+  .site-header-product {
+    @apply hidden min-w-0 items-center gap-3 truncate whitespace-nowrap text-base font-semibold tracking-tight text-on-surface expanded:flex;
+  }
+  .site-header-actions {
+    @apply flex shrink-0 items-center gap-1 sm:gap-2;
+  }
+  /* Ô tìm kiếm dạng viên thuốc trên header: chỉ từ 1280px, dưới đó là nút biểu tượng */
+  .site-search-field {
+    @apply hidden h-10 w-44 shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-outline-variant bg-surface-container-low px-3.5 text-sm text-on-surface-variant hover:border-on-surface/60 xl:flex 2xl:w-60;
+  }
+  /* Mục điều hướng trên hàng header: một dòng, không co; mục đang mở tô nền secondary-container */
+  .site-nav-link {
+    @apply inline-flex h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-3 text-on-surface-variant hover:text-on-surface 2xl:px-4;
+    @apply aria-[current=page]:bg-secondary-container aria-[current=page]:text-on-secondary-container;
+  }
+  /* Chip lọc M3 (lọc theo kỳ...): cao 32dp, vùng chạm 44dp nhờ phần mở rộng vô hình; đang chọn (aria-selected/aria-pressed) tô secondary-container.
+     Hàng chip xuống dòng cần gap-y-3 để vùng chạm hai hàng không chồng nhau. */
+  .site-chip {
+    @apply relative inline-flex h-8 shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-outline-variant px-3 text-on-surface after:absolute after:inset-x-0 after:-inset-y-1.5 after:content-[''];
+    @apply aria-selected:border-transparent aria-selected:bg-secondary-container aria-selected:text-on-secondary-container;
+    @apply aria-pressed:border-transparent aria-pressed:bg-secondary-container aria-pressed:text-on-secondary-container;
+  }
+  /* Menu xổ xuống từ header (menu điều hướng, menu tài khoản): bề mặt M3 menu, không tràn khỏi màn hình hẹp */
+  .site-menu {
+    @apply absolute top-full z-50 mt-1 max-w-[calc(100vw-1rem)] overflow-hidden rounded-m3-sm bg-surface-container py-2 text-on-surface shadow-m3-2;
+  }
 }
