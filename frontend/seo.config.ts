@@ -85,6 +85,7 @@ export const PRIVATE_PAGES: Record<string, PageSeo> = {
   "/account/giftcode": { title: "Nhập giftcode", description: "Nhập mã quà tặng để nhận thêm credit vào tài khoản." },
   "/account/transactions": { title: "Lịch sử giao dịch", description: "Toàn bộ biến động credit: nạp, thưởng, mua đề và hoàn tiền." },
   "/account/profile": { title: "Hồ sơ cá nhân", description: "Đổi ảnh đại diện, tên hiển thị, mật khẩu và kết nối đăng nhập." },
+  "/account/badges": { title: "Huy hiệu", description: "Huy hiệu bạn đã đạt khi luyện đề, ôn tập và đóng góp, kèm tiến độ lên bậc tiếp theo." },
   "/account/notifications": { title: "Thông báo", description: "Các thông báo gửi tới tài khoản của bạn." },
 
   "/admin": { title: "Quản trị: tổng quan", description: "Số liệu tổng quan hệ thống dành cho quản trị viên." },
@@ -113,6 +114,7 @@ export const PRIVATE_PAGES: Record<string, PageSeo> = {
   "/admin/ai": { title: "Quản trị: AI giải đáp án", description: "Thiết lập mô hình AI giải đáp án và giải thích." },
   "/admin/funnel": { title: "Quản trị: phễu người dùng", description: "Người đăng ký đi được tới đâu: lấy đề, nộp bài, nạp tiền, mua Pro." },
   "/admin/quality": { title: "Quản trị: chất lượng đề", description: "Câu nhiều người sai và đáp án có thể sai theo bài làm thực tế." },
+  "/admin/badges": { title: "Quản trị: huy hiệu", description: "Số người đạt từng huy hiệu và từng bậc." },
   "/admin/chatbot": { title: "Quản trị: chatbot hỗ trợ", description: "Cấu hình trợ lý Cóc Pass." },
   "/admin/marketing": { title: "Quản trị: email marketing", description: "Bật tắt các chiến dịch thư gợi ý và gửi thư mẫu." },
   "/admin/system-notices": { title: "Quản trị: gửi thông báo", description: "Gửi thông báo hệ thống tới mọi người dùng." },
