@@ -28,13 +28,13 @@ thì không tốn token (ví dụ luật vẽ đồ thị chỉ có trong `expla
 - **Ghép prompt** (`buildSystem(việc, mã)`): mảng `system` theo thứ tự cố định `base` (cache 1 giờ) → `module` (bỏ qua nếu thân rỗng)
   → `features` (nếu bật).
 - File được đọc **một lần lúc khởi động**; sửa prompt thì triển khai lại. Thiếu file hoặc front-matter sai thì server báo lỗi ngay.
-- `system` **chỉ chứa nội dung tĩnh**. Ngày giờ, ID, tiêu đề đề, bình luận... đều nằm trong `messages` (nếu không, prompt cache hỏng).
+- `system` **chỉ chứa nội dung tĩnh**. Ngày giờ, ID, tiêu đề đề... đều nằm trong `messages` (nếu không, prompt cache hỏng).
   Loader từ chối prompt có chuỗi giống ngày giờ, UUID hay `{{biến}}`.
 
 ## Việc nào ở đâu
 | Loại | Ở đâu |
 |---|---|
-| Kiểm tra được bằng logic xác định (định dạng, chuẩn hoá, đếm) | **Code**: `parseOutput`, `tallyOfComments`, kiểm tra đủ câu, thử lại câu thiếu |
+| Kiểm tra được bằng logic xác định (định dạng, chuẩn hoá, đếm) | **Code**: `parseOutput`, kiểm tra đủ câu, thử lại câu thiếu |
 | Ràng buộc cấu trúc output của việc giải đề | **Schema** (structured outputs) trong `exam-solver.service.ts` |
 | Phán đoán, đúng với mọi môn | `<việc>/base.md` |
 | Phán đoán, chỉ đúng với một môn | `<việc>/modules/<MÃ>.md` |

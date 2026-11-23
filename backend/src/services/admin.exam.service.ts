@@ -12,7 +12,6 @@ import { toMeta, type PaginationQuery } from "../utils/pagination";
 import { aiSettingService } from "./ai-setting.service";
 import { aiReady } from "../constants/ai";
 import { solveExam } from "./ai/exam-solver.service";
-import { compactCommentsText } from "./crawler/comments-file.service";
 import { examSolveService } from "./exam-solve.service";
 import { subjectCodeFromTitle } from "../utils/subject-code";
 import { buildExamZip, ExamZipTooLarge, withTrustedAnswers } from "../utils/exam-zip";
@@ -44,8 +43,8 @@ export const adminExamService = {
   },
 
   /**
-   * AI giải lại MỘT câu để admin đối chiếu, dùng bình luận đã lưu trong comments.txt (nếu có). Dùng đúng bộ prompt giải đề
-   * (base + module môn, đã cache) nên chất lượng như khi giải cả đề, nhưng chỉ gửi ảnh và bình luận của đúng câu này nên rẻ hơn nhiều.
+   * AI giải lại MỘT câu để admin đối chiếu, không dùng bình luận. Dùng đúng bộ prompt giải đề
+   * (base + module môn, đã cache) nên chất lượng như khi giải cả đề, nhưng chỉ gửi ảnh của đúng câu này nên rẻ hơn nhiều.
    * Không ghi đáp án vào DB: trả gợi ý để admin duyệt rồi lưu. commentsRefreshed/commentsCount/commentsNote giữ cho giao diện cũ.
    */
   async resolveQuestion(id: string, number: number) {
@@ -58,12 +57,9 @@ export const adminExamService = {
     if (!q) throw AppError.notFound("Không tìm thấy câu này");
     if (exam.answerSource === "PENDING" || examSolveService.isBusy(id)) throw AppError.conflict("AI đang giải cả đề này, chờ xong rồi giải lại từng câu");
 
-    const dir = path.join(storageDir, EXAM_STORAGE_DIR, exam.threadId);
-    const raw = await fs.readFile(path.join(dir, "comments.txt"), "utf-8").catch(() => null);
     try {
       const r = await solveExam(ai, {
         title: exam.title,
-        commentsText: raw ? compactCommentsText(raw) : null,
         questions: [{ number: q.number, name: q.name, file: path.join(storageDir, q.imagePath) }],
       });
       return { number, answer: r.answers[0] ?? "", notQuestion: r.notQuestions.includes(number), report: r.report, commentsRefreshed: false, commentsCount: null, commentsNote: null };
