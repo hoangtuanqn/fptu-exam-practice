@@ -4,11 +4,11 @@ import { storageDir } from "../configs/env";
 import { EXAM_STORAGE_DIR } from "../constants/crawler";
 import { prisma } from "../configs/prisma";
 import { realtimeHub } from "../realtime/hub";
-import type { RenameExamBody, UpdateExamQuestionsBody } from "../rules/requests/admin.request";
+import type { ListAdminExamsQuery, RenameExamBody, UpdateExamQuestionsBody } from "../rules/requests/admin.request";
 import { fileUrlOf } from "../utils/file-url";
 import { examRepository } from "../repositories/exam.repository";
 import { AppError } from "../rules/error";
-import { toMeta, type PaginationQuery } from "../utils/pagination";
+import { toMeta } from "../utils/pagination";
 import { aiSettingService } from "./ai-setting.service";
 import { aiReady } from "../constants/ai";
 import { solveExam } from "./ai/exam-solver.service";
@@ -20,7 +20,7 @@ import { AI_NOT_SOLVABLE_MESSAGE, EXAM_ZIP_MAX_BYTES, EXAM_ZIP_MAX_QUESTIONS, is
 import { HTTP_STATUS } from "../constants/httpStatus";
 
 export const adminExamService = {
-  async list(query: PaginationQuery) {
+  async list(query: ListAdminExamsQuery) {
     const { items, total } = await examRepository.listAll(query);
     return {
       items: items.map((e) => ({

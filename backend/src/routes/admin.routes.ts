@@ -55,7 +55,7 @@ import { uploadExamImages } from "../middlewares/upload.middlewares";
 import { adminExamUploadController } from "../controllers/admin.exam-upload.controllers";
 import { examGapFilter, examGapsQuery, updateExamImagesBody, uploadExamBody } from "../rules/requests/exam-upload.request";
 import { paginationQuery } from "../utils/pagination";
-import { adjustBalanceBody, uuidParam, listUsersQuery, questionParam, renameExamBody, resetPasswordBody, updateExamQuestionsBody, updateUserBody } from "../rules/requests/admin.request";
+import { adjustBalanceBody, listAdminExamsQuery, uuidParam, listUsersQuery, questionParam, renameExamBody, resetPasswordBody, updateExamQuestionsBody, updateUserBody } from "../rules/requests/admin.request";
 
 const adminRouter = Router();
 
@@ -149,7 +149,7 @@ adminRouter.put("/settings/crawler", validate(updateCrawlerBody), adminCrawlerCo
 adminRouter.get("/settings/ai", adminAiController.getSettings);
 adminRouter.put("/settings/ai", validate(updateAiBody), adminAiController.updateSettings);
 
-adminRouter.get("/exams", validate(paginationQuery, "query"), adminAiController.listExams);
+adminRouter.get("/exams", validate(listAdminExamsQuery, "query"), adminAiController.listExams);
 // Tải đề bằng tay (thư mục images/Q<số>.webp + ans.json): tạo đề / cập nhật ảnh của đề có sẵn; mỗi admin một lần tải đang chạy.
 // ?async=1: trả 202 ngay sau khi nhận tệp, xử lý nền; kết quả ở GET /exam-upload/jobs và sự kiện realtime admin:exam-upload
 adminRouter.post("/exams/upload", oneExamUploadPerAdmin, examUploadQueueRoom, uploadExamImages, validate(uploadExamBody), adminExamUploadController.upload);
