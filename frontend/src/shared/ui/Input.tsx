@@ -5,7 +5,7 @@ import { IconButton } from "./Button";
 // Ô nhập thô (không nhãn nổi) dùng khi cần tự bố cục: kiểu outlined của M3 (viền outline, focus đổi sang primary dày 2dp)
 const RAW =
   "md-body-medium h-12 w-full rounded-m3-xs border bg-transparent px-4 text-on-surface placeholder:text-on-surface-variant outline-none md-motion " +
-  "focus:border-primary focus:shadow-[inset_0_0_0_1px_var(--md-sys-color-primary)] disabled:border-on-surface/12 disabled:text-on-surface/38";
+  "hover:bg-on-surface/[0.04] focus:border-primary focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--md-sys-color-primary)_18%,transparent)] disabled:border-on-surface/12 disabled:text-on-surface/38";
 
 export const inputClass = (error?: string) => `${RAW} ${error ? "border-error shadow-[inset_0_0_0_1px_var(--md-sys-color-error)]" : "border-outline hover:border-on-surface"}`;
 
@@ -45,7 +45,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input({ l
   const describedBy = error || hint ? `${inputId}-support` : undefined;
   return (
     <div>
-      <div className={`group relative rounded-t-m3-xs bg-surface-container-highest md-motion ${props.disabled ? "opacity-[0.38]" : ""}`}>
+      {/* Lớp phủ hover kiểu M3 nằm dưới chữ (-z-10 trong ngữ cảnh isolate), không chặn click */}
+      <div className={`group relative isolate rounded-t-m3-xs bg-surface-container-highest md-motion before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-t-m3-xs before:bg-on-surface before:opacity-0 before:content-[''] hover:before:opacity-[0.08] ${props.disabled ? "opacity-[0.38]" : ""}`}>
         <input
           ref={ref}
           id={inputId}
@@ -60,7 +61,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input({ l
         {label && (
           <label
             htmlFor={inputId}
-            className={`md-body-medium pointer-events-none absolute left-4 top-4 origin-left text-on-surface-variant md-motion peer-focus:top-1.5 peer-focus:text-xs peer-[:not(:placeholder-shown)]:top-1.5 peer-[:not(:placeholder-shown)]:text-xs ${
+            className={`md-body-medium pointer-events-none absolute left-4 top-4 origin-left text-on-surface-variant md-motion peer-focus:-translate-y-2.5 peer-focus:scale-75 peer-[:not(:placeholder-shown)]:-translate-y-2.5 peer-[:not(:placeholder-shown)]:scale-75 ${
               error ? "!text-error" : "peer-focus:text-primary"
             }`}
           >
@@ -71,13 +72,13 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input({ l
         {/* Đường kẻ dưới: 1dp (outline), dày lên 2dp màu primary khi focus */}
         <span
           aria-hidden
-          className={`pointer-events-none absolute inset-x-0 bottom-0 h-px md-motion peer-hover:h-0.5 peer-focus:h-0.5 ${
+          className={`pointer-events-none absolute inset-x-0 bottom-0 h-px origin-bottom md-motion peer-hover:scale-y-[2] peer-focus:scale-y-[2] ${
             error ? "bg-error" : "bg-on-surface-variant peer-focus:bg-primary"
           }`}
         />
       </div>
       {(error || hint) && (
-        <p id={describedBy} role={error ? "alert" : undefined} className={`md-body-small mt-1 px-4 ${error ? "text-error" : "text-on-surface-variant"}`}>
+        <p id={describedBy} role={error ? "alert" : undefined} className={`md-body-small mt-1 animate-fade-up px-4 ${error ? "text-error" : "text-on-surface-variant"}`}>
           {error ?? hint}
         </p>
       )}

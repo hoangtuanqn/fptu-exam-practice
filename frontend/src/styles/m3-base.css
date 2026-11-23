@@ -78,7 +78,7 @@
 
 /* ---- Chuyển động: mặc định dùng easing standard, thời lượng short4 (200ms) ---- */
 .md-motion {
-  transition-property: background-color, color, border-color, box-shadow, opacity, transform;
+  transition-property: background-color, color, border-color, box-shadow, opacity, transform, translate, scale;
   transition-duration: var(--md-sys-motion-duration-short4);
   transition-timing-function: var(--md-sys-motion-easing-standard);
 }

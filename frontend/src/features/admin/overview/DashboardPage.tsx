@@ -5,6 +5,7 @@ import { DepositStatusBadge, RoleBadge } from "@/shared/components/StatusBadge";
 import { useApi } from "@/shared/hooks/useApi";
 import { Card, CardHeader, PageHeader, StatCard, StatGrid } from "@/shared/ui/Card";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
+import { SkeletonBlock } from "@/shared/ui/Skeleton";
 import { formatDate, formatDateTime, formatMoney, initials } from "@/shared/utils/formatters";
 
 const QUICK = [
@@ -22,17 +23,19 @@ const seeAll = (to: string) => (
 );
 
 export default function DashboardPage() {
-  const { data, error, loading, reload } = useApi(() => adminApi.dashboard(), []);
+  const { data, error, reload } = useApi(() => adminApi.dashboard(), []);
   const deposits = useApi(() => adminApi.deposits(1, ""), []);
   const users = useApi(() => adminApi.users({ page: 1 }), []);
 
-  if (loading && !data) return <Loading />;
+  const header = <PageHeader eyebrow="Quản trị" title="Tổng quan" description="Tình hình thành viên và dòng tiền nạp." />;
+  // Chờ dữ liệu: giữ tiêu đề, phần số liệu hiện skeleton
+  if (!data && !error) return <div className="space-y-8">{header}<SkeletonBlock lines={8} /></div>;
   if (error || !data) return <ErrorBox message={error ?? "Không có dữ liệu"} onRetry={reload} />;
   const stats = { users: data.users, deposits: data.deposits };
 
   return (
     <div className="space-y-8">
-      <PageHeader eyebrow="Quản trị" title="Tổng quan" description="Tình hình thành viên và dòng tiền nạp." />
+      {header}
 
       {stats.deposits.unmatchedTransactions > 0 && (
         <Link

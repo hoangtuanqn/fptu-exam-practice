@@ -104,7 +104,8 @@ export default defineConfig(({ mode }) => {
   };
 
   return {
-    plugins: [react(), tailwindcss(), brandHtml, webManifest, seoPages],
+    // React Compiler (target 18 dự án đang dùng React 18): tự memo component/hook, bớt render lại khi đổi trang
+    plugins: [react({ babel: { plugins: [["babel-plugin-react-compiler", { target: "18" }]] } }), tailwindcss(), brandHtml, webManifest, seoPages],
     // "@/shared/ui/Button" = src/shared/ui/Button (Vite hiểu "/src" là thư mục src của dự án)
     resolve: { alias: { "@": "/src" } },
     // Gọi /api/... từ trình duyệt, Vite chuyển tiếp sang backend (tránh CORS khi phát triển)

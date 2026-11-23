@@ -5,6 +5,7 @@ import { useToast } from "@/shared/context/ToastContext";
 import { useSubmit } from "@/shared/hooks/useSubmit";
 import { Button } from "@/shared/ui/Button";
 import { FormError } from "@/shared/ui/Feedback";
+import { SkeletonBlock } from "@/shared/ui/Skeleton";
 import { Input } from "@/shared/ui/Input";
 import { referralApi } from "@/features/referral/referral.api";
 import { useApi } from "@/shared/hooks/useApi";
@@ -65,10 +66,11 @@ export default function ReferralPage() {
   const [url, setUrl] = useUrlState({ page: "1" });
   const page = toPage(url.page);
   const setPage = (p: number) => setUrl({ page: String(p) });
-  const { data, error, loading, reload } = useApi(() => referralApi.me(page), [page]);
+  const { data, error, reload } = useApi(() => referralApi.me(page), [page]);
   useClampPage(data?.meta, setPage);
 
-  if (loading && !data) return <Loading />;
+  // Chờ dữ liệu: giữ tiêu đề trang, chỉ thay phần nội dung bằng skeleton
+  if (!data && !error) return (<><PageHeader title="Giới thiệu bạn bè" /><Card><SkeletonBlock lines={4} /></Card></>);
   if (error || !data) return <ErrorBox message={error ?? "Không tải được dữ liệu"} onRetry={reload} />;
 
   const link = `${window.location.origin}/register?ref=${data.code}`;

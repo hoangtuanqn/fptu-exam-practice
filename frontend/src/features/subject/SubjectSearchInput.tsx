@@ -12,7 +12,7 @@ export function SubjectSearchInput({ value, onChange, placeholder = "Gõ mã mô
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         aria-label="Tìm môn"
-        className="h-14 w-full rounded-full border border-outline-variant/80 bg-gradient-to-b from-surface-container-lowest to-surface-container-low pl-16 pr-5 text-base shadow-[0_1px_2px_rgba(0,0,0,0.05),0_14px_30px_-16px_rgba(70,45,0,0.45)] outline-none transition placeholder:text-on-surface-variant focus:border-[#e0a100] focus:shadow-[0_0_0_4px_rgba(255,198,31,0.22),0_14px_30px_-16px_rgba(70,45,0,0.45)]"
+        className="h-14 w-full rounded-full border border-outline-variant/80 bg-gradient-to-b from-surface-container-lowest to-surface-container-low pl-16 pr-5 text-base shadow-[0_1px_2px_rgba(0,0,0,0.05),0_14px_30px_-16px_rgba(70,45,0,0.45)] outline-none transition-[border-color,box-shadow] duration-300 ease-out placeholder:text-on-surface-variant hover:border-[#e0a100]/60 focus:border-[#e0a100] focus:shadow-[0_0_0_4px_rgba(255,198,31,0.22),0_14px_30px_-16px_rgba(70,45,0,0.45)]"
       />
     </label>
   );

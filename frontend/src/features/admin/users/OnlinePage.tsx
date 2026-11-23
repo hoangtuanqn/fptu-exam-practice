@@ -5,19 +5,22 @@ import { onServerEvent } from "@/shared/realtime/socket";
 import { EVENTS } from "@/shared/realtime/events";
 import { Card, CardHeader, PageHeader, StatCard, StatGrid } from "@/shared/ui/Card";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
+import { SkeletonBlock } from "@/shared/ui/Skeleton";
 import { Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
 
 // Ai đang online và đang xem trang nào. Danh sách tự cập nhật khi server báo có thay đổi (không hỏi định kỳ).
 export default function OnlinePage() {
-  const { data, error, loading, reload } = useApi(() => adminApi.presence(), []);
+  const { data, error, reload } = useApi(() => adminApi.presence(), []);
   useEffect(() => onServerEvent(EVENTS.presence, reload), [reload]);
 
-  if (loading && !data) return <Loading />;
+  const header = <PageHeader eyebrow="Người dùng" title="Đang online" description="Thành viên và khách đang mở trang web, kèm trang họ đang xem. Mở nhiều tab thì hiện nhiều trang." />;
+  // Chờ dữ liệu: giữ tiêu đề, phần danh sách hiện skeleton
+  if (!data && !error) return <div className="space-y-6">{header}<SkeletonBlock lines={6} /></div>;
   if (error || !data) return <ErrorBox message={error ?? "Không có dữ liệu"} onRetry={reload} />;
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Người dùng" title="Đang online" description="Thành viên và khách đang mở trang web, kèm trang họ đang xem. Mở nhiều tab thì hiện nhiều trang." />
+      {header}
       <StatGrid>
         <StatCard label="Thành viên online" value={data.total} tone="emerald" />
         <StatCard label="Khách online" value={data.guests} tone="slate" />
