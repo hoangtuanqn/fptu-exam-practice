@@ -27,6 +27,18 @@
   .md-drawer-in-right { animation: none; }
 }
 
+/* Ô môn "có đề sẵn" hiện lần lượt (delay gắn theo từng ô bằng inline style) */
+@keyframes tile-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+.tile-in {
+  animation: tile-in 0.55s cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tile-in { animation: none; }
+}
+
 /* Đổi sáng/tối: chỉ dùng vòng tròn lan từ nút (ThemeContext), tắt cross-fade mặc định của trình duyệt */
 ::view-transition-old(root),
 ::view-transition-new(root) {
