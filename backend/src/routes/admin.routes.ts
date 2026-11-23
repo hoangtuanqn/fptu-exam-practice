@@ -2,6 +2,7 @@ import { Router } from "express";
 import adminInsightsRouter from "./admin-insights.routes";
 import { adminDashboardController } from "../controllers/admin.dashboard.controllers";
 import { adminUserController } from "../controllers/admin.user.controllers";
+import { listAdminReferralsQuery } from "../rules/requests/referral.request";
 import { listBankTxQuery, listDepositsQuery } from "../rules/requests/deposit.request";
 import { adminSepayController } from "../controllers/admin.sepay.controllers";
 import { adminDepositController } from "../controllers/admin.deposit.controllers";
@@ -194,7 +195,7 @@ adminRouter.delete("/exam-comments/:id", validate(uuidParam, "params"), adminExa
 adminRouter.get("/settings/referral", adminReferralController.getSettings);
 adminRouter.put("/settings/referral", validate(updateReferralBody), adminReferralController.updateSettings);
 adminRouter.get("/referrals/summary", adminReferralController.summary);
-adminRouter.get("/referrals", validate(paginationQuery, "query"), adminReferralController.list);
+adminRouter.get("/referrals", validate(listAdminReferralsQuery, "query"), adminReferralController.list);
 
 // Lỗi trả sớm ở route nhận tệp (409 single-flight, 400 tham số): đọc bỏ thân trước khi trả lời để nginx không báo 502
 adminRouter.use(drainBeforeError);

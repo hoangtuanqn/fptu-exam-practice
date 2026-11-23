@@ -9,16 +9,19 @@ import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
 import { useApi } from "@/shared/hooks/useApi";
 import type { BankTxStatus } from "@/shared/types/api";
 import { formatDateTime, formatMoney } from "@/shared/utils/formatters";
+import { SearchBox } from "@/shared/ui/SearchBox";
+import { useUrlSearch } from "@/shared/hooks/useUrlSearch";
 import { useClampPage } from "@/shared/hooks/useClampPage";
 
 export default function BankTransactionsPage() {
-  const [url, setUrl] = useUrlState({ status: "", page: "1" });
+  const [url, setUrl] = useUrlState({ status: "", page: "1", q: "" });
+  const [search, setSearch, q] = useUrlSearch(url.q, setUrl);
   const status = url.status as BankTxStatus | "";
   const page = toPage(url.page);
   const setPage = (p: number) => setUrl({ page: String(p) });
   const setStatus = (v: BankTxStatus | "") => setUrl({ status: v, page: "1" });
 
-  const { data, error, loading, reload } = useApi(() => adminApi.bankTransactions(page, status), [page, status]);
+  const { data, error, loading, reload } = useApi(() => adminApi.bankTransactions(page, status, q), [page, status, q]);
   useClampPage(data?.meta, setPage);
 
   return (
@@ -28,7 +31,8 @@ export default function BankTransactionsPage() {
         description="Tiền vào lấy từ SePay. Giao dịch “Chưa khớp” không có mã nạp hợp lệ, hãy đối chiếu rồi cộng tiền thủ công ở trang Thành viên."
       />
       <Card>
-        <div className="border-b border-slate-100 p-4">
+        <div className="flex flex-wrap gap-3 border-b border-slate-100 p-4">
+          <SearchBox value={search} onChange={setSearch} placeholder="Tìm theo nội dung chuyển khoản hoặc mã giao dịch" label="Tìm giao dịch" />
           <Segmented
             label="Lọc theo trạng thái"
             value={status}
@@ -86,7 +90,7 @@ export default function BankTransactionsPage() {
             <Pagination meta={data.meta} onPage={setPage} />
           </>
         ) : (
-          <Empty icon={Landmark} title="Chưa có giao dịch nào" />
+          <Empty icon={Landmark} title={q || status ? "Không có giao dịch nào khớp bộ lọc" : "Chưa có giao dịch nào"} />
         )}
       </Card>
     </>

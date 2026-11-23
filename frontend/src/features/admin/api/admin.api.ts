@@ -455,21 +455,23 @@ export const adminApi = {
   saveReferralSettings: (body: ReferralSettings) =>
     http.put<ReferralSettings>("/admin/settings/referral", body),
   referralSummary: () => http.get<ReferralSummary>("/admin/referrals/summary"),
-  referrals: (page: number) =>
-    http.list<AdminReferral>("/admin/referrals", { page, limit: PAGE_SIZE }),
+  referrals: (page: number, q = "") =>
+    http.list<AdminReferral>("/admin/referrals", { page, limit: PAGE_SIZE, q }),
 
-  deposits: (page: number, status?: DepositStatus | "", userId?: string) =>
+  deposits: (page: number, status?: DepositStatus | "", userId?: string, q = "") =>
     http.list<DepositOrder>("/admin/deposits", {
       page,
       limit: PAGE_SIZE,
       status,
       userId,
+      q,
     }),
-  bankTransactions: (page: number, status?: BankTxStatus | "") =>
+  bankTransactions: (page: number, status?: BankTxStatus | "", q = "") =>
     http.list<BankTransaction>("/admin/bank-transactions", {
       page,
       limit: PAGE_SIZE,
       status,
+      q,
     }),
 
   sepayConfig: () => http.get<SepayAdminConfig>("/admin/settings/sepay"),

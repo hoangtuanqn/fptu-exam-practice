@@ -124,7 +124,7 @@ export const depositService = {
 
   // admin (withUser) thấy người tạo lệnh; thành viên chỉ thấy lệnh của chính mình nên không cần
   async list(query: ListDepositsQuery, userId?: string, withUser = false) {
-    const { items, total } = await depositRepository.list(query, { userId, status: query.status }, withUser);
+    const { items, total } = await depositRepository.list(query, { userId, status: query.status, q: withUser ? query.q : undefined }, withUser);
     return { items, meta: toMeta(query, total) };
   },
 };

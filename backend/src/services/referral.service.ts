@@ -183,7 +183,7 @@ export const referralService = {
   // ----- Admin
   adminSummary: () => referralRepository.summary(),
 
-  async adminList(query: PaginationQuery) {
+  async adminList(query: PaginationQuery & { q?: string }) {
     const { items, total } = await referralRepository.listAll(query);
     const commission = await referralRepository.commissionByReferred(items.map((u) => u.id));
     return {

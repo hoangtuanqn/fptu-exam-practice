@@ -10,16 +10,19 @@ import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
 import { useApi } from "@/shared/hooks/useApi";
 import type { DepositStatus } from "@/shared/types/api";
 import { formatDateTime, formatMoney } from "@/shared/utils/formatters";
+import { SearchBox } from "@/shared/ui/SearchBox";
+import { useUrlSearch } from "@/shared/hooks/useUrlSearch";
 import { useClampPage } from "@/shared/hooks/useClampPage";
 
 export default function DepositsPage() {
-  const [url, setUrl] = useUrlState({ status: "", userId: "", page: "1" });
+  const [url, setUrl] = useUrlState({ status: "", userId: "", page: "1", q: "" });
+  const [search, setSearch, q] = useUrlSearch(url.q, setUrl);
   const status = url.status as DepositStatus | "";
   const page = toPage(url.page);
   const setPage = (p: number) => setUrl({ page: String(p) });
   const setStatus = (v: DepositStatus | "") => setUrl({ status: v, page: "1" });
 
-  const { data, error, loading, reload } = useApi(() => adminApi.deposits(page, status, url.userId), [page, status, url.userId]);
+  const { data, error, loading, reload } = useApi(() => adminApi.deposits(page, status, url.userId, q), [page, status, url.userId, q]);
   useClampPage(data?.meta, setPage);
 
   return (
@@ -27,6 +30,7 @@ export default function DepositsPage() {
       <PageHeader title="Lệnh nạp tiền" description="Tất cả lệnh nạp do thành viên tạo." />
       <Card>
         <div className="panel-filter-row">
+          <SearchBox value={search} onChange={setSearch} placeholder="Tìm theo mã nạp, tên hoặc email" label="Tìm lệnh nạp" />
           <Segmented
             label="Lọc theo trạng thái"
             value={status}
@@ -95,7 +99,7 @@ export default function DepositsPage() {
             <Pagination meta={data.meta} onPage={setPage} />
           </>
         ) : (
-          <Empty icon={Receipt} title="Chưa có lệnh nạp nào" />
+          <Empty icon={Receipt} title={q || status ? "Không có lệnh nạp nào khớp bộ lọc" : "Chưa có lệnh nạp nào"} />
         )}
       </Card>
     </>

@@ -41,8 +41,13 @@ export const depositRepository = {
 
   countPending: (userId: string) => prisma.depositOrder.count({ where: { userId, status: "PENDING" } }),
 
-  async list(query: PaginationQuery, filter: { userId?: string; status?: DepositStatus }, withUser = false) {
-    const where: Prisma.DepositOrderWhereInput = { userId: filter.userId, status: filter.status };
+  async list(query: PaginationQuery, filter: { userId?: string; status?: DepositStatus; q?: string }, withUser = false) {
+    const { q } = filter;
+    const where: Prisma.DepositOrderWhereInput = {
+      userId: filter.userId,
+      status: filter.status,
+      ...(q && { OR: [{ code: { contains: q } }, { user: { email: { contains: q } } }, { user: { fullName: { contains: q } } }] }),
+    };
     const [items, total] = await Promise.all([
       prisma.depositOrder.findMany({
         where,

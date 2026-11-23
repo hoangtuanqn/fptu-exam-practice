@@ -2,6 +2,8 @@ import { Users } from "lucide-react";
 import { adminApi } from "@/features/admin/api/admin.api";
 import { ReferralSettingsForm } from "@/features/admin/users/ReferralSettingsForm";
 import { useApi } from "@/shared/hooks/useApi";
+import { SearchBox } from "@/shared/ui/SearchBox";
+import { useUrlSearch } from "@/shared/hooks/useUrlSearch";
 import { useClampPage } from "@/shared/hooks/useClampPage";
 import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
 import { Card, CardHeader, PageHeader, StatCard, StatGrid } from "@/shared/ui/Card";
@@ -14,10 +16,11 @@ export default function ReferralsPage() {
   const settings = useApi(() => adminApi.referralSettings(), []);
   const summary = useApi(() => adminApi.referralSummary(), []);
 
-  const [url, setUrl] = useUrlState({ page: "1" });
+  const [url, setUrl] = useUrlState({ page: "1", q: "" });
+  const [search, setSearch, q] = useUrlSearch(url.q, setUrl);
   const page = toPage(url.page);
   const setPage = (p: number) => setUrl({ page: String(p) });
-  const list = useApi(() => adminApi.referrals(page), [page]);
+  const list = useApi(() => adminApi.referrals(page, q), [page, q]);
   useClampPage(list.data?.meta, setPage);
 
   return (
@@ -43,6 +46,9 @@ export default function ReferralsPage() {
 
         <Card>
           <CardHeader title="Danh sách được giới thiệu" />
+          <div className="flex flex-wrap gap-3 border-b border-slate-100 p-4">
+            <SearchBox value={search} onChange={setSearch} placeholder="Tìm theo tên hoặc email (người giới thiệu hoặc được mời)" label="Tìm trong danh sách giới thiệu" />
+          </div>
           {list.loading && !list.data ? (
             <Loading shape="table" />
           ) : list.error ? (
@@ -92,7 +98,7 @@ export default function ReferralsPage() {
               <Pagination meta={list.data.meta} onPage={setPage} />
             </div>
           ) : (
-            <Empty icon={Users} title="Chưa có ai đăng ký qua mã giới thiệu" />
+            <Empty icon={Users} title={q ? "Không có ai khớp từ khoá" : "Chưa có ai đăng ký qua mã giới thiệu"} />
           )}
         </Card>
       </div>
