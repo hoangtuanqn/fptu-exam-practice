@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { ChevronDown, ChevronRight, LayoutGrid } from "lucide-react";
+import { ChevronDown, ChevronRight, LayoutGrid, Lightbulb } from "lucide-react";
 import type { Quiz } from "@/features/practice/hooks/useQuiz";
 import { useKeydown } from "@/features/practice/hooks/useKeydown";
+import { useRapidNavHint } from "@/features/practice/hooks/useRapidNavHint";
 import { nextUnanswered } from "@/features/practice/utils/unanswered";
 import { Button } from "@/shared/ui/Button";
 import { Kbd } from "@/shared/ui/Kbd";
@@ -29,6 +30,7 @@ export function Sidebar({ quiz, onSubmit, jump }: { quiz: Quiz; onSubmit?: () =>
   const { showDecor } = useSeason();
   const [seen, setSeen] = useState(wasSeen); // đã từng mở danh sách: thôi chấm tròn nhấp nháy gợi ý bấm vào
   const toggle = () => {
+    if (hint.show) hint.dismiss();
     setOpen((o) => !o);
     if (!seen) {
       setSeen(true);
@@ -40,6 +42,9 @@ export function Sidebar({ quiz, onSubmit, jump }: { quiz: Quiz; onSubmit?: () =>
     }
   };
   useKeydown((e) => open && e.key === "Escape" && setOpen(false));
+  // Đang thi tính giờ thì không làm phiền; luyện tập và flashcard thì gợi ý khi bấm Trước/Tiếp liên tục
+  const hint = useRapidNavHint(quiz.current, quiz.mode === "practice");
+  useKeydown((e) => hint.show && e.key === "Escape" && hint.dismiss());
 
   const question = quiz.questions[quiz.current];
   const count = Math.max(quiz.total, quiz.slots);
@@ -87,6 +92,26 @@ export function Sidebar({ quiz, onSubmit, jump }: { quiz: Quiz; onSubmit?: () =>
           <XmasGift className="h-3.5 w-3.5" />
           <XmasTree className="h-7 w-auto" />
           <XmasGift tone="green" className="h-3 w-3" />
+        </div>
+      )}
+
+      {hint.show && !open && (
+        <div role="status" className="absolute left-2 right-2 top-full z-10 mt-1 space-y-2 rounded-2xl border border-primary bg-surface p-3 shadow-lg lg:left-full lg:right-auto lg:top-4 lg:ml-2 lg:mt-0 lg:w-72">
+          <p className="md-label-large flex items-center gap-2 text-on-surface">
+            <Lightbulb size={16} className="shrink-0 text-primary" />
+            Muốn tới một câu nào đó?
+          </p>
+          <p className="md-body-small text-on-surface-variant">
+            Bấm nút <b>Câu {quiz.current + 1}/{count}</b> để mở danh sách và chọn câu ngay{jump ? ", hoặc gõ số câu rồi Enter" : ""}. Không cần bấm Trước/Tiếp nhiều lần.
+          </p>
+          <div className="flex justify-end gap-2">
+            <Button variant="text" size="sm" onClick={hint.dismiss}>
+              Đã hiểu
+            </Button>
+            <Button size="sm" onClick={toggle}>
+              Mở danh sách
+            </Button>
+          </div>
         </div>
       )}
 
