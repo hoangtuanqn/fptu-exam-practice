@@ -6,7 +6,10 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import opentype from "opentype.js";
-import { MASCOT_SVG } from "../../frontend/src/shared/ui/mascot-art";
+import { MASCOT_SVG, MASCOT_XMAS_SVG } from "../../frontend/src/shared/ui/mascot-art";
+
+/** `--theme=xmas`: dựng bản Giáng sinh (Cóc đội nón, tuyết, dải ruy băng); bản gốc không đổi khi không có cờ này */
+export const XMAS = process.argv.includes("--theme=xmas");
 
 const FONT_DIR = path.resolve(__dirname, "../assets/fonts");
 
@@ -90,7 +93,7 @@ export function text(font: Font, str: string, size: number, x: number, y: number
 // Mascot: bỏ thẻ <svg> ngoài, hệ toạ độ riêng 132x100; bảng "CÓC PASS" đổi thành path Inter để không dính phông dự phòng của máy
 export const MASCOT_W = 132;
 export const MASCOT_H = 100;
-const mascotInner = MASCOT_SVG.replace(/^<svg[^>]*>/, "").replace(/<\/svg>$/, "");
+const mascotInner = (XMAS ? MASCOT_XMAS_SVG : MASCOT_SVG).replace(/^<svg[^>]*>/, "").replace(/<\/svg>$/, "");
 export const mascotArt = (f: Fonts) => mascotInner.replace(/<text[^>]*>CÓC PASS<\/text>/, text(f.extrabold, "CÓC PASS", 7.6, 94.5, 91.8, "#6b3d00", { anchor: "middle" }));
 
 /** SVG độc lập chỉ có mascot (nền trong suốt) */
@@ -115,4 +118,19 @@ export function wordmark(font: Font, str: string, size: number, x: number, basel
   <path d="${d}" fill="${outline}" stroke="${outline}" stroke-width="${edge * 2}" stroke-linejoin="round"/>
   <path d="${d}" fill="url(#${id}f)"/>
   <path d="${d}" fill="url(#${id}s)"/>`;
+}
+
+/** Tuyết rơi (vị trí cố định theo công thức, ảnh dựng lại lần nào cũng giống nhau) + dải ruy băng đỏ/trắng/xanh ở mép dưới. Trả chuỗi rỗng khi không phải bản Giáng sinh. */
+export function xmasOverlay(w: number, h: number) {
+  if (!XMAS) return "";
+  const flakes = Array.from({ length: Math.round((w * h) / 9000) }, (_, i) => {
+    const x = ((i * 137.5) % 100) / 100 * w;
+    const y = ((i * 61.8 + (i % 7) * 13) % 100) / 100 * h;
+    const r = 1.4 + (i % 4) * 0.9;
+    return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" fill="#fff" opacity="${(0.55 + (i % 3) * 0.15).toFixed(2)}"/>`;
+  }).join("");
+  const bar = Math.max(6, Math.round(h / 60));
+  const seg = bar * 3;
+  const stripes = Array.from({ length: Math.ceil(w / seg) }, (_, i) => `<rect x="${i * seg}" y="${h - bar}" width="${seg}" height="${bar}" fill="${i % 2 ? "#1b7a3a" : "#d62828"}"/>`).join("");
+  return `<g>${flakes}${stripes}</g>`;
 }
