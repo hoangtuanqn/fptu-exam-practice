@@ -48,6 +48,7 @@ interface Props {
   onReset: () => void;
   onShowResult: () => void;
   reviewBackTo?: string; // xem lại bài đã nộp: chỉ còn một nút quay về kết quả
+  backLabel?: string; // chữ trên nút đó (mặc định "Về kết quả")
 }
 
 // Header tối giản. Chưa có đề: tên app + tài khoản. Đang làm: tên đề | chế độ + đồng hồ | mở đề khác | nộp bài | tài khoản.
@@ -69,6 +70,7 @@ export function Header({
   onReset,
   onShowResult,
   reviewBackTo,
+  backLabel = "Về kết quả",
 }: Props) {
   const { Icon, label } = getModeConfig(mode);
   const [seenHelp, setSeenHelp] = useState(helpSeen);
@@ -190,7 +192,7 @@ export function Header({
             {reviewBackTo ? (
               <Link to={reviewBackTo} className={buttonClass({ variant: "primary", className: "!px-3 sm:!px-4" })}>
                 <Award size={16} />
-                Về kết quả
+                {backLabel}
               </Link>
             ) : submitted ? (
               <>

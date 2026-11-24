@@ -6,6 +6,7 @@ import { nextUnanswered } from "@/features/practice/utils/unanswered";
 import { Button } from "@/shared/ui/Button";
 import { Kbd } from "@/shared/ui/Kbd";
 import { AnswerOptions } from "@/features/practice/components/quiz/AnswerOptions";
+import { JumpForm } from "./JumpForm";
 import { Legend } from "./Legend";
 import { NavButtons } from "./NavButtons";
 import { QuestionGrid } from "./QuestionGrid";
@@ -23,7 +24,7 @@ const wasSeen = () => {
   }
 };
 
-export function Sidebar({ quiz, onSubmit }: { quiz: Quiz; onSubmit?: () => void }) {
+export function Sidebar({ quiz, onSubmit, jump }: { quiz: Quiz; onSubmit?: () => void; jump?: boolean }) {
   const [open, setOpen] = useState(false);
   const { showDecor } = useSeason();
   const [seen, setSeen] = useState(wasSeen); // đã từng mở danh sách: thôi chấm tròn nhấp nháy gợi ý bấm vào
@@ -97,6 +98,7 @@ export function Sidebar({ quiz, onSubmit }: { quiz: Quiz; onSubmit?: () => void 
               <span>Danh sách câu</span>
               <span className="tabular-nums">{quiz.result ? `Đúng ${done}/${count}` : `Đã làm ${done}/${count}`}</span>
             </div>
+            {jump && <JumpForm max={count} onJump={(i) => { quiz.goTo(i); setOpen(false); }} />}
             <QuestionGrid
               questions={quiz.questions}
               answers={quiz.answers}

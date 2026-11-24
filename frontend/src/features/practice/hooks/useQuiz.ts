@@ -122,7 +122,7 @@ export function useQuiz() {
   function openExam(
     examQuestions: Question[],
     examTitle: string,
-    id: string,
+    id: string | null,
     chosenMode: Mode,
     source: AnswerSource = "AI",
     examTotal = examQuestions.length,
