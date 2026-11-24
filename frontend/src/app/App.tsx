@@ -56,6 +56,7 @@ const routePages = {
   SavedPage: () => import("@/features/saved/SavedPage"),
   ExamViewPage: () => import("@/features/exam-view/ExamViewPage"),
   ExamPreviewPage: () => import("@/features/exam-preview/ExamPreviewPage"),
+  ExamTrialPage: () => import("@/features/exam-store/ExamTrialPage"),
   SubjectPage: () => import("@/features/landing/SubjectPage"),
   PublicCatalogPage: () => import("@/features/exam-store/PublicCatalogPage"),
   FrequentPage: () => import("@/features/frequent/FrequentPage"),
@@ -95,6 +96,7 @@ const ReviewPage = lazy(routePages.ReviewPage);
 const SavedPage = lazy(routePages.SavedPage);
 const ExamViewPage = lazy(routePages.ExamViewPage);
 const ExamPreviewPage = lazy(routePages.ExamPreviewPage);
+const ExamTrialPage = lazy(routePages.ExamTrialPage);
 const SubjectPage = lazy(routePages.SubjectPage);
 const PublicCatalogPage = lazy(routePages.PublicCatalogPage);
 const FrequentPage = lazy(routePages.FrequentPage);
@@ -181,6 +183,9 @@ export default function App() {
           <Route path="/attempts/:id/review" element={<AttemptReviewPage />} />
         </Route>
         <Route path="/exam/:examId/preview" element={<ExamPreviewPage />} />
+        <Route element={<RequireAuth />}>
+          <Route path="/exam/:examId/trial" element={<ExamTrialPage />} />
+        </Route>
         {M3Gallery && <Route path="/dev/m3" element={<Suspense fallback={null}><M3Gallery /></Suspense>} />}
 
         {/* Bảng tính năng của hệ thống (để giới thiệu/chụp màn hình): công khai */}
