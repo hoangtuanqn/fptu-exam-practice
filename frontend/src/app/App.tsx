@@ -40,6 +40,7 @@ import { UserNoticeBell } from "@/features/notifications/UserNoticeBell";
 
 // Panel tách riêng thành chunk: người chỉ luyện đề không phải tải code của panel
 import { PageMeta } from "@/shared/seo/PageMeta";
+import { SeasonLayer } from "@/shared/season/SeasonContext";
 import { ScrollToTop } from "@/shared/layout/ScrollToTop";
 import { GoogleTagManager } from "@/shared/analytics/GoogleTagManager";
 // Các trang lazy gom một chỗ để App tải sẵn khi trình duyệt rảnh (chuyển trang không phải chờ tải code)
@@ -172,6 +173,7 @@ export default function App() {
       <DailyCheckInPopup />
       <WhatsNewDialog />
       <ChatWidget />
+      <SeasonLayer />
       <BottomNav more={ACCOUNT_NAV} />
       <ErrorBoundary resetKey={pathname}>
       <Routes>
