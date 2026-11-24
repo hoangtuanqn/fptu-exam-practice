@@ -63,7 +63,7 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit, readOnly
         <RotateHint />
         <Sidebar quiz={quiz} onSubmit={undefined} />
         <main className="flex min-w-0 flex-1 flex-col overflow-y-auto p-2 sm:p-3 lg:p-4">
-          <LockedQuestionCard examId={quiz.examId} number={quiz.current + 1} total={Math.max(quiz.total, quiz.slots)} onUnlocked={quiz.unlockTrial} onBack={quiz.prev} />
+          <LockedQuestionCard examId={quiz.examId} number={quiz.current + 1} total={Math.max(quiz.total, quiz.slots)} attempts={quiz.trialAttempts} onUnlocked={quiz.unlockTrial} onBack={quiz.prev} />
         </main>
       </div>
     );
@@ -159,7 +159,7 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit, readOnly
       <RotateHint />
       <Sidebar quiz={quiz} onSubmit={view.onSubmit} />
       <main className={`flex min-w-0 flex-1 flex-col overflow-y-auto p-2 sm:p-3 lg:p-4 ${panelOpen ? "max-lg:pb-[60dvh]" : ""}`}>
-        {quiz.trialLocked > 0 && quiz.examId && <TrialLockBanner examId={quiz.examId} locked={quiz.trialLocked} onUnlocked={quiz.unlockTrial} />}
+        {quiz.trialLocked > 0 && quiz.examId && <TrialLockBanner examId={quiz.examId} shown={quiz.questions.length} total={Math.max(quiz.total, quiz.slots)} onUnlocked={quiz.unlockTrial} />}
         {quiz.loadingMore && <LoadingMoreBanner loaded={quiz.questions.length} total={quiz.total} />}
         <AnswerPendingBanner source={quiz.answerSource} examId={quiz.examId} onRetry={quiz.waitForAnswers} />
         {showBundle && bundle && (
