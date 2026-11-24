@@ -184,9 +184,10 @@ export const catalogService = {
   async trialDetail(examId: string, userId: string) {
     const exam = (await usableExams()).find((e) => e.id === examId);
     if (!exam) throw AppError.notFound(EXAM_NOT_FOUND);
-    const [meta, first] = await Promise.all([
+    const [meta, first, attempts] = await Promise.all([
       prisma.exam.findUnique({ where: { id: examId }, select: { answerSource: true, totalQuestions: true } }),
       prisma.examQuestion.findMany({ where: { examId, isReference: false }, orderBy: { number: "asc" }, take: Math.min(TRIAL_QUESTIONS, Math.max(1, exam.questions - 1)), select: { number: true, imagePath: true, answer: true, topic: true, isReference: true } }),
+      prisma.examAttempt.count({ where: { examId } }),
     ]);
     const exp = Date.now() + TRIAL_IMAGE_TTL_MS;
     return {
@@ -198,7 +199,7 @@ export const catalogService = {
       answerError: null,
       questions: first.map((q) => ({ number: q.number, imageUrl: `${fileUrlOf(q.imagePath)}?${signExamFile(q.imagePath, exp, env.JWT_SECRET, userId)}`, correct: q.answer.split(/\s+/).filter(Boolean), isReference: q.isReference, topic: q.topic })),
       attachments: [],
-      trial: { locked: Math.max(0, exam.questions - first.length) },
+      trial: { locked: Math.max(0, exam.questions - first.length), attempts }, // attempts: số lượt làm thật của đề, để giao diện hiện khi đủ lớn
     };
   },
 
