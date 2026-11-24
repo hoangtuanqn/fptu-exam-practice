@@ -1,6 +1,6 @@
 import { ProtectedImg } from "@/shared/ui/ProtectedImg";
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, Navigate, useParams } from "react-router-dom";
 import { BookOpen, Download, FileSearch, Loader2, Timer } from "lucide-react";
 import { examApi } from "@/features/exam/exam.api";
 import { canPractice, type ExamAttachment, type ExamQuestionsPayload, type ImportedExam } from "@/features/exam/types";
@@ -49,7 +49,9 @@ export default function ExamPreviewPage() {
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-24 pt-6">
         <QueryBoundary query={query} loadingLabel="Đang mở đề…">
           {({ exam }) =>
-            exam ? (
+            exam?.trial ? (
+              <Navigate to={`/exam/${exam.id}/trial`} replace />
+            ) : exam ? (
               <Preview key={exam.id} exam={exam} />
             ) : (
               <Card>

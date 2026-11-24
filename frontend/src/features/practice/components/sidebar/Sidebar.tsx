@@ -92,6 +92,7 @@ export function Sidebar({ quiz, onSubmit }: { quiz: Quiz; onSubmit?: () => void 
               submitted={quiz.submitted}
               current={quiz.current}
               total={quiz.total}
+              locked={quiz.trialLocked}
               onSelect={(i) => {
                 quiz.goTo(i);
                 setOpen(false);

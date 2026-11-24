@@ -58,7 +58,7 @@ export function useSessionSync(quiz: Quiz) {
   } | null>(null);
   const creating = useRef<string | null>(null);
   useEffect(() => {
-    if (!hasQuiz || examId === null || answersPending || choosing || sessionId !== null) return; // chưa chọn chế độ thì chưa tạo lượt
+    if (!hasQuiz || examId === null || answersPending || choosing || sessionId !== null || quiz.trialLocked > 0) return; // chưa chọn chế độ thì chưa tạo lượt; đề xem thử không lưu
     const key = `${session}:${examId}`;
     if (creating.current === key) return; // đang tạo (kể cả khi effect chạy lặp)
     creating.current = key;
@@ -78,7 +78,7 @@ export function useSessionSync(quiz: Quiz) {
         if (creating.current === key) creating.current = null; // thử lại ở lần render sau
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasQuiz, examId, answersPending, choosing, sessionId, session]);
+  }, [hasQuiz, examId, answersPending, choosing, sessionId, session, quiz.trialLocked]);
 
   // Lượt được mở lại từ danh sách làm dở: ghi nhớ để "Làm lại" còn biết bỏ lượt này
   useEffect(() => {

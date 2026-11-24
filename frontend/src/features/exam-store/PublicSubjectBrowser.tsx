@@ -7,8 +7,6 @@ import type { CatalogSubject } from "./catalog.api";
 import { featuredSubjects } from "./featuredSubjects";
 import { PublicExamList } from "./PublicExamList";
 
-const COMPACT_PAGE_SIZE = 6; // trang chủ: chỉ vài đề mỗi trang để không đẩy các phần bên dưới đi quá xa
-
 export interface SubjectsQuery {
   data: CatalogSubject[] | null | undefined;
   loading: boolean;
@@ -26,7 +24,7 @@ export function PublicSubjectBrowser({ subjects, compact = false }: { subjects: 
   if (code)
     return (
       <SubjectCard title={`Môn ${code}`} onBack={() => setUrl({ subject: "" })}>
-        <PublicExamList code={code} pageSize={compact ? COMPACT_PAGE_SIZE : undefined} />
+        <PublicExamList code={code} />
       </SubjectCard>
     );
   if (compact)

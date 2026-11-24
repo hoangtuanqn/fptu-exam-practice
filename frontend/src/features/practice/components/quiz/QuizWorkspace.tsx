@@ -18,6 +18,7 @@ import type { Quiz } from "@/features/practice/hooks/useQuiz";
 import { Sidebar } from "@/features/practice/components/sidebar/Sidebar";
 import { AnswerPendingBanner } from "./AnswerPendingBanner";
 import { LoadingMoreBanner } from "./LoadingMoreBanner";
+import { TrialLockBanner } from "@/features/exam-store/TrialLockBanner";
 import { ImageViewer } from "./ImageViewer";
 import { QuestionCard } from "./QuestionCard";
 import { RotateHint } from "@/shared/ui/RotateHint";
@@ -120,7 +121,7 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit, readOnly
     onPrev: quiz.prev,
     onNext: quiz.next,
     // Câu cuối thì nút "Tiếp" thành "Nộp bài" (không khi đã nộp, chờ AI, hoặc đề còn đang được lấy về)
-    onSubmit: !readOnly && !quiz.submitted && !quiz.answersPending && !quiz.loadingMore ? onSubmit : undefined,
+    onSubmit: !readOnly && !quiz.submitted && !quiz.answersPending && !quiz.loadingMore && quiz.trialLocked === 0 ? onSubmit : undefined,
   };
 
   // Dùng chung cho màn hình làm bài và cửa sổ phóng to ảnh (chỉ gắn vào một nơi tại một thời điểm)
@@ -145,6 +146,7 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit, readOnly
       <RotateHint />
       <Sidebar quiz={quiz} onSubmit={view.onSubmit} />
       <main className={`flex min-w-0 flex-1 flex-col overflow-y-auto p-2 sm:p-3 lg:p-4 ${panelOpen ? "max-lg:pb-[60dvh]" : ""}`}>
+        {quiz.trialLocked > 0 && quiz.examId && <TrialLockBanner examId={quiz.examId} locked={quiz.trialLocked} onUnlocked={quiz.unlockTrial} />}
         {quiz.loadingMore && <LoadingMoreBanner loaded={quiz.questions.length} total={quiz.total} />}
         <AnswerPendingBanner source={quiz.answerSource} examId={quiz.examId} onRetry={quiz.waitForAnswers} />
         {showBundle && bundle && (

@@ -38,6 +38,16 @@ export interface CatalogPage {
   subject: { code: string; name: string | null; semester: number | null };
 }
 
+// Đề chưa mở khoá chỉ xem được thông tin, không có ảnh câu hỏi nào
+export interface ExamTrial {
+  examId: string;
+  title: string;
+  kind: ExamKind;
+  subjectCode: string | null;
+  totalQuestions: number;
+  locked: number;
+}
+
 export interface LibraryOverview {
   subjects: number;
   examsKnown: number; // tổng số đề của các môn
@@ -60,6 +70,7 @@ export const catalogApi = {
   latest: () => http.get<LatestExam[]>("/catalog/latest"),
   overview: () => http.get<LibraryOverview>("/catalog/overview"),
   subjects: () => http.get<CatalogSubject[]>("/catalog/subjects"),
+  trial: (examId: string) => http.get<ExamTrial>(`/catalog/exams/${examId}/trial`),
   mySubjects: () => http.get<string[]>("/catalog/my-subjects"),
   exams: (subject: string, opts: { q?: string; term?: string; kind?: string; page?: number; limit?: number }) =>
     http.get<CatalogPage>("/catalog/exams", { subject, ...(opts.q && { q: opts.q }), ...(opts.term && { term: opts.term }), ...(opts.kind && { kind: opts.kind }), page: opts.page ?? 1, ...(opts.limit && { limit: opts.limit }) }),

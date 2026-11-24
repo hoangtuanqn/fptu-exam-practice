@@ -6,6 +6,11 @@ import { catalogOrder } from "../utils/catalog-order";
 import { foldText } from "../utils/search-text";
 import { EXAM_KINDS } from "../utils/exam-kind";
 import { toMeta, type PaginationQuery } from "../utils/pagination";
+import { AppError } from "../rules/error";
+import { EXAM_NOT_FOUND } from "../constants/exam";
+import { env } from "../configs/env";
+import { signExamFile } from "../utils/exam-path";
+import { fileUrlOf } from "../utils/file-url";
 import { subjectCodeFromTitle, subjectOfExam } from "../utils/subject-code";
 import { termOf, termRank } from "../utils/term";
 import { crawlerSettingService } from "./crawler-setting.service";
@@ -16,6 +21,8 @@ import { crawlerSettingService } from "./crawler-setting.service";
 
 const CACHE_MS = 5 * 60 * 1000;
 const MY_SUBJECTS_MAX = 10;
+export const TRIAL_QUESTIONS = 3; // số câu đầu cho xem thử trước khi mở khoá cả đề
+const TRIAL_IMAGE_TTL_MS = 3 * 60 * 60 * 1000; // ảnh xem thử dùng link ký (đề chưa nằm trong kho), đủ cho một buổi làm thử
 
 interface UsableExam {
   id: string;
@@ -161,6 +168,38 @@ export const catalogService = {
     };
     if (gen === generation) overviewCache = { at: Date.now(), data };
     return data;
+  },
+
+  /** Thông tin để khoá đề chưa mở: tên, loại, tổng số câu. Không có ảnh câu hỏi nào. Chỉ đề có trong Kho đề. */
+  async trial(examId: string) {
+    const exam = (await usableExams()).find((e) => e.id === examId);
+    if (!exam) throw AppError.notFound(EXAM_NOT_FOUND);
+    return { examId: exam.id, title: exam.title, kind: exam.kind ?? "FE", subjectCode: exam.code, totalQuestions: exam.questions, locked: exam.questions };
+  },
+
+  /**
+   * Đề chưa mở khoá cho người xem thử, cùng dạng với chi tiết đề nhưng chỉ có TRIAL_QUESTIONS câu hỏi đầu (có đáp án của các câu đó);
+   * `trial.locked` là số câu còn khoá. totalQuestions vẫn là tổng thật để giao diện biết đề này làm được trên web hay chỉ xem trước.
+   */
+  async trialDetail(examId: string, userId: string) {
+    const exam = (await usableExams()).find((e) => e.id === examId);
+    if (!exam) throw AppError.notFound(EXAM_NOT_FOUND);
+    const [meta, first] = await Promise.all([
+      prisma.exam.findUnique({ where: { id: examId }, select: { answerSource: true, totalQuestions: true } }),
+      prisma.examQuestion.findMany({ where: { examId, isReference: false }, orderBy: { number: "asc" }, take: Math.min(TRIAL_QUESTIONS, Math.max(1, exam.questions - 1)), select: { number: true, imagePath: true, answer: true, topic: true, isReference: true } }),
+    ]);
+    const exp = Date.now() + TRIAL_IMAGE_TTL_MS;
+    return {
+      id: exam.id,
+      title: exam.title,
+      kind: exam.kind ?? "FE",
+      totalQuestions: meta?.totalQuestions ?? exam.questions,
+      answerStatus: meta?.answerSource ?? "DEFAULT",
+      answerError: null,
+      questions: first.map((q) => ({ number: q.number, imageUrl: `${fileUrlOf(q.imagePath)}?${signExamFile(q.imagePath, exp, env.JWT_SECRET, userId)}`, correct: q.answer.split(/\s+/).filter(Boolean), isReference: q.isReference, topic: q.topic })),
+      attachments: [],
+      trial: { locked: Math.max(0, exam.questions - first.length) },
+    };
   },
 
   /** Các môn người dùng đã lấy đề (mới nhất trước), để bấm nhanh. */

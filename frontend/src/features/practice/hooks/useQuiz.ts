@@ -65,6 +65,7 @@ export function useQuiz() {
   const [restoredSubmitted, setRestoredSubmitted] = useState(false); // bài đã nộp được mở lại sau khi tải lại trang
   const [resumedElapsed, setResumedElapsed] = useState(0); // số giây đã làm ở lượt được làm tiếp
   const [violations, setViolations] = useState<Violation[]>([]); // các lần rời khỏi bài thi toàn màn hình (chế độ Thi)
+  const [trialLocked, setTrialLocked] = useState(0); // đề xem thử: số câu còn khoá (0 = đề đã mở khoá đủ)
   const [choosing, setChoosing] = useState(false); // đề đã mở sẵn phía sau nhưng người dùng chưa chọn chế độ: chưa tính giờ, chưa tạo lượt làm
 
   // Đồng hồ chỉ chạy khi có đáp án để làm: chờ AI phân tích xong mới bắt đầu tính, dừng khi nộp bài
@@ -187,6 +188,19 @@ export function useQuiz() {
     setPending(null);
   }
 
+  // Vừa mở khoá đề đang xem thử: có đủ câu ngay trong lượt làm hiện tại (giữ đáp án, chế độ, giờ); các ô khoá thành câu thật
+  function unlockTrial(all: Question[], examTotal: number) {
+    if (submitted) clearProgress(); // đã nộp bài thử thì bắt đầu lại với đủ câu
+    const split = splitReferences(all);
+    setQuestions((prev) => {
+      const have = new Map(prev.map((q) => [q.number, q]));
+      return split.questions.map((q) => have.get(q.number) ?? q);
+    });
+    setReferences(split.references);
+    setTotal(examTotal);
+    setTrialLocked(0);
+  }
+
   // Đề đang được lấy về: có thêm câu mới thì thêm vào cuối (cả đề đang làm lẫn đề đang chờ chọn chế độ)
   function appendQuestions(incoming: IncomingQuestion[], examTotal: number) {
     const known = new Set(references.map((r) => r.number));
@@ -208,6 +222,7 @@ export function useQuiz() {
     setAnswerSource(null);
     setTotal(0);
     setTimeLimitMin(null);
+    setTrialLocked(0);
     clearProgress();
   }
 
@@ -312,6 +327,9 @@ export function useQuiz() {
     pendingExamId: pending?.examId ?? null,
     appendQuestions,
     closeExam,
+    trialLocked,
+    setTrialLocked,
+    unlockTrial,
     applyAnswers,
     markFailed,
     waitForAnswers,

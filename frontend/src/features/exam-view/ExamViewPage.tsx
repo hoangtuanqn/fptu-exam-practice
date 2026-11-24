@@ -1,6 +1,6 @@
 import { ProtectedImg } from "@/shared/ui/ProtectedImg";
 import { useEffect, useRef, useState } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
 import { FileSearch, Play } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { examApi } from "@/features/exam/exam.api";
@@ -57,7 +57,9 @@ export default function ExamViewPage() {
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-24 pt-6">
         <QueryBoundary query={query} loadingLabel="Đang mở đề…">
           {({ exam }) =>
-            exam ? (
+            exam?.trial ? (
+              <Navigate to={`/exam/${exam.id}`} replace />
+            ) : exam ? (
               <ExamView key={exam.id} exam={exam} />
             ) : (
               <Card>
