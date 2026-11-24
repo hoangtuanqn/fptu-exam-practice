@@ -2,6 +2,9 @@
  * Hình Cóc Pass (SVG tĩnh, dựng một lần lúc nạp module): đội vòng nguyệt quế, cầm bảng danh hiệu "CÓC PASS".
  * Nằm riêng để Mascot.tsx gọn và để dễ chỉnh hình.
  */
+import { santaHat } from "./santa-hat";
+import { xmasTree } from "./xmas-tree";
+
 const OUT = "#9a5f00"; // viền
 const f = (n: number) => Number(n.toFixed(2));
 
@@ -98,3 +101,7 @@ export const MASCOT_SVG =
   hand(65, 90) +
   hand(123, 90) +
   `</svg>`;
+
+// Bản Giáng sinh: bỏ bảng "CÓC PASS", cóc ôm cây thông Noel bằng hai tay và đội nón Noel đè lên đỉnh vòng nguyệt quế (tâm đầu ~ (52,43), vẫn nằm gọn trong khung 132x100)
+export const MASCOT_XMAS_SVG =
+  MASCOT_SVG.slice(0, MASCOT_SVG.indexOf('<g><rect x="64" y="68"')) + xmasTree(102, 98.5, 1.1) + hand(78, 86) + hand(126, 86) + santaHat(53, 19, 0.62, 12) + `</svg>`;
