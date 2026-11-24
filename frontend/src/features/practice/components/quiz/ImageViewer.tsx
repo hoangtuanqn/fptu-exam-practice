@@ -7,6 +7,7 @@ import { Button } from "@/shared/ui/Button";
 import { ExamTimer } from "../ExamTimer";
 import { AnswerOptions } from "./AnswerOptions";
 import { AnswerStatus } from "./AnswerStatus";
+import { AnswerLetters, RevealButton } from "./FlashcardAnswer";
 import { ExplainButton } from "./ExplainButton";
 import { NextButton } from "./NextButton";
 import type { QuestionViewProps } from "./types";
@@ -35,6 +36,7 @@ export function ImageViewer({
   onExplain,
   explainBought,
   explainFree,
+  flashcard,
   onClose,
   timer,
   aside,
@@ -97,8 +99,17 @@ export function ImageViewer({
           </div>
 
           <div className="order-1 flex flex-1 flex-col items-stretch gap-2.5 sm:order-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-4 sm:gap-y-2">
-            <AnswerOptions compact question={question} selected={selected} revealed={revealed} onChoose={onChoose} />
-            <AnswerStatus question={question} selected={selected} revealed={revealed} canCheck={canCheck} onCheck={onCheck} />
+            {flashcard ? (
+              <>
+                <RevealButton {...flashcard} />
+                <AnswerLetters answer={question.correct} shown={flashcard.shown} />
+              </>
+            ) : (
+              <>
+                <AnswerOptions compact question={question} selected={selected} revealed={revealed} onChoose={onChoose} />
+                <AnswerStatus question={question} selected={selected} revealed={revealed} canCheck={canCheck} onCheck={onCheck} />
+              </>
+            )}
           </div>
         </section>
       </div>

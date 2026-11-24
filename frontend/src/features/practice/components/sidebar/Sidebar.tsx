@@ -7,6 +7,7 @@ import { nextUnanswered } from "@/features/practice/utils/unanswered";
 import { Button } from "@/shared/ui/Button";
 import { Kbd } from "@/shared/ui/Kbd";
 import { AnswerOptions } from "@/features/practice/components/quiz/AnswerOptions";
+import { RevealButton, type FlashcardView } from "@/features/practice/components/quiz/FlashcardAnswer";
 import { JumpForm } from "./JumpForm";
 import { Legend } from "./Legend";
 import { NavButtons } from "./NavButtons";
@@ -25,7 +26,7 @@ const wasSeen = () => {
   }
 };
 
-export function Sidebar({ quiz, onSubmit, jump }: { quiz: Quiz; onSubmit?: () => void; jump?: boolean }) {
+export function Sidebar({ quiz, onSubmit, jump, flashcard }: { quiz: Quiz; onSubmit?: () => void; jump?: boolean; flashcard?: FlashcardView }) {
   const [open, setOpen] = useState(false);
   const { showDecor } = useSeason();
   const [seen, setSeen] = useState(wasSeen); // đã từng mở danh sách: thôi chấm tròn nhấp nháy gợi ý bấm vào
@@ -79,7 +80,13 @@ export function Sidebar({ quiz, onSubmit, jump }: { quiz: Quiz; onSubmit?: () =>
       {question && (
         <div className="mt-2 hidden max-h-[calc(100dvh-12rem)] w-full flex-col items-center rounded-2xl border border-outline-variant bg-surface-container-lowest px-1.5 py-2 shadow-sm lg:flex">
           <div className="flex min-h-0 w-full flex-col items-center overflow-x-hidden overflow-y-auto">
-            <AnswerOptions vertical question={question} selected={quiz.answers[question.number] ?? []} revealed={quiz.isRevealed(question)} onChoose={(opt) => quiz.choose(question, opt)} />
+            {flashcard ? (
+              <div className="flex flex-col items-center gap-2 py-1">
+                <RevealButton {...flashcard} iconOnly />
+              </div>
+            ) : (
+              <AnswerOptions vertical question={question} selected={quiz.answers[question.number] ?? []} revealed={quiz.isRevealed(question)} onChoose={(opt) => quiz.choose(question, opt)} />
+            )}
           </div>
           <NavButtons hasPrev={quiz.current > 0} hasNext={quiz.current < quiz.slots - 1} onPrev={quiz.prev} onNext={quiz.next} onSubmit={onSubmit} />
         </div>

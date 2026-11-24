@@ -6,7 +6,7 @@ import { Header } from "@/features/practice/components/Header";
 import { QuizWorkspace } from "@/features/practice/components/quiz/QuizWorkspace";
 import { Sidebar } from "@/features/practice/components/sidebar/Sidebar";
 import { useQuiz } from "@/features/practice/hooks/useQuiz";
-import { useQuizShortcuts } from "@/features/practice/hooks/useQuizShortcuts";
+import { useKeydown } from "@/features/practice/hooks/useKeydown";
 import type { Question } from "@/features/practice/types";
 import { useApi } from "@/shared/hooks/useApi";
 import { useUrlState } from "@/shared/hooks/useUrlState";
@@ -58,7 +58,22 @@ function Viewer({ code, data }: { code: string; data: FlashcardResult }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quiz.current]);
 
-  useQuizShortcuts(quiz, !zoomOpen, undefined);
+  // Đáp án chỉ hiện cho đúng câu đang xem: sang câu khác là tự ẩn
+  const [shownAt, setShownAt] = useState<number | null>(null);
+  const flashcard = { shown: shownAt === quiz.current, onToggle: () => setShownAt((s) => (s === quiz.current ? null : quiz.current)) };
+
+  // ← → chuyển câu, Space hiện/ẩn đáp án (không có phím chọn A–H như làm đề)
+  useKeydown((e) => {
+    const t = e.target;
+    if (e.isComposing || e.altKey || e.ctrlKey || e.metaKey) return;
+    if (t instanceof HTMLElement && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+    if (e.key === "ArrowRight") quiz.next();
+    else if (e.key === "ArrowLeft") quiz.prev();
+    else if (e.key === " " && !(t instanceof HTMLElement && /^(BUTTON|A)$/.test(t.tagName)) && quiz.current < quiz.questions.length) {
+      e.preventDefault();
+      flashcard.onToggle();
+    }
+  }, !zoomOpen && quiz.slots > 0);
 
   if (data.total === 0)
     return (
@@ -93,7 +108,7 @@ function Viewer({ code, data }: { code: string; data: FlashcardResult }) {
       {atLock ? (
         <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
           <RotateHint />
-          <Sidebar quiz={quiz} jump />
+          <Sidebar quiz={quiz} jump flashcard={flashcard} />
           <main className="flex min-w-0 flex-1 flex-col overflow-y-auto p-2 sm:p-3 lg:p-4">
             <div className="mx-auto w-full max-w-xl pt-6">
               <LockedPanel hidden={data.hidden} onClose={() => quiz.goTo(0)} />
@@ -101,7 +116,7 @@ function Viewer({ code, data }: { code: string; data: FlashcardResult }) {
           </main>
         </div>
       ) : (
-        <QuizWorkspace quiz={quiz} zoomOpen={zoomOpen} onZoomChange={setZoomOpen} onSubmit={() => undefined} readOnly jump />
+        <QuizWorkspace quiz={quiz} zoomOpen={zoomOpen} onZoomChange={setZoomOpen} onSubmit={() => undefined} readOnly jump flashcard={flashcard} />
       )}
     </>
   );
