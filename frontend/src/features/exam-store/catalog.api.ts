@@ -23,6 +23,7 @@ export interface CatalogItem {
   status: CatalogStatus;
   questions: number | null;
   kind?: ExamKind;
+  attempts?: number; // số lần bạn đã nộp bài đề này; máy chủ cũ chưa trả
 }
 
 export interface CatalogPage {
@@ -30,6 +31,7 @@ export interface CatalogPage {
   meta: PageMeta;
   terms: { term: string; count: number }[];
   total: number; // tổng số đề của môn (trước khi lọc)
+  kinds?: Record<ExamKind, number>; // số đề theo loại của cả môn
   price: number; // phí mở một đề chưa có trong kho của bạn (credit)
   pePrice?: number; // đề PE có giá riêng; API cũ chưa có thì dùng price
   subject: { code: string; name: string | null; semester: number | null };
@@ -58,6 +60,6 @@ export const catalogApi = {
   overview: () => http.get<LibraryOverview>("/catalog/overview"),
   subjects: () => http.get<CatalogSubject[]>("/catalog/subjects"),
   mySubjects: () => http.get<string[]>("/catalog/my-subjects"),
-  exams: (subject: string, opts: { q?: string; term?: string; page?: number; limit?: number }) =>
-    http.get<CatalogPage>("/catalog/exams", { subject, ...(opts.q && { q: opts.q }), ...(opts.term && { term: opts.term }), page: opts.page ?? 1, ...(opts.limit && { limit: opts.limit }) }),
+  exams: (subject: string, opts: { q?: string; term?: string; kind?: string; page?: number; limit?: number }) =>
+    http.get<CatalogPage>("/catalog/exams", { subject, ...(opts.q && { q: opts.q }), ...(opts.term && { term: opts.term }), ...(opts.kind && { kind: opts.kind }), page: opts.page ?? 1, ...(opts.limit && { limit: opts.limit }) }),
 };

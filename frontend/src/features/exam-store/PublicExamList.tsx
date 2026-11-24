@@ -11,6 +11,7 @@ import { examOpenPath } from "@/features/exam/types";
 import { catalogApi, type CatalogItem } from "./catalog.api";
 import { NewExamBadge } from "./NewExamBadge";
 import { ExamKindBadge } from "./ExamKindBadge";
+import { DoneBadge } from "./DoneBadge";
 import { isPro } from "@/shared/utils/pro";
 import { trackPrompt } from "@/shared/utils/trackPrompt";
 import { ExamFilterBar, useExamListQuery } from "./ExamFilterBar";
@@ -22,7 +23,7 @@ export function PublicExamList({ code, pageSize }: { code: string; pageSize?: nu
   const { user } = useAuth();
   const query = useExamListQuery();
   const { url, setUrl, page } = query;
-  const list = useApi(() => catalogApi.exams(code, { q: url.q, term: url.term, page, limit: pageSize }), [code, url.q, url.term, page, pageSize, user?.id]);
+  const list = useApi(() => catalogApi.exams(code, { q: url.q, term: url.term, kind: url.kind, page, limit: pageSize }), [code, url.q, url.term, url.kind, page, pageSize, user?.id]);
   const target = `/account/exams?tab=subject&subject=${encodeURIComponent(code)}`;
 
   return (
@@ -50,6 +51,7 @@ export function PublicExamList({ code, pageSize }: { code: string; pageSize?: nu
                         {/* Mobile: nhãn lên trước, tiêu đề xuống dòng riêng để đọc được; từ sm trở lên nằm cùng một hàng */}
                         <p className="md-title-small order-last line-clamp-2 basis-full break-words text-on-surface sm:order-none sm:line-clamp-1 sm:min-w-0 sm:flex-1 sm:basis-0" title={e.title}>{e.title}</p>
                         <NewExamBadge term={e.term} />
+                        <DoneBadge attempts={e.attempts} />
                       </div>
                       <p className="md-body-small flex flex-wrap items-center gap-x-3 text-on-surface-variant">
                         {e.postedAt && <span>{formatDate(e.postedAt)}</span>}
@@ -76,7 +78,7 @@ function ExamAction({ item, loggedIn, target, price }: { item: CatalogItem; logg
   if (item.status === "owned")
     return (
       <Link to={examOpenPath({ id: item.examId!, kind: item.kind, totalQuestions: item.questions })} className={cls}>
-        <Play size={15} /> Mở đề
+        <Play size={15} /> {item.attempts ? "Làm lại" : "Mở đề"}
       </Link>
     );
   // Chưa có trong kho: thành viên vào Kho đề của môn (có xác nhận phí trước khi trừ), khách đi đăng ký rồi quay lại đó
