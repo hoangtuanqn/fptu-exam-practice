@@ -5,7 +5,7 @@ import { useQuestionImageScale } from "@/features/practice/hooks/useQuestionImag
 import { isMultiple } from "@/features/practice/utils/question";
 import { Button } from "@/shared/ui/Button";
 import { AnswerOptions } from "./AnswerOptions";
-import { AnswerLetters, RevealButton } from "./FlashcardAnswer";
+import { AnswerBanner, RevealButton } from "./FlashcardAnswer";
 import { AnswerStatus } from "./AnswerStatus";
 import { ExplainButton } from "./ExplainButton";
 import { NextButton } from "./NextButton";
@@ -138,17 +138,15 @@ export function QuestionCard({
             />
           </div>
         </div>
+        {/* Flashcard: đáp án nằm ngay dưới ảnh, chữ to, chiều cao cố định để bật/tắt không làm ảnh nhảy */}
+        {flashcard && <AnswerBanner answer={question.correct} shown={flashcard.shown} />}
       </section>
 
       {nudge}
 
       {/* Điện thoại và máy tính bảng: thanh dưới cùng tầm ngón cái. Hàng 1: đáp án A–H chia đều chiều ngang. Hàng 2: Trước | kết quả | Tiếp. */}
       <section className="shrink-0 space-y-2 rounded-xl border border-slate-200 bg-surface-container-lowest p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-sm lg:hidden">
-        {flashcard ? (
-          <div className="flex min-h-9 items-center justify-center">
-            <AnswerLetters answer={question.correct} shown={flashcard.shown} />
-          </div>
-        ) : (
+        {!flashcard && (
           <AnswerOptions dense question={question} selected={selected} revealed={revealed} onChoose={onChoose} />
         )}
         <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2">
