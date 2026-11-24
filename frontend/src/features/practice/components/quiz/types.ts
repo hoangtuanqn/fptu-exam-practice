@@ -1,4 +1,5 @@
 import type { Question } from "@/features/practice/types.ts";
+import type { FlashcardView } from "./FlashcardAnswer";
 
 // Props chung cho mọi nơi hiển thị một câu hỏi và cho phép trả lời
 // (khung câu hỏi chính và cửa sổ phóng to ảnh dùng chung)
@@ -26,4 +27,5 @@ export interface QuestionViewProps {
   onPrev: () => void;
   onNext: () => void;
   onSubmit?: () => void; // chỉ có khi được phép nộp bài; ở câu cuối nút "Tiếp" đổi thành "Nộp bài"
+  flashcard?: FlashcardView; // có = chế độ flashcard: bấm "Hiện đáp án" thay cho chọn A–H
 }
