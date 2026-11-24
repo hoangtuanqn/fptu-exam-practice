@@ -40,6 +40,7 @@ export interface CatalogItem {
   status: CatalogStatus;
   questions: number | null; // chỉ biết với đề hệ thống đã có
   kind: ExamKind; // FE, PE, QUIZ, OTHER
+  attempts: number; // số lần người dùng đã nộp bài đề này (0 với khách)
 }
 
 let examCache: { at: number; exams: UsableExam[] } | null = null;
@@ -178,8 +179,10 @@ export const catalogService = {
     const subject = code.toUpperCase();
     const ours = (await usableExams()).filter((e) => e.code === subject);
     const mine = userId && ours.length ? new Set((await prisma.userExam.findMany({ where: { userId, examId: { in: ours.map((e) => e.id) } }, select: { examId: true } })).map((o) => o.examId)) : new Set<string>();
+    const done = new Map<string, number>();
+    if (userId && ours.length) for (const a of await prisma.examAttempt.groupBy({ by: ["examId"], where: { userId, examId: { in: ours.map((e) => e.id) } }, _count: { _all: true } })) done.set(a.examId, a._count._all);
     // Đề cũ chưa có loại (trước khi điền lúc khởi động) coi là FE
-    const everything: CatalogItem[] = ours.map((e) => ({ examId: e.id, threadId: e.threadId, title: e.title, postedAt: e.postedAt, replies: 0, term: termOf(e.title), status: mine.has(e.id) ? "owned" : "ready", questions: e.questions, kind: e.kind ?? "FE" }));
+    const everything: CatalogItem[] = ours.map((e) => ({ examId: e.id, threadId: e.threadId, title: e.title, postedAt: e.postedAt, replies: 0, term: termOf(e.title), status: mine.has(e.id) ? "owned" : "ready", questions: e.questions, kind: e.kind ?? "FE", attempts: done.get(e.id) ?? 0 }));
     const kinds = Object.fromEntries(EXAM_KINDS.map((k) => [k, 0])) as Record<ExamKind, number>;
     for (const i of everything) kinds[i.kind]++;
     const all = query.kind ? everything.filter((i) => i.kind === query.kind) : everything; // số kỳ và trang theo loại đang lọc
