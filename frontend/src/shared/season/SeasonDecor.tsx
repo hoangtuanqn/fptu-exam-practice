@@ -1,5 +1,6 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { useLocation } from "react-router-dom";
+import ReindeerFlyby from "./ReindeerFlyby";
 
 // 36 bông tuyết rải sẵn (điện thoại chỉ hiện 16 bông đầu, xem index.css): vị trí ngang, thời gian rơi 14-24s, 3 cỡ 4/6/9px,
 // lệch pha, độ trôi ngang
@@ -40,6 +41,7 @@ export default function SeasonDecor() {
           ))}
         </div>
       )}
+      <ReindeerFlyby />
     </>
   );
 }
