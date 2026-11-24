@@ -17,13 +17,14 @@ interface Props {
   replacing: boolean; // đang có bài làm dở sẽ bị thay thế
   onCancel: () => void;
   onStart: (mode: Mode, limitMin: number | null) => void;
+  trial?: boolean; // đề xem thử: không nộp bài được nên chỉ có chế độ Luyện tập
   initialMode?: Mode; // chọn sẵn chế độ (bấm "Thi" ở trang xem trước đề)
 }
 
 // Hộp thoại sau khi upload đề: xác nhận + chọn chế độ (không đổi được giữa chừng).
 // Chọn chế độ là nhóm radio (role=radiogroup), chọn thời gian là các filter chip.
-export function StartDialog({ title, total, answersPending, replacing, onCancel, onStart, initialMode }: Props) {
-  const [mode, setMode] = useState<Mode | null>(initialMode ?? null); // chưa chọn thì chưa cho bắt đầu
+export function StartDialog({ title, total, answersPending, replacing, onCancel, onStart, trial, initialMode }: Props) {
+  const [mode, setMode] = useState<Mode | null>(trial ? "practice" : (initialMode ?? null)); // chưa chọn thì chưa cho bắt đầu
   const [limit, setLimit] = useState<number>(TIME_LIMIT_OPTIONS[0]); // phút; mặc định 90, 0 = không giới hạn (chỉ dùng ở chế độ Thi)
   const [custom, setCustom] = useState(false); // chọn "Khác": người dùng tự nhập số phút
   const [customText, setCustomText] = useState("");
@@ -51,7 +52,7 @@ export function StartDialog({ title, total, answersPending, replacing, onCancel,
 
       <div className="md-label-large mt-5 text-on-surface-variant">Chọn chế độ</div>
       <div role="radiogroup" aria-label="Chế độ làm bài" className="mt-2 space-y-2">
-        {MODES.map(({ value, label, desc, Icon }) => {
+        {MODES.filter((m) => !trial || m.value === "practice").map(({ value, label, desc, Icon }) => {
           const on = mode === value;
           return (
             <button
@@ -128,6 +129,7 @@ export function StartDialog({ title, total, answersPending, replacing, onCancel,
           {canFullscreen && <p className="md-body-small mt-1.5 text-on-surface-variant">Bài thi chạy toàn màn hình. Rời khỏi màn hình (Esc, chuyển tab) sẽ bị ghi 1 lượt vi phạm, thi thử nên không giới hạn số lần.</p>}
         </div>
       )}
+      {trial && <p className="md-body-small mt-2 text-on-surface-variant">Chế độ Thi có sau khi mở khoá đề.</p>}
       <p className="md-body-small mt-3 text-on-surface-variant">{mode === null ? "Chọn một chế độ để bắt đầu. Đóng hộp thoại để quay lại." : "Không đổi được chế độ khi đang làm bài."}</p>
 
       <ModalActions>

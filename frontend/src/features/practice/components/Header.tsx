@@ -211,7 +211,7 @@ export function Header({
               <Button
                 variant="primary"
                 onClick={onSubmit}
-                disabled={submitLocked || trial}
+                disabled={submitLocked}
                 title={trial ? "Mở khoá đề để nộp bài" : undefined}
                 className="!px-3 sm:!px-4"
               >

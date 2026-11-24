@@ -33,6 +33,7 @@ export function QuizDialogs({ quiz, topicSummary, dialog, onDialogChange, onClos
           total={quiz.questions.length + quiz.trialLocked}
           answersPending={quiz.answersPending}
           replacing={false}
+          trial={quiz.trialLocked > 0}
           initialMode={initialMode}
           onCancel={onCancelChoose}
           onStart={(mode, limitMin) => {
