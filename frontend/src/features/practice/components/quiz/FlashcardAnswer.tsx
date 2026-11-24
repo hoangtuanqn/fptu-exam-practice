@@ -42,3 +42,31 @@ export function AnswerLetters({ answer, shown, vertical = false }: { answer: str
     </div>
   );
 }
+
+// Dải đáp án dưới ảnh: chữ cái to trên nền nổi bật; chưa hiện thì giữ nguyên chiều cao và nhắc cách xem
+export function AnswerBanner({ answer, shown }: { answer: string[]; shown: boolean }) {
+  return (
+    <section
+      aria-label="Đáp án"
+      aria-live="polite"
+      className={`flex min-h-[4.5rem] shrink-0 flex-wrap items-center justify-center gap-x-4 gap-y-2 border-t-2 px-4 py-2.5 ${shown ? "border-primary bg-primary-container text-on-primary-container" : "border-slate-200 bg-surface-container-lowest text-on-surface-variant"}`}
+    >
+      {!shown ? (
+        <p className="md-body-medium">Bấm vào ảnh hoặc nút "Hiện đáp án" để xem đáp án</p>
+      ) : answer.length === 0 ? (
+        <p className="md-title-small">Câu này chưa có đáp án</p>
+      ) : (
+        <>
+          <span className="md-label-large uppercase tracking-wide">Đáp án đúng{answer.length > 1 ? ` · chọn ${answer.length}` : ""}</span>
+          <div className="flex flex-wrap items-center justify-center gap-2.5">
+            {answer.map((a) => (
+              <span key={a} className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-2xl font-bold text-on-primary shadow-md ring-4 ring-primary/25">
+                {a}
+              </span>
+            ))}
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
