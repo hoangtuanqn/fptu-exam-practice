@@ -16,13 +16,17 @@ export function useUnlockExam(examId: string, onUnlocked: () => void | Promise<v
     setBusy(true);
     try {
       await examApi.unlock(examId);
-      void refresh(); // số dư vừa đổi
-      await onUnlocked();
-      setBusy(false);
     } catch (err) {
       toast.error(errorMessage(err, "Chưa mở được đề này"));
-      setBusy(false);
+      return setBusy(false);
     }
+    void refresh(); // số dư vừa đổi
+    try {
+      await onUnlocked();
+    } catch {
+      toast.error("Đã mở khoá đề nhưng chưa tải được câu hỏi, bạn tải lại trang nhé"); // đã trừ credit nên không báo như chưa mở được
+    }
+    setBusy(false);
   }
 
   async function start() {

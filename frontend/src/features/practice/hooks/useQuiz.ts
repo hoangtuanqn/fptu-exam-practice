@@ -190,6 +190,7 @@ export function useQuiz() {
 
   // Vừa mở khoá đề đang xem thử: có đủ câu ngay trong lượt làm hiện tại (giữ đáp án, chế độ, giờ); các ô khoá thành câu thật
   function unlockTrial(all: Question[], examTotal: number) {
+    if (submitted) clearProgress(); // đã nộp bài thử thì bắt đầu lại với đủ câu
     const split = splitReferences(all);
     setQuestions((prev) => {
       const have = new Map(prev.map((q) => [q.number, q]));

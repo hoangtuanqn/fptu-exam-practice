@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "@/features/auth/AuthContext";
 import { ArrowLeft, Crown, FileSearch, Loader2, Lock, Unlock } from "lucide-react";
 import { examApi } from "@/features/exam/exam.api";
 import { examOpenPath } from "@/features/exam/types";
@@ -11,6 +12,7 @@ import { Card } from "@/shared/ui/Card";
 import { Empty } from "@/shared/ui/Feedback";
 import { QueryBoundary } from "@/shared/ui/QueryBoundary";
 import { formatCredit } from "@/shared/utils/formatters";
+import { isPro } from "@/shared/utils/pro";
 import { isUuid } from "@/shared/utils/uuid";
 import { catalogApi, type ExamTrial } from "./catalog.api";
 import { ExamKindBadge } from "./ExamKindBadge";
@@ -33,7 +35,7 @@ export default function ExamTrialPage() {
       throw err;
     }
   }, [examId, valid]);
-  const owned = query.data?.quote.reason === "owned";
+  const owned = !!query.data?.quote.title; // title chỉ có khi đề đã trong kho của bạn (reason có thể là "pro" dù chưa sở hữu)
   const trial = query.data?.trial;
   // Đề đã có trong kho thì không cần khoá: vào thẳng đề
   useEffect(() => {
@@ -67,6 +69,7 @@ export default function ExamTrialPage() {
 function Locked({ trial, fee }: { trial: ExamTrial; fee: number }) {
   const navigate = useNavigate();
   const { start, busy, dialog } = useUnlockExam(trial.examId, () => navigate(`/exam/${trial.examId}/preview`, { replace: true }));
+  const { user } = useAuth();
   const back = `/kho-de?subject=${encodeURIComponent(trial.subjectCode ?? "")}`;
 
   return (
@@ -91,9 +94,11 @@ function Locked({ trial, fee }: { trial: ExamTrial; fee: number }) {
               {busy ? <Loader2 size={16} className="animate-spin" /> : <Unlock size={16} />}
               {fee > 0 ? `Mua đề này · ${formatCredit(fee)}` : "Mở đề"}
             </Button>
-            <Link to="/pro" className={buttonClass({ variant: "tonal" })}>
-              <Crown size={16} /> Nâng cấp Pro
-            </Link>
+            {!isPro(user) && (
+              <Link to="/pro" className={buttonClass({ variant: "tonal" })}>
+                <Crown size={16} /> Nâng cấp Pro
+              </Link>
+            )}
           </div>
         </div>
       </Card>
