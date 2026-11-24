@@ -1,6 +1,6 @@
 // Self-check for the admin exam folder validator. Run: node scripts/check-exam-folder.mjs (Node >= 23, strips TS types)
 import assert from "node:assert/strict";
-import { checkFolder, findRoot, parseAnsJson } from "../src/features/admin/exam-upload/folder.ts";
+import { checkFolder, checkResources, findRoot, isQuizFolder, parseAnsJson } from "../src/features/admin/exam-upload/folder.ts";
 
 const img = (path, size = 1000) => ({ path, file: { size, name: path.split("/").pop() } });
 const folder = (root, n, extra = []) => [...Array.from({ length: n }, (_, i) => img(`${root}images/Q${i + 1}.webp`)), img(`${root}ans.json`, 10), ...extra];
@@ -52,5 +52,21 @@ assert.deepEqual(upd.errors, []);
 assert.deepEqual(upd.replaced, [2]);
 assert.ok(checkFolder([img("images/Q12.webp")], null, 10).errors.some((e) => e.includes("Thiếu ảnh câu: 11")));
 assert.deepEqual(checkFolder([img("images/Q3.webp")], null, 10).errors, []);
+
+// Mode: quiz only with images/ and ans.json at the root; anything else is a resource folder
+assert.equal(isQuizFolder(["x/images/Q1.webp", "x/ans.json"]), true);
+assert.equal(isQuizFolder(["images/Q1.webp"]), false);
+assert.equal(isQuizFolder(["a.pdf", "ans.json"]), false);
+const res = checkResources([img("d/a.PDF"), img("d/b.zip"), img("d/c.exe"), img("d/.md"), img("d/big.mp4", 11 * 1024 * 1024)]);
+assert.deepEqual(res.files.map((f) => f.path), ["d/a.PDF", "d/b.zip", "d/big.mp4"]);
+assert.deepEqual(res.skipped, ["d/c.exe", "d/.md"]);
+assert.ok(res.errors.some((e) => e.includes("big.mp4")));
+assert.deepEqual(res.warnings, []);
+const noAns = checkResources([img("images/Q1.webp"), img("notes.txt")]);
+assert.deepEqual(noAns.errors, []);
+assert.ok(noAns.warnings.some((w) => w.includes("ans.json")));
+assert.deepEqual(noAns.skipped, ["images/Q1.webp"]);
+assert.equal(checkResources([img("x.exe")]).errors.length, 1);
+assert.ok(checkResources(Array.from({ length: 101 }, (_, i) => img(`${i}.pdf`))).errors.some((e) => e.includes("101")));
 
 console.log("check-exam-folder: ok");

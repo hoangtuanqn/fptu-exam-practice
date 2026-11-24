@@ -72,6 +72,15 @@ export const examUploadApi = {
     const form = uploadForm(rest, { title: title.trim(), subjectCode, kind });
     return sendForm<UploadJob>("POST", "/admin/exams/upload?async=1", form);
   },
+  // Thư mục tài liệu (không phải đề trắc nghiệm): máy chủ lưu ngay, tệp có đuôi không nhận thì trả trong `skipped`
+  createResource: ({ title, subjectCode, kind, files }: Omit<CreateExamInput, keyof UploadInput> & { files: File[] }) => {
+    const form = new FormData();
+    form.append("title", title.trim());
+    form.append("subjectCode", subjectCode);
+    form.append("kind", kind);
+    for (const f of files) form.append("files", f, f.name);
+    return sendForm<{ id: string; title: string; files: number; skipped?: string[] }>("POST", "/admin/exams/upload-resource", form);
+  },
   addImages: (examId: string, input: UploadInput) => {
     return sendForm<UploadJob>("POST", `/admin/exams/${encodeURIComponent(examId)}/images?async=1`, uploadForm(input));
   },

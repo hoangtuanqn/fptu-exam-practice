@@ -1,4 +1,4 @@
-// Kiểm tra thư mục đề trước khi tải lên: images/Q1.webp … Qn.webp và ans.json nằm cạnh images/.
+// Kiểm tra thư mục đề trước khi tải lên: images/Q1.webp … Qn.webp và ans.json nằm cạnh images/. Thiếu một trong hai thì là thư mục tài liệu.
 // Không import gì để script kiểm tra (scripts/check-exam-folder.mjs) chạy thẳng bằng node. Máy chủ vẫn kiểm tra lại.
 export const MAX_FOLDER_IMAGES = 100;
 export const MAX_FOLDER_IMAGE_MB = 10;
@@ -42,6 +42,41 @@ export function findRoot(paths: string[]): { root: string | null; others: string
 }
 
 export const ansPathOf = (root: string) => (root ? `${root}/ans.json` : "ans.json");
+
+/** Có images/ và ans.json ở thư mục gốc đề -> đề trắc nghiệm; còn lại lưu thành tài liệu. */
+export function isQuizFolder(paths: string[]): boolean {
+  const { root } = findRoot(paths);
+  return root !== null && paths.includes(ansPathOf(root));
+}
+
+// Trùng danh sách đuôi TYPES ở backend/src/utils/attachment.ts
+export const RESOURCE_EXTS = ["pdf", "zip", "rar", "7z", "txt", "md", "mp3", "wav", "ogg", "opus", "mp4", "m4v", "avi", "mov", "mpeg", "mpg", "ogv", "webm"];
+const extOf = (path: string) => {
+  const name = path.slice(path.lastIndexOf("/") + 1);
+  const dot = name.lastIndexOf(".");
+  return dot > 0 ? name.slice(dot + 1).toLowerCase() : "";
+};
+
+export interface ResourceCheck<F> {
+  files: FolderEntry<F>[]; // sẽ tải lên
+  skipped: string[]; // đường dẫn tệp có đuôi không được nhận
+  errors: string[];
+  warnings: string[];
+}
+
+/** Thư mục tài liệu: giữ tệp có đuôi được phép, kiểm tra cỡ từng tệp và số tệp (tổng dung lượng kiểm ở form). */
+export function checkResources<F extends { size: number }>(entries: FolderEntry<F>[]): ResourceCheck<F> {
+  const files = entries.filter((e) => RESOURCE_EXTS.includes(extOf(e.path)));
+  const skipped = entries.filter((e) => !RESOURCE_EXTS.includes(extOf(e.path))).map((e) => e.path);
+  const errors: string[] = [];
+  const warnings: string[] = [];
+  if (findRoot(entries.map((e) => e.path)).root !== null) warnings.push("Thiếu ans.json nên sẽ lưu thành tài nguyên. Ảnh câu hỏi (webp) không phải loại tệp tài liệu nên sẽ bị bỏ qua.");
+  const tooBig = files.filter((e) => e.file.size > MAX_BYTES).map((e) => e.path);
+  if (!files.length) errors.push("Thư mục không có tệp nào dùng được. Chỉ nhận PDF, ZIP/RAR/7Z, TXT/MD, âm thanh (MP3, WAV, OGG...) và video (MP4, WEBM, MOV...).");
+  if (tooBig.length) errors.push(`Tệp nặng hơn ${MAX_FOLDER_IMAGE_MB} MB: ${tooBig.slice(0, 12).join(", ")}${tooBig.length > 12 ? "…" : ""}.`);
+  if (files.length > MAX_FOLDER_IMAGES) errors.push(`Tối đa ${MAX_FOLDER_IMAGES} tệp mỗi lần, thư mục có ${files.length} tệp dùng được.`);
+  return { files, skipped, errors, warnings };
+}
 
 /** Đọc ans.json: {"Q1.webp": ["B"], "Q2.webp": ["A","C"]} -> đáp án theo số câu. */
 export function parseAnsJson(text: string): { byNumber: Map<number, string[]>; errors: string[]; unknownKeys: string[] } {

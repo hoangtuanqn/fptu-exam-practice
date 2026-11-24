@@ -79,7 +79,8 @@ export function useUploadJobs(onSaved?: () => void) {
   const add = useCallback(
     (job: UploadJob) => {
       if (!job.uploadId) {
-        toast.success("Đã lưu đề");
+        // 0 câu chỉ có ở thư mục tài liệu (đề trắc nghiệm luôn có ít nhất 1 ảnh)
+        toast.success(job.result?.questions === 0 ? `Đã lưu ${job.files} tệp tài liệu` : "Đã lưu đề");
         savedRef.current?.();
         return;
       }
