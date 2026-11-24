@@ -11,7 +11,7 @@ export interface ImportedExam {
   totalQuestions: number; // lớn hơn questions.length = đề còn đang được xử lý, các câu sau đến qua socket
   questions: Question[];
   attachments?: ExamAttachment[]; // tệp không phải ảnh (pdf, zip...); máy chủ cũ không trả về. Đề chỉ có tệp thì questions rỗng
-  trial?: { locked: number }; // có khi bạn chưa mở khoá đề: chỉ có vài câu đầu, locked = số câu còn khoá
+  trial?: { locked: number; attempts?: number }; // có khi bạn chưa mở khoá đề: chỉ có vài câu đầu, locked = số câu còn khoá, attempts = số lượt đã làm đề này (đếm thật)
 }
 
 // Tệp đính kèm của đề. url công khai, mở thẳng bằng <a href>; thêm download=1 để tải về

@@ -119,12 +119,13 @@ export default function PracticePage({ examId }: Props) {
   useTimeWarnings(quiz.mode === "exam" && quiz.timing && !quiz.submitted ? quiz.timeLimitSec : null, quiz.elapsed, quiz.session);
 
   // Đang mở hộp thoại thì tắt phím tắt để tránh bấm nhầm đáp án
-  const trialLocked = quiz.trialLocked > 0; // đề xem thử: không nộp bài được
+  const trialLocked = quiz.trialLocked > 0; // đề xem thử: nộp bài thì mời mở khoá
   const requestSubmit = useCallback(() => {
-    if (trialLocked) return;
     setZoomOpen(false);
+    if (trialLocked) return quiz.goTo(quiz.slots - 1); // đề xem thử không nộp được: đưa tới thẻ mời mở khoá
     setDialog("confirm");
-  }, [trialLocked]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trialLocked, quiz.slots]);
   const canSubmit = !quiz.submitted && !quiz.answersPending && !quiz.loadingMore && !trialLocked;
   useQuizShortcuts(quiz, hasQuiz && !anyDialogOpen, canSubmit ? requestSubmit : undefined);
 
@@ -251,6 +252,7 @@ export default function PracticePage({ examId }: Props) {
         // Đề chưa mở khoá: làm thử vài câu đầu như đề bình thường (không lưu), các câu còn lại khoá
         const examTotal = exam.trial ? exam.questions.length : exam.totalQuestions;
         quiz.setTrialLocked(exam.trial?.locked ?? 0);
+        quiz.setTrialAttempts(exam.trial?.attempts ?? 0);
         // Bộ đề theo chương (?t=chương&t=chương): chỉ giữ các câu thuộc những chương đã chọn
         const chapters = new Set(params.getAll("t"));
         if (chapters.size > 0) {

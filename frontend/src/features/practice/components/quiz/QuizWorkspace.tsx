@@ -19,6 +19,7 @@ import { Sidebar } from "@/features/practice/components/sidebar/Sidebar";
 import { AnswerPendingBanner } from "./AnswerPendingBanner";
 import { LoadingMoreBanner } from "./LoadingMoreBanner";
 import { TrialLockBanner } from "@/features/exam-store/TrialLockBanner";
+import { LockedQuestionCard } from "./LockedQuestionCard";
 import { ImageViewer } from "./ImageViewer";
 import { QuestionCard } from "./QuestionCard";
 import { RotateHint } from "@/shared/ui/RotateHint";
@@ -45,7 +46,9 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit, readOnly
   const toast = useToast();
   // Câu đã lưu của đề: tải một lần mỗi đề, sau đó cập nhật tại chỗ khi bấm lưu/bỏ lưu (khoá theo "đề:câu")
   const saveEnabled = !readOnly && !!user && quiz.examId !== null;
-  const savedOfExam = useApi(() => (saveEnabled ? savedApi.ofExam(quiz.examId!) : Promise.resolve(null)), [saveEnabled, quiz.examId]);
+  // Đề xem thử chưa nằm trong kho của bạn nên chưa có danh sách câu đã lưu (máy chủ sẽ báo không tìm thấy đề)
+  const savedLoadable = saveEnabled && quiz.trialLocked === 0;
+  const savedOfExam = useApi(() => (savedLoadable ? savedApi.ofExam(quiz.examId!) : Promise.resolve(null)), [savedLoadable, quiz.examId]);
   const [savedChanged, setSavedChanged] = useState<Record<string, boolean>>({});
   const [unlockOpen, setUnlockOpen] = useState(false); // hộp xác nhận mở khóa cả đề
   const [bannerCollapsed, setBannerCollapsed] = useState(false); // thẻ ưu đãi thu thành viên thuốc
@@ -55,6 +58,18 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit, readOnly
   const showTopic = quiz.mode === "practice" || quiz.submitted; // thi: chủ đề chỉ hiện sau khi nộp bài
 
   const question = quiz.questions[quiz.current];
+  // Đề xem thử: đứng ở ô khoá (sau các câu đã mở) thì hiện thẻ mời mở khoá thay cho câu hỏi
+  if (!question && quiz.trialLocked > 0 && quiz.current < quiz.slots && quiz.examId) {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+        <RotateHint />
+        <Sidebar quiz={quiz} onSubmit={undefined} />
+        <main className="flex min-w-0 flex-1 flex-col overflow-y-auto p-2 sm:p-3 lg:p-4">
+          <LockedQuestionCard examId={quiz.examId} number={quiz.current + 1} total={Math.max(quiz.total, quiz.slots)} attempts={quiz.trialAttempts} onUnlocked={quiz.unlockTrial} onBack={quiz.prev} />
+        </main>
+      </div>
+    );
+  }
   if (!question) return null;
 
   // Báo cáo đáp án sai: chỉ với đề của hệ thống, đã đăng nhập, và khi câu này đã có kết quả (đáp án đã chắc chắn)
@@ -84,6 +99,7 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit, readOnly
   const savedKey = `${quiz.examId}:${question.number}`;
   const isSaved = savedChanged[savedKey] ?? (Array.isArray(savedOfExam.data) && savedOfExam.data.includes(question.number));
   const toggleSave = async () => {
+    if (quiz.trialLocked > 0) return toast.error("Mở khoá đề để lưu câu này vào Câu đã lưu");
     const { number } = question;
     const next = !isSaved;
     try {
@@ -99,12 +115,12 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit, readOnly
 
   const view: QuestionViewProps = {
     question,
-    total: quiz.questions.length,
+    total: Math.max(quiz.total, quiz.slots),
     selected: quiz.answers[question.number] ?? [],
     revealed: quiz.isRevealed(question),
     canCheck: quiz.canCheck(question),
     hasPrev: quiz.current > 0,
-    hasNext: quiz.current < quiz.questions.length - 1,
+    hasNext: quiz.current < quiz.slots - 1,
     flagged: !!quiz.flagged[question.number],
     onToggleFlag: readOnly ? undefined : () => quiz.toggleFlag(question.number),
     saved: isSaved,
@@ -146,7 +162,7 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit, readOnly
       <RotateHint />
       <Sidebar quiz={quiz} onSubmit={view.onSubmit} />
       <main className={`flex min-w-0 flex-1 flex-col overflow-y-auto p-2 sm:p-3 lg:p-4 ${panelOpen ? "max-lg:pb-[60dvh]" : ""}`}>
-        {quiz.trialLocked > 0 && quiz.examId && <TrialLockBanner examId={quiz.examId} locked={quiz.trialLocked} onUnlocked={quiz.unlockTrial} />}
+        {quiz.trialLocked > 0 && quiz.examId && <TrialLockBanner examId={quiz.examId} shown={quiz.questions.length} total={Math.max(quiz.total, quiz.slots)} onUnlocked={quiz.unlockTrial} />}
         {quiz.loadingMore && <LoadingMoreBanner loaded={quiz.questions.length} total={quiz.total} />}
         <AnswerPendingBanner source={quiz.answerSource} examId={quiz.examId} onRetry={quiz.waitForAnswers} />
         {showBundle && bundle && (
