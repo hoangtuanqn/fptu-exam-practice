@@ -98,7 +98,7 @@ export const crawlJobService = {
         const entry = await walletService.charge(tx, { userId: owner.userId, amount: fetchPrice, type: "CRAWL_CHARGE", note: `Lấy đề thread ${threadId}` });
         balanceAfter = entry.balanceAfter;
       }
-      await examService.addToLibrary(owner, exam.id, tx);
+      await examService.addToLibrary(owner, exam.id, tx, isPro && fetchPrice === 0 && !alreadyOwned); // Pro mở free thì khoá lại khi hết Pro; có trả phí thì giữ vĩnh viễn
       // Ghi lại lượt mở của khách để đếm giới hạn ngày
       if (!isMember(owner)) await crawlJobRepository.create({ threadId, ...owner, chargedAmount: 0, status: "DONE", examId: exam.id, finishedAt: new Date() }, tx);
       return { existed: true as const, examId: exam.id, title: exam.title, charged: fetchPrice, free: alreadyOwned };

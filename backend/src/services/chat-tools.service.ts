@@ -1,3 +1,4 @@
+import { ownedWhere } from "../repositories/user-exam.repository";
 import type Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "../configs/prisma";
 import { AppError } from "../rules/error";
@@ -103,7 +104,7 @@ const RUNNERS: Record<string, Runner> = {
   async get_account_summary(userId) {
     const [u, exams, attempts, referred] = await Promise.all([
       prisma.user.findUnique({ where: { id: userId }, select: { fullName: true, balance: true, emailVerifiedAt: true, createdAt: true, referralCode: true } }),
-      prisma.userExam.count({ where: { userId } }),
+      prisma.userExam.count({ where: ownedWhere({ userId }) }),
       prisma.examAttempt.count({ where: { userId } }),
       prisma.user.count({ where: { referredById: userId } }),
     ]);
@@ -114,7 +115,7 @@ const RUNNERS: Record<string, Runner> = {
   async list_my_exams(userId, input) {
     const search = typeof input.search === "string" ? input.search.trim().slice(0, 100) : "";
     const rows = await prisma.userExam.findMany({
-      where: { userId, ...(search && { exam: { title: { contains: search } } }) },
+      where: { ...ownedWhere({ userId }), ...(search && { exam: { title: { contains: search } } }) },
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take: take(input),
       select: { createdAt: true, exam: { select: { id: true, title: true, totalQuestions: true, answerSource: true } } },

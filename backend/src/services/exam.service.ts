@@ -33,7 +33,7 @@ export const examService = {
     return { result };
   },
   // Đề nhập xong (hoặc đã có sẵn) đều vào kho của người nhập: thành viên hoặc khách
-  addToLibrary: (owner: Owner, examId: string, db?: Db) => userExamRepository.add(owner, examId, db),
+  addToLibrary: (owner: Owner, examId: string, db?: Db, viaPro = false) => userExamRepository.add(owner, examId, db, viaPro),
 
   // Chỉ chủ kho (hoặc admin) được xem/làm đề; người khác nhận 404 như thể đề không tồn tại
   async assertAccess(actor: Actor, examId: string) {
@@ -78,7 +78,7 @@ export const examService = {
       // Admin sửa đề chưa vào Kho đề (AI đang giải, lỗi...) vẫn cần xem đủ: đề ngoài Kho đề thì rơi xuống kiểm tra quyền thường
       const trial = await catalogService.trialDetail(id, actor.owner.userId).catch((err: unknown) => (actor.isAdmin ? null : Promise.reject(err)));
       // Pro mở đề miễn phí (như crawlJobService.submit): tự thêm vào Kho đề thay vì bắt bấm "Mở khoá"; đề đã qua kiểm tra usableExams nên là đề hợp lệ
-      if (trial && PRO_BENEFITS.freeFetch && (await planService.isPro(actor.owner.userId))) await userExamRepository.add(actor.owner, id);
+      if (trial && PRO_BENEFITS.freeFetch && (await planService.isPro(actor.owner.userId))) await userExamRepository.add(actor.owner, id, undefined, true);
       else if (trial) return trial;
     }
     await this.assertAccess(actor, id);

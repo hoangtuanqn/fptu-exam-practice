@@ -1,3 +1,4 @@
+import { ownedWhere } from "./user-exam.repository";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../configs/prisma";
 import { USABLE_ANSWER_SOURCES } from "../constants/exam";
@@ -55,7 +56,7 @@ const isRetryable = (err: unknown) => {
 // Câu ôn được khi đề còn dùng được và (trừ admin) đề còn trong kho của người dùng
 const visibleQuestion = (userId: string, isAdmin: boolean) => ({
   isReference: false,
-  exam: { answerSource: { in: [...USABLE_ANSWER_SOURCES] }, ...(isAdmin ? {} : { userExams: { some: { userId } } }) },
+  exam: { answerSource: { in: [...USABLE_ANSWER_SOURCES] }, ...(isAdmin ? {} : { userExams: { some: ownedWhere({ userId }) } }) },
 });
 
 export const fsrsCardRepository = {

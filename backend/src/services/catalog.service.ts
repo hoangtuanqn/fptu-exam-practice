@@ -1,3 +1,4 @@
+import { ownedWhere } from "../repositories/user-exam.repository";
 import { CATALOG_ANSWER_SOURCES } from "../constants/exam";
 import { PE_PRICE } from "../constants/pe";
 import type { ExamKind } from "@prisma/client";
@@ -205,7 +206,7 @@ export const catalogService = {
 
   /** Các môn người dùng đã lấy đề (mới nhất trước), để bấm nhanh. */
   async mySubjects(userId: string) {
-    const rows = await prisma.userExam.findMany({ where: { userId }, orderBy: { id: "desc" }, take: 300, select: { exam: { select: { title: true } } } });
+    const rows = await prisma.userExam.findMany({ where: ownedWhere({ userId }), orderBy: { id: "desc" }, take: 300, select: { exam: { select: { title: true } } } });
     const codes: string[] = [];
     for (const r of rows) {
       const code = subjectCodeFromTitle(r.exam.title);
@@ -219,7 +220,7 @@ export const catalogService = {
   async exams(code: string, query: PaginationQuery & { q?: string; term?: string; kind?: ExamKind }, userId: string | null) {
     const subject = code.toUpperCase();
     const ours = (await usableExams()).filter((e) => e.code === subject);
-    const owned = userId && ours.length ? await prisma.userExam.findMany({ where: { userId, examId: { in: ours.map((e) => e.id) } }, select: { examId: true, openedAt: true } }) : [];
+    const owned = userId && ours.length ? await prisma.userExam.findMany({ where: { ...ownedWhere({ userId }), examId: { in: ours.map((e) => e.id) } }, select: { examId: true, openedAt: true } }) : [];
     const mine = new Set(owned.map((o) => o.examId));
     const opened = new Set(owned.filter((o) => o.openedAt).map((o) => o.examId));
     const done = new Map<string, number>();
