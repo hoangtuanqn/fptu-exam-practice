@@ -9,7 +9,7 @@ cd "$(dirname "$0")/.."
 SSH_ARGS=${VPS_SSH:-fepass-vps2}
 HOST=${SSH_ARGS##* }                       # phần cuối: user@ip hoặc alias
 OPTS=""; [ "$HOST" != "$SSH_ARGS" ] && OPTS=${SSH_ARGS% *}
-run() { ssh $OPTS "$HOST" "$@"; }
+run() { ssh -n $OPTS "$HOST" "$@"; }
 put() { scp -q $OPTS "$1" "$HOST:$2"; }
 dry=false; [ "${1:-}" = "--dry-run" ] && dry=true
 
