@@ -233,7 +233,7 @@ export default function PracticePage({ examId }: Props) {
         loadedFor.current = examId; // đã tải xong đề này
         setAttachments({ examId: exam.id, list: exam.attachments ?? [] });
         // Không phải đề FE đủ câu: chỉ xem trước, không hỏi chế độ
-        if (!canPractice(exam.kind, exam.totalQuestions)) {
+        if (!canPractice(exam.kind, exam.totalQuestions, exam.answerStatus)) {
           quiz.closeExam();
           navigate(`/exam/${exam.id}/preview`, { replace: true });
           return;
