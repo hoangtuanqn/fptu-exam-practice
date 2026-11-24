@@ -20,9 +20,9 @@ export function PublicExamList({ code, pageSize }: { code: string; pageSize?: nu
   const { url, setUrl, page } = query;
   const list = useApi(() => catalogApi.exams(code, { q: url.q, term: url.term, kind: url.kind, page, limit: pageSize }), [code, url.q, url.term, url.kind, page, pageSize, user?.id]);
   const target = `/kho-de?subject=${encodeURIComponent(code)}`;
-  // Đã có trong kho: vào làm; thành viên chưa có: xem thử 3 câu đầu rồi mới trả phí; khách: đăng ký rồi quay lại đây
+  // Đã có trong kho: vào làm; thành viên chưa có: xem thử vài câu đầu hoặc trang khoá, rồi mới trả phí; khách: đăng ký rồi quay lại đây
   const linkOf = (e: CatalogItem) =>
-    e.status === "owned" ? { to: examOpenPath({ id: e.examId!, kind: e.kind, totalQuestions: e.questions }) } : user ? { to: `/exam/${e.examId}/trial?subject=${encodeURIComponent(code)}` } : { to: "/register", state: { from: target } };
+    e.status === "owned" ? { to: examOpenPath({ id: e.examId!, kind: e.kind, totalQuestions: e.questions }) } : user ? { to: `/exam/${e.examId}` } : { to: "/register", state: { from: target } };
   const fee = (e: CatalogItem) => (e.status === "owned" || isPro(user) || !list.data ? 0 : e.kind === "PE" ? (list.data.pePrice ?? list.data.price) : list.data.price);
 
   return (

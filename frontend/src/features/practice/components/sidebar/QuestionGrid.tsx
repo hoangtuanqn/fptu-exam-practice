@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { Lock } from "lucide-react";
 import type { Question, UserAnswers } from "@/features/practice/types.ts";
 import { getStatus, type QuestionStatus } from "@/features/practice/utils/grade";
 
@@ -10,6 +11,7 @@ interface Props {
   submitted: boolean;
   current: number;
   total?: number; // tổng số câu của đề; chưa tải xong thì các ô còn lại hiện mờ
+  locked?: number; // đề xem thử: số câu còn khoá, hiện ổ khoá sau các câu đang mở
   onSelect: (index: number) => void;
 }
 
@@ -23,7 +25,7 @@ const STATUS_STYLE: Record<QuestionStatus, { cls: string; name: string }> = {
 };
 
 // Bảng số câu (trong popup): màu theo trạng thái, vòng primary ở câu đang xem (aria-current), cuộn dọc khi nhiều câu.
-export function QuestionGrid({ questions, answers, checked, flagged, submitted, current, total = 0, onSelect }: Props) {
+export function QuestionGrid({ questions, answers, checked, flagged, submitted, current, total = 0, locked = 0, onSelect }: Props) {
   const boxRef = useRef<HTMLDivElement>(null);
 
   // Chuyển câu bằng phím/nút thì cuộn để ô câu hiện tại luôn nằm trong tầm nhìn
@@ -55,6 +57,11 @@ export function QuestionGrid({ questions, answers, checked, flagged, submitted, 
             </div>
           );
         })}
+        {Array.from({ length: locked }, (_, k) => (
+          <span key={`locked-${k}`} title={`Câu ${questions.length + k + 1}: đang khoá`} role="img" aria-label={`Câu ${questions.length + k + 1}, đang khoá`} className="flex h-11 w-full items-center justify-center rounded-m3-sm border border-outline-variant bg-surface-container text-on-surface-variant lg:h-10">
+            <Lock size={14} />
+          </span>
+        ))}
         {Array.from({ length: Math.max(0, total - questions.length) }, (_, k) => (
           <span
             key={`loading-${k}`}

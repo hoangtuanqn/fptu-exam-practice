@@ -181,7 +181,7 @@ export default function PracticePage({ examId }: Props) {
       setTopicSummary(null);
       return;
     }
-    if (quiz.examId === null || quiz.answersPending || quiz.restoredSubmitted || savedFor.current === quiz.session) return; // bài đã nộp được mở lại thì kết quả đã lưu từ trước
+    if (quiz.examId === null || quiz.trialLocked > 0 || quiz.answersPending || quiz.restoredSubmitted || savedFor.current === quiz.session) return; // bài đã nộp được mở lại thì kết quả đã lưu từ trước
     savedFor.current = quiz.session;
     const payload = {
       mode: quiz.mode === "exam" ? ("EXAM" as const) : ("PRACTICE" as const),
@@ -232,10 +232,10 @@ export default function PracticePage({ examId }: Props) {
         if (stale) return;
         loadedFor.current = examId; // đã tải xong đề này
         setAttachments({ examId: exam.id, list: exam.attachments ?? [] });
-        // Không phải đề FE đủ câu: chỉ xem trước, không hỏi chế độ
+        // Không phải đề FE đủ câu: chỉ xem trước (chưa mở khoá thì khoá ngay từ đầu), không hỏi chế độ
         if (!canPractice(exam.kind, exam.totalQuestions, exam.answerStatus)) {
           quiz.closeExam();
-          navigate(`/exam/${exam.id}/preview`, { replace: true });
+          navigate(`/exam/${exam.id}/${exam.trial ? "trial" : "preview"}`, { replace: true });
           return;
         }
         // Đề chỉ có tệp: không có câu để làm, không tạo lượt làm bài
@@ -245,6 +245,9 @@ export default function PracticePage({ examId }: Props) {
           return;
         }
         const mode = params.get("mode");
+        // Đề chưa mở khoá: làm thử vài câu đầu như đề bình thường (không lưu), các câu còn lại khoá
+        const examTotal = exam.trial ? exam.questions.length : exam.totalQuestions;
+        quiz.setTrialLocked(exam.trial?.locked ?? 0);
         // Bộ đề theo chương (?t=chương&t=chương): chỉ giữ các câu thuộc những chương đã chọn
         const chapters = new Set(params.getAll("t"));
         if (chapters.size > 0) {
@@ -259,7 +262,7 @@ export default function PracticePage({ examId }: Props) {
           return;
         }
         if (saved && saved.examId === exam.id) {
-          quiz.openExam(exam.questions, exam.title, exam.id, saved.mode === "EXAM" ? "exam" : "practice", exam.answerStatus, exam.totalQuestions, {
+          quiz.openExam(exam.questions, exam.title, exam.id, saved.mode === "EXAM" ? "exam" : "practice", exam.answerStatus, examTotal, {
             sessionId: saved.id,
             answers: saved.answers,
             checked: saved.checked,
@@ -269,8 +272,8 @@ export default function PracticePage({ examId }: Props) {
             violations: saved.violations,
             submitted: saved.status === "SUBMITTED",
           });
-        } else if (mode === "practice" || mode === "exam") quiz.openExam(exam.questions, exam.title, exam.id, mode, exam.answerStatus, exam.totalQuestions);
-        else quiz.openForChoice(exam.questions, exam.title, exam.id, exam.answerStatus, exam.totalQuestions); // đề hiện sẵn phía sau, hộp thoại chọn chế độ nằm đè lên
+        } else if (mode === "practice" || mode === "exam") quiz.openExam(exam.questions, exam.title, exam.id, mode, exam.answerStatus, examTotal);
+        else quiz.openForChoice(exam.questions, exam.title, exam.id, exam.answerStatus, examTotal); // đề hiện sẵn phía sau, hộp thoại chọn chế độ nằm đè lên
       })
       .catch((err: unknown) => {
         if (stale) return;

@@ -65,6 +65,7 @@ export function useQuiz() {
   const [restoredSubmitted, setRestoredSubmitted] = useState(false); // bài đã nộp được mở lại sau khi tải lại trang
   const [resumedElapsed, setResumedElapsed] = useState(0); // số giây đã làm ở lượt được làm tiếp
   const [violations, setViolations] = useState<Violation[]>([]); // các lần rời khỏi bài thi toàn màn hình (chế độ Thi)
+  const [trialLocked, setTrialLocked] = useState(0); // đề xem thử: số câu còn khoá (0 = đề đã mở khoá đủ)
   const [choosing, setChoosing] = useState(false); // đề đã mở sẵn phía sau nhưng người dùng chưa chọn chế độ: chưa tính giờ, chưa tạo lượt làm
 
   // Đồng hồ chỉ chạy khi có đáp án để làm: chờ AI phân tích xong mới bắt đầu tính, dừng khi nộp bài
@@ -208,6 +209,7 @@ export function useQuiz() {
     setAnswerSource(null);
     setTotal(0);
     setTimeLimitMin(null);
+    setTrialLocked(0);
     clearProgress();
   }
 
@@ -312,6 +314,8 @@ export function useQuiz() {
     pendingExamId: pending?.examId ?? null,
     appendQuestions,
     closeExam,
+    trialLocked,
+    setTrialLocked,
     applyAnswers,
     markFailed,
     waitForAnswers,

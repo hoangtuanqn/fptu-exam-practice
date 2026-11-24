@@ -49,8 +49,8 @@ function SubjectChooser({ onPick, compact }: { onPick: (code: string) => void; c
 
 const priceOf = (d: { price: number; pePrice?: number }, e: CatalogItem) => (e.kind === "PE" ? (d.pePrice ?? d.price) : d.price);
 
-// Đề đã có trong kho: vào làm; chưa có: vào trang xem thử 3 câu đầu, mở khoá cả đề ở đó (chỉ trừ credit khi đồng ý)
-const targetOf = (e: CatalogItem, code: string) => (e.status === "owned" ? examOpenPath({ id: e.examId!, kind: e.kind, totalQuestions: e.questions }) : `/exam/${e.examId}/trial?subject=${encodeURIComponent(code)}`);
+// Đề đã có trong kho: vào làm; chưa có: vào /exam/:id, nơi xem thử vài câu đầu (hoặc trang khoá nếu không làm thử được), chỉ trừ credit khi bạn đồng ý mở khoá
+const targetOf = (e: CatalogItem) => (e.status === "owned" ? examOpenPath({ id: e.examId!, kind: e.kind, totalQuestions: e.questions }) : `/exam/${e.examId}`);
 
 function ExamList({ code, onBack }: { code: string; onBack: () => void }) {
   const { user } = useAuth();
@@ -77,7 +77,7 @@ function ExamList({ code, onBack }: { code: string; onBack: () => void }) {
               <ul className="divide-y divide-outline-variant">
                 {data.items.map((e) => {
                   const fee = e.status !== "owned" && !isPro(user) ? priceOf(data, e) : 0;
-                  return <ExamRow key={e.examId} item={e} known to={targetOf(e, code)} hint={fee > 0 ? formatCredit(fee) : undefined} />;
+                  return <ExamRow key={e.examId} item={e} known to={targetOf(e)} hint={fee > 0 ? formatCredit(fee) : undefined} />;
                 })}
               </ul>
               <Pagination meta={data.meta} onPage={(p) => setUrl({ page: String(p) })} />
