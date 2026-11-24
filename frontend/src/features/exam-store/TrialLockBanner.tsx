@@ -1,11 +1,17 @@
 import { Link } from "react-router-dom";
 import { Loader2, Lock, Unlock } from "lucide-react";
+import { examApi } from "@/features/exam/exam.api";
+import type { Question } from "@/features/practice/types";
 import { Button } from "@/shared/ui/Button";
 import { useUnlockExam } from "./useUnlockExam";
 
-// Đề đang xem thử: chỉ vài câu đầu mở, các câu còn lại khoá cho tới khi mở khoá cả đề. Mở xong tải lại đề để có đủ câu.
-export function TrialLockBanner({ examId, locked }: { examId: string; locked: number }) {
-  const { start, busy, dialog } = useUnlockExam(examId, () => window.location.assign(`/exam/${examId}`));
+// Đề đang xem thử: chỉ vài câu đầu mở, các câu còn lại khoá cho tới khi mở khoá cả đề. Mở khoá xong thì các câu hiện ra ngay trong lượt đang làm.
+export function TrialLockBanner({ examId, locked, onUnlocked }: { examId: string; locked: number; onUnlocked: (all: Question[], total: number) => void }) {
+  // Mua xong thì nạp đủ câu vào đúng lượt đang làm, không mở lượt mới
+  const { start, busy, dialog } = useUnlockExam(examId, async () => {
+    const exam = await examApi.exam(examId);
+    onUnlocked(exam.questions, exam.totalQuestions);
+  });
   return (
     <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-m3-md border border-outline-variant bg-surface-container px-4 py-3">
       <Lock size={20} className="shrink-0 text-primary" aria-hidden />

@@ -78,7 +78,7 @@ export function useSessionSync(quiz: Quiz) {
         if (creating.current === key) creating.current = null; // thử lại ở lần render sau
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasQuiz, examId, answersPending, choosing, sessionId, session]);
+  }, [hasQuiz, examId, answersPending, choosing, sessionId, session, quiz.trialLocked]);
 
   // Lượt được mở lại từ danh sách làm dở: ghi nhớ để "Làm lại" còn biết bỏ lượt này
   useEffect(() => {

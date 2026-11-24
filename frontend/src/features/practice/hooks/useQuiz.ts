@@ -188,6 +188,18 @@ export function useQuiz() {
     setPending(null);
   }
 
+  // Vừa mở khoá đề đang xem thử: có đủ câu ngay trong lượt làm hiện tại (giữ đáp án, chế độ, giờ); các ô khoá thành câu thật
+  function unlockTrial(all: Question[], examTotal: number) {
+    const split = splitReferences(all);
+    setQuestions((prev) => {
+      const have = new Map(prev.map((q) => [q.number, q]));
+      return split.questions.map((q) => have.get(q.number) ?? q);
+    });
+    setReferences(split.references);
+    setTotal(examTotal);
+    setTrialLocked(0);
+  }
+
   // Đề đang được lấy về: có thêm câu mới thì thêm vào cuối (cả đề đang làm lẫn đề đang chờ chọn chế độ)
   function appendQuestions(incoming: IncomingQuestion[], examTotal: number) {
     const known = new Set(references.map((r) => r.number));
@@ -316,6 +328,7 @@ export function useQuiz() {
     closeExam,
     trialLocked,
     setTrialLocked,
+    unlockTrial,
     applyAnswers,
     markFailed,
     waitForAnswers,
