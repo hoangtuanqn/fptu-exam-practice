@@ -58,9 +58,21 @@ export function QuestionGrid({ questions, answers, checked, flagged, submitted, 
           );
         })}
         {Array.from({ length: locked }, (_, k) => (
-          <span key={`locked-${k}`} title={`Câu ${questions.length + k + 1}: đang khoá`} role="img" aria-label={`Câu ${questions.length + k + 1}, đang khoá`} className="flex h-11 w-full items-center justify-center rounded-m3-sm border border-outline-variant bg-surface-container text-on-surface-variant lg:h-10">
-            <Lock size={14} />
-          </span>
+          <div role="listitem" key={`locked-${k}`} className="shrink-0">
+            <button
+              data-current={questions.length + k === current}
+              aria-current={questions.length + k === current ? "true" : undefined}
+              title={`Câu ${questions.length + k + 1}: đang khoá`}
+              aria-label={`Câu ${questions.length + k + 1}, đang khoá`}
+              onClick={() => onSelect(questions.length + k)}
+              className={`md-state md-motion md-label-large relative flex h-11 w-full items-center justify-center gap-0.5 rounded-m3-sm border border-outline-variant bg-surface-container text-on-surface-variant lg:h-10 ${
+                questions.length + k === current ? "ring-2 ring-primary ring-offset-2 ring-offset-surface" : ""
+              }`}
+            >
+              <span className="opacity-50">{questions.length + k + 1}</span>
+              <Lock size={12} aria-hidden />
+            </button>
+          </div>
         ))}
         {Array.from({ length: Math.max(0, total - questions.length) }, (_, k) => (
           <span
