@@ -5,6 +5,7 @@ import { useQuestionImageScale } from "@/features/practice/hooks/useQuestionImag
 import { isMultiple } from "@/features/practice/utils/question";
 import { Button } from "@/shared/ui/Button";
 import { AnswerOptions } from "./AnswerOptions";
+import { AnswerLetters, RevealButton } from "./FlashcardAnswer";
 import { AnswerStatus } from "./AnswerStatus";
 import { ExplainButton } from "./ExplainButton";
 import { NextButton } from "./NextButton";
@@ -50,6 +51,7 @@ export function QuestionCard({
   onPrev,
   onNext,
   onSubmit,
+  flashcard,
   onZoom,
 }: Props) {
   const { number, imageUrl } = question;
@@ -127,7 +129,13 @@ export function QuestionCard({
         {/* Ảnh rộng hết khung (chữ to hơn nhiều so với co ảnh vừa cả chiều cao); đề dài thì cuộn trong khung. Bấm vào ảnh mở cửa sổ phóng to */}
         <div className="min-h-0 w-full flex-1 overflow-auto bg-slate-50 p-1.5 sm:p-2">
           <div className="relative" style={{ width: `${size.scale * 100}%`, maxWidth: "none" }}>
-            <ProtectedImg src={imageUrl} alt={`Câu ${number}`} onClick={onZoom} title="Bấm để mở cửa sổ phóng to" className="block h-auto w-full cursor-zoom-in" />
+            <ProtectedImg
+              src={imageUrl}
+              alt={`Câu ${number}`}
+              onClick={flashcard ? flashcard.onToggle : onZoom}
+              title={flashcard ? (flashcard.shown ? "Bấm để ẩn đáp án" : "Bấm để hiện đáp án") : "Bấm để mở cửa sổ phóng to"}
+              className={`block h-auto w-full ${flashcard ? "cursor-pointer" : "cursor-zoom-in"}`}
+            />
           </div>
         </div>
       </section>
@@ -136,13 +144,19 @@ export function QuestionCard({
 
       {/* Điện thoại và máy tính bảng: thanh dưới cùng tầm ngón cái. Hàng 1: đáp án A–H chia đều chiều ngang. Hàng 2: Trước | kết quả | Tiếp. */}
       <section className="shrink-0 space-y-2 rounded-xl border border-slate-200 bg-surface-container-lowest p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-sm lg:hidden">
-        <AnswerOptions dense question={question} selected={selected} revealed={revealed} onChoose={onChoose} />
+        {flashcard ? (
+          <div className="flex min-h-9 items-center justify-center">
+            <AnswerLetters answer={question.correct} shown={flashcard.shown} />
+          </div>
+        ) : (
+          <AnswerOptions dense question={question} selected={selected} revealed={revealed} onChoose={onChoose} />
+        )}
         <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2">
           <Button size="sm" onClick={onPrev} disabled={!hasPrev} aria-label="Câu trước" className="!min-h-11 !px-3">
             <ChevronLeft size={16} />
             Trước
           </Button>
-          <div className="flex min-h-10 min-w-0 items-center justify-center">{status}</div>
+          <div className="flex min-h-10 min-w-0 items-center justify-center">{flashcard ? <RevealButton {...flashcard} className="w-full" /> : status}</div>
           <NextButton hasNext={hasNext} onNext={onNext} onSubmit={onSubmit} className="!min-h-11 !px-3" />
         </div>
       </section>
