@@ -582,3 +582,212 @@ h3 {
 html {
   touch-action: manipulation;
 }
+
+/* ===== Mùa Giáng sinh: mọi thứ dưới đây chỉ có hiệu lực khi <html data-season="xmas"> (shared/season). Tắt mùa = bản gốc. =====
+   Trang trí chỉ hiện khi người dùng còn bật "Trang trí Giáng sinh" (JSX kiểm showDecor; CSS dùng thêm <html data-xmas-decor>).
+   Đỏ/xanh chỉ để trang trí, không dùng cho chữ hay trạng thái đúng/sai (đã có success/error).
+   Màn làm đề (data-no-bottom-nav): không tuyết, không nền màu, mọi thứ đứng yên và nhạt. */
+[data-season="xmas"] {
+  --xmas-red: #c62828;
+  --xmas-green: #1b5e20;
+  --xmas-gold: #f9a825;
+  --xmas-blue: #1e88e5;
+  --xmas-snow: #ffffff;
+  --xmas-flake: #bcd7f2;
+  /* nền tối xanh thông thay cho nâu vàng sẫm (chữ #fff6dc >= 8:1, vàng #ffc61f >= 5.5:1 trên màu sáng nhất) */
+  --xmas-forest-1: #1d5232;
+  --xmas-forest-2: #0e2c1a;
+  --xmas-forest-3: #061009;
+}
+[data-season="xmas"][data-theme="dark"] {
+  --xmas-red: #ef7b7b;
+  --xmas-green: #7ec28a;
+  --xmas-gold: #ffd54f;
+  --xmas-blue: #64b5f6;
+  --xmas-snow: #e8eef7;
+  --xmas-flake: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  [data-season="xmas"]:not([data-theme]) {
+    --xmas-red: #ef7b7b;
+    --xmas-green: #7ec28a;
+    --xmas-gold: #ffd54f;
+    --xmas-blue: #64b5f6;
+    --xmas-snow: #e8eef7;
+    --xmas-flake: #ffffff;
+    }
+}
+
+/* Không khí chung: ~360px đầu trang ngả xanh tuyết nhạt, đỏ nhạt bên trái, xanh nhạt bên phải (lớp tuyệt đối, không đẩy bố cục) */
+[data-season="xmas"] .xmas-tint {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 360px;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 40% 75% at 0 0, color-mix(in srgb, var(--xmas-red) 9%, transparent), transparent 70%),
+    radial-gradient(ellipse 40% 75% at 100% 0, color-mix(in srgb, var(--xmas-green) 9%, transparent), transparent 70%),
+    linear-gradient(color-mix(in srgb, var(--xmas-flake) 30%, transparent), transparent);
+  /* multiply chỉ làm tối/ngả màu nền, không bao giờ làm nhạt chữ tối nằm dưới lớp này */
+  mix-blend-mode: multiply;
+}
+
+/* Nền tối (thanh ưu đãi, khối kêu gọi, đầu trang Pro): nâu vàng sẫm -> xanh thông, giữ chữ và điểm nhấn vàng */
+[data-season="xmas"][data-xmas-decor] .xmas-dark {
+  background-image: radial-gradient(ellipse at top, var(--xmas-forest-1) 0%, var(--xmas-forest-2) 48%, var(--xmas-forest-3) 100%);
+}
+
+/* Tuyết rơi: lớp cố định không nhận thao tác, dưới hộp thoại; chỉ animate transform + opacity */
+[data-season="xmas"] .xmas-snow {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  overflow: hidden;
+  pointer-events: none;
+}
+[data-season="xmas"] .xmas-snow i {
+  position: absolute;
+  top: -12px;
+  left: var(--x);
+  width: var(--s);
+  height: var(--s);
+  border-radius: 50%;
+  background: var(--xmas-flake);
+  box-shadow: 0 0 6px 1px var(--xmas-snow);
+  opacity: 0;
+  will-change: transform;
+  animation: xmas-fall var(--d) linear var(--t) infinite;
+}
+[data-season="xmas"] .xmas-snow.is-paused i {
+  animation-play-state: paused;
+}
+@keyframes xmas-fall {
+  0% { transform: translate3d(0, 0, 0); opacity: 0; }
+  8% { opacity: 0.9; }
+  50% { transform: translate3d(var(--dx), 52vh, 0); }
+  92% { opacity: 0.9; }
+  100% { transform: translate3d(0, 105vh, 0); opacity: 0; }
+}
+@media (width <= 640px) {
+  [data-season="xmas"] .xmas-snow i:nth-child(n + 17) {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-season="xmas"] .xmas-snow {
+    display: none;
+  }
+}
+:root:has([data-no-bottom-nav]) :is(.xmas-snow, .xmas-tint) {
+  display: none;
+}
+@media print {
+  .xmas-snow,
+  .xmas-tint {
+    display: none;
+  }
+}
+
+/* Chuỗi đèn (header, XmasLights): treo ngay dưới mép dưới header (top: 100%), không đè nội dung header.
+   z-index -1 trong ngữ cảnh xếp lớp của header (z-30): vẫn nổi trên nội dung trang nhưng nằm dưới menu/popup của header */
+[data-season="xmas"] .xmas-garland-host {
+  position: relative;
+}
+[data-season="xmas"] .xmas-garland {
+  top: 100%;
+  height: 13px;
+  z-index: -1;
+}
+[data-season="xmas"] .xmas-wire {
+  stroke: var(--md-sys-color-outline);
+}
+[data-season="xmas"] .xmas-cap {
+  fill: var(--md-sys-color-outline);
+}
+[data-season="xmas"] .xmas-bulb-red { fill: var(--xmas-red); }
+[data-season="xmas"] .xmas-bulb-green { fill: var(--xmas-green); }
+[data-season="xmas"] .xmas-bulb-gold { fill: var(--xmas-gold); }
+[data-season="xmas"] .xmas-bulb-blue { fill: var(--xmas-blue); }
+[data-season="xmas"] .xmas-bulb-shine { fill: var(--xmas-snow); opacity: 0.6; }
+[data-season="xmas"] .xmas-glow-red { filter: drop-shadow(0 0 3px var(--xmas-red)); }
+[data-season="xmas"] .xmas-glow-green { filter: drop-shadow(0 0 3px var(--xmas-green)); }
+[data-season="xmas"] .xmas-glow-gold { filter: drop-shadow(0 0 3px var(--xmas-gold)); }
+[data-season="xmas"] .xmas-glow-blue { filter: drop-shadow(0 0 3px var(--xmas-blue)); }
+@media (prefers-reduced-motion: no-preference) {
+  [data-season="xmas"] .xmas-twinkle {
+    animation: xmas-twinkle 2.4s ease-in-out infinite alternate;
+  }
+  [data-season="xmas"] .xmas-twinkle-b {
+    animation-delay: -0.8s;
+  }
+  [data-season="xmas"] .xmas-twinkle-c {
+    animation-delay: -1.6s;
+  }
+}
+@keyframes xmas-twinkle {
+  to { opacity: 0.5; }
+}
+/* Màn làm đề: dây nhỏ hơn (cao ~7px dưới mép header, trong khoảng đệm 8px phía trên nội dung), đứng yên, nhạt */
+[data-season="xmas"]:has([data-no-bottom-nav]) .xmas-garland {
+  width: calc(100% / 0.55);
+  transform: scale(0.55);
+  transform-origin: 0 0;
+  opacity: 0.6;
+}
+[data-season="xmas"]:has([data-no-bottom-nav]) .xmas-twinkle {
+  animation: none;
+}
+
+/* Màn làm đề: cây + quà dưới khung đáp án, chỉ khi còn chỗ thật (khung đáp án cao tối đa 100dvh - 12rem, nên từ 820px cao mới dư ~48px) */
+.xmas-exam-corner {
+  display: none;
+}
+@media (min-width: 1024px) and (min-height: 820px) {
+  [data-season="xmas"] .xmas-exam-corner {
+    display: flex;
+  }
+}
+
+/* Hero trang chủ: ruy băng, lời chúc, gò tuyết dưới cây, đồi tuyết ở mép dưới */
+[data-season="xmas"] .xmas-ribbon {
+  background: repeating-linear-gradient(135deg, var(--xmas-red) 0 10px, var(--xmas-snow) 10px 13px, var(--xmas-green) 13px 23px, var(--xmas-snow) 23px 26px);
+}
+[data-season="xmas"] .xmas-greeting {
+  border-color: color-mix(in srgb, var(--xmas-red) 55%, transparent);
+}
+[data-season="xmas"] .xmas-dot {
+  background: var(--xmas-red);
+}
+[data-season="xmas"] .xmas-mound {
+  background: var(--xmas-snow);
+  box-shadow: 0 2px 0 var(--md-sys-color-outline-variant);
+}
+[data-season="xmas"] .xmas-snowhill {
+  background:
+    radial-gradient(ellipse 36px 14px at 36px 100%, var(--xmas-snow) 96%, transparent 100%) 0 100% / 72px 20px repeat-x,
+    radial-gradient(ellipse 22px 9px at 22px 100%, var(--xmas-snow) 96%, transparent 100%) 26px 100% / 58px 20px repeat-x;
+  filter: drop-shadow(0 -1px 0 var(--md-sys-color-outline-variant));
+}
+
+/* Tuyết đọng: dải sóng trắng ở mép trên (footer, khối tối trang Pro, ô số liệu, thẻ gói). Nằm trong phần đệm sẵn có, không đổi kích thước */
+[data-season="xmas"] .xmas-snowcap {
+  position: relative;
+}
+[data-season="xmas"] .xmas-snowcap::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 8px;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(circle at 8px 0, var(--xmas-snow) 6px, transparent 6.5px) 0 0 / 16px 8px repeat-x;
+  filter: drop-shadow(0 1px 0 var(--md-sys-color-outline-variant));
+}
+[data-season="xmas"] .xmas-snowcap-card::before {
+  left: 12px;
+  right: 12px;
+  height: 6px;
+  background: radial-gradient(circle at 6px 0, var(--xmas-snow) 4.5px, transparent 5px) 0 0 / 12px 6px repeat-x;
+}

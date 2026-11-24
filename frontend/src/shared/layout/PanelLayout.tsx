@@ -29,6 +29,7 @@ import { UserAvatar } from "@/shared/ui/UserAvatar";
 import { Fab, IconButton } from "@/shared/ui/Button";
 import { ThemeToggle } from "@/shared/theme/ThemeToggle";
 import { VerifyEmailNotice } from "@/features/verify-email/VerifyEmailNotice";
+import { XmasGarland } from "@/shared/season/XmasArt";
 
 export interface NavItem {
   to: string;
@@ -402,6 +403,7 @@ export function PanelLayout({
             <ThemeToggle className="max-sm:hidden" />
             <UserMenu />
           </div>
+          <XmasGarland />
         </header>
 
         <VerifyEmailNotice />

@@ -8,6 +8,7 @@ import { UserMenu } from "./UserMenu";
 import { UserNoticeBell } from "@/features/notifications/UserNoticeBell";
 // Ô tìm kiếm trên header: nằm trong feature search (ngoại lệ đã biết như UserNoticeBell)
 import { SearchTrigger } from "@/features/search/GlobalSearch";
+import { XmasGarland } from "@/shared/season/XmasArt";
 
 // Header của các trang công khai ngoài trang chủ (/features, /pro): giống header trang chủ (logo, tên, điều hướng, giao diện, tài khoản)
 export function SiteHeader() {
@@ -29,6 +30,7 @@ export function SiteHeader() {
         <ThemeToggle />
         <UserMenu />
       </div>
+      <XmasGarland />
     </header>
   );
 }

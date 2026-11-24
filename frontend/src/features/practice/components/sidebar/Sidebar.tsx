@@ -9,6 +9,8 @@ import { AnswerOptions } from "@/features/practice/components/quiz/AnswerOptions
 import { Legend } from "./Legend";
 import { NavButtons } from "./NavButtons";
 import { QuestionGrid } from "./QuestionGrid";
+import { useSeason } from "@/shared/season/SeasonContext";
+import { XmasGift, XmasTree } from "@/shared/season/XmasArt";
 
 // Nút nhỏ "Câu 5/40" (điện thoại: nằm ngang phía trên; máy tính: viên thuốc dọc ở mép trái, cách mép).
 // Bấm vào thì bung ra bảng số câu lớn để nhảy tới câu bất kỳ, chọn xong tự đóng (bấm ra ngoài hoặc Esc cũng đóng).
@@ -23,6 +25,7 @@ const wasSeen = () => {
 
 export function Sidebar({ quiz, onSubmit }: { quiz: Quiz; onSubmit?: () => void }) {
   const [open, setOpen] = useState(false);
+  const { showDecor } = useSeason();
   const [seen, setSeen] = useState(wasSeen); // đã từng mở danh sách: thôi chấm tròn nhấp nháy gợi ý bấm vào
   const toggle = () => {
     setOpen((o) => !o);
@@ -73,6 +76,16 @@ export function Sidebar({ quiz, onSubmit }: { quiz: Quiz; onSubmit?: () => void 
             <AnswerOptions vertical question={question} selected={quiz.answers[question.number] ?? []} revealed={quiz.isRevealed(question)} onChoose={(opt) => quiz.choose(question, opt)} />
           </div>
           <NavButtons hasPrev={quiz.current > 0} hasNext={quiz.current < quiz.questions.length - 1} onPrev={quiz.prev} onNext={quiz.next} onSubmit={onSubmit} />
+        </div>
+      )}
+
+      {/* Mùa Giáng sinh: cây thông + quà nhỏ, tĩnh, mờ. Nằm trong luồng NGAY DƯỚI khung đáp án (chỗ riêng, không phủ lên nút nào),
+          và chỉ hiện khi cột đủ cao (index.css: .xmas-exam-corner, từ 1024px rộng và 820px cao) */}
+      {showDecor && (
+        <div aria-hidden className="xmas-exam-corner pointer-events-none mt-3 items-end justify-center gap-0.5 opacity-60">
+          <XmasGift className="h-3.5 w-3.5" />
+          <XmasTree className="h-7 w-auto" />
+          <XmasGift tone="green" className="h-3 w-3" />
         </div>
       )}
 
