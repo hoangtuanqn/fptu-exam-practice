@@ -23,6 +23,7 @@ import explanationRouter from "./explanation.routes";
 import flashcardRouter from "./flashcard.routes";
 import giftCodeRouter from "./gift-code.routes";
 import offersPublicRouter from "./offers-public.routes";
+import seasonPublicRouter from "./season-public.routes";
 import extensionRouter from "./extension.routes";
 import peRouter from "./pe.routes";
 import { referralPublicRouter, referralRouter } from "./referral.routes";
@@ -59,6 +60,7 @@ rootRouter.use("/explanations", explanationRouter);
 rootRouter.use("/referrals", referralRouter);
 rootRouter.use("/public/referrals", referralPublicRouter);
 rootRouter.use("/public/offers", offersPublicRouter);
+rootRouter.use("/public/season", seasonPublicRouter); // giao diện theo mùa (Giáng sinh)
 rootRouter.use("/pe", peRouter);
 rootRouter.use("/extension", extensionRouter);
 rootRouter.use("/chat", chatRouter);

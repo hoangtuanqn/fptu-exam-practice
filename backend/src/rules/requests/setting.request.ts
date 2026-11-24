@@ -97,6 +97,12 @@ export const updateAccountBody = z.object({
 
 export type UpdateAccountBody = z.infer<typeof updateAccountBody>;
 
+export const updateSeasonBody = z.object({
+  xmasEnabled: z.boolean("Giá trị không hợp lệ"),
+});
+
+export type UpdateSeasonBody = z.infer<typeof updateSeasonBody>;
+
 export const updateLinkRewardBody = z.object({
   enabled: z.boolean(),
   apiToken: z.string().trim().max(200).regex(/^[A-Za-z0-9_-]*$/, "Token chỉ gồm chữ, số, gạch").optional(), // để trống = giữ token cũ

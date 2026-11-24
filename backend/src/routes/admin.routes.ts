@@ -19,6 +19,7 @@ import { adminGiftCodeController } from "../controllers/admin.gift-code.controll
 import { adminCrawlerController } from "../controllers/admin.crawler.controllers";
 import { adminHistoryController } from "../controllers/admin.history.controllers";
 import { adminAccountController } from "../controllers/admin.account.controllers";
+import { adminSeasonController } from "../controllers/admin.season.controllers";
 import { adminMarketingController } from "../controllers/admin.marketing.controllers";
 import {
   campaignKeyParam,
@@ -45,7 +46,7 @@ import { adminSubjectController } from "../controllers/admin.subject.controllers
 import { subjectCodeOnlyParam, subjectSemesterBody, updateSubjectBody } from "../rules/requests/library.request";
 import { listAttemptsQuery, listCrawlJobsQuery, listPurchasesQuery, listWalletQuery } from "../rules/requests/admin-history.request";
 import { authenticate, requireAdmin } from "../middlewares/auth.middlewares";
-import { updateAccountBody, updateAiBody, updateLinkRewardBody, updateCrawlerBody, updatePromoBody, updateReferralBody, updateSepayBody } from "../rules/requests/setting.request";
+import { updateAccountBody, updateAiBody, updateLinkRewardBody, updateCrawlerBody, updatePromoBody, updateReferralBody, updateSeasonBody, updateSepayBody } from "../rules/requests/setting.request";
 import { listFeedbackQuery } from "../rules/requests/explanation.request";
 import { listReportsQuery, reviewReportBody } from "../rules/requests/answer-report.request";
 import { createGiftCodeBody, listGiftCodesQuery, updateGiftCodeBody } from "../rules/requests/gift-code.request";
@@ -124,6 +125,8 @@ adminRouter.post("/marketing/broadcasts/:id/start", validate(uuidParam, "params"
 adminRouter.post("/marketing/broadcasts/:id/cancel", validate(uuidParam, "params"), adminMarketingController.cancelBroadcast);
 adminRouter.get("/settings/account", adminAccountController.get);
 adminRouter.put("/settings/account", validate(updateAccountBody), adminAccountController.update);
+adminRouter.get("/settings/season", adminSeasonController.get);
+adminRouter.put("/settings/season", validate(updateSeasonBody), adminSeasonController.update);
 adminRouter.get("/settings/link-reward", adminLinkRewardController.get);
 adminRouter.put("/settings/link-reward", validate(updateLinkRewardBody), adminLinkRewardController.update);
 
