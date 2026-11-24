@@ -2,6 +2,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "../configs/prisma";
 import { REVIEW_FREE_LIMIT, REVIEW_SESSION_SIZE } from "../constants/review";
 import { AppError } from "../rules/error";
+import { ownedWhere } from "../repositories/user-exam.repository";
 import { fileUrlOf } from "../utils/file-url";
 import { toMeta, toSkipTake, type PaginationQuery } from "../utils/pagination";
 import { subjectCodeFromTitle } from "../utils/subject-code";
@@ -11,7 +12,8 @@ import { badgeService } from "./badge.service";
 import { studyService } from "./study.service";
 
 // Chỉ ôn những câu của đề đã có đáp án chắc chắn (AI giải xong hoặc chỉnh tay); đề đang chờ AI hay lỗi thì chưa chấm được
-const USABLE_EXAM = { answerSource: { in: ["AI", "MANUAL"] } } satisfies Prisma.ExamWhereInput;
+// Đề còn dùng được và còn trong kho của người dùng (đề mở nhờ Pro khoá lại khi hết Pro nên câu sai của đề đó cũng ẩn)
+const usableOwnedExam = (userId: string) => ({ answerSource: { in: ["AI", "MANUAL"] }, userExams: { some: ownedWhere({ userId }) } }) satisfies Prisma.ExamWhereInput;
 
 const answersOf = (answer: string) => answer.split(/\s+/).filter(Boolean);
 
@@ -96,7 +98,7 @@ export const reviewService = {
   /** Tổng quan sổ câu sai: số câu cần ôn hôm nay, đang ôn, đã nhớ, giới hạn gói thường */
   async summary(userId: string, isPro: boolean) {
     const now = new Date();
-    const active = { userId, mastered: false, exam: USABLE_EXAM };
+    const active = { userId, mastered: false, exam: usableOwnedExam(userId) };
     const [due, counts, next] = await Promise.all([
       prisma.reviewItem.count({ where: { ...active, nextReviewAt: { lte: now } } }),
       prisma.reviewItem.groupBy({ by: ["mastered"], where: { userId }, _count: { _all: true } }), // đang ôn + đã nhớ trong một truy vấn
@@ -111,7 +113,7 @@ export const reviewService = {
   async queue(userId: string, all: boolean, limit = REVIEW_SESSION_SIZE, byTopic?: { subject: string; topic: string }) {
     const now = new Date();
     const found = await prisma.reviewItem.findMany({
-      where: { userId, mastered: false, exam: USABLE_EXAM, ...(all ? {} : { nextReviewAt: { lte: now } }) },
+      where: { userId, mastered: false, exam: usableOwnedExam(userId), ...(all ? {} : { nextReviewAt: { lte: now } }) },
       orderBy: [{ nextReviewAt: "asc" }, { id: "asc" }],
       take: byTopic ? 300 : limit, // lọc theo chủ đề thì lấy rộng rồi lọc, vì chủ đề nằm ở bảng câu hỏi
       include: { exam: { select: { title: true } } },
@@ -162,7 +164,7 @@ export const reviewService = {
 
   /** Danh sách trong trang Sổ câu sai: câu đang ôn (đến hạn trước) hoặc câu đã nhớ */
   async list(userId: string, query: PaginationQuery, status: "active" | "mastered") {
-    const where: Prisma.ReviewItemWhereInput = { userId, mastered: status === "mastered" };
+    const where: Prisma.ReviewItemWhereInput = { userId, mastered: status === "mastered", exam: { userExams: { some: ownedWhere({ userId }) } } };
     const [rows, total] = await Promise.all([
       prisma.reviewItem.findMany({
         where,
