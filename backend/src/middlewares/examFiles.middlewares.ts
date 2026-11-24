@@ -23,7 +23,8 @@ const serve: RequestHandler = async (req, res) => {
   const info = examRelPath(req.path);
   if (!info || info === "blocked") throw AppError.notFound("Không tìm thấy tệp");
   // Ảnh có chữ ký ngắn hạn (trang "Câu hay ra") thì không cần có đề trong kho; còn lại phải là đề của người xem hoặc admin
-  const signed = isValidExamFileSignature(info.rel, req.query.e, req.query.s, env.JWT_SECRET);
+  // (link của trang "Câu hay ra" không buộc người xem; link xem thử đề chưa mua buộc vào đúng tài khoản đang xem)
+  const signed = isValidExamFileSignature(info.rel, req.query.e, req.query.s, env.JWT_SECRET) || (!!req.user && isValidExamFileSignature(info.rel, req.query.e, req.query.s, env.JWT_SECRET, Date.now(), req.user.id));
   if (!signed) await examService.assertThreadFileAccess(actorOf(req), info.threadId);
   const abs = resolveInside(storageDir, info.rel);
   if (!abs) throw AppError.notFound("Không tìm thấy tệp");

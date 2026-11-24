@@ -181,7 +181,7 @@ export const catalogService = {
    * Đề chưa mở khoá cho người xem thử, cùng dạng với chi tiết đề nhưng chỉ có TRIAL_QUESTIONS câu hỏi đầu (có đáp án của các câu đó);
    * `trial.locked` là số câu còn khoá. totalQuestions vẫn là tổng thật để giao diện biết đề này làm được trên web hay chỉ xem trước.
    */
-  async trialDetail(examId: string) {
+  async trialDetail(examId: string, userId: string) {
     const exam = (await usableExams()).find((e) => e.id === examId);
     if (!exam) throw AppError.notFound(EXAM_NOT_FOUND);
     const [meta, first] = await Promise.all([
@@ -196,7 +196,7 @@ export const catalogService = {
       totalQuestions: meta?.totalQuestions ?? exam.questions,
       answerStatus: meta?.answerSource ?? "DEFAULT",
       answerError: null,
-      questions: first.map((q) => ({ number: q.number, imageUrl: `${fileUrlOf(q.imagePath)}?${signExamFile(q.imagePath, exp, env.JWT_SECRET)}`, correct: q.answer.split(/\s+/).filter(Boolean), isReference: q.isReference, topic: q.topic })),
+      questions: first.map((q) => ({ number: q.number, imageUrl: `${fileUrlOf(q.imagePath)}?${signExamFile(q.imagePath, exp, env.JWT_SECRET, userId)}`, correct: q.answer.split(/\s+/).filter(Boolean), isReference: q.isReference, topic: q.topic })),
       attachments: [],
       trial: { locked: Math.max(0, exam.questions - first.length) },
     };

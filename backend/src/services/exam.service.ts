@@ -72,7 +72,7 @@ export const examService = {
   // Dạng giống đề mở từ thư mục: mỗi câu có số, ảnh và đáp án đúng (có thể nhiều đáp án, cách nhau bằng dấu cách)
   async getDetail(actor: Actor, id: string) {
     // Thành viên (kể cả admin, ngoài trang quản trị) chưa có đề: chỉ xem thử vài câu đầu (đề có trong Kho đề); khách và đề lạ vẫn 404
-    if (isMember(actor.owner) && !(await userExamRepository.has(actor.owner, id))) return catalogService.trialDetail(id);
+    if (isMember(actor.owner) && !(await userExamRepository.has(actor.owner, id))) return catalogService.trialDetail(id, actor.owner.userId);
     await this.assertAccess(actor, id);
     await examSolveService.upgradeIfNeeded(id);
     const exam = await examRepository.findDetail(id);

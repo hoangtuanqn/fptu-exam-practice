@@ -22,15 +22,15 @@ export function examRelPath(p: string): { rel: string; threadId: string } | "blo
 }
 
 // Link ký ngắn hạn cho đúng MỘT ảnh (trang "Câu hay ra" lấy ảnh từ đề mới nhất của môn, thường không nằm trong kho của người xem).
-// Chữ ký gắn với đường dẫn và hạn dùng, không dùng được cho ảnh khác.
-const macOf = (rel: string, exp: number, secret: string) => createHmac("sha256", secret).update(`exam-file:${rel}:${exp}`).digest("hex").slice(0, 32);
+// Chữ ký gắn với đường dẫn và hạn dùng, không dùng được cho ảnh khác. `bind` (ví dụ ID người xem) buộc link vào đúng một người: gửi link cho người khác thì vô dụng.
+const macOf = (rel: string, exp: number, secret: string, bind?: string) => createHmac("sha256", secret).update(`exam-file:${rel}:${exp}${bind ? `:${bind}` : ""}`).digest("hex").slice(0, 32);
 
-export const signExamFile = (rel: string, exp: number, secret: string) => `e=${exp}&s=${macOf(rel, exp, secret)}`;
+export const signExamFile = (rel: string, exp: number, secret: string, bind?: string) => `e=${exp}&s=${macOf(rel, exp, secret, bind)}`;
 
-export function isValidExamFileSignature(rel: string, exp: unknown, sig: unknown, secret: string, now = Date.now()): boolean {
+export function isValidExamFileSignature(rel: string, exp: unknown, sig: unknown, secret: string, now = Date.now(), bind?: string): boolean {
   const e = Number(exp);
   if (!Number.isInteger(e) || e < now || typeof sig !== "string" || sig.length !== 32) return false;
-  const want = Buffer.from(macOf(rel, e, secret));
+  const want = Buffer.from(macOf(rel, e, secret, bind));
   const got = Buffer.from(sig);
   return got.length === want.length && timingSafeEqual(got, want);
 }
