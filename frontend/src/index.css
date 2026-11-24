@@ -680,7 +680,21 @@ html {
     display: none;
   }
 }
-:root:has([data-no-bottom-nav]) :is(.xmas-snow, .xmas-tint) {
+/* Tuần lộc kéo xe chở Cóc bay ngang màn hình (ReindeerFlyby): chỉ animate transform */
+.reindeer-fly { --rw: 1; position: fixed; top: 14vh; left: 0; z-index: 30; pointer-events: none; animation: reindeer-fly 11s linear forwards; will-change: transform; }
+.reindeer-bob { display: flex; align-items: flex-end; transform: scale(var(--rw)); transform-origin: 0 50%; animation: reindeer-bob 1.4s ease-in-out infinite; }
+.reindeer-sleigh { position: relative; width: 100px; height: 40px; }
+.reindeer-toad { position: absolute; left: 8px; bottom: 16px; width: 84px; }
+.reindeer-toad svg { display: block; width: 84px; height: auto; }
+.reindeer-rope { width: 16px; height: 2px; margin-bottom: 26px; background: #e0a000; }
+.reindeer-leg { transform-box: fill-box; transform-origin: 50% 0; animation: reindeer-leg 0.7s ease-in-out infinite alternate; }
+.reindeer-leg.b { animation-direction: alternate-reverse; }
+@keyframes reindeer-fly { from { transform: translateX(-240px); } to { transform: translateX(100vw); } }
+@keyframes reindeer-bob { 0%, 100% { translate: 0 0; } 50% { translate: 0 -14px; } }
+@keyframes reindeer-leg { from { transform: rotate(-28deg); } to { transform: rotate(28deg); } }
+@media (max-width: 640px) { .reindeer-fly { --rw: 0.6; top: 10vh; } }
+@media (prefers-reduced-motion: reduce) { .reindeer-fly { display: none; } }
+:root:has([data-no-bottom-nav]) :is(.xmas-snow, .xmas-tint, .reindeer-fly) {
   display: none;
 }
 @media print {
