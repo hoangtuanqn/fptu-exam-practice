@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { env } from "../configs/env";
 import { isMailConfigured, mailer, mailFrom } from "../configs/mailer";
@@ -38,6 +38,16 @@ import {
   type RefundEmailInput,
   type WelcomeEmailInput,
 } from "../mail/templates/account-notice";
+import { seasonSettingService } from "./season-setting.service";
+
+// Bản Giáng sinh của ảnh nhúng: cùng tên tệp trong assets/mail/xmas; thiếu tệp thì dùng ảnh thường
+// shortcut: kết quả kiểm tra tệp nhớ đến khi khởi động lại, thêm ảnh mới cần restart (deploy luôn restart)
+const XMAS_ASSETS_DIR = path.join(MAIL_ASSETS_DIR, "xmas");
+const hasXmasFile = new Map<string, boolean>();
+export const mailAssetPath = (file: string, xmas: boolean) => {
+  if (xmas && !hasXmasFile.has(file)) hasXmasFile.set(file, existsSync(path.join(XMAS_ASSETS_DIR, file)));
+  return path.join(xmas && hasXmasFile.get(file) ? XMAS_ASSETS_DIR : MAIL_ASSETS_DIR, file);
+};
 
 interface Rendered {
   html: string;
@@ -47,6 +57,7 @@ interface Rendered {
 // Gửi một thư đã dựng sẵn. Ném lỗi nếu chưa cấu hình SMTP hoặc gửi thất bại (nơi gọi quyết định xử lý)
 const send = async (to: string, subject: string, { html, text }: Rendered, headers?: Record<string, string>) => {
   if (!isMailConfigured) throw new Error("Chưa cấu hình SMTP (SMTP_USER, SMTP_PASS)");
+  const xmas = await seasonSettingService.isXmasMailOn();
   await mailer.sendMail({
     from: mailFrom,
     to,
@@ -55,7 +66,7 @@ const send = async (to: string, subject: string, { html, text }: Rendered, heade
     text,
     ...(headers && { headers }),
     // Logo nhúng thẳng vào thư (cid) nên hiển thị cả khi chạy local, không cần ảnh trên internet
-    attachments: Object.values(MAIL_IMAGES).map(({ file, cid }) => ({ filename: file, path: path.join(MAIL_ASSETS_DIR, file), cid })),
+    attachments: Object.values(MAIL_IMAGES).map(({ file, cid }) => ({ filename: file, path: mailAssetPath(file, xmas), cid })),
   });
 };
 
