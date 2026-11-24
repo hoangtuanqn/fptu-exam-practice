@@ -186,7 +186,7 @@ export const catalogService = {
     if (!exam) throw AppError.notFound(EXAM_NOT_FOUND);
     const [meta, first] = await Promise.all([
       prisma.exam.findUnique({ where: { id: examId }, select: { answerSource: true, totalQuestions: true } }),
-      prisma.examQuestion.findMany({ where: { examId, isReference: false }, orderBy: { number: "asc" }, take: TRIAL_QUESTIONS, select: { number: true, imagePath: true, answer: true, topic: true, isReference: true } }),
+      prisma.examQuestion.findMany({ where: { examId, isReference: false }, orderBy: { number: "asc" }, take: Math.min(TRIAL_QUESTIONS, Math.max(1, exam.questions - 1)), select: { number: true, imagePath: true, answer: true, topic: true, isReference: true } }),
     ]);
     const exp = Date.now() + TRIAL_IMAGE_TTL_MS;
     return {
