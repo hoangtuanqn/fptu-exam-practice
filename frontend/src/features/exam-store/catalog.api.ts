@@ -38,14 +38,13 @@ export interface CatalogPage {
   subject: { code: string; name: string | null; semester: number | null };
 }
 
-// Xem thử đề chưa mở khoá: vài câu đầu (ảnh, không đáp án), còn lại chỉ có số lượng
+// Đề chưa mở khoá chỉ xem được thông tin, không có ảnh câu hỏi nào
 export interface ExamTrial {
   examId: string;
   title: string;
   kind: ExamKind;
   subjectCode: string | null;
   totalQuestions: number;
-  questions: { number: number; imageUrl: string }[];
   locked: number;
 }
 

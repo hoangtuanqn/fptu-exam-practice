@@ -1,38 +1,32 @@
-import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { ArrowLeft, FileSearch, Loader2, Lock, Unlock } from "lucide-react";
-import { useAuth } from "@/features/auth/AuthContext";
+import { useEffect } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { ArrowLeft, Crown, FileSearch, Loader2, Lock, Unlock } from "lucide-react";
 import { examApi } from "@/features/exam/exam.api";
 import { examOpenPath } from "@/features/exam/types";
 import { ApiError } from "@/shared/api/client";
-import { errorMessage } from "@/shared/api/errors";
-import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
 import { SiteHeader } from "@/shared/layout/SiteHeader";
 import { Button, buttonClass } from "@/shared/ui/Button";
 import { Card } from "@/shared/ui/Card";
 import { Empty } from "@/shared/ui/Feedback";
-import { ProtectedImg } from "@/shared/ui/ProtectedImg";
 import { QueryBoundary } from "@/shared/ui/QueryBoundary";
 import { formatCredit } from "@/shared/utils/formatters";
 import { isUuid } from "@/shared/utils/uuid";
 import { catalogApi, type ExamTrial } from "./catalog.api";
-import { ConfirmOpenDialog } from "./ConfirmOpenDialog";
 import { ExamKindBadge } from "./ExamKindBadge";
+import { useUnlockExam } from "./useUnlockExam";
 
-const TILE = "relative block aspect-[4/3] overflow-hidden rounded-m3-md bg-surface-container-lowest shadow-m3-1";
-const MAX_LOCK_TILES = 6; // chỉ minh hoạ vài ô khoá, số câu còn lại ghi bằng chữ
+const LOCK_TILES = 6; // chỉ minh hoạ vài ô khoá, tổng số câu ghi bằng chữ
 
-// Xem thử một đề chưa mở khoá (/exam/:examId/trial): 3 câu đầu xem được, các câu còn lại khoá cho đến khi trả phí mở đề
+// Đề chưa mở khoá mà không làm thử được trên web (PE, Quiz, đề chỉ có tệp...): khoá ngay từ đầu, mua đề hoặc nâng cấp Pro để xem
 export default function ExamTrialPage() {
   const examId = useParams().examId ?? "";
-  const subject = useSearchParams()[0].get("subject") ?? undefined;
   const valid = isUuid(examId);
   const navigate = useNavigate();
   const query = useApi(async () => {
     if (!valid) return null;
     try {
-      const [trial, quote] = await Promise.all([catalogApi.trial(examId), examApi.quote(examId, subject)]);
+      const [trial, quote] = await Promise.all([catalogApi.trial(examId), examApi.quote(examId)]);
       return { trial, quote };
     } catch (err) {
       if (err instanceof ApiError && err.status === 404) return null;
@@ -41,7 +35,7 @@ export default function ExamTrialPage() {
   }, [examId, valid]);
   const owned = query.data?.quote.reason === "owned";
   const trial = query.data?.trial;
-  // Đề đã có trong kho thì không cần xem thử: vào thẳng đề
+  // Đề đã có trong kho thì không cần khoá: vào thẳng đề
   useEffect(() => {
     if (owned && trial) navigate(examOpenPath({ id: trial.examId, kind: trial.kind, totalQuestions: trial.totalQuestions }), { replace: true });
   }, [owned, trial, navigate]);
@@ -53,7 +47,7 @@ export default function ExamTrialPage() {
         <QueryBoundary query={query} loadingLabel="Đang mở đề…">
           {(res) =>
             res ? (
-              <Trial trial={res.trial} fee={res.quote.fee} subject={subject} />
+              <Locked trial={res.trial} fee={res.quote.fee} />
             ) : (
               <Card>
                 <Empty icon={FileSearch} title="Không tìm thấy đề này">
@@ -70,78 +64,50 @@ export default function ExamTrialPage() {
   );
 }
 
-function Trial({ trial, fee, subject }: { trial: ExamTrial; fee: number; subject?: string }) {
+function Locked({ trial, fee }: { trial: ExamTrial; fee: number }) {
   const navigate = useNavigate();
-  const toast = useToast();
-  const { user, refresh } = useAuth();
-  const [busy, setBusy] = useState(false);
-  const [confirming, setConfirming] = useState(false);
-  const back = `/kho-de?subject=${encodeURIComponent(subject ?? trial.subjectCode ?? "")}`;
-
-  async function open() {
-    setBusy(true);
-    try {
-      await examApi.unlock(trial.examId, subject);
-      void refresh(); // số dư vừa đổi
-      navigate(examOpenPath({ id: trial.examId, kind: trial.kind, totalQuestions: trial.totalQuestions }), { replace: true });
-    } catch (err) {
-      toast.error(errorMessage(err, "Chưa mở được đề này"));
-      setBusy(false);
-    }
-  }
+  const { start, busy, dialog } = useUnlockExam(trial.examId, () => navigate(`/exam/${trial.examId}/preview`, { replace: true }));
+  const back = `/kho-de?subject=${encodeURIComponent(trial.subjectCode ?? "")}`;
 
   return (
     <>
       <Link to={back} className={`${buttonClass({ size: "sm", variant: "text" })} mb-3`}>
         <ArrowLeft size={15} /> Quay lại danh sách
       </Link>
-      <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <ExamKindBadge kind={trial.kind} />
-            <h1 className="md-headline-small break-words text-on-surface">{trial.title}</h1>
-          </div>
-          <p className="md-body-medium mt-1 text-on-surface-variant">
-            Xem thử {trial.questions.length} câu đầu{trial.locked > 0 ? `, còn ${trial.locked} câu khoá` : ""}. Mở đề để xem đủ, luyện tập và thi thử.
-          </p>
-        </div>
-        <Button variant="primary" disabled={busy} onClick={() => (fee > 0 ? setConfirming(true) : void open())}>
-          {busy ? <Loader2 size={16} className="animate-spin" /> : <Unlock size={16} />}
-          {fee > 0 ? `Mở khoá cả đề · ${formatCredit(fee)}` : "Mở đề"}
-        </Button>
+      <div className="mb-5 flex items-center gap-2">
+        <ExamKindBadge kind={trial.kind} />
+        <h1 className="md-headline-small break-words text-on-surface">{trial.title}</h1>
       </div>
 
-      <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {trial.questions.map((q) => (
-          <li key={q.number}>
-            <div className={TILE}>
-              <ProtectedImg src={q.imageUrl} alt={`Câu ${q.number}`} className="h-full w-full object-cover object-top" />
-              <span className="md-label-large absolute inset-x-0 bottom-0 bg-inverse-surface/70 px-3 py-2 text-inverse-on-surface">Câu {q.number}</span>
-            </div>
-          </li>
-        ))}
-        {Array.from({ length: Math.min(trial.locked, MAX_LOCK_TILES) }, (_, i) => (
-          <li key={`lock-${i}`}>
-            <div className={`${TILE} flex flex-col items-center justify-center gap-2 bg-surface-container text-on-surface-variant`}>
-              <Lock size={26} aria-hidden />
-              <span className="md-label-large">Câu {trial.questions.length + i + 1}</span>
-            </div>
-          </li>
-        ))}
-      </ul>
-      {trial.locked > MAX_LOCK_TILES && <p className="md-body-medium mt-3 text-center text-on-surface-variant">và {trial.locked - MAX_LOCK_TILES} câu khoá khác</p>}
+      <Card>
+        <div className="flex flex-col items-center gap-3 px-6 py-10 text-center">
+          <span className="flex size-14 items-center justify-center rounded-full bg-primary-container text-on-primary-container">
+            <Lock size={26} aria-hidden />
+          </span>
+          <p className="md-title-medium text-on-surface">Đề này đang khoá{trial.locked > 0 ? ` (${trial.locked} câu)` : ""}</p>
+          <p className="md-body-medium max-w-md text-on-surface-variant">Mở khoá để xem toàn bộ đề, hoặc dùng gói Pro để mở mọi đề mà không tốn credit từng đề.</p>
+          <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
+            <Button variant="primary" disabled={busy} onClick={start}>
+              {busy ? <Loader2 size={16} className="animate-spin" /> : <Unlock size={16} />}
+              {fee > 0 ? `Mua đề này · ${formatCredit(fee)}` : "Mở đề"}
+            </Button>
+            <Link to="/pro" className={buttonClass({ variant: "tonal" })}>
+              <Crown size={16} /> Nâng cấp Pro
+            </Link>
+          </div>
+        </div>
+      </Card>
 
-      {confirming && user && (
-        <ConfirmOpenDialog
-          fee={fee}
-          balance={user.balance}
-          onCancel={() => setConfirming(false)}
-          onConfirm={() => {
-            setConfirming(false);
-            void open();
-          }}
-        />
+      {trial.locked > 0 && (
+        <ul className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-6" aria-hidden>
+          {Array.from({ length: Math.min(trial.locked, LOCK_TILES) }, (_, i) => (
+            <li key={i} className="flex aspect-[4/3] items-center justify-center rounded-m3-md bg-surface-container text-on-surface-variant">
+              <Lock size={22} />
+            </li>
+          ))}
+        </ul>
       )}
+      {dialog}
     </>
   );
 }
