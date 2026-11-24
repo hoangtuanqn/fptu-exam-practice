@@ -72,7 +72,8 @@ export function useQuiz() {
   const timing = questions.length > 0 && !submitted && !answersPending && !choosing;
   const elapsed = useStopwatch(timing, session, resumedElapsed);
 
-  const last = questions.length - 1;
+  const slots = questions.length + trialLocked; // đề xem thử: câu khoá cũng là một ô để đi tới (hiện thẻ mời mở khoá)
+  const last = slots - 1;
 
   function clearProgress() {
     setAnswers({});
@@ -328,6 +329,7 @@ export function useQuiz() {
     appendQuestions,
     closeExam,
     trialLocked,
+    slots,
     setTrialLocked,
     unlockTrial,
     applyAnswers,

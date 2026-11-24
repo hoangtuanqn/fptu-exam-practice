@@ -9,17 +9,19 @@ export function useQuizShortcuts(quiz: Quiz, enabled: boolean, onSubmit?: () => 
   const question = quiz.questions[quiz.current];
 
   useKeydown((e) => {
-    if (!question) return;
+    // Ô khoá của đề xem thử không có câu hỏi: chỉ còn ← → để đi lại
+    if (!question && quiz.slots === 0) return;
     // Đang gõ vào ô nhập (hỏi AI về câu này, góp ý...) hoặc đang gõ tiếng Việt có dấu: phím thuộc về ô nhập, không phải phím tắt
     const t = e.target;
     if (e.isComposing || (t instanceof HTMLElement && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)))) return;
 
     if (e.key === "ArrowRight") quiz.next();
     else if (e.key === "ArrowLeft") quiz.prev();
+    else if (!question) return;
     else if (e.key === "Enter") {
       e.preventDefault(); // tránh kích hoạt nút đang được focus (sẽ thành bấm hai lần)
       if (quiz.canCheck(question)) quiz.check(question);
-      else if (quiz.current < quiz.questions.length - 1) quiz.next();
+      else if (quiz.current < quiz.slots - 1) quiz.next();
       else onSubmit?.(); // câu cuối: giống bấm nút Nộp bài
     } else if (e.key.toLowerCase() === "m") {
       quiz.toggleFlag(question.number); // M = đánh dấu xem lại
@@ -32,5 +34,5 @@ export function useQuizShortcuts(quiz: Quiz, enabled: boolean, onSubmit?: () => 
       const letter = /^[1-8]$/.test(e.key) ? (OPTIONS[Number(e.key) - 1] ?? "") : e.key.toUpperCase();
       if (OPTIONS.includes(letter)) quiz.choose(question, letter);
     }
-  }, enabled && !!question);
+  }, enabled && quiz.slots > 0);
 }

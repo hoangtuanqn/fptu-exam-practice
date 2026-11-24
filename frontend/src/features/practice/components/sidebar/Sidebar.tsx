@@ -41,7 +41,7 @@ export function Sidebar({ quiz, onSubmit }: { quiz: Quiz; onSubmit?: () => void 
   useKeydown((e) => open && e.key === "Escape" && setOpen(false));
 
   const question = quiz.questions[quiz.current];
-  const count = Math.max(quiz.total, quiz.questions.length);
+  const count = Math.max(quiz.total, quiz.slots);
   const nextUnansweredAt = nextUnanswered(quiz.questions, quiz.answers, quiz.current);
   const done = quiz.result ? quiz.result.correct : Object.values(quiz.answers).filter((a) => a.length > 0).length;
 
@@ -75,7 +75,7 @@ export function Sidebar({ quiz, onSubmit }: { quiz: Quiz; onSubmit?: () => void 
           <div className="flex min-h-0 w-full flex-col items-center overflow-x-hidden overflow-y-auto">
             <AnswerOptions vertical question={question} selected={quiz.answers[question.number] ?? []} revealed={quiz.isRevealed(question)} onChoose={(opt) => quiz.choose(question, opt)} />
           </div>
-          <NavButtons hasPrev={quiz.current > 0} hasNext={quiz.current < quiz.questions.length - 1} onPrev={quiz.prev} onNext={quiz.next} onSubmit={onSubmit} />
+          <NavButtons hasPrev={quiz.current > 0} hasNext={quiz.current < quiz.slots - 1} onPrev={quiz.prev} onNext={quiz.next} onSubmit={onSubmit} />
         </div>
       )}
 

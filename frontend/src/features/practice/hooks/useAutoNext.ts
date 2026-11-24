@@ -31,7 +31,7 @@ export function useAutoNext(quiz: Quiz) {
   const key = q ? `${q.number}:${answer}` : "";
   const prev = useRef(key);
   const available = quiz.mode === "exam";
-  const applies = on && available && !quiz.submitted && !!q && !isMultiple(q) && quiz.current < quiz.questions.length - 1;
+  const applies = on && available && !quiz.submitted && !!q && !isMultiple(q) && quiz.current < quiz.slots - 1;
 
   useEffect(() => {
     const was = prev.current;
