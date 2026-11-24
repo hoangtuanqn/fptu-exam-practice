@@ -46,9 +46,11 @@ const invalid = (message: string, field = "images") => new AppError(message, HTT
 const solving = () => AppError.conflict("AI đang giải đề này, hãy chờ AI xong rồi cập nhật");
 const examExists = (examId: string) =>
   new AppError("Đề này đã có đủ câu trong hệ thống. Hãy mở đề đó và dùng chức năng cập nhật ảnh, đáp án.", HTTP_STATUS.CONFLICT, undefined, "EXAM_EXISTS", { examId });
-/** Tên đề đã có trong hệ thống thì chặn: 409 báo ngay ở ô tiêu đề */
-const assertTitleFree = async (title: string) => {
-  if (await examRepository.titleExists(title)) throw AppError.conflict("Đã có đề cùng tên này trong hệ thống", { title: "Tên đề đã tồn tại" });
+/** Đề cùng tên đã có: không có cờ overwrite thì 409 (EXAM_TITLE_EXISTS, giao diện hỏi lại admin), có cờ thì trả đề đó để ghi đè */
+const sameTitle = async (body: UploadExamBody) => {
+  const exam = body.title ? await examRepository.findByTitle(body.title) : null;
+  if (exam && !body.overwrite) throw new AppError("Đã có đề cùng tên này trong hệ thống", HTTP_STATUS.CONFLICT, { title: "Tên đề đã tồn tại" }, "EXAM_TITLE_EXISTS", { examId: exam.id });
+  return exam;
 };
 const bytesOf = (f: File) => ("buffer" in f ? f.buffer : fs.readFile(f.path));
 const removeFiles = (abs: string[]) => Promise.all(abs.map((p) => fs.rm(p, { force: true }).catch((err: Error) => console.error(`[exam-upload] không xoá được ảnh: ${err.message}`))));
@@ -144,7 +146,6 @@ const published = (examId: string) => {
 async function prepareCreate(body: UploadExamBody, files: MemFile[]) {
   const title = body.title;
   if (!title) throw invalid("Vui lòng nhập tiêu đề đề thi", "title");
-  await assertTitleFree(title);
   const p = plan(files, 0, body.answers);
   checkSignatures(files);
   const threadId = `${MANUAL_THREAD_PREFIX}${randomBytes(MANUAL_THREAD_HEX_BYTES).toString("hex")}`;
@@ -239,72 +240,74 @@ export const adminExamUploadService = {
    * Có đáp án ít nhất một câu: MANUAL; không có: DEFAULT (chưa có đáp án, không gọi AI ở đây).
    */
   async create(adminId: string, body: UploadExamBody, files: MemFile[]) {
+    const same = await sameTitle(body);
+    if (same) return this.updateImages(adminId, same.id, body, files); // ghi đè: thay ảnh các câu trùng số, cập nhật đáp án
     return runCreate(adminId, await prepareCreate(body, files), files);
   },
 
   /**
-   * Thư mục tài liệu (không có images/ + ans.json): đề 0 câu, nguồn đáp án DEFAULT, các tệp lưu thành tệp đính kèm
-   * ở exams/<threadId>/files/<hex>-<tên>. Tệp có đuôi không được phép thì bỏ qua và trả tên trong `skipped`.
+   * Thư mục tài liệu (không có images/ + ans.json): đề 0 câu, nguồn đáp án DEFAULT, MỌI tệp lưu thành tệp đính kèm
+   * ở exams/<threadId>/files/<hex>-<tên> (đuôi lạ lưu octet-stream, luôn tải về, không mở trên trình duyệt).
+   * Tên đề đã có + overwrite: xoá tệp cũ của đề đó rồi lưu tệp mới vào cùng đề.
    */
   async createResource(adminId: string, body: UploadExamBody, files: MemFile[]) {
     const title = body.title;
     if (!title) throw invalid("Vui lòng nhập tiêu đề đề thi", "title");
-    await assertTitleFree(title);
+    const same = await sameTitle(body);
     // multer 1.x đọc tên tệp theo latin1 còn trình duyệt gửi UTF-8: đổi lại để giữ tên tiếng Việt
     const all = files.map((f) => ({ buffer: f.buffer, name: baseName(Buffer.from(f.originalname, "latin1").toString("utf8")) }));
-    const kept = all.filter((f) => attachmentType(f.name));
-    const skipped = all.filter((f) => !attachmentType(f.name)).map((f) => f.name);
-    if (!kept.length) throw invalid("Thư mục không có tệp nào dùng được. Chỉ nhận PDF, ZIP/RAR/7Z, TXT/MD, âm thanh (MP3, WAV, OGG...) và video (MP4, WEBM, MOV...).", "files");
+    if (!all.length) throw invalid("Thư mục không có tệp nào.", "files");
 
-    const threadId = `${MANUAL_THREAD_PREFIX}${randomBytes(MANUAL_THREAD_HEX_BYTES).toString("hex")}`;
-    const dir = path.join(storageDir, EXAM_STORAGE_DIR, threadId, EXAM_FILES_DIR);
-    const names = resourceFileNames(
-      kept.map((f) => f.name),
-      EXAM_RESOURCE_NAME_MAX_BYTES,
-    );
-    const written: string[] = [];
-    let examId: string;
-    try {
-      await fs.mkdir(dir, { recursive: true });
-      const rows: NewAttachment[] = [];
-      for (const [i, f] of kept.entries()) {
-        const name = names[i]!;
-        const file = `${randomBytes(4).toString("hex")}-${name}`;
-        const abs = path.join(dir, file);
-        await fs.writeFile(abs, f.buffer, { flag: "wx" });
-        written.push(abs);
-        rows.push({ name, filePath: `${EXAM_STORAGE_DIR}/${threadId}/${EXAM_FILES_DIR}/${file}`, mime: attachmentType(f.name)!.mime, sizeBytes: f.buffer.length, sourceUrl: "" });
-      }
-      examId = await prisma.$transaction(
-        async (tx) => {
-          const { id } = await examRepository.createUploaded(tx, {
-            threadId,
-            title,
-            subjectCode: body.subjectCode,
-            kind: body.kind ?? "FE",
-            postedAt: null,
-            sourceUrl: "",
-            totalQuestions: 0,
-            answerSource: "DEFAULT",
-            createdById: adminId,
-          });
-          await examAttachmentRepository.add(id, rows, tx);
-          return id;
-        },
-        { timeout: EXAM_UPLOAD_TX_TIMEOUT_MS },
+    const threadId = same?.threadId ?? `${MANUAL_THREAD_PREFIX}${randomBytes(MANUAL_THREAD_HEX_BYTES).toString("hex")}`;
+    return withThreadLock(threadId, async () => {
+      const dir = path.join(storageDir, EXAM_STORAGE_DIR, threadId, EXAM_FILES_DIR);
+      const names = resourceFileNames(
+        all.map((f) => f.name),
+        EXAM_RESOURCE_NAME_MAX_BYTES,
       );
-    } catch (err) {
-      await removeFiles(written);
-      await fs.rm(path.join(storageDir, EXAM_STORAGE_DIR, threadId), { recursive: true, force: true }).catch(() => undefined); // threadId mới: thư mục chỉ chứa tệp vừa ghi
-      throw err;
-    }
-    console.log(`[admin] #${adminId} tải tài liệu #${examId}: ${kept.length} tệp, bỏ qua ${skipped.length}`);
-    published(examId);
-    return { id: examId, title, files: kept.length, skipped };
+      const old = same ? await examAttachmentRepository.listByExam(same.id) : [];
+      const written: string[] = [];
+      let examId: string;
+      try {
+        await fs.mkdir(dir, { recursive: true });
+        const rows: NewAttachment[] = [];
+        for (const [i, f] of all.entries()) {
+          const name = names[i]!;
+          const file = `${randomBytes(4).toString("hex")}-${name}`;
+          const abs = path.join(dir, file);
+          await fs.writeFile(abs, f.buffer, { flag: "wx" });
+          written.push(abs);
+          rows.push({ name, filePath: `${EXAM_STORAGE_DIR}/${threadId}/${EXAM_FILES_DIR}/${file}`, mime: attachmentType(f.name)?.mime ?? "application/octet-stream", sizeBytes: f.buffer.length, sourceUrl: "" });
+        }
+        examId = await prisma.$transaction(
+          async (tx) => {
+            let id = same?.id;
+            if (id) await examAttachmentRepository.removeAll(id, tx);
+            else
+              id = (
+                await examRepository.createUploaded(tx, { threadId, title, subjectCode: body.subjectCode, kind: body.kind ?? "FE", postedAt: null, sourceUrl: "", totalQuestions: 0, answerSource: "DEFAULT", createdById: adminId })
+              ).id;
+            await examAttachmentRepository.add(id, rows, tx);
+            return id;
+          },
+          { timeout: EXAM_UPLOAD_TX_TIMEOUT_MS },
+        );
+      } catch (err) {
+        await removeFiles(written);
+        if (!same) await fs.rm(path.join(storageDir, EXAM_STORAGE_DIR, threadId), { recursive: true, force: true }).catch(() => undefined); // threadId mới: thư mục chỉ chứa tệp vừa ghi
+        throw err;
+      }
+      await removeFiles(old.flatMap((a) => resolveInside(storageDir, a.filePath) ?? []));
+      console.log(`[admin] #${adminId} tải tài liệu ${same ? "ghi đè " : ""}#${examId}: ${all.length} tệp`);
+      published(examId);
+      return { id: examId, title, files: all.length, overwritten: !!same };
+    });
   },
 
   /** Như create nhưng chạy nền: kiểm tra nhanh, ghi tệp tạm, xếp hàng rồi trả về lượt vừa xếp (kết quả xem ở jobs / realtime) */
   async createAsync(adminId: string, body: UploadExamBody, files: MemFile[]) {
+    const same = await sameTitle(body);
+    if (same) return this.updateImagesAsync(adminId, same.id, body, files);
     const prep = await prepareCreate(body, files);
     return examUploadQueue.enqueue({ adminId, kind: "create", title: prep.title }, files, (staged) => runCreate(adminId, prep, staged));
   },

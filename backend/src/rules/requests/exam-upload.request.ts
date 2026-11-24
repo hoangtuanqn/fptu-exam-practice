@@ -15,6 +15,8 @@ export const uploadExamBody = z.object({
   subjectCode: subjectCodeSchema.transform((s) => s.toUpperCase()),
   kind: z.preprocess(blankToUndefined, z.enum(EXAM_KINDS, "Loại đề không hợp lệ").optional()),
   answers: answersField,
+  // Form gửi "1": tên đề đã có thì ghi đè (thay ảnh/tệp) thay vì báo trùng
+  overwrite: z.preprocess((v) => v === "1" || v === "true", z.boolean()),
 });
 
 export const updateExamImagesBody = z.object({ answers: answersField });

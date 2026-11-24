@@ -27,6 +27,9 @@ export const examAttachmentRepository = {
   list: (examId: string) =>
     prisma.examAttachment.findMany({ where: { examId }, orderBy: { id: "asc" }, select: { id: true, name: true, filePath: true, mime: true, sizeBytes: true } }),
 
+  // Xoá hết tệp của đề (ghi đè bằng thư mục mới). `db` = tx
+  removeAll: (examId: string, db: Db = prisma) => db.examAttachment.deleteMany({ where: { examId } }),
+
   // Thêm tệp mới, giữ nguyên các tệp cũ (id không đổi). `db` = tx khi cần chung transaction với việc tạo đề
   add: (examId: string, rows: NewAttachment[], db: Db = prisma) =>
     db.examAttachment.createMany({ data: rows.map((r) => ({ ...r, examId })), skipDuplicates: true }),
