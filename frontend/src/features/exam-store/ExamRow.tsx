@@ -1,17 +1,18 @@
-import type { ReactNode } from "react";
-import { Check } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Check, ChevronRight } from "lucide-react";
 import { formatDate } from "@/shared/utils/formatters";
 import type { CatalogItem } from "./catalog.api";
 import { ExamKindBadge } from "./ExamKindBadge";
 import { NewExamBadge } from "./NewExamBadge";
 
 // Một dòng đề trong Kho đề. Người đã đăng nhập: đề chưa làm có chấm xanh và tên đậm, đề đã làm thì nhạt đi.
-// Khách (known = false) chưa có lịch sử nên mọi đề hiện như nhau.
-export function ExamRow({ item: e, known, action }: { item: CatalogItem; known: boolean; action: ReactNode }) {
+// Khách (known = false) chưa có lịch sử nên mọi đề hiện như nhau. Cả hàng là liên kết (không có nút riêng); hint là dòng phụ bên phải, ví dụ phí mở.
+export function ExamRow({ item: e, known, to, state, hint }: { item: CatalogItem; known: boolean; to: string; state?: unknown; hint?: string }) {
   const done = known && !!(e.attempts || e.opened);
   const fresh = known && !done;
   return (
-    <li className={`group flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3.5 transition hover:bg-surface-container-low/70 ${done ? "bg-surface-container-lowest/40" : ""}`}>
+    <li className={done ? "bg-surface-container-lowest/40" : ""}>
+      <Link to={to} state={state} className="md-state group flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3.5 transition hover:bg-surface-container-low/70">
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
           <ExamKindBadge kind={e.kind} />
@@ -36,7 +37,9 @@ export function ExamRow({ item: e, known, action }: { item: CatalogItem; known: 
           )}
         </p>
       </div>
-      <div className="shrink-0">{action}</div>
+      {hint && <span className="md-label-medium shrink-0 text-on-surface-variant">{hint}</span>}
+      <ChevronRight size={18} className="shrink-0 text-on-surface-variant transition group-hover:translate-x-0.5" aria-hidden />
+      </Link>
     </li>
   );
 }

@@ -1,15 +1,9 @@
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { BookOpen, Loader2, Play } from "lucide-react";
-import { examApi } from "@/features/exam/exam.api";
+import { useMemo } from "react";
+import { BookOpen } from "lucide-react";
 import { examOpenPath } from "@/features/exam/types";
 import { useAuth } from "@/features/auth/AuthContext";
-import { ApiError } from "@/shared/api/client";
-import { errorMessage } from "@/shared/api/errors";
-import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
 import { useUrlState } from "@/shared/hooks/useUrlState";
-import { Button } from "@/shared/ui/Button";
 import { Empty } from "@/shared/ui/Feedback";
 import { QueryBoundary } from "@/shared/ui/QueryBoundary";
 import { Pagination } from "@/shared/ui/Table";
@@ -20,17 +14,14 @@ import { SubjectCard } from "@/features/subject/SubjectCard";
 import { SubjectPicker } from "@/features/subject/SubjectPicker";
 import { ExamRow } from "./ExamRow";
 import { catalogApi, type CatalogItem } from "./catalog.api";
-import { ConfirmOpenDialog } from "./ConfirmOpenDialog";
 import { ExamFilterBar, useExamListQuery } from "./ExamFilterBar";
 import { featuredSubjects } from "./featuredSubjects";
-
-const COMPACT_PAGE_SIZE = 6; // trang chủ: chỉ vài đề mỗi trang để không đẩy các phần bên dưới đi quá xa
 
 // Kho đề > Theo môn: các đề hệ thống đã có của một môn. Đề có phí chỉ trừ khi người dùng bấm và đồng ý.
 export function SubjectBrowser({ compact = false }: { compact?: boolean }) {
   const [url, setUrl] = useUrlState({ subject: "" });
   const code = url.subject.toUpperCase();
-  return code ? <ExamList code={code} compact={compact} onBack={() => setUrl({ subject: "" })} /> : <SubjectChooser compact={compact} onPick={(c) => setUrl({ subject: c })} />;
+  return code ? <ExamList code={code} onBack={() => setUrl({ subject: "" })} /> : <SubjectChooser compact={compact} onPick={(c) => setUrl({ subject: c })} />;
 }
 
 function SubjectChooser({ onPick, compact }: { onPick: (code: string) => void; compact: boolean }) {
@@ -58,102 +49,42 @@ function SubjectChooser({ onPick, compact }: { onPick: (code: string) => void; c
 
 const priceOf = (d: { price: number; pePrice?: number }, e: CatalogItem) => (e.kind === "PE" ? (d.pePrice ?? d.price) : d.price);
 
-function ExamList({ code, onBack, compact }: { code: string; onBack: () => void; compact: boolean }) {
-  const navigate = useNavigate();
-  const toast = useToast();
-  const { user, refresh } = useAuth();
+// Đề đã có trong kho: vào làm; chưa có: vào trang xem thử 3 câu đầu, mở khoá cả đề ở đó (chỉ trừ credit khi đồng ý)
+const targetOf = (e: CatalogItem, code: string) => (e.status === "owned" ? examOpenPath({ id: e.examId!, kind: e.kind, totalQuestions: e.questions }) : `/exam/${e.examId}/trial?subject=${encodeURIComponent(code)}`);
+
+function ExamList({ code, onBack }: { code: string; onBack: () => void }) {
+  const { user } = useAuth();
   const query = useExamListQuery();
   const { url, setUrl, page } = query;
-
-  const list = useApi(() => catalogApi.exams(code, { q: url.q, term: url.term, kind: url.kind, page, limit: compact ? COMPACT_PAGE_SIZE : undefined }), [code, url.q, url.term, url.kind, page, compact, user?.id]);
-  const d = list.data;
-  const [busy, setBusy] = useState<string | null>(null); // examId đang hỏi phí / đang mở
-  const [confirm, setConfirm] = useState<{ examId: string; item: CatalogItem; fee: number } | null>(null);
-
-  const open = async (examId: string, item: CatalogItem) => {
-    setBusy(examId);
-    try {
-      await examApi.unlock(examId, code);
-      void refresh(); // số dư vừa đổi
-      navigate(examOpenPath({ id: examId, kind: item.kind, totalQuestions: item.questions }));
-    } catch (err) {
-      toast.error(errorMessage(err, "Chưa mở được đề này"));
-      if (err instanceof ApiError && err.code === "EXAM_NOT_READY") list.reload(); // đề vừa bị gỡ: tải lại danh sách cho đúng trạng thái
-    } finally {
-      setBusy(null);
-    }
-  };
-
-  const pick = async (item: CatalogItem) => {
-    if (!user) return void navigate("/login");
-    const examId = item.examId;
-    if (!examId) return;
-    if (item.status === "owned") return void navigate(examOpenPath({ id: examId, kind: item.kind, totalQuestions: item.questions }));
-    setBusy(examId);
-    try {
-      // Hỏi phí thực tế trước khi trừ tiền; miễn phí (Pro, đã sở hữu) thì mở luôn
-      const quote = await examApi.quote(examId, code);
-      if (quote.free) return void (await open(examId, item));
-      setConfirm({ examId, item, fee: quote.fee });
-    } catch (err) {
-      toast.error(errorMessage(err, "Chưa mở được đề này"));
-      if (err instanceof ApiError && err.code === "EXAM_NOT_READY") list.reload();
-    } finally {
-      setBusy((b) => (b === examId ? null : b));
-    }
-  };
+  const list = useApi(() => catalogApi.exams(code, { q: url.q, term: url.term, kind: url.kind, page }), [code, url.q, url.term, url.kind, page, user?.id]);
 
   return (
-    <>
-      <SubjectCard title={`Môn ${code}`} onBack={onBack}>
-        <div className="space-y-3 border-b border-outline-variant px-5 py-4">
-          <ExamFilterBar query={query} terms={d?.terms} />
-        </div>
+    <SubjectCard title={`Môn ${code}`} onBack={onBack}>
+      <div className="space-y-3 border-b border-outline-variant px-5 py-4">
+        <ExamFilterBar query={query} terms={list.data?.terms} />
+      </div>
 
-        <QueryBoundary query={list}>
-          {(res) => {
-            // Chỉ hiện đề đã có trong hệ thống (máy chủ cũ còn trả mục chưa có đề)
-            const data = { ...res, items: res.items.filter((e) => !!e.examId) };
-            return data.items.length === 0 ? (
-              <Empty icon={BookOpen} title={data.total > 0 ? "Không có đề nào khớp" : "Chưa có đề nào của môn này"}>
-                {data.total > 0 ? "Thử bỏ bộ lọc hoặc đổi từ khoá." : "Môn này chưa có đề, bạn quay lại sau nhé."}
-              </Empty>
-            ) : (
-              <>
-                <ul className="divide-y divide-outline-variant">
-                  {data.items.map((e) => (
-                    <ExamRow
-                      key={e.examId}
-                      item={e}
-                      known
-                      action={
-                        <Button size="sm" variant="tonal" onClick={() => void pick(e)} disabled={busy !== null}>
-                        {busy === e.examId ? <Loader2 size={15} className="animate-spin" /> : <Play size={15} />}
-                        {e.status !== "owned" && priceOf(data, e) > 0 && !isPro(user) ? formatCredit(priceOf(data, e)) : e.attempts ? "Làm lại" : "Mở đề"}
-                      </Button>
-                      }
-                    />
-                  ))}
-                </ul>
-                <Pagination meta={data.meta} onPage={(p) => setUrl({ page: String(p) })} />
-              </>
-            );
-          }}
-        </QueryBoundary>
-      </SubjectCard>
-
-      {confirm && user && (
-        <ConfirmOpenDialog
-          fee={confirm.fee}
-          balance={user.balance}
-          onCancel={() => setConfirm(null)}
-          onConfirm={() => {
-            const { examId, item } = confirm;
-            setConfirm(null);
-            void open(examId, item);
-          }}
-        />
-      )}
-    </>
+      <QueryBoundary query={list}>
+        {(res) => {
+          // Chỉ hiện đề đã có trong hệ thống (máy chủ cũ còn trả mục chưa có đề)
+          const data = { ...res, items: res.items.filter((e) => !!e.examId) };
+          return data.items.length === 0 ? (
+            <Empty icon={BookOpen} title={data.total > 0 ? "Không có đề nào khớp" : "Chưa có đề nào của môn này"}>
+              {data.total > 0 ? "Thử bỏ bộ lọc hoặc đổi từ khoá." : "Môn này chưa có đề, bạn quay lại sau nhé."}
+            </Empty>
+          ) : (
+            <>
+              <ul className="divide-y divide-outline-variant">
+                {data.items.map((e) => {
+                  const fee = e.status !== "owned" && !isPro(user) ? priceOf(data, e) : 0;
+                  return <ExamRow key={e.examId} item={e} known to={targetOf(e, code)} hint={fee > 0 ? formatCredit(fee) : undefined} />;
+                })}
+              </ul>
+              <Pagination meta={data.meta} onPage={(p) => setUrl({ page: String(p) })} />
+            </>
+          );
+        }}
+      </QueryBoundary>
+    </SubjectCard>
   );
 }

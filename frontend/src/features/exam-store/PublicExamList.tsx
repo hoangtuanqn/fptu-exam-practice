@@ -1,8 +1,6 @@
-import { Link } from "react-router-dom";
-import { BookOpen, Play } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useApi } from "@/shared/hooks/useApi";
-import { buttonClass } from "@/shared/ui/Button";
 import { Empty } from "@/shared/ui/Feedback";
 import { QueryBoundary } from "@/shared/ui/QueryBoundary";
 import { Pagination } from "@/shared/ui/Table";
@@ -11,7 +9,6 @@ import { examOpenPath } from "@/features/exam/types";
 import { ExamRow } from "./ExamRow";
 import { catalogApi, type CatalogItem } from "./catalog.api";
 import { isPro } from "@/shared/utils/pro";
-import { trackPrompt } from "@/shared/utils/trackPrompt";
 import { ExamFilterBar, useExamListQuery } from "./ExamFilterBar";
 
 // Danh sách đề của một môn cho khách xem (trang Kho đề công khai và trang từng môn), không có khung ngoài: nơi dùng tự bọc Card.
@@ -22,7 +19,11 @@ export function PublicExamList({ code, pageSize }: { code: string; pageSize?: nu
   const query = useExamListQuery();
   const { url, setUrl, page } = query;
   const list = useApi(() => catalogApi.exams(code, { q: url.q, term: url.term, kind: url.kind, page, limit: pageSize }), [code, url.q, url.term, url.kind, page, pageSize, user?.id]);
-  const target = `/account/exams?tab=subject&subject=${encodeURIComponent(code)}`;
+  const target = `/kho-de?subject=${encodeURIComponent(code)}`;
+  // Đã có trong kho: vào làm; thành viên chưa có: xem thử 3 câu đầu rồi mới trả phí; khách: đăng ký rồi quay lại đây
+  const linkOf = (e: CatalogItem) =>
+    e.status === "owned" ? { to: examOpenPath({ id: e.examId!, kind: e.kind, totalQuestions: e.questions }) } : user ? { to: `/exam/${e.examId}/trial?subject=${encodeURIComponent(code)}` } : { to: "/register", state: { from: target } };
+  const fee = (e: CatalogItem) => (e.status === "owned" || isPro(user) || !list.data ? 0 : e.kind === "PE" ? (list.data.pePrice ?? list.data.price) : list.data.price);
 
   return (
     <div>
@@ -41,7 +42,7 @@ export function PublicExamList({ code, pageSize }: { code: string; pageSize?: nu
             <>
               <ul className="divide-y divide-outline-variant">
                 {data.items.map((e) => (
-                  <ExamRow key={e.examId} item={e} known={!!user} action={<ExamAction item={e} loggedIn={!!user} target={target} price={isPro(user) ? 0 : e.kind === "PE" ? (data.pePrice ?? data.price) : data.price} />} />
+                  <ExamRow key={e.examId} item={e} known={!!user} {...linkOf(e)} hint={fee(e) > 0 ? formatCredit(fee(e)) : undefined} />
                 ))}
               </ul>
               <Pagination meta={data.meta} onPage={(p) => setUrl({ page: String(p) })} />
@@ -50,23 +51,5 @@ export function PublicExamList({ code, pageSize }: { code: string; pageSize?: nu
         }}
       </QueryBoundary>
     </div>
-  );
-}
-
-// Đề đã có trong kho: "Mở đề". Chưa có thì nút ghi luôn số credit sẽ trừ (Pro thì price = 0 nên vẫn là "Mở đề")
-function ExamAction({ item, loggedIn, target, price }: { item: CatalogItem; loggedIn: boolean; target: string; price: number }) {
-  const cls = buttonClass({ size: "sm", variant: "tonal" });
-  const track = () => trackPrompt("library-open", "click");
-  if (item.status === "owned")
-    return (
-      <Link to={examOpenPath({ id: item.examId!, kind: item.kind, totalQuestions: item.questions })} className={cls}>
-        <Play size={15} /> {item.attempts ? "Làm lại" : "Mở đề"}
-      </Link>
-    );
-  // Chưa có trong kho: thành viên vào Kho đề của môn (có xác nhận phí trước khi trừ), khách đi đăng ký rồi quay lại đó
-  return (
-    <Link to={loggedIn ? target : "/register"} state={loggedIn ? undefined : { from: target }} className={cls} onClick={track}>
-      <Play size={15} /> {price > 0 ? formatCredit(price) : "Mở đề"}
-    </Link>
   );
 }
