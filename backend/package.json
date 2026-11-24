@@ -19,6 +19,7 @@
     "import:flashcards": "tsx scripts/import-flashcards.ts",
     "import:syllabus": "tsx scripts/import-syllabus.ts",
     "sync:exams": "tsx scripts/sync-exams.ts",
+    "push:exams": "bash scripts/push-exams.sh",
     "relabel:topics": "tsx scripts/relabel-topics.ts",
     "import:syllabus-details": "tsx scripts/import-syllabus-details.ts",
     "search:syllabus": "tsx scripts/search-syllabus.ts",
