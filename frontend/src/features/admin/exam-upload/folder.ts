@@ -29,6 +29,14 @@ export interface FolderCheck<F> {
 const depth = (dir: string) => (dir ? dir.split("/").length : 0);
 const list = (ns: number[]) => (ns.length > 12 ? `${ns.slice(0, 12).join(", ")}… (${ns.length} câu)` : ns.join(", "));
 
+/** Tên thư mục đã chọn ("ENM302 - SU26 - B5 - FE - L") làm tên đề; mã môn là phần đầu tên ("ENM302"). null nếu tệp không nằm trong thư mục. */
+export function nameFromFolder(paths: string[]): { title: string; subjectCode: string | null } | null {
+  const first = paths[0]?.split("/");
+  const title = first && first.length > 1 ? first[0]!.trim() : "";
+  if (!title) return null;
+  return { title, subjectCode: /^[A-Za-z]{2,4}\d{3}[A-Za-z]?(?![A-Za-z0-9])/.exec(title)?.[0].toUpperCase() ?? null };
+}
+
 /** Tìm thư mục gốc của đề: thư mục chứa images/ (ưu tiên có ans.json cạnh bên), nông nhất. */
 export function findRoot(paths: string[]): { root: string | null; others: string[] } {
   const roots = new Set<string>();
