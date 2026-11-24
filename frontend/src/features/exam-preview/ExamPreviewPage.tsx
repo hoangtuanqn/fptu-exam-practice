@@ -81,7 +81,7 @@ function Preview({ exam }: { exam: ImportedExam }) {
   const kind = exam.kind ?? "FE";
   const term = exam.title.match(/\b(?:SP|SU|FA)\d{2}\b/i)?.[0].toUpperCase() ?? null;
   const items = questions.filter((q) => !q.isReference).length;
-  const playable = canPractice(kind, total);
+  const playable = canPractice(kind, total, exam.answerStatus);
 
   // Đề vừa lấy về có thể còn đang tải ảnh: các trang mới hiện dần
   useExamQuestionsLive(
