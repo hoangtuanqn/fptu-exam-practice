@@ -1,5 +1,5 @@
 import { API_ORIGIN } from "@/shared/api/client";
-import { MASCOT_SVG } from "@/shared/ui/mascot-art";
+import { useMascotSvg } from "@/shared/season/useMascotSvg";
 
 interface UserAvatarProps {
   avatarPath?: string | null;
@@ -8,6 +8,7 @@ interface UserAvatarProps {
 }
 
 export function UserAvatar({ avatarPath, alt = "Avatar", className = "h-8 w-8" }: UserAvatarProps) {
+  const mascotSvg = useMascotSvg();
   if (avatarPath) {
     const src = `${API_ORIGIN}/api/v1/files/${avatarPath}`;
     return (
@@ -20,7 +21,7 @@ export function UserAvatar({ avatarPath, alt = "Avatar", className = "h-8 w-8" }
   return (
     <span
       className={`inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-brand-50 p-1 ${className}`}
-      dangerouslySetInnerHTML={{ __html: MASCOT_SVG }}
+      dangerouslySetInnerHTML={{ __html: mascotSvg }}
       aria-label={alt}
     />
   );

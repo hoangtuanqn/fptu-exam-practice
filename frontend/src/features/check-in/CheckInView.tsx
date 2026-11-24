@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { CalendarCheck, Check, Coins, Flame, Gift, Loader2, X } from "lucide-react";
 import { Button } from "@/shared/ui/Button";
 import { Modal } from "@/shared/ui/Modal";
-import { MASCOT_SVG } from "@/shared/ui/mascot-art";
+import { useMascotSvg } from "@/shared/season/useMascotSvg";
 import type { CheckInResult, CheckInStatus } from "./check-in.api";
 
 const fmt = (n: number) => n.toLocaleString("vi-VN");
@@ -106,6 +106,7 @@ export function CheckInView({ status, result, claiming, onClaim, onClose }: Prop
   const amount = result ? result.amount : status.todayAmount;
   const shown = useCountUp(amount, !!result);
   const isBonusDay = status.cycleDay === status.days;
+  const mascotSvg = useMascotSvg();
 
   return (
     <Modal onClose={onClose}>
@@ -123,7 +124,7 @@ export function CheckInView({ status, result, claiming, onClaim, onClose }: Prop
             <span aria-hidden className="absolute inset-0 rounded-full bg-gradient-to-b from-brand-100 via-brand-50 to-surface-container-lowest" />
             <span aria-hidden className="absolute inset-4 rounded-full border border-brand-200/70" />
             <span aria-hidden className="absolute inset-0 rounded-full bg-accent/10 blur-2xl" />
-            <div aria-hidden className={`relative w-32 drop-shadow-md [&>svg]:h-auto [&>svg]:w-full ${result ? "ci-bounce" : "ci-float"}`} dangerouslySetInnerHTML={{ __html: MASCOT_SVG }} />
+            <div aria-hidden className={`relative w-32 drop-shadow-md [&>svg]:h-auto [&>svg]:w-full ${result ? "ci-bounce" : "ci-float"}`} dangerouslySetInnerHTML={{ __html: mascotSvg }} />
             {result && <Confetti />}
           </div>
 

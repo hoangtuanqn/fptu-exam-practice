@@ -2,7 +2,9 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useLocation } from "react-router-dom";
 import { ArrowUp, Maximize2, Minimize2, RotateCcw, X } from "lucide-react";
 import { chatApi, type ChatMessage } from "@/features/chat/chat.api";
-import { MASCOT_SVG } from "@/shared/ui/mascot-art";
+import { MASCOT_SVG, MASCOT_XMAS_SVG } from "@/shared/ui/mascot-art";
+import { useSeason } from "@/shared/season/SeasonContext";
+import { useMascotSvg } from "@/shared/season/useMascotSvg";
 import { Markdown } from "@/shared/ui/Markdown";
 import { ApiError } from "@/shared/api/client";
 import { errorMessage } from "@/shared/api/errors";
@@ -18,8 +20,10 @@ const readWide = () => {
   }
 };
 
-// Mặt con cóc (cắt từ hình mascot) làm ảnh đại diện trong khung chat
-const AVATAR_SVG = MASCOT_SVG.replace(/viewBox="[^"]*" width="\d+" height="\d+"/, 'viewBox="20 12 64 60" width="100%" height="100%"');
+// Mặt con cóc (cắt từ hình mascot) làm ảnh đại diện trong khung chat; bản Giáng sinh cắt cao hơn để thấy nón
+const crop = (svg: string, box: string) => svg.replace(/viewBox="[^"]*" width="\d+" height="\d+"/, `viewBox="${box}" width="100%" height="100%"`);
+const AVATAR_SVG = crop(MASCOT_SVG, "20 12 64 60");
+const AVATAR_XMAS_SVG = crop(MASCOT_XMAS_SVG, "16 0 72 70");
 // Mặc định khi máy chủ cũ không trả giới hạn trong /chat/config
 const MAX_CHARS = 800;
 const MAX_TURNS = 6;
@@ -31,7 +35,8 @@ const GREETING: ChatMessage = {
 };
 
 function Avatar({ size = 28 }: { size?: number }) {
-  return <span aria-hidden className="block shrink-0 overflow-hidden rounded-full bg-amber-100 ring-1 ring-amber-200" style={{ width: size, height: size }} dangerouslySetInnerHTML={{ __html: AVATAR_SVG }} />;
+  const { xmas } = useSeason();
+  return <span aria-hidden className="block shrink-0 overflow-hidden rounded-full bg-amber-100 ring-1 ring-amber-200" style={{ width: size, height: size }} dangerouslySetInnerHTML={{ __html: xmas ? AVATAR_XMAS_SVG : AVATAR_SVG }} />;
 }
 
 interface Msg extends ChatMessage {
@@ -52,6 +57,7 @@ const load = (): Msg[] => {
 // Bong bóng hỏi đáp hướng dẫn sử dụng. Chỉ hiện khi máy chủ báo chatbot đang bật; hội thoại nhớ trong tab (sessionStorage).
 export default function ChatWidget() {
   const { pathname } = useLocation();
+  const mascotSvg = useMascotSvg();
   const [enabled, setEnabled] = useState(true); // chỉ ẩn khi máy chủ báo rõ là đã tắt (máy chủ chưa phản hồi thì vẫn hiện)
   const [limits, setLimits] = useState({ chars: MAX_CHARS, turns: MAX_TURNS });
   const [tip, setTip] = useState(false);
@@ -201,7 +207,7 @@ export default function ChatWidget() {
             title="Hỏi Cóc Pass"
             className="mascot-chat block rounded-full transition active:scale-95"
           >
-            <span className="mascot-chat-body block" dangerouslySetInnerHTML={{ __html: MASCOT_SVG }} />
+            <span className="mascot-chat-body block" dangerouslySetInnerHTML={{ __html: mascotSvg }} />
           </button>
         </div>
       )}

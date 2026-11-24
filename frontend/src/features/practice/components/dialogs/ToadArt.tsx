@@ -1,3 +1,5 @@
+import { useSeason } from "@/shared/season/SeasonContext";
+import { santaHat } from "@/shared/ui/santa-hat";
 import type { ToadMood } from "./toadMood";
 
 const OUT = "#9a5f00";
@@ -7,6 +9,10 @@ const GOLD = "#ffc61f";
 // Hệ toạ độ: 120 x 184, phần thân đặt lệch xuống 24 để chừa chỗ phía trên cho tay giơ cao / cúp / sao quay quanh đầu.
 export function ToadArt({ mood, scale = 1 }: { mood: ToadMood; scale?: number }) {
   const crown = mood === "star" || mood === "perfect";
+  // Mùa Giáng sinh: đội nón Noel (mood có vương miện giữ vương miện), buồn/choáng thì nón lệch hơn
+  const { xmas, showDecor } = useSeason();
+  const hat = xmas && !crown;
+  const sad = mood === "cry" || mood === "worry" || mood === "zero";
   return (
     <svg viewBox="0 0 120 184" width={96 * scale} height={147 * scale} xmlns="http://www.w3.org/2000/svg" role="presentation" aria-hidden="true">
       <defs>
@@ -40,6 +46,7 @@ export function ToadArt({ mood, scale = 1 }: { mood: ToadMood; scale?: number })
           <ellipse cx="60" cy="52" rx="42" ry="30" fill="url(#rt-gold)" stroke={OUT} strokeWidth="2" />
           <ellipse cx="44" cy="42" rx="14" ry="5" fill="#fff" opacity=".28" transform="rotate(-14 44 42)" />
           {crown && <Crown />}
+          {hat && <g dangerouslySetInnerHTML={{ __html: santaHat(60, 17, 0.85, sad ? 20 : 12) }} />}
 
           {/* mắt lồi trên đỉnh đầu */}
           <circle cx="36" cy="30" r="14" fill="url(#rt-gold)" stroke={OUT} strokeWidth="1.8" />
@@ -65,7 +72,27 @@ export function ToadArt({ mood, scale = 1 }: { mood: ToadMood; scale?: number })
       {mood === "perfect" && <Trophy />}
       {(mood === "good" || mood === "happy") && <Sparkles />}
       {(mood === "star" || mood === "perfect") && <Sparkles big />}
+      {showDecor && (mood === "good" || mood === "happy" || mood === "star" || mood === "perfect") && (
+        <>
+          <Gift x={2} y={160} size={18} tone="red" />
+          <Gift x={102} y={164} size={14} tone="green" />
+        </>
+      )}
     </svg>
+  );
+}
+
+// Hộp quà nhỏ dưới chân (mùa Giáng sinh, mood vui); màu lấy từ --xmas-*
+function Gift({ x, y, size, tone }: { x: number; y: number; size: number; tone: "red" | "green" }) {
+  const box = { fill: tone === "red" ? "var(--xmas-red)" : "var(--xmas-green)" };
+  const ribbon = { fill: tone === "red" ? "var(--xmas-gold)" : "var(--xmas-snow)" };
+  return (
+    <g transform={`translate(${x} ${y}) scale(${size / 24})`} stroke={OUT} strokeWidth={1.2 * (24 / size)} strokeLinejoin="round">
+      <rect x="3" y="9" width="18" height="13" rx="1.5" style={box} />
+      <rect x="2" y="6.5" width="20" height="4" rx="1" style={box} />
+      <rect x="10.5" y="6.5" width="3" height="15.5" style={ribbon} stroke="none" />
+      <path d="M12 6.5C9 2 5.5 3.5 7 6.5ZM12 6.5C15 2 18.5 3.5 17 6.5Z" style={ribbon} />
+    </g>
   );
 }
 
