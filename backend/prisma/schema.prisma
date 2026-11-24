@@ -385,6 +385,7 @@ model UserExam {
   examId    String   @map("exam_id") @db.Char(36)
   createdAt DateTime @default(now()) @map("created_at")
   openedAt  DateTime? @map("opened_at") // first time the owner opened the exam (picked a mode or viewed the preview)
+  viaPro    Boolean  @default(false) @map("via_pro") // opened free because of Pro: locks again when Pro ends. false = paid/imported, owned forever
 
   user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
   exam Exam  @relation(fields: [examId], references: [id], onDelete: Cascade)
