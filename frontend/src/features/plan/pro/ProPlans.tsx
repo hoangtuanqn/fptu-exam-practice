@@ -9,6 +9,7 @@ import { DAYS_PER_MONTH, vnd } from "./money";
 import { GlossCard } from "@/shared/ui/GlossCard";
 import { Reveal } from "./Reveal";
 import { GOLD_BUTTON, GOLD_GLOSS } from "@/shared/ui/gold";
+import { useSeason } from "@/shared/season/SeasonContext";
 
 interface Props {
   plan: PlanInfo; // giá Pro đã là giá ưu đãi nếu có
@@ -30,6 +31,7 @@ const PRO_POINTS = [
 export function ProPlans({ plan, promo, label, newExpiry, onBuy }: Props) {
   const s = plan.sprint;
   const price = useCountUp(plan.price, 1100);
+  const cap = useSeason().showDecor ? " xmas-snowcap xmas-snowcap-card" : "";
   const proPerDay = Math.round(plan.price / (plan.months * DAYS_PER_MONTH));
   const sprintPerDay = Math.round(s.price / s.days);
 
@@ -42,7 +44,7 @@ export function ProPlans({ plan, promo, label, newExpiry, onBuy }: Props) {
             <span className={`absolute -top-3 left-5 z-10 inline-flex items-center gap-1 rounded-full px-3 py-0.5 text-xs font-extrabold ${GOLD_GLOSS}`}>
               <Sparkles size={12} strokeWidth={2.6} /> Tiết kiệm nhất
             </span>
-            <div className="relative flex h-full flex-col rounded-m3-lg bg-gradient-to-b from-surface-container-lowest to-surface-container-low p-5 sm:p-6">
+            <div className={`relative flex h-full flex-col rounded-m3-lg bg-gradient-to-b from-surface-container-lowest to-surface-container-low p-5 sm:p-6${cap}`}>
               <h2 className="md-title-large text-on-surface">Pro {plan.months} tháng</h2>
               <p className="mt-3 flex flex-wrap items-end gap-x-3 gap-y-1">
                 {promo && <s className="mb-1 text-xl font-semibold tabular-nums text-on-surface-variant">{vnd(promo.originalPrice)}</s>}
@@ -80,7 +82,7 @@ export function ProPlans({ plan, promo, label, newExpiry, onBuy }: Props) {
             </div>
           </div>
 
-          <GlossCard lift className="flex flex-col p-5 sm:p-6">
+          <GlossCard lift className={`flex flex-col p-5 sm:p-6${cap}`}>
             <h2 className="md-title-large text-on-surface">Nước rút {s.days} ngày</h2>
             <p className="mt-3 flex flex-wrap items-baseline gap-x-2">
               <span className="text-3xl font-bold tabular-nums text-on-surface">{vnd(s.price)}</span>

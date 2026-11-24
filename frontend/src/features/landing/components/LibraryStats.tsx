@@ -2,6 +2,7 @@ import { BookOpen, FileText, ListChecks, Terminal, type LucideIcon } from "lucid
 import { catalogApi } from "@/features/exam-store/catalog.api";
 import { useApi } from "@/shared/hooks/useApi";
 import { useCountUp } from "@/shared/hooks/useCountUp";
+import { useSeason } from "@/shared/season/SeasonContext";
 
 // Số cột theo số ô: trên điện thoại ô phụ (Quiz) bị ẩn nên tính riêng, để không bị lẻ một ô
 const PHONE_COLS = ["", "grid-cols-1", "grid-cols-2", "grid-cols-3"];
@@ -48,10 +49,11 @@ export function LibraryStats() {
 function StatTile({ stat, index }: { stat: Stat & { value: number }; index: number }) {
   const { icon: Icon, label, value, wideOnly } = stat;
   const shown = useCountUp(value);
+  const { showDecor } = useSeason();
   return (
     <li
       style={{ animationDelay: `${index * 90}ms` }}
-      className={`stat-tile group relative animate-fade-up flex-col items-center overflow-hidden rounded-m3-md border border-outline-variant/70 bg-gradient-to-b from-surface-container-lowest to-surface-container-low px-2 pb-2.5 pt-3 text-center shadow-[0_1px_2px_rgba(0,0,0,0.05),0_14px_28px_-18px_rgba(70,45,0,0.45)] transition duration-300 hover:border-[#e0a100]/70 hover:shadow-[0_2px_4px_rgba(0,0,0,0.06),0_20px_36px_-16px_rgba(232,154,0,0.55)] motion-safe:hover:-translate-y-1 ${wideOnly ? "hidden sm:flex" : "flex"}`}
+      className={`stat-tile group relative animate-fade-up flex-col items-center overflow-hidden rounded-m3-md border border-outline-variant/70 bg-gradient-to-b from-surface-container-lowest to-surface-container-low px-2 pb-2.5 pt-3 text-center shadow-[0_1px_2px_rgba(0,0,0,0.05),0_14px_28px_-18px_rgba(70,45,0,0.45)] transition duration-300 hover:border-[#e0a100]/70 hover:shadow-[0_2px_4px_rgba(0,0,0,0.06),0_20px_36px_-16px_rgba(232,154,0,0.55)] motion-safe:hover:-translate-y-1 ${wideOnly ? "hidden sm:flex" : "flex"}${showDecor ? " xmas-snowcap xmas-snowcap-card" : ""}`}
     >
       <span aria-hidden className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-[#ffd75e] via-[#ffc61f] to-[#e89a00]" />
       <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-container/70 text-primary transition duration-300 motion-safe:group-hover:scale-110 motion-safe:group-hover:-rotate-6">
