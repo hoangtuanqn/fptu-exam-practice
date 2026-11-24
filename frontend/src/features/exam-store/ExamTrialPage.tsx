@@ -18,7 +18,7 @@ import { catalogApi, type ExamTrial } from "./catalog.api";
 import { ExamKindBadge } from "./ExamKindBadge";
 import { useUnlockExam } from "./useUnlockExam";
 
-const LOCK_TILES = 6; // chỉ minh hoạ vài ô khoá, tổng số câu ghi bằng chữ
+const LOCK_TILES = 12; // chỉ minh hoạ một dãy ô khoá có số, phần còn lại ghi bằng chữ
 
 // Đề chưa mở khoá mà không làm thử được trên web (PE, Quiz, đề chỉ có tệp...): khoá ngay từ đầu, mua đề hoặc nâng cấp Pro để xem
 export default function ExamTrialPage() {
@@ -104,12 +104,16 @@ function Locked({ trial, fee }: { trial: ExamTrial; fee: number }) {
       </Card>
 
       {trial.locked > 0 && (
-        <ul className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-6" aria-hidden>
+        <ul className="mt-4 grid grid-cols-4 gap-3 sm:grid-cols-6" aria-hidden>
           {Array.from({ length: Math.min(trial.locked, LOCK_TILES) }, (_, i) => (
-            <li key={i} className="flex aspect-[4/3] items-center justify-center rounded-m3-md bg-surface-container text-on-surface-variant">
-              <Lock size={22} />
+            <li key={i} className="flex aspect-[4/3] items-center justify-center gap-1 rounded-m3-md bg-surface-container text-on-surface-variant">
+              <span className="md-title-medium opacity-50">{i + 1}</span>
+              <Lock size={16} />
             </li>
           ))}
+          {trial.locked > LOCK_TILES && (
+            <li className="md-label-large col-span-full text-center text-on-surface-variant">và {trial.locked - LOCK_TILES} câu nữa đang khoá</li>
+          )}
         </ul>
       )}
       {dialog}
