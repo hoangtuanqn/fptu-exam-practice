@@ -6,6 +6,8 @@ import { userExamRepository } from "../repositories/user-exam.repository";
 import type { Db } from "../repositories/wallet.repository";
 import { topicLabelerService } from "./ai/topic-labeler.service";
 import { catalogService } from "./catalog.service";
+import { planService } from "./plan.service";
+import { PRO_BENEFITS } from "../constants/plan";
 import { examSolveService } from "./exam-solve.service";
 import { AppError } from "../rules/error";
 import { isMember, type Actor, type Owner } from "../utils/actor";
@@ -75,7 +77,9 @@ export const examService = {
     if (isMember(actor.owner) && !(await userExamRepository.has(actor.owner, id))) {
       // Admin sửa đề chưa vào Kho đề (AI đang giải, lỗi...) vẫn cần xem đủ: đề ngoài Kho đề thì rơi xuống kiểm tra quyền thường
       const trial = await catalogService.trialDetail(id, actor.owner.userId).catch((err: unknown) => (actor.isAdmin ? null : Promise.reject(err)));
-      if (trial) return trial;
+      // Pro mở đề miễn phí (như crawlJobService.submit): tự thêm vào Kho đề thay vì bắt bấm "Mở khoá"; đề đã qua kiểm tra usableExams nên là đề hợp lệ
+      if (trial && PRO_BENEFITS.freeFetch && (await planService.isPro(actor.owner.userId))) await userExamRepository.add(actor.owner, id);
+      else if (trial) return trial;
     }
     await this.assertAccess(actor, id);
     await examSolveService.upgradeIfNeeded(id);
