@@ -7,7 +7,7 @@ import { nextUnanswered } from "@/features/practice/utils/unanswered";
 import { Button } from "@/shared/ui/Button";
 import { Kbd } from "@/shared/ui/Kbd";
 import { AnswerOptions } from "@/features/practice/components/quiz/AnswerOptions";
-import { AnswerLetters, RevealButton, type FlashcardView } from "@/features/practice/components/quiz/FlashcardAnswer";
+import { RevealButton, type FlashcardView } from "@/features/practice/components/quiz/FlashcardAnswer";
 import { JumpForm } from "./JumpForm";
 import { Legend } from "./Legend";
 import { NavButtons } from "./NavButtons";
@@ -83,7 +83,6 @@ export function Sidebar({ quiz, onSubmit, jump, flashcard }: { quiz: Quiz; onSub
             {flashcard ? (
               <div className="flex flex-col items-center gap-2 py-1">
                 <RevealButton {...flashcard} iconOnly />
-                <AnswerLetters vertical answer={question.correct} shown={flashcard.shown} />
               </div>
             ) : (
               <AnswerOptions vertical question={question} selected={quiz.answers[question.number] ?? []} revealed={quiz.isRevealed(question)} onChoose={(opt) => quiz.choose(question, opt)} />
