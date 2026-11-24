@@ -34,6 +34,12 @@ export const examController = {
     res.json(new ResponseClient({ data: await examService.getAnswers(actorOf(req), id) }));
   },
 
+  async opened(req: Request, res: Response) {
+    const { id } = getValidated<UuidParam>(res, "params");
+    await examService.markOpened(actorOf(req), id);
+    res.json(new ResponseClient({ data: { ok: true } }));
+  },
+
   async retrySolve(req: Request, res: Response) {
     const { id } = getValidated<UuidParam>(res, "params");
     res.json(new ResponseClient({ data: await examService.retrySolve(actorOf(req), id) }));

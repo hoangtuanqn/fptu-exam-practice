@@ -18,6 +18,11 @@ const imageUrlOf = fileUrlOf;
 
 export const examService = {
   // Người dùng bấm "Thử lại" trên đề FAILED (có thời gian chờ giữa hai lần để không đốt token)
+  // Đề được mở xem (trang xem trước): để Kho đề bỏ chấm "chưa xem"
+  async markOpened(actor: Actor, id: string) {
+    await userExamRepository.markOpened(actor.owner, id);
+  },
+
   async retrySolve(actor: Actor, id: string) {
     await this.assertAccess(actor, id);
     const result = await examSolveService.retry(id);

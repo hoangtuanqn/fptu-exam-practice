@@ -17,6 +17,7 @@ const examRouter = Router();
 examRouter.get("/", identify, validate(listExamsQuery, "query"), examController.listMine);
 examRouter.post("/claim", authenticate, examController.claim);
 examRouter.get("/:id/answers", identify, validate(uuidParam, "params"), examController.answers);
+examRouter.post("/:id/opened", identify, validate(uuidParam, "params"), examController.opened);
 examRouter.post("/:id/retry-solve", identify, validate(uuidParam, "params"), examController.retrySolve);
 // Tệp đính kèm: mở bằng link thường (không gửi được token) nên công khai như ảnh đề ở /api/v1/files
 examRouter.get("/:examId/attachments/:attachmentId", validate(attachmentParam, "params"), validate(attachmentQuery, "query"), examController.attachment);
