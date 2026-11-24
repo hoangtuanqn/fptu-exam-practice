@@ -46,6 +46,10 @@ const invalid = (message: string, field = "images") => new AppError(message, HTT
 const solving = () => AppError.conflict("AI đang giải đề này, hãy chờ AI xong rồi cập nhật");
 const examExists = (examId: string) =>
   new AppError("Đề này đã có đủ câu trong hệ thống. Hãy mở đề đó và dùng chức năng cập nhật ảnh, đáp án.", HTTP_STATUS.CONFLICT, undefined, "EXAM_EXISTS", { examId });
+/** Tên đề đã có trong hệ thống thì chặn: 409 báo ngay ở ô tiêu đề */
+const assertTitleFree = async (title: string) => {
+  if (await examRepository.titleExists(title)) throw AppError.conflict("Đã có đề cùng tên này trong hệ thống", { title: "Tên đề đã tồn tại" });
+};
 const bytesOf = (f: File) => ("buffer" in f ? f.buffer : fs.readFile(f.path));
 const removeFiles = (abs: string[]) => Promise.all(abs.map((p) => fs.rm(p, { force: true }).catch((err: Error) => console.error(`[exam-upload] không xoá được ảnh: ${err.message}`))));
 
@@ -140,6 +144,7 @@ const published = (examId: string) => {
 async function prepareCreate(body: UploadExamBody, files: MemFile[]) {
   const title = body.title;
   if (!title) throw invalid("Vui lòng nhập tiêu đề đề thi", "title");
+  await assertTitleFree(title);
   const p = plan(files, 0, body.answers);
   checkSignatures(files);
   const threadId = `${MANUAL_THREAD_PREFIX}${randomBytes(MANUAL_THREAD_HEX_BYTES).toString("hex")}`;
@@ -244,6 +249,7 @@ export const adminExamUploadService = {
   async createResource(adminId: string, body: UploadExamBody, files: MemFile[]) {
     const title = body.title;
     if (!title) throw invalid("Vui lòng nhập tiêu đề đề thi", "title");
+    await assertTitleFree(title);
     // multer 1.x đọc tên tệp theo latin1 còn trình duyệt gửi UTF-8: đổi lại để giữ tên tiếng Việt
     const all = files.map((f) => ({ buffer: f.buffer, name: baseName(Buffer.from(f.originalname, "latin1").toString("utf8")) }));
     const kept = all.filter((f) => attachmentType(f.name));
