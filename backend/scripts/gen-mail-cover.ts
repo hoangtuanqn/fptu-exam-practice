@@ -9,7 +9,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
-import { COLOR, MASCOT_H, MASCOT_W, loadFonts, mascotArt, measure, textD, wordmark, type Fonts } from "./brand-art";
+import { COLOR, xmasOverlay, MASCOT_H, MASCOT_W, loadFonts, mascotArt, measure, textD, wordmark, type Fonts } from "./brand-art";
 
 const OUT_DIR = path.resolve(__dirname, "../assets/mail");
 export const COVER_W = 1120;
@@ -108,6 +108,7 @@ export function buildCover(f: Fonts): string {
   <path d="${urlD}" fill="${COLOR.gold700}"/>
   <path d="${creditD}" fill="${COLOR.gold700}"/>
   <path d="${brandD}" fill="${COLOR.gold900}"/>
+  ${xmasOverlay(COVER_W, COVER_H)}
 </svg>`;
 }
 

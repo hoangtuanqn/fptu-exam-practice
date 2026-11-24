@@ -1,5 +1,6 @@
 import { CalendarClock, Check, Crown, ShieldCheck, Wallet } from "lucide-react";
-import { logos } from "@/shared/brand/brand";
+import { logoFallback, useLogos } from "@/shared/brand/brand";
+import { useSeason } from "@/shared/season/SeasonContext";
 import { formatDate } from "@/shared/utils/formatters";
 import type { PlanInfo } from "../plan.api";
 import { DARK_GOLD, GOLD_GLOSS } from "@/shared/ui/gold";
@@ -13,8 +14,10 @@ interface Props {
 
 // Đầu trang nền vàng sẫm: lời hứa chính, mức tiết kiệm thật, linh vật. Chừa chỗ phía dưới để hai gói nổi chồng lên.
 export function ProHero({ plan, pro, daysLeft, expiresAt }: Props) {
+  const logos = useLogos();
+  const { showDecor } = useSeason();
   return (
-    <section className={`relative isolate overflow-hidden ${DARK_GOLD}`}>
+    <section className={`relative isolate overflow-hidden ${DARK_GOLD}${showDecor ? " xmas-snowcap" : ""}`}>
       <div aria-hidden className="pro-glow absolute -right-24 -top-24 -z-10 h-96 w-96 rounded-full bg-[#ffc61f]/30 blur-3xl" />
       <div aria-hidden className="pro-glow absolute -bottom-32 -left-24 -z-10 h-80 w-80 rounded-full bg-[#ff8a3d]/20 blur-3xl [animation-delay:1.5s]" />
       <div aria-hidden className="absolute inset-0 -z-10 opacity-[0.07] [background-image:radial-gradient(#fff_1px,transparent_1px)] [background-size:22px_22px]" />
@@ -53,7 +56,7 @@ export function ProHero({ plan, pro, daysLeft, expiresAt }: Props) {
         <div className="pro-rise relative mx-auto hidden w-full max-w-xs [animation-delay:150ms] expanded:block">
           <div aria-hidden className="pro-glow absolute inset-6 rounded-full bg-[#ffc61f]/40 blur-2xl" />
           <div className="pro-float relative">
-            <img src={logos.mark} alt="" className="relative mx-auto w-52 drop-shadow-[0_18px_30px_rgba(0,0,0,0.5)]" draggable={false} />
+            <img src={logos.mark} onError={logoFallback("mark")} alt="" className="relative mx-auto w-52 drop-shadow-[0_18px_30px_rgba(0,0,0,0.5)]" draggable={false} />
             <Crown size={70} strokeWidth={1.6} className="absolute -top-8 left-1/2 -translate-x-1/2 -rotate-6 fill-[#ffc61f] text-[#ffe58a] drop-shadow-[0_6px_14px_rgba(255,198,31,0.6)]" />
           </div>
           <div className="absolute -right-2 bottom-12 rotate-[5deg] rounded-xl bg-[#ff4d4d] px-3 py-1.5 text-sm font-extrabold text-white shadow-xl">{plan.months} tháng</div>

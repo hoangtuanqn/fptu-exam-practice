@@ -9,14 +9,16 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
-import { COLOR, MASCOT_H, MASCOT_W, loadFonts, mascotArt, mascotSvg, measure, text, wordmark, type Fonts } from "./brand-art";
+import { COLOR, XMAS, xmasOverlay, MASCOT_H, MASCOT_W, loadFonts, mascotArt, mascotSvg, measure, text, wordmark, type Fonts } from "./brand-art";
 import { buildCover } from "./gen-mail-cover";
 
 const ROOT = path.resolve(__dirname, "../..");
 const PUBLIC = path.join(ROOT, "frontend/public");
-const BRAND = path.join(PUBLIC, "brand");
+// Bản Giáng sinh (--theme=xmas) ghi sang thư mục riêng, không đè ảnh gốc
+const BRAND = path.join(PUBLIC, XMAS ? "brand/xmas" : "brand");
+const ICONS = XMAS ? path.join(PUBLIC, "xmas") : PUBLIC;
 const EXT_ICONS = path.join(ROOT, "chrome-extension/icons");
-const MAIL = path.join(ROOT, "backend/assets/mail");
+const MAIL = path.join(ROOT, XMAS ? "backend/assets/mail/xmas" : "backend/assets/mail");
 
 const png = (svg: string) => sharp(Buffer.from(svg)).png({ compressionLevel: 9 });
 
@@ -130,6 +132,7 @@ function ogCover(f: Fonts) {
     ${text(f.bold, "FEPASS.TOP", 22, mx, footY, COLOR.gold700, { spacing: 0.14 })}
     ${text(f.medium, credit, cs, cx0, footY, COLOR.gold700)}
     ${text(f.bold, brand, cs, cx0 + measure(f.medium, credit, cs), footY, COLOR.gold900)}
+    ${xmasOverlay(W, H)}
   </svg>`;
 }
 
@@ -155,26 +158,29 @@ function ico(images: { size: number; data: Buffer }[]) {
 
 async function main() {
   const f = await loadFonts();
-  await Promise.all([BRAND, EXT_ICONS, MAIL].map((d) => fs.mkdir(d, { recursive: true })));
+  await Promise.all([BRAND, ICONS, ...(XMAS ? [] : [EXT_ICONS]), MAIL].map((d) => fs.mkdir(d, { recursive: true })));
 
   // Logo
   await png(mascotSvg(f, 400)).toFile(path.join(BRAND, "logo-mark.png"));
   await png(logoFull(f, false, 4)).toFile(path.join(BRAND, "logo-full.png"));
   await png(logoFull(f, true, 4)).toFile(path.join(BRAND, "logo-full-light.png"));
 
+  // Bản Giáng sinh: web dùng .webp (như bản gốc)
+  if (XMAS) for (const n of ["logo-mark", "logo-full", "logo-full-light"]) await sharp(path.join(BRAND, `${n}.png`)).webp({ quality: 90 }).toFile(path.join(BRAND, `${n}.webp`));
+
   // Favicon + icon ứng dụng
   const sizes = [16, 32, 48, 128, 180, 192, 512];
   const icons = new Map<number, Buffer>();
   for (const s of sizes) icons.set(s, await png(squareIcon(f, s * 2, s !== 180)).resize(s, s).toBuffer());
-  await fs.writeFile(path.join(PUBLIC, "favicon-32.png"), icons.get(32)!);
-  await fs.writeFile(path.join(PUBLIC, "icon-192.png"), icons.get(192)!);
-  await fs.writeFile(path.join(PUBLIC, "icon-512.png"), icons.get(512)!);
-  await fs.writeFile(path.join(PUBLIC, "apple-touch-icon.png"), icons.get(180)!);
-  await fs.writeFile(path.join(PUBLIC, "favicon.ico"), ico([16, 32, 48].map((size) => ({ size, data: icons.get(size)! }))));
-  for (const s of [16, 32, 48, 128]) await fs.writeFile(path.join(EXT_ICONS, `icon${s}.png`), icons.get(s)!);
+  await fs.writeFile(path.join(ICONS, "favicon-32.png"), icons.get(32)!);
+  await fs.writeFile(path.join(ICONS, "icon-192.png"), icons.get(192)!);
+  await fs.writeFile(path.join(ICONS, "icon-512.png"), icons.get(512)!);
+  await fs.writeFile(path.join(ICONS, "apple-touch-icon.png"), icons.get(180)!);
+  await fs.writeFile(path.join(ICONS, "favicon.ico"), ico([16, 32, 48].map((size) => ({ size, data: icons.get(size)! }))));
+  if (!XMAS) for (const s of [16, 32, 48, 128]) await fs.writeFile(path.join(EXT_ICONS, `icon${s}.png`), icons.get(s)!);
 
   // Ảnh chia sẻ link
-  await sharp(Buffer.from(ogCover(f))).jpeg({ quality: 88, mozjpeg: true }).toFile(path.join(PUBLIC, "og-cover.jpg"));
+  await sharp(Buffer.from(ogCover(f))).jpeg({ quality: 88, mozjpeg: true }).toFile(path.join(ICONS, "og-cover.jpg"));
 
   // Email: logo ở chữ ký (rộng 240px, bản cho nền sáng) + ảnh bìa
   await png(logoFull(f, false, 4)).resize({ width: 240 }).toFile(path.join(MAIL, "logo.png"));

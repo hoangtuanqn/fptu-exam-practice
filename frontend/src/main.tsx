@@ -6,18 +6,21 @@ import { ImpersonationBanner } from "@/features/auth/ImpersonationBanner";
 import { AuthProvider } from "@/features/auth/AuthContext";
 import { ToastProvider } from "@/shared/context/ToastContext";
 import { ThemeProvider } from "@/shared/theme/ThemeContext";
+import { SeasonProvider } from "@/shared/season/SeasonContext";
 import "./index.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
       <ThemeProvider>
-        <ToastProvider>
-          <AuthProvider>
-            <App />
-            <ImpersonationBanner />
-          </AuthProvider>
-        </ToastProvider>
+        <SeasonProvider>
+          <ToastProvider>
+            <AuthProvider>
+              <App />
+              <ImpersonationBanner />
+            </AuthProvider>
+          </ToastProvider>
+        </SeasonProvider>
       </ThemeProvider>
     </BrowserRouter>
   </StrictMode>

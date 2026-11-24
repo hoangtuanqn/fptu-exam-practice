@@ -44,6 +44,7 @@ const FunnelPage = lazy(() => import("./insights/FunnelPage"));
 const QualityPage = lazy(() => import("./insights/QualityPage"));
 const MarketingPage = lazy(() => import("./marketing/MarketingPage"));
 const AdminBadgesPage = lazy(() => import("./badges/AdminBadgesPage"));
+const SeasonPage = lazy(() => import("./marketing/SeasonPage"));
 
 export const ADMIN_NAV: NavItem[] = [
   { to: "/admin", label: "Tổng quan", icon: NAV_ICON.overview, end: true, group: "Chung" },
@@ -74,6 +75,7 @@ export const ADMIN_NAV: NavItem[] = [
   { to: "/admin/promotions", label: "Ưu đãi & khuyến mãi", icon: NAV_ICON.megaphone, group: "Tăng trưởng" },
   { to: "/admin/marketing", label: "Email marketing", icon: NAV_ICON.mail, group: "Tăng trưởng" },
   { to: "/admin/system-notices", label: "Gửi thông báo", icon: NAV_ICON.bell, group: "Tăng trưởng" },
+  { to: "/admin/season", label: "Giao diện mùa", icon: NAV_ICON.sliders, group: "Tăng trưởng" },
   { to: "/admin/link-rewards", label: "Vượt link", icon: NAV_ICON.link, group: "Tăng trưởng" },
   { to: "/admin/coursera", label: "Coursera", icon: NAV_ICON.coursera, group: "Tăng trưởng" },
 ];
@@ -95,6 +97,7 @@ export const adminRoutes = (
     <Route path="subjects" element={<SubjectsManagerPage />} />
     <Route path="promotions" element={<PromoSettingsPage />} />
     <Route path="marketing" element={<MarketingPage />} />
+    <Route path="season" element={<SeasonPage />} />
     <Route path="wallet" element={<WalletHistoryPage />} />
     <Route path="crawl-jobs" element={<CrawlJobsPage />} />
     <Route path="attempts" element={<AttemptsPage />} />

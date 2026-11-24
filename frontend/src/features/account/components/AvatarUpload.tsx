@@ -5,7 +5,7 @@ import { useAuth } from "@/features/auth/AuthContext";
 import { useToast } from "@/shared/context/ToastContext";
 import { API_ORIGIN } from "@/shared/api/client";
 import { errorMessage } from "@/shared/api/errors";
-import { MASCOT_SVG } from "@/shared/ui/mascot-art";
+import { useMascotSvg } from "@/shared/season/useMascotSvg";
 
 // Giới hạn phía client (server cũng kiểm tra lại)
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -25,6 +25,7 @@ export function AvatarUpload() {
   const removeTicket = useRef(0); // lệnh xoá hoãn nào còn hiệu lực; tải ảnh mới hoặc bấm Hoàn tác sẽ huỷ nó
 
   const src = avatarSrc(user?.avatarPath);
+  const mascotSvg = useMascotSvg();
 
   const handleFile = async (file: File) => {
     if (!ALLOWED.includes(file.type)) {
@@ -92,7 +93,7 @@ export function AvatarUpload() {
           ) : (
             <span
               className="flex h-full w-full items-center justify-center"
-              dangerouslySetInnerHTML={{ __html: MASCOT_SVG }}
+              dangerouslySetInnerHTML={{ __html: mascotSvg }}
               style={{ padding: "6px" }}
             />
           )}

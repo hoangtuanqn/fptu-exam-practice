@@ -41,7 +41,7 @@ export function SemesterPromoBar() {
 
   if (!open || !promo || !plan) return null;
   return (
-    <div className="flex w-full shrink-0 items-center gap-1 border-b border-[#ffc61f]/40 bg-gradient-to-r from-[#2a1d00] to-[#4a3500] pl-4 pr-1 text-[#fff6dc]">
+    <div className="flex w-full shrink-0 items-center gap-1 border-b border-[#ffc61f]/40 bg-gradient-to-r from-[#2a1d00] to-[#4a3500] pl-4 pr-1 text-[#fff6dc] xmas-dark">
       <Link to="/pro" className="md-body-medium flex min-h-10 min-w-0 flex-1 items-center justify-center gap-2 py-1.5 text-center">
         <Crown size={16} className="shrink-0 text-[#ffc61f]" aria-hidden />
         <span className="min-w-0">

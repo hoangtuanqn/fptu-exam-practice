@@ -92,6 +92,11 @@ export interface SubjectDetail {
   } | null;
 }
 
+// Giao diện theo mùa (bật/tắt cho toàn site)
+export interface SeasonSettings {
+  xmasEnabled: boolean;
+}
+
 export interface SubjectPatch {
   name?: string;
   credits?: number | null;
@@ -396,6 +401,9 @@ export const adminApi = {
   accountSettings: () => http.get<AccountSettings>("/admin/settings/account"),
   saveAccountSettings: (body: AccountSettings) =>
     http.put<AccountSettings>("/admin/settings/account", body),
+  seasonSettings: () => http.get<SeasonSettings>("/admin/settings/season"),
+  saveSeasonSettings: (body: SeasonSettings) =>
+    http.put<SeasonSettings>("/admin/settings/season", body),
   crawlerSettings: () => http.get<CrawlerSettings>("/admin/settings/crawler"),
   saveCrawlerSettings: (body: CrawlerSettings) =>
     http.put<CrawlerSettings>("/admin/settings/crawler", body),

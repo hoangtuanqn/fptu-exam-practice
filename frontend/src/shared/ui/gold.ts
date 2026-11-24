@@ -11,4 +11,5 @@ export const GOLD_BUTTON =
   "bg-gradient-to-b from-[#ffe58a] via-[#ffc61f] to-[#e89a00] text-[#3a2600] ring-1 ring-[#b87d00]/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.65),inset_0_-2px_0_rgba(0,0,0,0.14),0_12px_32px_-8px_rgba(240,168,0,0.75)]";
 
 // Nền vàng sẫm dùng cho phần đầu trang, khối kêu gọi cuối trang và thanh mua nổi
-export const DARK_GOLD = "bg-[radial-gradient(ellipse_at_top,#5a4100_0%,#2a1d00_48%,#140e00_100%)] text-[#fff6dc]";
+// xmas-dark: mùa Giáng sinh đổi nền sang xanh thông (index.css), ngoài mùa không có style nào
+export const DARK_GOLD = "bg-[radial-gradient(ellipse_at_top,#5a4100_0%,#2a1d00_48%,#140e00_100%)] text-[#fff6dc] xmas-dark";

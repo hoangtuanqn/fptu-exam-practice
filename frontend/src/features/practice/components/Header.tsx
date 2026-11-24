@@ -18,6 +18,7 @@ import { SiteNav } from "@/shared/layout/SiteNav";
 import { ThemeToggle } from "@/shared/theme/ThemeToggle";
 import { SearchTrigger } from "@/features/search/GlobalSearch";
 import { UserNoticeBell } from "@/features/notifications/UserNoticeBell"; // component công khai của feature thông báo
+import { XmasGarland } from "@/shared/season/XmasArt";
 
 // Nút "Hướng dẫn": chưa từng mở thì có chấm nhấp nháy gợi ý bấm vào (mở một lần là thôi)
 const HELP_SEEN_KEY = "practice_help_seen";
@@ -98,7 +99,7 @@ export function Header({
   const accountHidden = showLeft ? "max-xl:hidden" : "max-lg:hidden";
 
   return (
-    <header className="z-30 flex h-16 shrink-0 items-center justify-between gap-2 border-b border-outline-variant bg-surface px-2 sm:px-4">
+    <header className="xmas-garland-host z-30 flex h-16 shrink-0 items-center justify-between gap-2 border-b border-outline-variant bg-surface px-2 sm:px-4">
       <div className="flex shrink-0 items-center gap-3 sm:min-w-0 sm:shrink">
         <Link
           to="/"
@@ -229,6 +230,7 @@ export function Header({
         <ThemeToggle className={loaded ? accountHidden : ""} />
         <UserMenu /> {/* luôn hiện: dưới lg chỉ còn ảnh đại diện, menu có đổi giao diện và số dư */}
       </div>
+      <XmasGarland />
     </header>
   );
 }

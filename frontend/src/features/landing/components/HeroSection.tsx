@@ -10,6 +10,8 @@ import { PromoDeadlineBanner } from "./PromoDeadlineBanner";
 import { SignupGiftBanner } from "./SignupGiftBanner";
 import { ProNudge } from "@/features/plan/ProNudge";
 import { FirstRunChecklist } from "@/features/account/FirstRunChecklist";
+import { useSeason } from "@/shared/season/SeasonContext";
+import { XmasGreeting, XmasRibbon } from "./XmasRibbon";
 
 interface Props {
   onPick: PickFolder;
@@ -21,6 +23,7 @@ interface Props {
 // Phong cách học thuật: nền giấy ấm, màu navy, một điểm nhấn vàng đồng, không chữ chuyển sắc hay hiệu ứng phát sáng.
 export function HeroSection({ onPick, onImported, userName }: Props) {
   const isGuest = !userName;
+  const { showDecor } = useSeason();
   // Dòng nhấn mạnh trải nghiệm miễn phí: hiện cho cả khách và người đã đăng nhập
   const freeNote = (
     <p className="free-shine mx-auto mt-5 inline-flex max-w-full items-center justify-center gap-2 text-xl font-bold sm:text-2xl">
@@ -36,9 +39,12 @@ export function HeroSection({ onPick, onImported, userName }: Props) {
         <div className="absolute left-1/2 top-[-7rem] h-72 w-[44rem] max-w-full -translate-x-1/2 rounded-full bg-[#ffc61f]/20 blur-3xl" />
         <div className="absolute inset-0 opacity-50 [background-image:radial-gradient(var(--md-sys-color-outline-variant)_1px,transparent_1px)] [background-size:22px_22px] [mask-image:radial-gradient(ellipse_70%_60%_at_50%_0%,#000_25%,transparent_100%)]" />
       </div>
+      {showDecor && <XmasRibbon />}
+      {showDecor && <XmasGreeting guest={isGuest} />}
       <div className={`mx-auto w-full max-w-3xl px-5 pb-10 text-center ${isGuest ? "pt-5 sm:pt-7" : "pt-12 sm:pt-16"}`}>
         <div className="animate-fade-up">
-          {isGuest && <p className="md-label-large uppercase tracking-[0.2em] text-primary">{brand.product}</p>}
+          {/* Mùa Giáng sinh: lời chúc nằm đè đúng chỗ dòng tên sản phẩm (dòng này giữ chỗ nhưng ẩn), nên tiêu đề không bị đẩy xuống */}
+          {isGuest && <p className={`md-label-large uppercase tracking-[0.2em] text-primary${showDecor ? " invisible" : ""}`}>{brand.product}</p>}
 
           <h1 className={`md-hero-title text-on-surface ${isGuest ? "mt-2" : "mt-5"}`}>
             {userName ? (

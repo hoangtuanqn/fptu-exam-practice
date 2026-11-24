@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { CalendarCheck, Check, ChevronDown, Crown, LayoutDashboard, LogOut, Monitor, Moon, ShieldCheck, Sun, Wallet } from "lucide-react";
+import { CalendarCheck, Check, ChevronDown, Crown, LayoutDashboard, LogOut, Monitor, Moon, ShieldCheck, Snowflake, Sun, Wallet } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { formatCredit } from "@/shared/utils/formatters";
 import { buttonClass } from "@/shared/ui/Button";
@@ -9,6 +9,7 @@ import { OPEN_CHECKIN_EVENT } from "@/features/check-in/DailyCheckInPopup";
 import { ProBadge } from "@/features/plan/ProBadge";
 import { isPro, proDaysLeft } from "@/shared/utils/pro";
 import { useTheme, type ThemeMode } from "@/shared/theme/ThemeContext";
+import { useSeason } from "@/shared/season/SeasonContext";
 
 // Mục menu M3: cao 48dp, chữ label-large, state layer khi di chuột/focus/nhấn
 const item = "md-state md-motion md-label-large flex h-12 w-full items-center gap-3 px-4 text-left text-on-surface";
@@ -23,6 +24,7 @@ const THEMES: { mode: ThemeMode; label: string; icon: typeof Sun }[] = [
 export function UserMenu() {
   const { user, loading, signOut } = useAuth();
   const { mode, setMode } = useTheme();
+  const { xmas, decor, setDecor } = useSeason();
   const [open, setOpen] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -149,6 +151,13 @@ export function UserMenu() {
               {mode === m && <Check size={18} className="text-primary" />}
             </button>
           ))}
+          {xmas && (
+            <button role="menuitemcheckbox" aria-checked={decor} className={item} onClick={() => setDecor(!decor)}>
+              <Snowflake size={20} className="text-on-surface-variant" />
+              <span className="flex-1">Trang trí Giáng sinh</span>
+              {decor && <Check size={18} className="text-primary" />}
+            </button>
+          )}
           <div role="separator" className="my-1 h-px bg-outline-variant" />
           <button
             role="menuitem"

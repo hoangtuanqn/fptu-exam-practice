@@ -1,4 +1,4 @@
-import { MASCOT_SVG } from "./mascot-art";
+import { useMascotSvg } from "@/shared/season/useMascotSvg";
 
 /**
  * Linh vật Cóc Pass nhảy dọc mép dưới màn hình (hình vẽ ở mascot-art.ts).
@@ -6,10 +6,11 @@ import { MASCOT_SVG } from "./mascot-art";
  * pointer-events: none nên không chặn thao tác. Người bật "giảm chuyển động" chỉ thấy cóc ngồi yên.
  */
 export function Mascot() {
+  const mascotSvg = useMascotSvg();
   return (
     <div aria-hidden="true" className="mascot print:hidden">
       <div className="mascot-travel">
-        <div className="mascot-hop" dangerouslySetInnerHTML={{ __html: MASCOT_SVG }} />
+        <div className="mascot-hop" dangerouslySetInnerHTML={{ __html: mascotSvg }} />
       </div>
     </div>
   );

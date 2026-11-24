@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
+import { useSeason } from "@/shared/season/SeasonContext";
 import { ToadArt } from "./ToadArt";
 import type { ToadMood } from "./toadMood";
 
@@ -12,6 +13,8 @@ const SETTLE_MS = 380; // chờ hộp thoại bung xong rồi mới đo vị tr�
 const NARROW = 640; // dưới mức này (điện thoại): cóc nổi ở góc màn hình, bong bóng nằm bên cạnh và tự mờ đi
 const BUBBLE_SHOW_MS = 6500; // điện thoại: bong bóng hiện chừng này rồi mờ để khỏi che bảng điểm
 const CONFETTI = ["#ffc61f", "#e53935", "#43a047", "#1e88e5", "#ab47bc", "#ff8f00"];
+// Mùa Giáng sinh: pháo giấy đỏ / xanh thông / vàng
+const XMAS_CONFETTI = ["var(--xmas-red)", "var(--xmas-green)", "var(--xmas-gold)"];
 
 interface Place {
   scale: number; // tỉ lệ kích thước cóc (nhỏ hơn trên điện thoại)
@@ -86,6 +89,7 @@ export function ResultToad({ mood, say }: { mood: ToadMood; say: string }) {
   }, [corner]);
 
   const party = mood === "happy" || mood === "star" || mood === "perfect";
+  const confetti = useSeason().showDecor ? XMAS_CONFETTI : CONFETTI;
   const layerStyle = pos
     ? ({ left: pos.cx, top: pos.top, width: TOAD_W * pos.scale, marginLeft: (-TOAD_W * pos.scale) / 2, "--bshift": `${pos.shift}px`, "--tail": `${-pos.shift}px`, "--bw": `${pos.bubbleW}px` } as CSSProperties)
     : undefined;
@@ -114,7 +118,7 @@ export function ResultToad({ mood, say }: { mood: ToadMood; say: string }) {
                     style={
                       {
                         left: `${(i * 37) % 100}%`,
-                        background: CONFETTI[i % CONFETTI.length],
+                        background: confetti[i % confetti.length],
                         "--delay": `${1.1 + ((i * 53) % 90) / 100}s`,
                         "--dur": `${1.6 + ((i * 29) % 12) / 10}s`,
                         "--spin": `${(i % 2 ? 1 : -1) * (240 + ((i * 41) % 200))}deg`,
