@@ -50,10 +50,12 @@ let generation = 0;
 async function usableExams(): Promise<UsableExam[]> {
   if (examCache && Date.now() - examCache.at < CACHE_MS) return examCache.exams;
   const gen = generation;
-  const [exams, counts] = await Promise.all([
+  const [exams, counts, withFiles] = await Promise.all([
     prisma.exam.findMany({ where: { answerSource: { in: CATALOG_ANSWER_SOURCES } }, select: { id: true, threadId: true, title: true, subjectCode: true, totalQuestions: true, createdAt: true, postedAt: true, kind: true } }),
     prisma.examQuestion.groupBy({ by: ["examId", "isReference"], _count: { _all: true } }),
+    prisma.examAttachment.groupBy({ by: ["examId"] }),
   ]);
+  const filesOnly = new Set(withFiles.map((f) => f.examId)); // đề tài nguyên: không có câu hỏi, chỉ có tệp
   const all = new Map<string, number>(); // tất cả ảnh đã lưu (gồm tài liệu tham khảo): so với totalQuestions để biết đã lấy đủ chưa
   const real = new Map<string, number>(); // số câu hỏi thật
   for (const c of counts) {
@@ -61,7 +63,7 @@ async function usableExams(): Promise<UsableExam[]> {
     if (!c.isReference) real.set(c.examId, c._count._all);
   }
   const list = exams
-    .filter((e) => (real.get(e.id) ?? 0) > 0 && (all.get(e.id) ?? 0) >= e.totalQuestions)
+    .filter((e) => ((real.get(e.id) ?? 0) > 0 && (all.get(e.id) ?? 0) >= e.totalQuestions) || (e.totalQuestions === 0 && filesOnly.has(e.id)))
     .map((e) => ({ id: e.id, threadId: e.threadId, title: e.title, questions: real.get(e.id) ?? 0, createdAt: e.createdAt, postedAt: e.postedAt, code: subjectOfExam(e), kind: e.kind }));
   if (gen === generation) examCache = { at: Date.now(), exams: list };
   return list;

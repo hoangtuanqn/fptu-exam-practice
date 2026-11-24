@@ -4,8 +4,9 @@ import path from "node:path";
 import sharp from "sharp";
 import { storageDir } from "../configs/env";
 import { prisma } from "../configs/prisma";
-import { EXAM_IMAGES_DIR, EXAM_STORAGE_DIR } from "../constants/crawler";
+import { EXAM_FILES_DIR, EXAM_IMAGES_DIR, EXAM_STORAGE_DIR } from "../constants/crawler";
 import {
+  EXAM_RESOURCE_NAME_MAX_BYTES,
   EXAM_UPLOAD_INPUT_MAX_PIXELS,
   EXAM_UPLOAD_KEEP_MAX_BYTES,
   EXAM_UPLOAD_KEEP_MAX_SIDE,
@@ -17,12 +18,14 @@ import {
 import { HTTP_STATUS } from "../constants/httpStatus";
 import { examUploadQueue } from "../jobs/exam-upload.queue";
 import { realtimeHub } from "../realtime/hub";
+import { examAttachmentRepository, type NewAttachment } from "../repositories/exam-attachment.repository";
 import { examGapRepository } from "../repositories/exam-gap.repository";
 import { examRepository, isDuplicateThread, type AnswerSource } from "../repositories/exam.repository";
 import { AppError } from "../rules/error";
 import type { ExamGapFilter, ExamGapsQuery, UpdateExamImagesBody, UploadExamBody } from "../rules/requests/exam-upload.request";
 import { isWebpSignature } from "../utils/exam-contribution";
-import { baseName, parseAnswersJson, planUploadNumbers } from "../utils/exam-upload";
+import { attachmentType } from "../utils/attachment";
+import { baseName, parseAnswersJson, planUploadNumbers, resourceFileNames } from "../utils/exam-upload";
 import { resolveInside } from "../utils/exam-zip";
 import { createKeyLock } from "../utils/key-lock";
 import type { StagedFile } from "../utils/upload-queue";
@@ -232,6 +235,66 @@ export const adminExamUploadService = {
    */
   async create(adminId: string, body: UploadExamBody, files: MemFile[]) {
     return runCreate(adminId, await prepareCreate(body, files), files);
+  },
+
+  /**
+   * Thư mục tài liệu (không có images/ + ans.json): đề 0 câu, nguồn đáp án DEFAULT, các tệp lưu thành tệp đính kèm
+   * ở exams/<threadId>/files/<hex>-<tên>. Tệp có đuôi không được phép thì bỏ qua và trả tên trong `skipped`.
+   */
+  async createResource(adminId: string, body: UploadExamBody, files: MemFile[]) {
+    const title = body.title;
+    if (!title) throw invalid("Vui lòng nhập tiêu đề đề thi", "title");
+    // multer 1.x đọc tên tệp theo latin1 còn trình duyệt gửi UTF-8: đổi lại để giữ tên tiếng Việt
+    const all = files.map((f) => ({ buffer: f.buffer, name: baseName(Buffer.from(f.originalname, "latin1").toString("utf8")) }));
+    const kept = all.filter((f) => attachmentType(f.name));
+    const skipped = all.filter((f) => !attachmentType(f.name)).map((f) => f.name);
+    if (!kept.length) throw invalid("Thư mục không có tệp nào dùng được. Chỉ nhận PDF, ZIP/RAR/7Z, TXT/MD, âm thanh (MP3, WAV, OGG...) và video (MP4, WEBM, MOV...).", "files");
+
+    const threadId = `${MANUAL_THREAD_PREFIX}${randomBytes(MANUAL_THREAD_HEX_BYTES).toString("hex")}`;
+    const dir = path.join(storageDir, EXAM_STORAGE_DIR, threadId, EXAM_FILES_DIR);
+    const names = resourceFileNames(
+      kept.map((f) => f.name),
+      EXAM_RESOURCE_NAME_MAX_BYTES,
+    );
+    const written: string[] = [];
+    let examId: string;
+    try {
+      await fs.mkdir(dir, { recursive: true });
+      const rows: NewAttachment[] = [];
+      for (const [i, f] of kept.entries()) {
+        const name = names[i]!;
+        const file = `${randomBytes(4).toString("hex")}-${name}`;
+        const abs = path.join(dir, file);
+        await fs.writeFile(abs, f.buffer, { flag: "wx" });
+        written.push(abs);
+        rows.push({ name, filePath: `${EXAM_STORAGE_DIR}/${threadId}/${EXAM_FILES_DIR}/${file}`, mime: attachmentType(f.name)!.mime, sizeBytes: f.buffer.length, sourceUrl: "" });
+      }
+      examId = await prisma.$transaction(
+        async (tx) => {
+          const { id } = await examRepository.createUploaded(tx, {
+            threadId,
+            title,
+            subjectCode: body.subjectCode,
+            kind: body.kind ?? "FE",
+            postedAt: null,
+            sourceUrl: "",
+            totalQuestions: 0,
+            answerSource: "DEFAULT",
+            createdById: adminId,
+          });
+          await examAttachmentRepository.add(id, rows, tx);
+          return id;
+        },
+        { timeout: EXAM_UPLOAD_TX_TIMEOUT_MS },
+      );
+    } catch (err) {
+      await removeFiles(written);
+      await fs.rm(path.join(storageDir, EXAM_STORAGE_DIR, threadId), { recursive: true, force: true }).catch(() => undefined); // threadId mới: thư mục chỉ chứa tệp vừa ghi
+      throw err;
+    }
+    console.log(`[admin] #${adminId} tải tài liệu #${examId}: ${kept.length} tệp, bỏ qua ${skipped.length}`);
+    published(examId);
+    return { id: examId, title, files: kept.length, skipped };
   },
 
   /** Như create nhưng chạy nền: kiểm tra nhanh, ghi tệp tạm, xếp hàng rồi trả về lượt vừa xếp (kết quả xem ở jobs / realtime) */

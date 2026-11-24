@@ -53,7 +53,7 @@ export function PublicExamList({ code, pageSize }: { code: string; pageSize?: nu
                       </div>
                       <p className="md-body-small flex flex-wrap items-center gap-x-3 text-on-surface-variant">
                         {e.postedAt && <span>{formatDate(e.postedAt)}</span>}
-                        {e.questions !== null ? <span>{e.questions} câu</span> : null}
+                        {e.questions ? <span>{e.questions} câu</span> : null}
                       </p>
                     </div>
                     <ExamAction item={e} loggedIn={!!user} target={target} price={isPro(user) ? 0 : e.kind === "PE" ? (data.pePrice ?? data.price) : data.price} />

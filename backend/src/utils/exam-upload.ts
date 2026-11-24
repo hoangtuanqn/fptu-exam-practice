@@ -1,4 +1,6 @@
+import path from "node:path";
 import { EXAM_UPLOAD_NAMES_SHOWN } from "../constants/exam-upload";
+import { sanitizeName } from "./filename";
 
 // Admin tải đề lên bằng tay: thư mục images/Q<số>.webp + ans.json {"Q1.webp": ["B"], "Q2.webp": ["A", "C"]}. Logic thuần, không DB.
 
@@ -14,6 +16,25 @@ export function questionNumberOf(name: string): number | null {
   const m = QUESTION_FILE.exec(baseName(name));
   const n = m ? Number(m[1]) : 0;
   return n >= 1 ? n : null;
+}
+
+/**
+ * Tên lưu của từng tệp tài liệu (cùng thứ tự): bỏ thư mục và ký tự cấm, cắt phần tên cho vừa maxBytes (giữ đuôi),
+ * trùng tên (không phân biệt hoa thường) thì thêm -2, -3... trước đuôi.
+ */
+export function resourceFileNames(names: string[], maxBytes: number): string[] {
+  const used = new Set<string>();
+  return names.map((raw) => {
+    const clean = sanitizeName(baseName(raw), "file");
+    const ext = path.extname(clean);
+    const stem = Array.from(clean.slice(0, clean.length - ext.length));
+    while (stem.length > 1 && Buffer.byteLength(stem.join("") + ext) > maxBytes) stem.pop();
+    const base = stem.join("");
+    let name = base + ext;
+    for (let n = 2; used.has(name.toLowerCase()); n++) name = `${base}-${n}${ext}`;
+    used.add(name.toLowerCase());
+    return name;
+  });
 }
 
 const list = (items: (string | number)[]) =>

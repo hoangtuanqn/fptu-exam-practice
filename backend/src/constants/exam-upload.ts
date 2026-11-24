@@ -17,6 +17,9 @@ export const EXAM_UPLOAD_INPUT_MAX_PIXELS = 50_000_000; // chặn ảnh "bom gi�
 export const MANUAL_THREAD_PREFIX = "m";
 export const MANUAL_THREAD_HEX_BYTES = 6;
 
+// Thư mục tài liệu (không phải đề trắc nghiệm): tên tệp lưu tối đa bấy nhiêu byte, để "<hex>-<tên>" vừa tên tệp trên đĩa và file_path VarChar(255)
+export const EXAM_RESOURCE_NAME_MAX_BYTES = 200;
+
 export const EXAM_UPLOAD_NAMES_SHOWN = 10; // số tên tệp lỗi liệt kê trong lời nhắn
 export const EXAM_GAP_QUERY_MAX = 60;
 export const EXAM_UPLOAD_TX_TIMEOUT_MS = 60_000; // một transaction ghi tối đa 100 câu

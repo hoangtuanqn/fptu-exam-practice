@@ -110,7 +110,7 @@ function SearchDialog({ onClose }: { onClose: () => void }) {
         key: `e-${e.examId}`,
         group: "Đề thi",
         label: e.title,
-        hint: [e.subjectCode, e.questions != null ? `${e.questions} câu` : null]
+        hint: [e.subjectCode, e.questions ? `${e.questions} câu` : null]
           .filter(Boolean)
           .join(" · "),
         to: `/exam/${e.examId}`,

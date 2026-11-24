@@ -18,6 +18,11 @@ export const adminExamUploadController = {
     res.status(data.created ? HTTP_STATUS.CREATED : HTTP_STATUS.OK).json(new ResponseClient({ message: `Đã lưu đề ${data.questions} câu`, data }));
   },
 
+  async uploadResource(req: Request, res: Response) {
+    const data = await adminExamUploadService.createResource(req.user!.id, getValidated<UploadExamBody>(res), filesOf(req));
+    res.status(HTTP_STATUS.CREATED).json(new ResponseClient({ message: `Đã lưu ${data.files} tệp tài liệu`, data }));
+  },
+
   async updateImages(req: Request, res: Response) {
     const { id } = getValidated<UuidParam>(res, "params");
     if (isAsyncUpload(req)) return void queued(res, await adminExamUploadService.updateImagesAsync(req.user!.id, id, getValidated<UpdateExamImagesBody>(res), filesOf(req)));

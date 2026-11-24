@@ -10,18 +10,19 @@ import { SubjectCombobox } from "@/features/subject/SubjectCombobox";
 import { subjectApi } from "@/features/subject/subject.api";
 import { MAX_TOTAL_BYTES } from "@/features/exam-contribution/limits";
 import { examUploadApi, KIND_LABEL, type ExamKind, type UploadJob } from "./exam-upload.api";
-import { ansPathOf, checkFolder, findRoot, type FolderCheck, type FolderEntry } from "./folder";
+import { ansPathOf, checkFolder, checkResources, findRoot, isQuizFolder, type FolderCheck, type FolderEntry, type ResourceCheck } from "./folder";
 import { FolderPicker } from "./FolderPicker";
 import { FolderPreview } from "./FolderPreview";
+import { ResourcePreview } from "./ResourcePreview";
 
 export type UploadTarget =
   | { mode: "create"; title?: string; subjectCode?: string | null; kind?: ExamKind | null }
   | { mode: "update"; examId: string; title: string; questions: number };
 
 const KINDS = Object.keys(KIND_LABEL) as ExamKind[];
-const FIELDS = ["title", "subjectCode", "kind", "images", "answers"];
+const FIELDS = ["title", "subjectCode", "kind", "images", "answers", "files"];
 
-// Tải đề từ một thư mục (images/Qn.webp + ans.json): tạo đề mới, hoặc bổ sung/thay ảnh cho đề đã có
+// Tải đề từ một thư mục (images/Qn.webp + ans.json): tạo đề mới, hoặc bổ sung/thay ảnh cho đề đã có. Tạo mới từ thư mục khác thì lưu thành tài liệu
 interface Props {
   target: UploadTarget;
   onDone: (job: UploadJob) => void; // máy chủ đã nhận đề, xử lý tiếp chạy nền
@@ -38,6 +39,7 @@ export function ExamUploadForm({ target, onDone, onBusy, onCancel }: Props) {
   const [subjectCode, setSubjectCode] = useState(create ? (target.subjectCode ?? "") : "");
   const [kind, setKind] = useState<ExamKind>(create && target.kind ? target.kind : "FE");
   const [folder, setFolder] = useState<{ check: FolderCheck<File>; ansJson: string | null } | null>(null);
+  const [resource, setResource] = useState<ResourceCheck<File> | null>(null);
   const [missing, setMissing] = useState<{ title?: string; subjectCode?: string; folder?: string }>({});
   const busy = submit.loading;
   useEffect(() => {
@@ -47,6 +49,13 @@ export function ExamUploadForm({ target, onDone, onBusy, onCancel }: Props) {
   const pick = async (entries: FolderEntry<File>[]) => {
     submit.clear();
     setMissing((m) => ({ ...m, folder: undefined }));
+    // Tạo mới mà thiếu images/ hoặc ans.json: lưu thành tài liệu. Bổ sung ảnh luôn đi đường đề trắc nghiệm
+    const asResource = create && !isQuizFolder(entries.map((e) => e.path));
+    setResource(asResource ? checkResources(entries) : null);
+    if (asResource) {
+      setFolder(null);
+      return;
+    }
     const { root } = findRoot(entries.map((e) => e.path));
     const ans = root === null ? undefined : entries.find((e) => e.path === ansPathOf(root));
     let ansJson: string | null = null;
@@ -62,14 +71,24 @@ export function ExamUploadForm({ target, onDone, onBusy, onCancel }: Props) {
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const check = folder?.check;
-    const total = check?.items.reduce((s, i) => s + i.file.size, 0) ?? 0;
+    const total = resource ? resource.files.reduce((s, f) => s + f.file.size, 0) : (check?.items.reduce((s, i) => s + i.file.size, 0) ?? 0);
     const next = {
       title: create && !title.trim() ? "Nhập tên đề" : undefined,
       subjectCode: create && !subjectCode ? "Chọn môn của đề" : undefined,
-      folder: !check ? "Chọn thư mục đề" : total > MAX_TOTAL_BYTES ? "Tổng dung lượng ảnh quá lớn. Hãy chia thành nhiều lần tải." : undefined,
+      folder: !check && !resource ? "Chọn thư mục đề" : total > MAX_TOTAL_BYTES ? `Tổng dung lượng ${resource ? "tệp" : "ảnh"} quá lớn. Hãy chia thành nhiều lần tải.` : undefined,
     };
     setMissing(next);
-    if (next.title || next.subjectCode || next.folder || !folder || !check || check.errors.length) return;
+    if (next.title || next.subjectCode || next.folder) return;
+    if (resource) {
+      if (resource.errors.length) return;
+      void submit.run(async () => {
+        const r = await examUploadApi.createResource({ title, subjectCode, kind, files: resource.files.map((f) => f.file) });
+        // Lưu xong ngay: đưa về dạng lượt đã xong, không có uploadId (useUploadJobs.add báo đã lưu và tải lại trang)
+        onDone({ kind: "create", title: r.title, status: "DONE", files: r.files, error: null, result: { id: r.id, questions: 0, answered: 0 } });
+      });
+      return;
+    }
+    if (!folder || !check || check.errors.length) return;
     if (!create && check.replaced.length) {
       const ok = await confirm({
         title: `Thay ảnh ${check.replaced.length} câu?`,
@@ -89,7 +108,8 @@ export function ExamUploadForm({ target, onDone, onBusy, onCancel }: Props) {
   };
 
   const check = folder?.check;
-  const blocked = !!check?.errors.length;
+  const notes = check ?? resource;
+  const blocked = !!notes?.errors.length;
   return (
     <form onSubmit={(e) => void onSubmit(e)} className="space-y-4" noValidate>
       {confirmDialog}
@@ -122,33 +142,40 @@ export function ExamUploadForm({ target, onDone, onBusy, onCancel }: Props) {
         </p>
       )}
 
-      <FolderPicker onPick={(entries) => void pick(entries)} disabled={busy} error={missing.folder ?? submit.fieldErrors.images ?? submit.fieldErrors.answers} />
+      <FolderPicker onPick={(entries) => void pick(entries)} disabled={busy} error={missing.folder ?? submit.fieldErrors.images ?? submit.fieldErrors.answers ?? submit.fieldErrors.files} />
 
-      {check && (
+      {resource && (
+        <p className="md-body-medium rounded-m3-sm bg-secondary-container px-4 py-3 text-on-secondary-container">
+          Thư mục này không phải đề trắc nghiệm (cần images/ và ans.json) nên sẽ lưu thành tài nguyên: sinh viên mở hoặc tải các tệp về, không làm bài và không chấm điểm.
+        </p>
+      )}
+
+      {notes && (
         <>
-          {check.root !== null && check.root !== "" && <p className="md-body-small break-words text-on-surface-variant">Thư mục đề: {check.root}</p>}
-          {check.errors.length > 0 && (
+          {check && check.root !== null && check.root !== "" && <p className="md-body-small break-words text-on-surface-variant">Thư mục đề: {check.root}</p>}
+          {notes.errors.length > 0 && (
             <ul role="alert" className="md-body-medium list-disc space-y-1 break-words rounded-m3-sm bg-error-container py-3 pl-8 pr-4 text-on-error-container">
-              {check.errors.map((m) => (
+              {notes.errors.map((m) => (
                 <li key={m}>{m}</li>
               ))}
             </ul>
           )}
-          {check.warnings.length > 0 && (
+          {notes.warnings.length > 0 && (
             <ul className="md-body-medium list-disc space-y-1 break-words rounded-m3-sm bg-warning-container py-3 pl-8 pr-4 text-on-warning-container">
-              {check.warnings.map((m) => (
+              {notes.warnings.map((m) => (
                 <li key={m}>{m}</li>
               ))}
             </ul>
           )}
-          {check.items.length > 0 && <FolderPreview items={check.items} replaced={check.replaced} />}
+          {check && check.items.length > 0 && <FolderPreview items={check.items} replaced={check.replaced} />}
+          {resource && <ResourcePreview check={resource} />}
         </>
       )}
 
       {busy && (
         <div className="space-y-1.5">
-          <p className="md-body-small text-on-surface-variant">Đang tải {check?.items.length ?? 0} ảnh lên, đừng đóng trang nhé…</p>
-          <LinearProgress label="Đang tải ảnh lên" />
+          <p className="md-body-small text-on-surface-variant">{resource ? `Đang tải ${resource.files.length} tệp lên` : `Đang tải ${check?.items.length ?? 0} ảnh lên`}, đừng đóng trang nhé…</p>
+          <LinearProgress label={resource ? "Đang tải tệp lên" : "Đang tải ảnh lên"} />
         </div>
       )}
       <FormError message={submit.error} />
@@ -159,7 +186,7 @@ export function ExamUploadForm({ target, onDone, onBusy, onCancel }: Props) {
           </Button>
         )}
         <Button type="submit" variant="primary" disabled={busy || blocked || submit.retryIn > 0}>
-          <Upload size={16} aria-hidden /> {busy ? "Đang tải lên…" : submit.retryIn > 0 ? `Thử lại sau ${submit.retryIn} giây` : create ? "Tạo đề" : "Tải ảnh lên"}
+          <Upload size={16} aria-hidden /> {busy ? "Đang tải lên…" : submit.retryIn > 0 ? `Thử lại sau ${submit.retryIn} giây` : resource ? "Lưu tài liệu" : create ? "Tạo đề" : "Tải ảnh lên"}
         </Button>
       </div>
     </form>
