@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Upload } from "lucide-react";
+import { ApiError } from "@/shared/api/client";
 import { useApi } from "@/shared/hooks/useApi";
 import { useSubmit } from "@/shared/hooks/useSubmit";
 import { Button } from "@/shared/ui/Button";
@@ -68,6 +69,22 @@ export function ExamUploadForm({ target, onDone, onBusy, onCancel }: Props) {
     setFolder({ check: checkFolder(entries, ansJson, create ? undefined : target.questions), ansJson });
   };
 
+  // Tên đề đã có: hỏi admin, đồng ý thì gửi lại với overwrite (thay tệp/ảnh cũ bằng bản mới). undefined = admin không đồng ý
+  const sendOrOverwrite = async <T,>(send: (overwrite: boolean) => Promise<T>): Promise<T | undefined> => {
+    try {
+      return await send(false);
+    } catch (err) {
+      if (!(err instanceof ApiError) || err.code !== "EXAM_TITLE_EXISTS") throw err;
+      const ok = await confirm({
+        title: "Đề này đã có, ghi đè?",
+        message: <>Đã có đề tên "{title.trim()}". Ghi đè sẽ thay {resource ? "toàn bộ tệp tài liệu cũ bằng các tệp mới" : "ảnh và đáp án các câu trùng số của đề cũ bằng bản mới"}. Dữ liệu cũ không khôi phục được.</>,
+        confirmLabel: "Ghi đè",
+        tone: "danger",
+      });
+      return ok ? send(true) : undefined;
+    }
+  };
+
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const check = folder?.check;
@@ -82,7 +99,8 @@ export function ExamUploadForm({ target, onDone, onBusy, onCancel }: Props) {
     if (resource) {
       if (resource.errors.length) return;
       void submit.run(async () => {
-        const r = await examUploadApi.createResource({ title, subjectCode, kind, files: resource.files.map((f) => f.file) });
+        const r = await sendOrOverwrite((overwrite) => examUploadApi.createResource({ title, subjectCode, kind, files: resource.files.map((f) => f.file), overwrite }));
+        if (!r) return;
         // Lưu xong ngay: đưa về dạng lượt đã xong, không có uploadId (useUploadJobs.add báo đã lưu và tải lại trang)
         onDone({ kind: "create", title: r.title, status: "DONE", files: r.files, error: null, result: { id: r.id, questions: 0, answered: 0 } });
       });
@@ -100,10 +118,8 @@ export function ExamUploadForm({ target, onDone, onBusy, onCancel }: Props) {
     }
     const input = { images: check.items.map((i) => i.file), ansJson: folder.ansJson };
     void submit.run(async () => {
-      const r = create
-        ? await examUploadApi.create({ ...input, title, subjectCode, kind })
-        : await examUploadApi.addImages(target.examId, input);
-      onDone(r);
+      const r = create ? await sendOrOverwrite((overwrite) => examUploadApi.create({ ...input, title, subjectCode, kind, overwrite })) : await examUploadApi.addImages(target.examId, input);
+      if (r) onDone(r);
     });
   };
 

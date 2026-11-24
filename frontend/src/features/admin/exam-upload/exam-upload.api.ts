@@ -68,18 +68,19 @@ function uploadForm({ images, ansJson }: UploadInput, fields: Record<string, str
 export const examUploadApi = {
   gaps: (f: GapFilter) => http.list<ExamGapItem>("/admin/exam-gaps", { gap: f.gap, kind: f.kind, subject: f.subject, q: f.q, page: f.page, limit: PAGE_SIZE }),
   summary: () => http.get<ExamGapSummary>("/admin/exam-gaps/summary"),
-  create: ({ title, subjectCode, kind, ...rest }: CreateExamInput) => {
-    const form = uploadForm(rest, { title: title.trim(), subjectCode, kind });
+  create: ({ title, subjectCode, kind, overwrite, ...rest }: CreateExamInput & { overwrite?: boolean }) => {
+    const form = uploadForm(rest, { title: title.trim(), subjectCode, kind, overwrite: overwrite ? "1" : undefined });
     return sendForm<UploadJob>("POST", "/admin/exams/upload?async=1", form);
   },
-  // Thư mục tài liệu (không phải đề trắc nghiệm): máy chủ lưu ngay, tệp có đuôi không nhận thì trả trong `skipped`
-  createResource: ({ title, subjectCode, kind, files }: Omit<CreateExamInput, keyof UploadInput> & { files: File[] }) => {
+  // Thư mục tài liệu (không phải đề trắc nghiệm): máy chủ lưu ngay mọi tệp. overwrite: tên đề đã có thì thay tệp của đề đó
+  createResource: ({ title, subjectCode, kind, files, overwrite }: Omit<CreateExamInput, keyof UploadInput> & { files: File[]; overwrite?: boolean }) => {
     const form = new FormData();
     form.append("title", title.trim());
     form.append("subjectCode", subjectCode);
     form.append("kind", kind);
+    if (overwrite) form.append("overwrite", "1");
     for (const f of files) form.append("files", f, f.name);
-    return sendForm<{ id: string; title: string; files: number; skipped?: string[] }>("POST", "/admin/exams/upload-resource", form);
+    return sendForm<{ id: string; title: string; files: number }>("POST", "/admin/exams/upload-resource", form);
   },
   addImages: (examId: string, input: UploadInput) => {
     return sendForm<UploadJob>("POST", `/admin/exams/${encodeURIComponent(examId)}/images?async=1`, uploadForm(input));
