@@ -32,10 +32,10 @@ export interface NewExam {
 
 export const examRepository = {
   findByThreadId: (threadId: string) => prisma.exam.findUnique({ where: { threadId } }),
-  /** Đã có đề cùng tên chưa: bỏ khoảng trắng, không phân biệt hoa thường (collation của cột), nên "A - FA26 - FE" và "a - fa26- fe" là một */
-  async titleExists(title: string) {
-    const rows = await prisma.$queryRaw<{ id: string }[]>`SELECT id FROM exams WHERE REPLACE(title, ' ', '') = ${title.replace(/\s+/g, "")} LIMIT 1`;
-    return rows.length > 0;
+  /** Đề cùng tên (bỏ khoảng trắng, không phân biệt hoa thường nhờ collation của cột): "A - FA26 - FE" và "a - fa26- fe" là một */
+  async findByTitle(title: string) {
+    const rows = await prisma.$queryRaw<{ id: string; threadId: string }[]>`SELECT id, thread_id AS threadId FROM exams WHERE REPLACE(title, ' ', '') = ${title.replace(/\s+/g, "")} LIMIT 1`;
+    return rows[0] ?? null;
   },
   findById: (id: string) => prisma.exam.findUnique({ where: { id } }),
 
