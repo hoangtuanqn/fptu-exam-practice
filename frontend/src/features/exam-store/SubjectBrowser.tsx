@@ -133,7 +133,7 @@ function ExamList({ code, onBack, compact }: { code: string; onBack: () => void;
                         </div>
                         <p className="md-body-small flex flex-wrap items-center gap-x-3 text-on-surface-variant">
                           {e.postedAt && <span>{formatDate(e.postedAt)}</span>}
-                          {e.questions !== null ? <span>{e.questions} câu</span> : null}
+                          {e.questions ? <span>{e.questions} câu</span> : null}
                         </p>
                       </div>
                       <Button size="sm" variant="tonal" onClick={() => void pick(e)} disabled={busy !== null}>
