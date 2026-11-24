@@ -33,6 +33,7 @@ const DESC: Record<string, string> = {
   "/admin/promotions": "Ưu đãi, khuyến mãi hiển thị cho người dùng",
   "/admin/marketing": "Gửi email marketing",
   "/admin/system-notices": "Gửi thông báo tới người dùng",
+  "/admin/season": "Bật/tắt giao diện Giáng sinh cho toàn website",
   "/admin/link-rewards": "Cấu hình lượt miễn phí khi vượt link",
   "/admin/coursera": "Quản lý dịch vụ Coursera",
 };

@@ -94,6 +94,7 @@ export const PRIVATE_PAGES: Record<string, PageSeo> = {
   "/admin/referrals": { title: "Quản trị: giới thiệu", description: "Theo dõi lượt giới thiệu và thưởng." },
   "/admin/account-settings": { title: "Quản trị: cấu hình đăng ký", description: "Thiết lập tặng credit và quy tắc đăng ký." },
   "/admin/promotions": { title: "Quản trị: ưu đãi và khuyến mãi", description: "Cấu hình mốc thưởng nạp tiền và ưu đãi." },
+  "/admin/season": { title: "Quản trị: giao diện mùa", description: "Bật hoặc tắt giao diện Giáng sinh cho toàn website." },
   "/admin/wallet": { title: "Quản trị: biến động số dư", description: "Lịch sử cộng trừ credit của toàn bộ thành viên." },
   "/admin/crawl-jobs": { title: "Quản trị: lịch sử lấy đề", description: "Phí mở đề, các lượt lấy đề trước đây và trạng thái từng lượt." },
   "/admin/attempts": { title: "Quản trị: lịch sử làm bài", description: "Các lượt làm bài của thành viên." },
