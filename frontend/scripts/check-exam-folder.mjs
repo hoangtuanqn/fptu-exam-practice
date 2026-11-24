@@ -1,6 +1,6 @@
 // Self-check for the admin exam folder validator. Run: node scripts/check-exam-folder.mjs (Node >= 23, strips TS types)
 import assert from "node:assert/strict";
-import { checkFolder, checkResources, findRoot, isQuizFolder, parseAnsJson } from "../src/features/admin/exam-upload/folder.ts";
+import { nameFromFolder, checkFolder, checkResources, findRoot, isQuizFolder, parseAnsJson } from "../src/features/admin/exam-upload/folder.ts";
 
 const img = (path, size = 1000) => ({ path, file: { size, name: path.split("/").pop() } });
 const folder = (root, n, extra = []) => [...Array.from({ length: n }, (_, i) => img(`${root}images/Q${i + 1}.webp`)), img(`${root}ans.json`, 10), ...extra];
@@ -68,5 +68,11 @@ assert.equal(noAns.files.length, 2);
 assert.equal(checkResources([img("x.exe")]).errors.length, 0);
 assert.equal(checkResources([]).errors.length, 1);
 assert.ok(checkResources(Array.from({ length: 101 }, (_, i) => img(`${i}.pdf`))).errors.some((e) => e.includes("101")));
+
+// Tên đề + mã môn lấy từ tên thư mục đã chọn
+assert.deepEqual(nameFromFolder(["ENM302 - SU26 - B5 - FE - L/images/Q1.webp"]), { title: "ENM302 - SU26 - B5 - FE - L", subjectCode: "ENM302" });
+assert.equal(nameFromFolder(["pro192m_x/a.pdf"])?.subjectCode, "PRO192M");
+assert.equal(nameFromFolder(["Đề lẻ/a.pdf"])?.subjectCode, null);
+assert.equal(nameFromFolder(["a.pdf"]), null);
 
 console.log("check-exam-folder: ok");

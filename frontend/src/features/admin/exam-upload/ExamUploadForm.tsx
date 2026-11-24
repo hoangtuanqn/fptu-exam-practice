@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Upload } from "lucide-react";
 import { ApiError } from "@/shared/api/client";
 import { useApi } from "@/shared/hooks/useApi";
@@ -11,7 +11,7 @@ import { SubjectCombobox } from "@/features/subject/SubjectCombobox";
 import { subjectApi } from "@/features/subject/subject.api";
 import { MAX_TOTAL_BYTES } from "@/features/exam-contribution/limits";
 import { examUploadApi, KIND_LABEL, type ExamKind, type UploadJob } from "./exam-upload.api";
-import { ansPathOf, checkFolder, checkResources, findRoot, isQuizFolder, type FolderCheck, type FolderEntry, type ResourceCheck } from "./folder";
+import { ansPathOf, checkFolder, checkResources, findRoot, isQuizFolder, nameFromFolder, type FolderCheck, type FolderEntry, type ResourceCheck } from "./folder";
 import { FolderPicker } from "./FolderPicker";
 import { FolderPreview } from "./FolderPreview";
 import { ResourcePreview } from "./ResourcePreview";
@@ -42,6 +42,7 @@ export function ExamUploadForm({ target, onDone, onBusy, onCancel }: Props) {
   const [folder, setFolder] = useState<{ check: FolderCheck<File>; ansJson: string | null } | null>(null);
   const [resource, setResource] = useState<ResourceCheck<File> | null>(null);
   const [missing, setMissing] = useState<{ title?: string; subjectCode?: string; folder?: string }>({});
+  const auto = useRef({ title: "", subjectCode: "" }); // giá trị đã tự điền từ tên thư mục: chọn thư mục khác thì được đổi theo, admin đã tự sửa thì giữ
   const busy = submit.loading;
   useEffect(() => {
     onBusy?.(busy);
@@ -50,6 +51,20 @@ export function ExamUploadForm({ target, onDone, onBusy, onCancel }: Props) {
   const pick = async (entries: FolderEntry<File>[]) => {
     submit.clear();
     setMissing((m) => ({ ...m, folder: undefined }));
+    const named = create ? nameFromFolder(entries.map((e) => e.path)) : null;
+    if (named) {
+      if (!title.trim() || title === auto.current.title) {
+        setTitle(named.title);
+        auto.current.title = named.title;
+        setMissing((m) => ({ ...m, title: undefined }));
+      }
+      const known = named.subjectCode && subjects.data?.some((s) => s.code === named.subjectCode);
+      if (known && (!subjectCode || subjectCode === auto.current.subjectCode)) {
+        setSubjectCode(named.subjectCode!);
+        auto.current.subjectCode = named.subjectCode!;
+        setMissing((m) => ({ ...m, subjectCode: undefined }));
+      }
+    }
     // Tạo mới mà thiếu images/ hoặc ans.json: lưu thành tài liệu. Bổ sung ảnh luôn đi đường đề trắc nghiệm
     const asResource = create && !isQuizFolder(entries.map((e) => e.path));
     setResource(asResource ? checkResources(entries) : null);
