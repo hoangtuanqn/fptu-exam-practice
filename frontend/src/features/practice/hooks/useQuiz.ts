@@ -66,6 +66,7 @@ export function useQuiz() {
   const [resumedElapsed, setResumedElapsed] = useState(0); // số giây đã làm ở lượt được làm tiếp
   const [violations, setViolations] = useState<Violation[]>([]); // các lần rời khỏi bài thi toàn màn hình (chế độ Thi)
   const [trialLocked, setTrialLocked] = useState(0); // đề xem thử: số câu còn khoá (0 = đề đã mở khoá đủ)
+  const [trialAttempts, setTrialAttempts] = useState(0); // đề xem thử: số lượt đã làm đề (đếm thật), 0 = không rõ
   const [choosing, setChoosing] = useState(false); // đề đã mở sẵn phía sau nhưng người dùng chưa chọn chế độ: chưa tính giờ, chưa tạo lượt làm
 
   // Đồng hồ chỉ chạy khi có đáp án để làm: chờ AI phân tích xong mới bắt đầu tính, dừng khi nộp bài
@@ -330,6 +331,8 @@ export function useQuiz() {
     closeExam,
     trialLocked,
     slots,
+    trialAttempts,
+    setTrialAttempts,
     setTrialLocked,
     unlockTrial,
     applyAnswers,

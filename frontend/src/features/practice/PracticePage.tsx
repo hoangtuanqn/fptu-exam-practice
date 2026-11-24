@@ -252,6 +252,7 @@ export default function PracticePage({ examId }: Props) {
         // Đề chưa mở khoá: làm thử vài câu đầu như đề bình thường (không lưu), các câu còn lại khoá
         const examTotal = exam.trial ? exam.questions.length : exam.totalQuestions;
         quiz.setTrialLocked(exam.trial?.locked ?? 0);
+        quiz.setTrialAttempts(exam.trial?.attempts ?? 0);
         // Bộ đề theo chương (?t=chương&t=chương): chỉ giữ các câu thuộc những chương đã chọn
         const chapters = new Set(params.getAll("t"));
         if (chapters.size > 0) {
