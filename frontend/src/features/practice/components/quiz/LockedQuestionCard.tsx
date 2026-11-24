@@ -1,0 +1,69 @@
+import { Link } from "react-router-dom";
+import { ChevronLeft, Crown, Loader2, Lock, Unlock } from "lucide-react";
+import { useAuth } from "@/features/auth/AuthContext";
+import { examApi } from "@/features/exam/exam.api";
+import { useTrialUnlock } from "@/features/exam-store/TrialLockBanner";
+import type { Question } from "@/features/practice/types";
+import { useApi } from "@/shared/hooks/useApi";
+import { Button, buttonClass } from "@/shared/ui/Button";
+import { formatCredit } from "@/shared/utils/formatters";
+import { isPro } from "@/shared/utils/pro";
+
+interface Props {
+  examId: string;
+  number: number; // số thứ tự của câu khoá
+  total: number; // tổng số câu thật của đề
+  onUnlocked: (all: Question[], total: number) => void;
+  onBack: () => void;
+}
+
+// Câu chưa mở của đề xem thử: khung giả (không có ảnh thật nào được gửi về) phủ mờ + ổ khoá, mời mua đề hoặc dùng Pro
+export function LockedQuestionCard({ examId, number, total, onUnlocked, onBack }: Props) {
+  const { user } = useAuth();
+  const quote = useApi(() => examApi.quote(examId), [examId]);
+  const { start, busy, dialog } = useTrialUnlock(examId, onUnlocked);
+  const fee = quote.data?.fee ?? 0;
+
+  return (
+    <section aria-label={`Câu ${number} đang khoá`} className="relative flex min-h-[360px] w-full flex-1 animate-fade-in flex-col overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm sm:min-h-[480px]">
+      {/* Khung giả: thanh chữ và bốn đáp án xám, chỉ để gợi hình dáng một câu hỏi */}
+      <div aria-hidden className="flex flex-1 animate-pulse flex-col gap-3 p-5 opacity-60 blur-[2px] sm:p-8">
+        <div className="h-4 w-1/4 rounded bg-surface-container-high" />
+        <div className="h-3 w-full rounded bg-surface-container-high" />
+        <div className="h-3 w-11/12 rounded bg-surface-container-high" />
+        <div className="h-3 w-3/4 rounded bg-surface-container-high" />
+        <div className="mt-4 grid gap-3">
+          {["A", "B", "C", "D"].map((o) => (
+            <div key={o} className="h-10 rounded-m3-md bg-surface-container-high" />
+          ))}
+        </div>
+      </div>
+
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-surface/70 px-4 py-6 text-center backdrop-blur-[2px]">
+        <span className="flex size-14 items-center justify-center rounded-full bg-primary-container text-on-primary-container">
+          <Lock size={26} aria-hidden />
+        </span>
+        <h2 className="md-title-large text-on-surface" aria-live="polite">
+          Câu {number} / {total} đang khoá
+        </h2>
+        <p className="md-body-medium max-w-md text-on-surface-variant">Mở khoá để làm tiếp, xem giải thích từng câu và lưu điểm. Bài làm thử hiện tại không được lưu.</p>
+        <div className="mt-1 flex flex-wrap items-center justify-center gap-3">
+          <Button autoFocus variant="primary" disabled={busy || quote.loading} onClick={start}>
+            {busy ? <Loader2 size={16} className="animate-spin" /> : <Unlock size={16} />}
+            {fee > 0 ? `Mua đề này · ${formatCredit(fee)}` : "Mở khoá đề"}
+          </Button>
+          {!isPro(user) && (
+            <Link to="/pro" className={buttonClass({ variant: "tonal" })}>
+              <Crown size={16} /> Nâng cấp Pro
+            </Link>
+          )}
+        </div>
+        <p className="md-label-medium text-on-surface-variant">Trả một lần, không tự gia hạn. Bạn thấy giá trước khi bị trừ credit.</p>
+        <Button size="sm" variant="text" onClick={onBack}>
+          <ChevronLeft size={15} /> Quay lại câu trước
+        </Button>
+      </div>
+      {dialog}
+    </section>
+  );
+}

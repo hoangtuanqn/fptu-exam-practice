@@ -19,6 +19,7 @@ import { Sidebar } from "@/features/practice/components/sidebar/Sidebar";
 import { AnswerPendingBanner } from "./AnswerPendingBanner";
 import { LoadingMoreBanner } from "./LoadingMoreBanner";
 import { TrialLockBanner } from "@/features/exam-store/TrialLockBanner";
+import { LockedQuestionCard } from "./LockedQuestionCard";
 import { ImageViewer } from "./ImageViewer";
 import { QuestionCard } from "./QuestionCard";
 import { RotateHint } from "@/shared/ui/RotateHint";
@@ -55,6 +56,18 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit, readOnly
   const showTopic = quiz.mode === "practice" || quiz.submitted; // thi: chủ đề chỉ hiện sau khi nộp bài
 
   const question = quiz.questions[quiz.current];
+  // Đề xem thử: đứng ở ô khoá (sau các câu đã mở) thì hiện thẻ mời mở khoá thay cho câu hỏi
+  if (!question && quiz.trialLocked > 0 && quiz.current < quiz.slots && quiz.examId) {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+        <RotateHint />
+        <Sidebar quiz={quiz} onSubmit={undefined} />
+        <main className="flex min-w-0 flex-1 flex-col overflow-y-auto p-2 sm:p-3 lg:p-4">
+          <LockedQuestionCard examId={quiz.examId} number={quiz.current + 1} total={Math.max(quiz.total, quiz.slots)} onUnlocked={quiz.unlockTrial} onBack={quiz.prev} />
+        </main>
+      </div>
+    );
+  }
   if (!question) return null;
 
   // Báo cáo đáp án sai: chỉ với đề của hệ thống, đã đăng nhập, và khi câu này đã có kết quả (đáp án đã chắc chắn)
@@ -99,12 +112,12 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit, readOnly
 
   const view: QuestionViewProps = {
     question,
-    total: quiz.questions.length,
+    total: Math.max(quiz.total, quiz.slots),
     selected: quiz.answers[question.number] ?? [],
     revealed: quiz.isRevealed(question),
     canCheck: quiz.canCheck(question),
     hasPrev: quiz.current > 0,
-    hasNext: quiz.current < quiz.questions.length - 1,
+    hasNext: quiz.current < quiz.slots - 1,
     flagged: !!quiz.flagged[question.number],
     onToggleFlag: readOnly ? undefined : () => quiz.toggleFlag(question.number),
     saved: isSaved,
