@@ -121,7 +121,7 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit, readOnly
     onPrev: quiz.prev,
     onNext: quiz.next,
     // Câu cuối thì nút "Tiếp" thành "Nộp bài" (không khi đã nộp, chờ AI, hoặc đề còn đang được lấy về)
-    onSubmit: !readOnly && !quiz.submitted && !quiz.answersPending && !quiz.loadingMore ? onSubmit : undefined,
+    onSubmit: !readOnly && !quiz.submitted && !quiz.answersPending && !quiz.loadingMore && quiz.trialLocked === 0 ? onSubmit : undefined,
   };
 
   // Dùng chung cho màn hình làm bài và cửa sổ phóng to ảnh (chỉ gắn vào một nơi tại một thời điểm)

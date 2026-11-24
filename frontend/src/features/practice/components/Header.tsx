@@ -35,6 +35,7 @@ interface Props {
   loaded: boolean; // đã có đề đang làm
   submitted: boolean;
   submitLocked?: boolean; // AI chưa xong đáp án: chưa cho nộp
+  trial?: boolean; // đề đang xem thử (chưa mở khoá): không có nộp bài
   elapsed: number; // số giây đã làm bài
   timeLimitSec?: number | null; // chế độ Thi có giới hạn: hiện thời gian còn lại thay cho thời gian đã làm
   timing: boolean; // đồng hồ đang chạy (không chạy khi chờ đáp án hoặc đã nộp)
@@ -55,6 +56,7 @@ export function Header({
   loaded,
   submitted,
   submitLocked,
+  trial,
   elapsed,
   timeLimitSec,
   timing,
@@ -208,7 +210,8 @@ export function Header({
               <Button
                 variant="primary"
                 onClick={onSubmit}
-                disabled={submitLocked}
+                disabled={submitLocked || trial}
+                title={trial ? "Mở khoá đề để nộp bài" : undefined}
                 className="!px-3 sm:!px-4"
               >
                 <Send size={16} />
