@@ -24,6 +24,7 @@ import { ImageViewer } from "./ImageViewer";
 import { QuestionCard } from "./QuestionCard";
 import { RotateHint } from "@/shared/ui/RotateHint";
 import type { QuestionViewProps } from "./types";
+import type { FlashcardView } from "./FlashcardAnswer";
 
 interface Props {
   quiz: Quiz;
@@ -32,10 +33,11 @@ interface Props {
   onSubmit: () => void; // mở hộp xác nhận nộp bài
   readOnly?: boolean; // xem lại bài đã nộp: bỏ các nút lưu, đánh dấu, báo cáo, giải thích, nộp bài
   jump?: boolean; // danh sách câu có ô gõ số để nhảy thẳng (bộ nhiều câu, ví dụ flashcard)
+  flashcard?: FlashcardView; // flashcard: "Hiện đáp án" thay cho chọn A–H
 }
 
 // Màn hình làm bài: sidebar danh sách câu + khung câu hỏi + (tuỳ chọn) cửa sổ phóng to ảnh
-export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit, readOnly, jump }: Props) {
+export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit, readOnly, jump, flashcard }: Props) {
   const { user } = useAuth();
   const [reportOpen, setReportOpen] = useState(false);
   const [confirmExplain, setConfirmExplain] = useState(false); // hộp xác nhận phí (chỉ lần đầu mỗi câu)
@@ -64,7 +66,7 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit, readOnly
     return (
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
         <RotateHint />
-        <Sidebar quiz={quiz} onSubmit={undefined} jump={jump} />
+        <Sidebar quiz={quiz} onSubmit={undefined} jump={jump} flashcard={flashcard} />
         <main className="flex min-w-0 flex-1 flex-col overflow-y-auto p-2 sm:p-3 lg:p-4">
           <LockedQuestionCard examId={quiz.examId} number={quiz.current + 1} total={Math.max(quiz.total, quiz.slots)} attempts={quiz.trialAttempts} onUnlocked={quiz.unlockTrial} onBack={quiz.prev} />
         </main>
@@ -138,6 +140,7 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit, readOnly
     onPrev: quiz.prev,
     onNext: quiz.next,
     // Câu cuối thì nút "Tiếp" thành "Nộp bài" (không khi đã nộp, chờ AI, hoặc đề còn đang được lấy về)
+    flashcard,
     onSubmit: !readOnly && !quiz.submitted && !quiz.answersPending && !quiz.loadingMore && quiz.trialLocked === 0 ? onSubmit : undefined,
   };
 
@@ -161,7 +164,7 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit, readOnly
   return (
     <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
       <RotateHint />
-      <Sidebar quiz={quiz} onSubmit={view.onSubmit} jump={jump} />
+      <Sidebar quiz={quiz} onSubmit={view.onSubmit} jump={jump} flashcard={flashcard} />
       <main className={`flex min-w-0 flex-1 flex-col overflow-y-auto p-2 sm:p-3 lg:p-4 ${panelOpen ? "max-lg:pb-[60dvh]" : ""}`}>
         {quiz.trialLocked > 0 && quiz.examId && <TrialLockBanner examId={quiz.examId} shown={quiz.questions.length} total={Math.max(quiz.total, quiz.slots)} onUnlocked={quiz.unlockTrial} />}
         {quiz.loadingMore && <LoadingMoreBanner loaded={quiz.questions.length} total={quiz.total} />}
