@@ -13,18 +13,16 @@ import { Button } from "@/shared/ui/Button";
 import { Empty } from "@/shared/ui/Feedback";
 import { QueryBoundary } from "@/shared/ui/QueryBoundary";
 import { Pagination } from "@/shared/ui/Table";
-import { formatCredit, formatDate } from "@/shared/utils/formatters";
+import { formatCredit } from "@/shared/utils/formatters";
 import { isPro } from "@/shared/utils/pro";
 import { CompactSubjectPicker } from "@/features/subject/CompactSubjectPicker";
 import { SubjectCard } from "@/features/subject/SubjectCard";
 import { SubjectPicker } from "@/features/subject/SubjectPicker";
+import { ExamRow } from "./ExamRow";
 import { catalogApi, type CatalogItem } from "./catalog.api";
 import { ConfirmOpenDialog } from "./ConfirmOpenDialog";
 import { ExamFilterBar, useExamListQuery } from "./ExamFilterBar";
 import { featuredSubjects } from "./featuredSubjects";
-import { NewExamBadge } from "./NewExamBadge";
-import { ExamKindBadge } from "./ExamKindBadge";
-import { DoneBadge } from "./DoneBadge";
 
 const COMPACT_PAGE_SIZE = 6; // trang chủ: chỉ vài đề mỗi trang để không đẩy các phần bên dưới đi quá xa
 
@@ -124,25 +122,17 @@ function ExamList({ code, onBack, compact }: { code: string; onBack: () => void;
               <>
                 <ul className="divide-y divide-outline-variant">
                   {data.items.map((e) => (
-                    <li key={e.examId} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 py-3.5">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-                          <ExamKindBadge kind={e.kind} />
-                          {/* Mobile: nhãn lên trước, tiêu đề xuống dòng riêng để đọc được; từ sm trở lên nằm cùng một hàng */}
-                          <p className="md-title-small order-last line-clamp-2 basis-full break-words text-on-surface sm:order-none sm:line-clamp-1 sm:min-w-0 sm:flex-1 sm:basis-0" title={e.title}>{e.title}</p>
-                          <NewExamBadge term={e.term} />
-                          <DoneBadge attempts={e.attempts} />
-                        </div>
-                        <p className="md-body-small flex flex-wrap items-center gap-x-3 text-on-surface-variant">
-                          {e.postedAt && <span>{formatDate(e.postedAt)}</span>}
-                          {e.questions ? <span>{e.questions} câu</span> : null}
-                        </p>
-                      </div>
-                      <Button size="sm" variant="tonal" onClick={() => void pick(e)} disabled={busy !== null}>
+                    <ExamRow
+                      key={e.examId}
+                      item={e}
+                      known
+                      action={
+                        <Button size="sm" variant="tonal" onClick={() => void pick(e)} disabled={busy !== null}>
                         {busy === e.examId ? <Loader2 size={15} className="animate-spin" /> : <Play size={15} />}
                         {e.status !== "owned" && priceOf(data, e) > 0 && !isPro(user) ? formatCredit(priceOf(data, e)) : e.attempts ? "Làm lại" : "Mở đề"}
                       </Button>
-                    </li>
+                      }
+                    />
                   ))}
                 </ul>
                 <Pagination meta={data.meta} onPage={(p) => setUrl({ page: String(p) })} />
