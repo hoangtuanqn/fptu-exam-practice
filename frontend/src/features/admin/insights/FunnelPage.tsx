@@ -13,6 +13,7 @@ const PROMPT_LABEL: Record<string, string> = {
   "first-run": "Danh sách Bắt đầu cho người mới",
   "library-page": "Xem Thư viện đề thi",
   "library-open": "Bấm mở đề ở thư viện",
+  "trial-locked": "Thẻ mời mở khoá câu xem thử",
 };
 
 const pct = (n: number, of: number) => (of > 0 ? `${Math.round((n / of) * 100)}%` : "—");
