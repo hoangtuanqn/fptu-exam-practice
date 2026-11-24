@@ -68,7 +68,7 @@ export default function PublicCatalogPage() {
           </div>
         </section>
 
-        <div className="mx-auto w-full max-w-5xl space-y-10 px-4 py-8">
+        <div className="mx-auto w-full max-w-6xl space-y-10 px-4 py-8">
           {code ? (
             <Card>
               <PublicExamList code={code} />
