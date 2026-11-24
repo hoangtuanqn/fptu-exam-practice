@@ -46,7 +46,9 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit, readOnly
   const toast = useToast();
   // Câu đã lưu của đề: tải một lần mỗi đề, sau đó cập nhật tại chỗ khi bấm lưu/bỏ lưu (khoá theo "đề:câu")
   const saveEnabled = !readOnly && !!user && quiz.examId !== null;
-  const savedOfExam = useApi(() => (saveEnabled ? savedApi.ofExam(quiz.examId!) : Promise.resolve(null)), [saveEnabled, quiz.examId]);
+  // Đề xem thử chưa nằm trong kho của bạn nên chưa có danh sách câu đã lưu (máy chủ sẽ báo không tìm thấy đề)
+  const savedLoadable = saveEnabled && quiz.trialLocked === 0;
+  const savedOfExam = useApi(() => (savedLoadable ? savedApi.ofExam(quiz.examId!) : Promise.resolve(null)), [savedLoadable, quiz.examId]);
   const [savedChanged, setSavedChanged] = useState<Record<string, boolean>>({});
   const [unlockOpen, setUnlockOpen] = useState(false); // hộp xác nhận mở khóa cả đề
   const [bannerCollapsed, setBannerCollapsed] = useState(false); // thẻ ưu đãi thu thành viên thuốc
@@ -97,6 +99,7 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit, readOnly
   const savedKey = `${quiz.examId}:${question.number}`;
   const isSaved = savedChanged[savedKey] ?? (Array.isArray(savedOfExam.data) && savedOfExam.data.includes(question.number));
   const toggleSave = async () => {
+    if (quiz.trialLocked > 0) return toast.error("Mở khoá đề để lưu câu này vào Câu đã lưu");
     const { number } = question;
     const next = !isSaved;
     try {
