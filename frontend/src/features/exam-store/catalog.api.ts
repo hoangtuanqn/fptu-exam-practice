@@ -23,6 +23,7 @@ export interface CatalogItem {
   status: CatalogStatus;
   questions: number | null;
   kind?: ExamKind;
+  opened?: boolean; // đã mở đề (chọn chế độ hoặc xem trước), máy chủ cũ chưa trả
   attempts?: number; // số lần bạn đã nộp bài đề này; máy chủ cũ chưa trả
 }
 

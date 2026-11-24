@@ -8,8 +8,8 @@ import { NewExamBadge } from "./NewExamBadge";
 // Một dòng đề trong Kho đề. Người đã đăng nhập: đề chưa làm có chấm xanh và tên đậm, đề đã làm thì nhạt đi.
 // Khách (known = false) chưa có lịch sử nên mọi đề hiện như nhau.
 export function ExamRow({ item: e, known, action }: { item: CatalogItem; known: boolean; action: ReactNode }) {
-  const done = known && !!e.attempts;
-  const fresh = known && !e.attempts;
+  const done = known && !!(e.attempts || e.opened);
+  const fresh = known && !done;
   return (
     <li className={`group flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3.5 transition hover:bg-surface-container-low/70 ${done ? "bg-surface-container-lowest/40" : ""}`}>
       <div className="min-w-0 flex-1">
@@ -31,7 +31,7 @@ export function ExamRow({ item: e, known, action }: { item: CatalogItem; known: 
           {e.questions ? <span>· {e.questions} câu</span> : null}
           {done && (
             <span className="inline-flex items-center gap-1 font-medium text-emerald-700">
-              <Check size={13} /> Đã làm{e.attempts! > 1 ? ` ${e.attempts} lần` : ""}
+              <Check size={13} /> {e.attempts ? `Đã làm${e.attempts > 1 ? ` ${e.attempts} lần` : ""}` : "Đã xem"}
             </span>
           )}
         </p>

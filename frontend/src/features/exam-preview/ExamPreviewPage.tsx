@@ -1,5 +1,5 @@
 import { ProtectedImg } from "@/shared/ui/ProtectedImg";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { BookOpen, Download, FileSearch, Loader2, Timer } from "lucide-react";
 import { examApi } from "@/features/exam/exam.api";
@@ -71,6 +71,7 @@ export default function ExamPreviewPage() {
 
 function Preview({ exam }: { exam: ImportedExam }) {
   const toast = useToast();
+  useEffect(() => void examApi.markOpened(exam.id), [exam.id]);
   const [questions, setQuestions] = useState<Question[]>(exam.questions ?? []);
   const [total, setTotal] = useState(exam.totalQuestions ?? 0);
   const [failed, setFailed] = useState(false);
