@@ -30,8 +30,7 @@ export function QuizDialogs({ quiz, topicSummary, dialog, onDialogChange, onClos
       {quiz.choosing && (
         <StartDialog
           title={quiz.title}
-          total={quiz.questions.length}
-          graded={quiz.questions.filter((q) => q.correct.length > 0).length}
+          total={quiz.questions.length + quiz.trialLocked}
           answersPending={quiz.answersPending}
           replacing={false}
           initialMode={initialMode}
@@ -47,7 +46,6 @@ export function QuizDialogs({ quiz, topicSummary, dialog, onDialogChange, onClos
         <StartDialog
           title={pending.title}
           total={pending.questions.length}
-          graded={pending.questions.filter((q) => q.correct.length > 0).length}
           answersPending={pending.answerSource === "PENDING"}
           replacing={quiz.questions.length > 0 && quiz.answeredCount > 0 && !quiz.submitted}
           onCancel={quiz.cancelPending}

@@ -13,7 +13,6 @@ const CHIP_OFF = "border-outline text-on-surface-variant";
 interface Props {
   title: string;
   total: number; // tổng số câu (ảnh)
-  graded: number; // số câu có đáp án
   answersPending: boolean; // AI đang phân tích đáp án
   replacing: boolean; // đang có bài làm dở sẽ bị thay thế
   onCancel: () => void;
@@ -23,7 +22,7 @@ interface Props {
 
 // Hộp thoại sau khi upload đề: xác nhận + chọn chế độ (không đổi được giữa chừng).
 // Chọn chế độ là nhóm radio (role=radiogroup), chọn thời gian là các filter chip.
-export function StartDialog({ title, total, graded, answersPending, replacing, onCancel, onStart, initialMode }: Props) {
+export function StartDialog({ title, total, answersPending, replacing, onCancel, onStart, initialMode }: Props) {
   const [mode, setMode] = useState<Mode | null>(initialMode ?? null); // chưa chọn thì chưa cho bắt đầu
   const [limit, setLimit] = useState<number>(TIME_LIMIT_OPTIONS[0]); // phút; mặc định 90, 0 = không giới hạn (chỉ dùng ở chế độ Thi)
   const [custom, setCustom] = useState(false); // chọn "Khác": người dùng tự nhập số phút
@@ -43,7 +42,7 @@ export function StartDialog({ title, total, graded, answersPending, replacing, o
           <span className="truncate">{title || "Đề chưa đặt tên"}</span>
         </div>
         <div className="md-body-medium mt-1 text-on-surface-variant">
-          {total} câu hỏi{answersPending ? " · đang chuẩn bị đáp án" : ` · ${graded} câu có đáp án`}
+          {total} câu hỏi{answersPending ? " · đang chuẩn bị đáp án" : ""}
         </div>
       </div>
 
