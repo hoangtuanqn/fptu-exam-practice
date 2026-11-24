@@ -4,6 +4,7 @@ import { practiceSessionRepository } from "../repositories/practice-session.repo
 import { AppError } from "../rules/error";
 import type { CreateSessionBody, ListSessionsQuery, SaveSessionBody } from "../rules/requests/session.request";
 import type { Violation } from "../rules/requests/violation.request";
+import { userExamRepository } from "../repositories/user-exam.repository";
 import type { Actor } from "../utils/actor";
 import { toMeta } from "../utils/pagination";
 import { examService } from "./exam.service";
@@ -47,6 +48,7 @@ export const practiceSessionService = {
   async create(actor: Actor, examId: string, body: CreateSessionBody) {
     await examService.assertAccess(actor, examId);
     if ((await examRepository.countQuestions(examId)) === 0) throw new AppError(NO_QUESTIONS_MESSAGE);
+    await userExamRepository.markOpened(actor.owner, examId);
     return toDto(await practiceSessionRepository.create(actor.owner, examId, body.mode));
   },
 

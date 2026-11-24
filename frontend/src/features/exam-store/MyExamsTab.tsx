@@ -135,7 +135,7 @@ export function MyExamsTab() {
           </div>
         ) : (
           <Empty icon={BookOpen} title="Bạn chưa lấy đề nào">
-            Chọn môn ở tab Theo môn để lấy đề đầu tiên.
+            <Link to="/kho-de" className="font-medium text-brand-700 hover:underline">Vào Kho đề</Link> chọn môn để lấy đề đầu tiên.
           </Empty>
         )}
       </Card>

@@ -13,6 +13,9 @@ export const userExamRepository = {
   // Đề (theo threadId) có trong kho của chủ này không: một truy vấn, không cần tra id đề trước
   hasThread: async (owner: Owner, threadId: string) => !!(await prisma.userExam.findFirst({ where: { ...whereOf(owner), exam: { threadId } }, select: { id: true } })),
 
+  // Lần mở đầu tiên thôi; đã có mốc thì không ghi lại
+  markOpened: (owner: Owner, examId: string) => prisma.userExam.updateMany({ where: { ...whereOf(owner), examId, openedAt: null }, data: { openedAt: new Date() } }),
+
   has: async (owner: Owner, examId: string) => !!(await prisma.userExam.findFirst({ where: { ...whereOf(owner), examId }, select: { id: true } })),
 
   async list(owner: Owner, query: PaginationQuery & { subject?: string }) {

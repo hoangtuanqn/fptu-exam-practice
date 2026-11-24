@@ -17,6 +17,8 @@ export const examApi = {
   // Phí thực tế của lần mở này (0 nếu đã có trong kho hoặc đang dùng Pro)
   quote: (examId: string, subject?: string) => http.get<QuoteResult>("/crawl-jobs/quote", { examId, ...(subject && { subject }) }),
   exam: (id: string) => http.get<ImportedExam>(`/exams/${id}`),
+  // Ghi nhận đã mở đề (trang xem trước) để Kho đề bỏ chấm chưa xem; lỗi thì bỏ qua
+  markOpened: (id: string) => http.post(`/exams/${id}/opened`).catch(() => undefined),
   // Hỏi lại trong lúc AI phân tích đáp án (nhẹ hơn tải cả đề)
   answers: (id: string) => http.get<Omit<ExamAnswersPayload, "examId">>(`/exams/${id}/answers`),
   // Đề AI giải lỗi: nhờ AI giải lại (có thời gian chờ giữa hai lần)

@@ -6,11 +6,10 @@ import { buttonClass } from "@/shared/ui/Button";
 import { Empty } from "@/shared/ui/Feedback";
 import { QueryBoundary } from "@/shared/ui/QueryBoundary";
 import { Pagination } from "@/shared/ui/Table";
-import { formatCredit, formatDate } from "@/shared/utils/formatters";
+import { formatCredit } from "@/shared/utils/formatters";
 import { examOpenPath } from "@/features/exam/types";
+import { ExamRow } from "./ExamRow";
 import { catalogApi, type CatalogItem } from "./catalog.api";
-import { NewExamBadge } from "./NewExamBadge";
-import { ExamKindBadge } from "./ExamKindBadge";
 import { isPro } from "@/shared/utils/pro";
 import { trackPrompt } from "@/shared/utils/trackPrompt";
 import { ExamFilterBar, useExamListQuery } from "./ExamFilterBar";
@@ -22,7 +21,7 @@ export function PublicExamList({ code, pageSize }: { code: string; pageSize?: nu
   const { user } = useAuth();
   const query = useExamListQuery();
   const { url, setUrl, page } = query;
-  const list = useApi(() => catalogApi.exams(code, { q: url.q, term: url.term, page, limit: pageSize }), [code, url.q, url.term, page, pageSize, user?.id]);
+  const list = useApi(() => catalogApi.exams(code, { q: url.q, term: url.term, kind: url.kind, page, limit: pageSize }), [code, url.q, url.term, url.kind, page, pageSize, user?.id]);
   const target = `/account/exams?tab=subject&subject=${encodeURIComponent(code)}`;
 
   return (
@@ -42,22 +41,7 @@ export function PublicExamList({ code, pageSize }: { code: string; pageSize?: nu
             <>
               <ul className="divide-y divide-outline-variant">
                 {data.items.map((e) => (
-                  <li key={e.examId} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 py-3.5 transition hover:bg-surface-container-low/70">
-                    {e.term && <span className="md-label-medium w-14 shrink-0 rounded-full bg-primary-container/70 px-2.5 py-1 text-center text-on-primary-container">{e.term}</span>}
-                    <div className="min-w-0 flex-1">
-                      <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-                        <ExamKindBadge kind={e.kind} />
-                        {/* Mobile: nhãn lên trước, tiêu đề xuống dòng riêng để đọc được; từ sm trở lên nằm cùng một hàng */}
-                        <p className="md-title-small order-last line-clamp-2 basis-full break-words text-on-surface sm:order-none sm:line-clamp-1 sm:min-w-0 sm:flex-1 sm:basis-0" title={e.title}>{e.title}</p>
-                        <NewExamBadge term={e.term} />
-                      </div>
-                      <p className="md-body-small flex flex-wrap items-center gap-x-3 text-on-surface-variant">
-                        {e.postedAt && <span>{formatDate(e.postedAt)}</span>}
-                        {e.questions ? <span>{e.questions} câu</span> : null}
-                      </p>
-                    </div>
-                    <ExamAction item={e} loggedIn={!!user} target={target} price={isPro(user) ? 0 : e.kind === "PE" ? (data.pePrice ?? data.price) : data.price} />
-                  </li>
+                  <ExamRow key={e.examId} item={e} known={!!user} action={<ExamAction item={e} loggedIn={!!user} target={target} price={isPro(user) ? 0 : e.kind === "PE" ? (data.pePrice ?? data.price) : data.price} />} />
                 ))}
               </ul>
               <Pagination meta={data.meta} onPage={(p) => setUrl({ page: String(p) })} />
@@ -76,7 +60,7 @@ function ExamAction({ item, loggedIn, target, price }: { item: CatalogItem; logg
   if (item.status === "owned")
     return (
       <Link to={examOpenPath({ id: item.examId!, kind: item.kind, totalQuestions: item.questions })} className={cls}>
-        <Play size={15} /> Mở đề
+        <Play size={15} /> {item.attempts ? "Làm lại" : "Mở đề"}
       </Link>
     );
   // Chưa có trong kho: thành viên vào Kho đề của môn (có xác nhận phí trước khi trừ), khách đi đăng ký rồi quay lại đó

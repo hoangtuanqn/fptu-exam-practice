@@ -384,6 +384,7 @@ model UserExam {
   guestId   String?  @map("guest_id") @db.VarChar(64) // khĂ¡ch chÆ°a Ä‘Äƒng nháº­p: kho riĂªng theo trĂ¬nh duyá»‡t, nháº­n vá» tĂ i khoáº£n khi Ä‘Äƒng kĂ½
   examId    String   @map("exam_id") @db.Char(36)
   createdAt DateTime @default(now()) @map("created_at")
+  openedAt  DateTime? @map("opened_at") // first time the owner opened the exam (picked a mode or viewed the preview)
 
   user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
   exam Exam  @relation(fields: [examId], references: [id], onDelete: Cascade)

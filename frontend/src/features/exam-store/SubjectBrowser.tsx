@@ -13,17 +13,16 @@ import { Button } from "@/shared/ui/Button";
 import { Empty } from "@/shared/ui/Feedback";
 import { QueryBoundary } from "@/shared/ui/QueryBoundary";
 import { Pagination } from "@/shared/ui/Table";
-import { formatCredit, formatDate } from "@/shared/utils/formatters";
+import { formatCredit } from "@/shared/utils/formatters";
 import { isPro } from "@/shared/utils/pro";
 import { CompactSubjectPicker } from "@/features/subject/CompactSubjectPicker";
 import { SubjectCard } from "@/features/subject/SubjectCard";
 import { SubjectPicker } from "@/features/subject/SubjectPicker";
+import { ExamRow } from "./ExamRow";
 import { catalogApi, type CatalogItem } from "./catalog.api";
 import { ConfirmOpenDialog } from "./ConfirmOpenDialog";
 import { ExamFilterBar, useExamListQuery } from "./ExamFilterBar";
 import { featuredSubjects } from "./featuredSubjects";
-import { NewExamBadge } from "./NewExamBadge";
-import { ExamKindBadge } from "./ExamKindBadge";
 
 const COMPACT_PAGE_SIZE = 6; // trang chủ: chỉ vài đề mỗi trang để không đẩy các phần bên dưới đi quá xa
 
@@ -42,7 +41,7 @@ function SubjectChooser({ onPick, compact }: { onPick: (code: string) => void; c
   if (compact) {
     // Trang chủ: môn của tôi trước, rồi các môn có sẵn đề; còn lại tìm bằng ô tìm kiếm
     const quick = [...new Set([...(mine.data ?? []), ...featuredSubjects(subjects.data)])].slice(0, 8);
-    return <CompactSubjectPicker subjects={list} loading={subjects.loading} error={subjects.error} onRetry={subjects.reload} onPick={onPick} quick={quick} allHref="/account/exams?tab=subject" />;
+    return <CompactSubjectPicker subjects={list} loading={subjects.loading} error={subjects.error} onRetry={subjects.reload} onPick={onPick} quick={quick} allHref="/kho-de" />;
   }
   return (
     <SubjectPicker
@@ -66,7 +65,7 @@ function ExamList({ code, onBack, compact }: { code: string; onBack: () => void;
   const query = useExamListQuery();
   const { url, setUrl, page } = query;
 
-  const list = useApi(() => catalogApi.exams(code, { q: url.q, term: url.term, page, limit: compact ? COMPACT_PAGE_SIZE : undefined }), [code, url.q, url.term, page, compact, user?.id]);
+  const list = useApi(() => catalogApi.exams(code, { q: url.q, term: url.term, kind: url.kind, page, limit: compact ? COMPACT_PAGE_SIZE : undefined }), [code, url.q, url.term, url.kind, page, compact, user?.id]);
   const d = list.data;
   const [busy, setBusy] = useState<string | null>(null); // examId đang hỏi phí / đang mở
   const [confirm, setConfirm] = useState<{ examId: string; item: CatalogItem; fee: number } | null>(null);
@@ -123,24 +122,17 @@ function ExamList({ code, onBack, compact }: { code: string; onBack: () => void;
               <>
                 <ul className="divide-y divide-outline-variant">
                   {data.items.map((e) => (
-                    <li key={e.examId} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 py-3.5">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-                          <ExamKindBadge kind={e.kind} />
-                          {/* Mobile: nhãn lên trước, tiêu đề xuống dòng riêng để đọc được; từ sm trở lên nằm cùng một hàng */}
-                          <p className="md-title-small order-last line-clamp-2 basis-full break-words text-on-surface sm:order-none sm:line-clamp-1 sm:min-w-0 sm:flex-1 sm:basis-0" title={e.title}>{e.title}</p>
-                          <NewExamBadge term={e.term} />
-                        </div>
-                        <p className="md-body-small flex flex-wrap items-center gap-x-3 text-on-surface-variant">
-                          {e.postedAt && <span>{formatDate(e.postedAt)}</span>}
-                          {e.questions ? <span>{e.questions} câu</span> : null}
-                        </p>
-                      </div>
-                      <Button size="sm" variant="tonal" onClick={() => void pick(e)} disabled={busy !== null}>
+                    <ExamRow
+                      key={e.examId}
+                      item={e}
+                      known
+                      action={
+                        <Button size="sm" variant="tonal" onClick={() => void pick(e)} disabled={busy !== null}>
                         {busy === e.examId ? <Loader2 size={15} className="animate-spin" /> : <Play size={15} />}
-                        {e.status !== "owned" && priceOf(data, e) > 0 && !isPro(user) ? formatCredit(priceOf(data, e)) : "Mở đề"}
+                        {e.status !== "owned" && priceOf(data, e) > 0 && !isPro(user) ? formatCredit(priceOf(data, e)) : e.attempts ? "Làm lại" : "Mở đề"}
                       </Button>
-                    </li>
+                      }
+                    />
                   ))}
                 </ul>
                 <Pagination meta={data.meta} onPage={(p) => setUrl({ page: String(p) })} />

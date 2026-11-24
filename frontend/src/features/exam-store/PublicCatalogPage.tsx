@@ -15,6 +15,7 @@ import { trackPrompt } from "@/shared/utils/trackPrompt";
 import { catalogApi } from "./catalog.api";
 import { CatalogOverview } from "./CatalogOverview";
 import { PublicExamList } from "./PublicExamList";
+import { SubjectBrowser } from "./SubjectBrowser";
 
 // Kho đề công khai (/kho-de): khách xem toàn bộ môn và đề trước khi đăng ký. Con số là số thật đếm từ danh mục, không phóng đại.
 // Chưa chọn môn: tiêu đề, số liệu, ô tìm và lưới mọi môn. Đã chọn môn (?subject=PRO192): danh sách đề của môn đó.
@@ -68,11 +69,16 @@ export default function PublicCatalogPage() {
           </div>
         </section>
 
-        <div className="mx-auto w-full max-w-5xl space-y-10 px-4 py-8">
+        <div className="mx-auto w-full max-w-6xl space-y-10 px-4 py-8">
           {code ? (
-            <Card>
-              <PublicExamList code={code} />
-            </Card>
+            // Thành viên mở đề ngay tại đây (có xác nhận phí); khách chỉ xem rồi đi đăng ký
+            user ? (
+              <SubjectBrowser />
+            ) : (
+              <Card>
+                <PublicExamList code={code} />
+              </Card>
+            )
           ) : (
             <CatalogOverview subjects={subjects} overview={overview} onPick={(c) => setUrl({ subject: c })} />
           )}
