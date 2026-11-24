@@ -101,7 +101,7 @@ export const reviewService = {
     const active = { userId, mastered: false, exam: usableOwnedExam(userId) };
     const [due, counts, next] = await Promise.all([
       prisma.reviewItem.count({ where: { ...active, nextReviewAt: { lte: now } } }),
-      prisma.reviewItem.groupBy({ by: ["mastered"], where: { userId }, _count: { _all: true } }), // đang ôn + đã nhớ trong một truy vấn
+      prisma.reviewItem.groupBy({ by: ["mastered"], where: { userId, exam: { userExams: { some: ownedWhere({ userId }) } } }, _count: { _all: true } }), // đang ôn + đã nhớ trong một truy vấn
       prisma.reviewItem.findFirst({ where: { ...active, nextReviewAt: { gt: now } }, orderBy: { nextReviewAt: "asc" }, select: { nextReviewAt: true } }),
     ]);
     const total = counts.find((c) => !c.mastered)?._count._all ?? 0;
