@@ -98,3 +98,11 @@ const examImagesUpload = multer({
 }).array("images", EXAM_UPLOAD_MAX_IMAGES);
 
 export const uploadExamImages = withBodyCap(examImagesUpload, EXAM_UPLOAD_MAX_REQUEST_BYTES);
+
+// ---- Admin tải thư mục tài liệu (PDF, zip, video...): field "files", nhiều tệp. Không lọc mimetype; service xét loại theo đuôi tệp ----
+const examFilesUpload = multer({
+  storage,
+  limits: { fileSize: EXAM_UPLOAD_MAX_FILE_BYTES, files: EXAM_UPLOAD_MAX_IMAGES, fields: 10, fieldSize: EXAM_UPLOAD_ANSWERS_MAX_CHARS },
+}).array("files", EXAM_UPLOAD_MAX_IMAGES);
+
+export const uploadExamFiles = withBodyCap(examFilesUpload, EXAM_UPLOAD_MAX_REQUEST_BYTES);

@@ -52,7 +52,7 @@ import { createGiftCodeBody, listGiftCodesQuery, updateGiftCodeBody } from "../r
 import { validate } from "../middlewares/validate.middlewares";
 import { drainBeforeError } from "../middlewares/drain.middlewares";
 import { examUploadQueueRoom, oneExamUploadPerAdmin } from "../middlewares/single-flight.middlewares";
-import { uploadExamImages } from "../middlewares/upload.middlewares";
+import { uploadExamFiles, uploadExamImages } from "../middlewares/upload.middlewares";
 import { adminExamUploadController } from "../controllers/admin.exam-upload.controllers";
 import { examGapFilter, examGapsQuery, updateExamImagesBody, uploadExamBody } from "../rules/requests/exam-upload.request";
 import { paginationQuery } from "../utils/pagination";
@@ -154,6 +154,8 @@ adminRouter.get("/exams", validate(listAdminExamsQuery, "query"), adminAiControl
 // Tải đề bằng tay (thư mục images/Q<số>.webp + ans.json): tạo đề / cập nhật ảnh của đề có sẵn; mỗi admin một lần tải đang chạy.
 // ?async=1: trả 202 ngay sau khi nhận tệp, xử lý nền; kết quả ở GET /exam-upload/jobs và sự kiện realtime admin:exam-upload
 adminRouter.post("/exams/upload", oneExamUploadPerAdmin, examUploadQueueRoom, uploadExamImages, validate(uploadExamBody), adminExamUploadController.upload);
+// Thư mục tài liệu (không có images/ + ans.json): chạy thẳng, không qua hàng đợi nền nên không cần examUploadQueueRoom
+adminRouter.post("/exams/upload-resource", oneExamUploadPerAdmin, uploadExamFiles, validate(uploadExamBody), adminExamUploadController.uploadResource);
 adminRouter.post("/exams/:id/images", validate(uuidParam, "params"), oneExamUploadPerAdmin, examUploadQueueRoom, uploadExamImages, validate(updateExamImagesBody), adminExamUploadController.updateImages);
 adminRouter.get("/exam-upload/jobs", adminExamUploadController.jobs);
 // Đề còn thiếu (chưa có đề / thiếu ảnh / thiếu đáp án)

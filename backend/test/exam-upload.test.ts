@@ -5,7 +5,7 @@ import { describe, it } from "node:test";
 import express from "express";
 import { errorHandler } from "../src/middlewares/error.middlewares";
 import { oneExamUploadPerAdmin } from "../src/middlewares/single-flight.middlewares";
-import { classifyExamGap, parseAnswersJson, planUploadNumbers, questionNumberOf } from "../src/utils/exam-upload";
+import { classifyExamGap, parseAnswersJson, planUploadNumbers, questionNumberOf, resourceFileNames } from "../src/utils/exam-upload";
 
 const names = (...n: number[]) => n.map((x) => `Q${x}.webp`);
 const okValue = <T>(r: { ok: true; value: T } | { ok: false; error: string }) => {
@@ -16,6 +16,14 @@ const errorOf = (r: { ok: boolean; error?: string }) => {
   assert.equal(r.ok, false);
   return r.error!;
 };
+
+describe("resource file names", () => {
+  it("strips folders and bad chars, suffixes duplicates before the extension, caps bytes keeping the extension", () => {
+    assert.deepEqual(resourceFileNames(["docs/Đề 1.pdf", "Đề 1.PDF", "a\\b:c.zip", "x\u0001y.txt"], 200), ["Đề 1.pdf", "Đề 1-2.PDF", "b_c.zip", "x_y.txt"]);
+    const [long] = resourceFileNames([`${"đ".repeat(300)}.mp4`], 50);
+    assert.ok(long!.endsWith(".mp4") && Buffer.byteLength(long!) <= 50);
+  });
+});
 
 describe("question file names", () => {
   it("reads Q<number>.webp case-insensitively, ignoring a folder prefix", () => {

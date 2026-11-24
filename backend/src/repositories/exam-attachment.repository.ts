@@ -1,4 +1,5 @@
 import { prisma } from "../configs/prisma";
+import type { Db } from "./wallet.repository";
 
 export interface NewAttachment {
   name: string;
@@ -26,7 +27,7 @@ export const examAttachmentRepository = {
   list: (examId: string) =>
     prisma.examAttachment.findMany({ where: { examId }, orderBy: { id: "asc" }, select: { id: true, name: true, filePath: true, mime: true, sizeBytes: true } }),
 
-  // Thêm tệp mới, giữ nguyên các tệp cũ (id không đổi)
-  add: (examId: string, rows: NewAttachment[]) =>
-    prisma.examAttachment.createMany({ data: rows.map((r) => ({ ...r, examId })), skipDuplicates: true }),
+  // Thêm tệp mới, giữ nguyên các tệp cũ (id không đổi). `db` = tx khi cần chung transaction với việc tạo đề
+  add: (examId: string, rows: NewAttachment[], db: Db = prisma) =>
+    db.examAttachment.createMany({ data: rows.map((r) => ({ ...r, examId })), skipDuplicates: true }),
 };
