@@ -4,7 +4,9 @@ import { storageDir } from "../configs/env";
 import { EXAM_STORAGE_DIR } from "../constants/crawler";
 import { prisma } from "../configs/prisma";
 import { realtimeHub } from "../realtime/hub";
-import type { ListAdminExamsQuery, RenameExamBody, UpdateExamQuestionsBody } from "../rules/requests/admin.request";
+import type { ListAdminExamsQuery, UpdateExamBody, UpdateExamQuestionsBody } from "../rules/requests/admin.request";
+import { subjectRepository } from "../repositories/subject.repository";
+import { invalidateCatalogCache } from "./catalog.service";
 import { fileUrlOf } from "../utils/file-url";
 import { examRepository } from "../repositories/exam.repository";
 import { AppError } from "../rules/error";
@@ -142,10 +144,19 @@ export const adminExamService = {
     return this.detail(id);
   },
 
-  async rename(adminId: string, id: string, { title }: RenameExamBody) {
-    if (!(await examRepository.findByThreadIdOfId(id))) throw AppError.notFound("Không tìm thấy đề");
-    await prisma.exam.update({ where: { id }, data: { title, subjectCode: subjectCodeFromTitle(title) } });
-    console.log(`[admin] #${adminId} đổi tên đề #${id}`);
+  // Sửa tên/loại/môn của đề. Chỉ gửi tên (giao diện cũ) thì môn vẫn suy từ tên như trước
+  async update(adminId: string, id: string, { title, kind, subjectCode }: UpdateExamBody) {
+    const exam = await examRepository.findByThreadIdOfId(id);
+    if (!exam) throw AppError.notFound("Không tìm thấy đề");
+    // subjectCode không có FK: mã cũ của đề có thể không nằm trong bảng môn, giữ nguyên thì không chặn
+    const changed = subjectCode && subjectCode !== exam.subjectCode?.toUpperCase();
+    if (changed && !(await subjectRepository.findByCode(subjectCode))) {
+      throw new AppError("Không tìm thấy môn học này", HTTP_STATUS.BAD_REQUEST, { subjectCode: "Môn học không tồn tại" });
+    }
+    const code = subjectCode !== undefined ? subjectCode : title !== undefined ? subjectCodeFromTitle(title) : undefined;
+    await examRepository.update(id, { title, kind, subjectCode: code });
+    console.log(`[admin] #${adminId} sửa đề #${id}: ${[title !== undefined && "tên", kind && `loại ${kind}`, code !== undefined && `môn ${code ?? "(bỏ)"}`].filter(Boolean).join(", ")}`);
+    invalidateCatalogCache(); // Kho đề hiện ngay tên/loại/môn mới
     return this.detail(id);
   },
 

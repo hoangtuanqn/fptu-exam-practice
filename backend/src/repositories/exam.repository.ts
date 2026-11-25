@@ -73,6 +73,8 @@ export const examRepository = {
       select: {
         id: true,
         title: true,
+        kind: true,
+        subjectCode: true,
         threadId: true,
         sourceUrl: true,
         totalQuestions: true,
@@ -123,7 +125,10 @@ export const examRepository = {
     return exams.filter((e) => e._count.questions >= e.totalQuestions).map((e) => e.id);
   },
 
-  findByThreadIdOfId: (id: string) => prisma.exam.findUnique({ where: { id }, select: { id: true } }),
+  findByThreadIdOfId: (id: string) => prisma.exam.findUnique({ where: { id }, select: { id: true, subjectCode: true } }),
+
+  update: (id: string, data: { title?: string; kind?: ExamKind; subjectCode?: string | null }) =>
+    prisma.exam.update({ where: { id }, data, select: { id: true } }),
 
   findReport: (id: string) =>
     prisma.exam.findUnique({ where: { id }, select: { id: true, title: true, threadId: true, answerSource: true, aiReport: true } }),

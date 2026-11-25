@@ -57,7 +57,7 @@ import { uploadExamFiles, uploadExamImages } from "../middlewares/upload.middlew
 import { adminExamUploadController } from "../controllers/admin.exam-upload.controllers";
 import { examGapFilter, examGapsQuery, updateExamImagesBody, uploadExamBody } from "../rules/requests/exam-upload.request";
 import { paginationQuery } from "../utils/pagination";
-import { adjustBalanceBody, listAdminExamsQuery, uuidParam, listUsersQuery, questionParam, renameExamBody, resetPasswordBody, updateExamQuestionsBody, updateUserBody } from "../rules/requests/admin.request";
+import { adjustBalanceBody, listAdminExamsQuery, uuidParam, listUsersQuery, questionParam, resetPasswordBody, updateExamBody, updateExamQuestionsBody, updateUserBody } from "../rules/requests/admin.request";
 
 const adminRouter = Router();
 
@@ -168,7 +168,7 @@ adminRouter.delete("/exam-upload/jobs/:id", validate(uuidParam, "params"), admin
 adminRouter.get("/exam-gaps", validate(examGapsQuery, "query"), adminExamUploadController.gaps);
 adminRouter.get("/exam-gaps/summary", validate(examGapFilter, "query"), adminExamUploadController.gapSummary);
 adminRouter.get("/exams/:id", validate(uuidParam, "params"), adminAiController.examDetail);
-adminRouter.patch("/exams/:id", validate(uuidParam, "params"), validate(renameExamBody), adminAiController.renameExam);
+adminRouter.patch("/exams/:id", validate(uuidParam, "params"), validate(updateExamBody), adminAiController.updateExam);
 adminRouter.delete("/exams/:id", validate(uuidParam, "params"), adminAiController.removeExam);
 adminRouter.patch("/exams/:id/questions", validate(uuidParam, "params"), validate(updateExamQuestionsBody), adminAiController.saveQuestions);
 adminRouter.post("/exams/:id/questions/:number/resolve", validate(questionParam, "params"), adminAiController.resolveQuestion);
