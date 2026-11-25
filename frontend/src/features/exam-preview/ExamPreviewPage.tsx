@@ -1,7 +1,7 @@
 import { ProtectedImg } from "@/shared/ui/ProtectedImg";
 import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
-import { BookOpen, Download, FileSearch, Loader2, Timer, ZoomIn } from "lucide-react";
+import { BookOpen, Download, FileSearch, Loader2, FileArchive, Timer, ZoomIn } from "lucide-react";
 import { examApi } from "@/features/exam/exam.api";
 import { canPractice, type ExamAttachment, type ExamQuestionsPayload, type ImportedExam } from "@/features/exam/types";
 import { downloadUrl, ICONS, OPENABLE } from "@/features/exam-attachments/AttachmentList";
@@ -19,6 +19,7 @@ import { buttonClass } from "@/shared/ui/Button";
 import { Card } from "@/shared/ui/Card";
 import { Empty } from "@/shared/ui/Feedback";
 import { QueryBoundary } from "@/shared/ui/QueryBoundary";
+import { formatBytes } from "@/shared/utils/formatters";
 import { isUuid } from "@/shared/utils/uuid";
 import { errorMessage } from "@/shared/api/errors";
 import { Button } from "@/shared/ui/Button";
@@ -122,7 +123,8 @@ function Preview({ exam }: { exam: ImportedExam }) {
       </button>
     </li>
   ));
-  const fileTiles = attachments.map((a) => (
+  const archives = attachments.filter((a) => a.kind === "archive");
+  const fileTiles = attachments.filter((a) => a.kind !== "archive").map((a) => (
     <li key={`a${a.id}`}>
       <FileTile a={a} />
     </li>
@@ -176,6 +178,16 @@ function Preview({ exam }: { exam: ImportedExam }) {
 
       {fetching && <LoadingMoreBanner loaded={questions.length} total={total} />}
 
+      {archives.length > 0 && (
+        <ul className="mb-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+          {archives.map((a) => (
+            <li key={a.id}>
+              <ArchiveRow a={a} />
+            </li>
+          ))}
+        </ul>
+      )}
+
       {tiles.length > 0 && (
         <section className="mb-6">
           <ul className="grid grid-cols-2 items-start gap-4 sm:grid-cols-3 lg:grid-cols-4">{tiles}</ul>
@@ -201,6 +213,31 @@ const pageLabel = (q: Question) => `Ảnh ${q.number}`;
 
 // Tên tệp ảnh của trang (phần cuối đường dẫn, bỏ query)
 const fileName = (q: Question) => decodeURIComponent(q.imageUrl.split("?")[0]!.split("/").pop() ?? `Q${q.number}`);
+
+// Tệp nén (zip, rar...): một hàng ở đầu trang, trước các ảnh: biểu tượng tròn, tên đậm, dung lượng, nút tải ở cuối hàng. Bấm cả hàng là tải về
+function ArchiveRow({ a }: { a: ExamAttachment }) {
+  return (
+    <a
+      href={downloadUrl(a.url)}
+      download={a.name}
+      aria-label={`Tải về ${a.name}`}
+      className="md-state group flex items-center gap-3 rounded-m3-lg bg-surface-container-low px-3 py-2.5 shadow-m3-1 outline-none transition duration-200 hover:-translate-y-0.5 hover:shadow-m3-2 focus-visible:ring-2 focus-visible:ring-primary"
+    >
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-container to-secondary-container text-on-primary-container ring-1 ring-primary/10">
+        <FileArchive size={20} strokeWidth={1.75} aria-hidden />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="md-label-large block truncate font-semibold text-on-surface" title={a.name}>
+          {a.name}
+        </span>
+        <span className="md-body-small block text-on-surface-variant">{formatBytes(a.sizeBytes)}</span>
+      </span>
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-on-surface-variant transition group-hover:bg-primary-container group-hover:text-on-primary-container">
+        <Download size={16} aria-hidden />
+      </span>
+    </a>
+  );
+}
 
 // Máy có chuột mới nhúng PDF làm hình xem trước: điện thoại thường không vẽ PDF trong khung, nên chỉ hiện biểu tượng và mở tab mới
 const canEmbedPdf = () => typeof window !== "undefined" && window.matchMedia("(pointer: fine)").matches;
