@@ -70,7 +70,9 @@ assert.equal(checkResources([]).errors.length, 1);
 assert.ok(checkResources(Array.from({ length: 101 }, (_, i) => img(`${i}.pdf`))).errors.some((e) => e.includes("101")));
 
 // Tên đề + mã môn lấy từ tên thư mục đã chọn
-assert.deepEqual(nameFromFolder(["ENM302 - SU26 - B5 - FE - L/images/Q1.webp"]), { title: "ENM302 - SU26 - B5 - FE - L", subjectCode: "ENM302" });
+assert.deepEqual(nameFromFolder(["ENM302 - SU26 - B5 - FE - L/images/Q1.webp"]), { title: "ENM302 - SU26 - B5 - FE - L", subjectCode: "ENM302", kind: "FE" });
+assert.equal(nameFromFolder(["PRF192 - FA26 - PE - NO1/a.pdf"])?.kind, "PE");
+assert.equal(nameFromFolder(["PRF192 - FA26 - NO1/a.pdf"])?.kind, null);
 assert.equal(nameFromFolder(["pro192m_x/a.pdf"])?.subjectCode, "PRO192M");
 assert.equal(nameFromFolder(["Đề lẻ/a.pdf"])?.subjectCode, null);
 assert.equal(nameFromFolder(["a.pdf"]), null);
