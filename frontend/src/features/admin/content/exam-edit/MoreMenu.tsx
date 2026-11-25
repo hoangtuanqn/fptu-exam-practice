@@ -5,7 +5,8 @@ import { buttonClass } from "@/shared/ui/Button";
 const ENABLED_ITEM = '[role="menuitem"]:not(:disabled)';
 
 // Nút "…" trên thanh công cụ: tải đề, xoá đề (ít dùng nên gom vào menu)
-export function MoreMenu({ downloading, locked, onDownload, onDelete }: { downloading: boolean; locked: boolean; onDownload: () => void; onDelete: () => void }) {
+// onDownload bỏ trống (đề không có câu hỏi) thì ẩn mục tải đề
+export function MoreMenu({ downloading, locked, onDownload, onDelete }: { downloading: boolean; locked: boolean; onDownload?: () => void; onDelete: () => void }) {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -76,13 +77,15 @@ export function MoreMenu({ downloading, locked, onDownload, onDelete }: { downlo
       {open && (
         <>
           <div ref={menuRef} role="menu" className="absolute right-0 top-full z-20 mt-1 w-60 space-y-0.5 rounded-xl border border-outline-variant bg-surface p-1.5 shadow-lg">
-            <button type="button" role="menuitem" disabled={downloading} onClick={run(onDownload)} className={`${item} text-on-surface`}>
-              <Download size={16} className="shrink-0 text-on-surface-variant" />
-              <span>
-                Tải đề (.zip)
-                <span className="block text-xs text-on-surface-variant">Ảnh từng câu và file đáp án</span>
-              </span>
-            </button>
+            {onDownload && (
+              <button type="button" role="menuitem" disabled={downloading} onClick={run(onDownload)} className={`${item} text-on-surface`}>
+                <Download size={16} className="shrink-0 text-on-surface-variant" />
+                <span>
+                  Tải đề (.zip)
+                  <span className="block text-xs text-on-surface-variant">Ảnh từng câu và file đáp án</span>
+                </span>
+              </button>
+            )}
             <button type="button" role="menuitem" disabled={locked} title={locked ? "Chờ AI giải xong" : undefined} onClick={run(onDelete)} className={`${item} text-error`}>
               <Trash2 size={16} className="shrink-0" /> Xoá đề
             </button>

@@ -58,6 +58,7 @@ export function ExamInfo({ exam, answered, gradable, onSaved }: { exam: ExamAdmi
   }
 
   const S = SOURCE[exam.answerSource];
+  const hasQuestions = exam.questions.length > 0;
   return (
     <Card className="mb-4 p-4 sm:p-5">
       <TitleEditor
@@ -67,6 +68,11 @@ export function ExamInfo({ exam, answered, gradable, onSaved }: { exam: ExamAdmi
         // Đề đã có môn: gửi kèm để máy chủ không suy môn từ tên mới và ghi đè môn admin đã chọn. Chưa có môn: chỉ gửi tên để máy chủ tự suy như trước
         onSave={(title) => change(subjectCode ? { title, subjectCode } : { title }, "Đã đổi tên đề", "Không đổi được tên")}
       />
+      {!hasQuestions && (
+        <p className="md-body-medium mt-1 text-on-surface-variant">
+          {exam.attachments?.length ? "Đề tài liệu: chỉ có tệp đính kèm, không có câu hỏi." : "Đề chưa có câu hỏi hay tệp nào. Bạn có thể thêm tệp ở bên dưới."}
+        </p>
+      )}
       <fieldset disabled={saving} className="mt-4 grid gap-3 sm:grid-cols-[11rem_1fr]">
         <Select label="Loại đề" value={kind} onChange={(e) => e.target.value !== kind && void change({ kind: e.target.value as ExamKind }, "Đã đổi loại đề")}>
           {!kind && (
@@ -92,20 +98,26 @@ export function ExamInfo({ exam, answered, gradable, onSaved }: { exam: ExamAdmi
           {unknownCode && <p className="md-body-small mt-1 px-4 text-on-surface-variant">{unknownCode} (chưa có trong danh sách môn)</p>}
         </div>
       </fieldset>
-      <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm text-on-surface-variant">
-        <Badge tone={S[1]}>{S[0]}</Badge>
-        <span>Thread {exam.threadId}</span>
-        <span>{exam.questions.length} ảnh</span>
-        <Link to={`/exam/${exam.id}`} className="inline-flex min-h-10 items-center gap-1 text-primary hover:underline">
-          <BookOpen size={14} /> Mở làm thử
-        </Link>
-      </div>
-      <div className="mt-2">
-        <p className="mb-1 text-xs text-on-surface-variant">
-          Có đáp án {answered}/{gradable}
-        </p>
-        <LinearProgress value={gradable ? answered / gradable : 0} label="Số câu đã có đáp án" />
-      </div>
+      {hasQuestions ? (
+        <>
+          <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm text-on-surface-variant">
+            <Badge tone={S[1]}>{S[0]}</Badge>
+            <span>Thread {exam.threadId}</span>
+            <span>{exam.questions.length} ảnh</span>
+            <Link to={`/exam/${exam.id}`} className="inline-flex min-h-10 items-center gap-1 text-primary hover:underline">
+              <BookOpen size={14} /> Mở làm thử
+            </Link>
+          </div>
+          <div className="mt-2">
+            <p className="mb-1 text-xs text-on-surface-variant">
+              Có đáp án {answered}/{gradable}
+            </p>
+            <LinearProgress value={gradable ? answered / gradable : 0} label="Số câu đã có đáp án" />
+          </div>
+        </>
+      ) : (
+        <p className="mt-4 text-sm text-on-surface-variant">Thread {exam.threadId}</p>
+      )}
     </Card>
   );
 }

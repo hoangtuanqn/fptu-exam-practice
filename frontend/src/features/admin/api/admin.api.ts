@@ -33,6 +33,7 @@ import type {
 import { ApiError, toApiError, BASE, http, tokenStore } from "@/shared/api/client";
 import { PAGE_SIZE } from "@/shared/api/pagination";
 import type { ExamKind } from "@/features/admin/exam-upload/exam-upload.api";
+import type { ExamAttachment } from "@/features/exam/types";
 
 export type NoticeCategory = "account" | "fetch" | "money" | "exam" | "system";
 
@@ -248,6 +249,7 @@ export interface ExamAdminDetail {
     purchases: number;
   };
   questions: ExamQuestionAdmin[];
+  attachments?: ExamAttachment[]; // máy chủ cũ không trả về: coi là []
 }
 
 export interface PurchaseUser {
@@ -501,6 +503,9 @@ export const adminApi = {
     http.list<AdminExam>("/admin/exams", { page, limit: PAGE_SIZE, ...filter }),
   updateExam,
   deleteExam: (id: string) => http.delete(`/admin/exams/${id}`),
+  renameAttachment: (id: string, attachmentId: number, name: string) =>
+    http.patch<{ attachment: ExamAttachment }>(`/admin/exams/${id}/attachments/${attachmentId}`, { name }),
+  removeAttachment: (id: string, attachmentId: number) => http.delete(`/admin/exams/${id}/attachments/${attachmentId}`),
   // Tải đề dạng zip (ảnh + đáp án) rồi lưu xuống máy; trả về tên file đã lưu
   async downloadExam(id: string): Promise<string> {
     await http.get("/users/me").catch(() => undefined); // làm mới token nếu sắp hết hạn (fetch thô bên dưới không tự làm mới)

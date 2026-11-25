@@ -84,7 +84,7 @@ export function useUploadJobs(onSaved?: () => void) {
         savedRef.current?.();
         return;
       }
-      toast.success("Đã nhận đề, đang xử lý nền");
+      toast.success("Đã nhận, đang xử lý nền");
       upsert(job);
     },
     [toast, upsert],

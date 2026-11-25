@@ -15,6 +15,7 @@ import { Segmented } from "@/shared/ui/Segmented";
 import { SkeletonBlock } from "@/shared/ui/Skeleton";
 import { isUuid } from "@/shared/utils/uuid";
 import { lettersOf, normalize } from "./exam-edit/answers";
+import { AttachmentManager } from "./exam-edit/AttachmentManager";
 import { DeleteExamDialog } from "./exam-edit/DeleteExamDialog";
 import { ExamInfo } from "./exam-edit/ExamInfo";
 import { MoreMenu } from "./exam-edit/MoreMenu";
@@ -139,19 +140,13 @@ export default function ExamEditPage() {
   }
 
   function applyPasted(map: Map<number, string>) {
-    let applied = 0;
     setDraft((prev) => {
       const next = { ...prev };
-      for (const [n, answer] of map) {
-        if (!original.has(n)) continue;
-        next[n] = { ...next[n], answer };
-        applied++;
-      }
+      for (const [n, answer] of map) if (original.has(n)) next[n] = { ...next[n], answer };
       return next;
     });
     setPasting(false);
     toast.success(`Đã điền ${map.size} câu, kiểm tra rồi bấm Lưu`);
-    void applied;
   }
 
   function goTo() {
@@ -173,6 +168,23 @@ export default function ExamEditPage() {
   if (error || !data) return <ErrorBox message={error ?? "Không tải được đề"} onRetry={reload} />;
 
   const locked = data.solving;
+  const attachments = data.attachments ?? [];
+  // Đề không có câu hỏi (đề tài liệu, chỉ có tệp) là đề hợp lệ: không có thanh công cụ câu hỏi, chỉ quản lý tệp
+  if (data.questions.length === 0)
+    return (
+      <>
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <Link to="/admin/exams" className="panel-back-link">
+            <ArrowLeft size={15} /> Danh sách đề
+          </Link>
+          <MoreMenu downloading={false} locked={locked} onDelete={() => setDeleting(true)} />
+        </div>
+        <ExamInfo exam={data} answered={0} gradable={0} onSaved={reload} />
+        <AttachmentManager examId={examId} attachments={attachments} onChanged={reload} />
+        {deleting && <DeleteExamDialog exam={data} onClose={() => setDeleting(false)} />}
+      </>
+    );
+
   const questions = data.questions.filter((q) => {
     if (filter === "changed") return isDirty(q);
     if (filter === "empty") return !view(q).isReference && lettersOf(view(q).answer).length === 0;
@@ -188,6 +200,7 @@ export default function ExamEditPage() {
         <ArrowLeft size={15} /> Danh sách đề
       </Link>
       <ExamInfo exam={data} answered={answered} gradable={gradable.length} onSaved={reload} />
+      {attachments.length > 0 && <AttachmentManager examId={examId} attachments={attachments} onChanged={reload} />}
 
       {locked && <div className="mb-3 rounded-xl border border-sky-200 bg-sky-50 px-4 py-2.5 text-sm text-sky-800">AI đang giải đề này, chờ AI xong rồi mới sửa tay được.</div>}
 
@@ -244,7 +257,7 @@ export default function ExamEditPage() {
 
       {questions.length === 0 ? (
         <Card>
-          <p className="p-8 text-center text-sm text-slate-500">{data.questions.length === 0 ? "Đề này chưa có ảnh câu hỏi." : "Không có câu nào khớp bộ lọc."}</p>
+          <p className="p-8 text-center text-sm text-slate-500">Không có câu nào khớp bộ lọc.</p>
         </Card>
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">

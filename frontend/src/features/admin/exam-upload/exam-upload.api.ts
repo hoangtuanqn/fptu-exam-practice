@@ -53,7 +53,7 @@ export interface UploadJob {
   status: UploadJobStatus;
   files: number;
   error: string | null;
-  result: { id: string; questions: number; answered: number } | null;
+  result: { id: string; questions?: number; answered?: number } | null; // lượt tải tệp đính kèm không có số câu
 }
 
 // Trường chữ đặt trước ảnh (máy chủ đọc được khi đang nhận ảnh). Gửi nguyên tệp (tên Qn.webp, không nén lại): máy chủ lấy số câu từ tên tệp
@@ -84,6 +84,19 @@ export const examUploadApi = {
   },
   addImages: (examId: string, input: UploadInput) => {
     return sendForm<UploadJob>("POST", `/admin/exams/${encodeURIComponent(examId)}/images?async=1`, uploadForm(input));
+  },
+  // Thêm tệp đính kèm cho đề (giữ tệp cũ), xử lý nền như addImages
+  addAttachments: (examId: string, files: File[]) => {
+    const form = new FormData();
+    for (const f of files) form.append("files", f, f.name);
+    return sendForm<UploadJob>("POST", `/admin/exams/${encodeURIComponent(examId)}/attachments?async=1`, form);
+  },
+  // Thay nội dung một tệp đính kèm. rename: lấy luôn tên tệp mới
+  replaceAttachment: (examId: string, attachmentId: number, file: File, rename: boolean) => {
+    const form = new FormData();
+    if (rename) form.append("rename", "1");
+    form.append("file", file, file.name);
+    return sendForm<UploadJob>("POST", `/admin/exams/${encodeURIComponent(examId)}/attachments/${attachmentId}/replace?async=1`, form);
   },
   jobs: () => http.get<UploadJob[]>("/admin/exam-upload/jobs"),
   removeJob: (uploadId: string) => http.delete(`/admin/exam-upload/jobs/${encodeURIComponent(uploadId)}`),

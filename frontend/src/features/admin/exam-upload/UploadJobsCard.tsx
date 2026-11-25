@@ -68,8 +68,8 @@ export function UploadJobsHistory({ jobs, onDismiss, className = "" }: { jobs: U
               <div className="min-w-0 flex-1">
                 <div className="md-title-small break-words text-on-surface">{j.title}</div>
                 <div className="md-body-small text-on-surface-variant">
-                  {j.status === "DONE" && j.result ? (
-                    `${j.result.questions} câu, ${j.result.answered} câu có đáp án`
+                  {j.status === "DONE" && j.result?.questions != null ? (
+                    `${j.result.questions} câu, ${j.result.answered ?? 0} câu có đáp án`
                   ) : j.status === "FAILED" ? (
                     <span className="text-error">{j.error ?? "Không xử lý được lần tải đề này."}</span>
                   ) : (
