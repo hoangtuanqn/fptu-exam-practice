@@ -35,3 +35,13 @@ export const changeEmailBody = z.object({
 });
 
 export type ChangeEmailBody = z.infer<typeof changeEmailBody>;
+
+// Xoá tài khoản: gửi mật khẩu, hoặc email (chỉ chấp nhận với tài khoản đăng nhập Google/GitHub)
+export const deleteAccountBody = z
+  .object({
+    password: z.string().max(200, "Mật khẩu không đúng").optional(),
+    email: emailField.optional(),
+  })
+  .refine((v) => !!v.password || !!v.email, { path: ["password"], message: "Vui lòng nhập mật khẩu hoặc email để xác nhận" });
+
+export type DeleteAccountBody = z.infer<typeof deleteAccountBody>;

@@ -88,6 +88,11 @@ export const notificationService = {
     });
   },
 
+  // Vừa yêu cầu xoá tài khoản: báo để huỷ kịp nếu không phải mình
+  deletionRequested(n: { email: string; name: string; deleteAt: Date }) {
+    notify("xoá tài khoản", () => mailService.sendDeletionRequested(n.email, { name: n.name, deleteAt: n.deleteAt, loginUrl: `${env.CLIENT_URL}/login` }));
+  },
+
   // Email đăng nhập đã đổi: báo tới địa chỉ CŨ để người dùng phát hiện nếu không phải mình
   emailChanged(n: { oldEmail: string; newEmail: string; name: string }) {
     notify("đổi email", () =>
