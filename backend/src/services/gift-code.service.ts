@@ -4,7 +4,7 @@ import { prisma } from "../configs/prisma";
 import { creditLotRepository } from "../repositories/credit-lot.repository";
 import { giftCodeRepository } from "../repositories/gift-code.repository";
 import { AppError } from "../rules/error";
-import type { CreateGiftCodeBody } from "../rules/requests/gift-code.request";
+import type { CreateGiftCodeBody, UpdateGiftCodeBody } from "../rules/requests/gift-code.request";
 import { toMeta, type PaginationQuery } from "../utils/pagination";
 import { adminNoticeService } from "./admin-notice.service";
 import { notificationService } from "./notification.service";
@@ -55,14 +55,48 @@ export const giftCodeService = {
     return { items: items.map((g) => ({ ...g, status: statusOf(g) })), meta: toMeta(query, total) };
   },
 
-  async setActive(id: string, active: boolean) {
+  async update(id: string, body: UpdateGiftCodeBody) {
+    const { expiresAt: rawExpiresAt, ...rest } = body;
+    const expiresAt = rawExpiresAt ? new Date(rawExpiresAt) : rawExpiresAt; // null = bỏ hạn
+    if (expiresAt && expiresAt <= new Date()) {
+      throw new AppError("Hạn dùng phải ở tương lai", 400, { expiresAt: "Hạn dùng phải ở tương lai" });
+    }
+    // Mã đã có người dùng thì code/credit/thời hạn credit chỉ được giữ nguyên (form gửi lại giá trị cũ vẫn qua)
+    const locked = { code: body.code, amount: body.amount, creditTtlMinutes: body.creditTtlMinutes };
+    const touchesLocked = Object.values(locked).some((v) => v !== undefined);
+    const guard: Prisma.GiftCodeWhereInput = {
+      usedCount: body.maxUses === undefined ? undefined : { lte: body.maxUses },
+      OR: touchesLocked ? [{ usedCount: 0 }, locked] : undefined,
+    };
+
+    let count: number;
     try {
-      const updated = await giftCodeRepository.setActive(id, active);
-      return { ...updated, status: statusOf(updated) };
+      count = await giftCodeRepository.update(id, { ...rest, expiresAt }, guard);
     } catch (err) {
-      if (prismaCode(err) === "P2025") throw AppError.notFound("Không tìm thấy mã");
+      if (prismaCode(err) === "P2002") throw AppError.conflict("Mã này đã tồn tại", { code: "Mã này đã tồn tại" });
       throw err;
     }
+
+    const current = await giftCodeRepository.findById(id);
+    if (!current) throw AppError.notFound("Không tìm thấy mã");
+    if (!count) {
+      const changesLocked = (Object.keys(locked) as (keyof typeof locked)[]).some((k) => locked[k] !== undefined && locked[k] !== current[k]);
+      if (current.usedCount > 0 && changesLocked) {
+        throw AppError.conflict("Mã đã có người dùng, không đổi được mã, credit hoặc thời hạn credit");
+      }
+      if (body.maxUses !== undefined && body.maxUses < current.usedCount) {
+        const msg = `Số lượt không được nhỏ hơn số lượt đã dùng (${current.usedCount})`;
+        throw new AppError(msg, 400, { maxUses: msg });
+      }
+      // Còn lại: dữ liệu gửi lên trùng giá trị cũ nên không có dòng nào đổi
+    }
+    return { ...current, status: statusOf(current) };
+  },
+
+  async remove(id: string) {
+    if (await giftCodeRepository.deleteUnused(id)) return;
+    if (!(await giftCodeRepository.findById(id))) throw AppError.notFound("Không tìm thấy mã");
+    throw AppError.conflict("Mã đã có người dùng, hãy tắt mã thay vì xóa");
   },
 
   async redemptions(id: string, query: PaginationQuery) {
@@ -93,6 +127,9 @@ export const giftCodeService = {
         if (gift.active) throw new AppError("Mã này đã hết lượt, những người nhập trước đã dùng hết.");
         throw new AppError(INVALID);
       }
+      const terms = await giftCodeRepository.lockTerms(tx, gift.id);
+      gift.amount = Number(terms.amount);
+      gift.creditTtlMinutes = terms.ttl === null ? null : Number(terms.ttl);
       try {
         await giftCodeRepository.createRedemption(tx, { giftCodeId: gift.id, userId, amount: gift.amount });
       } catch (err) {
