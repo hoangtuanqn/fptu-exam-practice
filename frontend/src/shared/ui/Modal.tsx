@@ -12,7 +12,8 @@ const FOCUSABLE = 'a[href], button:not(:disabled), input:not(:disabled), select:
  * "khung chứa" của lớp phủ position:fixed và làm nó chỉ phủ một mảng nhỏ thay vì cả màn hình.
  * Truy cập: role=dialog + aria-modal, nhốt phím Tab trong hộp, Esc để đóng, trả focus về nút đã mở hộp thoại khi đóng.
  */
-export function Modal({ children, onClose, wide = false, blur = false, maxWidth, top = false, flush = false }: { children: ReactNode; onClose?: () => void; wide?: boolean; blur?: boolean; maxWidth?: string; top?: boolean; flush?: boolean }) {
+export function Modal({ children, onClose, wide = false, blur = false, maxWidth, top = false, flush = false, corner }: { children: ReactNode; onClose?: () => void; wide?: boolean; blur?: boolean; maxWidth?: string; top?: boolean; flush?: boolean; corner?: ReactNode }) {
+  // corner: hình trang trí bám ngoài góc trên bên phải của hộp (hộp tự cuộn nên hình phải nằm ngoài khung cuộn)
   // top: hộp nằm gần mép trên (kiểu palette tìm kiếm); flush: không đệm trong để nội dung tự chia khoảng
   // blur: nền phủ tối hơn và nhòe nội dung phía sau, để không đọc được (ví dụ hộp chọn chế độ nằm đè lên đề đã mở: chưa chọn chế độ thì chưa xem được đề)
   const box = useRef<HTMLDivElement>(null);
@@ -61,14 +62,17 @@ export function Modal({ children, onClose, wide = false, blur = false, maxWidth,
       onMouseDown={(e) => e.target === e.currentTarget && onClose?.()}
       className={`md-scrim-in fixed inset-0 z-[60] flex ${top ? "items-start pt-[10vh]" : "items-center"} justify-center overflow-y-auto ${blur ? "bg-scrim/50 backdrop-blur-xl" : "bg-scrim/32"} p-4`}
     >
-      <div
-        ref={box}
-        role="dialog"
-        aria-modal="true"
-        tabIndex={-1}
-        className={`md-enter ${top ? "" : "my-auto"} max-h-full w-full ${maxWidth ?? (wide ? "max-w-4xl" : "max-w-md")} overflow-y-auto rounded-m3-xl ${top ? "bg-surface" : "bg-surface-container-high"} ${flush ? "" : "p-6 sm:p-7"} text-on-surface shadow-m3-3 outline-none`}
-      >
-        {children}
+      <div className={corner ? `relative ${top ? "" : "my-auto"} max-h-full w-full ${maxWidth ?? (wide ? "max-w-4xl" : "max-w-md")}` : "contents"}>
+        <div
+          ref={box}
+          role="dialog"
+          aria-modal="true"
+          tabIndex={-1}
+          className={`md-enter ${top || corner ? "" : "my-auto"} max-h-full w-full ${corner ? "" : (maxWidth ?? (wide ? "max-w-4xl" : "max-w-md"))} overflow-y-auto rounded-m3-xl ${top ? "bg-surface" : "bg-surface-container-high"} ${flush ? "" : "p-6 sm:p-7"} text-on-surface shadow-m3-3 outline-none`}
+        >
+          {children}
+        </div>
+        {corner}
       </div>
     </div>,
     document.body,
