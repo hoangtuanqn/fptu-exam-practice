@@ -14,7 +14,7 @@ const OUT = path.resolve(__dirname, "../../frontend/public/promo/pro-poster.webp
 
 async function main() {
   const f = await loadFonts();
-  const perks = ["Giải thích AI mọi câu", "Báo cáo điểm yếu theo chủ đề", "Sổ câu sai không giới hạn"];
+  const perks = ["Toàn bộ đề thi", "Toàn bộ flashcard", "Mọi tính năng, không giới hạn"];
   const ms = 3.4;
   const mx = W - MASCOT_W * ms - 14;
   const my = H - MASCOT_H * ms - 40;
@@ -37,7 +37,7 @@ async function main() {
   <rect x="48" y="44" width="${22 + pill.length * 15}" height="40" rx="20" fill="${COLOR.gold500}"/>
   <path d="${textD(f.extrabold, pill, 21, 48 + 15, 72, { spacing: 0.08 })}" fill="#4d0a10"/>
   ${wordmark(f.logo, "PRO", 190, 44, 270)}
-  <path d="${textD(f.extrabold, "Ôn thi FE chắc điểm 10", 40, 48, 338)}" fill="${COLOR.gold200}"/>
+  <path d="${textD(f.extrabold, "Mở khóa tất cả", 40, 48, 338)}" fill="${COLOR.gold200}"/>
   ${rows}
   <path d="${textD(f.bold, "FEPASS.TOP", 22, 48, 568, { spacing: 0.14 })}" fill="${COLOR.gold300}"/>
   <g transform="translate(${mx} ${my}) scale(${ms})">${mascotArt(f)}</g>

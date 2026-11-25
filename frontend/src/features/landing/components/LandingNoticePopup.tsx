@@ -30,7 +30,7 @@ export function LandingNoticePopup() {
   return (
     <Modal onClose={close} maxWidth="max-w-lg" flush corner={<div aria-hidden className="pointer-events-none absolute -right-3 -top-14 w-20 drop-shadow-lg sm:-right-4 sm:w-24 [&>svg]:h-auto [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: MASCOT_XMAS_SVG }} />}>
       <div className="relative">
-        <img src="/promo/pro-poster.webp" width={960} height={600} alt="Poster gói PRO của FEPass: giải thích AI mọi câu, báo cáo điểm yếu, sổ câu sai không giới hạn" className="block w-full" />
+        <img src="/promo/pro-poster.webp" width={960} height={600} alt="Poster gói PRO của FEPass: mở khóa tất cả đề thi, flashcard và mọi tính năng, không giới hạn" className="block w-full" />
       </div>
       <div className="p-5 sm:p-6">
         <h2 className="md-headline-small text-on-surface">
