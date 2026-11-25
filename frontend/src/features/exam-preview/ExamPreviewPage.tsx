@@ -25,6 +25,9 @@ import { Button } from "@/shared/ui/Button";
 import { downloadAllAsZip } from "./downloadAll";
 import { ImageLightbox } from "./ImageLightbox";
 
+// Thẻ ảnh trang đề: ảnh đủ khổ (không cắt) trên nền trắng, tên "Ảnh N" bên dưới
+const CARD = "md-state block w-full overflow-hidden rounded-m3-md border border-outline-variant bg-surface-container-lowest text-left outline-none focus-visible:ring-2 focus-visible:ring-primary";
+
 const TILE = "md-state group relative block aspect-[4/3] overflow-hidden rounded-m3-md bg-surface-container-lowest shadow-m3-1 outline-none focus-visible:ring-2 focus-visible:ring-primary";
 const CAPTION = "md-label-large absolute inset-x-0 bottom-0 truncate bg-inverse-surface/70 px-3 py-2 text-left text-inverse-on-surface";
 
@@ -77,7 +80,7 @@ function Preview({ exam }: { exam: ImportedExam }) {
   const [questions, setQuestions] = useState<Question[]>(exam.questions ?? []);
   const [total, setTotal] = useState(exam.totalQuestions ?? 0);
   const [failed, setFailed] = useState(false);
-  const [zoom, setZoom] = useState<Question | null>(null);
+  const [zoom, setZoom] = useState<number | null>(null); // số câu của ảnh đang xem lớn
   const [zipping, setZipping] = useState(false);
   const fetching = !failed && questions.length < total;
   const attachments = useExamAttachmentsLive(exam.id, exam.attachments);
@@ -108,9 +111,9 @@ function Preview({ exam }: { exam: ImportedExam }) {
   // Ảnh các trang và tệp đính kèm nằm chung một lưới (đề PE: tài liệu lên trước); tên hiển thị là tên tệp
   const pageTiles = questions.map((q) => (
     <li key={`p${q.number}`}>
-      <button type="button" onClick={() => setZoom(q)} aria-label={`Xem lớn ${fileName(q)}`} className={`${TILE} w-full`}>
-        <ProtectedImg src={q.imageUrl} alt="" loading="lazy" className="h-full w-full object-cover object-top" />
-        <span className={CAPTION}>{fileName(q)}</span>
+      <button type="button" onClick={() => setZoom(q.number)} aria-label={`Xem lớn ${pageLabel(q)}`} className={CARD}>
+        <ProtectedImg src={q.imageUrl} alt="" loading="lazy" className="block h-auto w-full bg-white" />
+        <span className="md-label-large block truncate px-3 py-2 text-on-surface-variant">{pageLabel(q)}</span>
       </button>
     </li>
   ));
@@ -119,6 +122,8 @@ function Preview({ exam }: { exam: ImportedExam }) {
       <FileTile a={a} />
     </li>
   ));
+  const lightboxItems = questions.map((q) => ({ src: q.imageUrl, name: pageLabel(q) }));
+  const zoomAt = zoom === null ? -1 : questions.findIndex((q) => q.number === zoom);
   const tiles = kind === "PE" ? [...fileTiles, ...pageTiles] : [...pageTiles, ...fileTiles];
 
   // Đề PE: gom mọi tài nguyên (tệp đính kèm + ảnh) vào một file zip mang tên đề
@@ -168,7 +173,7 @@ function Preview({ exam }: { exam: ImportedExam }) {
 
       {tiles.length > 0 && (
         <section className="mb-6">
-          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">{tiles}</ul>
+          <ul className="grid grid-cols-2 items-start gap-3 sm:grid-cols-3 lg:grid-cols-4">{tiles}</ul>
           {items > 0 && kind !== "PE" && (
             <Link to={`/exam/${exam.id}/view`} className={buttonClass({ variant: "text", className: "mt-3" })}>
               Xem từng câu kèm đáp án
@@ -182,10 +187,12 @@ function Preview({ exam }: { exam: ImportedExam }) {
         </Card>
       )}
 
-      {zoom && <ImageLightbox src={zoom.imageUrl} name={fileName(zoom)} onClose={() => setZoom(null)} />}
+      {zoomAt >= 0 && <ImageLightbox items={lightboxItems} index={zoomAt} onIndex={(i) => setZoom(questions[i]!.number)} onClose={() => setZoom(null)} />}
     </>
   );
 }
+
+const pageLabel = (q: Question) => `Ảnh ${q.number}`;
 
 // Tên tệp ảnh của trang (phần cuối đường dẫn, bỏ query)
 const fileName = (q: Question) => decodeURIComponent(q.imageUrl.split("?")[0]!.split("/").pop() ?? `Q${q.number}`);
