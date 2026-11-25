@@ -20,7 +20,6 @@ import { GuestSync } from "@/features/guest-sync/GuestSync";
 import { DailyCheckInPopup } from "@/features/check-in/DailyCheckInPopup";
 import { GradeBridgeHost } from "@/features/grade/GradeBridgeHost";
 import { FreeTurnNotice } from "@/features/link-reward/FreeTurnNotice";
-import { WhatsNewDialog } from "@/features/changelog/WhatsNewDialog";
 import PracticePage from "@/features/practice/PracticePage";
 import { SemesterPromoBar } from "@/features/plan/SemesterPromoBar";
 import { SearchProvider } from "@/features/search/GlobalSearch";
@@ -172,7 +171,6 @@ export default function App() {
       <GradeBridgeHost />
       <FreeTurnNotice />
       <DailyCheckInPopup />
-      <WhatsNewDialog />
       <ChatWidget />
       <SeasonLayer />
       <BottomNav more={ACCOUNT_NAV} />
