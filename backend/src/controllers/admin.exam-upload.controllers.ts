@@ -34,6 +34,15 @@ export const adminExamUploadController = {
     res.json(new ResponseClient({ data: adminExamUploadService.jobs(req.user!.id) }));
   },
 
+  async removeJobs(req: Request, res: Response) {
+    const { id } = getValidated<UuidParam>(res, "params");
+    res.json(new ResponseClient({ data: { removed: adminExamUploadService.removeJobs(req.user!.id, id) } }));
+  },
+
+  async clearJobs(req: Request, res: Response) {
+    res.json(new ResponseClient({ data: { removed: adminExamUploadService.removeJobs(req.user!.id) } }));
+  },
+
   async gaps(_req: Request, res: Response) {
     const { items, meta } = await adminExamUploadService.gaps(getValidated<ExamGapsQuery>(res, "query"));
     res.json(new ResponseClient({ data: items, meta }));

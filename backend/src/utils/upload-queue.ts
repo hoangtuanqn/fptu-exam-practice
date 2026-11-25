@@ -148,6 +148,18 @@ export function createUploadQueue<R extends { id: string }>(opts: {
         .reverse()
         .map(view),
 
+    /** Xoá lượt đã xong/lỗi của admin (một lượt nếu có uploadId, không thì tất cả). Lượt đang chờ/chạy giữ nguyên. Trả số lượt đã xoá */
+    remove: (adminId: string, uploadId?: string) => {
+      let removed = 0;
+      for (let i = jobs.length - 1; i >= 0; i--) {
+        const j = jobs[i]!;
+        if (j.adminId !== adminId || (uploadId && j.uploadId !== uploadId) || (j.status !== "DONE" && j.status !== "FAILED")) continue;
+        jobs.splice(i, 1);
+        removed++;
+      }
+      return removed;
+    },
+
     /** Khi khởi động: hàng đợi cũ đã mất, xoá mọi tệp tạm còn sót */
     clearStaged: () => fs.rmSync(opts.dir, { recursive: true, force: true }),
 

@@ -329,6 +329,7 @@ export const adminExamUploadService = {
 
   /** Các lượt tải chạy nền gần đây của admin này, mới nhất trước */
   jobs: (adminId: string) => examUploadQueue.list(adminId),
+  removeJobs: (adminId: string, uploadId?: string) => examUploadQueue.remove(adminId, uploadId),
 
   async gaps(query: ExamGapsQuery) {
     const { gap, kind, subject, q, page, limit } = query;
