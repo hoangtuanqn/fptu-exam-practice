@@ -19,6 +19,7 @@ export const adminExamUploadController = {
   },
 
   async uploadResource(req: Request, res: Response) {
+    if (isAsyncUpload(req)) return void queued(res, await adminExamUploadService.createResourceAsync(req.user!.id, getValidated<UploadExamBody>(res), filesOf(req)));
     const data = await adminExamUploadService.createResource(req.user!.id, getValidated<UploadExamBody>(res), filesOf(req));
     res.status(HTTP_STATUS.CREATED).json(new ResponseClient({ message: `Đã lưu ${data.files} tệp tài liệu`, data }));
   },

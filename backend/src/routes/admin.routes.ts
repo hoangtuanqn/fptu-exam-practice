@@ -157,8 +157,8 @@ adminRouter.get("/exams", validate(listAdminExamsQuery, "query"), adminAiControl
 // Tải đề bằng tay (thư mục images/Q<số>.webp + ans.json): tạo đề / cập nhật ảnh của đề có sẵn; mỗi admin một lần tải đang chạy.
 // ?async=1: trả 202 ngay sau khi nhận tệp, xử lý nền; kết quả ở GET /exam-upload/jobs và sự kiện realtime admin:exam-upload
 adminRouter.post("/exams/upload", oneExamUploadPerAdmin, examUploadQueueRoom, uploadExamImages, validate(uploadExamBody), adminExamUploadController.upload);
-// Thư mục tài liệu (không có images/ + ans.json): chạy thẳng, không qua hàng đợi nền nên không cần examUploadQueueRoom
-adminRouter.post("/exams/upload-resource", oneExamUploadPerAdmin, uploadExamFiles, validate(uploadExamBody), adminExamUploadController.uploadResource);
+// Thư mục tài liệu (không có images/ + ans.json): cũng chạy nền qua cùng hàng đợi, luôn trả 202
+adminRouter.post("/exams/upload-resource", oneExamUploadPerAdmin, examUploadQueueRoom, uploadExamFiles, validate(uploadExamBody), adminExamUploadController.uploadResource);
 adminRouter.post("/exams/:id/images", validate(uuidParam, "params"), oneExamUploadPerAdmin, examUploadQueueRoom, uploadExamImages, validate(updateExamImagesBody), adminExamUploadController.updateImages);
 adminRouter.get("/exam-upload/jobs", adminExamUploadController.jobs);
 // Xoá lịch sử: chỉ lượt đã xong/lỗi của chính admin này (lượt đang chờ/chạy không xoá được)

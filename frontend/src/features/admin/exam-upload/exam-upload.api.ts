@@ -72,7 +72,7 @@ export const examUploadApi = {
     const form = uploadForm(rest, { title: title.trim(), subjectCode, kind, overwrite: overwrite ? "1" : undefined });
     return sendForm<UploadJob>("POST", "/admin/exams/upload?async=1", form);
   },
-  // Thư mục tài liệu (không phải đề trắc nghiệm): máy chủ lưu ngay mọi tệp. overwrite: tên đề đã có thì thay tệp của đề đó
+  // Thư mục tài liệu (không phải đề trắc nghiệm): máy chủ xếp hàng, lưu nền như tải đề. overwrite: tên đề đã có thì thay tệp của đề đó
   createResource: ({ title, subjectCode, kind, files, overwrite }: Omit<CreateExamInput, keyof UploadInput> & { files: File[]; overwrite?: boolean }) => {
     const form = new FormData();
     form.append("title", title.trim());
@@ -80,7 +80,7 @@ export const examUploadApi = {
     form.append("kind", kind);
     if (overwrite) form.append("overwrite", "1");
     for (const f of files) form.append("files", f, f.name);
-    return sendForm<{ id: string; title: string; files: number }>("POST", "/admin/exams/upload-resource", form);
+    return sendForm<UploadJob>("POST", "/admin/exams/upload-resource?async=1", form);
   },
   addImages: (examId: string, input: UploadInput) => {
     return sendForm<UploadJob>("POST", `/admin/exams/${encodeURIComponent(examId)}/images?async=1`, uploadForm(input));
