@@ -59,14 +59,15 @@ describe("admin exam upload + gaps (throwaway MySQL)", { skip: DB_TESTS_ENABLED 
 
   it("rejects bad input with 400 and leaves no files behind", async () => {
     const dirs = () => fs.readdirSync(path.join(STORAGE, "exams")).length;
+    // tiêu đề riêng: "TST101 manual" đã có từ test trước nên create() sẽ trả 409 trùng tên trước khi kiểm tra ảnh
     const before = dirs();
-    await assert.rejects(m.service.create(admin, body(), files(webp, 1, 3)), hasStatus(400)); // thiếu Q2
-    await assert.rejects(m.service.create(admin, body(), files(png, 1)), hasStatus(400)); // không phải webp
-    await assert.rejects(m.service.create(admin, body({ answers: '{"Q1.webp":["Z"]}' }), files(webp, 1)), hasStatus(400));
+    await assert.rejects(m.service.create(admin, body({ title: "TST101 bad" }), files(webp, 1, 3)), hasStatus(400)); // thiếu Q2
+    await assert.rejects(m.service.create(admin, body({ title: "TST101 bad" }), files(png, 1)), hasStatus(400)); // không phải webp
+    await assert.rejects(m.service.create(admin, body({ title: "TST101 bad", answers: '{"Q1.webp":["Z"]}' }), files(webp, 1)), hasStatus(400));
     await assert.rejects(m.service.create(admin, body({ title: undefined }), files(webp, 1)), hasStatus(400));
     // ảnh hỏng ở cuối: các ảnh đã ghi trước đó bị xoá
     const count = await m.prisma.exam.count();
-    await assert.rejects(m.service.create(admin, body(), [...files(webp, 1), { buffer: Buffer.from("RIFF0000WEBPjunk"), originalname: "Q2.webp" }]), hasStatus(400));
+    await assert.rejects(m.service.create(admin, body({ title: "TST101 bad" }), [...files(webp, 1), { buffer: Buffer.from("RIFF0000WEBPjunk"), originalname: "Q2.webp" }]), hasStatus(400));
     assert.equal(await m.prisma.exam.count(), count);
     const leftover = fs.readdirSync(path.join(STORAGE, "exams")).flatMap((d) => (fs.existsSync(path.join(STORAGE, "exams", d, "images")) ? fs.readdirSync(path.join(STORAGE, "exams", d, "images")) : []));
     assert.equal(leftover.length, 3); // chỉ ảnh của đề đã tạo ở test trước

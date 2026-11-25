@@ -7,8 +7,9 @@ import { realtimeHub } from "../realtime/hub";
 import type { ListAdminExamsQuery, UpdateExamBody, UpdateExamQuestionsBody } from "../rules/requests/admin.request";
 import { subjectRepository } from "../repositories/subject.repository";
 import { invalidateCatalogCache } from "./catalog.service";
-import { fileUrlOf } from "../utils/file-url";
+import { fileUrlOf, toAttachmentDto } from "../utils/file-url";
 import { examRepository } from "../repositories/exam.repository";
+import { examAttachmentRepository } from "../repositories/exam-attachment.repository";
 import { AppError } from "../rules/error";
 import { toMeta } from "../utils/pagination";
 import { aiSettingService } from "./ai-setting.service";
@@ -81,14 +82,16 @@ export const adminExamService = {
     const exam = await examRepository.findAdminDetail(id);
     if (!exam) throw AppError.notFound("Không tìm thấy đề");
     const { questions, ...info } = exam;
-    const [userExams, attempts, unlocks, purchases] = await Promise.all([
+    const [userExams, attempts, unlocks, purchases, attachments] = await Promise.all([
       prisma.userExam.count({ where: { examId: id } }),
       prisma.examAttempt.count({ where: { examId: id } }),
       prisma.explanationUnlock.count({ where: { examId: id } }),
       prisma.explanationPurchase.count({ where: { examId: id } }),
+      examAttachmentRepository.list(id),
     ]);
     return {
       ...info,
+      attachments: attachments.map((a) => toAttachmentDto(id, a)), // cùng dạng với GET đề công khai
       usage: { userExams, attempts, unlocks, purchases }, // mức độ đang được dùng: để cân nhắc trước khi xoá
       solving: examSolveService.isBusy(id) || exam.answerSource === "PENDING",
       questions: questions.map(({ imagePath, ...q }) => ({ ...q, imageUrl: fileUrlOf(imagePath) })),

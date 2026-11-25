@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { env } from "../configs/env";
 import { attachmentKind } from "./attachment";
 
@@ -8,6 +9,9 @@ export const fileUrlOf = (imagePath: string) => `${env.API_URL}/api/v1/files/${i
 // Tệp đính kèm (pdf, zip...) không phục vụ tĩnh mà qua endpoint riêng để đặt Content-Type/Content-Disposition an toàn
 export const attachmentUrlOf = (examId: string, attachmentId: number) => `${env.API_URL}/api/v1/exams/${examId}/attachments/${attachmentId}`;
 
+// ?v= đổi khi thay tệp (tên trên đĩa <hex>-<tên> đổi) hoặc đổi tên hiển thị, để trình duyệt không dùng bản cũ trong cache; route bỏ qua tham số này
+const attachmentVersion = (a: { name: string; filePath: string }) => createHash("sha1").update(`${a.filePath}\0${a.name}`).digest("hex").slice(0, 8);
+
 // Tệp đính kèm trả cho giao diện: dùng chung cho GET đề và sự kiện socket để hai bên luôn cùng dạng
 export const toAttachmentDto = (examId: string, a: { id: number; name: string; filePath: string; mime: string; sizeBytes: number }) => ({
   id: a.id,
@@ -15,5 +19,5 @@ export const toAttachmentDto = (examId: string, a: { id: number; name: string; f
   mime: a.mime,
   sizeBytes: a.sizeBytes,
   kind: attachmentKind(a.filePath),
-  url: attachmentUrlOf(examId, a.id),
+  url: `${attachmentUrlOf(examId, a.id)}?v=${attachmentVersion(a)}`,
 });

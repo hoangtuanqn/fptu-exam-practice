@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import { HTTP_STATUS } from "../constants/httpStatus";
 import { getValidated } from "../middlewares/validate.middlewares";
 import type { UuidParam } from "../rules/requests/admin.request";
-import type { ExamGapFilter, ExamGapsQuery, UpdateExamImagesBody, UploadExamBody } from "../rules/requests/exam-upload.request";
+import type { AttachmentParam, ExamGapFilter, ExamGapsQuery, RenameAttachmentBody, ReplaceAttachmentBody, UpdateExamImagesBody, UploadExamBody } from "../rules/requests/exam-upload.request";
 import { ResponseClient } from "../rules/response";
 import { adminExamUploadService } from "../services/admin.exam-upload.service";
 
@@ -29,6 +29,32 @@ export const adminExamUploadController = {
     if (isAsyncUpload(req)) return void queued(res, await adminExamUploadService.updateImagesAsync(req.user!.id, id, getValidated<UpdateExamImagesBody>(res), filesOf(req)));
     const data = await adminExamUploadService.updateImages(req.user!.id, id, getValidated<UpdateExamImagesBody>(res), filesOf(req));
     res.json(new ResponseClient({ message: `Đã cập nhật ${data.replaced.length + data.added.length} ảnh`, data }));
+  },
+
+  async addFiles(req: Request, res: Response) {
+    const { id } = getValidated<UuidParam>(res, "params");
+    if (isAsyncUpload(req)) return void queued(res, await adminExamUploadService.addFilesAsync(req.user!.id, id, filesOf(req)));
+    const data = await adminExamUploadService.addFiles(req.user!.id, id, filesOf(req));
+    res.status(HTTP_STATUS.CREATED).json(new ResponseClient({ message: `Đã thêm ${data.files} tệp`, data }));
+  },
+
+  async replaceFile(req: Request, res: Response) {
+    const { id, attachmentId } = getValidated<AttachmentParam>(res, "params");
+    const { rename } = getValidated<ReplaceAttachmentBody>(res);
+    if (isAsyncUpload(req)) return void queued(res, await adminExamUploadService.replaceFileAsync(req.user!.id, id, attachmentId, rename, filesOf(req)));
+    const data = await adminExamUploadService.replaceFile(req.user!.id, id, attachmentId, rename, filesOf(req));
+    res.json(new ResponseClient({ message: "Đã thay tệp", data }));
+  },
+
+  async renameFile(req: Request, res: Response) {
+    const { id, attachmentId } = getValidated<AttachmentParam>(res, "params");
+    const { name } = getValidated<RenameAttachmentBody>(res);
+    res.json(new ResponseClient({ message: "Đã đổi tên tệp", data: await adminExamUploadService.renameFile(req.user!.id, id, attachmentId, name) }));
+  },
+
+  async removeFile(req: Request, res: Response) {
+    const { id, attachmentId } = getValidated<AttachmentParam>(res, "params");
+    res.json(new ResponseClient({ message: "Đã xoá tệp", data: await adminExamUploadService.removeFile(req.user!.id, id, attachmentId) }));
   },
 
   async jobs(req: Request, res: Response) {

@@ -103,6 +103,8 @@ export const uploadExamImages = withBodyCap(examImagesUpload, EXAM_UPLOAD_MAX_RE
 const examFilesUpload = multer({
   storage,
   limits: { fileSize: EXAM_UPLOAD_MAX_FILE_BYTES, files: EXAM_UPLOAD_MAX_IMAGES, fields: 10, fieldSize: EXAM_UPLOAD_ANSWERS_MAX_CHARS },
-}).array("files", EXAM_UPLOAD_MAX_IMAGES);
+});
 
-export const uploadExamFiles = withBodyCap(examFilesUpload, EXAM_UPLOAD_MAX_REQUEST_BYTES);
+export const uploadExamFiles = withBodyCap(examFilesUpload.array("files", EXAM_UPLOAD_MAX_IMAGES), EXAM_UPLOAD_MAX_REQUEST_BYTES);
+// Thay nội dung một tệp đính kèm: field "file", cùng giới hạn; service bắt đúng một tệp (báo lỗi rõ hơn lỗi multer)
+export const uploadExamFile = withBodyCap(examFilesUpload.array("file", EXAM_UPLOAD_MAX_IMAGES), EXAM_UPLOAD_MAX_REQUEST_BYTES);

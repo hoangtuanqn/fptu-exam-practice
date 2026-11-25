@@ -27,6 +27,7 @@ import { isWebpSignature } from "../utils/exam-contribution";
 import { attachmentType } from "../utils/attachment";
 import { baseName, parseAnswersJson, planUploadNumbers, resourceFileNames } from "../utils/exam-upload";
 import { resolveInside } from "../utils/exam-zip";
+import { toAttachmentDto } from "../utils/file-url";
 import { createKeyLock } from "../utils/key-lock";
 import type { StagedFile } from "../utils/upload-queue";
 import { toMeta } from "../utils/pagination";
@@ -117,6 +118,12 @@ const oldImages = (questions: { number: number; imagePath: string }[], numbers: 
 
 export type ExamUploadResult = Awaited<ReturnType<typeof result>>;
 
+// Số câu / số câu có đáp án: mọi kết quả chạy nền đều có (lịch sử lượt tải dùng chung hiển thị hai số này)
+const countsOf = (exam: Awaited<ReturnType<typeof examRepository.findAnswers>>) => ({
+  questions: exam?.questions.length ?? 0,
+  answered: exam?.questions.filter((q) => q.answer !== "").length ?? 0,
+});
+
 async function result(examId: string, created: boolean, p: Plan, replaced: number[]) {
   const exam = await examRepository.findAnswers(examId);
   const target = await examRepository.findUploadTarget(prisma, examId);
@@ -127,8 +134,7 @@ async function result(examId: string, created: boolean, p: Plan, replaced: numbe
     created,
     totalQuestions: target?.totalQuestions ?? 0,
     answerSource: exam?.answerSource ?? "DEFAULT",
-    questions: exam?.questions.length ?? 0,
-    answered: exam?.questions.filter((q) => q.answer !== "").length ?? 0,
+    ...countsOf(exam),
     added: p.numbers.filter((n) => !replaced.includes(n)).sort((a, b) => a - b),
     replaced: [...replaced].sort((a, b) => a - b),
     ignoredAnswers: p.ignored,
@@ -235,7 +241,112 @@ function runUpdate(adminId: string, id: string, threadId: string, body: UpdateEx
 }
 
 type ResourcePrep = Awaited<ReturnType<typeof prepareResource>>;
-export type ResourceUploadResult = Awaited<ReturnType<typeof runResource>>;
+// Kết quả chạy nền của mọi lượt ghi tệp tài liệu: id = id đề
+export type ResourceUploadResult = Awaited<ReturnType<typeof runResource | typeof runAddFiles | typeof runReplace>>;
+
+// multer 1.x đọc tên tệp theo latin1 còn trình duyệt gửi UTF-8: đổi lại để giữ tên tiếng Việt
+const utf8Name = (f: File) => baseName(Buffer.from(f.originalname, "latin1").toString("utf8"));
+const mimeOf = (name: string) => attachmentType(name)?.mime ?? "application/octet-stream";
+/** Tên lưu cho các tệp mới, không trùng (không phân biệt hoa thường) với tên đang có của đề */
+const freshNames = (existing: string[], raw: string[]) => resourceFileNames([...existing, ...raw], EXAM_RESOURCE_NAME_MAX_BYTES).slice(existing.length);
+const attachmentNotFound = () => AppError.notFound("Không tìm thấy tệp");
+
+/** Ghi tệp vào exams/<threadId>/files/<hex>-<tên> (cờ "wx": không đè tệp nào); đường dẫn đã ghi đẩy vào `written` để dọn khi lỗi */
+async function writeResources(threadId: string, items: { file: File; name: string }[], written: string[]): Promise<NewAttachment[]> {
+  const dir = path.join(storageDir, EXAM_STORAGE_DIR, threadId, EXAM_FILES_DIR);
+  await fs.mkdir(dir, { recursive: true });
+  const rows: NewAttachment[] = [];
+  for (const { file: f, name } of items) {
+    const file = `${randomBytes(4).toString("hex")}-${name}`;
+    const abs = path.join(dir, file);
+    const buffer = await bytesOf(f); // lần lượt từng tệp để giữ RAM thấp
+    await fs.writeFile(abs, buffer, { flag: "wx" });
+    written.push(abs);
+    rows.push({ name, filePath: `${EXAM_STORAGE_DIR}/${threadId}/${EXAM_FILES_DIR}/${file}`, mime: mimeOf(name), sizeBytes: buffer.length, sourceUrl: "" });
+  }
+  return rows;
+}
+
+// Danh sách tệp của đề vừa đổi: như published + gửi lại danh sách tệp cho trang đang mở
+const attachmentsChanged = (examId: string) => {
+  published(examId);
+  void realtimeHub.publishExamAttachments(examId);
+};
+
+async function examTarget(id: string) {
+  const exam = await examRepository.findUploadTarget(prisma, id);
+  if (!exam) throw AppError.notFound("Không tìm thấy đề");
+  return exam;
+}
+type ExamTarget = Awaited<ReturnType<typeof examTarget>>;
+
+function runAddFiles(adminId: string, exam: ExamTarget, files: File[]) {
+  return withThreadLock(exam.threadId, async () => {
+    await examTarget(exam.id); // đề có thể vừa bị xoá trong lúc chờ khoá
+    const old = await examAttachmentRepository.list(exam.id);
+    const names = freshNames(
+      old.map((a) => a.name),
+      files.map(utf8Name),
+    );
+    const written: string[] = [];
+    try {
+      const rows = await writeResources(
+        exam.threadId,
+        files.map((file, i) => ({ file, name: names[i]! })),
+        written,
+      );
+      await examAttachmentRepository.add(exam.id, rows);
+    } catch (err) {
+      await removeFiles(written);
+      throw err;
+    }
+    console.log(`[admin] #${adminId} thêm ${files.length} tệp vào đề #${exam.id}`);
+    attachmentsChanged(exam.id);
+    return { id: exam.id, title: exam.title, files: files.length, ...countsOf(await examRepository.findAnswers(exam.id)) };
+  });
+}
+
+function runReplace(adminId: string, exam: ExamTarget, attachmentId: number, rename: boolean, files: File[]) {
+  const file = files[0]!;
+  return withThreadLock(exam.threadId, async () => {
+    const list = await examAttachmentRepository.list(exam.id);
+    const old = list.find((a) => a.id === attachmentId);
+    if (!old) throw attachmentNotFound();
+    const others = list.filter((a) => a.id !== attachmentId).map((a) => a.name);
+    const [name] = freshNames(others, [utf8Name(file)]);
+    // Giữ tên cũ nhưng đuôi khác tệp mới: đổi đuôi theo tệp mới để tên tải về khớp nội dung
+    const oldExt = path.extname(old.name);
+    const newExt = path.extname(name!);
+    const kept = oldExt.toLowerCase() === newExt.toLowerCase() ? undefined : freshNames(others, [`${path.basename(old.name, oldExt)}${newExt}`])[0];
+    const written: string[] = [];
+    let row: Awaited<ReturnType<typeof examAttachmentRepository.update>>;
+    try {
+      const [r] = await writeResources(exam.threadId, [{ file, name: name! }], written);
+      const newName = rename ? r!.name : kept;
+      row = await examAttachmentRepository.update(attachmentId, { filePath: r!.filePath, mime: r!.mime, sizeBytes: r!.sizeBytes, ...(newName && { name: newName }) });
+    } catch (err) {
+      await removeFiles(written);
+      throw err;
+    }
+    const oldAbs = resolveInside(storageDir, old.filePath);
+    if (oldAbs) await removeFiles([oldAbs]);
+    console.log(`[admin] #${adminId} thay tệp #${attachmentId} của đề #${exam.id}`);
+    attachmentsChanged(exam.id);
+    return { id: exam.id, title: exam.title, files: 1, ...countsOf(await examRepository.findAnswers(exam.id)), attachment: toAttachmentDto(exam.id, row) };
+  });
+}
+
+async function prepareReplace(id: string, attachmentId: number, files: MemFile[]) {
+  if (files.length !== 1) throw invalid("Vui lòng chọn đúng một tệp.", "file");
+  const exam = await examTarget(id);
+  if (!(await examAttachmentRepository.find(id, attachmentId))) throw attachmentNotFound();
+  return exam;
+}
+
+async function prepareAddFiles(id: string, files: MemFile[]) {
+  if (!files.length) throw invalid("Vui lòng chọn ít nhất một tệp.", "files");
+  return examTarget(id);
+}
 
 /** Kiểm tra nhanh (tiêu đề, trùng tên, có tệp) trước khi xếp hàng, để lỗi và hỏi ghi đè vẫn trả ngay */
 async function prepareResource(body: UploadExamBody, files: MemFile[]) {
@@ -248,29 +359,17 @@ async function prepareResource(body: UploadExamBody, files: MemFile[]) {
 }
 
 function runResource(adminId: string, { title, body, same, threadId }: ResourcePrep, files: File[]) {
-  // multer 1.x đọc tên tệp theo latin1 còn trình duyệt gửi UTF-8: đổi lại để giữ tên tiếng Việt
-  const all = files.map((f) => ({ file: f, name: baseName(Buffer.from(f.originalname, "latin1").toString("utf8")) }));
   return withThreadLock(threadId, async () => {
-    const dir = path.join(storageDir, EXAM_STORAGE_DIR, threadId, EXAM_FILES_DIR);
-    const names = resourceFileNames(
-      all.map((f) => f.name),
-      EXAM_RESOURCE_NAME_MAX_BYTES,
-    );
+    const names = resourceFileNames(files.map(utf8Name), EXAM_RESOURCE_NAME_MAX_BYTES);
     const old = same ? await examAttachmentRepository.listByExam(same.id) : [];
     const written: string[] = [];
     let examId: string;
     try {
-      await fs.mkdir(dir, { recursive: true });
-      const rows: NewAttachment[] = [];
-      for (const [i, f] of all.entries()) {
-        const name = names[i]!;
-        const file = `${randomBytes(4).toString("hex")}-${name}`;
-        const abs = path.join(dir, file);
-        const buffer = await bytesOf(f.file); // lần lượt từng tệp để giữ RAM thấp
-        await fs.writeFile(abs, buffer, { flag: "wx" });
-        written.push(abs);
-        rows.push({ name, filePath: `${EXAM_STORAGE_DIR}/${threadId}/${EXAM_FILES_DIR}/${file}`, mime: attachmentType(f.name)?.mime ?? "application/octet-stream", sizeBytes: buffer.length, sourceUrl: "" });
-      }
+      const rows = await writeResources(
+        threadId,
+        files.map((file, i) => ({ file, name: names[i]! })),
+        written,
+      );
       examId = await prisma.$transaction(
         async (tx) => {
           let id = same?.id;
@@ -290,9 +389,9 @@ function runResource(adminId: string, { title, body, same, threadId }: ResourceP
       throw err;
     }
     await removeFiles(old.flatMap((a) => resolveInside(storageDir, a.filePath) ?? []));
-    console.log(`[admin] #${adminId} tải tài liệu ${same ? "ghi đè " : ""}#${examId}: ${all.length} tệp`);
+    console.log(`[admin] #${adminId} tải tài liệu ${same ? "ghi đè " : ""}#${examId}: ${files.length} tệp`);
     published(examId);
-    return { id: examId, title, files: all.length, overwritten: !!same, questions: 0, answered: 0 };
+    return { id: examId, title, files: files.length, overwritten: !!same, questions: 0, answered: 0 };
   });
 }
 
@@ -342,6 +441,59 @@ export const adminExamUploadService = {
   async updateImagesAsync(adminId: string, id: string, body: UpdateExamImagesBody, files: MemFile[]) {
     const first = await prepareUpdate(id, body, files);
     return examUploadQueue.enqueue({ adminId, kind: "update", title: first.title, examId: id }, files, (staged) => runUpdate(adminId, id, first.threadId, body, staged));
+  },
+
+  /**
+   * Tệp đính kèm của đề có sẵn (đề PE chỉ có tệp): thêm tệp (giữ tệp cũ, trùng tên thì thêm -2, -3...), thay nội dung một tệp,
+   * đổi tên hiển thị, xoá. Mọi lượt ghi cùng đề chạy lần lượt theo khoá threadId như tải đề.
+   */
+  async addFiles(adminId: string, id: string, files: MemFile[]) {
+    return runAddFiles(adminId, await prepareAddFiles(id, files), files);
+  },
+
+  async addFilesAsync(adminId: string, id: string, files: MemFile[]) {
+    const exam = await prepareAddFiles(id, files);
+    return examUploadQueue.enqueue({ adminId, kind: "update", title: exam.title, examId: id }, files, (staged) => runAddFiles(adminId, exam, staged));
+  },
+
+  async replaceFile(adminId: string, id: string, attachmentId: number, rename: boolean, files: MemFile[]) {
+    return runReplace(adminId, await prepareReplace(id, attachmentId, files), attachmentId, rename, files);
+  },
+
+  async replaceFileAsync(adminId: string, id: string, attachmentId: number, rename: boolean, files: MemFile[]) {
+    const exam = await prepareReplace(id, attachmentId, files);
+    return examUploadQueue.enqueue({ adminId, kind: "update", title: exam.title, examId: id }, files, (staged) => runReplace(adminId, exam, attachmentId, rename, staged));
+  },
+
+  /** Đổi tên hiển thị (tệp trên đĩa và mime giữ nguyên: loại tệp và Content-Type theo tệp trên đĩa). Trùng tên tệp khác của đề: 409 */
+  async renameFile(adminId: string, id: string, attachmentId: number, rawName: string) {
+    const exam = await examTarget(id);
+    return withThreadLock(exam.threadId, async () => {
+      const list = await examAttachmentRepository.list(id);
+      if (!list.some((a) => a.id === attachmentId)) throw attachmentNotFound();
+      const [name] = resourceFileNames([rawName], EXAM_RESOURCE_NAME_MAX_BYTES);
+      const taken = list.some((a) => a.id !== attachmentId && a.name.toLowerCase() === name!.toLowerCase());
+      if (taken) throw new AppError("Đề đã có tệp khác cùng tên này", HTTP_STATUS.CONFLICT, { name: "Tên tệp đã có trong đề" });
+      const row = await examAttachmentRepository.update(attachmentId, { name: name! });
+      console.log(`[admin] #${adminId} đổi tên tệp #${attachmentId} của đề #${id}`);
+      attachmentsChanged(id);
+      return { attachment: toAttachmentDto(id, row) };
+    });
+  },
+
+  /** Xoá một tệp: xoá dòng rồi xoá tệp trên đĩa (chỉ trong storage; tệp đã mất thì bỏ qua). Đề còn 0 tệp, 0 câu vẫn được. */
+  async removeFile(adminId: string, id: string, attachmentId: number) {
+    const exam = await examTarget(id);
+    return withThreadLock(exam.threadId, async () => {
+      const a = await examAttachmentRepository.find(id, attachmentId);
+      if (!a) throw attachmentNotFound();
+      await examAttachmentRepository.remove(attachmentId);
+      const abs = resolveInside(storageDir, a.filePath);
+      if (abs) await removeFiles([abs]);
+      console.log(`[admin] #${adminId} xoá tệp #${attachmentId} của đề #${id}`);
+      attachmentsChanged(id);
+      return { removed: true };
+    });
   },
 
   /** Các lượt tải chạy nền gần đây của admin này, mới nhất trước */
