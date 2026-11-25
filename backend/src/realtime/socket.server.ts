@@ -21,7 +21,7 @@ async function identifySocket(auth: Record<string, unknown>): Promise<Actor> {
 
   if (token) {
     const user = await userRepository.findById(verifyToken(token).sub);
-    if (!user || user.status === "BANNED") throw new Error("unauthorized");
+    if (!user || user.status === "BANNED" || user.deleteRequestedAt) throw new Error("unauthorized");
     return { owner: { userId: user.id }, isAdmin: user.role === "ADMIN" };
   }
   if (!guestId) throw new Error("unauthorized");

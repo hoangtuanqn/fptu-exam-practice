@@ -93,7 +93,7 @@ export const authController = {
     try {
       const { userId, refreshToken } = await refreshTokenService.rotate(raw, clientContext(req));
       const user = await userRepository.findById(userId);
-      if (!user || user.status === "BANNED") {
+      if (!user || user.status === "BANNED" || user.deleteRequestedAt) {
         await refreshTokenService.revokeAllOfUser(userId);
         throw AppError.unauthorized();
       }

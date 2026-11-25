@@ -19,6 +19,8 @@ export const publicUserSelect = {
   marketingOptOut: true,
   marketingMutedTopics: true,
   marketingMutedUntil: true,
+  deleteRequestedAt: true,
+  deletedAt: true,
   createdAt: true,
 } satisfies Prisma.UserSelect;
 
@@ -41,8 +43,8 @@ export const userRepository = {
 
   // Đăng nhập Google: tìm theo mã Google, hoặc theo email để liên kết với tài khoản có sẵn
   findBySocial: (provider: SocialProvider, id: string) =>
-    prisma.user.findUnique({ where: provider === "google" ? { googleSub: id } : { githubId: id }, select: { id: true, status: true } }),
-  findByEmailForLink: (email: string) => prisma.user.findUnique({ where: { email }, select: { id: true, status: true, emailVerifiedAt: true } }),
+    prisma.user.findUnique({ where: provider === "google" ? { googleSub: id } : { githubId: id }, select: { id: true, status: true, deleteRequestedAt: true } }),
+  findByEmailForLink: (email: string) => prisma.user.findUnique({ where: { email }, select: { id: true, status: true, emailVerifiedAt: true, deleteRequestedAt: true } }),
   linkSocial: async (id: string, provider: SocialProvider, sub: string, emailVerifiedAt: Date) =>
     fresh(id, await prisma.user.update({ where: { id }, data: { ...(provider === "google" ? { googleSub: sub } : { githubId: sub }), emailVerifiedAt } })),
 
@@ -81,7 +83,8 @@ export const userRepository = {
   // Tên hiển thị của một nhóm thành viên (trang "đang online")
   findNames: (ids: string[]) => prisma.user.findMany({ where: { id: { in: ids } }, select: { id: true, fullName: true, email: true } }),
 
-  countByStatus: () => prisma.user.groupBy({ by: ["status"], _count: { _all: true } }),
+  countByStatus: () => prisma.user.groupBy({ by: ["status"], where: { deletedAt: null }, _count: { _all: true } }),
+  countDeleted: () => prisma.user.count({ where: { deletedAt: { not: null } } }),
 
   // Lần hoạt động gần nhất (không có trong publicUserSelect nên không cần xoá cache xác thực)
   touchActive: (id: string, at: Date) => prisma.user.updateMany({ where: { id }, data: { lastActiveAt: at } }),

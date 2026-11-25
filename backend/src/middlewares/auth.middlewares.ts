@@ -12,11 +12,14 @@ const loadUser = async (req: Request) => {
   const [scheme, token] = (req.headers.authorization ?? "").split(" ");
   if (scheme !== "Bearer" || !token) throw AppError.unauthorized();
 
-  const { sub } = verifyToken(token);
+  const { sub, impersonated } = verifyToken(token);
   const user = await userCache.get(sub, () => userRepository.findById(sub));
   if (!user) throw AppError.unauthorized();
   if (user.status === "BANNED") throw AppError.banned();
+  // Đang chờ xoá hoặc đã xoá: access token còn hạn cũng vô hiệu
+  if (user.deleteRequestedAt) throw AppError.unauthorized();
   req.user = user;
+  req.impersonated = impersonated;
 };
 
 // Xác thực bắt buộc
