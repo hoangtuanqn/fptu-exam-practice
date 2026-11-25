@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Loader2 } from "lucide-react";
 import { AvatarUpload } from "@/features/account/components/AvatarUpload";
+import { DeleteAccountCard } from "@/features/account/components/DeleteAccountCard";
 import { EmailSection } from "@/features/account/components/EmailSection";
 import { MarketingEmailCard } from "@/features/account/components/MarketingEmailCard";
 import { ReminderCard } from "@/features/review/ReminderCard";
@@ -110,6 +111,7 @@ export default function ProfilePage() {
         <ReminderCard />
         <MarketingEmailCard />
       </div>
+      <DeleteAccountCard />
     </>
   );
 }

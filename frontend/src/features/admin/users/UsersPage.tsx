@@ -78,7 +78,7 @@ export default function UsersPage() {
                       <div className="truncate text-xs text-slate-500">{u.email}</div>
                       <div className="mt-1 flex flex-wrap items-center gap-1.5">
                         <RoleBadge value={u.role} />
-                        <UserStatusBadge value={u.status} />
+                        <UserStatusBadge user={u} />
                       </div>
                     </div>
                     <div className="shrink-0 text-right">
@@ -113,7 +113,7 @@ export default function UsersPage() {
                       </div>
                     </Td>
                     <Td><RoleBadge value={u.role} /></Td>
-                    <Td><UserStatusBadge value={u.status} /></Td>
+                    <Td><UserStatusBadge user={u} /></Td>
                     <Td className="text-right tabular-nums">{formatCredit(u.balance)}</Td>
                     <Td className="whitespace-nowrap text-slate-500">{formatDate(u.createdAt)}</Td>
                   </Tr>

@@ -6,6 +6,7 @@ import { useAuth } from "@/features/auth/AuthContext";
 import { impersonation } from "@/shared/api/client";
 import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
+import { UserStatusBadge } from "@/shared/components/StatusBadge";
 import { useSubmit } from "@/shared/hooks/useSubmit";
 import type { Role, User, UserStatus } from "@/shared/types/api";
 import { isPro } from "@/shared/utils/pro";
@@ -183,7 +184,7 @@ function UserDetail({ initial }: { initial: User }) {
   };
 
   const amountOk = Number(digits) > 0 && note.trim().length > 0;
-  const canImpersonate = !isSelf && current.role !== "ADMIN" && current.status === "ACTIVE";
+  const canImpersonate = !isSelf && current.role !== "ADMIN" && current.status === "ACTIVE" && !current.deleteRequestedAt;
   const pwdTooShort = newPassword.length > 0 && newPassword.length < 8;
   const adminOther = current.role === "ADMIN" && !isSelf;
 
@@ -205,7 +206,7 @@ function UserDetail({ initial }: { initial: User }) {
             <p className="truncate text-sm text-slate-500">{current.email}</p>
             <div className="mt-2 flex flex-wrap items-center gap-1.5">
               <Badge tone={current.role === "ADMIN" ? "info" : "neutral"}>{current.role === "ADMIN" ? "Quản trị" : "Thành viên"}</Badge>
-              <Badge tone={current.status === "ACTIVE" ? "success" : "danger"}>{current.status === "ACTIVE" ? "Hoạt động" : "Bị khoá"}</Badge>
+              <UserStatusBadge user={current} />
               <Badge tone={current.emailVerifiedAt ? "success" : "warning"}>{current.emailVerifiedAt ? "Email đã xác minh" : "Chưa xác minh email"}</Badge>
               <span className="text-xs text-slate-500">#{current.id} · tham gia {formatDate(current.createdAt)}</span>
             </div>
@@ -232,6 +233,9 @@ function UserDetail({ initial }: { initial: User }) {
         />
       </div>
 
+      {current.deletedAt ? (
+        <Card className="p-5 text-sm text-slate-500">Tài khoản đã bị xoá ngày {formatDate(current.deletedAt)}, không còn thao tác quản lý nào. Lịch sử giao dịch vẫn xem được ở các liên kết phía trên.</Card>
+      ) : (
       <div className="grid items-start gap-6 lg:grid-cols-2">
         {/* Cột trái: thông tin + số dư */}
         <div className="space-y-6">
@@ -325,10 +329,11 @@ function UserDetail({ initial }: { initial: User }) {
             <Button variant="primary" disabled={login.loading || !canImpersonate} onClick={loginAs}>
               {login.loading ? <Loader2 size={15} className="animate-spin" /> : <LogIn size={15} />} Đăng nhập thay
             </Button>
-            {!canImpersonate && <p className="mt-2 text-xs text-slate-500">{isSelf ? "Đây là tài khoản của bạn." : current.role === "ADMIN" ? "Không đăng nhập thay quản trị viên khác." : "Tài khoản đang bị khoá, hãy mở khoá trước."}</p>}
+            {!canImpersonate && <p className="mt-2 text-xs text-slate-500">{isSelf ? "Đây là tài khoản của bạn." : current.role === "ADMIN" ? "Không đăng nhập thay quản trị viên khác." : current.deleteRequestedAt ? "Tài khoản đang chờ xoá." : "Tài khoản đang bị khoá, hãy mở khoá trước."}</p>}
           </Panel>
         </div>
       </div>
+      )}
     </>
   );
 }
