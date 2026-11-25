@@ -4,6 +4,7 @@ import { prisma } from "../configs/prisma";
 import { userRepository } from "../repositories/user.repository";
 import { REFERRAL_CODE_ALPHABET, REFERRAL_CODE_LENGTH } from "../constants/referral";
 import { referralRepository } from "../repositories/referral.repository";
+import { accountDeletionRepository } from "../repositories/account-deletion.repository";
 import { AppError } from "../rules/error";
 import type { Db } from "../repositories/wallet.repository";
 import { maskEmail } from "../utils/mask";
@@ -61,7 +62,7 @@ export const referralService = {
   // Cộng thưởng đăng ký cho người mới (và người giới thiệu nếu admin đặt). Dùng chung cho lúc đăng ký và lúc nhập mã muộn.
   async grantSignupRewards(db: Db, newUser: { id: string; fullName: string }, ownerId: string): Promise<RewardNotice[]> {
     const config = await referralSettingService.get();
-    if (!config.enabled) return [];
+    if (!config.enabled || (await accountDeletionRepository.isReturning(db, newUser.id))) return [];
     const referrer = await db.user.findUnique({ where: { id: ownerId }, select: { fullName: true } });
     const notices: RewardNotice[] = [];
 
@@ -125,7 +126,7 @@ export const referralService = {
    */
   async rewardDeposit(db: Db, input: { depositorId: string; depositorName: string; depositOrderId: string; code: string; amount: number }): Promise<RewardNotice | null> {
     const link = await referralRepository.findReferrerOf(db, input.depositorId);
-    if (!link?.referredById) return null;
+    if (!link?.referredById || link.referredBy?.deleteRequestedAt) return null; // người giới thiệu đã đóng tài khoản
     const config = await referralSettingService.get();
     if (!config.enabled || config.commissionPercent <= 0) return null;
     const commission = Math.floor((input.amount * config.commissionPercent) / 100);

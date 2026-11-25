@@ -79,7 +79,7 @@ export const reminderService = {
   async run(now = Date.now()) {
     const today = vnDate(now);
     const users = await prisma.user.findMany({
-      where: { reminderEnabled: true, status: "ACTIVE", emailVerifiedAt: { not: null }, OR: [{ reminderSentOn: null }, { reminderSentOn: { lt: today } }] },
+      where: { reminderEnabled: true, status: "ACTIVE", deleteRequestedAt: null, emailVerifiedAt: { not: null }, OR: [{ reminderSentOn: null }, { reminderSentOn: { lt: today } }] },
       take: REMINDER_MAX_PER_RUN,
       select: { id: true, email: true, fullName: true, examDate: true },
     });

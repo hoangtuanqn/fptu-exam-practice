@@ -5,7 +5,7 @@ import type { Db } from "./wallet.repository";
 
 export const referralRepository = {
   // Người sở hữu mã giới thiệu (mã đã được chuẩn hóa chữ hoa)
-  findOwnerByCode: (db: Db, code: string) => db.user.findUnique({ where: { referralCode: code }, select: { id: true, status: true } }),
+  findOwnerByCode: (db: Db, code: string) => db.user.findFirst({ where: { referralCode: code, deleteRequestedAt: null }, select: { id: true, status: true } }),
 
   codeExists: async (code: string) => !!(await prisma.user.findUnique({ where: { referralCode: code }, select: { id: true } })),
 
@@ -22,7 +22,7 @@ export const referralRepository = {
     return count === 1;
   },
 
-  findReferrerOf: (db: Db, userId: string) => db.user.findUnique({ where: { id: userId }, select: { referredById: true } }),
+  findReferrerOf: (db: Db, userId: string) => db.user.findUnique({ where: { id: userId }, select: { referredById: true, referredBy: { select: { deleteRequestedAt: true } } } }),
 
   createReward: (db: Db, data: { referrerId: string; referredId: string; type: ReferralRewardType; amount: number; depositOrderId?: string }) =>
     db.referralReward.create({ data, select: { id: true } }),

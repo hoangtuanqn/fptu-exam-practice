@@ -18,7 +18,7 @@ export const depositRepository = {
   // Chiếm lệnh bằng điều kiện ở DB: chỉ một tiến trình đổi được sang PAID, các tiến trình khác nhận count = 0
   async markPaid(db: Db, id: string) {
     const { count } = await db.depositOrder.updateMany({
-      where: { id, status: { not: "PAID" } },
+      where: { id, status: { not: "PAID" }, user: { deletedAt: null } }, // tiền tới sau khi tài khoản đã xoá: để ở mục chưa khớp cho admin xử lý
       data: { status: "PAID", paidAt: new Date() },
     });
     return count === 1;
