@@ -5,7 +5,7 @@ const MAX_ZOOM = 3;
 const STEP = 0.25;
 const WHEEL_SPEED = 0.0015; // độ nhạy con lăn: hệ số phóng = e^(-deltaY * WHEEL_SPEED)
 
-// Logic phóng to/thu nhỏ ảnh: nút +/−, con lăn chuột (phóng quanh con trỏ); ảnh tràn khung thì kéo chuột để di chuyển (bàn tay). Bấm vào ảnh không làm gì.
+// Logic phóng to/thu nhỏ ảnh: nút +/−, con lăn chuột phóng quanh con trỏ khi ảnh vừa khung (ảnh dài thì con lăn cuộn ảnh); ảnh tràn khung thì kéo chuột để di chuyển (bàn tay). Bấm vào ảnh không làm gì.
 // Mức phóng và vị trí đang xem (tâm khung nhìn, tỉ lệ 0–1 trên ảnh) được giữ khi đổi câu; nút "đặt lại" mới về 100%.
 // topAlign: ảnh mới nạp / đặt lại thì hiện từ ĐẦU ảnh (cuộn lên đầu) thay vì giữa ảnh; dùng cho xem lần lượt các trang đề.
 export function useImageZoom({ topAlign = false }: { topAlign?: boolean } = {}) {
@@ -64,6 +64,10 @@ export function useImageZoom({ topAlign = false }: { topAlign?: boolean } = {}) 
     const onWheel = (e: WheelEvent) => {
       const img = imgRef.current;
       if (!img) return;
+      // Ảnh dài (ở 100% cao hơn khung xem): con lăn cuộn ảnh lên/xuống như bình thường, muốn phóng thì dùng nút hoặc Ctrl + lăn (vuốt chụm trên touchpad).
+      // Ảnh vừa một khung nhìn: con lăn phóng/thu quanh con trỏ.
+      const tall = img.getBoundingClientRect().height / zoomNow.current > box.clientHeight;
+      if (tall && !e.ctrlKey) return;
       e.preventDefault();
       const next = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Math.round(zoomNow.current * Math.exp(-Math.max(-100, Math.min(100, e.deltaY)) * WHEEL_SPEED) * 1000) / 1000));
       if (next === zoomNow.current) return;
