@@ -86,4 +86,6 @@ export const examUploadApi = {
     return sendForm<UploadJob>("POST", `/admin/exams/${encodeURIComponent(examId)}/images?async=1`, uploadForm(input));
   },
   jobs: () => http.get<UploadJob[]>("/admin/exam-upload/jobs"),
+  removeJob: (uploadId: string) => http.delete(`/admin/exam-upload/jobs/${encodeURIComponent(uploadId)}`),
+  clearJobs: () => http.delete("/admin/exam-upload/jobs"),
 };

@@ -6,16 +6,6 @@ import { isRealtimeConnected, onConnectionChange, onServerEvent } from "@/shared
 import { examUploadApi, type UploadJob } from "./exam-upload.api";
 
 const FALLBACK_POLL_MS = 5000; // chỉ dùng khi mất kết nối realtime và đang có lượt chờ/chạy
-const DISMISSED_KEY = "fepass.examUploadDismissed";
-const DISMISSED_MAX = 100; // chỉ nhớ bấy nhiêu mã gần nhất cho gọn
-const loadDismissed = (): string[] => {
-  try {
-    const v = JSON.parse(localStorage.getItem(DISMISSED_KEY) ?? "[]");
-    return Array.isArray(v) ? v : [];
-  } catch {
-    return [];
-  }
-};
 export const isActive = (j: UploadJob) => j.status === "QUEUED" || j.status === "RUNNING";
 
 /**
@@ -26,9 +16,7 @@ export function useUploadJobs(onSaved?: () => void) {
   const toast = useToast();
   const query = useApi(() => examUploadApi.jobs(), []);
   const [live, setLive] = useState<UploadJob[] | null>(null);
-  const [dismissed, setDismissed] = useState(loadDismissed);
-  const all = live ?? query.data ?? [];
-  const jobs = all.filter((j) => !j.uploadId || !dismissed.includes(j.uploadId));
+  const jobs = live ?? query.data ?? [];
   const running = jobs.some(isActive);
   const savedRef = useRef(onSaved);
   savedRef.current = onSaved;
@@ -49,7 +37,7 @@ export function useUploadJobs(onSaved?: () => void) {
   const active = useRef(new Set<string>());
   useEffect(() => {
     let saved = false;
-    for (const j of all) {
+    for (const j of jobs) {
       if (!j.uploadId) continue;
       if (isActive(j)) active.current.add(j.uploadId);
       else if (active.current.delete(j.uploadId)) {
@@ -61,7 +49,7 @@ export function useUploadJobs(onSaved?: () => void) {
       }
     }
     if (saved) savedRef.current?.();
-  }, [all, toast]);
+  }, [jobs, toast]);
 
   useEffect(() => onServerEvent<UploadJob>(EVENTS.examUpload, upsert), [upsert]);
 
@@ -102,18 +90,18 @@ export function useUploadJobs(onSaved?: () => void) {
     [toast, upsert],
   );
 
-  // Chỉ ẩn lượt đã xong/lỗi (lượt đang chạy không xoá được). Máy chủ chỉ giữ lượt trong RAM nên ghi nhớ ở trình duyệt để tải lại trang không hiện lại
-  const dismiss = useCallback((ids: string[]) => {
-    setDismissed((prev) => {
-      const next = [...new Set([...prev, ...ids])].slice(-DISMISSED_MAX);
+  // Xoá ở máy chủ rồi bỏ khỏi danh sách (một lượt, hoặc tất cả lượt đã xong/lỗi). Lượt đang chạy không xoá được
+  const dismiss = useCallback(
+    async (id?: string) => {
       try {
-        localStorage.setItem(DISMISSED_KEY, JSON.stringify(next));
+        await (id ? examUploadApi.removeJob(id) : examUploadApi.clearJobs());
+        setLive((prev) => (prev ?? query.data ?? []).filter((j) => (id ? j.uploadId !== id : isActive(j))));
       } catch {
-        // trình duyệt chặn lưu trữ: vẫn ẩn trong phiên này
+        toast.error("Chưa xoá được, bạn thử lại nhé");
       }
-      return next;
-    });
-  }, []);
+    },
+    [query.data, toast],
+  );
 
   return { jobs, add, dismiss };
 }

@@ -42,9 +42,9 @@ export function UploadJobsSummary({ jobs, className = "" }: { jobs: UploadJob[];
 }
 
 // Lịch sử các lượt tải đề, đặt dưới form. Lượt đã xong/lỗi có nút X để xoá khỏi danh sách; không có lượt nào thì ẩn
-export function UploadJobsHistory({ jobs, onDismiss, className = "" }: { jobs: UploadJob[]; onDismiss: (ids: string[]) => void; className?: string }) {
+export function UploadJobsHistory({ jobs, onDismiss, className = "" }: { jobs: UploadJob[]; onDismiss: (id?: string) => void; className?: string }) {
   if (!jobs.length) return null;
-  const finished = jobs.filter((j) => !isActive(j) && j.uploadId).map((j) => j.uploadId!);
+  const finished = jobs.filter((j) => !isActive(j)).length;
   return (
     <Card className={className}>
       <div id={HISTORY_ID} className="scroll-mt-24" />
@@ -52,8 +52,8 @@ export function UploadJobsHistory({ jobs, onDismiss, className = "" }: { jobs: U
         title="Lịch sử tải đề"
         description="Các lượt tải đề gần đây."
         action={
-          finished.length > 1 ? (
-            <Button variant="text" size="sm" onClick={() => onDismiss(finished)}>
+          finished > 1 ? (
+            <Button variant="text" size="sm" onClick={() => onDismiss()}>
               Xoá tất cả đã xong
             </Button>
           ) : undefined
@@ -83,7 +83,7 @@ export function UploadJobsHistory({ jobs, onDismiss, className = "" }: { jobs: U
                 </Link>
               )}
               {!isActive(j) && j.uploadId && (
-                <IconButton label={`Xoá lượt tải ${j.title}`} onClick={() => onDismiss([j.uploadId!])}>
+                <IconButton label={`Xoá lượt tải ${j.title}`} onClick={() => onDismiss(j.uploadId)}>
                   <X size={18} aria-hidden />
                 </IconButton>
               )}
