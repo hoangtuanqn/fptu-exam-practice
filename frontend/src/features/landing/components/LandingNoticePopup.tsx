@@ -32,7 +32,7 @@ export function LandingNoticePopup() {
   const days = Math.ceil(promo.msLeft / 86_400_000);
 
   return (
-    <Modal onClose={close} maxWidth="max-w-lg" flush corner={<img src="/promo/mascot-corner.webp" width={150} height={120} alt="" aria-hidden className="pointer-events-none absolute hidden select-none drop-shadow-md md:block" style={{ right: -75, top: -75 }} />}>
+    <Modal onClose={close} maxWidth="max-w-lg" flush corner={<img src="/promo/mascot-corner.webp" width={112} height={147} alt="" aria-hidden className="pointer-events-none absolute hidden select-none drop-shadow-md md:block" style={{ right: 28, top: -139 }} />}>
       <div className="relative">
         <img src="/promo/pro-poster.webp" width={960} height={600} alt="Poster gói PRO của FEPass: mở khóa tất cả đề thi, flashcard và mọi tính năng, không giới hạn" className="block w-full" />
       </div>
