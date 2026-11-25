@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { Modal } from "@/shared/ui/Modal";
 import { Button, buttonClass } from "@/shared/ui/Button";
 import { isSnoozed, snooze } from "@/shared/utils/promptSnooze";
+import { useAuth } from "@/features/auth/AuthContext";
+import { isPro } from "@/shared/utils/pro";
 import { activePromo, usePlanInfo } from "@/features/plan/semesterPromo";
 
 const NAMES: Record<string, string> = { SP: "Spring", SU: "Summer", FA: "Fall" };
@@ -14,7 +16,10 @@ const termName = (t: string) => {
 
 // Popup trang chủ: đếm ngược ưu đãi mua gói Pro của kỳ mới (dữ liệu thật từ DB). Hết đợt hoặc đã dùng ưu đãi thì không hiện.
 export function LandingNoticePopup() {
-  const promo = activePromo(usePlanInfo().data);
+  const { user } = useAuth();
+  const pro = !!user && isPro(user); // đã mua PRO thì không mời nữa
+  const plan = usePlanInfo(!pro).data;
+  const promo = pro ? null : activePromo(plan);
   const surface = `landing_promo:${promo?.term ?? ""}`;
   const [closed, setClosed] = useState(false);
   if (!promo || closed || isSnoozed(surface)) return null;
@@ -27,7 +32,7 @@ export function LandingNoticePopup() {
   const days = Math.ceil(promo.msLeft / 86_400_000);
 
   return (
-    <Modal onClose={close} maxWidth="max-w-lg" flush corner={<img src="/promo/mascot-corner.webp" width={128} height={113} alt="" aria-hidden className="pointer-events-none absolute select-none drop-shadow-md" style={{ right: -28, top: -62 }} />}>
+    <Modal onClose={close} maxWidth="max-w-lg" flush corner={<img src="/promo/mascot-corner.webp" width={130} height={107} alt="" aria-hidden className="pointer-events-none absolute hidden select-none drop-shadow-md md:block" style={{ right: -74, top: -51 }} />}>
       <div className="relative">
         <img src="/promo/pro-poster.webp" width={960} height={600} alt="Poster gói PRO của FEPass: mở khóa tất cả đề thi, flashcard và mọi tính năng, không giới hạn" className="block w-full" />
       </div>
