@@ -70,6 +70,19 @@ export function Footer() {
               </Link>
             </div>
             <div>
+              <Link to="/dieu-khoan" className="hover:underline">
+                Điều khoản
+              </Link>
+              {" · "}
+              <Link to="/bao-mat" className="hover:underline">
+                Bảo mật
+              </Link>
+              {" · "}
+              <Link to="/thanh-toan-hoan-tien" className="hover:underline">
+                Hoàn tiền
+              </Link>
+            </div>
+            <div>
               Founder: {brand.founder}
               {brand.coFounders.length > 0 && (
                 <> · Co-Founder: {brand.coFounders.join(", ")}</>
