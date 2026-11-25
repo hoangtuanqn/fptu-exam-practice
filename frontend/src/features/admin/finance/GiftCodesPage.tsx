@@ -35,6 +35,7 @@ export default function GiftCodesPage() {
   useClampPage(data?.meta, (p) => setUrl({ page: String(p) }));
   const [creating, setCreating] = useState(false);
   const [viewing, setViewing] = useState<GiftCode | null>(null);
+  const [editing, setEditing] = useState<GiftCode | null>(null);
   const { confirm, confirmDialog } = useConfirm();
 
   const toggle = async (g: GiftCode) => {
@@ -45,7 +46,7 @@ export default function GiftCodesPage() {
     );
     if (!ok) return;
     try {
-      await adminApi.setGiftCodeActive(g.id, !g.active);
+      await adminApi.updateGiftCode(g.id, { active: !g.active });
       toast.success(g.active ? `Đã tắt mã ${g.code}` : `Đã bật mã ${g.code}`);
       reload();
     } catch (e) {
@@ -53,13 +54,31 @@ export default function GiftCodesPage() {
     }
   };
 
+  const remove = async (g: GiftCode) => {
+    const ok = await confirm({ title: `Xóa mã ${g.code}?`, message: "Mã sẽ bị xóa hẳn và không khôi phục được.", confirmLabel: "Xóa mã", tone: "danger" });
+    if (!ok) return;
+    try {
+      await adminApi.deleteGiftCode(g.id);
+      toast.success(`Đã xóa mã ${g.code}`);
+      reload();
+    } catch (e) {
+      toast.error(errorMessage(e, "Không xóa được mã"));
+    }
+  };
+
   const actions = (g: GiftCode) => (
-    <div className="flex items-center justify-end gap-2">
+    <div className="flex flex-wrap items-center justify-end gap-2">
       <Button size="sm" onClick={() => setViewing(g)}>
         Lượt dùng
       </Button>
       <Button size="sm" onClick={() => void toggle(g)}>
         {g.active ? "Tắt" : "Bật"}
+      </Button>
+      <Button size="sm" onClick={() => setEditing(g)}>
+        Sửa
+      </Button>
+      <Button size="sm" onClick={() => void remove(g)} disabled={g.usedCount > 0} title={g.usedCount > 0 ? "Đã có người dùng, hãy tắt mã" : undefined}>
+        Xóa
       </Button>
     </div>
   );
@@ -174,7 +193,8 @@ export default function GiftCodesPage() {
         )}
       </Card>
 
-      {creating && <GiftCodeDialog onClose={() => setCreating(false)} onCreated={reload} />}
+      {creating && <GiftCodeDialog onClose={() => setCreating(false)} onSaved={reload} />}
+      {editing && <GiftCodeDialog editing={editing} onClose={() => setEditing(null)} onSaved={reload} />}
       {viewing && <GiftCodeRedemptionsDialog gift={viewing} onClose={() => setViewing(null)} />}
     </>
   );
