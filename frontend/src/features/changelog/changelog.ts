@@ -9,7 +9,7 @@ export interface Release {
   version: string;
   date: string; // YYYY-MM-DD
   title: string;
-  highlights: string[]; // vài ý nổi bật, dùng cho hộp thoại "Có gì mới"
+  highlights: string[]; // vài ý nổi bật của bản này (hiện chưa hiển thị ở đâu)
   changes: Change[];
 }
 export type Product = "web" | "extension";
