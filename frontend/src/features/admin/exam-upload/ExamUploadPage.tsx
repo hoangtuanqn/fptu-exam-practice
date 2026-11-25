@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card, PageHeader } from "@/shared/ui/Card";
 import { ExamUploadForm } from "./ExamUploadForm";
-import { UploadJobsCard } from "./UploadJobsCard";
+import { UploadJobsHistory, UploadJobsSummary } from "./UploadJobsCard";
 import { useUploadJobs } from "./useUploadJobs";
 
 // Tải một đề mới từ thư mục ảnh + ans.json. Máy chủ nhận đề rồi xử lý nền
@@ -12,7 +12,7 @@ export default function ExamUploadPage() {
   return (
     <>
       <PageHeader eyebrow="Quản trị" title="Tải đề lên" description="Chọn thư mục đề gồm ảnh từng câu và ans.json, kiểm tra rồi tạo đề." />
-      <UploadJobsCard jobs={jobs.jobs} className="mb-4" />
+      <UploadJobsSummary jobs={jobs.jobs} className="mb-4" />
       <Card>
         <div className="p-5">
           <ExamUploadForm
@@ -25,6 +25,7 @@ export default function ExamUploadPage() {
           />
         </div>
       </Card>
+      <UploadJobsHistory jobs={jobs.jobs} onDismiss={jobs.dismiss} className="mt-4" />
     </>
   );
 }

@@ -19,7 +19,7 @@ import { SubjectCombobox } from "@/features/subject/SubjectCombobox";
 import { subjectApi } from "@/features/subject/subject.api";
 import { examUploadApi, KIND_LABEL, type ExamGap, type ExamGapItem, type ExamKind } from "./exam-upload.api";
 import { ExamUploadForm, type UploadTarget } from "./ExamUploadForm";
-import { UploadJobsCard } from "./UploadJobsCard";
+import { UploadJobsHistory, UploadJobsSummary } from "./UploadJobsCard";
 import { useUploadJobs } from "./useUploadJobs";
 
 const GAP: Partial<Record<ExamGap, [string, Tone]>> = {
@@ -84,7 +84,7 @@ export default function ExamGapsPage() {
   return (
     <>
       <PageHeader eyebrow="Quản trị" title="Đề cần bổ sung" description="Đề còn thiếu ảnh hoặc đáp án. Bấm Bổ sung để tải thư mục đề lên." />
-      <UploadJobsCard jobs={jobs.jobs} className="mb-4" />
+      <UploadJobsSummary jobs={jobs.jobs} className="mb-4" />
       <Card>
         <div className="space-y-3 border-b border-outline-variant p-4">
           <Segmented<ExamGap | ""> label="Lọc theo phần còn thiếu" value={gap} onChange={(v) => setUrl({ gap: v, page: "1" })} options={tabs} />
@@ -161,6 +161,8 @@ export default function ExamGapsPage() {
           }
         </QueryBoundary>
       </Card>
+
+      <UploadJobsHistory jobs={jobs.jobs} onDismiss={jobs.dismiss} className="mt-4" />
 
       {open && (
         <Modal wide onClose={close}>
