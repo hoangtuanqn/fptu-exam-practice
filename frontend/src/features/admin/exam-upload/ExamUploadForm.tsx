@@ -45,6 +45,10 @@ export function ExamUploadForm({ target, onDone, onBusy, onCancel }: Props) {
   const [missing, setMissing] = useState<{ title?: string; subjectCode?: string; folder?: string }>({});
   const auto = useRef({ title: "", subjectCode: "" }); // giá trị đã tự điền từ tên thư mục: chọn thư mục khác thì được đổi theo, admin đã tự sửa thì giữ
   const busy = submit.loading;
+  const switchKind = (k: ExamKind) => {
+    kindPicked.current = true;
+    setKind(k);
+  };
   // Loại đề tự đoán theo tên đề (FE / PE / Quiz); không thấy từ khoá thì FE, admin chọn tay rồi thì giữ lựa chọn đó
   useEffect(() => {
     if (create && !kindPicked.current) setKind(kindFromTitle(title) ?? "FE");
@@ -162,10 +166,7 @@ export function ExamUploadForm({ target, onDone, onBusy, onCancel }: Props) {
               }}
               error={missing.subjectCode ?? submit.fieldErrors.subjectCode ?? (subjects.error ? "Chưa tải được danh sách môn" : undefined)}
             />
-            <Select label="Loại đề" value={kind} onChange={(e) => {
-                kindPicked.current = true;
-                setKind(e.target.value as ExamKind);
-              }} disabled={busy} error={submit.fieldErrors.kind}>
+            <Select label="Loại đề" value={kind} onChange={(e) => switchKind(e.target.value as ExamKind)} disabled={busy} error={submit.fieldErrors.kind}>
               {KINDS.map((k) => (
                 <option key={k} value={k}>
                   {KIND_LABEL[k]}
@@ -185,6 +186,23 @@ export function ExamUploadForm({ target, onDone, onBusy, onCancel }: Props) {
       {resource && (
         <p className="md-body-medium rounded-m3-sm bg-secondary-container px-4 py-3 text-on-secondary-container">
           Thư mục này không phải đề trắc nghiệm (cần images/ và ans.json) nên sẽ lưu thành tài nguyên: sinh viên mở hoặc tải các tệp về, không làm bài và không chấm điểm.
+        </p>
+      )}
+
+      {create && resource && kind === "FE" && (
+        <p role="status" className="md-body-medium rounded-m3-sm bg-warning-container px-4 py-3 text-on-warning-container">
+          Đề FE thường có thư mục images/ và ans.json, còn thư mục này thì không. Đây có phải đề PE không?{" "}
+          <button type="button" onClick={() => switchKind("PE")} className="font-semibold underline underline-offset-2">
+            Đổi sang PE
+          </button>
+        </p>
+      )}
+      {create && folder && kind === "PE" && (
+        <p role="status" className="md-body-medium rounded-m3-sm bg-warning-container px-4 py-3 text-on-warning-container">
+          Thư mục này có ảnh câu hỏi và ans.json giống đề FE (làm và chấm điểm trên web), nhưng loại đề đang là PE. Bạn chắc chứ?{" "}
+          <button type="button" onClick={() => switchKind("FE")} className="font-semibold underline underline-offset-2">
+            Đổi sang FE
+          </button>
         </p>
       )}
 
