@@ -43,6 +43,26 @@ export const PUBLIC_PAGES: Record<string, PageSeo> = {
     description: "Danh sách tính năng mới, cải tiến và sửa lỗi theo từng phiên bản của Luyện thi FE FPTU và tiện ích Chrome.",
     index: true,
   },
+  "/chinh-sach": {
+    title: "Chính sách của FEPass",
+    description: "Điều khoản sử dụng, chính sách bảo mật và quy định thanh toán, hoàn tiền của FEPass.",
+    index: true,
+  },
+  "/dieu-khoan": {
+    title: "Điều khoản sử dụng",
+    description: "Quy định khi tạo tài khoản và dùng FEPass: tài khoản, nội dung, credit, bản quyền và xử lý vi phạm.",
+    index: true,
+  },
+  "/bao-mat": {
+    title: "Chính sách bảo mật",
+    description: "FEPass thu thập dữ liệu nào, dùng vào việc gì, chia sẻ với ai và bạn có những quyền gì với dữ liệu của mình.",
+    index: true,
+  },
+  "/thanh-toan-hoan-tien": {
+    title: "Thanh toán và hoàn tiền",
+    description: "Cách nạp credit, mua gói Pro, hạn dùng credit và các trường hợp được hoàn tiền tại FEPass.",
+    index: true,
+  },
   "/register": {
     title: "Đăng ký tài khoản, nhận credit miễn phí",
     description: "Tạo tài khoản Luyện thi FE FPTU bằng email, Google hoặc GitHub. Đăng ký lần đầu nhận ngay credit để lấy đề và làm thử không tốn phí.",

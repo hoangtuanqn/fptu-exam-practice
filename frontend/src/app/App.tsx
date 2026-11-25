@@ -112,6 +112,7 @@ const ReferralPage = lazy(routePages.ReferralPage);
 const GiftCodePage = lazy(routePages.GiftCodePage);
 const FeaturesPage = lazy(routePages.FeaturesPage);
 const ChangelogPage = lazy(routePages.ChangelogPage);
+const LegalPage = lazy(() => import("@/features/legal/LegalPage"));
 const PlanPage = lazy(routePages.PlanPage);
 const GradesPage = lazy(routePages.GradesPage);
 const CourseraPage = lazy(routePages.CourseraPage);
@@ -203,6 +204,12 @@ export default function App() {
         </Route>
         {/* Lịch sử thay đổi (Có gì mới) của web và tiện ích Chrome: công khai */}
         <Route path="/changelog" element={<ChangelogPage />} />
+
+        {/* Điều khoản, bảo mật, hoàn tiền: công khai */}
+        <Route path="/chinh-sach" element={<LegalPage />} />
+        <Route path="/dieu-khoan" element={<LegalPage slug="dieu-khoan" />} />
+        <Route path="/bao-mat" element={<LegalPage slug="bao-mat" />} />
+        <Route path="/thanh-toan-hoan-tien" element={<LegalPage slug="thanh-toan-hoan-tien" />} />
 
         {/* Trang bán gói Pro: công khai, khách bấm mua sẽ được dẫn đi đăng nhập */}
         <Route path="/pro" element={<PlanPage />} />
