@@ -29,7 +29,19 @@ export const createGiftCodeBody = z.object({
   creditTtlMinutes: z.number("Thời hạn không hợp lệ").int("Thời hạn phải là số nguyên").min(1, "Tối thiểu 1 phút").max(CREDIT_TTL_MAX_MINUTES, "Tối đa 1 năm").optional(),
 });
 
-export const updateGiftCodeBody = z.object({ active: z.boolean() });
+// Mọi trường đều tùy chọn (body cũ chỉ có { active } vẫn hợp lệ); null = xóa giá trị
+const createFields = createGiftCodeBody.shape;
+export const updateGiftCodeBody = z
+  .object({
+    active: z.boolean().optional(),
+    code: giftCodeValue.optional(),
+    amount: createFields.amount.optional(),
+    maxUses: createFields.maxUses.optional(),
+    expiresAt: createFields.expiresAt.unwrap().nullable().optional(),
+    note: createFields.note.unwrap().nullable().optional(),
+    creditTtlMinutes: createFields.creditTtlMinutes.unwrap().nullable().optional(),
+  })
+  .refine((b) => Object.values(b).some((v) => v !== undefined), "Cần thay đổi ít nhất một thông tin");
 
 export const listGiftCodesQuery = paginationQuery.extend({
   q: z.string().trim().toUpperCase().max(32).optional(), // tìm theo mã
