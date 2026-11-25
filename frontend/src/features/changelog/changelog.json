@@ -1,6 +1,25 @@
 {
   "web": [
     {
+      "version": "1.14.0",
+      "date": "2026-11-25",
+      "title": "Tự xoá tài khoản và trang chính sách",
+      "highlights": [
+        "Bạn tự xoá tài khoản ngay trong mục Hồ sơ",
+        "Điều khoản, bảo mật và hoàn tiền được công bố rõ ràng"
+      ],
+      "changes": [
+        {
+          "type": "new",
+          "text": "Xoá tài khoản trong mục Hồ sơ; đổi ý thì chỉ cần đăng nhập lại trong thời gian chờ"
+        },
+        {
+          "type": "new",
+          "text": "Trang Điều khoản sử dụng, Chính sách bảo mật, Thanh toán và hoàn tiền ở cuối trang"
+        }
+      ]
+    },
+    {
       "version": "1.13.0",
       "date": "2026-11-19",
       "title": "Tải trọn bộ đề PE và lưu câu nhanh hơn",
