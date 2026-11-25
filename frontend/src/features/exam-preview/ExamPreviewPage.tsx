@@ -81,7 +81,7 @@ function Preview({ exam }: { exam: ImportedExam }) {
   const [questions, setQuestions] = useState<Question[]>(exam.questions ?? []);
   const [total, setTotal] = useState(exam.totalQuestions ?? 0);
   const [failed, setFailed] = useState(false);
-  const [zoom, setZoom] = useState<number | null>(null); // số câu của ảnh đang xem lớn
+  const [zoom, setZoom] = useState<string | null>(null); // khoá của ảnh đang xem lớn (trang đề hoặc tệp ảnh đính kèm)
   const [zipping, setZipping] = useState(false);
   const fetching = !failed && questions.length < total;
   const attachments = useExamAttachmentsLive(exam.id, exam.attachments);
@@ -110,27 +110,37 @@ function Preview({ exam }: { exam: ImportedExam }) {
 
   const meta = [term && `Kỳ ${term}`, items > 0 && `${items} câu`, attachments.length > 0 && `${attachments.length} tệp đính kèm`].filter(Boolean).join(" · ");
   // Ảnh các trang và tệp đính kèm nằm chung một lưới (đề PE: tài liệu lên trước); tên hiển thị là tên tệp
-  const pageTiles = questions.map((q) => (
-    <li key={`p${q.number}`}>
-      <button type="button" onClick={() => setZoom(q.number)} aria-label={`Xem lớn ${pageLabel(q)}`} className={CARD}>
+  // Ảnh để xem lớn: trang đề, rồi các tệp đính kèm là ảnh (đề PE tải lên dạng thư mục tài liệu thường có Q1.webp...). Tệp ảnh đính kèm vẫn là tệp tải về
+  // (máy chủ không phát inline), nên hiện bằng ProtectedImg (tải có danh tính rồi hiển thị bằng blob) giống ảnh trang đề.
+  const shots = [
+    ...questions.map((q) => ({ key: `p${q.number}`, src: q.imageUrl, label: pageLabel(q) })),
+    ...attachments.filter(isImageFile).map((a) => ({ key: `a${a.id}`, src: a.url, label: a.name })),
+  ];
+  const pageTiles = shots.map((s) => (
+    <li key={s.key}>
+      <button type="button" onClick={() => setZoom(s.key)} aria-label={`Xem lớn ${s.label}`} className={CARD}>
         <span className="relative block overflow-hidden rounded-m3-md bg-white shadow-sm ring-1 ring-outline-variant/50">
-          <ProtectedImg src={q.imageUrl} alt="" loading="lazy" className="block h-auto w-full" />
+          <ProtectedImg src={s.src} alt="" loading="lazy" className="block h-auto w-full" />
           <span className="absolute inset-0 flex items-center justify-center bg-primary/0 text-on-primary opacity-0 transition duration-200 group-hover:bg-primary/25 group-hover:opacity-100">
             <ZoomIn size={28} className="rounded-full bg-primary p-1.5 shadow-m3-2" aria-hidden />
           </span>
         </span>
-        <span className="md-label-large block truncate px-1 pb-0.5 pt-2.5 text-center text-on-surface-variant">{pageLabel(q)}</span>
+        <span className="md-label-large block truncate px-1 pb-0.5 pt-2.5 text-center text-on-surface-variant" title={s.label}>
+          {s.label}
+        </span>
       </button>
     </li>
   ));
   const archives = attachments.filter((a) => a.kind === "archive");
-  const fileTiles = attachments.filter((a) => a.kind !== "archive").map((a) => (
-    <li key={`a${a.id}`}>
-      <FileTile a={a} />
-    </li>
-  ));
-  const lightboxItems = questions.map((q) => ({ src: q.imageUrl, name: pageLabel(q) }));
-  const zoomAt = zoom === null ? -1 : questions.findIndex((q) => q.number === zoom);
+  const fileTiles = attachments
+    .filter((a) => a.kind !== "archive" && !isImageFile(a))
+    .map((a) => (
+      <li key={`a${a.id}`}>
+        <FileTile a={a} />
+      </li>
+    ));
+  const lightboxItems = shots.map((s) => ({ src: s.src, name: s.label }));
+  const zoomAt = zoom === null ? -1 : shots.findIndex((s) => s.key === zoom);
   const tiles = kind === "PE" ? [...fileTiles, ...pageTiles] : [...pageTiles, ...fileTiles];
 
   // Đề PE: gom mọi tài nguyên (tệp đính kèm + ảnh) vào một file zip mang tên đề
@@ -204,12 +214,15 @@ function Preview({ exam }: { exam: ImportedExam }) {
         </Card>
       )}
 
-      {zoomAt >= 0 && <ImageLightbox items={lightboxItems} index={zoomAt} onIndex={(i) => setZoom(questions[i]!.number)} onClose={() => setZoom(null)} />}
+      {zoomAt >= 0 && <ImageLightbox items={lightboxItems} index={zoomAt} onIndex={(i) => setZoom(shots[i]!.key)} onClose={() => setZoom(null)} />}
     </>
   );
 }
 
 const pageLabel = (q: Question) => `Ảnh ${q.number}`;
+
+// Tệp đính kèm là ảnh (đuôi ảnh thường gặp; SVG không tính vì có thể chứa script)
+const isImageFile = (a: ExamAttachment) => /\.(webp|png|jpe?g|gif)$/i.test(a.name);
 
 // Tên tệp ảnh của trang (phần cuối đường dẫn, bỏ query)
 const fileName = (q: Question) => decodeURIComponent(q.imageUrl.split("?")[0]!.split("/").pop() ?? `Q${q.number}`);
