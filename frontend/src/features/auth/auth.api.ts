@@ -4,6 +4,7 @@ import { http } from "@/shared/api/client";
 export interface AuthResult {
   token: string;
   user: User;
+  deletionCancelled?: boolean; // đăng nhập này vừa huỷ yêu cầu xoá tài khoản
 }
 
 export const authApi = {

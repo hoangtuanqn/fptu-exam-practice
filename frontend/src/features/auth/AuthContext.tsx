@@ -34,11 +34,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void authApi.logout().catch(() => undefined); // thu hồi phiên dài hạn ở máy chủ (không chờ)
   }, []);
 
-  const signIn = useCallback(({ token, user }: AuthResult) => {
+  const signIn = useCallback(({ token, user, deletionCancelled }: AuthResult) => {
     tokenStore.set(token);
     setUser(user);
     refreshRealtimeAuth();
-  }, []);
+    if (deletionCancelled) toast.success("Đã huỷ yêu cầu xoá tài khoản. Chào mừng bạn quay lại.", { duration: 8000 });
+  }, [toast]);
 
   const refresh = useCallback(async () => {
     try {
