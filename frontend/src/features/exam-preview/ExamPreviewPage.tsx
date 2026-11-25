@@ -179,7 +179,7 @@ function Preview({ exam }: { exam: ImportedExam }) {
       {fetching && <LoadingMoreBanner loaded={questions.length} total={total} />}
 
       {archives.length > 0 && (
-        <ul className="mb-4 space-y-2.5">
+        <ul className="mb-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
           {archives.map((a) => (
             <li key={a.id}>
               <ArchiveRow a={a} />
@@ -221,19 +221,19 @@ function ArchiveRow({ a }: { a: ExamAttachment }) {
       href={downloadUrl(a.url)}
       download={a.name}
       aria-label={`Tải về ${a.name}`}
-      className="md-state group flex items-center gap-4 rounded-m3-xl bg-surface-container-low px-4 py-3.5 shadow-m3-1 outline-none transition duration-200 hover:shadow-m3-2 focus-visible:ring-2 focus-visible:ring-primary"
+      className="md-state group flex items-center gap-3 rounded-m3-lg bg-surface-container-low px-3 py-2.5 shadow-m3-1 outline-none transition duration-200 hover:-translate-y-0.5 hover:shadow-m3-2 focus-visible:ring-2 focus-visible:ring-primary"
     >
-      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-container to-secondary-container text-on-primary-container ring-1 ring-primary/10">
-        <FileArchive size={24} strokeWidth={1.75} aria-hidden />
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-container to-secondary-container text-on-primary-container ring-1 ring-primary/10">
+        <FileArchive size={20} strokeWidth={1.75} aria-hidden />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="md-title-medium block truncate text-on-surface" title={a.name}>
+        <span className="md-label-large block truncate font-semibold text-on-surface" title={a.name}>
           {a.name}
         </span>
-        <span className="md-body-medium block text-on-surface-variant">{formatBytes(a.sizeBytes)}</span>
+        <span className="md-body-small block text-on-surface-variant">{formatBytes(a.sizeBytes)}</span>
       </span>
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-on-surface-variant transition group-hover:bg-primary-container group-hover:text-on-primary-container">
-        <Download size={20} aria-hidden />
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-on-surface-variant transition group-hover:bg-primary-container group-hover:text-on-primary-container">
+        <Download size={16} aria-hidden />
       </span>
     </a>
   );
