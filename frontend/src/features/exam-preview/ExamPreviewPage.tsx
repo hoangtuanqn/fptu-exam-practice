@@ -25,8 +25,8 @@ import { Button } from "@/shared/ui/Button";
 import { downloadAllAsZip } from "./downloadAll";
 import { ImageLightbox } from "./ImageLightbox";
 
-// Thẻ ảnh trang đề: ảnh đủ khổ (không cắt) trên nền trắng, tên "Ảnh N" bên dưới
-const CARD = "md-state block w-full overflow-hidden rounded-m3-md border border-outline-variant bg-surface-container-lowest text-left outline-none focus-visible:ring-2 focus-visible:ring-primary";
+// Thẻ ảnh trang đề: nền tông nhạt cùng bảng màu với thẻ tệp, ảnh trắng bo góc ở trên, số trang ở dưới
+const CARD = "md-state group block w-full overflow-hidden rounded-m3-lg bg-surface-container-low text-left shadow-m3-1 outline-none transition-shadow hover:shadow-m3-2 focus-visible:ring-2 focus-visible:ring-primary";
 
 const TILE = "md-state group relative block aspect-[4/3] overflow-hidden rounded-m3-md bg-surface-container-lowest shadow-m3-1 outline-none focus-visible:ring-2 focus-visible:ring-primary";
 const CAPTION = "md-label-large absolute inset-x-0 bottom-0 truncate bg-inverse-surface/70 px-3 py-2 text-left text-inverse-on-surface";
@@ -112,8 +112,15 @@ function Preview({ exam }: { exam: ImportedExam }) {
   const pageTiles = questions.map((q) => (
     <li key={`p${q.number}`}>
       <button type="button" onClick={() => setZoom(q.number)} aria-label={`Xem lớn ${pageLabel(q)}`} className={CARD}>
-        <ProtectedImg src={q.imageUrl} alt="" loading="lazy" className="block h-auto w-full bg-white" />
-        <span className="md-label-large block truncate px-3 py-2 text-on-surface-variant">{pageLabel(q)}</span>
+        <div className="p-2 pb-0">
+          <div className="overflow-hidden rounded-m3-sm bg-white ring-1 ring-outline-variant/60">
+            <ProtectedImg src={q.imageUrl} alt="" loading="lazy" className="block h-auto w-full" />
+          </div>
+        </div>
+        <span className="flex items-center gap-2 px-3 py-2.5">
+          <span className="md-label-medium min-w-6 rounded-full bg-primary-container px-1.5 text-center text-on-primary-container">{q.number}</span>
+          <span className="md-label-large truncate text-on-surface-variant">{pageLabel(q)}</span>
+        </span>
       </button>
     </li>
   ));
