@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Crown } from "lucide-react";
+import { MASCOT_XMAS_SVG } from "@/shared/ui/mascot-art";
 import { Modal } from "@/shared/ui/Modal";
 import { Button, buttonClass } from "@/shared/ui/Button";
 import { isSnoozed, snooze } from "@/shared/utils/promptSnooze";
@@ -28,25 +28,23 @@ export function LandingNoticePopup() {
   const days = Math.ceil(promo.msLeft / 86_400_000);
 
   return (
-    <Modal onClose={close} maxWidth="max-w-md">
-      <div className="relative -mx-1 overflow-hidden rounded-m3-lg bg-gradient-to-br from-[#2a1d00] via-[#4a3500] to-[#7a5a00] px-5 py-6 text-center text-[#fff6dc]">
-        <Crown size={120} aria-hidden className="pointer-events-none absolute -right-6 -top-6 rotate-12 text-[#ffc61f]/15" />
-        <Crown size={96} aria-hidden className="pointer-events-none absolute -bottom-8 -left-6 -rotate-12 text-[#ffc61f]/10" />
-        <p className="relative inline-flex items-center gap-1.5 rounded-full bg-[#ffc61f]/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#ffc61f]">
-          <Crown size={14} aria-hidden /> Ưu đãi gói PRO
-        </p>
-        <p className="relative mt-3 text-sm text-[#fff6dc]/80">Chỉ còn</p>
-        <p className="relative text-6xl font-extrabold leading-none text-[#ffc61f] tabular-nums">{days}</p>
-        <p className="relative mt-1 text-lg font-semibold">ngày nữa để mua gói PRO</p>
-        <p className="relative mt-3 inline-block rounded-full bg-[#ffc61f] px-3 py-1 text-sm font-bold text-[#2a1d00]">Giảm {promo.percentOff}%</p>
+    <Modal onClose={close} maxWidth="max-w-lg" flush>
+      <div className="relative">
+        <img src="/promo/pro-poster.webp" width={960} height={600} alt="Poster gói PRO của FEPass: giải thích AI mọi câu, báo cáo điểm yếu, sổ câu sai không giới hạn" className="block w-full" />
+        {/* Cóc Pass đội nón Noel ở góc trên bên phải hộp thoại (chỉ để trang trí) */}
+        <div aria-hidden className="pointer-events-none absolute right-2 top-2 w-24 drop-shadow-lg sm:w-28 [&>svg]:h-auto [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: MASCOT_XMAS_SVG }} />
       </div>
-      <h2 className="sr-only">Chỉ còn {days} ngày nữa để mua gói PRO giá ưu đãi</h2>
-      <p className="md-body-medium mt-4 text-center text-on-surface-variant">
-        Mua để kích hoạt liền, hoặc để dành cho kỳ <b className="text-on-surface">{termName(promo.term)}</b>.
-      </p>
-      <div className="mt-5 flex flex-wrap justify-end gap-2">
-        <Button variant="text" onClick={later}>Để sau</Button>
-        <Link to="/pro" onClick={close} className={buttonClass({ variant: "filled" })}>Xem gói PRO</Link>
+      <div className="p-5 sm:p-6">
+        <h2 className="md-headline-small text-on-surface">
+          Chỉ còn <span className="text-primary">{days} ngày</span> nữa mua gói PRO
+        </h2>
+        <p className="md-body-medium mt-2 text-on-surface-variant">
+          Mua để kích hoạt liền, hoặc để dành cho kỳ <b className="text-on-surface">{termName(promo.term)}</b>. Giảm {promo.percentOff}% so với giá thường.
+        </p>
+        <div className="mt-5 flex flex-wrap justify-end gap-2">
+          <Button variant="text" onClick={later}>Để sau</Button>
+          <Link to="/pro" onClick={close} className={buttonClass({ variant: "filled" })}>Xem gói PRO</Link>
+        </div>
       </div>
     </Modal>
   );
