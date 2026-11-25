@@ -4,7 +4,7 @@ import { Link, Navigate, useParams } from "react-router-dom";
 import { BookOpen, Download, FileSearch, Loader2, FileArchive, Timer, ZoomIn } from "lucide-react";
 import { examApi } from "@/features/exam/exam.api";
 import { canPractice, type ExamAttachment, type ExamQuestionsPayload, type ImportedExam } from "@/features/exam/types";
-import { downloadUrl, ICONS, OPENABLE } from "@/features/exam-attachments/AttachmentList";
+import { downloadUrl, ICONS, isImageFile, OPENABLE } from "@/features/exam-attachments/AttachmentList";
 import { ExamKindBadge } from "@/features/exam-store/ExamKindBadge";
 import { NewExamBadge } from "@/features/exam-store/NewExamBadge";
 import { LoadingMoreBanner } from "@/features/practice/components/quiz/LoadingMoreBanner";
@@ -119,8 +119,8 @@ function Preview({ exam }: { exam: ImportedExam }) {
   const pageTiles = shots.map((s) => (
     <li key={s.key}>
       <button type="button" onClick={() => setZoom(s.key)} aria-label={`Xem lớn ${s.label}`} className={CARD}>
-        <span className="relative block overflow-hidden rounded-m3-md bg-white shadow-sm ring-1 ring-outline-variant/50">
-          <ProtectedImg src={s.src} alt="" loading="lazy" className="block h-auto w-full" />
+        <span className="relative block max-h-64 overflow-hidden rounded-m3-md bg-white shadow-sm ring-1 ring-outline-variant/50 sm:max-h-72">
+          <ProtectedImg src={s.src} alt="" loading="lazy" className="block h-auto w-full object-cover object-top" />
           <span className="absolute inset-0 flex items-center justify-center bg-primary/0 text-on-primary opacity-0 transition duration-200 group-hover:bg-primary/25 group-hover:opacity-100">
             <ZoomIn size={28} className="rounded-full bg-primary p-1.5 shadow-m3-2" aria-hidden />
           </span>
@@ -220,9 +220,6 @@ function Preview({ exam }: { exam: ImportedExam }) {
 }
 
 const pageLabel = (q: Question) => `Ảnh ${q.number}`;
-
-// Tệp đính kèm là ảnh (đuôi ảnh thường gặp; SVG không tính vì có thể chứa script)
-const isImageFile = (a: ExamAttachment) => /\.(webp|png|jpe?g|gif)$/i.test(a.name);
 
 // Tên tệp ảnh của trang (phần cuối đường dẫn, bỏ query)
 const fileName = (q: Question) => decodeURIComponent(q.imageUrl.split("?")[0]!.split("/").pop() ?? `Q${q.number}`);
