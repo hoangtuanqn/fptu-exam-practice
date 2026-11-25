@@ -7,7 +7,8 @@ const WHEEL_SPEED = 0.0015; // độ nhạy con lăn: hệ số phóng = e^(-del
 
 // Logic phóng to/thu nhỏ ảnh: nút +/−, con lăn chuột (phóng quanh con trỏ); ảnh tràn khung thì kéo chuột để di chuyển (bàn tay). Bấm vào ảnh không làm gì.
 // Mức phóng và vị trí đang xem (tâm khung nhìn, tỉ lệ 0–1 trên ảnh) được giữ khi đổi câu; nút "đặt lại" mới về 100%.
-export function useImageZoom() {
+// topAlign: ảnh mới nạp / đặt lại thì hiện từ ĐẦU ảnh (cuộn lên đầu) thay vì giữa ảnh; dùng cho xem lần lượt các trang đề.
+export function useImageZoom({ topAlign = false }: { topAlign?: boolean } = {}) {
   const [zoom, setZoom] = useState(1);
   const scrollRef = useRef<HTMLDivElement>(null); // khung cuộn chứa ảnh
   const imgRef = useRef<HTMLImageElement>(null);
@@ -126,7 +127,10 @@ export function useImageZoom() {
     imgRef,
     onScroll,
     onImageLoad: () => {
-      apply(); // ảnh câu mới nạp xong: đưa về đúng vị trí đang xem
+      if (topAlign && scrollRef.current) {
+        scrollRef.current.scrollTop = 0;
+        onScroll();
+      } else apply(); // ảnh câu mới nạp xong: đưa về đúng vị trí đang xem
       measure();
     },
     canPan,
@@ -136,6 +140,7 @@ export function useImageZoom() {
     zoomOut: () => change(-STEP),
     reset: () => {
       center.current = { x: 0.5, y: 0.5 };
+      if (topAlign && scrollRef.current) scrollRef.current.scrollTop = 0;
       setZoom(1);
     },
     canZoomIn: zoom < MAX_ZOOM,

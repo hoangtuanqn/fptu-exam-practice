@@ -16,7 +16,7 @@ const BTN = "flex h-10 w-10 shrink-0 items-center justify-center rounded-full te
 const SLIDE_MS = 3000;
 
 export function ImageLightbox({ items, index, onIndex, onClose }: { items: LightboxItem[]; index: number; onIndex: (i: number) => void; onClose: () => void }) {
-  const z = useImageZoom();
+  const z = useImageZoom({ topAlign: true });
   const [turns, setTurns] = useState(0); // số lần xoay 90° theo chiều kim đồng hồ
   const [playing, setPlaying] = useState(false);
   const strip = useRef<HTMLDivElement>(null);
@@ -102,9 +102,9 @@ export function ImageLightbox({ items, index, onIndex, onClose }: { items: Light
           onMouseDown={(e) => e.target === e.currentTarget && onClose()}
           className={`h-full overflow-auto p-4 ${z.canPan ? (z.grabbing ? "cursor-grabbing select-none" : "cursor-grab") : ""}`}
         >
-          {/* m-auto: ảnh nhỏ nằm giữa, ảnh tràn khung vẫn cuộn tới được mọi phía */}
+          {/* Rộng đúng bằng khung xem (100% = vừa chiều ngang), nằm giữa theo chiều ngang và bắt đầu từ ĐẦU ảnh */}
           <div className="flex min-h-full min-w-full">
-            <div className="relative m-auto shrink-0" style={{ width: `${z.zoom * 100}%`, maxWidth: "none" }}>
+            <div className="relative mx-auto shrink-0" style={{ width: `${z.zoom * 100}%`, maxWidth: "none" }}>
               <ProtectedImg
                 ref={z.imgRef}
                 src={item.src}
