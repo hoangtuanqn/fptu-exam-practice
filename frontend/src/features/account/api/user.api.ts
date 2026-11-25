@@ -8,6 +8,8 @@ export const userApi = {
     http.patch<null>("/users/me/password", body),
   transactions: (page = 1, limit = PAGE_SIZE) => http.list<WalletTransaction>("/users/me/transactions", { page, limit }),
   changeEmail: (body: { email: string; password: string }) => http.post<null>("/users/me/email", body),
+  // Đóng tài khoản ngay; đăng nhập lại trước `deleteAt` là huỷ. Gửi mật khẩu, hoặc email với tài khoản Google/GitHub
+  requestDeletion: (body: { password: string } | { email: string }) => http.post<{ deleteAt: string }>("/users/me/deletion", body),
   redeemGiftCode: (code: string) => http.post<RedeemResult>("/gift-codes/redeem", { code }),
   myCreditLots: () => http.get<MyCreditLot[]>("/gift-codes/lots"),
   myGiftCodes: (page = 1) => http.list<MyGiftRedemption>("/gift-codes/mine", { page, limit: PAGE_SIZE }),

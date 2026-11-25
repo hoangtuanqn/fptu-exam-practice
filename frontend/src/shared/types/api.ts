@@ -19,6 +19,9 @@ export interface User {
   marketingOptOut?: boolean; // true = không nhận thư gợi ý/ưu đãi; thiếu (backend cũ) coi như false
   marketingMutedTopics?: number; // bit đã tắt: review=1, offers=2, renewal=4, news=8
   marketingMutedUntil?: string | null; // tạm dừng đến thời điểm này (đã qua = không tạm dừng)
+  // Xoá tài khoản (backend cũ không trả hai trường này)
+  deleteRequestedAt?: string | null; // có giá trị = đã yêu cầu xoá
+  deletedAt?: string | null; // có giá trị = đã ẩn danh, không khôi phục được
   createdAt: string;
 }
 
