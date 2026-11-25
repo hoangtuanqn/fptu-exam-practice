@@ -4,6 +4,7 @@ import { userRepository, type SocialProvider } from "../repositories/user.reposi
 import { AppError } from "../rules/error";
 import { signToken } from "../utils/jwt";
 import { hashPassword } from "../utils/password";
+import { accountDeletionService } from "./account-deletion.service";
 import { accountSettingService } from "./account-setting.service";
 import { avatarService } from "./avatar.service";
 import { badgeService } from "./badge.service";
@@ -61,6 +62,7 @@ export const socialAuthService = {
 
     if (existing) {
       if (existing.status === "BANNED") throw AppError.banned();
+      const deletionCancelled = await accountDeletionService.cancelOnLogin(existing);
       if (byEmail) {
         await userRepository.linkSocial(byEmail.id, profile.provider, profile.sub, byEmail.emailVerifiedAt ?? new Date());
       }
@@ -69,7 +71,7 @@ export const socialAuthService = {
         await adoptPicture(user.id, profile.provider, profile.picture);
         user = (await userRepository.findById(existing.id))!;
       }
-      return { token: signToken(user.id), user, created: false };
+      return { token: signToken(user.id), user, created: false, deletionCancelled };
     }
 
     const password = await hashPassword(randomBytes(24).toString("base64url"));

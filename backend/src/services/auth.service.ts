@@ -8,6 +8,7 @@ import { AppError } from "../rules/error";
 import { INVALID_RESET, type ForgotPasswordBody, type LoginBody, type RegisterBody, type ResetPasswordBody } from "../rules/requests/auth.request";
 import { signToken } from "../utils/jwt";
 import { comparePassword, hashPassword } from "../utils/password";
+import { accountDeletionService } from "./account-deletion.service";
 import { accountSettingService } from "./account-setting.service";
 import { referralService } from "./referral.service";
 import { mailService } from "./mail.service";
@@ -78,9 +79,10 @@ export const authService = {
     }
     loginGuard.clear(key);
     if (found.status === "BANNED") throw AppError.banned();
+    const deletionCancelled = await accountDeletionService.cancelOnLogin(found);
 
     const user = await userRepository.findById(found.id);
-    return { token: signToken(found.id), user };
+    return { token: signToken(found.id), user, deletionCancelled };
   },
 
   // Luôn kết thúc êm với mọi email (có hay không có tài khoản) để không lộ email nào đã đăng ký.

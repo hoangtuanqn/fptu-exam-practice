@@ -8,3 +8,8 @@ export const ACCOUNT_DEFAULTS: AccountConfig = {
 };
 
 export const ACCOUNT_KEY_PREFIX = "account.";
+
+// Tự xoá tài khoản: chờ chừng này ngày (đăng nhập lại là huỷ) rồi mới ẩn danh
+export const DELETION_GRACE_DAYS = 14;
+export const DELETION_MAX_PER_RUN = 200;
+export const DELETED_ACCOUNT_NAME = "Tài khoản đã xóa";

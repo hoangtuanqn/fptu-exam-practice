@@ -3,10 +3,13 @@ import { userController } from "../controllers/user.controllers";
 import { authenticate } from "../middlewares/auth.middlewares";
 import { uploadAvatar, validateAvatarUpload } from "../middlewares/upload.middlewares";
 import { validate } from "../middlewares/validate.middlewares";
-import { changeEmailBody, changePasswordBody, updateProfileBody } from "../rules/requests/user.request";
+import { makeLimiter } from "../middlewares/rateLimit.middlewares";
+import { changeEmailBody, changePasswordBody, deleteAccountBody, updateProfileBody } from "../rules/requests/user.request";
 import { paginationQuery } from "../utils/pagination";
 
 const userRouter = Router();
+// Chặn dò mật khẩu qua bước xác nhận xoá (đếm theo tài khoản)
+const deletionLimiter = makeLimiter({ limit: 5, windowMs: 15 * 60 * 1000, keyGenerator: (req) => req.user!.id, message: "Bạn đã thử xoá tài khoản quá nhiều lần." });
 
 // Toàn bộ /users/me/* yêu cầu đăng nhập
 userRouter.use(authenticate);
@@ -15,6 +18,7 @@ userRouter.get("/me", userController.profile);
 userRouter.patch("/me", validate(updateProfileBody), userController.updateProfile);
 userRouter.patch("/me/password", validate(changePasswordBody), userController.changePassword);
 userRouter.post("/me/email", validate(changeEmailBody), userController.changeEmail);
+userRouter.post("/me/deletion", deletionLimiter, validate(deleteAccountBody), userController.requestDeletion);
 userRouter.get("/me/transactions", validate(paginationQuery, "query"), userController.transactions);
 
 // Avatar: multipart/form-data, field tên "avatar"

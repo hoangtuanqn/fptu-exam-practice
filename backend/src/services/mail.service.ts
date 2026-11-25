@@ -27,6 +27,7 @@ import {
 
 import {
   renderAccountStatusEmail,
+  renderDeletionRequestedEmail,
   renderEmailChangedEmail,
   renderAdjustEmail,
   renderPasswordChangedEmail,
@@ -98,6 +99,9 @@ export const mailService = {
 
   sendVerifyEmail: (to: string, input: { name: string; link: string; expiresHours: number }) =>
     send(to, `${tag} Xác minh email của bạn`, renderVerifyEmail(input)),
+
+  sendDeletionRequested: (to: string, input: { name: string; deleteAt: Date; loginUrl: string }) =>
+    send(to, `${tag} Yêu cầu xoá tài khoản của bạn`, renderDeletionRequestedEmail(input)),
 
   sendEmailChanged: (to: string, input: EmailChangedInput) =>
     send(to, `${tag} Email đăng nhập của bạn vừa được đổi`, renderEmailChangedEmail(input)),

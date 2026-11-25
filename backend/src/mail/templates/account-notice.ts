@@ -222,3 +222,31 @@ export function renderAccountStatusEmail(i: { name: string; banned: boolean; sup
     ].filter((l, idx, arr) => l !== "" || arr[idx - 1] !== "")),
   };
 }
+
+// ---------- Yêu cầu xoá tài khoản
+
+export function renderDeletionRequestedEmail(i: { name: string; deleteAt: Date; loginUrl: string }) {
+  const when = formatDateTimeVN(i.deleteAt);
+  const bodyHtml = [
+    p(`Kính gửi <strong>${esc(i.name)}</strong>,`),
+    p(`Chúng tôi đã nhận yêu cầu <strong>xoá tài khoản</strong> của bạn. Tài khoản đã được đóng và sẽ bị xoá vĩnh viễn sau <strong>${esc(when)}</strong>. Credit còn lại và gói Pro sẽ mất, không hoàn tiền.`),
+    p("<strong>Đổi ý, hoặc không phải bạn yêu cầu?</strong> Đăng nhập lại trước thời điểm trên để huỷ yêu cầu, sau đó đổi mật khẩu."),
+    button("Đăng nhập để huỷ yêu cầu", i.loginUrl),
+    supportLine(),
+    signature(),
+  ].join("");
+
+  return {
+    html: renderLayout({
+      title: "Yêu cầu xoá tài khoản",
+      preheader: `Tài khoản sẽ bị xoá sau ${when}. Đăng nhập lại để huỷ.`,
+      bodyHtml,
+    }),
+    text: sign([
+      `Kính gửi ${i.name},`,
+      "",
+      `Tài khoản của bạn đã được đóng và sẽ bị xoá vĩnh viễn sau ${when}. Credit còn lại và gói Pro sẽ mất, không hoàn tiền.`,
+      `Đăng nhập lại trước thời điểm đó để huỷ yêu cầu: ${i.loginUrl}`,
+    ]),
+  };
+}

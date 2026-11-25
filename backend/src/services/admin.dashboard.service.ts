@@ -27,8 +27,9 @@ export const adminDashboardService = {
   },
 
   async compute() {
-    const [users, orders, totalDeposited, todayDeposited, unmatched] = await Promise.all([
+    const [users, deletedUsers, orders, totalDeposited, todayDeposited, unmatched] = await Promise.all([
       userRepository.countByStatus(),
+      userRepository.countDeleted(),
       depositRepository.countByStatus(),
       bankTransactionRepository.sumMatched(),
       bankTransactionRepository.sumMatched(startOfTodayVN()),
@@ -36,7 +37,7 @@ export const adminDashboardService = {
     ]);
 
     return {
-      users: { active: countOf(users, "ACTIVE"), banned: countOf(users, "BANNED") },
+      users: { active: countOf(users, "ACTIVE"), banned: countOf(users, "BANNED"), deleted: deletedUsers },
       deposits: {
         pending: countOf(orders, "PENDING"),
         paid: countOf(orders, "PAID"),

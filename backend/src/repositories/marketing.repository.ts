@@ -32,7 +32,7 @@ const pauseApplies = (campaign: LogCampaign) => campaign !== "pro_expiry";
  * không tắt loại thư của chiến dịch, và không đang tạm dừng tại `pausedAt` (null = bỏ qua tạm dừng, chỉ dùng cho nhắc hết hạn Pro).
  */
 const eligible = (campaign: LogCampaign, pausedAt: Date | null) =>
-  Prisma.sql`u.role = 'USER' AND u.status = 'ACTIVE' AND u.email_verified_at IS NOT NULL AND u.marketing_opt_out = false
+  Prisma.sql`u.role = 'USER' AND u.status = 'ACTIVE' AND u.delete_requested_at IS NULL AND u.email_verified_at IS NOT NULL AND u.marketing_opt_out = false
     AND (u.marketing_muted_topics & ${TOPIC_BITS[topicOf(campaign)]}) = 0
     ${pausedAt ? Prisma.sql`AND (u.marketing_muted_until IS NULL OR u.marketing_muted_until <= ${pausedAt})` : Prisma.empty}`;
 

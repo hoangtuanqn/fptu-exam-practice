@@ -1,4 +1,5 @@
 import { ACCOUNT_DEFAULTS, ACCOUNT_KEY_PREFIX, type AccountConfig } from "../constants/account";
+import { accountDeletionRepository } from "../repositories/account-deletion.repository";
 import { settingRepository } from "../repositories/setting.repository";
 import type { Db } from "../repositories/wallet.repository";
 import type { UpdateAccountBody } from "../rules/requests/setting.request";
@@ -26,7 +27,7 @@ export const accountSettingService = {
   /** Gọi trong transaction đăng ký: tặng credit đăng ký (nếu admin đặt > 0). Trả số dư sau khi cộng, hoặc null nếu không tặng. */
   async grantSignupCredit(db: Db, userId: string) {
     const { signupCredit } = await this.get();
-    if (signupCredit <= 0) return null;
+    if (signupCredit <= 0 || (await accountDeletionRepository.isReturning(db, userId))) return null;
     const entry = await walletService.applyChange(db, { userId, amount: signupCredit, type: "SIGNUP_BONUS", note: "Tặng credit khi đăng ký" });
     return { amount: signupCredit, balanceAfter: entry.balanceAfter };
   },

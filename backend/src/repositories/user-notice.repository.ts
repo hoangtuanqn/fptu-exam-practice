@@ -44,7 +44,7 @@ export const userNoticeRepository = {
   // Id thành viên đang hoạt động, theo lô (phân trang bằng id, không OFFSET)
   activeUserIds: (afterId: string | null, take: number) =>
     prisma.user
-      .findMany({ where: { status: "ACTIVE", ...(afterId && { id: { gt: afterId } }) }, select: { id: true }, orderBy: { id: "asc" }, take })
+      .findMany({ where: { status: "ACTIVE", deleteRequestedAt: null, ...(afterId && { id: { gt: afterId } }) }, select: { id: true }, orderBy: { id: "asc" }, take })
       .then((rows) => rows.map((r) => r.id)),
 
   // Unique (user_id, dedupe_key): người đã có thông báo cùng khoá thì bỏ qua; count = số dòng thật sự ghi thêm
