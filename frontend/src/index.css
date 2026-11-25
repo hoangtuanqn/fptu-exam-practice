@@ -805,3 +805,10 @@ html {
   height: 6px;
   background: radial-gradient(circle at 6px 0, var(--xmas-snow) 4.5px, transparent 5px) 0 0 / 12px 6px repeat-x;
 }
+
+/* Cóc bám viền popup trang chủ và đi vòng quanh (theo chiều kim đồng hồ). Điểm neo là đáy giữa ảnh nên bàn chân luôn đứng trên viền, ảnh tự xoay theo cạnh. Giảm chuyển động: đứng yên ở gần góc trên bên phải */
+.popup-orbit { width: 64px; height: auto; offset-path: inset(0 round 28px); offset-anchor: 50% 100%; offset-rotate: auto; offset-distance: 22%; }
+@keyframes popup-orbit { to { offset-distance: 100%; } }
+@media (prefers-reduced-motion: no-preference) {
+  .popup-orbit { animation: popup-orbit 36s linear infinite; }
+}
