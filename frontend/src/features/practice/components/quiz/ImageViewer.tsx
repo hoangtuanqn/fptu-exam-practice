@@ -73,7 +73,7 @@ export function ImageViewer({
         <div ref={zoom.scrollRef} onScroll={zoom.onScroll} {...zoom.dragProps} className={`relative isolate z-0 min-h-0 flex-1 overflow-auto rounded-xl bg-surface-container-lowest p-4 ${zoom.canPan ? (zoom.grabbing ? "cursor-grabbing select-none" : "cursor-grab") : ""}`}>
           {/* m-auto thay cho justify-center: ảnh nhỏ thì nằm giữa, ảnh tràn khung thì vẫn cuộn tới được mọi phía */}
           <div className="flex min-h-full min-w-full">
-            <div className="relative m-auto shrink-0" style={{ width: `${zoom.zoom * 100}%`, maxWidth: "none" }}>
+            <div className="relative m-auto shrink-0" style={{ width: zoom.imgWidth, maxWidth: "none" }}>
               <ProtectedImg
                 ref={zoom.imgRef}
                 src={question.imageUrl}

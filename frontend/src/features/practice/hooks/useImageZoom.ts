@@ -3,6 +3,8 @@ import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent } from 
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 3;
 const STEP = 0.25;
+const LONG_ASPECT = 2; // ảnh cao hơn 2 lần chiều rộng là "ảnh dài": hiện vừa chiều ngang, lăn chuột để cuộn. Ngắn hơn thì hiện trọn trong khung nhìn, lăn chuột để phóng/thu
+const PAD = 32; // đệm (p-4) hai bên của khung cuộn
 const WHEEL_SPEED = 0.0015; // độ nhạy con lăn: hệ số phóng = e^(-deltaY * WHEEL_SPEED)
 
 // Logic phóng to/thu nhỏ ảnh: nút +/−, con lăn chuột phóng quanh con trỏ khi ảnh vừa khung (ảnh dài thì con lăn cuộn ảnh); ảnh tràn khung thì kéo chuột để di chuyển (bàn tay). Bấm vào ảnh không làm gì.
@@ -18,6 +20,10 @@ export function useImageZoom({ topAlign = false }: { topAlign?: boolean } = {}) 
   const [canPan, setCanPan] = useState(false); // ảnh đang tràn khung: có gì đó để kéo
   const zoomNow = useRef(1);
   zoomNow.current = zoom;
+  const [aspect, setAspect] = useState<number | null>(null); // cao / rộng của ảnh đang xem (từ cỡ gốc)
+  const aspectNow = useRef<number | null>(null);
+  aspectNow.current = aspect;
+  const [view, setView] = useState({ w: 0, h: 0 }); // vùng nhìn trống trong khung cuộn (đã trừ đệm)
   const anchor = useRef<{ fx: number; fy: number; px: number; py: number } | null>(null); // điểm trên ảnh phải đứng yên dưới con trỏ sau khi đổi mức phóng (con lăn)
 
   // Cuộn để `center` nằm giữa khung nhìn (gọi sau khi đổi mức phóng hoặc nạp ảnh câu mới)
@@ -33,7 +39,11 @@ export function useImageZoom({ topAlign = false }: { topAlign?: boolean } = {}) 
 
   const measure = () => {
     const box = scrollRef.current;
-    if (box) setCanPan(box.scrollWidth > box.clientWidth + 1 || box.scrollHeight > box.clientHeight + 1);
+    if (!box) return;
+    setCanPan(box.scrollWidth > box.clientWidth + 1 || box.scrollHeight > box.clientHeight + 1);
+    const w = Math.max(0, box.clientWidth - PAD);
+    const h = Math.max(0, box.clientHeight - PAD);
+    setView((v) => (v.w === w && v.h === h ? v : { w, h }));
   };
 
   useLayoutEffect(() => {
@@ -66,8 +76,8 @@ export function useImageZoom({ topAlign = false }: { topAlign?: boolean } = {}) 
       if (!img) return;
       // Ảnh dài (ở 100% cao hơn khung xem): con lăn cuộn ảnh lên/xuống như bình thường, muốn phóng thì dùng nút hoặc Ctrl + lăn (vuốt chụm trên touchpad).
       // Ảnh vừa một khung nhìn: con lăn phóng/thu quanh con trỏ.
-      const tall = img.getBoundingClientRect().height / zoomNow.current > box.clientHeight;
-      if (tall && !e.ctrlKey) return;
+      const long = (aspectNow.current ?? 0) > LONG_ASPECT;
+      if (long && !e.ctrlKey) return;
       e.preventDefault();
       const next = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Math.round(zoomNow.current * Math.exp(-Math.max(-100, Math.min(100, e.deltaY)) * WHEEL_SPEED) * 1000) / 1000));
       if (next === zoomNow.current) return;
@@ -130,7 +140,12 @@ export function useImageZoom({ topAlign = false }: { topAlign?: boolean } = {}) 
     scrollRef,
     imgRef,
     onScroll,
+    // Bề rộng ảnh ở mức phóng hiện tại: ảnh thường vừa trọn khung nhìn (cả rộng lẫn cao) ở 100%, ảnh dài vừa chiều ngang
+    imgWidth: aspect !== null && aspect <= LONG_ASPECT && view.w > 0 && view.h > 0 ? `${Math.round(zoom * Math.min(view.w, view.h / aspect))}px` : `${zoom * 100}%`,
+    isLong: aspect !== null && aspect > LONG_ASPECT,
     onImageLoad: () => {
+      const img = imgRef.current;
+      if (img && img.naturalWidth > 0) setAspect(img.naturalHeight / img.naturalWidth);
       if (topAlign && scrollRef.current) {
         scrollRef.current.scrollTop = 0;
         onScroll();
