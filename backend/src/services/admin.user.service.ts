@@ -24,8 +24,15 @@ export const adminUserService = {
     return user;
   },
 
+  // Tài khoản đã ẩn danh chỉ để xem: sửa, cộng tiền, đặt mật khẩu đều không còn ý nghĩa
+  async getActive(id: string) {
+    const user = await this.get(id);
+    if (user.deletedAt) throw new AppError("Tài khoản này đã bị xoá");
+    return user;
+  },
+
   async update(actor: PublicUser, id: string, body: UpdateUserBody) {
-    const before = await this.get(id);
+    const before = await this.getActive(id);
     // Tự hạ quyền / tự khoá mình sẽ làm hệ thống mất admin
     if (id === actor.id && (body.role === "USER" || body.status === "BANNED")) {
       throw new AppError("Không thể tự hạ quyền hoặc tự khoá tài khoản của mình");
@@ -43,7 +50,7 @@ export const adminUserService = {
   },
 
   async adjustBalance(id: string, { amount, note }: AdjustBalanceBody) {
-    await this.get(id);
+    await this.getActive(id);
     const entry = await prisma.$transaction((tx) => walletService.applyChange(tx, { userId: id, amount, type: "ADMIN_ADJUST", note }));
     notificationService.balanceAdjusted({ userId: id, amount, note: note ?? null, balanceAfter: entry.balanceAfter });
     return this.get(id);
@@ -73,7 +80,7 @@ export const adminUserService = {
 
   // Đặt mật khẩu mới (tự sinh nếu không nhập), đăng xuất mọi thiết bị, báo cho chủ tài khoản. Trả mật khẩu một lần để admin chuyển cho người dùng.
   async resetPassword(actor: PublicUser, id: string, { password }: ResetPasswordByAdminBody) {
-    const user = await this.get(id);
+    const user = await this.getActive(id);
     if (user.role === "ADMIN" && user.id !== actor.id) throw AppError.forbidden("Không đặt lại mật khẩu của quản trị viên khác");
     const plain = password ?? randomBytes(9).toString("base64url"); // 12 ký tự
     const hashed = await hashPassword(plain);
@@ -88,7 +95,7 @@ export const adminUserService = {
   },
 
   async sendResetLink(id: string) {
-    const user = await this.get(id);
+    const user = await this.getActive(id);
     if (user.status === "BANNED") throw new AppError("Tài khoản đang bị khoá");
     await authService.sendResetLink(user);
   },
@@ -106,6 +113,7 @@ export const adminUserService = {
     if (user.id === actor.id) throw new AppError("Đây là tài khoản của bạn");
     if (user.role === "ADMIN") throw AppError.forbidden("Không đăng nhập thay quản trị viên khác");
     if (user.status === "BANNED") throw new AppError("Tài khoản đang bị khoá, hãy mở khoá trước");
+    if (user.deleteRequestedAt) throw new AppError("Tài khoản đã đóng theo yêu cầu xoá");
     console.log(`[admin] #${actor.id} đăng nhập thay thành viên #${id}`);
     return { token: signImpersonationToken(user.id, actor.id), user };
   },
