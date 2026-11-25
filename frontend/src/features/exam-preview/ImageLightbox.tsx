@@ -100,7 +100,7 @@ export function ImageLightbox({ items, index, onIndex, onClose }: { items: Light
         >
           {/* Rộng đúng bằng khung xem (100% = vừa chiều ngang), nằm giữa theo chiều ngang và bắt đầu từ ĐẦU ảnh */}
           <div className="flex min-h-full min-w-full">
-            <div className="relative mx-auto shrink-0" style={{ width: `${z.zoom * 100}%`, maxWidth: "none" }}>
+            <div className="relative mx-auto shrink-0" style={{ width: z.imgWidth, maxWidth: "none" }}>
               <ProtectedImg
                 ref={z.imgRef}
                 src={item.src}
