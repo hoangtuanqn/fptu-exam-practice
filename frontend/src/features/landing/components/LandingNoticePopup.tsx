@@ -28,11 +28,9 @@ export function LandingNoticePopup() {
   const days = Math.ceil(promo.msLeft / 86_400_000);
 
   return (
-    <Modal onClose={close} maxWidth="max-w-lg" flush>
+    <Modal onClose={close} maxWidth="max-w-lg" flush corner={<div aria-hidden className="pointer-events-none absolute -right-3 -top-14 w-20 drop-shadow-lg sm:-right-4 sm:w-24 [&>svg]:h-auto [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: MASCOT_XMAS_SVG }} />}>
       <div className="relative">
         <img src="/promo/pro-poster.webp" width={960} height={600} alt="Poster gói PRO của FEPass: giải thích AI mọi câu, báo cáo điểm yếu, sổ câu sai không giới hạn" className="block w-full" />
-        {/* Cóc Pass đội nón Noel ở góc trên bên phải hộp thoại (chỉ để trang trí) */}
-        <div aria-hidden className="pointer-events-none absolute right-2 top-2 w-24 drop-shadow-lg sm:w-28 [&>svg]:h-auto [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: MASCOT_XMAS_SVG }} />
       </div>
       <div className="p-5 sm:p-6">
         <h2 className="md-headline-small text-on-surface">
