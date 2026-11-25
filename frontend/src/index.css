@@ -806,9 +806,16 @@ html {
   background: radial-gradient(circle at 6px 0, var(--xmas-snow) 4.5px, transparent 5px) 0 0 / 12px 6px repeat-x;
 }
 
-/* Cóc bám viền popup trang chủ và đi vòng quanh (theo chiều kim đồng hồ). Điểm neo là đáy giữa ảnh nên bàn chân luôn đứng trên viền, ảnh tự xoay theo cạnh. Giảm chuyển động: đứng yên ở gần góc trên bên phải */
-.popup-orbit { width: 64px; height: auto; offset-path: inset(0 round 28px); offset-anchor: 50% 100%; offset-rotate: auto; offset-distance: 22%; }
+/* Cóc leo bám viền popup trang chủ, đi vòng quanh theo chiều kim đồng hồ. Ba lớp ảnh chồng nhau (thân, tay trái, tay phải); điểm neo là mép popup nên ảnh tự xoay theo từng cạnh. Hai tay thay nhau với tới rồi bám lại, thân lắc nhẹ. Giảm chuyển động: đứng yên ở gần góc trên bên phải */
+.popup-climber { position: absolute; left: 0; top: 0; width: 88px; aspect-ratio: 160 / 150; offset-path: inset(0 round 28px); offset-anchor: 50% 93.33%; offset-rotate: auto; offset-distance: 22%; filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.3)); }
+.popup-climber img { position: absolute; inset: 0; width: 100%; height: 100%; user-select: none; }
+.popup-climber .climb-body { transform-origin: 50% 100%; }
 @keyframes popup-orbit { to { offset-distance: 100%; } }
+@keyframes climb-reach { 0%, 100% { transform: translate(-4px, 0); } 35% { transform: translate(4px, -5px); } 55% { transform: translate(4px, 0); } }
+@keyframes climb-sway { 0%, 100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
 @media (prefers-reduced-motion: no-preference) {
-  .popup-orbit { animation: popup-orbit 36s linear infinite; }
+  .popup-climber { animation: popup-orbit 45s linear infinite; }
+  .popup-climber .climb-body { animation: climb-sway 1.6s ease-in-out infinite; }
+  .popup-climber .climb-hand-l { animation: climb-reach 1.6s ease-in-out infinite; }
+  .popup-climber .climb-hand-r { animation: climb-reach 1.6s ease-in-out -0.8s infinite; }
 }
