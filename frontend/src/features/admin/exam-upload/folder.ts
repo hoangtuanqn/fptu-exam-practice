@@ -175,3 +175,10 @@ export function checkFolder<F extends { size: number }>(entries: FolderEntry<F>[
   const items = numbers.map((number) => ({ number, file: seen.get(number)!.file, answer: byNumber.get(number) ?? [] }));
   return { root, items, ansFile: ansEntry?.file ?? null, replaced, errors, warnings };
 }
+
+// Loại đề đoán từ tên đề (cùng quy tắc với backend utils/exam-kind): từ khoá FE/PE/Quiz không dính chữ/số hai bên, ví dụ "MSS301 - SU26 - PE - RE" là PE. Không thấy thì null.
+const KIND_TOKEN = /(?<![A-Za-z0-9])(?:(FE|final[\s_-]*exam)|(PE|practical[\s_-]*exam)|(quizz?(?:es)?))(?![A-Za-z0-9])/i;
+export function kindFromTitle(title: string): "FE" | "PE" | "QUIZ" | null {
+  const m = KIND_TOKEN.exec(title);
+  return m ? (m[1] ? "FE" : m[2] ? "PE" : "QUIZ") : null;
+}

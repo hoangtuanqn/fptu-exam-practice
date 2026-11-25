@@ -11,7 +11,7 @@ import { SubjectCombobox } from "@/features/subject/SubjectCombobox";
 import { subjectApi } from "@/features/subject/subject.api";
 import { MAX_TOTAL_BYTES } from "@/features/exam-contribution/limits";
 import { examUploadApi, KIND_LABEL, type ExamKind, type UploadJob } from "./exam-upload.api";
-import { ansPathOf, checkFolder, checkResources, findRoot, isQuizFolder, nameFromFolder, type FolderCheck, type FolderEntry, type ResourceCheck } from "./folder";
+import { ansPathOf, checkFolder, checkResources, findRoot, isQuizFolder, kindFromTitle, nameFromFolder, type FolderCheck, type FolderEntry, type ResourceCheck } from "./folder";
 import { FolderPicker } from "./FolderPicker";
 import { FolderPreview } from "./FolderPreview";
 import { ResourcePreview } from "./ResourcePreview";
@@ -39,11 +39,16 @@ export function ExamUploadForm({ target, onDone, onBusy, onCancel }: Props) {
   const [title, setTitle] = useState(create ? (target.title ?? "") : "");
   const [subjectCode, setSubjectCode] = useState(create ? (target.subjectCode ?? "") : "");
   const [kind, setKind] = useState<ExamKind>(create && target.kind ? target.kind : "FE");
+  const kindPicked = useRef(create && !!target.kind); // admin đã tự chọn loại (hoặc đề được mở sẵn với loại): thôi tự đoán theo tên
   const [folder, setFolder] = useState<{ check: FolderCheck<File>; ansJson: string | null } | null>(null);
   const [resource, setResource] = useState<ResourceCheck<File> | null>(null);
   const [missing, setMissing] = useState<{ title?: string; subjectCode?: string; folder?: string }>({});
   const auto = useRef({ title: "", subjectCode: "" }); // giá trị đã tự điền từ tên thư mục: chọn thư mục khác thì được đổi theo, admin đã tự sửa thì giữ
   const busy = submit.loading;
+  // Loại đề tự đoán theo tên đề (FE / PE / Quiz); không thấy từ khoá thì FE, admin chọn tay rồi thì giữ lựa chọn đó
+  useEffect(() => {
+    if (create && !kindPicked.current) setKind(kindFromTitle(title) ?? "FE");
+  }, [create, title]);
   useEffect(() => {
     onBusy?.(busy);
   }, [busy, onBusy]);
@@ -157,7 +162,10 @@ export function ExamUploadForm({ target, onDone, onBusy, onCancel }: Props) {
               }}
               error={missing.subjectCode ?? submit.fieldErrors.subjectCode ?? (subjects.error ? "Chưa tải được danh sách môn" : undefined)}
             />
-            <Select label="Loại đề" value={kind} onChange={(e) => setKind(e.target.value as ExamKind)} disabled={busy} error={submit.fieldErrors.kind}>
+            <Select label="Loại đề" value={kind} onChange={(e) => {
+                kindPicked.current = true;
+                setKind(e.target.value as ExamKind);
+              }} disabled={busy} error={submit.fieldErrors.kind}>
               {KINDS.map((k) => (
                 <option key={k} value={k}>
                   {KIND_LABEL[k]}
