@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight, Download, ExternalLink, Maximize, Pause, Play, RotateCw, X, ZoomIn, ZoomOut } from "lucide-react";
+import { useImageZoom } from "@/features/practice/hooks/useImageZoom";
 import { downloadProtectedImage, openProtectedImage } from "@/shared/api/protectedImage";
 import { ProtectedImg } from "@/shared/ui/ProtectedImg";
 
@@ -10,13 +11,12 @@ export interface LightboxItem {
 }
 
 // Xem ảnh các trang trong lớp phủ: đếm trang, thu/phóng, xoay, tự chạy, toàn màn hình, tải, mở tab mới, mũi tên và dải ảnh nhỏ bên dưới.
-// Ảnh hiện vừa khung; thu/phóng nhân kích thước đó (cuộn được khi lớn hơn màn hình).
+// Thu/phóng dùng chung logic với cửa sổ xem ảnh khi luyện đề: bấm vào ảnh để phóng quanh điểm bấm, đã phóng thì kéo chuột (bàn tay) để di chuyển.
 const BTN = "flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white hover:bg-white/15 disabled:opacity-40 disabled:hover:bg-transparent";
-const ZOOMS = [0.5, 0.75, 1, 1.5, 2, 3, 4];
 const SLIDE_MS = 3000;
 
 export function ImageLightbox({ items, index, onIndex, onClose }: { items: LightboxItem[]; index: number; onIndex: (i: number) => void; onClose: () => void }) {
-  const [zoom, setZoom] = useState(1);
+  const z = useImageZoom();
   const [turns, setTurns] = useState(0); // số lần xoay 90° theo chiều kim đồng hồ
   const [playing, setPlaying] = useState(false);
   const strip = useRef<HTMLDivElement>(null);
@@ -27,8 +27,9 @@ export function ImageLightbox({ items, index, onIndex, onClose }: { items: Light
 
   // Sang ảnh khác thì về cỡ vừa khung, không xoay
   useEffect(() => {
-    setZoom(1);
+    z.reset();
     setTurns(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index]);
 
   useEffect(() => {
@@ -54,14 +55,6 @@ export function ImageLightbox({ items, index, onIndex, onClose }: { items: Light
     strip.current?.querySelector<HTMLElement>('[aria-current="true"]')?.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
   }, [index]);
 
-  const step = (dir: 1 | -1) => {
-    const i = ZOOMS.findIndex((z) => z >= zoom - 0.001);
-    setZoom(ZOOMS[Math.min(ZOOMS.length - 1, Math.max(0, (i < 0 ? ZOOMS.length - 1 : i) + dir))]!);
-  };
-
-  const sideways = turns % 2 === 1; // xoay ngang: khung vừa màn hình đổi chiều
-  const box = sideways ? { w: "calc(100dvh - 12rem)", h: "calc(100vw - 8rem)" } : { w: "calc(100vw - 8rem)", h: "calc(100dvh - 12rem)" };
-
   return createPortal(
     <div role="dialog" aria-modal="true" aria-label={item.name} className="md-scrim-in fixed inset-0 z-[60] flex flex-col bg-black text-white">
       <div className="flex items-center justify-between gap-2 px-3 py-2">
@@ -69,13 +62,13 @@ export function ImageLightbox({ items, index, onIndex, onClose }: { items: Light
           {index + 1} / {items.length}
         </span>
         <div className="flex items-center gap-0.5">
-          <button type="button" onClick={() => step(-1)} disabled={zoom <= ZOOMS[0]!} aria-label="Thu nhỏ" className={BTN}>
+          <button type="button" onClick={z.zoomOut} disabled={!z.canZoomOut} aria-label="Thu nhỏ" className={BTN}>
             <ZoomOut size={20} />
           </button>
-          <button type="button" onClick={() => setZoom(1)} title="Về cỡ vừa khung" className="w-14 text-center text-sm font-medium tabular-nums">
-            {Math.round(zoom * 100)}%
+          <button type="button" onClick={z.reset} title="Về cỡ vừa khung" className="w-14 text-center text-sm font-medium tabular-nums">
+            {Math.round(z.zoom * 100)}%
           </button>
-          <button type="button" onClick={() => step(1)} disabled={zoom >= ZOOMS[ZOOMS.length - 1]!} aria-label="Phóng to" className={BTN}>
+          <button type="button" onClick={z.zoomIn} disabled={!z.canZoomIn} aria-label="Phóng to" className={BTN}>
             <ZoomIn size={20} />
           </button>
           <button type="button" onClick={() => setTurns((t) => t + 1)} aria-label="Xoay ảnh" className={BTN}>
@@ -102,15 +95,27 @@ export function ImageLightbox({ items, index, onIndex, onClose }: { items: Light
       </div>
 
       <div className="relative min-h-0 flex-1">
-        <div className="flex h-full overflow-auto" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-          <div className="m-auto p-4" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-            <ProtectedImg
-              src={item.src}
-              alt={item.name}
-              onClick={() => setZoom((z) => (z === 1 ? 2 : 1))}
-              className={`block h-auto max-w-none select-none bg-white transition-transform ${zoom === 1 ? "cursor-zoom-in" : "cursor-zoom-out"}`}
-              style={{ maxWidth: zoom === 1 ? box.w : "none", maxHeight: zoom === 1 ? box.h : "none", width: zoom === 1 ? undefined : `calc(${box.w} * ${zoom})`, transform: `rotate(${turns * 90}deg)` }}
-            />
+        <div
+          ref={z.scrollRef}
+          onScroll={z.onScroll}
+          {...z.dragProps}
+          onMouseDown={(e) => e.target === e.currentTarget && onClose()}
+          className={`h-full overflow-auto p-4 ${z.zoom > 1 ? (z.grabbing ? "cursor-grabbing select-none" : "cursor-grab") : ""}`}
+        >
+          {/* m-auto: ảnh nhỏ nằm giữa, ảnh tràn khung vẫn cuộn tới được mọi phía */}
+          <div className="flex min-h-full min-w-full">
+            <div className="relative m-auto shrink-0" style={{ width: `${z.zoom * 100}%`, maxWidth: "none" }}>
+              <ProtectedImg
+                ref={z.imgRef}
+                src={item.src}
+                alt={item.name}
+                onClick={z.toggleAt}
+                onLoad={z.onImageLoad}
+                title={z.zoom <= 1 ? "Bấm để phóng to" : "Kéo để di chuyển ảnh"}
+                className={`block w-full select-none bg-white ${z.zoom <= 1 ? "cursor-zoom-in" : "cursor-[inherit]"}`}
+                style={{ transform: `rotate(${turns * 90}deg)` }}
+              />
+            </div>
           </div>
         </div>
         {index > 0 && (
