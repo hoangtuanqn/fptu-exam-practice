@@ -31,6 +31,16 @@
     <priority>0.4</priority>
   </url>
   <url>
+    <loc>https://fepass.top/dieu-khoan/</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  <url>
+    <loc>https://fepass.top/bao-mat/</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  <url>
     <loc>https://fepass.top/login/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>

@@ -101,6 +101,18 @@ export default function RegisterPage() {
         </Button>
       </form>
 
+      <p className="mt-4 text-center text-xs text-slate-500">
+        Khi đăng ký, bạn đồng ý với{" "}
+        <Link to="/dieu-khoan" className="font-medium text-brand-700 hover:underline">
+          Điều khoản
+        </Link>{" "}
+        và{" "}
+        <Link to="/bao-mat" className="font-medium text-brand-700 hover:underline">
+          Chính sách bảo mật
+        </Link>
+        .
+      </p>
+
       <p className="mt-6 text-center text-sm text-slate-500">
         Đã có tài khoản?{" "}
         <Link to="/login" className="font-medium text-brand-700 hover:underline">
