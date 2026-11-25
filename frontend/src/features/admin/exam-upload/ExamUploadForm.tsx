@@ -42,7 +42,7 @@ export function ExamUploadForm({ target, onDone, onBusy, onCancel }: Props) {
   const [folder, setFolder] = useState<{ check: FolderCheck<File>; ansJson: string | null } | null>(null);
   const [resource, setResource] = useState<ResourceCheck<File> | null>(null);
   const [missing, setMissing] = useState<{ title?: string; subjectCode?: string; folder?: string }>({});
-  const auto = useRef({ title: "", subjectCode: "" }); // giá trị đã tự điền từ tên thư mục: chọn thư mục khác thì được đổi theo, admin đã tự sửa thì giữ
+  const auto = useRef<{ title: string; subjectCode: string; kind: ExamKind }>({ title: "", subjectCode: "", kind }); // giá trị đã tự điền từ tên thư mục: chọn thư mục khác thì được đổi theo, admin đã tự sửa thì giữ
   const busy = submit.loading;
   useEffect(() => {
     onBusy?.(busy);
@@ -63,6 +63,10 @@ export function ExamUploadForm({ target, onDone, onBusy, onCancel }: Props) {
         setSubjectCode(named.subjectCode!);
         auto.current.subjectCode = named.subjectCode!;
         setMissing((m) => ({ ...m, subjectCode: undefined }));
+      }
+      if (named.kind && kind === auto.current.kind) {
+        setKind(named.kind);
+        auto.current.kind = named.kind;
       }
     }
     // Tạo mới mà thiếu images/ hoặc ans.json: lưu thành tài liệu. Bổ sung ảnh luôn đi đường đề trắc nghiệm
