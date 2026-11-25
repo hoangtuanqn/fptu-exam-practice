@@ -116,8 +116,7 @@ export function ExamUploadForm({ target, onDone, onBusy, onCancel }: Props) {
       void submit.run(async () => {
         const r = await sendOrOverwrite((overwrite) => examUploadApi.createResource({ title, subjectCode, kind, files: resource.files.map((f) => f.file), overwrite }));
         if (!r) return;
-        // Lưu xong ngay: đưa về dạng lượt đã xong, không có uploadId (useUploadJobs.add báo đã lưu và tải lại trang)
-        onDone({ kind: "create", title: r.title, status: "DONE", files: r.files, error: null, result: { id: r.id, questions: 0, answered: 0 } });
+        onDone(r);
       });
       return;
     }
