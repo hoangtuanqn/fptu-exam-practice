@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { MASCOT_XMAS_SVG } from "@/shared/ui/mascot-art";
 import { Modal } from "@/shared/ui/Modal";
 import { Button, buttonClass } from "@/shared/ui/Button";
 import { isSnoozed, snooze } from "@/shared/utils/promptSnooze";
@@ -28,7 +27,7 @@ export function LandingNoticePopup() {
   const days = Math.ceil(promo.msLeft / 86_400_000);
 
   return (
-    <Modal onClose={close} maxWidth="max-w-lg" flush corner={<div aria-hidden className="pointer-events-none absolute -right-3 -top-14 w-20 drop-shadow-lg sm:-right-4 sm:w-24 [&>svg]:h-auto [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: MASCOT_XMAS_SVG }} />}>
+    <Modal onClose={close} maxWidth="max-w-lg" flush corner={<img src="/promo/mascot-corner.webp" width={128} height={113} alt="" aria-hidden className="pointer-events-none absolute select-none drop-shadow-md" style={{ right: -28, top: -62 }} />}>
       <div className="relative">
         <img src="/promo/pro-poster.webp" width={960} height={600} alt="Poster gói PRO của FEPass: mở khóa tất cả đề thi, flashcard và mọi tính năng, không giới hạn" className="block w-full" />
       </div>
