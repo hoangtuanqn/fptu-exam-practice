@@ -1,4 +1,5 @@
 import cron from "node-cron";
+import { accountDeletionService } from "../services/account-deletion.service";
 import { practiceSessionService } from "../services/practice-session.service";
 import { emailVerificationRepository } from "../repositories/email-verification.repository";
 import { passwordResetRepository } from "../repositories/password-reset.repository";
@@ -8,6 +9,11 @@ import { userNoticeService } from "../services/user-notice.service";
 // Mỗi đêm 3:45 (giờ máy chủ) xoá các lượt làm bài đã cũ để bảng không phình dần
 export const startSessionCleanup = () => {
   cron.schedule("45 3 * * *", async () => {
+    // Ẩn danh tài khoản đã hết thời gian chờ xoá (tách khỏi phần dọn bên dưới để lỗi bên này không chặn bên kia)
+    await accountDeletionService
+      .runDue()
+      .then((n) => n > 0 && console.log(`[account-deletion] đã xoá ${n} tài khoản`))
+      .catch((err: Error) => console.error("[account-deletion]", err.message));
     try {
       const removed = await practiceSessionService.cleanup();
       if (removed > 0) console.log(`[session-cleanup] đã xoá ${removed} lượt làm bài cũ`);
