@@ -19,10 +19,15 @@ export const adminGiftCodeController = {
     res.status(HTTP_STATUS.CREATED).json(new ResponseClient({ message: "Đã tạo giftcode", data }));
   },
 
-  async setActive(_req: Request, res: Response) {
+  async update(_req: Request, res: Response) {
     const { id } = getValidated<UuidParam>(res, "params");
-    const { active } = getValidated<UpdateGiftCodeBody>(res);
-    res.json(new ResponseClient({ data: await giftCodeService.setActive(id, active) }));
+    res.json(new ResponseClient({ data: await giftCodeService.update(id, getValidated<UpdateGiftCodeBody>(res)) }));
+  },
+
+  async remove(_req: Request, res: Response) {
+    const { id } = getValidated<UuidParam>(res, "params");
+    await giftCodeService.remove(id);
+    res.json(new ResponseClient({ message: "Đã xóa giftcode" }));
   },
 
   async redemptions(_req: Request, res: Response) {

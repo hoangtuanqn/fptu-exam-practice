@@ -183,7 +183,8 @@ adminRouter.get("/exams/:id/download", validate(uuidParam, "params"), adminAiCon
 
 adminRouter.get("/gift-codes", validate(listGiftCodesQuery, "query"), adminGiftCodeController.list);
 adminRouter.post("/gift-codes", validate(createGiftCodeBody), adminGiftCodeController.create);
-adminRouter.patch("/gift-codes/:id", validate(uuidParam, "params"), validate(updateGiftCodeBody), adminGiftCodeController.setActive);
+adminRouter.patch("/gift-codes/:id", validate(uuidParam, "params"), validate(updateGiftCodeBody), adminGiftCodeController.update);
+adminRouter.delete("/gift-codes/:id", validate(uuidParam, "params"), adminGiftCodeController.remove);
 adminRouter.get("/gift-codes/:id/redemptions", validate(uuidParam, "params"), validate(paginationQuery, "query"), adminGiftCodeController.redemptions);
 
 adminRouter.get("/explanation-feedback", validate(listFeedbackQuery, "query"), adminExplanationFeedbackController.list);
