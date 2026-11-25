@@ -1,6 +1,6 @@
 /**
  * Dựng ảnh Cóc Pass đội nón Noel đu bám vào góc trên bên phải của popup: frontend/public/promo/mascot-corner.webp (nền trong suốt).
- * Điểm góc của popup nằm ở CORNER (toạ độ ảnh 290x230): tay trên bám mép trên (y = CORNER.y), tay dưới bám mép phải (x = CORNER.x).
+ * Điểm góc của popup nằm ở CORNER (toạ độ ảnh 300x240): tay trên bám mép trên (y = CORNER.y), tay dưới bám mép phải (x = CORNER.x).
  * Popup đặt ảnh theo hai số này nên đổi CORNER thì phải đổi cả nơi đặt ảnh.
  * Chạy lại:  npx tsx scripts/gen-popup-mascot.ts
  */
@@ -10,35 +10,33 @@ import sharp from "sharp";
 import { MASCOT_SVG } from "../../frontend/src/shared/ui/mascot-art";
 import { santaHat } from "../../frontend/src/shared/ui/santa-hat";
 
-export const W = 290;
-export const H = 230;
-export const CORNER = { x: 120, y: 110 };
+export const W = 300;
+export const H = 240;
+export const CORNER = { x: 150, y: 150 };
 const OUT = path.resolve(__dirname, "../../frontend/public/promo/mascot-corner.webp");
 const BROWN = "#9a5f00";
 
 // Thân + đầu của mascot (bỏ bảng danh hiệu và hai tay đỡ bảng)
 const head = MASCOT_SVG.slice(MASCOT_SVG.indexOf("<defs>"), MASCOT_SVG.indexOf('<g><rect x="64" y="68"'));
 
-// Tay ngắn, mập, đầu tròn như tay cầm bảng của mascot gốc (hai nét viền: nâu rồi vàng)
-const arm = (d: string) => `<path d="${d}" fill="none" stroke="${BROWN}" stroke-width="17" stroke-linecap="round"/><path d="${d}" fill="none" stroke="#ffc61f" stroke-width="12.5" stroke-linecap="round"/>`;
 const digit = (x: number, y: number, w: number, h: number) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${Math.min(w, h) / 2}" fill="url(#gold)" stroke="${BROWN}" stroke-width="1.8"/>`;
 const sparkle = (x: number, y: number, r: number) => `<path d="M${x} ${y - r}Q${x} ${y} ${x + r} ${y}Q${x} ${y} ${x} ${y + r}Q${x} ${y} ${x - r} ${y}Q${x} ${y} ${x} ${y - r}Z" fill="#fff6c8"/>`;
+const stub = (d: string) => `<path d="${d}" fill="none" stroke="${BROWN}" stroke-width="15" stroke-linecap="round"/><path d="${d}" fill="none" stroke="#ffc61f" stroke-width="10.5" stroke-linecap="round"/>`;
 
 const { x: cx, y: cy } = CORNER;
-// Cóc đứng bên cạnh phải của popup, quay mặt sang trái (lật ngang), nghiêng nhẹ; một tay vắt qua góc bám mép trên, một tay bám mép phải
+// Cóc núp sau góc trên bên phải của popup, ló đầu ra và bám hai tay vào hai mép: thân chỉ vẽ phần nằm NGOÀI popup (clipPath), nên không cần vẽ tay dài
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W * 2}" height="${H * 2}" viewBox="0 0 ${W} ${H}">
-  <defs></defs>
-  <ellipse cx="${cx + 20}" cy="${cy + 82}" rx="22" ry="4.5" fill="#000" opacity=".16"/>
-  ${sparkle(258, 36, 9)}${sparkle(270, 62, 5)}${sparkle(190, 20, 6)}
-  <g transform="translate(202 104) rotate(6) scale(-1.2 1.2) translate(-66 -50)">${head}${santaHat(53, 19, 0.62, 12)}</g>
-  ${arm(`M158 98C148 98 136 98 ${cx - 12} ${cy - 5}`)}
-  ${arm(`M166 134C156 144 146 148 ${cx + 20} ${cy + 46}`)}
-  <!-- bàn tay trên: ba ngón mập rủ xuống mặt trước của mép trên, lòng bàn tay nằm trên mép -->
-  <g>${digit(cx - 42, cy - 3, 11, 19)}${digit(cx - 30, cy - 3, 11, 22)}${digit(cx - 18, cy - 3, 11, 19)}
-  <ellipse cx="${cx - 23}" cy="${cy - 8}" rx="19" ry="11.5" fill="url(#gold)" stroke="${BROWN}" stroke-width="2"/></g>
+  <defs><clipPath id="outside"><path clip-rule="evenodd" d="M0 0H${W}V${H}H0Z M0 ${cy}H${cx}V${H}H0Z"/></clipPath></defs>
+  ${sparkle(268, 40, 9)}${sparkle(284, 68, 5)}${sparkle(200, 22, 6)}
+  <g clip-path="url(#outside)"><g transform="translate(${cx + 16} ${cy - 24}) rotate(7) scale(-1.35 1.35) translate(-66 -50)">${head}${santaHat(53, 19, 0.62, 12)}</g></g>
+  ${stub(`M${cx - 30} ${cy - 18}V${cy - 6}`)}
+  ${stub(`M${cx + 18} ${cy + 36}H${cx + 8}`)}
+  <!-- bàn tay trên: ba ngón mập rủ xuống mặt trước của mép trên -->
+  <g>${digit(cx - 49, cy - 2, 11, 19)}${digit(cx - 37, cy - 2, 11, 22)}${digit(cx - 25, cy - 2, 11, 19)}
+  <ellipse cx="${cx - 30}" cy="${cy - 6}" rx="19" ry="11.5" fill="url(#gold)" stroke="${BROWN}" stroke-width="2"/></g>
   <!-- bàn tay dưới: ba ngón mập vòng sang mặt trước của mép phải -->
-  <g>${digit(cx - 18, cy + 31, 21, 11)}${digit(cx - 21, cy + 43, 24, 11)}${digit(cx - 18, cy + 55, 21, 11)}
-  <ellipse cx="${cx + 12}" cy="${cy + 48}" rx="11.5" ry="19" fill="url(#gold)" stroke="${BROWN}" stroke-width="2"/></g>
+  <g>${digit(cx - 18, cy + 30, 21, 11)}${digit(cx - 21, cy + 42, 24, 11)}${digit(cx - 18, cy + 54, 21, 11)}
+  <ellipse cx="${cx + 10}" cy="${cy + 46}" rx="11.5" ry="19" fill="url(#gold)" stroke="${BROWN}" stroke-width="2"/></g>
 </svg>`;
 
 void (async () => {
