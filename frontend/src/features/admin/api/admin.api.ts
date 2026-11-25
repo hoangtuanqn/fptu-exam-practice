@@ -114,6 +114,17 @@ export interface GiftCodeForm {
   creditTtlMinutes?: number; // credit nhận được hết hạn sau chừng này phút kể từ lúc người dùng nhập; bỏ trống = vĩnh viễn
 }
 
+// Sửa giftcode: chỉ gửi trường đổi; null = xóa giá trị (không hết hạn / bỏ ghi chú / credit vĩnh viễn)
+export interface GiftCodePatch {
+  active?: boolean;
+  code?: string;
+  amount?: number;
+  maxUses?: number;
+  expiresAt?: string | null;
+  note?: string | null;
+  creditTtlMinutes?: number | null;
+}
+
 export interface UserFilter {
   page: number;
   search?: string;
@@ -442,8 +453,9 @@ export const adminApi = {
     }),
   createGiftCode: (body: GiftCodeForm) =>
     http.post<GiftCode>("/admin/gift-codes", body),
-  setGiftCodeActive: (id: string, active: boolean) =>
-    http.patch<GiftCode>(`/admin/gift-codes/${id}`, { active }),
+  updateGiftCode: (id: string, body: GiftCodePatch) =>
+    http.patch<GiftCode>(`/admin/gift-codes/${id}`, body),
+  deleteGiftCode: (id: string) => http.delete(`/admin/gift-codes/${id}`),
   giftCodeRedemptions: (id: string, page: number) =>
     http.list<GiftCodeRedemption>(`/admin/gift-codes/${id}/redemptions`, {
       page,
