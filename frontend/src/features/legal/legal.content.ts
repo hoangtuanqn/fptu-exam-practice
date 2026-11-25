@@ -145,7 +145,7 @@ export const PRIVACY: LegalDoc = {
       title: "5. Lưu trữ và bảo mật",
       items: [
         "Mật khẩu được băm một chiều. Kết nối tới FEPass dùng HTTPS.",
-        "Dữ liệu được giữ trong thời gian tài khoản còn hoạt động. Dữ liệu giao dịch có thể được giữ lâu hơn theo yêu cầu kế toán, thuế.",
+        "Dữ liệu được giữ trong thời gian tài khoản còn hoạt động. Khi bạn xoá tài khoản, phần được giữ lại ghi ở mục 7.",
         "Không có hệ thống nào an toàn tuyệt đối. Nếu phát hiện sự cố liên quan tới bạn, chúng tôi sẽ thông báo theo quy định.",
       ],
     },
@@ -154,18 +154,29 @@ export const PRIVACY: LegalDoc = {
       items: [
         "Xem và sửa thông tin cá nhân, đổi mật khẩu trong mục Hồ sơ.",
         "Từ chối email gợi ý và ưu đãi bằng liên kết trong thư. Thư về tài khoản và giao dịch vẫn được gửi.",
-        "Yêu cầu xoá dữ liệu hoặc hỏi về dữ liệu của bạn: gửi email tới {email}.",
+        "Tự xoá tài khoản trong mục Hồ sơ (xem mục 7). Hỏi về dữ liệu của bạn: gửi email tới {email}.",
       ],
     },
     {
-      title: "7. Cookie và bộ nhớ trình duyệt",
+      title: "7. Xoá tài khoản",
+      items: [
+        "Vào Hồ sơ, chọn Xoá tài khoản rồi xác nhận bằng mật khẩu, hoặc bằng email nếu bạn đăng nhập bằng Google hay GitHub. Không vào được tài khoản thì gửi email tới {email}.",
+        "Cần chờ đơn Coursera đang xử lý và lệnh nạp đang chờ thanh toán kết thúc trước khi gửi yêu cầu.",
+        "Tài khoản đóng ngay và mọi thiết bị bị đăng xuất. Đăng nhập lại trong vòng 14 ngày là huỷ yêu cầu.",
+        "Sau 14 ngày không khôi phục được: tên, email, ảnh đại diện, liên kết Google hoặc GitHub, câu đã lưu, sổ câu sai, lịch ôn, huy hiệu, bảng điểm và lịch thi đã đồng bộ, slide đã tải lên, câu bạn hỏi trợ lý được xoá hoặc ẩn danh. Số dư credit và gói Pro còn lại bị huỷ, không hoàn tiền.",
+        "Chúng tôi vẫn giữ: lịch sử nạp tiền, chuyển khoản và biến động credit (phục vụ kế toán, đối soát), kết quả bài làm, nội dung bạn đã đóng góp hoặc bình luận. Một số ghi chép cũ, ví dụ thưởng giới thiệu trong lịch sử của người khác, có thể vẫn nhắc tên bạn.",
+        "Chúng tôi lưu mã băm của email đã xoá để việc đăng ký lại không nhận quà đăng ký và thưởng giới thiệu lần nữa. Bạn vẫn đăng ký lại được bằng email đó.",
+      ],
+    },
+    {
+      title: "8. Cookie và bộ nhớ trình duyệt",
       items: [
         "FEPass lưu thông tin đăng nhập, giao diện sáng/tối và mã giới thiệu trong trình duyệt để dịch vụ hoạt động.",
         "Công cụ đo lường (Google Tag Manager) có thể đặt cookie của họ. Bạn có thể chặn cookie trong trình duyệt, nhưng một số tính năng có thể không dùng được.",
       ],
     },
     {
-      title: "8. Thay đổi và liên hệ",
+      title: "9. Thay đổi và liên hệ",
       items: [
         "Ngày cập nhật ghi ở đầu trang. Thay đổi quan trọng sẽ được thông báo trên website.",
         "Liên hệ về dữ liệu cá nhân: {email}.",
