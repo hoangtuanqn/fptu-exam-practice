@@ -32,6 +32,7 @@ import type {
 } from "@/shared/types/api";
 import { ApiError, toApiError, BASE, http, tokenStore } from "@/shared/api/client";
 import { PAGE_SIZE } from "@/shared/api/pagination";
+import type { ExamKind } from "@/features/admin/exam-upload/exam-upload.api";
 
 export type NoticeCategory = "account" | "fetch" | "money" | "exam" | "system";
 
@@ -235,6 +236,8 @@ export interface ExamAdminDetail {
   threadId: string;
   totalQuestions: number;
   answerSource: AnswerSource;
+  kind?: ExamKind | null; // null = đề cũ chưa phân loại; máy chủ cũ không trả về
+  subjectCode?: string | null; // máy chủ cũ không trả về
   aiReport: string | null;
   createdAt: string;
   solving: boolean;
@@ -283,6 +286,9 @@ export interface PresenceData {
   total: number; // tổng thành viên online (danh sách có thể bị cắt bớt)
   users: { userId: string; fullName: string; email: string; pages: string[] }[];
 }
+
+export type ExamPatch = { title?: string; kind?: ExamKind; subjectCode?: string | null };
+const updateExam = (id: string, patch: ExamPatch) => http.patch<ExamAdminDetail>(`/admin/exams/${id}`, patch);
 
 export const adminApi = {
   presence: () => http.get<PresenceData>("/admin/presence"),
@@ -493,8 +499,7 @@ export const adminApi = {
     http.put<AiAdminConfig>("/admin/settings/ai", body),
   exams: (page: number, filter: { q?: string; kind?: string; source?: string } = {}) =>
     http.list<AdminExam>("/admin/exams", { page, limit: PAGE_SIZE, ...filter }),
-  renameExam: (id: string, title: string) =>
-    http.patch<ExamAdminDetail>(`/admin/exams/${id}`, { title }),
+  updateExam,
   deleteExam: (id: string) => http.delete(`/admin/exams/${id}`),
   // Tải đề dạng zip (ảnh + đáp án) rồi lưu xuống máy; trả về tên file đã lưu
   async downloadExam(id: string): Promise<string> {
