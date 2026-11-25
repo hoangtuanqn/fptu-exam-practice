@@ -40,6 +40,9 @@ model User {
   marketingMutedUntil  DateTime? @map("marketing_muted_until") // tam dung thu marketing toi luc nay (tru nhac het han Pro)
   lastActiveAt    DateTime? @map("last_active_at") // lan dang nhap/lam moi phien gan nhat (ghi toi da 1 lan/gio); null = chua hoat dong tu khi co cot nay
   emailVerifiedAt DateTime? @map("email_verified_at") // chÆ°a xĂ¡c minh email thĂ¬ chÆ°a dĂ¹ng Ä‘Æ°á»£c cĂ¡c dá»‹ch vá»¥ trá»« credit
+  deleteRequestedAt DateTime? @map("delete_requested_at") // self-service deletion: set = closed, erased after the grace period
+  deletedAt         DateTime? @map("deleted_at") // row already anonymised
+  deletedEmailHash  String?   @map("deleted_email_hash") @db.VarChar(64) // keyed hash of the erased email: no signup/referral bonus again
   createdAt DateTime   @default(now()) @map("created_at")
   updatedAt DateTime   @updatedAt @map("updated_at")
 
@@ -86,6 +89,8 @@ model User {
   rewardsAsReferred  ReferralReward[]     @relation("RewardReferred")
 
   @@index([referredById])
+  @@index([deleteRequestedAt])
+  @@index([deletedEmailHash])
   @@index([status]) // dashboard Ä‘áº¿m theo tráº¡ng thĂ¡i
   @@index([lastActiveAt]) // chien dich win-back loc nguoi lau khong vao
   @@index([role, status]) // danh sĂ¡ch thĂ nh viĂªn lá»c vai trĂ²/tráº¡ng thĂ¡i
