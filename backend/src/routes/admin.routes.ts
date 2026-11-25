@@ -161,6 +161,9 @@ adminRouter.post("/exams/upload", oneExamUploadPerAdmin, examUploadQueueRoom, up
 adminRouter.post("/exams/upload-resource", oneExamUploadPerAdmin, uploadExamFiles, validate(uploadExamBody), adminExamUploadController.uploadResource);
 adminRouter.post("/exams/:id/images", validate(uuidParam, "params"), oneExamUploadPerAdmin, examUploadQueueRoom, uploadExamImages, validate(updateExamImagesBody), adminExamUploadController.updateImages);
 adminRouter.get("/exam-upload/jobs", adminExamUploadController.jobs);
+// Xoá lịch sử: chỉ lượt đã xong/lỗi của chính admin này (lượt đang chờ/chạy không xoá được)
+adminRouter.delete("/exam-upload/jobs", adminExamUploadController.clearJobs);
+adminRouter.delete("/exam-upload/jobs/:id", validate(uuidParam, "params"), adminExamUploadController.removeJobs);
 // Đề còn thiếu (chưa có đề / thiếu ảnh / thiếu đáp án)
 adminRouter.get("/exam-gaps", validate(examGapsQuery, "query"), adminExamUploadController.gaps);
 adminRouter.get("/exam-gaps/summary", validate(examGapFilter, "query"), adminExamUploadController.gapSummary);

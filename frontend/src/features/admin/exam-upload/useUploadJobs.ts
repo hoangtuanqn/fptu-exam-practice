@@ -6,7 +6,7 @@ import { isRealtimeConnected, onConnectionChange, onServerEvent } from "@/shared
 import { examUploadApi, type UploadJob } from "./exam-upload.api";
 
 const FALLBACK_POLL_MS = 5000; // chỉ dùng khi mất kết nối realtime và đang có lượt chờ/chạy
-const isActive = (j: UploadJob) => j.status === "QUEUED" || j.status === "RUNNING";
+export const isActive = (j: UploadJob) => j.status === "QUEUED" || j.status === "RUNNING";
 
 /**
  * Các lượt tải đề chạy nền của admin này. Tải một lần, nhận lượt vừa xong/lỗi qua socket, mất kết nối thì hỏi định kỳ GET /jobs.
@@ -90,5 +90,18 @@ export function useUploadJobs(onSaved?: () => void) {
     [toast, upsert],
   );
 
-  return { jobs, add };
+  // Xoá ở máy chủ rồi bỏ khỏi danh sách (một lượt, hoặc tất cả lượt đã xong/lỗi). Lượt đang chạy không xoá được
+  const dismiss = useCallback(
+    async (id?: string) => {
+      try {
+        await (id ? examUploadApi.removeJob(id) : examUploadApi.clearJobs());
+        setLive((prev) => (prev ?? query.data ?? []).filter((j) => (id ? j.uploadId !== id : isActive(j))));
+      } catch {
+        toast.error("Chưa xoá được, bạn thử lại nhé");
+      }
+    },
+    [query.data, toast],
+  );
+
+  return { jobs, add, dismiss };
 }
