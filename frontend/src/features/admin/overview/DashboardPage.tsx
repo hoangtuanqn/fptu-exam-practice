@@ -59,7 +59,7 @@ export default function DashboardPage() {
           value={stats.deposits.pending}
           note={`${stats.deposits.paid} đã thanh toán · ${stats.deposits.expired} hết hạn`}
         />
-        <StatCard tone="emerald" label="Thành viên hoạt động" value={stats.users.active} />
+        <StatCard tone="emerald" label="Thành viên hoạt động" value={stats.users.active} note={stats.users.deleted ? `${stats.users.deleted} tài khoản đã xoá` : undefined} />
         <StatCard tone="rose" label="Thành viên bị khoá" value={stats.users.banned} />
         <StatCard tone="slate" label="Tổng lệnh nạp" value={stats.deposits.pending + stats.deposits.paid + stats.deposits.expired} />
       </StatGrid>

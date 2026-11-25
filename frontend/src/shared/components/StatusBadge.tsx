@@ -1,5 +1,5 @@
 import { Badge, type Tone } from "@/shared/ui/Badge";
-import type { BankTxStatus, DepositStatus, GiftCodeStatus, ReportStatus, Role, TransactionType, UserStatus } from "@/shared/types/api";
+import type { BankTxStatus, DepositStatus, GiftCodeStatus, ReportStatus, Role, TransactionType, User, UserStatus } from "@/shared/types/api";
 
 // Gom nhãn + màu của mọi trạng thái vào một chỗ để panel user và admin hiển thị giống nhau
 const DEPOSIT: Record<DepositStatus, [string, Tone]> = {
@@ -60,7 +60,12 @@ const make =
   );
 
 export const DepositStatusBadge = make(DEPOSIT);
-export const UserStatusBadge = make(USER);
+// Trạng thái xoá tài khoản được ưu tiên hơn khoá / hoạt động
+export function UserStatusBadge({ user }: { user: Pick<User, "status" | "deleteRequestedAt" | "deletedAt"> }) {
+  if (user.deletedAt) return <Badge tone="neutral">Đã xoá</Badge>;
+  if (user.deleteRequestedAt) return <Badge tone="warning">Chờ xoá</Badge>;
+  return <Badge tone={USER[user.status][1]}>{USER[user.status][0]}</Badge>;
+}
 export const RoleBadge = make(ROLE);
 export const BankTxBadge = make(BANK);
 export const GiftCodeStatusBadge = make(GIFT);

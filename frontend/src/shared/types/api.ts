@@ -126,7 +126,7 @@ export interface SyncResult {
 }
 
 export interface DashboardOverview {
-  users: { active: number; banned: number };
+  users: { active: number; banned: number; deleted?: number };
   deposits: {
     pending: number;
     paid: number;
