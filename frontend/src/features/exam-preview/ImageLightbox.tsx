@@ -25,12 +25,8 @@ export function ImageLightbox({ items, index, onIndex, onClose }: { items: Light
 
   const go = useCallback((i: number) => onIndex(Math.min(last, Math.max(0, i))), [onIndex, last]);
 
-  // Sang ảnh khác thì về cỡ vừa khung, không xoay
-  useEffect(() => {
-    z.reset();
-    setTurns(0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index]);
+  // Sang ảnh khác: giữ mức phóng đang dùng (chỉ nút % mới về 100%), bỏ xoay; ảnh mới tự hiện từ đầu trang (onImageLoad)
+  useEffect(() => setTurns(0), [index]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
