@@ -36,7 +36,6 @@ export function LandingNoticePopup() {
       <div className="relative">
         <img src="/promo/pro-poster.webp" width={960} height={600} alt="Poster gói PRO của FEPass: mở khóa tất cả đề thi, flashcard và mọi tính năng, không giới hạn, Pro 4 tháng giá 69.000đ thay vì 99.000đ" className="block w-full" />
       </div>
-      </div>
       <div className="p-5 sm:p-6">
         <h2 className="md-headline-small text-on-surface">
           Chỉ còn <span className="text-primary">{days} ngày</span> nữa mua gói PRO
