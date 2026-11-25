@@ -11,6 +11,7 @@ export interface Brand {
   siteUrl: string; // địa chỉ website thật (để trống nếu chưa có); dùng cho ảnh bìa khi chia sẻ
   companyUrl: string; // trang chủ công ty (tuỳ chọn); không có thì liên kết về Facebook
   facebookUrl: string; // fanpage công ty
+  contactEmail: string; // email liên hệ, hiện ở các trang chính sách
   founder: string; // người sáng lập, hiện ở footer
   coFounders: string[]; // đồng sáng lập (VITE_CO_FOUNDERS, cách nhau bằng dấu phẩy)
   partnerName: string; // đối tác cung cấp kho đề
@@ -30,6 +31,7 @@ const DEFAULTS = {
   siteUrl: "",
   companyUrl: "",
   facebookUrl: "https://facebook.com/mstsoftware.vn",
+  contactEmail: "info@mstsoftware.vn",
   founder: "Phạm Hoàng Tuấn",
   coFounders: "Vũ Việt Quang, Mai Trung Hậu",
   partnerName: "FuOverflow",
@@ -51,6 +53,7 @@ export function loadBrand(env: Env): Brand {
     siteUrl: pick("VITE_SITE_URL", DEFAULTS.siteUrl).replace(/\/$/, ""),
     companyUrl: pick("VITE_COMPANY_URL", DEFAULTS.companyUrl),
     facebookUrl: pick("VITE_FACEBOOK_URL", DEFAULTS.facebookUrl),
+    contactEmail: pick("VITE_CONTACT_EMAIL", DEFAULTS.contactEmail),
     founder: pick("VITE_FOUNDER", DEFAULTS.founder),
     coFounders: pick("VITE_CO_FOUNDERS", DEFAULTS.coFounders)
       .split(",")
