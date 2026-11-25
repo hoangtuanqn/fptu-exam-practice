@@ -1,9 +1,11 @@
 import type { Request, Response } from "express";
 import { getValidated } from "../middlewares/validate.middlewares";
-import type { ChangeEmailBody, ChangePasswordBody, UpdateProfileBody } from "../rules/requests/user.request";
+import type { ChangeEmailBody, ChangePasswordBody, DeleteAccountBody, UpdateProfileBody } from "../rules/requests/user.request";
 import { ResponseClient } from "../rules/response";
 import { emailVerificationService } from "../services/email-verification.service";
 import { userService } from "../services/user.service";
+import { accountDeletionService } from "../services/account-deletion.service";
+import { clearRefreshCookie } from "../utils/auth-cookie";
 import { avatarService } from "../services/avatar.service";
 import { userRepository } from "../repositories/user.repository";
 import { walletService } from "../services/wallet.service";
@@ -30,6 +32,13 @@ export const userController = {
   async changeEmail(req: Request, res: Response) {
     await emailVerificationService.requestChange(req.user!.id, getValidated<ChangeEmailBody>(res));
     res.json(new ResponseClient({ message: "Đã gửi thư xác minh tới email mới. Bấm liên kết trong thư để hoàn tất đổi email." }));
+  },
+
+  // Xoá tài khoản: đóng ngay, ẩn danh sau thời gian chờ, đăng nhập lại là huỷ
+  async requestDeletion(req: Request, res: Response) {
+    const data = await accountDeletionService.request(req.user!.id, !!req.impersonated, getValidated<DeleteAccountBody>(res));
+    clearRefreshCookie(res);
+    res.json(new ResponseClient({ message: "Đã ghi nhận yêu cầu xoá tài khoản", data }));
   },
 
   // Upload avatar: multer đã parse file, middleware đã validate

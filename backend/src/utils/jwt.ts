@@ -16,7 +16,7 @@ export const signToken = (userId: string) =>
 export const signImpersonationToken = (userId: string, adminId: string) =>
   jwt.sign({ sub: userId, imp: adminId }, env.JWT_SECRET, { expiresIn: "2h" });
 
-export const verifyToken = (token: string): TokenPayload => {
+export const verifyToken = (token: string): TokenPayload & { impersonated: boolean } => {
   let payload: jwt.JwtPayload | string;
   try {
     payload = jwt.verify(token, env.JWT_SECRET);
@@ -26,5 +26,5 @@ export const verifyToken = (token: string): TokenPayload => {
   // Tokens issued before migration 0080 carry a numeric id: 401 so the client renews through the refresh cookie
   const sub = uuidSchema.safeParse(typeof payload === "string" ? undefined : payload.sub);
   if (!sub.success) throw AppError.unauthorized();
-  return { sub: sub.data };
+  return { sub: sub.data, impersonated: !!(payload as jwt.JwtPayload).imp };
 };
