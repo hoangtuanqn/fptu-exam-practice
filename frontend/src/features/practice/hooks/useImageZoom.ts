@@ -1,19 +1,24 @@
-import { useLayoutEffect, useRef, useState, type PointerEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent } from "react";
 
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 3;
 const STEP = 0.25;
-const CLICK_ZOOM = 2; // mức phóng khi bấm vào ảnh
+const WHEEL_SPEED = 0.0015; // độ nhạy con lăn: hệ số phóng = e^(-deltaY * WHEEL_SPEED)
 
-// Logic phóng to/thu nhỏ ảnh: nút +/−, bấm vào ảnh để phóng quanh điểm bấm; khi đã phóng thì kéo chuột để di chuyển ảnh (thu nhỏ bằng nút −/100%).
+// Logic phóng to/thu nhỏ ảnh: nút +/−, con lăn chuột (phóng quanh con trỏ); ảnh tràn khung thì kéo chuột để di chuyển (bàn tay). Bấm vào ảnh không làm gì.
 // Mức phóng và vị trí đang xem (tâm khung nhìn, tỉ lệ 0–1 trên ảnh) được giữ khi đổi câu; nút "đặt lại" mới về 100%.
-export function useImageZoom() {
+// topAlign: ảnh mới nạp / đặt lại thì hiện từ ĐẦU ảnh (cuộn lên đầu) thay vì giữa ảnh; dùng cho xem lần lượt các trang đề.
+export function useImageZoom({ topAlign = false }: { topAlign?: boolean } = {}) {
   const [zoom, setZoom] = useState(1);
   const scrollRef = useRef<HTMLDivElement>(null); // khung cuộn chứa ảnh
   const imgRef = useRef<HTMLImageElement>(null);
   const center = useRef({ x: 0.5, y: 0.5 }); // điểm trên ảnh đang nằm giữa khung nhìn
   const drag = useRef<{ x: number; y: number; left: number; top: number } | null>(null);
   const [grabbing, setGrabbing] = useState(false);
+  const [canPan, setCanPan] = useState(false); // ảnh đang tràn khung: có gì đó để kéo
+  const zoomNow = useRef(1);
+  zoomNow.current = zoom;
+  const anchor = useRef<{ fx: number; fy: number; px: number; py: number } | null>(null); // điểm trên ảnh phải đứng yên dưới con trỏ sau khi đổi mức phóng (con lăn)
 
   // Cuộn để `center` nằm giữa khung nhìn (gọi sau khi đổi mức phóng hoặc nạp ảnh câu mới)
   const apply = () => {
@@ -26,7 +31,55 @@ export function useImageZoom() {
     box.scrollTop = imgRect.top - boxRect.top + box.scrollTop + center.current.y * imgRect.height - box.clientHeight / 2;
   };
 
-  useLayoutEffect(apply, [zoom]);
+  const measure = () => {
+    const box = scrollRef.current;
+    if (box) setCanPan(box.scrollWidth > box.clientWidth + 1 || box.scrollHeight > box.clientHeight + 1);
+  };
+
+  useLayoutEffect(() => {
+    const box = scrollRef.current;
+    const img = imgRef.current;
+    const a = anchor.current;
+    anchor.current = null;
+    if (a && box && img) {
+      // Con lăn: đặt lại cuộn để điểm dưới con trỏ vẫn nằm đúng chỗ cũ
+      const boxRect = box.getBoundingClientRect();
+      const imgRect = img.getBoundingClientRect();
+      box.scrollLeft = imgRect.left - boxRect.left + box.scrollLeft + a.fx * imgRect.width - a.px;
+      box.scrollTop = imgRect.top - boxRect.top + box.scrollTop + a.fy * imgRect.height - a.py;
+      onScroll();
+    } else apply();
+    measure();
+  }, [zoom]);
+
+  useEffect(() => {
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+
+  // Con lăn phóng/thu quanh con trỏ. Gắn tay với passive:false để chặn được việc cuộn trang phía sau
+  useEffect(() => {
+    const box = scrollRef.current;
+    if (!box) return;
+    const onWheel = (e: WheelEvent) => {
+      const img = imgRef.current;
+      if (!img) return;
+      e.preventDefault();
+      const next = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Math.round(zoomNow.current * Math.exp(-Math.max(-100, Math.min(100, e.deltaY)) * WHEEL_SPEED) * 1000) / 1000));
+      if (next === zoomNow.current) return;
+      const boxRect = box.getBoundingClientRect();
+      const imgRect = img.getBoundingClientRect();
+      anchor.current = {
+        fx: (e.clientX - imgRect.left) / imgRect.width,
+        fy: (e.clientY - imgRect.top) / imgRect.height,
+        px: e.clientX - boxRect.left,
+        py: e.clientY - boxRect.top,
+      };
+      setZoom(next);
+    };
+    box.addEventListener("wheel", onWheel, { passive: false });
+    return () => box.removeEventListener("wheel", onWheel);
+  }, []);
 
   // Người dùng cuộn thì nhớ lại điểm đang ở giữa; trục nào không tràn khung thì bỏ qua (ảnh đang nằm giữa sẵn)
   const onScroll = () => {
@@ -42,19 +95,11 @@ export function useImageZoom() {
   const change = (delta: number) =>
     setZoom((z) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Math.round((z + delta) * 100) / 100)));
 
-  // Bấm vào ảnh đang vừa khung -> phóng to quanh điểm bấm. Đã phóng to thì bấm không làm gì (kéo để di chuyển, xem dưới)
-  function toggleAt(e: React.MouseEvent<HTMLImageElement>) {
-    if (zoom > 1) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    center.current = { x: (e.clientX - rect.left) / rect.width, y: (e.clientY - rect.top) / rect.height };
-    setZoom(CLICK_ZOOM);
-  }
-
   // Kéo chuột để di chuyển ảnh khi đã phóng to (cảm ứng đã vuốt để cuộn được sẵn)
   const dragProps = {
     onPointerDown(e: PointerEvent<HTMLDivElement>) {
       const box = scrollRef.current;
-      if (!box || zoom <= 1 || e.pointerType !== "mouse" || e.button !== 0) return;
+      if (!box || (box.scrollWidth <= box.clientWidth && box.scrollHeight <= box.clientHeight) || e.pointerType !== "mouse" || e.button !== 0) return;
       drag.current = { x: e.clientX, y: e.clientY, left: box.scrollLeft, top: box.scrollTop };
       e.currentTarget.setPointerCapture(e.pointerId);
       setGrabbing(true);
@@ -81,14 +126,21 @@ export function useImageZoom() {
     scrollRef,
     imgRef,
     onScroll,
-    onImageLoad: apply, // ảnh câu mới nạp xong: đưa về đúng vị trí đang xem
-    toggleAt,
+    onImageLoad: () => {
+      if (topAlign && scrollRef.current) {
+        scrollRef.current.scrollTop = 0;
+        onScroll();
+      } else apply(); // ảnh câu mới nạp xong: đưa về đúng vị trí đang xem
+      measure();
+    },
+    canPan,
     dragProps,
     grabbing,
     zoomIn: () => change(STEP),
     zoomOut: () => change(-STEP),
     reset: () => {
       center.current = { x: 0.5, y: 0.5 };
+      if (topAlign && scrollRef.current) scrollRef.current.scrollTop = 0;
       setZoom(1);
     },
     canZoomIn: zoom < MAX_ZOOM,
