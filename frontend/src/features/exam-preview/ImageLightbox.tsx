@@ -100,7 +100,7 @@ export function ImageLightbox({ items, index, onIndex, onClose }: { items: Light
           onScroll={z.onScroll}
           {...z.dragProps}
           onMouseDown={(e) => e.target === e.currentTarget && onClose()}
-          className={`h-full overflow-auto p-4 ${z.zoom > 1 ? (z.grabbing ? "cursor-grabbing select-none" : "cursor-grab") : ""}`}
+          className={`h-full overflow-auto p-4 ${z.canPan ? (z.grabbing ? "cursor-grabbing select-none" : "cursor-grab") : ""}`}
         >
           {/* m-auto: ảnh nhỏ nằm giữa, ảnh tràn khung vẫn cuộn tới được mọi phía */}
           <div className="flex min-h-full min-w-full">
@@ -109,10 +109,9 @@ export function ImageLightbox({ items, index, onIndex, onClose }: { items: Light
                 ref={z.imgRef}
                 src={item.src}
                 alt={item.name}
-                onClick={z.toggleAt}
                 onLoad={z.onImageLoad}
-                title={z.zoom <= 1 ? "Bấm để phóng to" : "Kéo để di chuyển ảnh"}
-                className={`block w-full select-none bg-white ${z.zoom <= 1 ? "cursor-zoom-in" : "cursor-[inherit]"}`}
+                title="Lăn chuột để phóng/thu, kéo để di chuyển ảnh"
+                className="block w-full cursor-[inherit] select-none bg-white"
                 style={{ transform: `rotate(${turns * 90}deg)` }}
               />
             </div>

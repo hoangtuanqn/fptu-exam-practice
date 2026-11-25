@@ -70,7 +70,7 @@ export function ImageViewer({
 
       <div className="flex min-h-0 flex-1 flex-col gap-3 px-3 pb-3 sm:px-5 sm:pb-5">
         {/* Ảnh */}
-        <div ref={zoom.scrollRef} onScroll={zoom.onScroll} {...zoom.dragProps} className={`relative isolate z-0 min-h-0 flex-1 overflow-auto rounded-xl bg-surface-container-lowest p-4 ${zoom.zoom > 1 ? (zoom.grabbing ? "cursor-grabbing select-none" : "cursor-grab") : ""}`}>
+        <div ref={zoom.scrollRef} onScroll={zoom.onScroll} {...zoom.dragProps} className={`relative isolate z-0 min-h-0 flex-1 overflow-auto rounded-xl bg-surface-container-lowest p-4 ${zoom.canPan ? (zoom.grabbing ? "cursor-grabbing select-none" : "cursor-grab") : ""}`}>
           {/* m-auto thay cho justify-center: ảnh nhỏ thì nằm giữa, ảnh tràn khung thì vẫn cuộn tới được mọi phía */}
           <div className="flex min-h-full min-w-full">
             <div className="relative m-auto shrink-0" style={{ width: `${zoom.zoom * 100}%`, maxWidth: "none" }}>
@@ -78,10 +78,9 @@ export function ImageViewer({
                 ref={zoom.imgRef}
                 src={question.imageUrl}
                 alt={`Câu ${question.number}`}
-                onClick={zoom.toggleAt}
                 onLoad={zoom.onImageLoad}
-                title={zoom.zoom <= 1 ? "Bấm để phóng to" : "Kéo để di chuyển ảnh"}
-                className={`block w-full ${zoom.zoom <= 1 ? "cursor-zoom-in" : "cursor-[inherit]"}`}
+                title="Lăn chuột để phóng/thu, kéo để di chuyển ảnh"
+                className="block w-full cursor-[inherit]"
               />
             </div>
           </div>
