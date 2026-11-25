@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { HTTP_STATUS } from "../constants/httpStatus";
 import { getValidated } from "../middlewares/validate.middlewares";
-import type { ListAdminExamsQuery, QuestionParam, RenameExamBody, UpdateExamQuestionsBody, UuidParam } from "../rules/requests/admin.request";
+import type { ListAdminExamsQuery, QuestionParam, UpdateExamBody, UpdateExamQuestionsBody, UuidParam } from "../rules/requests/admin.request";
 import type { UpdateAiBody } from "../rules/requests/setting.request";
 import { ResponseClient } from "../rules/response";
 import { adminExamService } from "../services/admin.exam.service";
@@ -60,10 +60,10 @@ export const adminAiController = {
     res.json(new ResponseClient({ data: await adminExamService.resolveQuestion(id, number) }));
   },
 
-  async renameExam(req: Request, res: Response) {
+  async updateExam(req: Request, res: Response) {
     const { id } = getValidated<UuidParam>(res, "params");
-    const data = await adminExamService.rename(req.user!.id, id, getValidated<RenameExamBody>(res));
-    res.json(new ResponseClient({ message: "Đã đổi tên đề", data }));
+    const data = await adminExamService.update(req.user!.id, id, getValidated<UpdateExamBody>(res));
+    res.json(new ResponseClient({ message: "Đã lưu thông tin đề", data }));
   },
 
   async removeExam(req: Request, res: Response) {

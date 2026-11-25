@@ -53,11 +53,11 @@ import { createGiftCodeBody, listGiftCodesQuery, updateGiftCodeBody } from "../r
 import { validate } from "../middlewares/validate.middlewares";
 import { drainBeforeError } from "../middlewares/drain.middlewares";
 import { examUploadQueueRoom, oneExamUploadPerAdmin } from "../middlewares/single-flight.middlewares";
-import { uploadExamFiles, uploadExamImages } from "../middlewares/upload.middlewares";
+import { uploadExamFile, uploadExamFiles, uploadExamImages } from "../middlewares/upload.middlewares";
 import { adminExamUploadController } from "../controllers/admin.exam-upload.controllers";
-import { examGapFilter, examGapsQuery, updateExamImagesBody, uploadExamBody } from "../rules/requests/exam-upload.request";
+import { attachmentParam, examGapFilter, examGapsQuery, renameAttachmentBody, replaceAttachmentBody, updateExamImagesBody, uploadExamBody } from "../rules/requests/exam-upload.request";
 import { paginationQuery } from "../utils/pagination";
-import { adjustBalanceBody, listAdminExamsQuery, uuidParam, listUsersQuery, questionParam, renameExamBody, resetPasswordBody, updateExamQuestionsBody, updateUserBody } from "../rules/requests/admin.request";
+import { adjustBalanceBody, listAdminExamsQuery, uuidParam, listUsersQuery, questionParam, resetPasswordBody, updateExamBody, updateExamQuestionsBody, updateUserBody } from "../rules/requests/admin.request";
 
 const adminRouter = Router();
 
@@ -160,6 +160,11 @@ adminRouter.post("/exams/upload", oneExamUploadPerAdmin, examUploadQueueRoom, up
 // Thư mục tài liệu (không có images/ + ans.json): cũng chạy nền qua cùng hàng đợi, luôn trả 202
 adminRouter.post("/exams/upload-resource", oneExamUploadPerAdmin, examUploadQueueRoom, uploadExamFiles, validate(uploadExamBody), adminExamUploadController.uploadResource);
 adminRouter.post("/exams/:id/images", validate(uuidParam, "params"), oneExamUploadPerAdmin, examUploadQueueRoom, uploadExamImages, validate(updateExamImagesBody), adminExamUploadController.updateImages);
+// Tệp đính kèm của đề (đề PE): thêm / thay nội dung (?async=1 chạy nền qua cùng hàng đợi), đổi tên, xoá
+adminRouter.post("/exams/:id/attachments", validate(uuidParam, "params"), oneExamUploadPerAdmin, examUploadQueueRoom, uploadExamFiles, adminExamUploadController.addFiles);
+adminRouter.post("/exams/:id/attachments/:attachmentId/replace", validate(attachmentParam, "params"), oneExamUploadPerAdmin, examUploadQueueRoom, uploadExamFile, validate(replaceAttachmentBody), adminExamUploadController.replaceFile);
+adminRouter.patch("/exams/:id/attachments/:attachmentId", validate(attachmentParam, "params"), validate(renameAttachmentBody), adminExamUploadController.renameFile);
+adminRouter.delete("/exams/:id/attachments/:attachmentId", validate(attachmentParam, "params"), adminExamUploadController.removeFile);
 adminRouter.get("/exam-upload/jobs", adminExamUploadController.jobs);
 // Xoá lịch sử: chỉ lượt đã xong/lỗi của chính admin này (lượt đang chờ/chạy không xoá được)
 adminRouter.delete("/exam-upload/jobs", adminExamUploadController.clearJobs);
@@ -168,7 +173,7 @@ adminRouter.delete("/exam-upload/jobs/:id", validate(uuidParam, "params"), admin
 adminRouter.get("/exam-gaps", validate(examGapsQuery, "query"), adminExamUploadController.gaps);
 adminRouter.get("/exam-gaps/summary", validate(examGapFilter, "query"), adminExamUploadController.gapSummary);
 adminRouter.get("/exams/:id", validate(uuidParam, "params"), adminAiController.examDetail);
-adminRouter.patch("/exams/:id", validate(uuidParam, "params"), validate(renameExamBody), adminAiController.renameExam);
+adminRouter.patch("/exams/:id", validate(uuidParam, "params"), validate(updateExamBody), adminAiController.updateExam);
 adminRouter.delete("/exams/:id", validate(uuidParam, "params"), adminAiController.removeExam);
 adminRouter.patch("/exams/:id/questions", validate(uuidParam, "params"), validate(updateExamQuestionsBody), adminAiController.saveQuestions);
 adminRouter.post("/exams/:id/questions/:number/resolve", validate(questionParam, "params"), adminAiController.resolveQuestion);

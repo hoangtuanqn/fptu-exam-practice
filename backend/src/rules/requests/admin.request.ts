@@ -1,5 +1,7 @@
 import { z } from "zod";
+import { EXAM_KINDS } from "../../utils/exam-kind";
 import { paginationQuery } from "../../utils/pagination";
+import { subjectCodeSchema } from "./subject.request";
 
 export const idParam = z.object({ id: z.coerce.number().int().positive() });
 // UUID v7 ids (users, exams, practice sessions, gift codes, notices, broadcasts, coursera, pro tickets, feedback, reports, materials, attempts, subjects, deposits, wallet rows). Lower-cased like the stored value.
@@ -66,8 +68,15 @@ export const updateExamQuestionsBody = z.object({
 });
 
 export type UpdateExamQuestionsBody = z.infer<typeof updateExamQuestionsBody>;
-export const renameExamBody = z.object({ title: z.string().trim().min(1, "Tiêu đề không được để trống").max(255, "Tiêu đề tối đa 255 ký tự") });
-export type RenameExamBody = z.infer<typeof renameExamBody>;
+// Sửa thông tin đề: gửi trường nào đổi trường đó. subjectCode null = bỏ môn
+export const updateExamBody = z
+  .object({
+    title: z.string().trim().min(1, "Tiêu đề không được để trống").max(255, "Tiêu đề tối đa 255 ký tự").optional(),
+    kind: z.enum(EXAM_KINDS, "Loại đề không hợp lệ").optional(),
+    subjectCode: subjectCodeSchema.transform((s) => s.toUpperCase()).nullable().optional(),
+  })
+  .refine((b) => b.title !== undefined || b.kind !== undefined || b.subjectCode !== undefined, "Chưa có thay đổi nào");
+export type UpdateExamBody = z.infer<typeof updateExamBody>;
 
 export type IdParam = z.infer<typeof idParam>;
 export type UuidParam = z.infer<typeof uuidParam>;

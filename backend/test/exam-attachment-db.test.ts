@@ -52,7 +52,7 @@ describe("exam attachments (MySQL)", { skip: DB_TESTS_ENABLED ? false : DB_SKIP_
     assert.equal(detail.kind, "FE"); // kind null (chưa phân loại) trả về FE
     const [a] = detail.attachments;
     assert.ok(a);
-    assert.deepEqual({ ...a, url: a.url.replace(/^.*\/api\/v1/, "") }, { id: a.id, name: "paper.pdf", mime: "application/pdf", sizeBytes: 10, kind: "pdf", url: `/exams/${examId}/attachments/${a.id}` });
+    assert.deepEqual({ ...a, url: a.url.replace(/^.*\/api\/v1/, "").replace(/\?v=[0-9a-f]{8}$/, "") }, { id: a.id, name: "paper.pdf", mime: "application/pdf", sizeBytes: 10, kind: "pdf", url: `/exams/${examId}/attachments/${a.id}` });
     assert.equal((await m.examService.getAttachmentFile(examId, a.id)).name, "paper.pdf");
     await assert.rejects(m.examService.getAttachmentFile(otherId, a.id), status(404));
     const list = await m.examService.listMine({ userId }, { page: 1, limit: 20 });

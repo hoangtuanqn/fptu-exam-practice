@@ -17,8 +17,13 @@ describe("toAttachmentDto (GET exam + exam:attachments)", () => {
       mime: "application/zip",
       sizeBytes: 2048,
       kind: "archive",
-      url: attachmentUrlOf(EXAM, 7),
+      url: toAttachmentDto(EXAM, row).url,
     });
+    assert.match(toAttachmentDto(EXAM, row).url, new RegExp(`/api/v1/exams/${EXAM}/attachments/7\\?v=[0-9a-f]{8}$`));
+    // phiên bản đổi khi thay tệp (đường dẫn trên đĩa đổi) hoặc đổi tên, giữ nguyên khi không đổi gì
+    assert.notEqual(toAttachmentDto(EXAM, { ...row, filePath: "exams/123/files/ab-PE_SU26.zip" }).url, toAttachmentDto(EXAM, row).url);
+    assert.notEqual(toAttachmentDto(EXAM, { ...row, name: "x.zip" }).url, toAttachmentDto(EXAM, row).url);
+    assert.equal(toAttachmentDto(EXAM, { ...row, sizeBytes: 1 }).url, toAttachmentDto(EXAM, row).url);
     assert.match(attachmentUrlOf(EXAM, 7), new RegExp(`/api/v1/exams/${EXAM}/attachments/7$`));
     assert.equal(toAttachmentDto(EXAM, { ...row, filePath: "exams/123/files/a.bin" }).kind, "other");
     assert.ok(!("filePath" in toAttachmentDto(EXAM, row))); // không lộ đường dẫn trên đĩa

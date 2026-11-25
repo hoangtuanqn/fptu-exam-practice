@@ -33,4 +33,10 @@ export const examAttachmentRepository = {
   // Thêm tệp mới, giữ nguyên các tệp cũ (id không đổi). `db` = tx khi cần chung transaction với việc tạo đề
   add: (examId: string, rows: NewAttachment[], db: Db = prisma) =>
     db.examAttachment.createMany({ data: rows.map((r) => ({ ...r, examId })), skipDuplicates: true }),
+
+  // Admin sửa một tệp (đổi tên hiển thị / thay nội dung); trả về cùng dạng với list
+  update: (id: number, data: Partial<Pick<NewAttachment, "name" | "filePath" | "mime" | "sizeBytes">>) =>
+    prisma.examAttachment.update({ where: { id }, data, select: { id: true, name: true, filePath: true, mime: true, sizeBytes: true } }),
+
+  remove: (id: number) => prisma.examAttachment.delete({ where: { id }, select: { id: true } }),
 };
