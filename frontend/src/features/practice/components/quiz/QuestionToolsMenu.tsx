@@ -41,7 +41,7 @@ export function QuestionToolsMenu({ onZoom, onReport, reported, autoNext, onTogg
       {open && (
         <>
           <button type="button" aria-label="Đóng menu" onClick={() => setOpen(false)} className="fixed inset-0 z-10 cursor-default" tabIndex={-1} />
-          <div role="menu" className="absolute right-0 top-full z-20 mt-1 w-64 space-y-0.5 rounded-xl border border-outline-variant bg-surface p-1.5 shadow-lg">
+          <div role="menu" className="absolute right-0 top-full z-20 mt-1 w-64 space-y-0.5 rounded-xl border border-outline-variant bg-surface p-1.5 shadow-lg land:fixed land:right-14 land:top-12 land:mt-0 land:max-h-[calc(100dvh-4rem)] land:overflow-y-auto">
             <Item icon={<Maximize2 size={16} />} label="Mở cửa sổ phóng to ảnh" onClick={run(onZoom)} />
             {onToggleAutoNext && <Item icon={<ChevronsRight size={16} className={autoNext ? "text-primary" : ""} />} label="Tự sang câu sau khi chọn" state={autoNext ? "Bật" : "Tắt"} checked={!!autoNext} onClick={run(onToggleAutoNext)} />}
             <div role="group" aria-label="Cỡ ảnh đề" className="flex items-center gap-1 px-2.5 py-1.5">

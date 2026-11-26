@@ -20,8 +20,8 @@ export function NextButton({ hasNext, onNext, onSubmit, grow, className }: Props
     );
   }
   return (
-    <Button grow={grow} variant="primary" size="sm" onClick={onNext} disabled={!hasNext} className={className}>
-      Tiếp
+    <Button grow={grow} variant="primary" size="sm" onClick={onNext} disabled={!hasNext} aria-label="Câu tiếp" className={className}>
+      <span className="landwide:hidden">Tiếp</span>
       <ChevronRight size={16} />
     </Button>
   );

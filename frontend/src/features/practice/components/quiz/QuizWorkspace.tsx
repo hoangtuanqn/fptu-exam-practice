@@ -22,7 +22,6 @@ import { TrialLockBanner } from "@/features/exam-store/TrialLockBanner";
 import { LockedQuestionCard } from "./LockedQuestionCard";
 import { ImageViewer } from "./ImageViewer";
 import { QuestionCard } from "./QuestionCard";
-import { RotateHint } from "@/shared/ui/RotateHint";
 import type { QuestionViewProps } from "./types";
 import type { FlashcardView } from "./FlashcardAnswer";
 
@@ -64,10 +63,9 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit, readOnly
   // Đề xem thử: đứng ở ô khoá (sau các câu đã mở) thì hiện thẻ mời mở khoá thay cho câu hỏi
   if (!question && quiz.trialLocked > 0 && quiz.current < quiz.slots && quiz.examId) {
     return (
-      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-        <RotateHint />
+      <div className="relative flex min-h-0 flex-1 flex-col lg:flex-row land:pl-[env(safe-area-inset-left)] land:pr-[env(safe-area-inset-right)]">
         <Sidebar quiz={quiz} onSubmit={undefined} jump={jump} flashcard={flashcard} />
-        <main className="flex min-w-0 flex-1 flex-col overflow-y-auto p-2 sm:p-3 lg:p-4">
+        <main className="flex min-w-0 flex-1 flex-col overflow-y-auto p-2 sm:p-3 lg:p-4 land:pb-16">
           <LockedQuestionCard examId={quiz.examId} number={quiz.current + 1} total={Math.max(quiz.total, quiz.slots)} attempts={quiz.trialAttempts} onUnlocked={quiz.unlockTrial} onBack={quiz.prev} />
         </main>
       </div>
@@ -162,10 +160,9 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit, readOnly
   );
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-      <RotateHint />
+    <div className="relative flex min-h-0 flex-1 flex-col lg:flex-row land:pl-[env(safe-area-inset-left)] land:pr-[env(safe-area-inset-right)]">
       <Sidebar quiz={quiz} onSubmit={view.onSubmit} jump={jump} flashcard={flashcard} />
-      <main className={`flex min-w-0 flex-1 flex-col overflow-y-auto p-2 sm:p-3 lg:p-4 ${panelOpen ? "max-lg:pb-[60dvh]" : ""}`}>
+      <main className={`flex min-w-0 flex-1 flex-col overflow-y-auto p-2 sm:p-3 lg:p-4 land:p-1 ${panelOpen ? "max-lg:pb-[60dvh] land:pb-1 land:pr-[50%]" : ""}`}>
         {quiz.trialLocked > 0 && quiz.examId && <TrialLockBanner examId={quiz.examId} shown={quiz.questions.length} total={Math.max(quiz.total, quiz.slots)} onUnlocked={quiz.unlockTrial} />}
         {quiz.loadingMore && <LoadingMoreBanner loaded={quiz.questions.length} total={quiz.total} />}
         <AnswerPendingBanner source={quiz.answerSource} examId={quiz.examId} onRetry={quiz.waitForAnswers} />

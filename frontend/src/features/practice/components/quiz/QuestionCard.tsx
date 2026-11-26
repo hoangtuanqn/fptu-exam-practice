@@ -9,6 +9,7 @@ import { AnswerOptions } from "./AnswerOptions";
 import { AnswerBanner, RevealButton } from "./FlashcardAnswer";
 import { AnswerStatus } from "./AnswerStatus";
 import { ExplainButton } from "./ExplainButton";
+import { RotateHint } from "@/shared/ui/RotateHint";
 import { NextButton } from "./NextButton";
 import { QuestionKindBadge } from "./QuestionKindBadge";
 import { QuestionToolsMenu } from "./QuestionToolsMenu";
@@ -61,10 +62,11 @@ export function QuestionCard({
   const status = <AnswerStatus question={question} selected={selected} revealed={revealed} canCheck={canCheck} onCheck={onCheck} />;
 
   return (
-    <div className="flex min-h-[360px] w-full flex-1 sm:min-h-[480px] animate-fade-in flex-col gap-2">
-      <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-slate-200 bg-surface-container-lowest shadow-sm">
-        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-slate-200 px-3 py-1.5 sm:px-4 lg:flex-wrap lg:gap-x-3 lg:gap-y-1.5">
-          <div className="flex min-w-0 flex-1 items-center gap-x-3 gap-y-1 lg:flex-wrap">
+    <div className="flex min-h-[360px] w-full flex-1 sm:min-h-[480px] animate-fade-in flex-col gap-2 land:min-h-0 land:gap-1">
+      {/* Xoay ngang: nút công cụ thành cột bên phải để dành chiều cao cho ảnh đề (flashcard giữ dạng cột vì có dải đáp án dưới ảnh) */}
+      <section className={`flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-slate-200 bg-surface-container-lowest shadow-sm ${flashcard ? "" : "land:flex-row-reverse"}`}>
+        <div className={`flex shrink-0 items-center justify-between gap-2 border-b border-slate-200 px-3 py-1.5 sm:px-4 lg:flex-wrap lg:gap-x-3 lg:gap-y-1.5 ${flashcard ? "" : "land:flex-col land:justify-start land:border-b-0 land:border-l land:px-1.5"}`}>
+          <div className={`flex min-w-0 flex-1 items-center gap-x-3 gap-y-1 lg:flex-wrap ${flashcard ? "" : "land:max-w-12 land:flex-none land:text-center"}`}>
             <h2 className="hidden whitespace-nowrap text-base font-semibold text-slate-900 lg:block">
               Câu {number} <span className="font-sans text-sm font-normal text-slate-500">/ {total}</span>
             </h2>
@@ -73,7 +75,7 @@ export function QuestionCard({
             {/* Máy tính: nút Xác nhận / kết quả đúng sai hiện ngay đầu câu khi cần */}
             {(canCheck || revealed) && <div className="hidden lg:block">{status}</div>}
           </div>
-          <div className="flex shrink-0 items-center gap-1.5">
+          <div className={`flex shrink-0 items-center gap-1.5 ${flashcard ? "" : "land:flex-col land:gap-2"}`}>
             {onExplain && <ExplainButton onExplain={onExplain} bought={explainBought} free={explainFree} />}
             {/* Lưu câu để ôn lại: nút riêng ngoài menu cho dễ thấy (trước đây nằm trong "…" nên nhiều người không biết là có) */}
             {onToggleSave && (
@@ -110,7 +112,7 @@ export function QuestionCard({
 
         {/* Chủ đề của câu: một dòng chữ thường riêng ngay dưới thanh tiêu đề, rộng hết chiều ngang nên đọc được đủ cả trên điện thoại (tên dài thì xuống dòng, không cắt) */}
         {(topic || topicLoading) && (
-          <div className="flex shrink-0 items-start gap-1.5 border-b border-slate-200 px-3 py-1.5 sm:px-4">
+          <div className="flex shrink-0 items-start gap-1.5 border-b border-slate-200 px-3 py-1.5 sm:px-4 land:hidden">
             {topic ? (
               <>
                 <Tag size={13} aria-hidden className="mt-0.5 shrink-0 text-brand-700" />
@@ -130,7 +132,7 @@ export function QuestionCard({
 
         {/* Ảnh rộng hết khung (chữ to hơn nhiều so với co ảnh vừa cả chiều cao); đề dài thì cuộn trong khung. Bấm vào ảnh mở cửa sổ phóng to */}
         {/* Dưới 1024px: ảnh được cắt khoảng trắng (lớp q-crop trong panel.css) nên chữ to hơn; ảnh gốc không đổi */}
-        <div className="min-h-0 w-full flex-1 overflow-auto bg-slate-50 p-1.5 sm:p-2">
+        <div className="min-h-0 w-full min-w-0 flex-1 overflow-auto bg-slate-50 p-1.5 sm:p-2 land:p-1 land:[container-type:size]">
           <div className="relative" style={{ width: `${size.scale * 100}%`, maxWidth: "none", "--crop-zoom": size.scale } as CSSProperties}>
             <div className={crop.style ? "q-crop" : undefined} style={crop.style ?? undefined}>
               <ProtectedImg
@@ -148,17 +150,19 @@ export function QuestionCard({
         {flashcard && <AnswerBanner answer={question.correct} shown={flashcard.shown} />}
       </section>
 
+      <RotateHint />
+
       {nudge}
 
-      {/* Điện thoại và máy tính bảng: thanh dưới cùng tầm ngón cái. Hàng 1: đáp án A–H chia đều chiều ngang. Hàng 2: Trước | kết quả | Tiếp. */}
-      <section className="shrink-0 space-y-2 rounded-xl border border-slate-200 bg-surface-container-lowest p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-sm lg:hidden">
+      {/* Điện thoại và máy tính bảng: thanh dưới cùng tầm ngón cái: đáp án A–H rồi Trước | kết quả | Tiếp. Xoay ngang: chừa bên trái cho nút số câu (Sidebar đặt đè lên); đủ rộng thì gộp một hàng. */}
+      <section className="shrink-0 space-y-2 rounded-xl border border-slate-200 bg-surface-container-lowest p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-sm lg:hidden land:space-y-1 land:py-1 landwide:flex landwide:items-center landwide:gap-2 landwide:space-y-0 landwide:pl-32">
         {!flashcard && (
           <AnswerOptions dense question={question} selected={selected} revealed={revealed} onChoose={onChoose} />
         )}
-        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2">
+        <div className={`grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 land:pl-32 landwide:flex landwide:pl-0 ${flashcard ? "landwide:flex-1 landwide:justify-between" : "landwide:shrink-0"}`}>
           <Button size="sm" onClick={onPrev} disabled={!hasPrev} aria-label="Câu trước" className="!min-h-11 !px-3">
             <ChevronLeft size={16} />
-            Trước
+            <span className="landwide:hidden">Trước</span>
           </Button>
           <div className="flex min-h-10 min-w-0 items-center justify-center">{flashcard ? <RevealButton {...flashcard} className="w-full" /> : status}</div>
           <NextButton hasNext={hasNext} onNext={onNext} onSubmit={onSubmit} className="!min-h-11 !px-3" />

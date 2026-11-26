@@ -101,7 +101,7 @@ export function Header({
   const accountHidden = showLeft ? "max-xl:hidden" : "max-lg:hidden";
 
   return (
-    <header className="xmas-garland-host z-30 flex h-16 shrink-0 items-center justify-between gap-2 border-b border-outline-variant bg-surface px-2 sm:px-4">
+    <header className={`xmas-garland-host z-30 flex h-16 shrink-0 items-center justify-between gap-2 border-b border-outline-variant bg-surface px-2 sm:px-4 ${loaded ? "land:h-11" : ""}`}>
       <div className="flex shrink-0 items-center gap-3 sm:min-w-0 sm:shrink">
         <Link
           to="/"

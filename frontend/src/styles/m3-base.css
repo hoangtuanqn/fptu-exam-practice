@@ -5,6 +5,10 @@
 @custom-variant compact (@media (width < 600px));
 @custom-variant medium (@media (width >= 600px) and (width < 840px));
 @custom-variant expanded (@media (width >= 840px));
+/* Điện thoại xoay ngang (thấp và hẹp hơn máy tính): dùng ở màn làm đề */
+@custom-variant land (@media (orientation: landscape) and (max-height: 500px) and (width < 1024px));
+/* Xoay ngang đủ rộng để đáp án và Trước/Tiếp nằm chung một hàng; hẹp hơn thì hai hàng */
+@custom-variant landwide (@media (orientation: landscape) and (max-height: 500px) and (780px <= width < 1024px));
 
 @layer base {
   html {
