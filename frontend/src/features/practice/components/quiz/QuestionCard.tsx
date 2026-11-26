@@ -20,6 +20,10 @@ interface Props extends QuestionViewProps {
   nudge?: ReactNode; // thanh mời giữa ảnh đề và thanh trả lời (ví dụ mời xem giải thích khi làm sai)
   topic?: string | null; // chủ đề của câu, hiện trên đầu câu (luyện tập: luôn hiện; thi: sau khi nộp bài)
   topicLoading?: boolean; // chủ đề đang được gắn nền: hiện chip chờ có hiệu ứng thay cho chủ đề
+  exit?: ReactNode; // nút thoát bài và cụm nộp bài: hiện trong khung này ở máy tính và điện thoại ngang
+  actions?: ReactNode;
+  onHelp?: () => void;
+  onShowReferences?: () => void;
 }
 
 // Máy tính (lg trở lên): một hàng đầu [số câu, chủ đề, kết quả | giải thích AI, menu công cụ] và ảnh đề chiếm hết chỗ còn lại;
@@ -46,6 +50,10 @@ export function QuestionCard({
   nudge,
   topic,
   topicLoading,
+  exit,
+  actions,
+  onHelp,
+  onShowReferences,
   autoNext,
   onToggleAutoNext,
   onChoose,
@@ -65,7 +73,8 @@ export function QuestionCard({
     <div className="flex min-h-[360px] w-full flex-1 sm:min-h-[480px] animate-fade-in flex-col gap-2 land:min-h-0 land:gap-1">
       {/* Xoay ngang: nút công cụ thành cột bên phải để dành chiều cao cho ảnh đề (flashcard giữ dạng cột vì có dải đáp án dưới ảnh) */}
       <section className={`flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-slate-200 bg-surface-container-lowest shadow-sm ${flashcard ? "" : "land:flex-row-reverse"}`}>
-        <div className={`flex shrink-0 items-center justify-between gap-2 border-b border-slate-200 px-3 py-1.5 sm:px-4 lg:flex-wrap lg:gap-x-3 lg:gap-y-1.5 ${flashcard ? "" : "land:flex-col land:justify-start land:border-b-0 land:border-l land:px-1.5"}`}>
+        <div className={`flex shrink-0 items-center justify-between gap-2 border-b border-slate-200 px-3 py-1.5 sm:px-4 lg:flex-wrap lg:gap-x-3 lg:gap-y-1.5 ${flashcard ? "" : "land:flex-col land:justify-start land:gap-1 land:overflow-y-auto land:border-b-0 land:border-l land:px-1.5 land:py-1"}`}>
+          {exit && <div className="hidden shrink-0 lg:flex land:flex">{exit}</div>}
           <div className={`flex min-w-0 flex-1 items-center gap-x-3 gap-y-1 lg:flex-wrap ${flashcard ? "" : "land:max-w-12 land:flex-none land:text-center"}`}>
             <h2 className="hidden whitespace-nowrap text-base font-semibold text-slate-900 lg:block">
               Câu {number} <span className="font-sans text-sm font-normal text-slate-500">/ {total}</span>
@@ -75,7 +84,7 @@ export function QuestionCard({
             {/* Máy tính: nút Xác nhận / kết quả đúng sai hiện ngay đầu câu khi cần */}
             {(canCheck || revealed) && <div className="hidden lg:block">{status}</div>}
           </div>
-          <div className={`flex shrink-0 items-center gap-1.5 ${flashcard ? "" : "land:flex-col land:gap-2"}`}>
+          <div className={`flex shrink-0 items-center gap-1.5 ${flashcard ? "" : "land:flex-col land:gap-1"}`}>
             {onExplain && <ExplainButton onExplain={onExplain} bought={explainBought} free={explainFree} />}
             {/* Lưu câu để ôn lại: nút riêng ngoài menu cho dễ thấy (trước đây nằm trong "…" nên nhiều người không biết là có) */}
             {onToggleSave && (
@@ -106,8 +115,9 @@ export function QuestionCard({
               <Flag size={18} className={flagged ? "fill-current" : ""} />
             </button>
             )}
-            <QuestionToolsMenu onZoom={onZoom} onReport={onReport} reported={reported} autoNext={autoNext} onToggleAutoNext={onToggleAutoNext} size={size} original={crop.original} onToggleOriginal={crop.canCrop ? crop.toggleOriginal : undefined} />
+            <QuestionToolsMenu onZoom={onZoom} onReport={onReport} reported={reported} autoNext={autoNext} onToggleAutoNext={onToggleAutoNext} size={size} original={crop.original} onToggleOriginal={crop.canCrop ? crop.toggleOriginal : undefined} onHelp={onHelp} onShowReferences={onShowReferences} />
           </div>
+          {actions && <div className="hidden shrink-0 lg:flex land:sticky land:bottom-0 land:mt-auto land:flex land:bg-surface-container-lowest">{actions}</div>}
         </div>
 
         {/* Chủ đề của câu: một dòng chữ thường riêng ngay dưới thanh tiêu đề, rộng hết chiều ngang nên đọc được đủ cả trên điện thoại (tên dài thì xuống dòng, không cắt) */}
@@ -152,10 +162,11 @@ export function QuestionCard({
 
       <RotateHint />
 
-      {nudge}
+      {/* Xoay ngang thì ưu tiên đề: lời mời xem giải thích ẩn đi, nút giải thích vẫn ở cột bên phải */}
+      {nudge && <div className="shrink-0 land:hidden">{nudge}</div>}
 
       {/* Điện thoại và máy tính bảng: thanh dưới cùng tầm ngón cái: đáp án A–H rồi Trước | kết quả | Tiếp. Xoay ngang: chừa bên trái cho nút số câu (Sidebar đặt đè lên); đủ rộng thì gộp một hàng. */}
-      <section className="shrink-0 space-y-2 rounded-xl border border-slate-200 bg-surface-container-lowest p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-sm lg:hidden land:space-y-1 land:py-1 landwide:flex landwide:items-center landwide:gap-2 landwide:space-y-0 landwide:pl-32">
+      <section className="q-bar shrink-0 space-y-2 rounded-xl border border-slate-200 bg-surface-container-lowest p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-sm lg:hidden land:space-y-1 land:py-1 landwide:flex landwide:items-center landwide:gap-2 landwide:space-y-0 landwide:pl-32">
         {!flashcard && (
           <AnswerOptions dense question={question} selected={selected} revealed={revealed} onChoose={onChoose} />
         )}

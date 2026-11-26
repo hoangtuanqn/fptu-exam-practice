@@ -97,6 +97,14 @@
     max-height: none;
     border-radius: 1rem 0 0 0;
   }
+  [data-focus] .panel-explain-sheet {
+    top: 0; /* màn làm đề không có thanh đầu trang */
+  }
+  /* Đang đọc lời giải: chỉ còn đề bên trái, lời giải bên phải (nửa màn không đủ chỗ cho thanh đáp án) */
+  [data-explain] .q-bar,
+  [data-explain] > nav {
+    display: none;
+  }
 }
 
 /* Nút chat nổi (mascot) góc phải dưới: ẩn ở màn làm đề (data-no-bottom-nav), chỉ dưới 840px, và khi trang có thanh/nút chính sát đáy (data-hide-chat),

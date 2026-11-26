@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { ChevronDown, ChevronRight, LayoutGrid, Lightbulb } from "lucide-react";
 import type { Quiz } from "@/features/practice/hooks/useQuiz";
 import { useKeydown } from "@/features/practice/hooks/useKeydown";
@@ -26,7 +26,17 @@ const wasSeen = () => {
   }
 };
 
-export function Sidebar({ quiz, onSubmit, jump, flashcard }: { quiz: Quiz; onSubmit?: () => void; jump?: boolean; flashcard?: FlashcardView }) {
+interface Props {
+  quiz: Quiz;
+  onSubmit?: () => void;
+  jump?: boolean;
+  flashcard?: FlashcardView;
+  before?: ReactNode; // cùng hàng với nút số câu trên điện thoại, máy tính bảng cầm dọc (màn khác đã có chỗ trong khung câu hỏi)
+  after?: ReactNode;
+  always?: boolean; // hiện before/after ở mọi cỡ màn
+}
+
+export function Sidebar({ quiz, onSubmit, jump, flashcard, before, after, always }: Props) {
   const [open, setOpen] = useState(false);
   const { showDecor } = useSeason();
   const [seen, setSeen] = useState(wasSeen); // đã từng mở danh sách: thôi chấm tròn nhấp nháy gợi ý bấm vào
@@ -54,7 +64,8 @@ export function Sidebar({ quiz, onSubmit, jump, flashcard }: { quiz: Quiz; onSub
 
   // Xoay ngang: nút số câu nằm đè lên đầu trái thanh dưới của khung câu hỏi (không tốn thêm hàng nào)
   return (
-    <nav aria-label="Câu hỏi" className={`relative shrink-0 px-2 pt-2 lg:px-0 lg:pb-4 lg:pl-4 lg:pt-4 land:absolute land:bottom-[calc(env(safe-area-inset-bottom)+1rem)] land:left-[calc(env(safe-area-inset-left)+0.75rem)] land:p-0 ${open ? "z-40" : "z-10"}`}>
+    <nav aria-label="Câu hỏi" className={`relative flex shrink-0 items-center gap-2 px-2 pt-[max(0.5rem,env(safe-area-inset-top))] lg:flex-col lg:items-stretch lg:px-0 lg:pb-4 lg:pl-4 lg:pt-4 ${always ? "" : "land:absolute land:bottom-[calc(env(safe-area-inset-bottom)+1rem)] land:left-[calc(env(safe-area-inset-left)+0.75rem)] land:p-0"} ${open ? "z-40" : "z-10"}`}>
+      {before && <div className={`flex shrink-0 ${always ? "lg:justify-center" : "lg:hidden land:hidden"}`}>{before}</div>}
       <button
         onClick={toggle}
         aria-expanded={open}
@@ -68,13 +79,15 @@ export function Sidebar({ quiz, onSubmit, jump, flashcard }: { quiz: Quiz; onSub
           </span>
         )}
         <LayoutGrid size={16} />
-        <span className="tabular-nums lg:text-center">
+        <span className="whitespace-nowrap tabular-nums lg:text-center">
           Câu {quiz.current + 1}
           <span className="lg:block">/{count}</span>
         </span>
         <ChevronDown size={14} className={`lg:hidden ${open ? "rotate-180" : ""}`} />
         <ChevronRight size={14} className={`hidden lg:block ${open ? "rotate-180" : ""}`} />
       </button>
+
+      {after && <div className={`ml-auto flex shrink-0 lg:ml-0 lg:justify-center ${always ? "" : "lg:hidden land:hidden"}`}>{after}</div>}
 
       {/* Màn hình rộng: đáp án A–H xếp dọc ngay dưới nút danh sách câu, nút nhỏ để dành chỗ cho đề (màn nhỏ: đáp án ở thanh dưới).
           Trước / Tiếp nằm liền dưới đáp án để chọn xong bấm luôn. Đáp án quá dài thì cuộn, hai nút Trước / Tiếp luôn thấy. */}
