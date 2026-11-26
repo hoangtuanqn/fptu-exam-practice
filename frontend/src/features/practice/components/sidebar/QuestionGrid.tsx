@@ -34,8 +34,8 @@ export function QuestionGrid({ questions, answers, checked, flagged, submitted, 
   }, [current]);
 
   return (
-    <div ref={boxRef} className="max-h-[60dvh] overflow-y-auto p-1">
-      <div role="list" aria-label="Danh sách câu hỏi" className="grid grid-cols-6 gap-2 sm:grid-cols-8">
+    <div ref={boxRef} className="max-h-[60dvh] overflow-y-auto p-1 land:max-h-[45dvh]">
+      <div role="list" aria-label="Danh sách câu hỏi" className="grid grid-cols-6 gap-2 sm:grid-cols-8 land:grid-cols-10">
         {questions.map((q, i) => {
           const status = getStatus(q, answers[q.number], submitted || !!checked[q.number]);
           const { cls, name } = STATUS_STYLE[status];
