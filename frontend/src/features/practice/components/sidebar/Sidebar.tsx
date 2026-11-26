@@ -52,8 +52,9 @@ export function Sidebar({ quiz, onSubmit, jump, flashcard }: { quiz: Quiz; onSub
   const nextUnansweredAt = nextUnanswered(quiz.questions, quiz.answers, quiz.current);
   const done = quiz.result ? quiz.result.correct : Object.values(quiz.answers).filter((a) => a.length > 0).length;
 
+  // Xoay ngang: nút số câu nằm đè lên đầu trái thanh dưới của khung câu hỏi (không tốn thêm hàng nào)
   return (
-    <nav aria-label="Câu hỏi" className="relative z-10 shrink-0 px-2 pt-2 lg:px-0 lg:pb-4 lg:pl-4 lg:pt-4">
+    <nav aria-label="Câu hỏi" className={`relative shrink-0 px-2 pt-2 lg:px-0 lg:pb-4 lg:pl-4 lg:pt-4 land:absolute land:bottom-[calc(env(safe-area-inset-bottom)+1rem)] land:left-[calc(env(safe-area-inset-left)+0.75rem)] land:p-0 ${open ? "z-40" : "z-10"}`}>
       <button
         onClick={toggle}
         aria-expanded={open}
@@ -103,7 +104,7 @@ export function Sidebar({ quiz, onSubmit, jump, flashcard }: { quiz: Quiz; onSub
       )}
 
       {hint.show && !open && (
-        <div role="status" className="absolute left-2 right-2 top-full z-10 mt-1 space-y-2 rounded-2xl border border-primary bg-surface p-3 shadow-lg lg:left-full lg:right-auto lg:top-4 lg:ml-2 lg:mt-0 lg:w-72">
+        <div role="status" className="absolute left-2 right-2 top-full z-10 mt-1 space-y-2 rounded-2xl border border-primary bg-surface p-3 shadow-lg lg:left-full lg:right-auto lg:top-4 lg:ml-2 lg:mt-0 lg:w-72 land:bottom-full land:left-0 land:right-auto land:top-auto land:mb-3 land:w-72">
           <p className="md-label-large flex items-center gap-2 text-on-surface">
             <Lightbulb size={16} className="shrink-0 text-primary" />
             Muốn tới một câu nào đó?
@@ -124,8 +125,9 @@ export function Sidebar({ quiz, onSubmit, jump, flashcard }: { quiz: Quiz; onSub
 
       {open && (
         <>
-          <button aria-label="Đóng danh sách câu" onClick={() => setOpen(false)} className="fixed inset-0 cursor-default" tabIndex={-1} />
-          <div className="absolute left-2 right-2 top-full z-10 mt-1 space-y-3 rounded-2xl border border-outline-variant bg-surface p-3 shadow-lg lg:left-full lg:right-auto lg:top-4 lg:ml-2 lg:mt-0 lg:w-[30rem]">
+          <button aria-label="Đóng danh sách câu" onClick={() => setOpen(false)} className="fixed inset-0 cursor-default max-sm:bg-scrim/32 land:bg-scrim/32" tabIndex={-1} />
+          {/* Điện thoại (cầm dọc hoặc xoay ngang): danh sách mở từ đáy màn hình; rộng hơn thì xổ cạnh nút như cũ */}
+          <div className="absolute left-2 right-2 top-full z-10 mt-1 space-y-3 rounded-2xl border border-outline-variant bg-surface p-3 shadow-lg lg:left-full lg:right-auto lg:top-4 lg:ml-2 lg:mt-0 lg:w-[30rem] max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 max-sm:top-auto max-sm:mt-0 max-sm:rounded-b-none max-sm:pb-[max(0.75rem,env(safe-area-inset-bottom))] land:fixed land:inset-x-0 land:bottom-0 land:top-auto land:mt-0 land:max-h-[90dvh] land:overflow-y-auto land:rounded-b-none">
             <div className="md-label-large flex justify-between text-on-surface-variant">
               <span>Danh sách câu</span>
               <span className="tabular-nums">{quiz.result ? `Đúng ${done}/${count}` : `Đã làm ${done}/${count}`}</span>

@@ -16,7 +16,7 @@ export function ExplainButton({ onExplain, bought, free }: Props) {
       className="relative inline-flex items-center gap-1.5 rounded-md after:absolute after:-inset-y-2 after:inset-x-0 after:content-[''] border border-brand-200 bg-brand-50 p-2 text-xs font-medium text-brand-800 transition hover:border-brand-400 sm:px-2.5 sm:py-1"
     >
       <Sparkles size={13} />
-      <span className="hidden sm:inline">{bought ? "Xem giải thích" : free ? "Giải thích miễn phí" : "Giải thích"}</span>
+      <span className="hidden sm:inline land:hidden">{bought ? "Xem giải thích" : free ? "Giải thích miễn phí" : "Giải thích"}</span>
     </button>
   );
 }

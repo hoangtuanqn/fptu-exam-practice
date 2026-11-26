@@ -12,7 +12,6 @@ import { useApi } from "@/shared/hooks/useApi";
 import { useUrlState } from "@/shared/hooks/useUrlState";
 import { buttonClass } from "@/shared/ui/Button";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
-import { RotateHint } from "@/shared/ui/RotateHint";
 import { flashcardApi, type FlashcardResult } from "./flashcard.api";
 import { LockedPanel } from "./LockedPanel";
 
@@ -106,10 +105,9 @@ function Viewer({ code, data }: { code: string; data: FlashcardResult }) {
         backLabel="Tất cả môn"
       />
       {atLock ? (
-        <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-          <RotateHint />
+        <div className="relative flex min-h-0 flex-1 flex-col lg:flex-row">
           <Sidebar quiz={quiz} jump flashcard={flashcard} />
-          <main className="flex min-w-0 flex-1 flex-col overflow-y-auto p-2 sm:p-3 lg:p-4">
+          <main className="flex min-w-0 flex-1 flex-col overflow-y-auto p-2 sm:p-3 lg:p-4 land:pb-16">
             <div className="mx-auto w-full max-w-xl pt-6">
               <LockedPanel hidden={data.hidden} onClose={() => quiz.goTo(0)} />
             </div>

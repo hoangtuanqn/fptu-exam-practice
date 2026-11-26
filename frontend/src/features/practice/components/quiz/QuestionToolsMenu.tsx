@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { ChevronsRight, Maximize2, MessageSquareWarning, MoreHorizontal, ZoomIn, ZoomOut } from "lucide-react";
+import { ChevronsRight, Image as ImageIcon, Maximize2, MessageSquareWarning, MoreHorizontal, ZoomIn, ZoomOut } from "lucide-react";
 import { useKeydown } from "@/features/practice/hooks/useKeydown";
 import type { useQuestionImageScale } from "@/features/practice/hooks/useQuestionImageScale";
 
@@ -10,11 +10,13 @@ interface Props {
   autoNext?: boolean;
   onToggleAutoNext?: () => void; // chỉ có ở chế độ Thi
   size: ReturnType<typeof useQuestionImageScale>;
+  original?: boolean; // đang xem ảnh gốc (không cắt khoảng trắng)
+  onToggleOriginal?: () => void; // chỉ có khi ảnh này cắt được
 }
 
 // Các công cụ phụ của câu hỏi gom vào một nút "…" cho khu vực làm bài gọn: phóng to ảnh, cỡ ảnh, báo cáo đáp án sai.
 // (Đánh dấu xem lại và Lưu câu dùng thường xuyên nên có nút riêng ngoài menu.)
-export function QuestionToolsMenu({ onZoom, onReport, reported, autoNext, onToggleAutoNext, size }: Props) {
+export function QuestionToolsMenu({ onZoom, onReport, reported, autoNext, onToggleAutoNext, size, original, onToggleOriginal }: Props) {
   const [open, setOpen] = useState(false);
   useKeydown((e) => open && e.key === "Escape" && setOpen(false));
   const run = (fn: () => void) => () => {
@@ -39,7 +41,7 @@ export function QuestionToolsMenu({ onZoom, onReport, reported, autoNext, onTogg
       {open && (
         <>
           <button type="button" aria-label="Đóng menu" onClick={() => setOpen(false)} className="fixed inset-0 z-10 cursor-default" tabIndex={-1} />
-          <div role="menu" className="absolute right-0 top-full z-20 mt-1 w-64 space-y-0.5 rounded-xl border border-outline-variant bg-surface p-1.5 shadow-lg">
+          <div role="menu" className="absolute right-0 top-full z-20 mt-1 w-64 space-y-0.5 rounded-xl border border-outline-variant bg-surface p-1.5 shadow-lg land:fixed land:right-14 land:top-12 land:mt-0 land:max-h-[calc(100dvh-4rem)] land:overflow-y-auto">
             <Item icon={<Maximize2 size={16} />} label="Mở cửa sổ phóng to ảnh" onClick={run(onZoom)} />
             {onToggleAutoNext && <Item icon={<ChevronsRight size={16} className={autoNext ? "text-primary" : ""} />} label="Tự sang câu sau khi chọn" state={autoNext ? "Bật" : "Tắt"} checked={!!autoNext} onClick={run(onToggleAutoNext)} />}
             <div role="group" aria-label="Cỡ ảnh đề" className="flex items-center gap-1 px-2.5 py-1.5">
@@ -54,6 +56,11 @@ export function QuestionToolsMenu({ onZoom, onReport, reported, autoNext, onTogg
                 <ZoomIn size={16} />
               </button>
             </div>
+            {onToggleOriginal && (
+              <div className="lg:hidden">
+                <Item icon={<ImageIcon size={16} />} label="Xem ảnh gốc" state={original ? "Bật" : "Tắt"} checked={!!original} onClick={run(onToggleOriginal)} />
+              </div>
+            )}
             {onReport && <Item icon={<MessageSquareWarning size={16} />} label={reported ? "Đã báo cáo đáp án" : "Báo cáo đáp án sai"} disabled={reported} onClick={run(onReport)} />}
           </div>
         </>

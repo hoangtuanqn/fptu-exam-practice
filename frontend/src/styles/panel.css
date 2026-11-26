@@ -66,6 +66,39 @@
   }
 }
 
+/* Ảnh đề đã cắt khoảng trắng (useContentCrop đặt biến): chỉ dưới 1024px, máy tính giữ nguyên ảnh. Phóng tối đa 1,6 lần cỡ gốc.
+   Để ngoài @layer vì thẻ img có sẵn utility w-full. */
+@media (width < 1024px) {
+  .q-crop {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: var(--crop-aspect);
+    max-width: calc(var(--crop-px) * 1.6px * var(--crop-zoom, 1));
+    margin-inline: auto;
+  }
+  .q-crop > img {
+    width: var(--crop-img);
+    max-width: none;
+  }
+}
+/* Điện thoại xoay ngang: vừa cả chiều cao khung (khung ảnh khai báo container-type: size) */
+@media (orientation: landscape) and (max-height: 500px) and (width < 1024px) {
+  .q-crop {
+    max-width: min(calc(var(--crop-px) * 1.6px * var(--crop-zoom, 1)), calc(100cqh * var(--crop-aspect) * var(--crop-zoom, 1)));
+  }
+}
+
+/* Điện thoại xoay ngang: tấm trượt từ đáy chỉ còn một dải thấp, nên lời giải AI thành cột bên phải (dưới thanh đầu trang) */
+@media (orientation: landscape) and (max-height: 500px) and (width < 1024px) {
+  .panel-explain-sheet {
+    top: 2.75rem;
+    left: auto;
+    width: 50%;
+    max-height: none;
+    border-radius: 1rem 0 0 0;
+  }
+}
+
 /* Nút chat nổi (mascot) góc phải dưới: ẩn ở màn làm đề (data-no-bottom-nav), chỉ dưới 840px, và khi trang có thanh/nút chính sát đáy (data-hide-chat),
    để không che nút Tiếp, Nộp bài... Để ngoài @layer vì nút đặt display bằng utility (flex). */
 @media (width < 840px) {
