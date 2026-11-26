@@ -43,7 +43,7 @@ export function MyExams({ onOpen }: Props) {
 
   return (
     <>
-      <ResumeList limit={3} className="mt-10 text-left" />
+      {!user && <ResumeList limit={3} className="mt-10 text-left" />} {/* thành viên: danh sách làm tiếp nằm trên ô chọn môn (ExamSourcePicker) */}
       <section className="mt-8 text-left">
         <div className="mb-2.5 flex items-baseline justify-between gap-3">
           <h2 className="font-display text-[17px] font-semibold text-brand-900">
