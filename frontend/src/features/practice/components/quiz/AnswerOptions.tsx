@@ -10,7 +10,7 @@ interface Props {
   onChoose: (option: string) => void;
   compact?: boolean;
   vertical?: boolean; // xếp dọc, nút 40dp: dùng trong thanh dọc cạnh ảnh đề để dành chỗ cho đề
-  dense?: boolean; // 8 nút chia đều một hàng ngang, cao 44dp (thanh dưới cùng trên điện thoại, máy tính bảng)
+  dense?: boolean; // chia đều bề ngang, cao 44dp (thanh dưới cùng): điện thoại cầm dọc 4 cột x 2 hàng, rộng hơn hoặc xoay ngang thì một hàng 8 nút
 }
 
 // Hàng lựa chọn A–H, mỗi nút 48x48dp (thanh dọc: 40dp). Tròn = chọn một, bo góc = chọn nhiều.
@@ -41,7 +41,7 @@ export function AnswerOptions({ question, selected, revealed, onChoose, compact 
     <div
       role="group"
       aria-label={multiple ? "Chọn một hoặc nhiều đáp án" : "Chọn một đáp án"}
-      className={vertical ? "flex flex-col items-center gap-1" : dense ? "mx-auto grid max-w-md grid-cols-8 gap-1" : compact ? "grid grid-cols-4 gap-2 sm:flex sm:flex-wrap sm:justify-center" : "flex flex-wrap gap-3"}
+      className={vertical ? "flex flex-col items-center gap-1" : dense ? "mx-auto grid w-full max-w-md grid-cols-4 gap-2 sm:grid-cols-8 sm:gap-1 land:min-w-0 land:max-w-none land:flex-1 land:grid-cols-8 land:gap-1" : compact ? "grid grid-cols-4 gap-2 sm:flex sm:flex-wrap sm:justify-center" : "flex flex-wrap gap-3"}
     >
       {OPTIONS.map((opt, i) => {
         const { cls, mark } = state(opt);
