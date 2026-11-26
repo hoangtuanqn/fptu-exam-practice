@@ -1,5 +1,6 @@
 import { ProtectedImg } from "@/shared/ui/ProtectedImg";
-import type { ReactNode } from "react";
+import { useContentCrop } from "@/features/practice/hooks/useContentCrop";
+import type { CSSProperties, ReactNode } from "react";
 import { Bookmark, ChevronLeft, Flag, Sparkles, Tag } from "lucide-react";
 import { useQuestionImageScale } from "@/features/practice/hooks/useQuestionImageScale";
 import { isMultiple } from "@/features/practice/utils/question";
@@ -56,6 +57,7 @@ export function QuestionCard({
 }: Props) {
   const { number, imageUrl } = question;
   const size = useQuestionImageScale();
+  const crop = useContentCrop(imageUrl);
   const status = <AnswerStatus question={question} selected={selected} revealed={revealed} canCheck={canCheck} onCheck={onCheck} />;
 
   return (
@@ -102,7 +104,7 @@ export function QuestionCard({
               <Flag size={18} className={flagged ? "fill-current" : ""} />
             </button>
             )}
-            <QuestionToolsMenu onZoom={onZoom} onReport={onReport} reported={reported} autoNext={autoNext} onToggleAutoNext={onToggleAutoNext} size={size} />
+            <QuestionToolsMenu onZoom={onZoom} onReport={onReport} reported={reported} autoNext={autoNext} onToggleAutoNext={onToggleAutoNext} size={size} original={crop.original} onToggleOriginal={crop.canCrop ? crop.toggleOriginal : undefined} />
           </div>
         </div>
 
@@ -127,15 +129,19 @@ export function QuestionCard({
         )}
 
         {/* Ảnh rộng hết khung (chữ to hơn nhiều so với co ảnh vừa cả chiều cao); đề dài thì cuộn trong khung. Bấm vào ảnh mở cửa sổ phóng to */}
+        {/* Dưới 1024px: ảnh được cắt khoảng trắng (lớp q-crop trong panel.css) nên chữ to hơn; ảnh gốc không đổi */}
         <div className="min-h-0 w-full flex-1 overflow-auto bg-slate-50 p-1.5 sm:p-2">
-          <div className="relative" style={{ width: `${size.scale * 100}%`, maxWidth: "none" }}>
-            <ProtectedImg
-              src={imageUrl}
-              alt={`Câu ${number}`}
-              onClick={flashcard ? flashcard.onToggle : onZoom}
-              title={flashcard ? (flashcard.shown ? "Bấm để ẩn đáp án" : "Bấm để hiện đáp án") : "Bấm để mở cửa sổ phóng to"}
-              className={`block h-auto w-full ${flashcard ? "cursor-pointer" : "cursor-zoom-in"}`}
-            />
+          <div className="relative" style={{ width: `${size.scale * 100}%`, maxWidth: "none", "--crop-zoom": size.scale } as CSSProperties}>
+            <div className={crop.style ? "q-crop" : undefined} style={crop.style ?? undefined}>
+              <ProtectedImg
+                src={imageUrl}
+                alt={`Câu ${number}`}
+                onLoad={crop.onLoad}
+                onClick={flashcard ? flashcard.onToggle : onZoom}
+                title={flashcard ? (flashcard.shown ? "Bấm để ẩn đáp án" : "Bấm để hiện đáp án") : "Bấm để mở cửa sổ phóng to"}
+                className={`block h-auto w-full ${flashcard ? "cursor-pointer" : "cursor-zoom-in"}`}
+              />
+            </div>
           </div>
         </div>
         {/* Flashcard: đáp án nằm ngay dưới ảnh, chữ to, chiều cao cố định để bật/tắt không làm ảnh nhảy */}

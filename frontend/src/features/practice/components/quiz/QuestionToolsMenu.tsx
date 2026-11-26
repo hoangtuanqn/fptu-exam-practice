@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { ChevronsRight, Maximize2, MessageSquareWarning, MoreHorizontal, ZoomIn, ZoomOut } from "lucide-react";
+import { ChevronsRight, Image as ImageIcon, Maximize2, MessageSquareWarning, MoreHorizontal, ZoomIn, ZoomOut } from "lucide-react";
 import { useKeydown } from "@/features/practice/hooks/useKeydown";
 import type { useQuestionImageScale } from "@/features/practice/hooks/useQuestionImageScale";
 
@@ -10,11 +10,13 @@ interface Props {
   autoNext?: boolean;
   onToggleAutoNext?: () => void; // chỉ có ở chế độ Thi
   size: ReturnType<typeof useQuestionImageScale>;
+  original?: boolean; // đang xem ảnh gốc (không cắt khoảng trắng)
+  onToggleOriginal?: () => void; // chỉ có khi ảnh này cắt được
 }
 
 // Các công cụ phụ của câu hỏi gom vào một nút "…" cho khu vực làm bài gọn: phóng to ảnh, cỡ ảnh, báo cáo đáp án sai.
 // (Đánh dấu xem lại và Lưu câu dùng thường xuyên nên có nút riêng ngoài menu.)
-export function QuestionToolsMenu({ onZoom, onReport, reported, autoNext, onToggleAutoNext, size }: Props) {
+export function QuestionToolsMenu({ onZoom, onReport, reported, autoNext, onToggleAutoNext, size, original, onToggleOriginal }: Props) {
   const [open, setOpen] = useState(false);
   useKeydown((e) => open && e.key === "Escape" && setOpen(false));
   const run = (fn: () => void) => () => {
@@ -54,6 +56,11 @@ export function QuestionToolsMenu({ onZoom, onReport, reported, autoNext, onTogg
                 <ZoomIn size={16} />
               </button>
             </div>
+            {onToggleOriginal && (
+              <div className="lg:hidden">
+                <Item icon={<ImageIcon size={16} />} label="Xem ảnh gốc" state={original ? "Bật" : "Tắt"} checked={!!original} onClick={run(onToggleOriginal)} />
+              </div>
+            )}
             {onReport && <Item icon={<MessageSquareWarning size={16} />} label={reported ? "Đã báo cáo đáp án" : "Báo cáo đáp án sai"} disabled={reported} onClick={run(onReport)} />}
           </div>
         </>
