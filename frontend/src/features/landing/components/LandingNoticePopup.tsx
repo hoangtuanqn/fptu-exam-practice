@@ -15,11 +15,12 @@ const termName = (t: string) => {
 };
 
 // Popup trang chủ: đếm ngược ưu đãi mua gói Pro của kỳ mới (dữ liệu thật từ DB). Hết đợt hoặc đã dùng ưu đãi thì không hiện.
+// Khách không thấy popup (chưa xem được gì đã bị che trang); với họ chỉ có thanh ưu đãi ở đầu trang.
 export function LandingNoticePopup() {
   const { user } = useAuth();
-  const pro = !!user && isPro(user); // đã mua PRO thì không mời nữa
-  const plan = usePlanInfo(!pro).data;
-  const promo = pro ? null : activePromo(plan);
+  const hidden = !user || isPro(user); // khách, hoặc đã mua PRO thì không mời
+  const plan = usePlanInfo(!hidden).data;
+  const promo = hidden ? null : activePromo(plan);
   const surface = `landing_promo:${promo?.term ?? ""}`;
   const [closed, setClosed] = useState(false);
   if (!promo || closed || isSnoozed(surface)) return null;
