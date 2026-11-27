@@ -82,8 +82,12 @@ export function moderateComment(body: string): "BLOCKED" | Extract<CommentFlagRe
   return null;
 }
 
-// Chữ đáp án in hoa ở đầu ("A", "A, C", "A C"); chữ dính liền như "FE", "DB" là từ thường nên không tính, theo sau là hết câu, dấu câu, " - " hoặc vì/do/là/đúng/nha/nhé
-const ANSWER_PREFIX = /^([A-H](?:\s*[,/&]\s*[A-H]|\s+[A-H])*)(?=\s*$|\s*[.,!?;:)…]|\s+-|\s+(?:[vV]ì|[dD]o|[lL]à|[đĐ]úng|[nN]ha|[nN]hé)(?![\p{L}\p{M}]))/u;
+// Chữ đáp án in hoa ở đầu ("A", "A, C", "A C", "A và C"), có thể sau "Đáp án" / "ĐA" / "Chọn"; chữ dính liền như "FE", "DB" là từ thường nên không tính.
+// Theo sau là hết câu, dấu câu, " - " hoặc một từ khẳng định (vì/do/là/đúng/chắc/chuẩn/nha/nhé...); "A sai" không khớp
+const LEAD = String.raw`(?:(?:[đĐ]áp\s+án|ĐA|[đĐ]a|[cC]họn)\s*[:.]?\s*)?`;
+const SEP = String.raw`(?:\s*[,/&]\s*|\s+(?:và|hoặc)\s+|\s+)`;
+const AFTER = String.raw`(?=\s*$|\s*[.,!?;:)…]|\s+-|\s+(?:[vV]ì|[dD]o|[lL]à|[đĐ]úng|[cC]hắc|[cC]huẩn|[tT]hì|[mM]ới|[nN]ha|[nN]hé|[oO]k)(?![\p{L}\p{M}]))`;
+const ANSWER_PREFIX = new RegExp(`^${LEAD}([A-H](?:${SEP}[A-H])*)${AFTER}`, "u");
 
 /**
  * Bình luận mở đầu bằng chữ đáp án thì trả các chữ đó (đã sắp xếp), không thì null.
