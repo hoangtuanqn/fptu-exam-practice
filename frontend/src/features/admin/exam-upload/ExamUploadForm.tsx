@@ -12,6 +12,7 @@ import { subjectApi } from "@/features/subject/subject.api";
 import { MAX_TOTAL_BYTES } from "@/features/exam-contribution/limits";
 import { examUploadApi, KIND_LABEL, type ExamKind, type UploadJob } from "./exam-upload.api";
 import { ansPathOf, checkFolder, checkResources, findRoot, isQuizFolder, kindFromTitle, nameFromFolder, type FolderCheck, type FolderEntry, type ResourceCheck } from "./folder";
+import { BatchUpload, groupByFolder } from "./BatchUpload";
 import { FolderPicker } from "./FolderPicker";
 import { FolderPreview } from "./FolderPreview";
 import { ResourcePreview } from "./ResourcePreview";
@@ -29,9 +30,10 @@ interface Props {
   onDone: (job: UploadJob) => void; // máy chủ đã nhận đề, xử lý tiếp chạy nền
   onBusy?: (busy: boolean) => void;
   onCancel?: () => void; // có thì hiện nút Huỷ (dùng trong hộp thoại)
+  onQueued?: (job: UploadJob) => void; // có thì thả được nhiều thư mục đề một lần (tải hàng loạt, form không bị làm trống)
 }
 
-export function ExamUploadForm({ target, onDone, onBusy, onCancel }: Props) {
+export function ExamUploadForm({ target, onDone, onBusy, onCancel, onQueued }: Props) {
   const create = target.mode === "create";
   const subjects = useApi(() => (create ? subjectApi.subjects() : Promise.resolve(null)), [create]);
   const submit = useSubmit("Chưa tải được đề lên, bạn thử lại nhé", FIELDS);
@@ -42,6 +44,7 @@ export function ExamUploadForm({ target, onDone, onBusy, onCancel }: Props) {
   const kindPicked = useRef(create && !!target.kind); // admin đã tự chọn loại (hoặc đề được mở sẵn với loại): thôi tự đoán theo tên
   const [folder, setFolder] = useState<{ check: FolderCheck<File>; ansJson: string | null } | null>(null);
   const [resource, setResource] = useState<ResourceCheck<File> | null>(null);
+  const [batch, setBatch] = useState<FolderEntry<File>[][] | null>(null);
   const [missing, setMissing] = useState<{ title?: string; subjectCode?: string; folder?: string }>({});
   const auto = useRef({ title: "", subjectCode: "" }); // giá trị đã tự điền từ tên thư mục: chọn thư mục khác thì được đổi theo, admin đã tự sửa thì giữ
   const busy = submit.loading;
@@ -59,6 +62,11 @@ export function ExamUploadForm({ target, onDone, onBusy, onCancel }: Props) {
 
   const pick = async (entries: FolderEntry<File>[]) => {
     submit.clear();
+    const groups = groupByFolder(entries);
+    if (create && onQueued && groups.length > 1) {
+      setBatch(groups);
+      return;
+    }
     setMissing((m) => ({ ...m, folder: undefined }));
     const named = create ? nameFromFolder(entries.map((e) => e.path)) : null;
     if (named) {
@@ -146,6 +154,8 @@ export function ExamUploadForm({ target, onDone, onBusy, onCancel }: Props) {
       if (r) onDone(r);
     });
   };
+
+  if (batch && onQueued) return <BatchUpload groups={batch} subjectCodes={subjects.data?.map((s) => s.code) ?? []} onJob={onQueued} onCancel={() => setBatch(null)} />;
 
   const check = folder?.check;
   const notes = check ?? resource;

@@ -17,6 +17,7 @@ export default function ExamUploadPage() {
         <div className="p-5">
           <ExamUploadForm
             key={round}
+            onQueued={jobs.add}
             target={{ mode: "create" }}
             onDone={(job) => {
               jobs.add(job);
