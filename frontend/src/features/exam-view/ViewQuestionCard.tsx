@@ -10,10 +10,11 @@ interface Props {
   highlighted: boolean;
   saved?: boolean;
   onToggleSave?: () => void; // chỉ có khi đã đăng nhập
+  onOpen?: () => void; // bấm ảnh để xem lớn (kèm khung thảo luận)
 }
 
 // Một câu của trang xem đề: số câu, chủ đề, ảnh, đáp án và nút lưu (không chọn đáp án, không chấm)
-export function ViewQuestionCard({ q, showAnswer, highlighted, saved, onToggleSave }: Props) {
+export function ViewQuestionCard({ q, showAnswer, highlighted, saved, onToggleSave, onOpen }: Props) {
   const correct = q.correct ?? [];
   return (
     <li id={`q-${q.number}`} className="scroll-mt-20 md:scroll-mt-36">
@@ -33,9 +34,9 @@ export function ViewQuestionCard({ q, showAnswer, highlighted, saved, onToggleSa
           )}
         </div>
         {q.imageUrl && (
-          <div className="relative">
+          <button type="button" onClick={onOpen} disabled={!onOpen} aria-label={`Xem lớn câu ${q.number}`} className="relative block w-full cursor-zoom-in outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary disabled:cursor-default">
             <ProtectedImg src={q.imageUrl} alt={`Câu ${q.number}`} loading="lazy" className="h-auto w-full border-y border-outline-variant bg-surface-container-lowest" />
-          </div>
+          </button>
         )}
         {showAnswer && correct.length > 0 && (
           <p className="md-body-medium px-4 py-2 text-on-surface">

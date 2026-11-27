@@ -1,10 +1,13 @@
 import { ProtectedImg } from "@/shared/ui/ProtectedImg";
 import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
-import { BookOpen, Download, FileSearch, Loader2, FileArchive, Timer, ZoomIn } from "lucide-react";
+import { BookOpen, Download, FileSearch, Loader2, FileArchive, MessageSquare, Timer, ZoomIn } from "lucide-react";
 import { examApi } from "@/features/exam/exam.api";
 import { canPractice, type ExamAttachment, type ExamQuestionsPayload, type ImportedExam } from "@/features/exam/types";
 import { downloadUrl, ICONS, isImageFile, OPENABLE } from "@/features/exam-attachments/AttachmentList";
+import { CommentCountButton, CommentsDialog } from "@/features/exam-comments/CommentsDialog";
+import { attachmentTarget } from "@/features/exam-comments/exam-comments.api";
+import { useCommentCounts } from "@/features/exam-comments/useCommentCounts";
 import { ExamKindBadge } from "@/features/exam-store/ExamKindBadge";
 import { NewExamBadge } from "@/features/exam-store/NewExamBadge";
 import { LoadingMoreBanner } from "@/features/practice/components/quiz/LoadingMoreBanner";
@@ -89,6 +92,8 @@ function Preview({ exam }: { exam: ImportedExam }) {
   const term = exam.title.match(/\b(?:SP|SU|FA)\d{2}\b/i)?.[0].toUpperCase() ?? null;
   const items = questions.filter((q) => !q.isReference).length;
   const playable = canPractice(kind, total, exam.answerStatus);
+  const comments = useCommentCounts(exam.id);
+  const [talk, setTalk] = useState<ExamAttachment | null>(null); // tệp không phải ảnh đang mở thảo luận
 
   // Đề vừa lấy về có thể còn đang tải ảnh: các trang mới hiện dần
   useExamQuestionsLive(
@@ -113,17 +118,26 @@ function Preview({ exam }: { exam: ImportedExam }) {
   // Ảnh để xem lớn: trang đề, rồi các tệp đính kèm là ảnh (đề PE tải lên dạng thư mục tài liệu thường có Q1.webp...). Tệp ảnh đính kèm vẫn là tệp tải về
   // (máy chủ không phát inline), nên hiện bằng ProtectedImg (tải có danh tính rồi hiển thị bằng blob) giống ảnh trang đề.
   const shots = [
-    ...questions.map((q) => ({ key: `p${q.number}`, src: q.imageUrl, label: pageLabel(q) })),
-    ...attachments.filter(isImageFile).map((a) => ({ key: `a${a.id}`, src: a.url, label: a.name })),
+    ...questions.map((q) => ({ key: `p${q.number}`, src: q.imageUrl, label: pageLabel(q), question: q.number, poll: !q.isReference })),
+    ...attachments.filter(isImageFile).map((a) => ({ key: `a${a.id}`, src: a.url, label: a.name, question: attachmentTarget(a.id), poll: false })),
   ];
+  const commentsOf = (question?: number) => (question !== undefined ? (comments.counts?.[String(question)] ?? 0) : 0);
+  // Tệp không phải ảnh: nút bình luận cạnh thẻ, bấm thẻ vẫn mở / tải tệp như cũ
+  const talkButton = (a: ExamAttachment, className?: string) =>
+    comments.counts ? <CommentCountButton name={a.name} count={commentsOf(attachmentTarget(a.id))} onOpen={() => setTalk(a)} className={className} /> : null;
   const pageTiles = shots.map((s) => (
     <li key={s.key}>
-      <button type="button" onClick={() => setZoom(s.key)} aria-label={`Xem lớn ${s.label}`} className={CARD}>
+      <button type="button" onClick={() => setZoom(s.key)} aria-label={`Xem lớn ${s.label}${commentsOf(s.question) > 0 ? `, ${commentsOf(s.question)} bình luận` : ""}`} className={CARD}>
         <span className="relative block max-h-64 overflow-hidden rounded-m3-md bg-white shadow-sm ring-1 ring-outline-variant/50 sm:max-h-72">
           <ProtectedImg src={s.src} alt="" loading="lazy" className="block h-auto w-full object-cover object-top" />
           <span className="absolute inset-0 flex items-center justify-center bg-primary/0 text-on-primary opacity-0 transition duration-200 group-hover:bg-primary/25 group-hover:opacity-100">
             <ZoomIn size={28} className="rounded-full bg-primary p-1.5 shadow-m3-2" aria-hidden />
           </span>
+          {commentsOf(s.question) > 0 && (
+            <span className="md-label-medium absolute right-2 top-2 flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-on-primary shadow-m3-1" aria-hidden>
+              <MessageSquare size={12} /> {commentsOf(s.question)}
+            </span>
+          )}
         </span>
         <span className="md-label-large block truncate px-1 pb-0.5 pt-2.5 text-center text-on-surface-variant" title={s.label}>
           {s.label}
@@ -135,11 +149,12 @@ function Preview({ exam }: { exam: ImportedExam }) {
   const fileTiles = attachments
     .filter((a) => a.kind !== "archive" && !isImageFile(a))
     .map((a) => (
-      <li key={`a${a.id}`}>
+      <li key={`a${a.id}`} className="relative">
         <FileTile a={a} />
+        {talkButton(a, "absolute right-2 top-2")}
       </li>
     ));
-  const lightboxItems = shots.map((s) => ({ src: s.src, name: s.label }));
+  const lightboxItems = shots.map((s) => ({ src: s.src, name: s.label, question: s.question, poll: s.poll }));
   const zoomAt = zoom === null ? -1 : shots.findIndex((s) => s.key === zoom);
   const tiles = kind === "PE" ? [...fileTiles, ...pageTiles] : [...pageTiles, ...fileTiles];
 
@@ -191,8 +206,11 @@ function Preview({ exam }: { exam: ImportedExam }) {
       {archives.length > 0 && (
         <ul className="mb-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
           {archives.map((a) => (
-            <li key={a.id}>
-              <ArchiveRow a={a} />
+            <li key={a.id} className="flex items-center gap-2">
+              <div className="min-w-0 flex-1">
+                <ArchiveRow a={a} />
+              </div>
+              {talkButton(a)}
             </li>
           ))}
         </ul>
@@ -214,7 +232,8 @@ function Preview({ exam }: { exam: ImportedExam }) {
         </Card>
       )}
 
-      {zoomAt >= 0 && <ImageLightbox items={lightboxItems} index={zoomAt} onIndex={(i) => setZoom(shots[i]!.key)} onClose={() => setZoom(null)} />}
+      {zoomAt >= 0 && <ImageLightbox items={lightboxItems} index={zoomAt} onIndex={(i) => setZoom(shots[i]!.key)} onClose={() => setZoom(null)} discussion={comments.counts ? { examId: exam.id, examTitle: exam.title, counts: comments.counts, onChanged: comments.reload } : undefined} />}
+      {talk && <CommentsDialog examId={exam.id} examTitle={exam.title} target={attachmentTarget(talk.id)} name={talk.name} onChanged={comments.reload} onClose={() => setTalk(null)} />}
     </>
   );
 }

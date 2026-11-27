@@ -1,0 +1,131 @@
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import { Loader2, SendHorizontal, Smile } from "lucide-react";
+import { ApiError } from "@/shared/api/client";
+import { errorMessage } from "@/shared/api/errors";
+import { useToast } from "@/shared/context/ToastContext";
+import { COMMENT_MAX_LENGTH } from "./exam-comments.api";
+
+const EMOJI = ["😀", "😂", "🤣", "😊", "😍", "🥰", "😎", "🤔", "😅", "😭", "😢", "😡", "👍", "👎", "👏", "🙏", "💪", "🔥", "💯", "🎉", "❤️", "✅", "❌", "❓"];
+const MAX_HEIGHT = 160;
+
+// Ô viết bình luận cố định cuối khung: Enter để gửi, Shift+Enter xuống dòng, bảng emoji nhỏ. Gửi lỗi thì giữ nguyên bản nháp.
+export function CommentComposer({ onSend, hint }: { onSend: (body: string) => Promise<void>; hint: boolean }) {
+  const toast = useToast();
+  const [draft, setDraft] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [emojiOpen, setEmojiOpen] = useState(false);
+  const box = useRef<HTMLTextAreaElement>(null);
+  const wrap = useRef<HTMLDivElement>(null);
+  const hintId = useId();
+
+  // Tự giãn chiều cao theo nội dung (tối đa vài dòng rồi cuộn)
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, MAX_HEIGHT)}px`;
+  }, [draft]);
+
+  // Bấm ra ngoài thì đóng bảng emoji
+  useEffect(() => {
+    if (!emojiOpen) return;
+    const onDown = (e: MouseEvent) => !wrap.current?.contains(e.target as Node) && setEmojiOpen(false);
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [emojiOpen]);
+
+  const send = async () => {
+    const body = draft.trim();
+    if (!body || busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await onSend(body);
+      setDraft("");
+    } catch (err) {
+      const field = err instanceof ApiError ? err.errors?.body : undefined;
+      if (field) setError(field);
+      else toast.error(errorMessage(err, "Chưa gửi được bình luận"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    // Bộ gõ tiếng Việt đang ghép chữ thì Enter thuộc về bộ gõ
+    if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+      e.preventDefault();
+      void send();
+    }
+  };
+
+  const insert = (emoji: string) => {
+    const el = box.current;
+    const start = el?.selectionStart ?? draft.length;
+    const end = el?.selectionEnd ?? start;
+    setDraft((d) => `${d.slice(0, start)}${emoji}${d.slice(end)}`.slice(0, COMMENT_MAX_LENGTH));
+    setEmojiOpen(false);
+    requestAnimationFrame(() => {
+      el?.focus();
+      el?.setSelectionRange(start + emoji.length, start + emoji.length);
+    });
+  };
+
+  return (
+    <div ref={wrap} className="relative">
+      <div className={`flex items-end gap-1 rounded-m3-xl bg-surface-container-high py-1 pl-4 pr-1 ${error ? "ring-1 ring-error" : ""}`}>
+        <textarea
+          ref={box}
+          rows={1}
+          value={draft}
+          maxLength={COMMENT_MAX_LENGTH}
+          onChange={(e) => {
+            setDraft(e.target.value);
+            if (error) setError(null);
+          }}
+          onKeyDown={onKeyDown}
+          placeholder="Viết bình luận về câu này…"
+          aria-label="Viết bình luận"
+          aria-describedby={hintId}
+          aria-invalid={!!error}
+          className="md-body-medium min-h-10 flex-1 resize-none bg-transparent py-2 text-on-surface outline-none placeholder:text-on-surface-variant"
+        />
+        <button type="button" onClick={() => setEmojiOpen((o) => !o)} aria-label="Chèn biểu tượng cảm xúc" aria-expanded={emojiOpen} className="md-state flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-on-surface-variant">
+          <Smile size={20} />
+        </button>
+        <button type="button" onClick={() => void send()} disabled={busy || !draft.trim()} aria-label="Gửi bình luận" className="md-state flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-primary disabled:text-on-surface/38">
+          {busy ? <Loader2 size={20} className="animate-spin" /> : <SendHorizontal size={20} />}
+        </button>
+      </div>
+      {emojiOpen && (
+        <div
+          role="group"
+          aria-label="Biểu tượng cảm xúc"
+          onKeyDown={(e) => {
+            if (e.key !== "Escape") return;
+            e.stopPropagation(); // Esc chỉ đóng bảng emoji, không đóng trình xem ảnh
+            setEmojiOpen(false);
+          }}
+          className="absolute bottom-full right-0 z-10 mb-2 grid grid-cols-6 gap-1 rounded-m3-lg bg-surface-container-highest p-2 shadow-m3-2"
+        >
+          {EMOJI.map((e) => (
+            <button key={e} type="button" onClick={() => insert(e)} aria-label={`Chèn ${e}`} className="md-state flex h-10 w-10 items-center justify-center rounded-full text-xl">
+              {e}
+            </button>
+          ))}
+        </div>
+      )}
+      {error ? (
+        <p id={hintId} role="alert" className="md-body-small mt-1 px-4 text-error">
+          {error}
+        </p>
+      ) : (
+        <p id={hintId} className="md-body-small mt-1 px-4 text-on-surface-variant">
+          {hint && "Mở đầu bằng chữ đáp án (vd. “A vì…”) để tự chọn."}
+          {draft.length > COMMENT_MAX_LENGTH - 100 && ` ${draft.length}/${COMMENT_MAX_LENGTH}`}
+        </p>
+      )}
+    </div>
+  );
+}
