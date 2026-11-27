@@ -1,13 +1,12 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { openImageHandler } from "@/shared/api/protectedImage";
 import { ProtectedImg } from "@/shared/ui/ProtectedImg";
-import { CheckCheck, ThumbsDown, ThumbsUp } from "lucide-react";
+import { SearchCheck, ThumbsDown, ThumbsUp } from "lucide-react";
 import { adminApi, type ExplanationFeedbackAdmin, type ResolvedFilter } from "@/features/admin/api/admin.api";
 import { refreshReviewCounts } from "@/features/admin/review-counts.store";
 import { ResolvedBadge } from "@/features/admin/shared";
 import { FEEDBACK_REASONS } from "@/features/explanation/explanation.api";
-import { errorMessage } from "@/shared/api/errors";
-import { useToast } from "@/shared/context/ToastContext";
+import { Badge } from "@/shared/ui/Badge";
 import { Button } from "@/shared/ui/Button";
 import { Markdown } from "@/shared/ui/Markdown";
 import { useApi } from "@/shared/hooks/useApi";
@@ -19,7 +18,8 @@ import { Card, PageHeader } from "@/shared/ui/Card";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { Segmented } from "@/shared/ui/Segmented";
 import { Pagination } from "@/shared/ui/Table";
-import { formatDateTime } from "@/shared/utils/formatters";
+import { formatCredit, formatDateTime } from "@/shared/utils/formatters";
+import { FeedbackReviewDialog } from "./FeedbackReviewDialog";
 
 // down = chưa tốt và chưa giải quyết; resolved = chưa tốt đã giải quyết
 type Filter = "up" | "down" | "resolved" | "";
@@ -37,30 +37,13 @@ const reasonLabel = (v: string | null) => FEEDBACK_REASONS.find((r) => r.value =
 export default function FeedbackPage() {
   const [url, setUrl] = useUrlState({ helpful: "down", page: "1", q: "" });
   const [search, setSearch, q, searchPending] = useUrlSearch(url.q, setUrl);
-  const toast = useToast();
   const filter = (Object.prototype.hasOwnProperty.call(QUERY, url.helpful) ? url.helpful : "down") as Filter;
   const page = toPage(url.page);
   const setPage = (p: number) => setUrl({ page: String(p) });
   const { data, error, loading, reload } = useApi(() => adminApi.explanationFeedback(page, ...QUERY[filter], q), [page, filter, q]);
-  // Dòng vừa giải quyết hiện ngay kết quả server trả về; tải lại danh sách thì bỏ
-  const [patched, setPatched] = useState<Record<string, ExplanationFeedbackAdmin>>({});
-  useEffect(() => setPatched({}), [data]);
-  const [saving, setSaving] = useState<string | null>(null);
-  const items = data?.items.map((r) => patched[r.id] ?? r) ?? [];
-
-  const resolve = async (id: string) => {
-    setSaving(id);
-    try {
-      const row = await adminApi.resolveFeedback(id);
-      setPatched((p) => ({ ...p, [id]: row }));
-      toast.success("Đã đánh dấu đã giải quyết");
-      void refreshReviewCounts();
-    } catch (err) {
-      toast.error(errorMessage(err));
-    } finally {
-      setSaving(null);
-    }
-  };
+  const items = data?.items ?? [];
+  // Xử lý trong hộp xem xét; xác nhận đúng còn tự đóng các 👎 khác của câu nên xong thì tải lại cả danh sách
+  const [selected, setSelected] = useState<ExplanationFeedbackAdmin | null>(null);
   const summary = useApi(() => adminApi.explanationFeedbackSummary(), []);
   useClampPage(data?.meta, setPage);
   const [open, setOpen] = useState<string | null>(null);
@@ -68,7 +51,7 @@ export default function FeedbackPage() {
 
   return (
     <>
-      <PageHeader title="Đánh giá lời giải AI" description="Người dùng bấm hữu ích hoặc chưa tốt dưới mỗi lời giải. Đọc các đánh giá chưa tốt để biết prompt cần sửa ở đâu." />
+      <PageHeader title="Đánh giá lời giải AI" description="Đọc các đánh giá chưa tốt. Xác nhận đúng thì lời giải cũ bị xóa và người góp ý được thưởng credit." />
       {summary.data && (
         <p className="mb-3 text-sm text-slate-600">
           Tổng {total} đánh giá: <b className="text-emerald-700">{summary.data.up} hữu ích</b> · <b className="text-rose-700">{summary.data.down} chưa tốt</b>
@@ -115,21 +98,16 @@ export default function FeedbackPage() {
                         </span>
                         {r.comment && <span className="mt-1 block text-sm text-slate-700">“{r.comment}”</span>}
                         {r.resolvedAt && (
-                          <span className="mt-1 block">
+                          <span className="mt-1 flex flex-wrap gap-1">
                             <ResolvedBadge at={r.resolvedAt} />
+                            {(r.reward ?? 0) > 0 && <Badge tone="info">Đã thưởng {formatCredit(r.reward ?? 0)}</Badge>}
                           </span>
                         )}
                       </span>
                     </button>
                     {!r.helpful && !r.resolvedAt && (
-                      <Button
-                        size="sm"
-                        onClick={() => void resolve(r.id)}
-                        disabled={saving !== null}
-                        aria-label={`Giải quyết đánh giá câu ${r.questionNumber}, ${r.exam.title}`}
-                        className="shrink-0"
-                      >
-                        <CheckCheck size={16} aria-hidden /> Giải quyết
+                      <Button size="sm" onClick={() => setSelected(r)} aria-label={`Xem xét đánh giá câu ${r.questionNumber}, ${r.exam.title}`} className="shrink-0">
+                        <SearchCheck size={16} aria-hidden /> Xem xét
                       </Button>
                     )}
                   </div>
@@ -154,6 +132,17 @@ export default function FeedbackPage() {
           <Empty icon={ThumbsDown} title={q ? "Không có đánh giá nào khớp từ khoá" : filter === "down" ? "Không có đánh giá chưa tốt nào cần xử lý" : "Chưa có đánh giá nào"} />
         )}
       </Card>
+
+      {selected && (
+        <FeedbackReviewDialog
+          feedback={selected}
+          onClose={() => setSelected(null)}
+          onDone={() => {
+            reload();
+            void refreshReviewCounts();
+          }}
+        />
+      )}
     </>
   );
 }
