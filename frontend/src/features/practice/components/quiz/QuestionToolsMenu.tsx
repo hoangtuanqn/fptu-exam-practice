@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { ChevronsRight, Image as ImageIcon, Maximize2, MessageSquareWarning, MoreHorizontal, ZoomIn, ZoomOut } from "lucide-react";
+import { BookOpen, ChevronsRight, CircleHelp, Image as ImageIcon, Maximize2, MessageSquareWarning, MoreHorizontal, ZoomIn, ZoomOut } from "lucide-react";
 import { useKeydown } from "@/features/practice/hooks/useKeydown";
 import type { useQuestionImageScale } from "@/features/practice/hooks/useQuestionImageScale";
 
@@ -12,11 +12,13 @@ interface Props {
   size: ReturnType<typeof useQuestionImageScale>;
   original?: boolean; // đang xem ảnh gốc (không cắt khoảng trắng)
   onToggleOriginal?: () => void; // chỉ có khi ảnh này cắt được
+  onHelp?: () => void; // màn làm đề không có thanh đầu trang: hướng dẫn làm bài nằm trong menu
+  onShowReferences?: () => void; // chỉ hiện khi xoay ngang (cột công cụ không đủ chỗ cho nút riêng)
 }
 
 // Các công cụ phụ của câu hỏi gom vào một nút "…" cho khu vực làm bài gọn: phóng to ảnh, cỡ ảnh, báo cáo đáp án sai.
 // (Đánh dấu xem lại và Lưu câu dùng thường xuyên nên có nút riêng ngoài menu.)
-export function QuestionToolsMenu({ onZoom, onReport, reported, autoNext, onToggleAutoNext, size, original, onToggleOriginal }: Props) {
+export function QuestionToolsMenu({ onZoom, onReport, reported, autoNext, onToggleAutoNext, size, original, onToggleOriginal, onHelp, onShowReferences }: Props) {
   const [open, setOpen] = useState(false);
   useKeydown((e) => open && e.key === "Escape" && setOpen(false));
   const run = (fn: () => void) => () => {
@@ -61,6 +63,12 @@ export function QuestionToolsMenu({ onZoom, onReport, reported, autoNext, onTogg
                 <Item icon={<ImageIcon size={16} />} label="Xem ảnh gốc" state={original ? "Bật" : "Tắt"} checked={!!original} onClick={run(onToggleOriginal)} />
               </div>
             )}
+            {onShowReferences && (
+              <div className="hidden land:block">
+                <Item icon={<BookOpen size={16} />} label="Tài liệu tham khảo" onClick={run(onShowReferences)} />
+              </div>
+            )}
+            {onHelp && <Item icon={<CircleHelp size={16} />} label="Hướng dẫn làm bài" onClick={run(onHelp)} />}
             {onReport && <Item icon={<MessageSquareWarning size={16} />} label={reported ? "Đã báo cáo đáp án" : "Báo cáo đáp án sai"} disabled={reported} onClick={run(onReport)} />}
           </div>
         </>

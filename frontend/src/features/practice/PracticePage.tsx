@@ -331,6 +331,8 @@ export default function PracticePage({ examId }: Props) {
   return (
     // Đang làm đề thì ẩn thanh điều hướng dưới; trang chủ thì chừa chỗ cho nó
     <div className="flex h-[calc(100dvh-var(--bottom-nav-h,0px))] flex-col" data-no-bottom-nav={hasQuiz || undefined}>
+      {/* Đang làm đề thì bỏ thanh đầu trang để dành chỗ cho đề; các nút cần thiết nằm trong QuizWorkspace (ExamControls) */}
+      {!hasQuiz && (
       <Header
         title={quiz.title}
         mode={quiz.mode}
@@ -349,6 +351,7 @@ export default function PracticePage({ examId }: Props) {
         onReset={quiz.reset}
         onShowResult={() => setDialog("result")}
       />
+      )}
 
       {helpOpen && <HelpDialog mode={quiz.mode} onClose={() => setHelpOpen(false)} />}
       <QuizDialogs quiz={quiz} topicSummary={topicSummary} dialog={dialog} onDialogChange={setDialog} onCloseZoom={() => setZoomOpen(false)} onCancelChoose={cancelChoosing} onBeforeSubmit={guard.finish} nextExam={nextQueue.length > 0 ? { remaining: nextQueue.length, onOpen: openNext } : undefined} initialMode={new URLSearchParams(location.search).get("start") === "exam" ? "exam" : undefined} />
@@ -380,7 +383,27 @@ export default function PracticePage({ examId }: Props) {
       {referencesOpen && !guard.away && quiz.references.length + examFiles.length > 0 && <ReferenceDialog references={quiz.references} attachments={examFiles} guarded={quiz.timing && quiz.mode === "exam" && canFullscreen} onClose={() => setReferencesOpen(false)} />}
 
       {guard.away ? null : hasQuiz ? ( // đang ở ngoài bài thi: gỡ hẳn đề khỏi trang, mọi trạng thái bài làm vẫn nằm trong useQuiz
-        <QuizWorkspace quiz={quiz} zoomOpen={zoomOpen} onZoomChange={setZoomOpen} onSubmit={requestSubmit} />
+        <QuizWorkspace
+          quiz={quiz}
+          zoomOpen={zoomOpen}
+          onZoomChange={setZoomOpen}
+          onSubmit={requestSubmit}
+          focus={{
+            mode: quiz.mode,
+            submitted: quiz.submitted,
+            submitLocked: quiz.answersPending,
+            trial: trialLocked,
+            elapsed: quiz.elapsed,
+            timeLimitSec: quiz.timeLimitSec,
+            referenceCount: quiz.references.length + examFiles.length,
+            onShowReferences: () => setReferencesOpen(true),
+            onHelp: () => setHelpOpen(true),
+            onHome: goHome,
+            onSubmit: requestSubmit,
+            onReset: quiz.reset,
+            onShowResult: () => setDialog("result"),
+          }}
+        />
       ) : filesOnly && examId ? (
         <FilesOnlyExam title={filesOnly.title} attachments={liveFiles} />
       ) : opening ? (

@@ -10,6 +10,7 @@ import { errorMessage } from "@/shared/api/errors";
 import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
 import { ReportAnswerDialog } from "@/features/answer-report/ReportAnswerDialog";
+import { ExamActions, ExitButton, type ExamFocus } from "@/features/practice/components/ExamControls";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useExamTopicsLive } from "@/features/practice/hooks/useExamTopicsLive";
 import { useAutoNext } from "@/features/practice/hooks/useAutoNext";
@@ -33,10 +34,11 @@ interface Props {
   readOnly?: boolean; // xem lại bài đã nộp: bỏ các nút lưu, đánh dấu, báo cáo, giải thích, nộp bài
   jump?: boolean; // danh sách câu có ô gõ số để nhảy thẳng (bộ nhiều câu, ví dụ flashcard)
   flashcard?: FlashcardView; // flashcard: "Hiện đáp án" thay cho chọn A–H
+  focus?: ExamFocus; // đang làm đề (không có thanh đầu trang): nút thoát, nộp bài... nằm trong màn này
 }
 
 // Màn hình làm bài: sidebar danh sách câu + khung câu hỏi + (tuỳ chọn) cửa sổ phóng to ảnh
-export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit, readOnly, jump, flashcard }: Props) {
+export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit, readOnly, jump, flashcard, focus }: Props) {
   const { user } = useAuth();
   const [reportOpen, setReportOpen] = useState(false);
   const [confirmExplain, setConfirmExplain] = useState(false); // hộp xác nhận phí (chỉ lần đầu mỗi câu)
@@ -60,12 +62,15 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit, readOnly
   const showTopic = quiz.mode === "practice" || quiz.submitted; // thi: chủ đề chỉ hiện sau khi nộp bài
 
   const question = quiz.questions[quiz.current];
+  const exit = focus && <ExitButton onHome={focus.onHome} />;
+  const actions = focus && <ExamActions focus={focus} />;
   // Đề xem thử: đứng ở ô khoá (sau các câu đã mở) thì hiện thẻ mời mở khoá thay cho câu hỏi
   if (!question && quiz.trialLocked > 0 && quiz.current < quiz.slots && quiz.examId) {
     return (
-      <div className="relative flex min-h-0 flex-1 flex-col lg:flex-row land:pl-[env(safe-area-inset-left)] land:pr-[env(safe-area-inset-right)]">
-        <Sidebar quiz={quiz} onSubmit={undefined} jump={jump} flashcard={flashcard} />
-        <main className="flex min-w-0 flex-1 flex-col overflow-y-auto p-2 sm:p-3 lg:p-4 land:pb-16">
+      <div data-focus={focus ? "" : undefined} className="relative flex min-h-0 flex-1 flex-col lg:flex-row land:pl-[env(safe-area-inset-left)] land:pr-[env(safe-area-inset-right)]">
+        {/* Câu khoá không có khung câu hỏi nên nút thoát, nộp bài đi cùng nút số câu ở mọi cỡ màn */}
+        <Sidebar quiz={quiz} onSubmit={undefined} jump={jump} flashcard={flashcard} before={exit} after={actions} always />
+        <main className="flex min-w-0 flex-1 flex-col overflow-y-auto p-2 sm:p-3 lg:p-4">
           <LockedQuestionCard examId={quiz.examId} number={quiz.current + 1} total={Math.max(quiz.total, quiz.slots)} attempts={quiz.trialAttempts} onUnlocked={quiz.unlockTrial} onBack={quiz.prev} />
         </main>
       </div>
@@ -160,8 +165,8 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit, readOnly
   );
 
   return (
-    <div className="relative flex min-h-0 flex-1 flex-col lg:flex-row land:pl-[env(safe-area-inset-left)] land:pr-[env(safe-area-inset-right)]">
-      <Sidebar quiz={quiz} onSubmit={view.onSubmit} jump={jump} flashcard={flashcard} />
+    <div data-focus={focus ? "" : undefined} data-explain={panelOpen ? "" : undefined} className="relative flex min-h-0 flex-1 flex-col lg:flex-row land:pl-[env(safe-area-inset-left)] land:pr-[env(safe-area-inset-right)]">
+      <Sidebar quiz={quiz} onSubmit={view.onSubmit} jump={jump} flashcard={flashcard} before={exit} after={actions} />
       <main className={`flex min-w-0 flex-1 flex-col overflow-y-auto p-2 sm:p-3 lg:p-4 land:p-1 ${panelOpen ? "max-lg:pb-[60dvh] land:pb-1 land:pr-[50%]" : ""}`}>
         {quiz.trialLocked > 0 && quiz.examId && <TrialLockBanner examId={quiz.examId} shown={quiz.questions.length} total={Math.max(quiz.total, quiz.slots)} onUnlocked={quiz.unlockTrial} />}
         {quiz.loadingMore && <LoadingMoreBanner loaded={quiz.questions.length} total={quiz.total} />}
@@ -169,7 +174,7 @@ export function QuizWorkspace({ quiz, zoomOpen, onZoomChange, onSubmit, readOnly
         {showBundle && bundle && (
           <ExplainBundleBanner bundle={bundle} unitPrice={info.data!.price} collapsed={bannerCollapsed} onCollapse={() => setBannerCollapsed(true)} onUnlock={() => setUnlockOpen(true)} />
         )}
-        <QuestionCard key={question.number} {...view} nudge={nudge} topic={showTopic ? question.topic : null} topicLoading={showTopic && topicsLabeling} onZoom={() => onZoomChange(true)} />
+        <QuestionCard key={question.number} {...view} nudge={nudge} topic={showTopic ? question.topic : null} topicLoading={showTopic && topicsLabeling} onZoom={() => onZoomChange(true)} exit={exit} actions={actions} onHelp={focus?.onHelp} onShowReferences={focus && focus.referenceCount > 0 ? focus.onShowReferences : undefined} />
       </main>
 
       {!zoomOpen && explainPanel}

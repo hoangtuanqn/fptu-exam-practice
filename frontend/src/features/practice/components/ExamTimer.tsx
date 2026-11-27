@@ -17,9 +17,10 @@ interface Props {
   left: number; // giây còn lại
   limit: number; // tổng giây của bài thi
   onDark?: boolean; // đặt trên nền tối (cửa sổ phóng to)
+  compact?: boolean; // chỉ còn số, đủ hẹp cho cột công cụ khi xoay ngang
 }
 
-export function ExamTimer({ left, limit, onDark = false }: Props) {
+export function ExamTimer({ left, limit, onDark = false, compact = false }: Props) {
   const tone = toneOf(left, limit);
   const urgent = tone.bar !== "bg-brand-500";
   return (
@@ -27,19 +28,19 @@ export function ExamTimer({ left, limit, onDark = false }: Props) {
       role="timer"
       aria-label={`Thời gian còn lại ${formatDuration(left)}`}
       title="Thời gian còn lại"
-      className={`inline-flex items-center gap-2 rounded-xl border px-2.5 py-1.5 transition-colors ${
+      className={`inline-flex items-center gap-2 rounded-xl border py-1.5 transition-colors ${compact ? "px-1" : "px-2.5"} ${
         onDark ? "border-white/20 bg-white/10" : "border-outline-variant bg-surface-container-lowest"
       }`}
     >
-      <Clock size={15} className={`shrink-0 max-[359px]:hidden ${urgent ? (onDark ? tone.onDark : tone.text) : onDark ? "text-slate-500" : "text-brand-700"}`} aria-hidden />
-      <span className={`min-w-[3.4rem] text-center text-base font-bold leading-none tabular-nums ${tone.blink} ${onDark ? tone.onDark : tone.text}`}>{formatDuration(left)}</span>
+      <Clock size={15} className={`shrink-0 max-[359px]:hidden ${compact ? "hidden" : ""} ${urgent ? (onDark ? tone.onDark : tone.text) : onDark ? "text-slate-500" : "text-brand-700"}`} aria-hidden />
+      <span className={`text-center font-bold ${compact ? "text-xs" : "min-w-[3.4rem] text-base"} leading-none tabular-nums ${tone.blink} ${onDark ? tone.onDark : tone.text}`}>{formatDuration(left)}</span>
       <div
         role="progressbar"
         aria-label="Thời gian còn lại"
         aria-valuemin={0}
         aria-valuemax={limit}
         aria-valuenow={Math.max(0, left)}
-        className={`h-2 w-16 overflow-hidden rounded-full max-sm:hidden lg:w-24 ${onDark ? "bg-white/20" : "bg-outline-variant/40"}`}
+        className={`h-2 w-16 overflow-hidden rounded-full max-sm:hidden lg:w-24 ${compact ? "!hidden" : ""} ${onDark ? "bg-white/20" : "bg-outline-variant/40"}`}
       >
         <div className={`h-full rounded-full ${tone.bar} transition-[width,background-color] duration-1000 ease-linear`} style={{ width: `${percentOf(left, limit)}%` }} />
       </div>
