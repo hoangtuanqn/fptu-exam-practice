@@ -1,5 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { BookOpen, Check, Search, X } from "lucide-react";
+import { buildSearchIndex, foldText, searchSubjects } from "@/shared/utils/searchText";
 
 export interface ComboSubject {
   code: string;
@@ -14,16 +15,6 @@ interface Props {
   error?: string;
   placeholder?: string;
 }
-
-// Bỏ dấu tiếng Việt và viết thường để gõ "mang may tinh" vẫn ra "Mạng máy tính"
-const fold = (s: string) =>
-  s
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/đ/g, "d")
-    .replace(/Đ/g, "D")
-    .toLowerCase()
-    .trim();
 
 const labelOf = (s: ComboSubject) => (s.name ? `${s.code} · ${s.name}` : s.code);
 
@@ -42,19 +33,10 @@ export function SubjectCombobox({ label, subjects, value, onChange, error, place
 
   const all = useMemo(() => subjects ?? [], [subjects]);
   const selected = useMemo(() => all.find((s) => s.code === value) ?? null, [all, value]);
-  const indexed = useMemo(() => all.map((s) => ({ s, code: fold(s.code), name: fold(s.name ?? "") })), [all]);
+  const index = useMemo(() => buildSearchIndex(all), [all]);
 
-  const term = fold(query);
-  const matches = useMemo(() => {
-    if (!term) return all;
-    const starts: ComboSubject[] = [];
-    const contains: ComboSubject[] = [];
-    for (const { s, code, name } of indexed) {
-      if (code.startsWith(term)) starts.push(s);
-      else if (code.includes(term) || name.includes(term)) contains.push(s);
-    }
-    return [...starts, ...contains];
-  }, [all, indexed, term]);
+  const term = foldText(query);
+  const matches = useMemo(() => searchSubjects(index, query), [index, query]);
 
   // Giữ ô đang sáng luôn nằm trong vùng nhìn thấy khi bấm mũi tên
   useEffect(() => {
