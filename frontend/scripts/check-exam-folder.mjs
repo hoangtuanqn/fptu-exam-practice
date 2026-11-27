@@ -73,6 +73,8 @@ assert.ok(checkResources(Array.from({ length: 101 }, (_, i) => img(`${i}.pdf`)))
 assert.deepEqual(nameFromFolder(["ENM302 - SU26 - B5 - FE - L/images/Q1.webp"]), { title: "ENM302 - SU26 - B5 - FE - L", subjectCode: "ENM302", kind: "FE" });
 assert.equal(nameFromFolder(["PRF192 - FA26 - PE - NO1/a.pdf"])?.kind, "PE");
 assert.equal(nameFromFolder(["PRF192 - FA26 - NO1/a.pdf"])?.kind, null);
+assert.equal(nameFromFolder(["PRF192 - Practical Exam/a.pdf"])?.kind, "PE");
+assert.equal(nameFromFolder(["PRF192_quizzes/a.pdf"])?.kind, "QUIZ");
 assert.equal(nameFromFolder(["pro192m_x/a.pdf"])?.subjectCode, "PRO192M");
 assert.equal(nameFromFolder(["Đề lẻ/a.pdf"])?.subjectCode, null);
 assert.equal(nameFromFolder(["a.pdf"]), null);

@@ -11,7 +11,7 @@ import { SubjectCombobox } from "@/features/subject/SubjectCombobox";
 import { subjectApi } from "@/features/subject/subject.api";
 import { MAX_TOTAL_BYTES } from "@/features/exam-contribution/limits";
 import { examUploadApi, KIND_LABEL, type ExamKind, type UploadJob } from "./exam-upload.api";
-import { ansPathOf, checkFolder, checkResources, findRoot, isQuizFolder, nameFromFolder, type FolderCheck, type FolderEntry, type ResourceCheck } from "./folder";
+import { ansPathOf, checkFolder, checkResources, findRoot, isQuizFolder, kindFromTitle, nameFromFolder, type FolderCheck, type FolderEntry, type ResourceCheck } from "./folder";
 import { FolderPicker } from "./FolderPicker";
 import { FolderPreview } from "./FolderPreview";
 import { ResourcePreview } from "./ResourcePreview";
@@ -39,11 +39,20 @@ export function ExamUploadForm({ target, onDone, onBusy, onCancel }: Props) {
   const [title, setTitle] = useState(create ? (target.title ?? "") : "");
   const [subjectCode, setSubjectCode] = useState(create ? (target.subjectCode ?? "") : "");
   const [kind, setKind] = useState<ExamKind>(create && target.kind ? target.kind : "FE");
+  const kindPicked = useRef(create && !!target.kind); // admin đã tự chọn loại (hoặc đề được mở sẵn với loại): thôi tự đoán theo tên
   const [folder, setFolder] = useState<{ check: FolderCheck<File>; ansJson: string | null } | null>(null);
   const [resource, setResource] = useState<ResourceCheck<File> | null>(null);
   const [missing, setMissing] = useState<{ title?: string; subjectCode?: string; folder?: string }>({});
-  const auto = useRef<{ title: string; subjectCode: string; kind: ExamKind }>({ title: "", subjectCode: "", kind }); // giá trị đã tự điền từ tên thư mục: chọn thư mục khác thì được đổi theo, admin đã tự sửa thì giữ
+  const auto = useRef({ title: "", subjectCode: "" }); // giá trị đã tự điền từ tên thư mục: chọn thư mục khác thì được đổi theo, admin đã tự sửa thì giữ
   const busy = submit.loading;
+  const switchKind = (k: ExamKind) => {
+    kindPicked.current = true;
+    setKind(k);
+  };
+  // Loại đề tự đoán theo tên đề (FE / PE / Quiz); không thấy từ khoá thì FE, admin chọn tay rồi thì giữ lựa chọn đó
+  useEffect(() => {
+    if (create && !kindPicked.current) setKind(kindFromTitle(title) ?? "FE");
+  }, [create, title]);
   useEffect(() => {
     onBusy?.(busy);
   }, [busy, onBusy]);
@@ -64,10 +73,7 @@ export function ExamUploadForm({ target, onDone, onBusy, onCancel }: Props) {
         auto.current.subjectCode = named.subjectCode!;
         setMissing((m) => ({ ...m, subjectCode: undefined }));
       }
-      if (named.kind && kind === auto.current.kind) {
-        setKind(named.kind);
-        auto.current.kind = named.kind;
-      }
+      if (named.kind && !kindPicked.current) setKind(named.kind); // cả khi tên đề đã gõ sẵn: tên thư mục có loại thì theo
     }
     // Tạo mới mà thiếu images/ hoặc ans.json: lưu thành tài liệu. Bổ sung ảnh luôn đi đường đề trắc nghiệm
     const asResource = create && !isQuizFolder(entries.map((e) => e.path));
@@ -161,7 +167,7 @@ export function ExamUploadForm({ target, onDone, onBusy, onCancel }: Props) {
               }}
               error={missing.subjectCode ?? submit.fieldErrors.subjectCode ?? (subjects.error ? "Chưa tải được danh sách môn" : undefined)}
             />
-            <Select label="Loại đề" value={kind} onChange={(e) => setKind(e.target.value as ExamKind)} disabled={busy} error={submit.fieldErrors.kind}>
+            <Select label="Loại đề" value={kind} onChange={(e) => switchKind(e.target.value as ExamKind)} disabled={busy} error={submit.fieldErrors.kind}>
               {KINDS.map((k) => (
                 <option key={k} value={k}>
                   {KIND_LABEL[k]}
@@ -181,6 +187,23 @@ export function ExamUploadForm({ target, onDone, onBusy, onCancel }: Props) {
       {resource && (
         <p className="md-body-medium rounded-m3-sm bg-secondary-container px-4 py-3 text-on-secondary-container">
           Thư mục này không phải đề trắc nghiệm (cần images/ và ans.json) nên sẽ lưu thành tài nguyên: sinh viên mở hoặc tải các tệp về, không làm bài và không chấm điểm.
+        </p>
+      )}
+
+      {create && resource && kind === "FE" && (
+        <p role="status" className="md-body-medium rounded-m3-sm bg-warning-container px-4 py-3 text-on-warning-container">
+          Đề FE thường có thư mục images/ và ans.json, còn thư mục này thì không. Đây có phải đề PE không?{" "}
+          <button type="button" onClick={() => switchKind("PE")} className="font-semibold underline underline-offset-2">
+            Đổi sang PE
+          </button>
+        </p>
+      )}
+      {create && folder && kind === "PE" && (
+        <p role="status" className="md-body-medium rounded-m3-sm bg-warning-container px-4 py-3 text-on-warning-container">
+          Thư mục này có ảnh câu hỏi và ans.json giống đề FE (làm và chấm điểm trên web), nhưng loại đề đang là PE. Bạn chắc chứ?{" "}
+          <button type="button" onClick={() => switchKind("FE")} className="font-semibold underline underline-offset-2">
+            Đổi sang FE
+          </button>
         </p>
       )}
 
