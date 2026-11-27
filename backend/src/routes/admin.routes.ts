@@ -47,7 +47,7 @@ import { subjectCodeOnlyParam, subjectSemesterBody, updateSubjectBody } from "..
 import { listAttemptsQuery, listCrawlJobsQuery, listPurchasesQuery, listWalletQuery } from "../rules/requests/admin-history.request";
 import { authenticate, requireAdmin } from "../middlewares/auth.middlewares";
 import { updateAccountBody, updateAiBody, updateLinkRewardBody, updateCrawlerBody, updatePromoBody, updateReferralBody, updateSeasonBody, updateSepayBody } from "../rules/requests/setting.request";
-import { listFeedbackQuery } from "../rules/requests/explanation.request";
+import { confirmFeedbackBody, listFeedbackQuery } from "../rules/requests/explanation.request";
 import { listReportsQuery, reviewReportBody } from "../rules/requests/answer-report.request";
 import { createGiftCodeBody, listGiftCodesQuery, updateGiftCodeBody } from "../rules/requests/gift-code.request";
 import { validate } from "../middlewares/validate.middlewares";
@@ -190,6 +190,7 @@ adminRouter.get("/gift-codes/:id/redemptions", validate(uuidParam, "params"), va
 adminRouter.get("/explanation-feedback", validate(listFeedbackQuery, "query"), adminExplanationFeedbackController.list);
 adminRouter.get("/explanation-feedback/summary", adminExplanationFeedbackController.summary);
 adminRouter.post("/explanation-feedback/:id/resolve", validate(uuidParam, "params"), adminExplanationFeedbackController.resolve);
+adminRouter.post("/explanation-feedback/:id/confirm", validate(uuidParam, "params"), validate(confirmFeedbackBody), adminExplanationFeedbackController.confirm);
 adminRouter.get("/review-counts", adminAnswerReportController.reviewCounts);
 adminRouter.get("/answer-reports", validate(listReportsQuery, "query"), adminAnswerReportController.list);
 adminRouter.post("/answer-reports/:id/approve", validate(uuidParam, "params"), validate(reviewReportBody), adminAnswerReportController.approve);
