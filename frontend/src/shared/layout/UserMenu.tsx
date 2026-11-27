@@ -4,7 +4,7 @@ import { CalendarCheck, Check, ChevronDown, Crown, LayoutDashboard, LogOut, Moni
 import { useAuth } from "@/features/auth/AuthContext";
 import { formatCredit } from "@/shared/utils/formatters";
 import { buttonClass } from "@/shared/ui/Button";
-import { UserAvatar } from "@/shared/ui/UserAvatar";
+import { avatarTier, UserAvatar } from "@/shared/ui/UserAvatar";
 import { OPEN_CHECKIN_EVENT } from "@/features/check-in/DailyCheckInPopup";
 import { ProBadge } from "@/features/plan/ProBadge";
 import { isPro, proDaysLeft } from "@/shared/utils/pro";
@@ -86,7 +86,7 @@ export function UserMenu() {
         aria-expanded={open}
         className="md-state md-motion relative flex h-12 shrink-0 items-center gap-2 rounded-full pl-1 pr-2 after:absolute after:inset-0 after:content-['']"
       >
-        <UserAvatar avatarPath={user.avatarPath} alt={user.fullName} className="h-9 w-9" />
+        <UserAvatar avatarPath={user.avatarPath} alt={user.fullName} className="h-10 w-10" tier={avatarTier(user)} />
         <span className="hidden min-w-0 flex-col items-start text-left lg:flex">
           <span className="md-label-large flex max-w-[11rem] items-center gap-1.5 text-on-surface">
             <span className="truncate">{user.fullName}</span>
@@ -108,7 +108,7 @@ export function UserMenu() {
           className="site-menu md-enter right-0 w-72"
         >
           <div className="flex items-center gap-3 px-4 pb-2 pt-1">
-            <UserAvatar avatarPath={user.avatarPath} alt={user.fullName} className="h-10 w-10" />
+            <UserAvatar avatarPath={user.avatarPath} alt={user.fullName} className="h-11 w-11" tier={avatarTier(user)} />
             <div className="min-w-0 flex-1">
               <div className="md-title-small flex items-center gap-1.5">
                 <span className="truncate">{user.fullName}</span>

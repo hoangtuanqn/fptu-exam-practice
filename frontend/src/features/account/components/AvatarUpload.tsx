@@ -3,19 +3,12 @@ import { Camera, Loader2, X } from "lucide-react";
 import { userApi } from "@/features/account/api/user.api";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useToast } from "@/shared/context/ToastContext";
-import { API_ORIGIN } from "@/shared/api/client";
 import { errorMessage } from "@/shared/api/errors";
-import { useMascotSvg } from "@/shared/season/useMascotSvg";
+import { avatarTier, UserAvatar } from "@/shared/ui/UserAvatar";
 
 // Giới hạn phía client (server cũng kiểm tra lại)
 const MAX_BYTES = 5 * 1024 * 1024;
 const ALLOWED = ["image/jpeg", "image/png", "image/webp"];
-
-// Chuyển avatarPath → URL đầy đủ để hiển thị
-function avatarSrc(avatarPath: string | null | undefined): string | null {
-  if (!avatarPath) return null;
-  return `${API_ORIGIN}/api/v1/files/${avatarPath}`;
-}
 
 export function AvatarUpload() {
   const { user, setUser } = useAuth();
@@ -24,8 +17,7 @@ export function AvatarUpload() {
   const [uploading, setUploading] = useState(false);
   const removeTicket = useRef(0); // lệnh xoá hoãn nào còn hiệu lực; tải ảnh mới hoặc bấm Hoàn tác sẽ huỷ nó
 
-  const src = avatarSrc(user?.avatarPath);
-  const mascotSvg = useMascotSvg();
+  const custom = !!user?.avatarPath;
 
   const handleFile = async (file: File) => {
     if (!ALLOWED.includes(file.type)) {
@@ -85,18 +77,10 @@ export function AvatarUpload() {
           type="button"
           onClick={() => !busy && inputRef.current?.click()}
           disabled={busy}
-          className="group relative h-20 w-20 overflow-hidden rounded-full border-2 border-slate-200 bg-brand-50 transition hover:border-brand-400 disabled:opacity-60"
+          className="group relative block h-24 w-24 rounded-full transition disabled:opacity-60"
           title="Đổi ảnh đại diện"
         >
-          {src ? (
-            <img src={src} alt="Avatar" className="h-full w-full object-cover" />
-          ) : (
-            <span
-              className="flex h-full w-full items-center justify-center"
-              dangerouslySetInnerHTML={{ __html: mascotSvg }}
-              style={{ padding: "6px" }}
-            />
-          )}
+          <UserAvatar avatarPath={user?.avatarPath} alt="Ảnh đại diện" className="h-24 w-24" tier={user ? avatarTier(user) : "free"} />
 
           {/* Overlay hover */}
           {!busy && (
@@ -114,7 +98,7 @@ export function AvatarUpload() {
         </button>
 
         {/* Nút xoá (chỉ hiện khi có avatar tuỳ chỉnh) */}
-        {src && !busy && (
+        {custom && !busy && (
           <button
             type="button"
             onClick={handleRemove}

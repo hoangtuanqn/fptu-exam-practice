@@ -11,7 +11,8 @@ import { useSubmit } from "@/shared/hooks/useSubmit";
 import type { Role, User, UserStatus } from "@/shared/types/api";
 import { isPro } from "@/shared/utils/pro";
 import { isUuid } from "@/shared/utils/uuid";
-import { formatCredit, formatDate, formatDateTime, initials } from "@/shared/utils/formatters";
+import { formatCredit, formatDate, formatDateTime } from "@/shared/utils/formatters";
+import { avatarTier, UserAvatar } from "@/shared/ui/UserAvatar";
 import { Badge } from "@/shared/ui/Badge";
 import { Button } from "@/shared/ui/Button";
 import { Card } from "@/shared/ui/Card";
@@ -198,9 +199,7 @@ function UserDetail({ initial }: { initial: User }) {
       {/* Đầu trang */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-surface-container-lowest p-5">
         <div className="flex min-w-0 items-center gap-4">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary-container text-xl font-bold text-on-primary-container">
-            {initials(current.fullName)}
-          </div>
+          <UserAvatar avatarPath={current.avatarPath} alt={current.fullName} className="h-20 w-20" tier={avatarTier(current)} />
           <div className="min-w-0">
             <h1 className="truncate text-2xl font-semibold text-slate-900">{current.fullName}</h1>
             <p className="truncate text-sm text-slate-500">{current.email}</p>

@@ -25,7 +25,7 @@ import { PageSkeleton } from "@/shared/ui/Skeleton";
 import { ErrorBoundary } from "@/shared/ui/ErrorBoundary";
 import { Footer } from "./Footer";
 import { UserMenu } from "./UserMenu";
-import { UserAvatar } from "@/shared/ui/UserAvatar";
+import { avatarTier, UserAvatar } from "@/shared/ui/UserAvatar";
 import { Fab, IconButton } from "@/shared/ui/Button";
 import { ThemeToggle } from "@/shared/theme/ThemeToggle";
 import { VerifyEmailNotice } from "@/features/verify-email/VerifyEmailNotice";
@@ -200,7 +200,8 @@ export function DrawerContent({
           <UserAvatar
             avatarPath={user.avatarPath}
             alt={user.fullName}
-            className="h-10 w-10"
+            className="h-11 w-11"
+            tier={avatarTier(user)}
           />
           <div className="min-w-0 flex-1">
             <div className="md-title-small truncate text-on-surface">
