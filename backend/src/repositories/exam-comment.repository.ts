@@ -3,9 +3,15 @@ import { prisma } from "../configs/prisma";
 import type { CommentFlagReason } from "../constants/exam-comment";
 import { toSkipTake, type PaginationQuery } from "../utils/pagination";
 
+// Tệp đính kèm (decision 0020): filePath chỉ để ký link, không trả ra ngoài
+const fileSelect = { select: { id: true, name: true, mime: true, sizeBytes: true, filePath: true }, orderBy: { id: "asc" } } satisfies Prisma.ExamComment$filesArgs;
+// Tài khoản đã xoá (hoặc đang chờ xoá) không được gợi ý / nhắc tên
+const liveUser = { deletedAt: null, deleteRequestedAt: null } satisfies Prisma.UserWhereInput;
+
 // Cột cho danh sách công khai: userId chỉ để tính "mine", role/proExpiresAt chỉ để tính nhãn; không trả ra ngoài
 const publicSelect = {
   id: true,
+  examId: true,
   questionNumber: true,
   body: true,
   status: true,
@@ -15,6 +21,8 @@ const publicSelect = {
   replyToId: true,
   user: { select: { fullName: true, avatarPath: true, role: true, proExpiresAt: true, createdAt: true } },
   replyTo: { select: { user: { select: { fullName: true } } } },
+  files: fileSelect,
+  mentions: { select: { user: { select: { fullName: true } } } },
 } satisfies Prisma.ExamCommentSelect;
 
 const adminSelect = {
@@ -31,6 +39,7 @@ const adminSelect = {
   exam: { select: { id: true, title: true } },
   user: { select: { id: true, email: true, fullName: true } },
   _count: { select: { reports: true } },
+  files: fileSelect,
 } satisfies Prisma.ExamCommentSelect;
 
 export type PublicCommentRow = Prisma.ExamCommentGetPayload<{ select: typeof publicSelect }>;
@@ -52,7 +61,81 @@ export const examCommentRepository = {
     flagReason: CommentFlagReason | null;
     parentId?: string | null;
     replyToId?: string | null;
-  }) => prisma.examComment.create({ data, select: publicSelect }),
+    files?: { name: string; filePath: string; mime: string; sizeBytes: number }[];
+    mentionUserIds?: string[];
+  }) => {
+    const { files = [], mentionUserIds = [], ...row } = data;
+    // Một câu lệnh: bình luận, tệp và người được nhắc cùng được ghi hoặc cùng không
+    return prisma.examComment.create({
+      data: { ...row, files: { create: files }, mentions: { create: mentionUserIds.map((userId) => ({ userId })) } },
+      select: publicSelect,
+    });
+  },
+
+  // ----- Tệp đính kèm
+  // Số tệp một người đã tải lên từ `since` (bình luận đã xoá không tính: tệp của nó cũng đã bị xoá khỏi đĩa); index user_id, created_at rồi comment_id
+  countFilesByUserSince: (userId: string, since: Date) => prisma.examCommentFile.count({ where: { comment: { userId, createdAt: { gte: since } } } }),
+
+  // Đường dẫn tệp của một bình luận và các trả lời của nó (đọc trước khi xoá, xoá trên đĩa sau)
+  threadFilePaths: async (id: string) =>
+    (await prisma.examCommentFile.findMany({ where: { comment: { OR: [{ id }, { parentId: id }] } }, select: { filePath: true } })).map((f) => f.filePath),
+
+  // Xoá dòng tệp của các bình luận (không đụng trả lời của chúng), trả về đường dẫn để xoá trên đĩa
+  async deleteFilesOf(commentIds: string[]) {
+    const files = await prisma.examCommentFile.findMany({ where: { commentId: { in: commentIds } }, select: { id: true, filePath: true } });
+    if (files.length) await prisma.examCommentFile.deleteMany({ where: { id: { in: files.map((f) => f.id) } } });
+    return files.map((f) => f.filePath);
+  },
+
+  // Tệp để phát qua link ký: phải thuộc một bình luận của đề này
+  findFile: (id: string, examId: string) => prisma.examCommentFile.findFirst({ where: { id, comment: { examId } }, select: { name: true, mime: true, filePath: true } }),
+
+  // ----- Nhắc tên
+  // Người viết của các bình luận đã duyệt `refs` trong đề này (ref = id một bình luận của người đó); tài khoản đã xoá thì bỏ
+  mentionAuthors: (refs: string[], examId: string) =>
+    refs.length
+      ? prisma.examComment.findMany({ where: { id: { in: refs }, examId, status: "APPROVED", user: liveUser }, select: { userId: true, user: { select: { fullName: true } } } })
+      : Promise.resolve([]),
+
+  /**
+   * Gợi ý nhắc tên: người viết khác nhau của các bình luận đã duyệt trong đề (trừ người xem), tên chứa `q`, người mới bình luận gần nhất trước.
+   * ref = id bình luận mới nhất của người đó (không trả id người dùng). GROUP BY trên index (exam_id, status, user_id).
+   */
+  async mentionSuggestions(examId: string, viewerId: string, q: string, take: number) {
+    const groups = await prisma.examComment.groupBy({
+      by: ["userId"],
+      where: { examId, status: "APPROVED", userId: { not: viewerId }, user: { ...liveUser, ...(q && { fullName: { contains: q } }) } },
+      _max: { id: true },
+      orderBy: { _max: { id: "desc" } },
+      take,
+    });
+    const users = new Map(
+      (await prisma.user.findMany({ where: { id: { in: groups.map((g) => g.userId) } }, select: { id: true, fullName: true, avatarPath: true } })).map((u) => [u.id, u]),
+    );
+    return groups.flatMap((g) => {
+      const u = users.get(g.userId);
+      return u && g._max.id ? [{ ref: g._max.id, userId: u.id, fullName: u.fullName, avatarPath: u.avatarPath }] : [];
+    });
+  },
+
+  /**
+   * Người được nhắc trong các bình luận đã hiện mà chưa được báo: lấy ra rồi đánh dấu đã báo (mỗi người một lần, kể cả khi bị ẩn rồi duyệt lại).
+   * shortcut: đọc rồi cập nhật không khoá; hai admin duyệt cùng một bình luận cùng lúc có thể báo hai lần
+   */
+  async claimMentions(commentIds: string[]) {
+    if (!commentIds.length) return [];
+    const rows = await prisma.examCommentMention.findMany({
+      where: { commentId: { in: commentIds }, notifiedAt: null, comment: { status: "APPROVED" } },
+      select: {
+        userId: true,
+        comment: {
+          select: { id: true, examId: true, questionNumber: true, body: true, userId: true, user: { select: { fullName: true } }, replyTo: { select: { userId: true } }, parent: { select: { userId: true } } },
+        },
+      },
+    });
+    if (rows.length) await prisma.examCommentMention.updateMany({ where: { commentId: { in: [...new Set(rows.map((r) => r.comment.id))] }, notifiedAt: null }, data: { notifiedAt: new Date() } });
+    return rows;
+  },
 
   // ----- Giới hạn khi gửi (bình luận và trả lời tính chung): đều là COUNT/findMany có giới hạn trên index
   // Số bình luận của một người từ `since` (index user_id, created_at)
@@ -140,7 +223,7 @@ export const examCommentRepository = {
     }),
 
   // Bình luận gốc đã duyệt (danh sách trả lời)
-  findApprovedRoot: (id: string, examId: string) => prisma.examComment.findFirst({ where: { id, examId, parentId: null, status: "APPROVED" }, select: { id: true } }),
+  findApprovedRoot: (id: string, examId: string) => prisma.examComment.findFirst({ where: { id, examId, parentId: null, status: "APPROVED" }, select: { id: true, questionNumber: true } }),
 
   // ----- Thích / không thích: mỗi người một cảm xúc trên một bình luận
   // Số thích và không thích của các bình luận trong trang: một GROUP BY trên khoá chính (comment_id, ...)

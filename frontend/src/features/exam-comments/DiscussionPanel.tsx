@@ -19,7 +19,6 @@ interface Props {
   question: number; // đích bình luận: câu (dương) hoặc tệp đính kèm (-id)
   position: string; // "Ảnh n/N" hoặc tên tệp
   poll: boolean; // chỉ ảnh câu hỏi thật mới có bình chọn đáp án
-  closeAlways?: boolean; // nút đóng hiện cả trên máy tính (khung mở trong hộp thoại)
   onChanged: () => void; // số bình luận của câu đổi: trang tải lại bộ đếm
   onUnavailable: () => void; // 404 (không có quyền / máy chủ cũ): trình xem ảnh ẩn khung
   onHide: () => void;
@@ -27,7 +26,7 @@ interface Props {
 }
 
 // Khung thảo luận của MỘT câu (nơi gọi đặt key theo câu, nên đổi ảnh là trạng thái, bản nháp và phản hồi cũ đều bỏ)
-export function DiscussionPanel({ examId, examTitle, question, position, poll, closeAlways, onChanged, onUnavailable, onHide, focusComment }: Props) {
+export function DiscussionPanel({ examId, examTitle, question, position, poll, onChanged, onUnavailable, onHide, focusComment }: Props) {
   const toast = useToast();
   const reactions = useApi(() => orGone(commentApi.reactions(examId, question)), [examId, question]);
   const { user, canAct, from, first, gone, list, loadingMore, more, post, act, patchItem, removeRoot, highlight, preload, confirmDialog, gate } = useCommentList({
@@ -69,10 +68,10 @@ export function DiscussionPanel({ examId, examTitle, question, position, poll, c
       {confirmDialog}
       <div className="flex items-start gap-2 border-b border-outline-variant px-4 py-3">
         <div className="min-w-0 flex-1">
-          <h2 className="md-title-small line-clamp-2 break-words text-on-surface">{examTitle}</h2>
-          <p className="md-body-small text-on-surface-variant">{position}</p>
+          <p className="md-label-small inline-block max-w-full truncate rounded-m3-xs bg-surface-container-highest text-on-surface-variant px-1.5 py-0.5">{position}</p>
+          <h2 className="md-title-small mt-1 line-clamp-2 break-words text-on-surface">{examTitle}</h2>
         </div>
-        <IconButton label={closeAlways ? "Đóng" : "Ẩn thảo luận"} onClick={onHide} className={closeAlways ? "" : "lg:hidden"}>
+        <IconButton label="Ẩn thảo luận" onClick={onHide} className="lg:hidden">
           <X size={20} />
         </IconButton>
       </div>
@@ -92,9 +91,9 @@ export function DiscussionPanel({ examId, examTitle, question, position, poll, c
                 Bình luận <span className="font-normal text-on-surface-variant">· {list.total}</span>
               </h3>
               {list.items.length === 0 ? (
-                <p className="md-body-medium text-on-surface-variant">Chưa có bình luận nào.</p>
+                <p className="md-body-medium rounded-m3-lg border border-dashed border-outline-variant px-3 py-4 text-center text-on-surface-variant">Chưa ai mở lời. Bạn thử trước nhé!</p>
               ) : (
-                <ul className="space-y-3">
+                <ul className="space-y-5">
                   {list.items.map((c) => (
                     <CommentThread
                       key={preload?.rootId === c.id ? `${c.id}:open` : c.id}
@@ -122,7 +121,7 @@ export function DiscussionPanel({ examId, examTitle, question, position, poll, c
 
       <div className="border-t border-outline-variant px-3 py-2">
         {canAct ? (
-          <CommentComposer onSend={post} hint={poll} />
+          <CommentComposer examId={examId} onSend={post} hint={poll} />
         ) : user ? (
           <VerifyEmailNotice variant="inline" message="Xác minh email để bình chọn, thích và bình luận." />
         ) : (

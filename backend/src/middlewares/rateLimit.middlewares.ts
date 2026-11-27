@@ -1,6 +1,7 @@
 import type { Request } from "express";
 import rateLimit, { type Options, type RateLimitInfo } from "express-rate-limit";
-import { EXAM_COMMENT_PER_MINUTE, EXAM_LIKE_PER_MINUTE, EXAM_VOTE_PER_MINUTE } from "../constants/exam-comment";
+import { EXAM_COMMENT_FILE_VIEWS_PER_MINUTE, EXAM_COMMENT_PER_MINUTE, EXAM_LIKE_PER_MINUTE, EXAM_MENTION_SEARCH_PER_MINUTE, EXAM_VOTE_PER_MINUTE } from "../constants/exam-comment";
+import { drainingLimitHandler } from "./drain.middlewares";
 import { waitText } from "../utils/format";
 
 export const TOO_FAST = "Bạn thao tác quá nhanh.";
@@ -81,12 +82,25 @@ export const giftCodeLimiter = makeLimiter({
 });
 
 // Gửi bình luận câu hỏi: theo tài khoản (dùng sau authenticate); giới hạn theo ngày đếm trong DB ở exam-comment.service
+// Có thể kèm tệp (multipart): đọc bỏ thân trước khi trả 429 để Nginx không trả 502
 export const examCommentLimiter = makeLimiter({
   limit: EXAM_COMMENT_PER_MINUTE,
   keyGenerator: (req) => `user:${req.user?.id ?? "anon"}`,
   validate: { keyGeneratorIpFallback: false },
+  handler: drainingLimitHandler,
   message: "Bạn gửi bình luận quá nhanh.",
 });
+
+// Gợi ý nhắc tên khi gõ @: theo tài khoản
+export const examMentionLimiter = makeLimiter({
+  limit: EXAM_MENTION_SEARCH_PER_MINUTE,
+  keyGenerator: (req) => `user:${req.user?.id ?? "anon"}`,
+  validate: { keyGeneratorIpFallback: false },
+  message: "Bạn tìm tên quá nhanh.",
+});
+
+// Xem tệp đính kèm của bình luận (link ký, không đăng nhập): theo IP
+export const commentFileLimiter = makeLimiter({ limit: EXAM_COMMENT_FILE_VIEWS_PER_MINUTE, message: "Bạn mở tệp quá nhanh." });
 
 // Bình chọn đáp án và thích (ảnh câu hỏi, bình luận): theo tài khoản, mỗi loại một bộ đếm
 export const examVoteLimiter = makeLimiter({

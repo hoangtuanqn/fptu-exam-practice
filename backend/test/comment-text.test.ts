@@ -10,6 +10,13 @@ const expect = (verdict: ReturnType<typeof moderateComment>, samples: string[]) 
 };
 
 describe("moderateComment", () => {
+  it("does not let formatting hide words or links", () => {
+    expect("BLOCKED", ["**đ**m", "đ~~~~m", "đ||m"]);
+    expect("LINK", ["[xem](//evil.ru/x)", "[xem](ftp:abc)", "[xem](https\\://abc)", "[a]: //evil.ru", "<irc:abc>"]);
+    expect("WORDS", ["&#273;m", "&uacute;"]);
+    expect(null, ["**đậm** và *nghiêng*", "## Tiêu đề\n- một\n- hai", "dùng `arr[i](x)` nhé", "vector<std::string> v;", "a && b; x &y", "| A | B |\n| --- | --- |\n| 1 | 2 |", "[trang đề](/exam/1)"]);
+  });
+
   it("blocks profanity and insults, with or without evasion", () => {
     expect("BLOCKED", [
       "đm câu này",

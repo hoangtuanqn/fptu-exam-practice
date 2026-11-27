@@ -1,11 +1,11 @@
 import { ProtectedImg } from "@/shared/ui/ProtectedImg";
-import { useEffect, useRef, useState } from "react";
-import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, Navigate, useLocation, useParams, useSearchParams } from "react-router-dom";
 import { BookOpen, Download, FileSearch, Loader2, Timer, ZoomIn } from "lucide-react";
 import { examApi } from "@/features/exam/exam.api";
 import { canPractice, type ExamAttachment, type ExamQuestionsPayload, type ImportedExam } from "@/features/exam/types";
 import { downloadUrl, ICONS, isImageFile } from "@/features/exam-attachments/AttachmentList";
-import { CommentCountButton, CommentsDialog } from "@/features/exam-comments/CommentsDialog";
+import { QuestionLinks } from "@/features/exam-comments/CommentBody";
 import { attachmentTarget } from "@/features/exam-comments/exam-comments.api";
 import { ExamDiscussion } from "@/features/exam-comments/ExamDiscussion";
 import { useCommentCounts } from "@/features/exam-comments/useCommentCounts";
@@ -92,7 +92,6 @@ function Preview({ exam }: { exam: ImportedExam }) {
   const items = questions.filter((q) => !q.isReference).length;
   const playable = canPractice(kind, total, exam.answerStatus);
   const comments = useCommentCounts(exam.id);
-  const [talk, setTalk] = useState<ExamAttachment | null>(null); // tệp không phải ảnh đang mở thảo luận
   const [focus, setFocus] = useState<{ question: number; comment: string | null } | null>(null); // mở từ thông báo (?target=N&comment=ID)
 
   // Đề vừa lấy về có thể còn đang tải ảnh: các trang mới hiện dần
@@ -122,9 +121,6 @@ function Preview({ exam }: { exam: ImportedExam }) {
     ...attachments.filter(isImageFile).map((a) => ({ key: `a${a.id}`, src: a.url, label: a.name, question: attachmentTarget(a.id), poll: false })),
   ];
   const commentsOf = (question?: number) => (question !== undefined ? (comments.counts?.[String(question)] ?? 0) : 0);
-  // Tệp không phải ảnh: nút bình luận cạnh thẻ, bấm thẻ vẫn mở / tải tệp như cũ
-  const talkButton = (a: ExamAttachment, className?: string) =>
-    comments.counts ? <CommentCountButton name={a.name} count={commentsOf(attachmentTarget(a.id))} onOpen={() => setTalk(a)} className={className} /> : null;
   const pageTiles = shots.map((s) => (
     <li key={s.key}>
       <button type="button" onClick={() => setZoom(s.key)} aria-label={`Xem lớn ${s.label}${commentsOf(s.question) > 0 ? `, ${commentsOf(s.question)} bình luận` : ""}`} className={CARD}>
@@ -149,22 +145,23 @@ function Preview({ exam }: { exam: ImportedExam }) {
   const [params] = useSearchParams();
   const target = Number(params.get("target"));
   const comment = params.get("comment");
+  // location.key: bấm lại cùng liên kết "#12" trong bình luận (đang ở trang này, kể cả trong trình xem ảnh) vẫn mở lại câu đó
+  const { key: visit } = useLocation();
   const handled = useRef("");
   useEffect(() => {
-    const key = `${target}:${comment}`;
+    const key = `${visit}:${target}:${comment}`;
     if (!Number.isInteger(target) || target === 0 || handled.current === key) return;
+    // Chỉ ảnh (trang đề, tệp ảnh) có thảo luận; tệp khác không mở gì. Đang xem ảnh khác (bấm "#12" ngay trong đó) thì chuyển sang ảnh mới
     const shot = shots.find((s) => s.question === target);
-    const file = shot ? undefined : attachments.find((a) => attachmentTarget(a.id) === target);
-    if (!shot && !file) return;
+    if (!shot) return;
     handled.current = key;
     setFocus({ question: target, comment });
-    if (shot) setZoom(shot.key);
-    else setTalk(file ?? null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- chạy lại khi địa chỉ đổi hoặc có thêm ảnh/tệp
-  }, [target, comment, shots.length, attachments.length]);
+    setZoom(shot.key);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- chạy lại khi địa chỉ đổi hoặc có thêm ảnh
+  }, [visit, target, comment, shots.length]);
+  const links = useMemo(() => ({ examId: exam.id, numbers: questions.map((q) => q.number) }), [exam.id, questions]);
   const closeViewer = () => {
     setZoom(null);
-    setTalk(null);
     setFocus(null);
   };
   const tiles = pageTiles;
@@ -185,7 +182,7 @@ function Preview({ exam }: { exam: ImportedExam }) {
   };
 
   return (
-    <>
+    <QuestionLinks.Provider value={links}>
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -217,11 +214,8 @@ function Preview({ exam }: { exam: ImportedExam }) {
       {archives.length > 0 && (
         <ul className="mb-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
           {archives.map((a) => (
-            <li key={a.id} className="flex items-center gap-2">
-              <div className="min-w-0 flex-1">
-                <ArchiveRow a={a} />
-              </div>
-              {talkButton(a)}
+            <li key={a.id} className="min-w-0">
+              <ArchiveRow a={a} />
             </li>
           ))}
         </ul>
@@ -246,8 +240,7 @@ function Preview({ exam }: { exam: ImportedExam }) {
       {comments.counts && <ExamDiscussion examId={exam.id} focusComment={params.get("target") === "0" ? comment : null} onChanged={comments.reload} />}
 
       {zoomAt >= 0 && <ImageLightbox items={lightboxItems} index={zoomAt} onIndex={(i) => setZoom(shots[i]!.key)} onClose={closeViewer} discussion={comments.counts ? { examId: exam.id, examTitle: exam.title, counts: comments.counts, onChanged: comments.reload, focus } : undefined} />}
-      {talk && <CommentsDialog examId={exam.id} examTitle={exam.title} target={attachmentTarget(talk.id)} name={talk.name} onChanged={comments.reload} onClose={closeViewer} focusComment={focus?.question === attachmentTarget(talk.id) ? focus.comment : null} />}
-    </>
+    </QuestionLinks.Provider>
   );
 }
 

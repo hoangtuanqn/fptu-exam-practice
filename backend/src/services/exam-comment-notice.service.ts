@@ -42,4 +42,11 @@ export const commentNoticeService = {
     for (const userId of to) send(userId, { kind: "comment.replied", title: `${author.name} đã trả lời bình luận của bạn`, body: excerpt(t.body), link: commentLink(t) });
     return to;
   },
+
+  /** Bình luận đã hiện công khai nhắc tên: báo cho mỗi người được nhắc một lần, trừ chính mình và người đã nhận thông báo trả lời (`skip`). */
+  mention(t: Target & { body: string }, author: { id: string; name: string }, mentioned: readonly string[], skip: (string | null | undefined)[] = []) {
+    const to = [...new Set(mentioned)].filter((id) => id !== author.id && !skip.includes(id));
+    for (const userId of to) send(userId, { kind: "comment.mentioned", title: `${author.name} đã nhắc đến bạn`, body: excerpt(t.body), link: commentLink(t) });
+    return to;
+  },
 };

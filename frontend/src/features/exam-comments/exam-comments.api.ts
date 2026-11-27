@@ -1,4 +1,4 @@
-import { http } from "@/shared/api/client";
+import { http, sendForm } from "@/shared/api/client";
 import { PAGE_SIZE } from "@/shared/api/pagination";
 
 export type CommentStatus = "APPROVED" | "PENDING" | "REJECTED";
@@ -28,6 +28,30 @@ export interface ExamComment {
   replyCount?: number;
   dislikes?: number;
   reaction?: CommentReaction;
+  attachments?: CommentAttachment[]; // máy chủ cũ chưa gửi
+  mentions?: string[]; // tên những người được nhắc (@Tên), để tô đậm
+}
+
+// url: địa chỉ đầy đủ máy chủ đã ký sẵn, dùng thẳng cho img / a
+export interface CommentAttachment {
+  id: string;
+  name: string;
+  mime: string;
+  sizeBytes: number;
+  isImage: boolean;
+  url: string;
+}
+
+export interface CommentInput {
+  body: string;
+  files: File[];
+  mentions: string[]; // ref của người được nhắc
+}
+
+export interface MentionCandidate {
+  ref: string;
+  name: string;
+  avatarUrl: string | null;
 }
 
 export type CommentReaction = "like" | "dislike" | null;
@@ -65,8 +89,18 @@ const base = (examId: string) => `/exams/${examId}`;
 
 export const commentApi = {
   list: (examId: string, question: number, page: number, order?: CommentOrder) => http.list<ExamComment>(`${base(examId)}/comments`, { question, page, limit: COMMENT_PAGE_SIZE, order }),
-  create: (examId: string, questionNumber: number, body: string, replyToId?: string) =>
-    http.post<ExamComment>(`${base(examId)}/comments`, { questionNumber, body, ...(replyToId && { replyToId }) }),
+  // Có tệp thì gửi multipart (mentions lặp nhiều trường), không thì JSON như cũ
+  create: (examId: string, questionNumber: number, { body, files, mentions }: CommentInput, replyToId?: string) => {
+    if (files.length === 0) return http.post<ExamComment>(`${base(examId)}/comments`, { questionNumber, body, ...(replyToId && { replyToId }), ...(mentions.length > 0 && { mentions }) });
+    const form = new FormData();
+    form.append("questionNumber", String(questionNumber));
+    form.append("body", body);
+    if (replyToId) form.append("replyToId", replyToId);
+    for (const m of mentions) form.append("mentions", m);
+    for (const f of files) form.append("files", f);
+    return sendForm<ExamComment>("POST", `${base(examId)}/comments`, form);
+  },
+  mentions: (examId: string, q: string) => http.get<MentionCandidate[]>(`${base(examId)}/mentions`, { q }),
   // Phản hồi của một bình luận gốc: phẳng, cũ trước
   replies: (examId: string, commentId: string, page: number) => http.list<ExamComment>(`${base(examId)}/comments/${commentId}/replies`, { page, limit: COMMENT_PAGE_SIZE }),
   react: (examId: string, commentId: string, reaction: CommentReaction) => http.put<ReactionState>(`${base(examId)}/comments/${commentId}/reaction`, { reaction }),
@@ -80,7 +114,7 @@ export const commentApi = {
 
 // ----- Admin
 export type AdminCommentFilter = "PENDING" | "REPORTED" | "APPROVED" | "REJECTED" | "all";
-export type FlagReason = "WORDS" | "LINK" | "CONTACT" | "REPEATED" | "SPAM" | "STRIKES" | "REPORTED";
+export type FlagReason = "WORDS" | "LINK" | "CONTACT" | "REPEATED" | "SPAM" | "STRIKES" | "REPORTED" | "UPLOAD";
 
 export interface AdminExamComment {
   id: string;
@@ -98,6 +132,7 @@ export interface AdminExamComment {
   exam: { id: string; title: string };
   author: { id: string; email: string; fullName: string } | null;
   imageUrl: string | null;
+  attachments?: CommentAttachment[];
 }
 
 export const adminCommentApi = {

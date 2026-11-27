@@ -11,26 +11,33 @@ export interface NewAttachment {
 
 // Bình luận và lượt thích của tệp đính kèm dùng questionNumber = -id (decision 0019): xoá tệp thì xoá theo
 // (thích, báo cáo của bình luận xoá theo khoá ngoại). Không có attachmentId = mọi tệp của đề.
+const targetWhere = (examId: string, attachmentId?: number) => ({ examId, questionNumber: attachmentId === undefined ? { lt: 0 } : -attachmentId });
 const removeTargets = (db: Db, examId: string, attachmentId?: number) => {
-  const where = { examId, questionNumber: attachmentId === undefined ? { lt: 0 } : -attachmentId };
+  const where = targetWhere(examId, attachmentId);
   return [db.examComment.deleteMany({ where }), db.examQuestionLike.deleteMany({ where })];
 };
+// Tệp đính kèm của các bình luận sắp bị xoá theo (decision 0020): đọc trước khi xoá, bên gọi xoá trên đĩa sau khi commit
+const targetFiles = async (db: Db, examId: string, attachmentId?: number) =>
+  (await db.examCommentFile.findMany({ where: { comment: targetWhere(examId, attachmentId) }, select: { filePath: true } })).map((f) => f.filePath);
 
 export const examAttachmentRepository = {
   find: (examId: string, id: number) =>
-    prisma.examAttachment.findFirst({ where: { id, examId }, select: { name: true, filePath: true } }),
+    prisma.examAttachment.findFirst({ where: { id, examId }, select: { name: true, filePath: true, mime: true } }),
 
   // Tệp theo id (bảng duyệt bình luận của admin: tên và ảnh của tệp được bình luận)
   byIds: (ids: number[]) =>
     ids.length ? prisma.examAttachment.findMany({ where: { id: { in: ids } }, select: { id: true, examId: true, name: true, filePath: true, mime: true, sizeBytes: true } }) : Promise.resolve([]),
 
-  // Lấy đề / làm mới: thay toàn bộ danh sách tệp của đề trong một transaction (không trùng, không sót tệp cũ)
-  replace: (examId: string, rows: NewAttachment[]) =>
-    prisma.$transaction([
+  // Lấy đề / làm mới: thay toàn bộ danh sách tệp của đề trong một transaction (không trùng, không sót tệp cũ). Trả tệp bình luận cần xoá trên đĩa
+  async replace(examId: string, rows: NewAttachment[]) {
+    const files = await targetFiles(prisma, examId);
+    await prisma.$transaction([
       ...removeTargets(prisma, examId),
       prisma.examAttachment.deleteMany({ where: { examId } }),
       prisma.examAttachment.createMany({ data: rows.map((r) => ({ ...r, examId })) }),
-    ]),
+    ]);
+    return files;
+  },
 
   // Nạp dữ liệu mới: tệp đã có của đề (để chỉ tải tệp mới, không trùng tên trên đĩa)
   listByExam: (examId: string) => prisma.examAttachment.findMany({ where: { examId }, select: { filePath: true, sourceUrl: true } }),
@@ -39,15 +46,18 @@ export const examAttachmentRepository = {
   list: (examId: string) =>
     prisma.examAttachment.findMany({ where: { examId }, orderBy: { id: "asc" }, select: { id: true, name: true, filePath: true, mime: true, sizeBytes: true } }),
 
-  // Xoá hết tệp của đề (ghi đè bằng thư mục mới) cùng bình luận/thích của chúng. `db` = tx để mọi bước chung một transaction
+  // Xoá hết tệp của đề cùng bình luận/thích của chúng. `db` = tx để mọi bước chung một transaction. Trả tệp bình luận cần xoá trên đĩa sau khi commit
   async removeAll(examId: string, db: Db = prisma) {
+    const files = await targetFiles(db, examId);
     for (const op of removeTargets(db, examId)) await op;
-    return db.examAttachment.deleteMany({ where: { examId } });
+    await db.examAttachment.deleteMany({ where: { examId } });
+    return files;
   },
 
   /**
    * Ghi đè bằng thư mục mới: tệp trùng tên (không phân biệt hoa thường) giữ nguyên id và bình luận, chỉ đổi nội dung;
    * tệp không còn trong thư mục mới bị xoá cùng bình luận/thích; tệp mới được thêm. `db` = tx.
+   * Trả đường dẫn tệp của các bình luận bị xoá theo: bên gọi xoá trên đĩa sau khi transaction commit.
    */
   async syncByName(examId: string, rows: NewAttachment[], db: Db = prisma) {
     const old = await db.examAttachment.findMany({ where: { examId }, select: { id: true, name: true } });
@@ -62,9 +72,15 @@ export const examAttachmentRepository = {
         await db.examAttachment.update({ where: { id }, data: { name: r.name, filePath: r.filePath, mime: r.mime, sizeBytes: r.sizeBytes, sourceUrl: r.sourceUrl } });
       }
     }
-    for (const o of old) if (!kept.has(o.id)) for (const op of removeTargets(db, examId, o.id)) await op;
+    const commentFiles: string[] = [];
+    for (const o of old) {
+      if (kept.has(o.id)) continue;
+      commentFiles.push(...(await targetFiles(db, examId, o.id)));
+      for (const op of removeTargets(db, examId, o.id)) await op;
+    }
     await db.examAttachment.deleteMany({ where: { examId, id: { notIn: [...kept] } } });
     if (fresh.length) await db.examAttachment.createMany({ data: fresh.map((r) => ({ ...r, examId })), skipDuplicates: true });
+    return commentFiles;
   },
 
   // Thêm tệp mới, giữ nguyên các tệp cũ (id không đổi). `db` = tx khi cần chung transaction với việc tạo đề
@@ -75,7 +91,10 @@ export const examAttachmentRepository = {
   update: (id: number, data: Partial<Pick<NewAttachment, "name" | "filePath" | "mime" | "sizeBytes">>) =>
     prisma.examAttachment.update({ where: { id }, data, select: { id: true, name: true, filePath: true, mime: true, sizeBytes: true } }),
 
-  // Xoá một tệp cùng bình luận/thích của nó trong một transaction
-  remove: (examId: string, id: number) =>
-    prisma.$transaction([...removeTargets(prisma, examId, id), prisma.examAttachment.deleteMany({ where: { id, examId } })]),
+  // Xoá một tệp cùng bình luận/thích của nó trong một transaction. Trả tệp bình luận cần xoá trên đĩa
+  async remove(examId: string, id: number) {
+    const files = await targetFiles(prisma, examId, id);
+    await prisma.$transaction([...removeTargets(prisma, examId, id), prisma.examAttachment.deleteMany({ where: { id, examId } })]);
+    return files;
+  },
 };

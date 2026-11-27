@@ -3,6 +3,10 @@ import {
   EXAM_COMMENT_BULK_MAX,
   EXAM_COMMENT_MAX_LENGTH,
   EXAM_COMMENT_MAX_LINES,
+  EXAM_COMMENT_MENTION_QUERY_MAX,
+  EXAM_COMMENT_MENTION_SEARCH_DEFAULT,
+  EXAM_COMMENT_MENTION_SEARCH_MAX,
+  EXAM_COMMENT_MENTIONS_MAX,
   EXAM_COMMENT_REPORT_REASON_MAX,
   EXAM_VOTE_LETTERS,
 } from "../../constants/exam-comment";
@@ -37,11 +41,51 @@ const commentBody = z
 const INT_MAX = 2_147_483_647;
 const target = (n: z.ZodNumber) => n.int("Câu không hợp lệ").min(-INT_MAX, "Câu không hợp lệ").max(INT_MAX, "Câu không hợp lệ");
 
+// Người được nhắc: các ref lấy từ GET /exams/:id/mentions (id một bình luận của người đó). Ref sai bị bỏ qua ở service, không báo lỗi
+const mentions = z
+  .array(z.string("Người được nhắc không hợp lệ").max(64, "Người được nhắc không hợp lệ"), "Người được nhắc không hợp lệ")
+  .max(EXAM_COMMENT_MENTIONS_MAX, `Mỗi bình luận nhắc tối đa ${EXAM_COMMENT_MENTIONS_MAX} người`);
+
 export const createCommentBody = z.object({
   questionNumber: target(z.number("Câu không hợp lệ")),
   body: commentBody,
   replyToId: uuidSchema.optional(), // trả lời bình luận này (cùng đề, cùng câu)
+  mentions: mentions.optional(),
 });
+
+/**
+ * Cùng bình luận gửi dạng multipart/form-data (có tệp ở trường "files"): mọi trường là chuỗi. questionNumber là số nguyên viết bằng chữ số;
+ * replyToId rỗng = không trả lời; mentions là trường lặp lại (mỗi trường một ref) hoặc một trường chứa mảng JSON.
+ */
+export const createCommentForm = createCommentBody.extend({
+  questionNumber: z
+    .string("Câu không hợp lệ")
+    .regex(/^-?\d{1,10}$/, "Câu không hợp lệ")
+    .transform(Number)
+    .pipe(target(z.number())),
+  replyToId: z.preprocess((v) => (v === "" ? undefined : v), uuidSchema.optional()),
+  mentions: z.preprocess((v) => {
+    if (v === undefined || v === "") return undefined;
+    const list: unknown[] = Array.isArray(v) ? v : [v];
+    if (list.length === 1 && typeof list[0] === "string" && list[0].trimStart().startsWith("[")) {
+      try {
+        return JSON.parse(list[0]);
+      } catch {
+        return null; // lỗi định dạng: báo "không hợp lệ"
+      }
+    }
+    return list;
+  }, mentions.optional()),
+});
+
+// Gợi ý nhắc tên trong một đề
+export const mentionsQuery = z.object({
+  q: z.string().trim().max(EXAM_COMMENT_MENTION_QUERY_MAX, "Từ khoá quá dài").default(""),
+  limit: z.coerce.number("Số lượng không hợp lệ").int("Số lượng không hợp lệ").min(1, "Số lượng không hợp lệ").max(EXAM_COMMENT_MENTION_SEARCH_MAX, "Số lượng không hợp lệ").default(EXAM_COMMENT_MENTION_SEARCH_DEFAULT),
+});
+
+// Tệp đính kèm của bình luận (link ký, không cần đăng nhập; e, s đọc thẳng từ query)
+export const commentFileParam = z.object({ id: uuidSchema, fileId: uuidSchema });
 
 // Danh sách trả lời của một bình luận gốc
 export const listRepliesQuery = paginationQuery;
@@ -99,6 +143,8 @@ export const bulkReviewCommentsBody = z.object({
 });
 
 export type CreateCommentBody = z.infer<typeof createCommentBody>;
+export type MentionsQuery = z.infer<typeof mentionsQuery>;
+export type CommentFileParam = z.infer<typeof commentFileParam>;
 export type ListCommentsQuery = z.infer<typeof listCommentsQuery>;
 export type CommentParam = z.infer<typeof commentParam>;
 export type QuestionParam = z.infer<typeof questionParam>;

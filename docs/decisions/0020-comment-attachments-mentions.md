@@ -1,0 +1,20 @@
+# 0020. Comment attachments and mentions
+
+Builds on [0019](0019-comment-post-moderation.md): every comment rule there (filter, limits, moderation, access, notices) still applies.
+
+**Context.** Students want to attach a photo of their working or a small file to a comment, and to call someone into a discussion with `@name`. Uploaded files are user content on our disk, so they must be validated, never served as public static files, and cleaned up with the comment.
+
+**Decision.**
+- `POST /exams/:id/comments` keeps accepting JSON and also accepts `multipart/form-data` with the same text fields and the files in the repeated field `files`. The body text stays required.
+- Accepted files: JPG, PNG, WebP images and PDF, ZIP, TXT files. The type comes from the extension and is checked against the content (`%PDF-`, `PK`, no NUL byte in text, images must decode with sharp under a pixel cap). Images are re-encoded to WebP, which strips EXIF/GPS, and very large sides are scaled down. Anything else is a 422 on `files`. Limits are named constants in `backend/src/constants/exam-comment.ts`: `EXAM_COMMENT_FILES_MAX`, `EXAM_COMMENT_IMAGE_MAX_BYTES`, `EXAM_COMMENT_FILE_MAX_BYTES`, `EXAM_COMMENT_MAX_REQUEST_BYTES` (checked from Content-Length before buffering), `EXAM_COMMENT_UPLOADS_PER_DAY` (per user, rolling 24 hours, message without numbers), `EXAM_COMMENT_IMAGE_MAX_SIDE`, `EXAM_COMMENT_IMAGE_INPUT_MAX_PIXELS`.
+- Order on create: access, target, text filter (blocked text writes nothing), limits, then files are written to disk, then one insert writes the comment, its files and mentions. Any failure removes the files just written.
+- A comment with at least one file is always held (`PENDING`, `flag_reason = UPLOAD`) unless another rule already holds it, in which case that reason is kept.
+- Files live under `STORAGE_DIR/comments/<examId>/` with random names. The `/api/v1/files` static handler refuses that folder (case-insensitive, decoded and normalised like the other protected folders). Files are served only by `GET /exams/:id/comment-files/:fileId` with a short-lived signed link bound to the stored path (`utils/exam-path.ts`, `EXAM_COMMENT_FILE_URL_TTL_MS`), `nosniff`, images inline, everything else as a download with the sanitised original name. No login is needed so the link works in `<img src>`; links are only handed out with rows the viewer may see (approved, own, or admin).
+- Cleanup: deleting a comment (own or admin, a root with its replies), removing or replacing exam attachments (their comments) and deleting an exam remove the files from disk after the rows are gone. Account deletion keeps comments, so it keeps their files.
+- Mentions: `GET /exams/:id/mentions` suggests authors of approved comments in the exam, without the viewer and deleted accounts. Each suggestion carries a `ref` (the id of one of that author's approved comments) instead of a user id. On create, `mentions` (refs, at most `EXAM_COMMENT_MENTIONS_MAX`) resolve to authors in the same exam. Only people whose `@<name>` appears in the body are kept. Self and invalid refs are ignored. The mentions are stored in `exam_comment_mentions`.
+- A mention notice is sent once, when the comment first becomes visible (at once, or when an admin approves it). `notified_at` makes a report-hide followed by a new approval send nothing more, and people who already get the reply notice for that comment are skipped. A notice failure never fails the request.
+- Migration `0098_comment_files_mentions` (additive): `exam_comment_files`, `exam_comment_mentions` (cascade from comments and users) and an `exam_comments (exam_id, status, user_id)` index for the suggestions.
+
+**Consequences.** More comments wait for an admin because of files. Disk use grows with uploads and is bounded by the per-user daily cap and the review queue. A file uploaded in the instant between reading and deleting a thread can stay on disk until its exam is deleted.
+
+- Rejecting a comment removes its files (rows and disk); approving it later does not bring them back. One upload request per account is accepted at a time.

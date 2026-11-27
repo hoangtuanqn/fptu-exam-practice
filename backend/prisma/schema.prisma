@@ -82,6 +82,7 @@ model User {
   examComments       ExamComment[]
   examCommentLikes   ExamCommentLike[]
   examCommentReports ExamCommentReport[]
+  examCommentMentions ExamCommentMention[]
   examQuestionLikes  ExamQuestionLike[]
   examQuestionVotes  ExamQuestionVote[]
   examContributions  ExamContribution[]
@@ -1421,7 +1422,7 @@ model ExamComment {
   reviewedAt     DateTime?         @map("reviewed_at")
   reviewedById   String?           @map("reviewed_by_id") @db.Char(36) // admin who reviewed it (soft reference, no FK)
   reviewNote     String?           @map("review_note") @db.VarChar(255)
-  flagReason     String?           @map("flag_reason") @db.VarChar(20) // why it was held for review: WORDS, LINK, CONTACT, REPEATED, SPAM, STRIKES, REPORTED; null = not held
+  flagReason     String?           @map("flag_reason") @db.VarChar(20) // why it was held for review: WORDS, LINK, CONTACT, REPEATED, SPAM, STRIKES, REPORTED, UPLOAD; null = not held
   parentId       String?           @map("parent_id") @db.Char(36) // root comment of a reply (replies are flat under one root); null = root
   replyToId      String?           @map("reply_to_id") @db.Char(36) // comment actually replied to (root or another reply); null = root or that comment was deleted
 
@@ -1433,8 +1434,11 @@ model ExamComment {
   repliedBy ExamComment[]       @relation("CommentReplyTo")
   likes     ExamCommentLike[]
   reports   ExamCommentReport[]
+  files     ExamCommentFile[]
+  mentions  ExamCommentMention[]
 
   @@index([examId, questionNumber, status, createdAt]) // counts per question
+  @@index([examId, status, userId]) // mention suggestions: distinct approved authors of one exam
   @@index([examId, questionNumber, parentId, status, createdAt]) // public list of the root comments of one question
   @@index([parentId, status, createdAt]) // replies of one root, reply counts
   @@index([replyToId])
@@ -1473,6 +1477,36 @@ model ExamCommentReport {
   @@id([commentId, userId])
   @@index([userId, createdAt]) // daily report limit
   @@map("exam_comment_reports")
+}
+
+// File attached to a comment (decision 0020). Stored under STORAGE_DIR/comments/<examId>/ with a random name, served only by a signed link
+model ExamCommentFile {
+  id        String   @id @default(uuid(7)) @db.Char(36)
+  commentId String   @map("comment_id") @db.Char(36)
+  name      String   @db.VarChar(255) // display name, sanitised (images get .webp)
+  filePath  String   @map("file_path") @db.VarChar(255) // relative to STORAGE_DIR
+  mime      String   @db.VarChar(100)
+  sizeBytes Int      @map("size_bytes")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  comment ExamComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@index([commentId])
+  @@map("exam_comment_files")
+}
+
+// Member mentioned in a comment (@name). notifiedAt = bell notice already sent (once, when the comment first became visible)
+model ExamCommentMention {
+  commentId  String    @map("comment_id") @db.Char(36)
+  userId     String    @map("user_id") @db.Char(36)
+  notifiedAt DateTime? @map("notified_at")
+
+  comment ExamComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([commentId, userId])
+  @@index([userId])
+  @@map("exam_comment_mentions")
 }
 
 // One like per member per question image

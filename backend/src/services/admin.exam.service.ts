@@ -15,6 +15,7 @@ import { toMeta } from "../utils/pagination";
 import { aiSettingService } from "./ai-setting.service";
 import { aiReady } from "../constants/ai";
 import { solveExam } from "./ai/exam-solver.service";
+import { examCommentFileService } from "./exam-comment-file.service";
 import { examSolveService } from "./exam-solve.service";
 import { subjectCodeFromTitle } from "../utils/subject-code";
 import { buildExamZip, ExamZipTooLarge, withTrustedAnswers } from "../utils/exam-zip";
@@ -173,6 +174,7 @@ export const adminExamService = {
     if (!exam) throw AppError.notFound("Không tìm thấy đề");
     await examRepository.deleteById(id);
     await fs.rm(path.join(storageDir, EXAM_STORAGE_DIR, exam.threadId), { recursive: true, force: true }).catch(() => undefined);
+    await examCommentFileService.removeExamDir(id); // tệp đính kèm của bình luận (dòng đã xoá theo khoá ngoại)
     console.log(`[admin] #${adminId} xoá đề #${id} (thread ${exam.threadId})`);
   },
 };

@@ -6,7 +6,8 @@ import { useApi } from "@/shared/hooks/useApi";
 import { Card, CardHeader, PageHeader, StatCard, StatGrid } from "@/shared/ui/Card";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { SkeletonBlock } from "@/shared/ui/Skeleton";
-import { formatDate, formatDateTime, formatMoney, initials } from "@/shared/utils/formatters";
+import { formatDate, formatDateTime, formatMoney } from "@/shared/utils/formatters";
+import { avatarTier, UserAvatar } from "@/shared/ui/UserAvatar";
 
 const QUICK = [
   { to: "/admin/users", label: "Quản lý thành viên", note: "Phân quyền, khoá, chỉnh số dư" },
@@ -101,9 +102,7 @@ export default function DashboardPage() {
             <ul className="divide-y divide-slate-200">
               {users.data.items.slice(0, 5).map((u) => (
                 <li key={u.id} className="flex items-center gap-3 px-5 py-3">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white">
-                    {initials(u.fullName)}
-                  </span>
+                  <UserAvatar avatarPath={u.avatarPath} alt="" className="h-10 w-10" tier={avatarTier(u)} />
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-medium text-slate-900">{u.fullName}</div>
                     <div className="mt-0.5 truncate text-xs text-slate-500">

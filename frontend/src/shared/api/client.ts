@@ -191,7 +191,7 @@ export const http = {
 
 
 // Gửi multipart/form-data (không set Content-Type để browser tự thêm boundary + phần đuôi)
-export async function sendForm<T>(method: string, path: string, form: FormData): Promise<T> {
+export async function sendForm<T>(method: string, path: string, form: FormData, retried = false): Promise<T> {
   const token = tokenStore.get();
   let res: Response;
   try {
@@ -208,6 +208,13 @@ export async function sendForm<T>(method: string, path: string, form: FormData):
     throw new ApiError("Không kết nối được máy chủ", 0);
   }
   const json = (await res.json().catch(() => null)) as Envelope<T> | null;
-  if (!res.ok || !json?.status) throw toApiError(res, json);
+  if (!res.ok || !json?.status) {
+    // Token hết hạn: làm mới rồi gửi lại một lần, như send()
+    if (res.status === 401 && token) {
+      if (retried) onUnauthorized?.();
+      else if ((tokenStore.get() !== token ? "ok" : await refreshAccessToken()) === "ok") return sendForm<T>(method, path, form, true);
+    }
+    throw toApiError(res, json);
+  }
   return json.data as T;
 }

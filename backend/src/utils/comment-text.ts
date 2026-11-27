@@ -13,7 +13,7 @@ import { EXAM_COMMENT_REPEAT_CHAR_MAX, type CommentFlagReason } from "../constan
 const INVISIBLE = /[­͏᠎​-‏⁠-⁤﻿]/g;
 const WORD = /[\p{L}\p{M}\p{N}]+/gu;
 // Dấu chèn giữa hai chữ cái để lách: "đ.m", "d_c_m", "f*ck"
-const INNER_SEP = /(?<=[\p{L}\p{M}])[._\-*'`~]+(?=[\p{L}\p{M}])/gu;
+const INNER_SEP = /(?<=[\p{L}\p{M}])[._\-*'`~|]+(?=[\p{L}\p{M}])/gu;
 // Các chữ cái đơn đứng cách nhau: "v c l" -> "vcl"
 const SINGLE_RUN = /(?<![\p{L}\p{M}\p{N}])\p{L}\p{M}*(?:[ ._\-*]+\p{L}\p{M}*(?![\p{L}\p{M}\p{N}]))+/gu;
 
@@ -53,6 +53,15 @@ const LINK_PATTERNS = [
   new RegExp(`(?<![\\p{L}\\p{N}])[\\p{L}\\p{N}][\\p{L}\\p{N}-]*\\.(?:${COMMENT_LINK_TLDS.join("|")})(?![\\p{L}\\p{N}_(]|\\.[\\p{L}\\p{N}])`, "u"),
 ];
 
+// Liên kết viết bằng Markdown ra ngoài trang: [chữ](//ten-mien), [chữ](scheme:...), định nghĩa tham chiếu, <scheme:...> (không ăn vào <std::string>)
+const MARKDOWN_LINKS = [
+  /\]\(\s*<?\s*(?:[\\/]{2}|[a-z][a-z0-9+.-]*:)/,
+  /^\s{0,3}\[[^\]\n]+\]:\s*<?\s*(?:[\\/]{2}|[a-z][a-z0-9+.-]*:)/m,
+  /<[a-z][a-z0-9+.-]+:(?!:)[^\s>]*>/,
+];
+// Mã ký tự (&#100; &uacute;) hiện thành chữ khi vẽ Markdown nên qua mặt được danh sách từ: để admin xem
+const ENTITY = /&(?:#\d+|#x[0-9a-f]+|[a-z]+\d*);/;
+
 const REPEATED_CHAR = new RegExp(`(\\S)\\1{${EXAM_COMMENT_REPEAT_CHAR_MAX},}`, "u");
 
 /**
@@ -65,9 +74,10 @@ export function moderateComment(body: string): "BLOCKED" | Extract<CommentFlagRe
   const variants = [words(text), words(joined), words(joined.replace(SINGLE_RUN, (run) => run.replace(/[ ._\-*]+/g, "")))];
 
   if (variants.some((t) => hasEntry(t, BLOCKED))) return "BLOCKED";
-  if (variants.some((t) => hasEntry(t, HELD))) return "WORDS";
+  if (variants.some((t) => hasEntry(t, HELD)) || ENTITY.test(text)) return "WORDS";
   if (variants.some((t) => hasEntry(t, CONTACT)) || CONTACT_PATTERNS.some((p) => p.test(text))) return "CONTACT";
-  if (LINK_PATTERNS.some((p) => p.test(text.replace(ALLOWED_DOTTED, " ")))) return "LINK";
+  const unescaped = text.replace(/\\(?=[:/.()[\]])/g, "");
+  if (LINK_PATTERNS.some((p) => p.test(text.replace(ALLOWED_DOTTED, " "))) || MARKDOWN_LINKS.some((p) => p.test(unescaped))) return "LINK";
   if (REPEATED_CHAR.test(text)) return "REPEATED";
   return null;
 }

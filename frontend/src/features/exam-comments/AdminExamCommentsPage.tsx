@@ -19,6 +19,7 @@ import { SearchBox } from "@/shared/ui/SearchBox";
 import { Segmented } from "@/shared/ui/Segmented";
 import { Pagination } from "@/shared/ui/Table";
 import { formatDateTime } from "@/shared/utils/formatters";
+import { CommentFiles } from "./CommentAttachments";
 import { adminCommentApi, type AdminCommentFilter, type AdminExamComment, type CommentStatus, type FlagReason } from "./exam-comments.api";
 
 const FILTERS: { value: AdminCommentFilter; label: string }[] = [
@@ -43,6 +44,7 @@ const FLAG: Record<FlagReason, string> = {
   SPAM: "Gửi lặp ở nhiều câu",
   STRIKES: "Người gửi hay bị từ chối",
   REPORTED: "Bị báo cáo",
+  UPLOAD: "Có ảnh / tệp đính kèm",
 };
 
 type Decision = "APPROVED" | "REJECTED";
@@ -85,8 +87,12 @@ export default function AdminExamCommentsPage() {
   const review = (c: AdminExamComment, decision: Decision, reviewNote?: string) =>
     act(() => adminCommentApi.review(c.id, decision, reviewNote), decision === "APPROVED" ? "Đã duyệt bình luận" : "Đã từ chối bình luận", "Chưa cập nhật được bình luận");
 
-  const bulk = (decision: Decision) =>
-    act(() => adminCommentApi.bulk([...selected], decision), decision === "APPROVED" ? `Đã duyệt ${selected.size} bình luận` : `Đã từ chối ${selected.size} bình luận`, "Chưa cập nhật được các bình luận");
+  // Từ chối là xoá luôn tệp đính kèm: hỏi lại khi trong số đã chọn có tệp
+  const bulk = async (decision: Decision) => {
+    const losesFiles = decision === "REJECTED" && items.some((c) => selected.has(c.id) && c.attachments?.length);
+    if (losesFiles && !(await confirm({ title: `Từ chối ${selected.size} bình luận?`, message: "Ảnh và tệp đính kèm của các bình luận này sẽ bị xoá hẳn.", confirmLabel: "Từ chối", tone: "danger" }))) return;
+    await act(() => adminCommentApi.bulk([...selected], decision), decision === "APPROVED" ? `Đã duyệt ${selected.size} bình luận` : `Đã từ chối ${selected.size} bình luận`, "Chưa cập nhật được các bình luận");
+  };
 
   const remove = async (c: AdminExamComment) => {
     if (!(await confirm({ title: "Xoá bình luận này?", message: "Bình luận bị xoá hẳn, không khôi phục được.", confirmLabel: "Xoá", tone: "danger" }))) return;
@@ -154,6 +160,7 @@ export default function AdminExamCommentsPage() {
                       {c.reportCount > 0 && <Badge tone="danger">{c.reportCount} báo cáo</Badge>}
                     </div>
                     <p className="md-body-medium whitespace-pre-wrap break-words text-on-surface">{c.body}</p>
+                    <CommentFiles items={c.attachments} />
                     <div className="md-body-small text-on-surface-variant">
                       {c.author ? `${c.author.fullName} (${c.author.email})` : "Không rõ"} · {formatDateTime(c.createdAt)}
                     </div>
@@ -210,6 +217,7 @@ export default function AdminExamCommentsPage() {
           busy={busy}
           message={
             <label className="block">
+              {!!rejecting.attachments?.length && <span className="md-body-medium mb-3 block text-error">Ảnh và tệp đính kèm của bình luận này sẽ bị xoá hẳn.</span>}
               <span className="md-label-large text-on-surface">Ghi chú (không bắt buộc)</span>
               <textarea value={note} maxLength={255} rows={3} onChange={(e) => setNote(e.target.value)} className="md-body-medium mt-1 w-full rounded-m3-sm border border-outline bg-transparent p-2 text-on-surface" />
             </label>

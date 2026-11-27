@@ -6,6 +6,7 @@ import { errorHandler, notFoundHandler } from "./middlewares/error.middlewares";
 import { examFilesRouter } from "./middlewares/examFiles.middlewares";
 import rootRouter from "./routes/root.routes";
 import { isAttachmentStaticPath } from "./utils/attachment";
+import { isCommentFileStaticPath } from "./utils/comment-file";
 import { isContributionStaticPath } from "./utils/exam-contribution";
 import { isFlashcardStaticPath } from "./utils/flashcard";
 
@@ -33,6 +34,8 @@ export const createApp = () => {
       if (isFlashcardStaticPath(req.path)) return notFoundHandler(req, res, next);
       // Ảnh đóng góp đề thi chỉ admin xem qua /api/v1/admin/exam-contributions/:id/images/:index
       if (isContributionStaticPath(req.path)) return notFoundHandler(req, res, next);
+      // Tệp đính kèm của bình luận chỉ phát qua /api/v1/exams/:id/comment-files/:fileId (link ký, header an toàn)
+      if (isCommentFileStaticPath(req.path)) return notFoundHandler(req, res, next);
       res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
       next();
     },

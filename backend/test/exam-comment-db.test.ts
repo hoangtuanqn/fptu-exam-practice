@@ -206,25 +206,40 @@ describe("exam comments (MySQL)", { skip: DB_TESTS_ENABLED ? false : DB_SKIP_REA
     await assert.rejects(m.svc.create(member(third), old(third), exam, { questionNumber: 2, body: "đủ ngày" }), status(429));
   });
 
-  it("attachments (-id) get comments and likes but no poll; deleting a file removes them", async () => {
+  it("image attachments (-id) get comments and likes but no poll; other files are not commentable; deleting a file removes them", async () => {
     const files = (await import("../src/repositories/exam-attachment.repository")).examAttachmentRepository;
     const mk = (examId: string, name: string, mime: string) =>
       m.prisma.examAttachment.create({ data: { examId, name, filePath: `exams/x/files/${name}`, mime, sizeBytes: 1, sourceUrl: "" } }).then((a) => a.id);
     const pdf = await mk(exam, "de.pdf", "application/pdf");
     const png = await mk(exam, "hinh.png", "image/png");
-    const foreign = await mk(notMine, "khac.pdf", "application/pdf");
+    const oldJpg = await mk(exam, "cu.jpg", "application/octet-stream"); // tải lên trước khi ghi mime ảnh
+    const foreign = await mk(notMine, "khac.png", "image/png");
 
     await assert.rejects(m.svc.create(member(me), old(me), exam, { questionNumber: -foreign, body: "x" }), status(422)); // tệp của đề khác
     await assert.rejects(m.svc.create(member(me), old(me), exam, { questionNumber: -999999, body: "x" }), status(422));
-    await assert.rejects(m.reactions.vote(member(me), me, exam, -pdf, ["A"]), status(422));
+    // tệp không phải ảnh: 422 như mục không tồn tại (bình luận, danh sách, thích, bình chọn)
+    await assert.rejects(m.svc.create(member(me), old(me), exam, { questionNumber: -pdf, body: "file này" }), status(422));
+    await assert.rejects(m.svc.list(member(me), me, exam, { question: -pdf, ...page }), status(422));
+    await assert.rejects(m.reactions.like(member(other), other, exam, -pdf, true), status(422));
+    await assert.rejects(m.reactions.vote(member(me), me, exam, -png, ["A"]), status(422));
 
-    const c = await m.svc.create(member(me), old(me), exam, { questionNumber: -pdf, body: "A vì file này đúng" });
-    assert.equal(c.status, "APPROVED");
-    assert.deepEqual((await m.reactions.reactions(member(me), me, exam, -pdf)).votes, { voters: 0, counts: {}, mine: [] }); // không tự bình chọn
+    // dòng cũ trên tệp pdf (trước quy tắc mới) vẫn còn: admin thấy, không đếm, không trả lời/thích/báo cáo được
+    const c = await m.prisma.examComment.create({ data: { examId: exam, questionNumber: -pdf, userId: me, body: "A vì file này đúng", status: "APPROVED" } });
+    await m.prisma.examCommentLike.create({ data: { commentId: c.id, userId: other } });
+    await m.prisma.examCommentReport.create({ data: { commentId: c.id, userId: third } });
+    await assert.rejects(m.svc.create(member(other), old(other), exam, { questionNumber: -pdf, body: "trả lời", replyToId: c.id }), status(422));
+    await assert.rejects(m.svc.like(member(other), who(other), exam, c.id, true), status(422));
+    await assert.rejects(m.svc.report(member(other), other, exam, c.id, null), status(422));
+    await assert.rejects(m.svc.replies(member(other), other, exam, c.id, page), status(422));
+
+    const p = await m.svc.create(member(me), old(me), exam, { questionNumber: -png, body: "ảnh này mờ quá" });
+    assert.equal(p.status, "APPROVED");
+    assert.deepEqual((await m.reactions.reactions(member(me), me, exam, -png)).votes, { voters: 0, counts: {}, mine: [] }); // không bình chọn
     assert.deepEqual(await m.reactions.like(member(other), other, exam, -png, true), { likes: 1, liked: true });
-    await m.svc.create(member(me), old(me), exam, { questionNumber: -png, body: "ảnh này mờ quá" });
-    assert.equal((await m.svc.counts(member(me), exam)).counts[String(-pdf)], 1);
-    assert.deepEqual((await m.svc.list(member(other), other, exam, { question: -pdf, ...page })).items.map((i) => i.id), [c.id]);
+    assert.equal((await m.svc.create(member(me), old(me), exam, { questionNumber: -oldJpg, body: "ảnh cũ vẫn được" })).status, "APPROVED");
+    const counts = (await m.svc.counts(member(me), exam)).counts;
+    assert.deepEqual([counts[String(-png)], counts[String(-oldJpg)], counts[String(-pdf)]], [1, 1, undefined]);
+    assert.deepEqual((await m.svc.list(member(other), other, exam, { question: -png, ...page })).items.map((i) => i.id), [p.id]);
 
     const rows = (await m.svc.adminList({ status: "all", q: "file này", ...page })).items;
     assert.deepEqual(rows.map((r) => [r.targetName, r.imageUrl]), [["de.pdf", null]]);
@@ -232,9 +247,8 @@ describe("exam comments (MySQL)", { skip: DB_TESTS_ENABLED ? false : DB_SKIP_REA
     assert.equal(img.targetName, "hinh.png");
     assert.match(img.imageUrl ?? "", new RegExp(`/exams/${exam}/attachments/${png}\\?v=`));
     assert.equal((await m.svc.adminList({ status: "all", q: "Câu này hỏi về", ...page })).items[0]!.targetName, null); // câu hỏi thật
+    assert.match((await m.svc.adminList({ status: "all", q: "ảnh cũ vẫn", ...page })).items[0]!.imageUrl ?? "", /attachments/);
 
-    await m.svc.like(member(other), who(other), exam, c.id, true);
-    await m.svc.report(member(other), other, exam, c.id, null);
     await files.remove(exam, pdf);
     assert.equal(await m.prisma.examComment.count({ where: { examId: exam, questionNumber: -pdf } }), 0);
     assert.equal(await m.prisma.examCommentLike.count({ where: { commentId: c.id } }), 0);

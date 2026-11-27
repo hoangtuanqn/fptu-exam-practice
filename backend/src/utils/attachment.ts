@@ -30,6 +30,13 @@ const INLINE_KINDS = new Set<AttachmentKind>(["pdf", "text", "video", "audio"]);
 
 const extOf = (name: string) => path.extname(name).slice(1).toLowerCase();
 
+// Ảnh tải lên làm tệp đính kèm (cùng tập đuôi với isImageFile ở giao diện); không nằm trong TYPES nên cách phát tệp không đổi
+const IMAGE_MIMES: Record<string, string> = { webp: "image/webp", png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif" };
+export const imageMimeOf = (name: string) => IMAGE_MIMES[extOf(name)] ?? null;
+
+/** Tệp đính kèm là ảnh: mime image/* hoặc tệp trên đĩa có đuôi ảnh (dòng cũ tải lên trước khi ghi mime ảnh lưu octet-stream). Chỉ ảnh mới bình luận được. */
+export const isImageAttachment = (a: { mime: string; filePath: string }) => a.mime.startsWith("image/") || imageMimeOf(a.filePath) !== null;
+
 /** Mime + loại theo đuôi (không tin content-type của site); null nếu đuôi không được phép. */
 export const attachmentType = (name: string) => TYPES[extOf(name)] ?? null;
 

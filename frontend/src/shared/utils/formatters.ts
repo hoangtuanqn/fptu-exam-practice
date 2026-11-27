@@ -29,12 +29,6 @@ export const timeLeft = (iso: string, now = Date.now()) => {
   return minutes <= 0 ? "đã hết hạn" : `còn ${formatMinutes(minutes)}`;
 };
 
-// "Nguyễn Văn An" -> "NA"; dùng cho avatar chữ cái
-export const initials = (name: string) => {
-  const parts = name.trim().split(/\s+/);
-  return ((parts[0]?.[0] ?? "") + (parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? "") : "")).toUpperCase();
-};
-
 // 2048 -> "2 KB", 5_400_000 -> "5,1 MB"
 export const formatBytes = (n: number) => {
   const units = ["B", "KB", "MB", "GB"];
