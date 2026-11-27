@@ -10,10 +10,22 @@ interface Props {
   onChanged: () => void;
   onClose: () => void;
   focusComment?: string | null;
+  pdfUrl?: string; // có thì hiện luôn tệp PDF bên trái, bình luận bên phải
 }
 
 // Thảo luận của một tệp không xem được trong trình xem ảnh (pdf, zip, video...): cùng khung, không có bình chọn đáp án
-export function CommentsDialog({ examId, examTitle, target, name, onChanged, onClose, focusComment }: Props) {
+export function CommentsDialog({ examId, examTitle, target, name, onChanged, onClose, focusComment, pdfUrl }: Props) {
+  const panel = <DiscussionPanel examId={examId} examTitle={examTitle} question={target} position={name} poll={false} closeAlways onChanged={onChanged} onUnavailable={onClose} onHide={onClose} focusComment={focusComment} />;
+  if (pdfUrl) {
+    return (
+      <Modal onClose={onClose} flush maxWidth="max-w-6xl">
+        <div className="flex h-[88vh] flex-col overflow-hidden md:flex-row">
+          <iframe src={`${pdfUrl}#view=FitH`} title={name} className="min-h-0 flex-1 border-0 bg-white" />
+          <div className="h-[45%] shrink-0 overflow-hidden border-t border-outline-variant md:h-auto md:w-[380px] md:border-l md:border-t-0">{panel}</div>
+        </div>
+      </Modal>
+    );
+  }
   return (
     <Modal onClose={onClose} flush maxWidth="max-w-lg">
       <div className="h-[80vh] max-h-[720px] overflow-hidden">
