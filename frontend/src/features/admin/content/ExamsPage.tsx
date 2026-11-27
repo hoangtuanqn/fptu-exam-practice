@@ -68,7 +68,7 @@ export default function ExamsPage() {
   const { confirm, confirmDialog } = useConfirm();
   const [url, setUrl] = useUrlState({ page: "1", q: "", kind: "", source: "" });
   const page = toPage(url.page);
-  const [search, setSearch, q] = useUrlSearch(url.q, setUrl);
+  const [search, setSearch, q, searchPending] = useUrlSearch(url.q, setUrl);
   const { kind, source } = url;
   const { data, error, loading, reload } = useApi(() => adminApi.exams(page, { q, kind, source }), [page, q, kind, source]);
   useClampPage(data?.meta, (p) => setUrl({ page: String(p) }));
@@ -164,7 +164,7 @@ export default function ExamsPage() {
       <PageHeader eyebrow="Quản trị" title="Đề thi" description="Bấm vào một đề để xem và sửa đáp án. Mục Có đáp án đỏ là đề đang thiếu." />
       <Card>
         <div className="flex flex-wrap gap-3 border-b border-slate-100 p-4">
-          <SearchBox value={search} onChange={setSearch} placeholder="Tìm theo tên đề, mã môn hoặc thread" label="Tìm đề thi" />
+          <SearchBox busy={searchPending || loading} value={search} onChange={setSearch} placeholder="Tìm theo tên đề, mã môn hoặc thread" label="Tìm đề thi" />
           <Segmented
             label="Lọc theo loại đề"
             value={kind}

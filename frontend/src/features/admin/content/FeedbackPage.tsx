@@ -36,7 +36,7 @@ const reasonLabel = (v: string | null) => FEEDBACK_REASONS.find((r) => r.value =
 // Đánh giá 👍/👎 của người dùng về lời giải AI: mặc định hiện các đánh giá chưa tốt, kèm lời giải để đọc ngay và sửa prompt
 export default function FeedbackPage() {
   const [url, setUrl] = useUrlState({ helpful: "down", page: "1", q: "" });
-  const [search, setSearch, q] = useUrlSearch(url.q, setUrl);
+  const [search, setSearch, q, searchPending] = useUrlSearch(url.q, setUrl);
   const toast = useToast();
   const filter = (Object.prototype.hasOwnProperty.call(QUERY, url.helpful) ? url.helpful : "down") as Filter;
   const page = toPage(url.page);
@@ -77,7 +77,7 @@ export default function FeedbackPage() {
       )}
       <Card>
         <div className="flex flex-wrap gap-3 border-b border-slate-100 p-4">
-          <SearchBox value={search} onChange={setSearch} placeholder="Tìm theo tên đề, email hoặc nhận xét" label="Tìm đánh giá" />
+          <SearchBox busy={searchPending || loading} value={search} onChange={setSearch} placeholder="Tìm theo tên đề, email hoặc nhận xét" label="Tìm đánh giá" />
           <Segmented<Filter>
             label="Lọc theo đánh giá"
             value={filter}

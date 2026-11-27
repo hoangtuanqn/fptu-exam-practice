@@ -27,7 +27,7 @@ const FILTERS: { value: Filter; label: string }[] = [
 // Đề thành viên đóng góp: mặc định hiện đề chờ duyệt
 export default function AdminContributionsPage() {
   const [url, setUrl] = useUrlState({ status: "PENDING", page: "1", q: "" });
-  const [search, setSearch, q] = useUrlSearch(url.q, setUrl);
+  const [search, setSearch, q, searchPending] = useUrlSearch(url.q, setUrl);
   const status = (FILTERS.some((f) => f.value === url.status) ? url.status : "PENDING") as Filter;
   const page = toPage(url.page);
   const setPage = (p: number) => setUrl({ page: String(p) });
@@ -57,7 +57,7 @@ export default function AdminContributionsPage() {
       <PageHeader title="Đề đóng góp" description="Ảnh đề thành viên gửi lên. Xem ảnh rồi duyệt hoặc từ chối; từ chối sẽ xoá ảnh." />
       <Card>
         <div className="flex flex-wrap gap-3 border-b border-outline-variant p-4">
-          <SearchBox value={search} onChange={setSearch} placeholder="Tìm theo tiêu đề, mã môn hoặc email" label="Tìm đề đóng góp" />
+          <SearchBox busy={searchPending || loading} value={search} onChange={setSearch} placeholder="Tìm theo tiêu đề, mã môn hoặc email" label="Tìm đề đóng góp" />
           <Segmented<Filter> label="Lọc theo trạng thái" value={status} onChange={(v) => setUrl({ status: v, page: "1" })} options={FILTERS} />
         </div>
 
