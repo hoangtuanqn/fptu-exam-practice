@@ -15,7 +15,8 @@ export function useExamListQuery() {
     if (debounced !== url.q) setUrl({ q: debounced, page: "1" });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debounced]);
-  return { url, setUrl, page: toPage(url.page), typed, setTyped, pending: typed !== url.q }; // pending: đã gõ nhưng chưa bắt đầu tìm
+  // pending: đã gõ nhưng chưa bắt đầu tìm (không so với url.q: địa chỉ đổi từ nơi khác thì vòng xoay sẽ quay mãi)
+  return { url, setUrl, page: toPage(url.page), typed, setTyped, pending: typed !== debounced };
 }
 
 interface Props {
