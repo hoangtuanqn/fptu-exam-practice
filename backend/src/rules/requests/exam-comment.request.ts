@@ -32,10 +32,10 @@ const commentBody = z
       .refine((s) => s.split("\n").length <= EXAM_COMMENT_MAX_LINES, "Bình luận có quá nhiều dòng, bạn viết gọn lại nhé"),
   );
 
-// Mục được bình luận/thích: số câu (>= 1) hoặc -id của tệp đính kèm (decision 0019); trong khoảng INT của MySQL, khác 0
+// Mục được bình luận/thích: số câu (>= 1), -id của tệp đính kèm hoặc 0 = cả đề (decision 0019); trong khoảng INT của MySQL.
+// 0 chỉ có bình luận: thích/bình chọn trả 422 ở service
 const INT_MAX = 2_147_483_647;
-const target = (n: z.ZodNumber) =>
-  n.int("Câu không hợp lệ").min(-INT_MAX, "Câu không hợp lệ").max(INT_MAX, "Câu không hợp lệ").refine((v) => v !== 0, "Câu không hợp lệ");
+const target = (n: z.ZodNumber) => n.int("Câu không hợp lệ").min(-INT_MAX, "Câu không hợp lệ").max(INT_MAX, "Câu không hợp lệ");
 
 export const createCommentBody = z.object({
   questionNumber: target(z.number("Câu không hợp lệ")),
@@ -51,6 +51,7 @@ export const reactionBody = z.object({ reaction: z.enum(["like", "dislike"], "C�
 
 export const listCommentsQuery = paginationQuery.extend({
   question: target(z.coerce.number("Câu không hợp lệ")),
+  order: z.enum(["newest", "oldest"], "Thứ tự không hợp lệ").default("newest"), // bình luận gốc; thảo luận chung của đề dùng oldest
 });
 
 export const commentParam = z.object({ id: uuidSchema, commentId: uuidSchema });

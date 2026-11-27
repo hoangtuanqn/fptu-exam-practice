@@ -337,4 +337,50 @@ describe("exam comments (MySQL)", { skip: DB_TESTS_ENABLED ? false : DB_SKIP_REA
     assert.equal(await m.prisma.examComment.count({ where: { parentId: root.id } }), 0);
     assert.equal(await m.prisma.examComment.count({ where: { id: { in: [r1.id, r2.id, held.id] } } }), 0);
   });
+
+  it("exam-wide discussion (target 0): comments, #n order, author card, no poll, admin label, notice link", async () => {
+    const mk = async (key: string) => {
+      const { id } = await m.prisma.user.create({ data: { email: `${key}@test.local`, fullName: key, password: "x" } });
+      names.set(id, key);
+      await m.prisma.userExam.create({ data: { userId: id, examId: exam } });
+      return id;
+    };
+    const [dan, eve] = [await mk("dan"), await mk("eve")];
+    await assert.rejects(m.svc.create(member(dan), old(dan), notMine, { questionNumber: 0, body: "đề khác" }), status(404));
+    const ghost = "0190f5a2-1c3b-7000-8000-000000000001";
+    await assert.rejects(m.svc.create({ owner: { userId: admin }, isAdmin: true }, old(admin), ghost, { questionNumber: 0, body: "không có đề" }), status(422));
+
+    const first = await m.svc.create(member(dan), old(dan), exam, { questionNumber: 0, body: "A vì đề này dễ" });
+    assert.deepEqual([first.status, first.questionNumber, first.index, first.author.commentCount], ["APPROVED", 0, 1, 1]);
+    assert.equal(await m.prisma.examQuestionVote.count({ where: { examId: exam, questionNumber: 0 } }), 0); // không tự bình chọn
+    const second = await m.svc.create(member(eve), old(eve), exam, { questionNumber: 0, body: "đề năm nay khó hơn" });
+    assert.equal(second.index, 2);
+    await assert.rejects(m.reactions.vote(member(dan), dan, exam, 0, ["A"]), status(422));
+    await assert.rejects(m.reactions.like(member(dan), dan, exam, 0, true), status(422));
+    assert.deepEqual(await m.reactions.reactions(member(dan), dan, exam, 0), { likes: 0, liked: false, votes: { voters: 0, counts: {}, mine: [] } });
+
+    const held = await m.svc.create(member(dan), old(dan), exam, { questionNumber: 0, body: "inbox mình nhé" });
+    assert.equal(held.index, null);
+    const oldestFirst = await m.svc.list(member(dan), dan, exam, { question: 0, order: "oldest", ...page });
+    assert.deepEqual(oldestFirst.items.map((i) => [i.id, i.index]), [[held.id, null], [first.id, 1], [second.id, 2]]);
+    const newestFirst = await m.svc.list(member(eve), eve, exam, { question: 0, order: "newest", page: 1, limit: 1 });
+    assert.deepEqual(newestFirst.items.map((i) => [i.id, i.index]), [[second.id, 2]]);
+    assert.deepEqual((await m.svc.list(member(eve), eve, exam, { question: 0, order: "newest", page: 2, limit: 1 })).items.map((i) => i.index), [1]);
+    const card = oldestFirst.items.find((i) => i.id === first.id)!.author;
+    assert.deepEqual([card.commentCount, card.joinedAt], [1, (await m.prisma.user.findUniqueOrThrow({ where: { id: dan } })).createdAt]);
+    assert.equal(JSON.stringify(oldestFirst).includes(dan), false);
+    assert.equal((await m.svc.counts(member(dan), exam)).counts["0"], 2);
+
+    const row = (await m.svc.adminList({ status: "all", q: "đề năm nay", ...page })).items[0]!;
+    assert.deepEqual([row.targetKind, row.targetName, row.imageUrl, row.questionNumber], ["exam", null, null, 0]);
+    assert.equal((await m.svc.adminList({ status: "all", q: "Câu này hỏi về", ...page })).items[0]!.targetKind, "question");
+
+    const reply = await m.svc.create(member(eve), old(eve), exam, { questionNumber: 0, body: "đồng ý", replyToId: first.id });
+    assert.equal(reply.index, null);
+    for (let i = 0; i < 40 && !(await m.prisma.userNotice.count({ where: { userId: dan, kind: "comment.replied" } })); i++) await new Promise((r) => setTimeout(r, 50));
+    const notice = await m.prisma.userNotice.findFirstOrThrow({ where: { userId: dan, kind: "comment.replied" } });
+    assert.equal(notice.link, `/exam/${exam}/preview?target=0&comment=${reply.id}`);
+    assert.equal((await m.svc.list(member(dan), dan, exam, { question: 0, order: "oldest", ...page })).items.find((i) => i.id === first.id)!.author.commentCount, 1);
+    assert.equal((await m.svc.list(member(dan), dan, exam, { question: 0, order: "oldest", ...page })).items.find((i) => i.id === second.id)!.author.commentCount, 2); // gốc + trả lời
+  });
 });

@@ -32,7 +32,7 @@ import type {
 import type { Actor } from "../utils/actor";
 import { answerLettersOf, moderateComment } from "../utils/comment-text";
 import { fileUrlOf, toAttachmentDto } from "../utils/file-url";
-import { toMeta } from "../utils/pagination";
+import { toMeta, toSkipTake } from "../utils/pagination";
 import { isProUntil } from "../utils/pro";
 import { adminNoticeService } from "./admin-notice.service";
 import { commentNoticeService } from "./exam-comment-notice.service";
@@ -44,10 +44,15 @@ const sameText = (a: string, b: string) => a.toLowerCase().replace(/\s+/g, " ") 
 
 /**
  * Mục được bình luận/thích không có trong đề: cùng một lỗi 422 cho bình luận, bình chọn, thích.
- * Số dương = câu hỏi (ExamQuestion.number), số âm = -id của tệp đính kèm của đề này (decision 0019).
+ * Số dương = câu hỏi (ExamQuestion.number), số âm = -id của tệp đính kèm của đề này, 0 = cả đề (chỉ khi `exam`: bình luận chung) (decision 0019).
  */
-export async function assertQuestion(examId: string, questionNumber: number) {
-  const found = questionNumber > 0 ? await examRepository.findQuestionAnswer(examId, questionNumber) : await examAttachmentRepository.find(examId, -questionNumber);
+export async function assertQuestion(examId: string, questionNumber: number, exam = false) {
+  const found =
+    questionNumber > 0
+      ? await examRepository.findQuestionAnswer(examId, questionNumber)
+      : questionNumber < 0
+        ? await examAttachmentRepository.find(examId, -questionNumber)
+        : exam && (await examRepository.findByThreadIdOfId(examId)); // admin qua được assertAccess cả với đề không tồn tại nên vẫn kiểm tra
   if (!found) {
     throw new AppError("Đề này không có câu bạn chọn", HTTP_STATUS.UNPROCESSABLE_ENTITY, { questionNumber: "Câu không tồn tại trong đề" });
   }
@@ -75,12 +80,14 @@ export function holdReason(text: CommentFlagReason | null, c: { sameElsewhere: n
 // Ảnh đại diện lưu theo tên avatars/<userId>-...: ảnh cũ còn mang id người dùng thì không trả ra (danh sách công khai không lộ id)
 const avatarUrlOf = (userId: string, avatarPath: string | null) => (avatarPath && !avatarPath.includes(userId) ? fileUrlOf(avatarPath) : null);
 
-type Extra = { likes: number; dislikes: number; reaction: CommentReaction | null; replyCount: number };
+// commentCount = số bình luận đã duyệt của người viết trên cả trang web; index = số thứ tự "#n" của bình luận gốc đã duyệt (null nếu không có)
+type Extra = { likes: number; dislikes: number; reaction: CommentReaction | null; replyCount: number; commentCount?: number; index?: number | null };
 const NO_EXTRA: Extra = { likes: 0, dislikes: 0, reaction: null, replyCount: 0 };
 
 /**
  * Một dòng bình luận cho người xem: không có id/email người viết, không có lý do bị giữ; `mine` = của người xem.
  * replyTo = tên người được trả lời (null khi trả lời thẳng bình luận gốc hoặc bình luận đó đã bị xoá); replyCount chỉ có ở bình luận gốc.
+ * author.joinedAt = ngày tạo tài khoản (thẻ tác giả kiểu diễn đàn).
  */
 export const toPublicComment = (row: PublicCommentRow, viewerId: string | null, x: Extra = NO_EXTRA) => ({
   id: row.id,
@@ -95,7 +102,10 @@ export const toPublicComment = (row: PublicCommentRow, viewerId: string | null, 
     avatarUrl: avatarUrlOf(row.userId, row.user.avatarPath),
     isPro: isProUntil(row.user.proExpiresAt),
     isAdmin: row.user.role === "ADMIN",
+    joinedAt: row.user.createdAt,
+    commentCount: x.commentCount ?? 0,
   },
+  index: x.index ?? null,
   mine: viewerId !== null && row.userId === viewerId,
   likes: x.likes,
   liked: x.reaction === "like",
@@ -104,16 +114,36 @@ export const toPublicComment = (row: PublicCommentRow, viewerId: string | null, 
   replyCount: row.parentId ? 0 : x.replyCount,
 });
 
-// Số thích/không thích, cảm xúc của người xem và số trả lời cho cả trang: ba truy vấn gộp, không truy vấn theo từng dòng
-async function decorate(rows: PublicCommentRow[], viewerId: string | null) {
+// Số thích/không thích, cảm xúc của người xem, số trả lời và số bình luận của người viết cho cả trang: bốn truy vấn gộp, không truy vấn theo từng dòng
+async function decorate(rows: PublicCommentRow[], viewerId: string | null, indexOf = new Map<string, number>()) {
   const ids = rows.map((r) => r.id);
-  const [counts, mine, replies] = await Promise.all([
+  const [counts, mine, replies, authors] = await Promise.all([
     examCommentRepository.reactionCounts(ids),
     viewerId ? examCommentRepository.viewerReactions(viewerId, ids) : new Map<string, CommentReaction>(),
     examCommentRepository.replyCounts(rows.filter((r) => !r.parentId).map((r) => r.id)),
+    examCommentRepository.approvedCountsByUser(rows.map((r) => r.userId)),
   ]);
-  return rows.map((r) => toPublicComment(r, viewerId, { ...counts.get(r.id)!, reaction: mine.get(r.id) ?? null, replyCount: replies.get(r.id) ?? 0 }));
+  return rows.map((r) =>
+    toPublicComment(r, viewerId, {
+      ...counts.get(r.id)!,
+      reaction: mine.get(r.id) ?? null,
+      replyCount: replies.get(r.id) ?? 0,
+      commentCount: authors.get(r.userId) ?? 0,
+      index: indexOf.get(r.id) ?? null,
+    }),
+  );
 }
+
+/**
+ * Số thứ tự "#n" (1 = cũ nhất) của các bình luận gốc đã duyệt trong một trang, suy từ vị trí trong trang và total: không cần truy vấn thêm.
+ * `skip` = số dòng trước trang này theo đúng thứ tự `order` của danh sách.
+ */
+export function rootIndexes(ids: readonly string[], skip: number, total: number, order: "newest" | "oldest") {
+  return new Map(ids.map((id, i) => [id, order === "oldest" ? skip + i + 1 : total - skip - i]));
+}
+
+// Loại mục được bình luận (decision 0019): 0 = cả đề, dương = câu hỏi, âm = tệp đính kèm
+export const targetKindOf = (questionNumber: number) => (questionNumber === 0 ? "exam" : questionNumber > 0 ? "question" : "file");
 
 const byTime = (a: PublicCommentRow, b: PublicCommentRow) => a.createdAt.getTime() - b.createdAt.getTime() || a.id.localeCompare(b.id);
 
@@ -126,7 +156,7 @@ function notifyAdmins(kind: "held" | "reported", userId: string, examId: string,
   if (lastNotice.size > 500) lastNotice.clear();
   lastNotice.set(key, Date.now());
   adminNoticeService.push("comment.created", {
-    title: `${kind === "held" ? "Bình luận chờ duyệt" : "Bình luận bị báo cáo"}: {exam}, câu ${questionNumber}`,
+    title: `${kind === "held" ? "Bình luận chờ duyệt" : "Bình luận bị báo cáo"}: {exam}, ${{ exam: "thảo luận chung", question: `câu ${questionNumber}`, file: "tệp đính kèm" }[targetKindOf(questionNumber)]}`,
     examId,
     body: body.slice(0, 200),
     userId,
@@ -135,7 +165,7 @@ function notifyAdmins(kind: "held" | "reported", userId: string, examId: string,
 }
 
 // Dòng của admin: gắn ảnh câu hỏi / tệp đính kèm (một truy vấn mỗi loại cho cả trang), user -> author, số báo cáo đang mở;
-// examId đã có trong exam.id nên bỏ. Tệp đính kèm: targetName = tên tệp, imageUrl chỉ khi tệp là ảnh.
+// examId đã có trong exam.id nên bỏ. Tệp đính kèm: targetName = tên tệp, imageUrl chỉ khi tệp là ảnh. Thảo luận chung (0): cả hai null.
 async function withImages(rows: AdminCommentRow[]) {
   const [images, files] = await Promise.all([
     answerReportRepository.questionImages(rows.filter((c) => c.questionNumber > 0).map((c) => ({ examId: c.examId, number: c.questionNumber }))),
@@ -151,6 +181,7 @@ async function withImages(rows: AdminCommentRow[]) {
       author: user,
       imageUrl: file ? (file.mime.startsWith("image/") ? toAttachmentDto(examId, file).url : null) : (imageOf.get(`${examId}:${c.questionNumber}`) ?? null),
       targetName: file?.name ?? null,
+      targetKind: targetKindOf(c.questionNumber),
     };
   });
 }
@@ -174,15 +205,16 @@ async function approvedComment(actor: Actor, examId: string, commentId: string) 
 
 export const examCommentService = {
   // ----- Người xem (khách hoặc thành viên); đề phải nằm trong kho của người xem như mọi API đề khác
-  // Chỉ bình luận gốc, mới nhất trước; trả lời lấy riêng theo từng bình luận gốc
-  async list(actor: Actor, viewerId: string | null, examId: string, { question, ...page }: ListCommentsQuery) {
+  // Chỉ bình luận gốc, mới nhất trước (hoặc cũ nhất trước với order=oldest); trả lời lấy riêng theo từng bình luận gốc
+  async list(actor: Actor, viewerId: string | null, examId: string, { question, order = "newest", ...page }: Omit<ListCommentsQuery, "order"> & Partial<Pick<ListCommentsQuery, "order">>) {
     await examService.assertAccess(actor, examId);
     const [{ items, total }, own] = await Promise.all([
-      examCommentRepository.listApproved(examId, question, page),
+      examCommentRepository.listApproved(examId, question, page, order),
       // Bình luận chưa duyệt của chính mình chỉ hiện ở đầu trang 1 (không tính vào total)
       viewerId && page.page === 1 ? examCommentRepository.listOwnUnapproved(examId, question, viewerId, EXAM_COMMENT_OWN_PENDING_MAX) : [],
     ]);
-    return { items: await decorate([...own, ...items], viewerId), meta: toMeta(page, total) };
+    const indexOf = rootIndexes(items.map((r) => r.id), toSkipTake(page).skip, total, order);
+    return { items: await decorate([...own, ...items], viewerId, indexOf), meta: toMeta(page, total) };
   },
 
   // Trả lời của một bình luận gốc đang hiện, cũ nhất trước; trả lời chưa duyệt của chính mình xen vào trang 1 theo thời gian
@@ -208,7 +240,7 @@ export const examCommentService = {
    */
   async create(actor: Actor, author: { id: string; createdAt: Date; fullName: string }, examId: string, { questionNumber, body, replyToId }: CreateCommentBody) {
     await examService.assertAccess(actor, examId);
-    await assertQuestion(examId, questionNumber);
+    await assertQuestion(examId, questionNumber, true);
     const target = replyToId ? await examCommentRepository.findApproved(replyToId, examId) : null;
     if (replyToId && (!target || (target.parent && target.parent.status !== "APPROVED"))) throw AppError.notFound(COMMENT_NOT_FOUND);
     if (target && target.questionNumber !== questionNumber) {
@@ -229,8 +261,8 @@ export const examCommentService = {
     const newAccount = now - author.createdAt.getTime() < EXAM_COMMENT_NEW_ACCOUNT_MS;
     const limit = commentLimitError({ today, onQuestion: onQuestion.map((c) => c.body), newAccount }, body);
     if (limit === "daily") throw new AppError("Hôm nay bạn đã bình luận quá nhiều, vui lòng quay lại sau", HTTP_STATUS.TOO_MANY_REQUESTS);
-    if (limit === "question") throw new AppError("Hôm nay bạn đã bình luận câu này nhiều rồi, vui lòng quay lại sau", HTTP_STATUS.TOO_MANY_REQUESTS);
-    if (limit === "duplicate") throw AppError.conflict("Bạn đã gửi bình luận này cho câu này rồi", { body: "Bạn đã gửi bình luận này cho câu này rồi" });
+    if (limit === "question") throw new AppError("Hôm nay bạn đã bình luận ở đây nhiều rồi, vui lòng quay lại sau", HTTP_STATUS.TOO_MANY_REQUESTS);
+    if (limit === "duplicate") throw AppError.conflict("Bạn đã gửi bình luận này ở đây rồi", { body: "Bạn đã gửi bình luận này ở đây rồi" });
 
     const flagReason = holdReason(text, { sameElsewhere, strikes });
     const row = await examCommentRepository.create({
@@ -245,11 +277,16 @@ export const examCommentService = {
     });
     // Trả lời bị giữ thì báo khi admin duyệt (review)
     if (target && !flagReason) commentNoticeService.reply({ examId, questionNumber, commentId: row.id, body }, { id: userId, name: author.fullName }, [target.userId, target.parent?.userId]);
-    const letters = questionNumber > 0 ? answerLettersOf(body) : null; // tệp đính kèm không có bình chọn
+    const letters = questionNumber > 0 ? answerLettersOf(body) : null; // tệp đính kèm và thảo luận chung (0) không có bình chọn
     // Bình luận bị giữ chưa có hiệu lực công khai nên không đổi phiếu
     if (letters && !flagReason) await examReactionRepository.setVote({ examId, questionNumber }, userId, letters.join(" "));
     if (flagReason) notifyAdmins("held", userId, examId, questionNumber, body);
-    return toPublicComment(row, userId);
+    const [commentCount, roots] = await Promise.all([
+      examCommentRepository.approvedCountsByUser([userId]).then((m) => m.get(userId) ?? 0),
+      // bình luận gốc vừa hiện là bình luận mới nhất: số thứ tự = số bình luận gốc đã duyệt
+      row.status === "APPROVED" && !row.parentId ? examCommentRepository.countApprovedRoots(examId, questionNumber) : null,
+    ]);
+    return toPublicComment(row, userId, { ...NO_EXTRA, commentCount, index: roots });
   },
 
   // Người viết xoá bình luận của mình (mọi trạng thái); không phải của mình thì 404 như không tồn tại
