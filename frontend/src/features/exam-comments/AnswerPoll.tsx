@@ -35,7 +35,7 @@ export function AnswerPoll({ votes, busy, onVote }: { votes: Votes; busy: boolea
           <Switch checked={multi} onChange={setMulti} label="Chọn nhiều đáp án" />
         </label>
       </div>
-      <ul className="mx-auto grid max-w-sm grid-cols-4 gap-2">
+      <ul className="space-y-1.5">
         {LETTERS.slice(0, last + 1).map((l) => {
           const n = counts[l] ?? 0;
           const pct = votes.voters > 0 ? Math.round((n / votes.voters) * 100) : 0;
@@ -49,13 +49,13 @@ export function AnswerPoll({ votes, busy, onVote }: { votes: Votes; busy: boolea
                 aria-label={`${l}: ${n} người, ${pct}%${on ? ", bạn đã chọn" : ""}`}
                 title={`${n} người chọn ${l}`}
                 onClick={() => pick(l)}
-                className={`md-state relative flex h-[4.5rem] w-full flex-col items-center justify-center overflow-hidden rounded-m3-md bg-surface-container-lowest outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-60 ${on ? "ring-2 ring-inset ring-on-surface" : "ring-1 ring-inset ring-outline-variant"}`}
+                className={`md-state relative flex h-10 w-full items-center gap-3 overflow-hidden rounded-m3-sm bg-surface-container-lowest px-3 outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-60 ${on ? "ring-2 ring-inset ring-on-surface" : "ring-1 ring-inset ring-outline-variant"}`}
               >
-                {/* Cột màu dâng từ dưới theo tỉ lệ chọn; đáp án nhiều người chọn nhất đậm hơn */}
-                <span aria-hidden className={`absolute inset-x-0 bottom-0 transition-[height] duration-500 ${n > 0 && n === top ? "bg-surface-container-highest" : "bg-surface-container-high"}`} style={{ height: `${pct}%` }} />
-                {on && <Check size={14} className="absolute right-1 top-1 text-on-surface" aria-hidden />}
-                <span className="md-title-large relative font-bold leading-none text-on-surface">{l}</span>
-                <span className="md-label-small relative mt-1 tabular-nums text-on-surface-variant">{pct}%</span>
+                {/* Thanh màu dài ra từ trái theo tỉ lệ chọn; đáp án nhiều người chọn nhất đậm hơn */}
+                <span aria-hidden className={`absolute inset-y-0 left-0 transition-[width] duration-500 ${n > 0 && n === top ? "bg-surface-container-highest" : "bg-surface-container-high"}`} style={{ width: `${pct}%` }} />
+                <span className="md-title-medium relative w-5 shrink-0 text-left font-bold text-on-surface">{l}</span>
+                {on && <Check size={14} className="relative text-on-surface" aria-hidden />}
+                <span className="md-label-medium relative ml-auto tabular-nums text-on-surface-variant">{pct}%</span>
               </button>
             </li>
           );
