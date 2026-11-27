@@ -59,6 +59,7 @@ export const examCommentRepository = {
     body: string;
     status: ExamCommentStatus;
     flagReason: CommentFlagReason | null;
+    autoVote?: boolean;
     parentId?: string | null;
     replyToId?: string | null;
     files?: { name: string; filePath: string; mime: string; sizeBytes: number }[];
@@ -307,6 +308,10 @@ export const examCommentRepository = {
     ]);
     return updated.count;
   },
+
+  // Bình luận do bình chọn tạo ra của một người trên một câu; có người trả lời thì giữ lại để không mất trả lời của họ
+  deleteAutoVote: async (examId: string, questionNumber: number, userId: string) =>
+    (await prisma.examComment.deleteMany({ where: { examId, questionNumber, userId, autoVote: true, replies: { none: {} } } })).count,
 
   deleteById: async (id: string) => (await prisma.examComment.deleteMany({ where: { id } })).count,
 };

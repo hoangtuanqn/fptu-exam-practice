@@ -1,3 +1,4 @@
+import { examCommentRepository } from "../repositories/exam-comment.repository";
 import { examReactionRepository } from "../repositories/exam-reaction.repository";
 import type { Actor } from "../utils/actor";
 import { assertQuestion } from "./exam-comment.service";
@@ -46,6 +47,9 @@ export const examReactionService = {
   async vote(actor: Actor, userId: string, examId: string, questionNumber: number, answers: string[]) {
     const q = await openQuestion(actor, examId, questionNumber > 0 ? questionNumber : 0); // 0 không tồn tại: cùng lỗi 422 (route đã chặn số âm)
     await examReactionRepository.setVote(q, userId, answers.join(" "));
+    // Bấm chọn = bình luận "A, C" hiện ngay; đổi hoặc gỡ chọn thì thu hồi bình luận cũ do hệ thống tạo (bình luận người dùng tự viết giữ nguyên)
+    await examCommentRepository.deleteAutoVote(examId, questionNumber, userId);
+    if (answers.length) await examCommentRepository.create({ examId, questionNumber, userId, body: answers.join(", "), status: "APPROVED", flagReason: null, autoVote: true });
     return votesOf(q, userId);
   },
 
