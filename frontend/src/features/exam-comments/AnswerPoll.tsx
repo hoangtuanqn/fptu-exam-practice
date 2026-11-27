@@ -62,7 +62,7 @@ export function AnswerPoll({ votes, busy, onVote }: { votes: Votes; busy: boolea
         })}
         {last < LETTERS.length - 1 && (
           <li>
-            <button type="button" onClick={() => setAdded(last + 1)} aria-label="Thêm phương án" title="Thêm phương án" className="md-state flex h-[4.5rem] w-full items-center justify-center rounded-m3-md border border-dashed border-outline text-on-surface-variant outline-none focus-visible:ring-2 focus-visible:ring-primary">
+            <button type="button" onClick={() => setAdded(LETTERS.length - 1)} aria-label="Thêm phương án" title="Thêm phương án" className="md-state flex h-[4.5rem] w-full items-center justify-center rounded-m3-md border border-dashed border-outline text-on-surface-variant outline-none focus-visible:ring-2 focus-visible:ring-primary">
               <Plus size={20} aria-hidden />
             </button>
           </li>
