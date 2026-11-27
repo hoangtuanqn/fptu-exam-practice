@@ -9,14 +9,15 @@ interface Props {
   name: string;
   onChanged: () => void;
   onClose: () => void;
+  focusComment?: string | null;
 }
 
 // Thảo luận của một tệp không xem được trong trình xem ảnh (pdf, zip, video...): cùng khung, không có bình chọn đáp án
-export function CommentsDialog({ examId, examTitle, target, name, onChanged, onClose }: Props) {
+export function CommentsDialog({ examId, examTitle, target, name, onChanged, onClose, focusComment }: Props) {
   return (
     <Modal onClose={onClose} flush maxWidth="max-w-lg">
       <div className="h-[80vh] max-h-[720px] overflow-hidden">
-        <DiscussionPanel examId={examId} examTitle={examTitle} question={target} position={name} poll={false} closeAlways onChanged={onChanged} onUnavailable={onClose} onHide={onClose} />
+        <DiscussionPanel examId={examId} examTitle={examTitle} question={target} position={name} poll={false} closeAlways onChanged={onChanged} onUnavailable={onClose} onHide={onClose} focusComment={focusComment} />
       </div>
     </Modal>
   );
