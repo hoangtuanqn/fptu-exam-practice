@@ -69,8 +69,8 @@ export function DiscussionPanel({ examId, examTitle, question, position, poll, c
       {confirmDialog}
       <div className="flex items-start gap-2 border-b border-outline-variant px-4 py-3">
         <div className="min-w-0 flex-1">
-          <h2 className="md-title-small line-clamp-2 break-words text-on-surface">{examTitle}</h2>
-          <p className="md-body-small text-on-surface-variant">{position}</p>
+          <p className="md-label-small inline-block max-w-full truncate rounded-full bg-primary-container px-2.5 py-0.5 text-on-primary-container">{position}</p>
+          <h2 className="md-title-small mt-1 line-clamp-2 break-words text-on-surface">{examTitle}</h2>
         </div>
         <IconButton label={closeAlways ? "Đóng" : "Ẩn thảo luận"} onClick={onHide} className={closeAlways ? "" : "lg:hidden"}>
           <X size={20} />
@@ -92,9 +92,9 @@ export function DiscussionPanel({ examId, examTitle, question, position, poll, c
                 Bình luận <span className="font-normal text-on-surface-variant">· {list.total}</span>
               </h3>
               {list.items.length === 0 ? (
-                <p className="md-body-medium text-on-surface-variant">Chưa có bình luận nào.</p>
+                <p className="md-body-medium rounded-m3-lg border border-dashed border-outline-variant px-3 py-4 text-center text-on-surface-variant">Chưa ai mở lời. Bạn thử trước nhé!</p>
               ) : (
-                <ul className="space-y-3">
+                <ul className="space-y-5">
                   {list.items.map((c) => (
                     <CommentThread
                       key={preload?.rootId === c.id ? `${c.id}:open` : c.id}

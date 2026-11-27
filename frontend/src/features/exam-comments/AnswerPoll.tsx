@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Check, Plus } from "lucide-react";
 import { Switch } from "@/shared/ui/Switch";
 import type { Votes } from "./exam-comments.api";
 
@@ -21,19 +21,21 @@ export function AnswerPoll({ votes, busy, onVote }: { votes: Votes; busy: boolea
     onVote(multi ? [...mine, l].sort() : [l]);
   };
 
+  const top = Math.max(0, ...LETTERS.map((l) => counts[l] ?? 0));
+
   return (
-    <section aria-label="Bình chọn đáp án" className="space-y-2">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h3 className="md-title-small text-on-surface">Bình chọn đáp án</h3>
-          <p className="md-body-small text-on-surface-variant">{votes.voters} người đã chọn</p>
+    <section aria-label="Bình chọn đáp án" className="space-y-3 rounded-m3-lg bg-surface-container-low p-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="md-title-small text-on-surface">Mọi người chọn gì?</h3>
+          <p className="md-body-small text-on-surface-variant">{votes.voters > 0 ? `${votes.voters} người đã chọn` : "Chạm vào đáp án của bạn"}</p>
         </div>
         <label className="md-label-medium flex shrink-0 items-center gap-2 text-on-surface">
-          <Switch checked={multi} onChange={setMulti} label="Nhiều đáp án" />
-          Nhiều đáp án
+          Chọn nhiều
+          <Switch checked={multi} onChange={setMulti} label="Chọn nhiều đáp án" />
         </label>
       </div>
-      <ul className="space-y-1.5">
+      <ul className="grid grid-cols-4 gap-2">
         {LETTERS.slice(0, last + 1).map((l) => {
           const n = counts[l] ?? 0;
           const pct = votes.voters > 0 ? Math.round((n / votes.voters) * 100) : 0;
@@ -45,23 +47,27 @@ export function AnswerPoll({ votes, busy, onVote }: { votes: Votes; busy: boolea
                 disabled={busy}
                 aria-pressed={on}
                 aria-label={`${l}: ${n} người, ${pct}%${on ? ", bạn đã chọn" : ""}`}
+                title={`${n} người chọn ${l}`}
                 onClick={() => pick(l)}
-                className={`md-state relative flex h-11 w-full items-center gap-3 overflow-hidden rounded-m3-md border px-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-60 ${on ? "border-primary" : "border-outline-variant"}`}
+                className={`md-state relative flex h-[4.5rem] w-full flex-col items-center justify-center overflow-hidden rounded-m3-md bg-surface-container-lowest outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-60 ${on ? "ring-2 ring-inset ring-primary" : "ring-1 ring-inset ring-outline-variant"}`}
               >
-                <span aria-hidden className="absolute inset-y-0 left-0 bg-secondary-container transition-[width]" style={{ width: `${pct}%` }} />
-                <span className={`relative flex h-7 w-7 items-center justify-center rounded-m3-sm text-sm font-semibold ${on ? "bg-primary text-on-primary" : "bg-surface text-on-surface ring-1 ring-outline-variant"}`}>{l}</span>
-                <span className="relative ml-auto text-sm tabular-nums text-on-surface">{n}</span>
-                <span className="relative w-11 text-right text-sm tabular-nums text-on-surface-variant">{pct}%</span>
+                {/* Cột màu dâng từ dưới theo tỉ lệ chọn; đáp án nhiều người chọn nhất đậm hơn */}
+                <span aria-hidden className={`absolute inset-x-0 bottom-0 transition-[height] duration-500 ${n > 0 && n === top ? "bg-primary-container" : "bg-secondary-container"}`} style={{ height: `${pct}%` }} />
+                {on && <Check size={14} className="absolute right-1 top-1 text-primary" aria-hidden />}
+                <span className="md-title-large relative font-bold leading-none text-on-surface">{l}</span>
+                <span className="md-label-small relative mt-1 tabular-nums text-on-surface-variant">{pct}%</span>
               </button>
             </li>
           );
         })}
+        {last < LETTERS.length - 1 && (
+          <li>
+            <button type="button" onClick={() => setAdded(last + 1)} aria-label="Thêm phương án" title="Thêm phương án" className="md-state flex h-[4.5rem] w-full items-center justify-center rounded-m3-md border border-dashed border-outline text-on-surface-variant outline-none focus-visible:ring-2 focus-visible:ring-primary">
+              <Plus size={20} aria-hidden />
+            </button>
+          </li>
+        )}
       </ul>
-      {last < LETTERS.length - 1 && (
-        <button type="button" onClick={() => setAdded(last + 1)} className="md-state md-label-large flex h-10 w-full items-center justify-center gap-2 rounded-m3-md border border-outline-variant text-on-surface-variant">
-          <Plus size={16} aria-hidden /> Thêm phương án
-        </button>
-      )}
     </section>
   );
 }

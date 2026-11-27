@@ -1,11 +1,14 @@
-import { useEffect, useRef, type ReactNode } from "react";
-import { Gem, ThumbsDown, ThumbsUp } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { CornerDownRight, Flag, MoreHorizontal, Reply, ThumbsDown, ThumbsUp, Trash2 } from "lucide-react";
 import { Badge } from "@/shared/ui/Badge";
+import { IconButton } from "@/shared/ui/Button";
 import { timeAgo } from "@/shared/ui/NotificationBell";
 import { UserAvatar } from "@/shared/ui/UserAvatar";
+import { formatDateTime } from "@/shared/utils/formatters";
 import { reactionOf, type ExamComment } from "./exam-comments.api";
 
-const ACTION = "md-state inline-flex min-h-10 items-center gap-1 rounded-full px-2 font-medium outline-none focus-visible:ring-2 focus-visible:ring-primary";
+const ACTION = "md-state md-label-medium inline-flex min-h-10 items-center gap-1.5 px-3 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary";
+const CHIP = "md-label-small rounded-full px-2 py-0.5 font-semibold";
 
 export interface CommentItemProps {
   c: ExamComment;
@@ -18,67 +21,144 @@ export interface CommentItemProps {
   children?: ReactNode; // phản hồi của bình luận gốc
 }
 
-// Một bình luận hoặc phản hồi: nội dung là văn bản thuần (giữ xuống dòng, không HTML, không biến link thành liên kết)
+const joinedText = (iso?: string) => {
+  const d = iso ? new Date(iso) : null;
+  return d && !Number.isNaN(d.getTime()) ? `Tham gia tháng ${d.getMonth() + 1}/${d.getFullYear()}` : undefined;
+};
+
+// Một bình luận hoặc phản hồi, dùng chung cho khung xem ảnh và khu trao đổi cuối trang.
+// Nội dung là văn bản thuần (giữ xuống dòng, không HTML, không biến link thành liên kết).
 export function CommentItem({ c, reported, highlight, onReact, onReply, onReport, onDelete, children }: CommentItemProps) {
+  const body = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (highlight) body.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [highlight]);
+
   const approved = c.status === "APPROVED";
+  const reply = !!c.parentId;
   const reaction = reactionOf(c);
   const likes = c.likes ?? 0;
   const dislikes = c.dislikes ?? 0;
-  const bubble = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (highlight) bubble.current?.scrollIntoView({ block: "center" });
-  }, [highlight]);
+  const about = [joinedText(c.author.joinedAt), c.author.commentCount != null && `${c.author.commentCount} bình luận`].filter(Boolean).join(" · ");
+  const menu: MenuItem[] = [
+    ...(approved && !c.mine ? [{ label: reported ? "Đã báo cáo" : "Báo cáo", icon: <Flag size={16} />, onClick: onReport, disabled: reported }] : []),
+    ...(c.mine ? [{ label: "Xoá", icon: <Trash2 size={16} />, onClick: onDelete, danger: true }] : []),
+  ];
+  const vote = (on: boolean) => `${ACTION} ${on ? "bg-primary text-on-primary" : "text-on-surface-variant"}`;
 
   return (
-    <li id={`comment-${c.id}`} className="flex gap-2.5">
-      <UserAvatar src={c.author.avatarUrl} alt="" className="h-8 w-8" />
+    <li id={`comment-${c.id}`} className="flex gap-3">
+      <UserAvatar src={c.author.avatarUrl} alt="" className={reply ? "h-7 w-7" : "h-10 w-10"} />
       <div className="min-w-0 flex-1">
-        <div ref={bubble} className={`inline-block max-w-full rounded-m3-lg bg-surface-container-high px-3 py-2 ${highlight ? "ring-2 ring-primary" : ""}`}>
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="md-label-large break-words text-on-surface">{c.author.name}</span>
-            {c.author.isPro && <Gem size={14} className="text-primary" aria-label="Pro" role="img" />}
-            {c.author.isAdmin && <Badge tone="info">Quản trị</Badge>}
+        <div ref={body} className={`rounded-m3-lg transition-colors duration-500 ${highlight ? "-mx-2 bg-primary-container/50 px-2 py-1 ring-1 ring-primary" : ""}`}>
+          <div className="flex items-start gap-2">
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="md-title-small break-words text-on-surface" title={about || undefined}>
+                {c.author.name}
+              </span>
+              {c.author.isAdmin && <span className={`${CHIP} bg-primary text-on-primary`}>Quản trị</span>}
+              {c.author.isPro && <span className={`${CHIP} bg-tertiary-container text-on-tertiary-container`}>PRO</span>}
+              {c.mine && <span className={`${CHIP} bg-surface-container-highest text-on-surface-variant`}>Bạn</span>}
+              <time dateTime={c.createdAt} title={formatDateTime(c.createdAt)} className="md-body-small text-on-surface-variant">
+                {timeAgo(c.createdAt)}
+              </time>
+              {c.mine && c.status === "PENDING" && <Badge tone="warning">Chờ duyệt</Badge>}
+              {c.mine && c.status === "REJECTED" && <Badge tone="danger">Bị từ chối</Badge>}
+            </div>
+            {menu.length > 0 && <CommentMenu name={c.author.name} items={menu} />}
           </div>
-          <p className="md-body-medium whitespace-pre-wrap break-words text-on-surface">
-            {c.replyTo && <span className="mr-1 font-medium text-primary">Trả lời {c.replyTo.name}</span>}
-            {c.body}
-          </p>
+          {c.replyTo && (
+            <p className="md-label-small mt-1 inline-flex max-w-full items-center gap-1 rounded-full bg-secondary-container px-2 py-0.5 text-on-secondary-container">
+              <CornerDownRight size={12} aria-hidden />
+              <span className="truncate">Trả lời {c.replyTo.name}</span>
+            </p>
+          )}
+          <p className="md-body-medium mt-1 whitespace-pre-wrap break-words text-on-surface">{c.body}</p>
         </div>
-        <div className="md-body-small flex flex-wrap items-center gap-x-0.5 text-on-surface-variant">
-          <time dateTime={c.createdAt} className="px-2">
-            {timeAgo(c.createdAt)}
-          </time>
-          {approved && (
-            <>
-              <button type="button" onClick={() => onReact("like")} aria-pressed={reaction === "like"} aria-label={`Thích bình luận của ${c.author.name}, ${likes} lượt`} className={`${ACTION} ${reaction === "like" ? "text-primary" : ""}`}>
-                <ThumbsUp size={14} className={reaction === "like" ? "fill-current" : ""} aria-hidden />
-                {likes > 0 && likes}
+
+        {approved && (
+          <div className="mt-1 flex flex-wrap items-center gap-1">
+            <div className="inline-flex items-center divide-x divide-outline-variant overflow-hidden rounded-full bg-surface-container-high">
+              <button type="button" onClick={() => onReact("like")} aria-pressed={reaction === "like"} aria-label={`Thích bình luận của ${c.author.name}, ${likes} lượt`} className={vote(reaction === "like")}>
+                <ThumbsUp size={15} aria-hidden />
+                <span className="tabular-nums">{likes}</span>
               </button>
-              <button type="button" onClick={() => onReact("dislike")} aria-pressed={reaction === "dislike"} aria-label={`Không thích bình luận của ${c.author.name}, ${dislikes} lượt`} className={`${ACTION} ${reaction === "dislike" ? "text-primary" : ""}`}>
-                <ThumbsDown size={14} className={reaction === "dislike" ? "fill-current" : ""} aria-hidden />
-                {dislikes > 0 && dislikes}
+              <button type="button" onClick={() => onReact("dislike")} aria-pressed={reaction === "dislike"} aria-label={`Không thích bình luận của ${c.author.name}, ${dislikes} lượt`} className={vote(reaction === "dislike")}>
+                <ThumbsDown size={15} aria-hidden />
+                <span className="tabular-nums">{dislikes}</span>
               </button>
-              <button type="button" onClick={onReply} aria-label={`Trả lời ${c.author.name}`} className={ACTION}>
-                Trả lời
-              </button>
-            </>
-          )}
-          {approved && !c.mine && (
-            <button type="button" onClick={onReport} disabled={reported} aria-label={`Báo cáo bình luận của ${c.author.name}`} className={`${ACTION} disabled:opacity-60`}>
-              {reported ? "Đã báo cáo" : "Báo cáo"}
+            </div>
+            <button type="button" onClick={onReply} aria-label={`Trả lời ${c.author.name}`} className={`${ACTION} rounded-full text-on-surface-variant`}>
+              <Reply size={15} aria-hidden />
+              Trả lời
             </button>
-          )}
-          {c.mine && (
-            <button type="button" onClick={onDelete} aria-label="Xoá bình luận của bạn" className={ACTION}>
-              Xoá
-            </button>
-          )}
-          {c.mine && c.status === "PENDING" && <Badge tone="warning">Chờ duyệt</Badge>}
-          {c.mine && c.status === "REJECTED" && <Badge tone="danger">Bị từ chối</Badge>}
-        </div>
+          </div>
+        )}
         {children}
       </div>
     </li>
+  );
+}
+
+interface MenuItem {
+  label: string;
+  icon: ReactNode;
+  onClick: () => void;
+  disabled?: boolean;
+  danger?: boolean;
+}
+
+// Nút "…": Báo cáo (bình luận người khác) hoặc Xoá (của mình)
+function CommentMenu({ name, items }: { name: string; items: MenuItem[] }) {
+  const [open, setOpen] = useState(false);
+  const wrap = useRef<HTMLDivElement>(null);
+  // Đóng bằng bàn phím hay chọn một mục: trả focus về nút "…" (hộp xác nhận mở sau đó sẽ trả focus về đây)
+  const close = () => {
+    setOpen(false);
+    wrap.current?.querySelector("button")?.focus();
+  };
+
+  // Bấm ra ngoài thì đóng
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => !wrap.current?.contains(e.target as Node) && setOpen(false);
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [open]);
+
+  return (
+    <div
+      ref={wrap}
+      className="relative -my-2 shrink-0"
+      onKeyDown={(e) => {
+        if (e.key !== "Escape" || !open) return;
+        e.stopPropagation();
+        close();
+      }}
+    >
+      <IconButton label={`Thao tác khác với bình luận của ${name}`} aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+        <MoreHorizontal size={18} />
+      </IconButton>
+      {open && (
+        <div className="absolute right-0 top-full z-20 mt-1 min-w-40 rounded-m3-md bg-surface-container p-1 shadow-m3-2 ring-1 ring-outline-variant/50">
+          {items.map((i, n) => (
+            <button
+              key={i.label}
+              type="button"
+              autoFocus={n === 0}
+              disabled={i.disabled}
+              onClick={() => {
+                close();
+                i.onClick();
+              }}
+              className={`md-state md-body-medium flex min-h-10 w-full items-center gap-2.5 rounded-m3-sm px-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-60 ${i.danger ? "text-error" : "text-on-surface"}`}
+            >
+              {i.icon}
+              {i.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

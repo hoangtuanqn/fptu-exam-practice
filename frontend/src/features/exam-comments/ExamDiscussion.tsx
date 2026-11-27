@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { Loader2, MessageSquare, MessagesSquare } from "lucide-react";
+import { Loader2, MessagesSquare } from "lucide-react";
 import { VerifyEmailNotice } from "@/features/verify-email/VerifyEmailNotice";
 import { Button, buttonClass } from "@/shared/ui/Button";
 import { Empty, ErrorBox } from "@/shared/ui/Feedback";
@@ -18,8 +18,8 @@ interface Props {
 }
 
 const ORDERS: { value: CommentOrder; label: string }[] = [
-  { value: "oldest", label: "Cũ nhất" },
   { value: "newest", label: "Mới nhất" },
+  { value: "oldest", label: "Cũ nhất" },
 ];
 const NEAR_MARGIN = "600px"; // bắt đầu tải khi khu bình luận còn cách màn hình chừng này
 
@@ -43,14 +43,14 @@ export function ExamDiscussion({ examId, focusComment, onChanged }: Props) {
 
   if (gone) return null;
   return (
-    <section ref={ref} id="binh-luan" aria-label="Bình luận" className="mt-10 scroll-mt-20">
+    <section ref={ref} id="binh-luan" aria-label="Bình luận" className="mt-10 scroll-mt-20 rounded-m3-xl bg-surface-container-low p-4 sm:p-6">
       {near ? <Thread examId={examId} focusComment={focusComment} onChanged={onChanged} onGone={() => setGone(true)} /> : <div className="min-h-40" />}
     </section>
   );
 }
 
 function Thread({ examId, focusComment, onChanged, onGone }: Props & { onGone: () => void }) {
-  const [order, setOrder] = useState<CommentOrder>("oldest");
+  const [order, setOrder] = useState<CommentOrder>("newest");
   const { user, canAct, from, first, gone, list, loadingMore, more, post, act, patchItem, removeRoot, highlight, preload, confirmDialog } = useCommentList({
     examId,
     question: EXAM_TARGET,
@@ -68,72 +68,62 @@ function Thread({ examId, focusComment, onChanged, onGone }: Props & { onGone: (
   return (
     <>
       {confirmDialog}
-      <header className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary-container text-on-primary-container" aria-hidden>
-            <MessagesSquare size={22} />
-          </span>
-          <div className="min-w-0">
-            <h2 className="md-title-large text-on-surface">
-              Bình luận {list && <span className="font-normal tabular-nums text-on-surface-variant">· {list.total}</span>}
-            </h2>
-            <p className="md-body-medium text-on-surface-variant">Trao đổi chung về đề này</p>
-          </div>
-        </div>
+      <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="md-title-large flex items-center gap-2 text-on-surface">
+          Góc trao đổi
+          {list && <span className="md-label-large rounded-full bg-primary-container px-2.5 py-0.5 tabular-nums text-on-primary-container">{list.total}</span>}
+        </h2>
         {list && list.total > 1 && <Segmented label="Sắp xếp bình luận" value={order} options={ORDERS} onChange={setOrder} />}
       </header>
 
-      {first.error && !list ? (
-        <ErrorBox message={first.error} onRetry={first.reload} />
-      ) : !list ? (
-        <PostsSkeleton />
-      ) : list.items.length === 0 ? (
-        <div className="rounded-m3-xl border border-dashed border-outline-variant bg-surface-container-low">
-          <Empty icon={MessageSquare} title="Chưa có bình luận nào">
-            Hãy là người đầu tiên chia sẻ cách giải hay thắc mắc về đề này.
-          </Empty>
-        </div>
+      {canAct ? (
+        <CommentComposer roomy onSend={post} hint={false} />
+      ) : user ? (
+        <VerifyEmailNotice variant="inline" message="Xác minh email để thích và bình luận." />
       ) : (
-        <ul aria-busy={first.loading} className={`space-y-4 transition-opacity duration-200 ${first.loading ? "opacity-60" : ""}`}>
-          {list.items.map((c) => (
-            <CommentThread
-              key={preload?.rootId === c.id ? `${c.id}:open` : c.id}
-              variant="forum"
-              root={c}
-              examId={examId}
-              question={EXAM_TARGET}
-              act={act}
-              patch={patchItem}
-              onRemoved={() => removeRoot(c)}
-              highlightId={highlight}
-              preload={preload?.rootId === c.id ? preload.data : undefined}
-            />
-          ))}
-        </ul>
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-m3-lg border border-outline-variant bg-surface-container-lowest px-4 py-3">
+          <p className="md-body-medium text-on-surface-variant">Đăng nhập để tham gia trao đổi.</p>
+          <Link to="/login" state={{ from }} className={buttonClass({ variant: "filled", size: "sm" })}>
+            Đăng nhập
+          </Link>
+        </div>
       )}
 
+      <div className="mt-6">
+        {first.error && !list ? (
+          <ErrorBox message={first.error} onRetry={first.reload} />
+        ) : !list ? (
+          <PostsSkeleton />
+        ) : list.items.length === 0 ? (
+          <Empty icon={MessagesSquare} title="Chưa ai mở lời">
+            Hãy là người đầu tiên chia sẻ cách giải hay thắc mắc về đề này.
+          </Empty>
+        ) : (
+          <ul aria-busy={first.loading} className={`divide-y divide-outline-variant/60 transition-opacity duration-200 [&>li]:py-4 [&>li:first-child]:pt-0 ${first.loading ? "opacity-60" : ""}`}>
+            {list.items.map((c) => (
+              <CommentThread
+                key={preload?.rootId === c.id ? `${c.id}:open` : c.id}
+                root={c}
+                examId={examId}
+                question={EXAM_TARGET}
+                act={act}
+                patch={patchItem}
+                onRemoved={() => removeRoot(c)}
+                highlightId={highlight}
+                preload={preload?.rootId === c.id ? preload.data : undefined}
+              />
+            ))}
+          </ul>
+        )}
+      </div>
+
       {list && list.page < list.totalPages && (
-        <div className="mt-4 flex justify-center">
+        <div className="mt-2 flex justify-center">
           <Button variant="tonal" onClick={() => void more()} disabled={loadingMore}>
             {loadingMore && <Loader2 size={16} className="animate-spin" />} Xem thêm bình luận
           </Button>
         </div>
       )}
-
-      <div className="mt-6">
-        {canAct ? (
-          <CommentComposer variant="card" onSend={post} hint={false} />
-        ) : user ? (
-          <VerifyEmailNotice variant="inline" message="Xác minh email để thích và bình luận." />
-        ) : (
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-m3-xl bg-surface-container-low px-4 py-3 ring-1 ring-outline-variant/60">
-            <p className="md-body-medium text-on-surface-variant">Đăng nhập để tham gia bình luận.</p>
-            <Link to="/login" state={{ from }} className={buttonClass({ variant: "filled", size: "sm" })}>
-              Đăng nhập
-            </Link>
-          </div>
-        )}
-      </div>
     </>
   );
 }
@@ -141,15 +131,12 @@ function Thread({ examId, focusComment, onChanged, onGone }: Props & { onGone: (
 function PostsSkeleton() {
   return (
     <SkeletonWrap label="Đang tải bình luận…">
-      <div className="space-y-4">
+      <div className="space-y-5">
         {[0, 1].map((i) => (
-          <div key={i} className="flex flex-col gap-3 rounded-m3-xl bg-surface-container-lowest p-4 ring-1 ring-outline-variant/50 sm:flex-row sm:gap-5">
-            <div className="flex items-center gap-3 sm:w-40 sm:flex-col">
-              <Skeleton className="h-10 w-10 !rounded-full sm:h-16 sm:w-16" />
-              <Skeleton className="h-3.5 w-24" />
-            </div>
-            <div className="flex-1 space-y-2.5 sm:pt-1">
-              <Skeleton className="h-3 w-20" />
+          <div key={i} className="flex gap-3">
+            <Skeleton className="h-10 w-10 shrink-0 !rounded-full" />
+            <div className="flex-1 space-y-2.5">
+              <Skeleton className="h-3.5 w-32" />
               <Skeleton className="h-4 w-full" />
               <Skeleton className="h-4 w-2/3" />
             </div>
