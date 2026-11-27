@@ -364,9 +364,10 @@ h3 {
 }
 @media (max-width: 640px) { .mascot-chat { --mw: 68px; } }
 
-/* Đang đứng ở một ô tìm kiếm (input[data-search]): tạm dừng hiệu ứng trang trí lặp lại, nhường máy cho việc gõ */
-:root:has(input[data-search]:focus) :is(.mascot-chat-body, .mascot-travel, .mascot-hop, .free-shine, .pro-glow, .pro-float, .ci-float, .xmas-snow i, .xmas-twinkle, .reindeer-fly, .reindeer-bob, .reindeer-leg),
-:root:has(input[data-search]:focus) .pro-cta::after {
+/* Đang đứng ở một ô tìm kiếm (shared/utils/searchFocus gắn data-searching lên <html>): tạm dừng hiệu ứng trang trí lặp lại,
+   nhường máy cho việc gõ. Không dùng :has(input:focus): trình duyệt phải xét lại sau mỗi thay đổi trong trang, gõ càng chậm */
+html[data-searching] :is(.mascot-chat-body, .mascot-travel, .mascot-hop, .free-shine, .pro-glow, .pro-float, .ci-float, .xmas-snow i, .xmas-twinkle, .reindeer-fly, .reindeer-bob, .reindeer-leg),
+html[data-searching] .pro-cta::after {
   animation-play-state: paused;
 }
 
