@@ -355,7 +355,10 @@ export const examCommentService = {
     if (mentionUserIds.length && !flagReason) await notifyMentions([row.id]);
     const letters = questionNumber > 0 ? answerLettersOf(body) : null; // tệp đính kèm và thảo luận chung (0) không có bình chọn
     // Bình luận bị giữ chưa có hiệu lực công khai nên không đổi phiếu
-    if (letters && !flagReason) await examReactionRepository.setVote({ examId, questionNumber }, userId, letters.join(" "));
+    if (letters && !flagReason) {
+      await examCommentRepository.deleteAutoVote(examId, questionNumber, userId); // phiếu đổi: bình luận tự tạo từ lần bấm trước không còn đúng
+      await examReactionRepository.setVote({ examId, questionNumber }, userId, letters.join(" "));
+    }
     if (flagReason) notifyAdmins("held", userId, examId, questionNumber, body);
     const [commentCount, roots] = await Promise.all([
       examCommentRepository.approvedCountsByUser([userId]).then((m) => m.get(userId) ?? 0),

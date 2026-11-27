@@ -1425,6 +1425,7 @@ model ExamComment {
   flagReason     String?           @map("flag_reason") @db.VarChar(20) // why it was held for review: WORDS, LINK, CONTACT, REPEATED, SPAM, STRIKES, REPORTED, UPLOAD; null = not held
   parentId       String?           @map("parent_id") @db.Char(36) // root comment of a reply (replies are flat under one root); null = root
   replyToId      String?           @map("reply_to_id") @db.Char(36) // comment actually replied to (root or another reply); null = root or that comment was deleted
+  autoVote       Boolean           @default(false) @map("auto_vote") // created by the answer poll when the user tapped an answer; removed when the vote is withdrawn
 
   exam      Exam                @relation(fields: [examId], references: [id], onDelete: Cascade)
   user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)

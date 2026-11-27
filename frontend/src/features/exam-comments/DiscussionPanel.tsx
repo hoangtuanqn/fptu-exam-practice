@@ -53,7 +53,14 @@ export function DiscussionPanel({ examId, examTitle, question, position, poll, o
     setVoting(true);
     commentApi
       .vote(examId, question, answers)
-      .then((votes) => setR((p) => p && { ...p, votes }), (err: unknown) => toast.error(errorMessage(err, "Chưa bình chọn được")))
+      .then(
+        (votes) => {
+          setR((p) => p && { ...p, votes });
+          first.reload(); // máy chủ tự tạo / thu hồi bình luận theo lựa chọn
+          onChanged();
+        },
+        (err: unknown) => toast.error(errorMessage(err, "Chưa bình chọn được")),
+      )
       .finally(() => setVoting(false));
   };
 
