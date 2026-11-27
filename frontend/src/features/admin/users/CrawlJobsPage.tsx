@@ -73,7 +73,7 @@ export default function CrawlJobsPage() {
   const setPage = (p: number) => setUrl({ page: String(p) });
 
   // Ô tìm kiếm gõ trực tiếp, sau khi ngừng gõ mới đưa lên URL (và về trang 1)
-  const [search, setSearch, q] = useUrlSearch(url.q, setUrl);
+  const [search, setSearch, q, searchPending] = useUrlSearch(url.q, setUrl);
 
   const { data, error, loading, reload } = useApi(() => adminApi.crawlJobs({ page, search: q, status, userId: url.userId }), [page, q, status, url.userId]);
   useClampPage(data?.meta, setPage);
@@ -93,7 +93,7 @@ export default function CrawlJobsPage() {
       )}
       <Card>
         <div className="panel-filter-row">
-          <SearchBox value={search} onChange={setSearch} placeholder="Tìm theo tên hoặc email" label="Tìm thành viên" />
+          <SearchBox busy={searchPending || loading} value={search} onChange={setSearch} placeholder="Tìm theo tên hoặc email" label="Tìm thành viên" />
           <Segmented
             label="Lọc theo trạng thái"
             value={status}

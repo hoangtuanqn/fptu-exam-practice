@@ -28,7 +28,7 @@ export default function UsersPage() {
   const open = (id: string) => navigate(`/admin/users/${id}`);
 
   // Ô tìm kiếm gõ trực tiếp, sau khi ngừng gõ mới đưa lên URL (và về trang 1)
-  const [search, setSearch, q] = useUrlSearch(url.q, setUrl);
+  const [search, setSearch, q, searchPending] = useUrlSearch(url.q, setUrl);
 
   const { data, error, loading, reload } = useApi(() => adminApi.users({ page, search: q, role, status }), [page, q, role, status]);
   useClampPage(data?.meta, setPage);
@@ -39,7 +39,7 @@ export default function UsersPage() {
 
       <Card>
         <div className="flex flex-wrap gap-3 border-b border-slate-100 p-4">
-          <SearchBox value={search} onChange={setSearch} placeholder="Tìm theo tên hoặc email" label="Tìm thành viên" />
+          <SearchBox busy={searchPending || loading} value={search} onChange={setSearch} placeholder="Tìm theo tên hoặc email" label="Tìm thành viên" />
           <Segmented
             label="Lọc theo vai trò"
             value={role}
