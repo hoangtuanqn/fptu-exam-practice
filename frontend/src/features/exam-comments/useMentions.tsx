@@ -49,7 +49,8 @@ export function useMentions(examId: string | undefined, onPick: (start: number, 
     if (off) return;
     const at = mentionAt(value, caret);
     if (!at) return close();
-    setToken({ start: at.start, end: caret, query: at.query });
+    // onChange và onSelect cùng gọi mỗi phím: giữ nguyên state khi không đổi để khỏi render thêm
+    setToken((t) => (t && t.start === at.start && t.end === caret && t.query === at.query ? t : { start: at.start, end: caret, query: at.query }));
   };
 
   const pick = (c: MentionCandidate) => {

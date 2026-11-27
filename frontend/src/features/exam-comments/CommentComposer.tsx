@@ -52,10 +52,14 @@ export function CommentComposer({ onSend, examId, hint, label = "Viết bình lu
     return true;
   });
 
-  // Tự giãn chiều cao theo nội dung (tối đa vài dòng rồi cuộn)
+  // Tự giãn chiều cao theo nội dung (tối đa vài dòng rồi cuộn). Chỉ đo lại khi cần giãn thêm hoặc nội dung ngắn đi:
+  // gõ thường trong dòng không ghi style, nên không ép trình duyệt tính lại layout mỗi phím.
+  const lastLength = useRef(0);
   useEffect(() => {
     const el = box.current;
-    if (!el) return;
+    const shrank = draft.length < lastLength.current;
+    lastLength.current = draft.length;
+    if (!el || (!shrank && !preview && el.style.height && el.scrollHeight <= el.clientHeight)) return;
     el.style.height = "auto";
     el.style.height = `${Math.min(el.scrollHeight, roomy ? MAX_HEIGHT * 2 : MAX_HEIGHT)}px`;
   }, [draft, preview]);
