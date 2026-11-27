@@ -168,6 +168,10 @@ export interface ExplanationFeedbackAdmin {
   explanation: string | null; // lời giải đang lưu (null nếu đã bị xóa)
   imageUrl?: string | null; // ảnh câu hỏi để đối chiếu; backend cũ không có
   model: string | null;
+  // backend cũ không trả ba trường này
+  reward?: number; // credit đã thưởng khi xác nhận góp ý đúng
+  currentAnswer?: string | null; // đáp án hiện tại của câu, dạng "A C"
+  explanationStale?: boolean; // lời giải đã được tạo lại sau góp ý: chỉ đóng được, không thưởng
 }
 
 export interface ChatbotAdmin {
@@ -466,6 +470,9 @@ export const adminApi = {
     http.list<ExplanationFeedbackAdmin>("/admin/explanation-feedback", { page, limit: PAGE_SIZE, helpful, resolved, q }),
   resolveFeedback: (id: string) =>
     http.post<ExplanationFeedbackAdmin>(`/admin/explanation-feedback/${id}/resolve`),
+  // Xác nhận góp ý đúng: xóa lời giải, thưởng credit; gửi answer khi đồng thời sửa đáp án
+  confirmFeedback: (id: string, body: { answer?: string }) =>
+    http.post<ExplanationFeedbackAdmin>(`/admin/explanation-feedback/${id}/confirm`, body),
   reviewCounts: () => http.get<ReviewCounts>("/admin/review-counts"),
   explanationFeedbackSummary: () => http.get<{ up: number; down: number }>("/admin/explanation-feedback/summary"),
   answerReports: (page: number, status: ReportStatus | "", resolved: ResolvedFilter = "", q = "") =>
