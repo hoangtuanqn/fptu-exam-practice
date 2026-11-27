@@ -1,7 +1,7 @@
 import { ProtectedImg } from "@/shared/ui/ProtectedImg";
 import { useEffect, useRef, useState } from "react";
 import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
-import { BookOpen, Download, FileSearch, Loader2, FileArchive, MessageSquare, Timer, ZoomIn } from "lucide-react";
+import { BookOpen, Download, FileSearch, Loader2, FileArchive, Timer, ZoomIn } from "lucide-react";
 import { examApi } from "@/features/exam/exam.api";
 import { canPractice, type ExamAttachment, type ExamQuestionsPayload, type ImportedExam } from "@/features/exam/types";
 import { downloadUrl, ICONS, isImageFile, OPENABLE } from "@/features/exam-attachments/AttachmentList";
@@ -134,11 +134,6 @@ function Preview({ exam }: { exam: ImportedExam }) {
           <span className="absolute inset-0 flex items-center justify-center bg-primary/0 text-on-primary opacity-0 transition duration-200 group-hover:bg-primary/25 group-hover:opacity-100">
             <ZoomIn size={28} className="rounded-full bg-primary p-1.5 shadow-m3-2" aria-hidden />
           </span>
-          {commentsOf(s.question) > 0 && (
-            <span className="md-label-medium absolute right-2 top-2 flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-on-primary shadow-m3-1" aria-hidden>
-              <MessageSquare size={12} /> {commentsOf(s.question)}
-            </span>
-          )}
         </span>
         <span className="md-label-large block truncate px-1 pb-0.5 pt-2.5 text-center text-on-surface-variant" title={s.label}>
           {s.label}

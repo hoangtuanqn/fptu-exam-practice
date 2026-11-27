@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Heart, Loader2, X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { VerifyEmailNotice } from "@/features/verify-email/VerifyEmailNotice";
 import { ApiError } from "@/shared/api/client";
@@ -119,11 +119,6 @@ export function DiscussionPanel({ examId, examTitle, question, position, poll, c
   const fail = (fallback: string) => (err: unknown) => toast.error(errorMessage(err, fallback));
   const patchItem = (id: string, patch: Partial<ExamComment>) => setList((l) => l && { ...l, items: l.items.map((c) => (c.id === id ? { ...c, ...patch } : c)) });
 
-  const likeQuestion = () => {
-    if (!gate() || !r) return;
-    commentApi.likeQuestion(examId, question, !r.liked).then((res) => setR((p) => p && { ...p, ...res }), fail("Chưa thích được"));
-  };
-
   const vote = (answers: string[]) => {
     if (!gate() || !poll) return;
     setVoting(true);
@@ -238,9 +233,6 @@ export function DiscussionPanel({ examId, examTitle, question, position, poll, c
           </div>
         ) : (
           <>
-            <Button size="sm" variant={r.liked ? "tonal" : "outlined"} onClick={likeQuestion} aria-pressed={r.liked} aria-label={`Thích, ${r.likes} lượt thích`}>
-              <Heart size={16} className={r.liked ? "fill-current" : ""} aria-hidden /> Thích{r.likes > 0 && ` · ${r.likes}`}
-            </Button>
             {poll && r.votes && <AnswerPoll votes={r.votes} busy={voting} onVote={vote} />}
             <section aria-label="Bình luận" className="space-y-3">
               <h3 className="md-title-small text-on-surface">
