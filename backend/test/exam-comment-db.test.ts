@@ -235,6 +235,18 @@ describe("exam comments (MySQL)", { skip: DB_TESTS_ENABLED ? false : DB_SKIP_REA
     assert.equal(await m.prisma.examCommentReport.count({ where: { commentId: c.id } }), 0);
     assert.equal(await m.prisma.examQuestionLike.count({ where: { examId: exam, questionNumber: -png } }), 1); // tệp khác giữ nguyên
 
+    // Ghi đè bằng thư mục mới: trùng tên (HINH.PNG) giữ id và bình luận, tệp biến mất bị xoá, tệp mới được thêm
+    const row = (name: string) => ({ name, filePath: `exams/x/files/new-${name}`, mime: "image/png", sizeBytes: 2, sourceUrl: "" });
+    await m.prisma.$transaction((tx) => files.syncByName(exam, [row("HINH.PNG"), row("moi.png")], tx));
+    const after = await m.prisma.examAttachment.findMany({ where: { examId: exam }, orderBy: { id: "asc" } });
+    assert.deepEqual(after.map((a) => a.name), ["HINH.PNG", "moi.png"]);
+    assert.equal(after[0]!.id, png);
+    assert.equal(after[0]!.filePath, "exams/x/files/new-HINH.PNG");
+    assert.equal(await m.prisma.examComment.count({ where: { examId: exam, questionNumber: -png } }), 1);
+    assert.equal(await m.prisma.examQuestionLike.count({ where: { examId: exam, questionNumber: -png } }), 1);
+    await m.prisma.$transaction((tx) => files.syncByName(exam, [row("moi.png")], tx));
+    assert.equal(await m.prisma.examComment.count({ where: { examId: exam, questionNumber: -png } }), 0); // tệp không còn trong thư mục mới
+
     await m.prisma.$transaction((tx) => files.removeAll(exam, tx));
     assert.equal(await m.prisma.examComment.count({ where: { examId: exam, questionNumber: { lt: 0 } } }), 0);
     assert.equal(await m.prisma.examQuestionLike.count({ where: { examId: exam, questionNumber: { lt: 0 } } }), 0);

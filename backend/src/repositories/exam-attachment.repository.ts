@@ -45,6 +45,28 @@ export const examAttachmentRepository = {
     return db.examAttachment.deleteMany({ where: { examId } });
   },
 
+  /**
+   * Ghi đè bằng thư mục mới: tệp trùng tên (không phân biệt hoa thường) giữ nguyên id và bình luận, chỉ đổi nội dung;
+   * tệp không còn trong thư mục mới bị xoá cùng bình luận/thích; tệp mới được thêm. `db` = tx.
+   */
+  async syncByName(examId: string, rows: NewAttachment[], db: Db = prisma) {
+    const old = await db.examAttachment.findMany({ where: { examId }, select: { id: true, name: true } });
+    const oldByName = new Map(old.map((o) => [o.name.toLowerCase(), o.id]));
+    const kept = new Set<number>();
+    const fresh: NewAttachment[] = [];
+    for (const r of rows) {
+      const id = oldByName.get(r.name.toLowerCase());
+      if (id === undefined || kept.has(id)) fresh.push(r);
+      else {
+        kept.add(id);
+        await db.examAttachment.update({ where: { id }, data: { name: r.name, filePath: r.filePath, mime: r.mime, sizeBytes: r.sizeBytes, sourceUrl: r.sourceUrl } });
+      }
+    }
+    for (const o of old) if (!kept.has(o.id)) for (const op of removeTargets(db, examId, o.id)) await op;
+    await db.examAttachment.deleteMany({ where: { examId, id: { notIn: [...kept] } } });
+    if (fresh.length) await db.examAttachment.createMany({ data: fresh.map((r) => ({ ...r, examId })), skipDuplicates: true });
+  },
+
   // Thêm tệp mới, giữ nguyên các tệp cũ (id không đổi). `db` = tx khi cần chung transaction với việc tạo đề
   add: (examId: string, rows: NewAttachment[], db: Db = prisma) =>
     db.examAttachment.createMany({ data: rows.map((r) => ({ ...r, examId })), skipDuplicates: true }),
