@@ -7,6 +7,7 @@ import { Card } from "@/shared/ui/Card";
 import { Empty } from "@/shared/ui/Feedback";
 import { Field, Select, inputClass } from "@/shared/ui/Input";
 import { QueryBoundary } from "@/shared/ui/QueryBoundary";
+import { SearchStatusIcon } from "@/shared/ui/SearchStatusIcon";
 import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
 import { marketingAdminApi, type Campaign, type MarketingLog } from "./marketing.api";
 
@@ -37,7 +38,7 @@ export function LogsTab({ campaigns }: { campaigns: Campaign[] | null }) {
   const [url, setUrl] = useUrlState({ campaign: "", from: "", to: "", q: "", page: "1" });
   const page = toPage(url.page);
   const setPage = (p: number) => setUrl({ page: String(p) });
-  const [search, setSearch, q] = useUrlSearch(url.q, setUrl);
+  const [search, setSearch, q, searchPending] = useUrlSearch(url.q, setUrl);
   const logs = useApi(
     () => marketingAdminApi.logs({ campaign: url.campaign, from: url.from, to: url.to, email: q, page }),
     [url.campaign, url.from, url.to, q, page],
@@ -70,7 +71,12 @@ export function LogsTab({ campaigns }: { campaigns: Campaign[] | null }) {
           <input type="date" className={inputClass()} value={url.to} min={url.from || undefined} onChange={(e) => setUrl({ to: e.target.value, page: "1" })} />
         </Field>
         <Field label="Tìm theo email">
-          <input type="search" className={inputClass()} value={search} maxLength={100} placeholder="Một phần email" onChange={(e) => setSearch(e.target.value)} />
+          <span className="relative block">
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">
+              <SearchStatusIcon busy={searchPending || logs.loading} />
+            </span>
+            <input data-search type="search" className={`${inputClass()} pl-9`} value={search} maxLength={100} placeholder="Một phần email" onChange={(e) => setSearch(e.target.value)} />
+          </span>
         </Field>
       </div>
       <QueryBoundary query={logs}>
