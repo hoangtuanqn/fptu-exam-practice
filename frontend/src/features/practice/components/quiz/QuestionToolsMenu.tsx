@@ -68,7 +68,11 @@ export function QuestionToolsMenu({ onZoom, onReport, reported, autoNext, onTogg
                 <Item icon={<BookOpen size={16} />} label="Tài liệu tham khảo" onClick={run(onShowReferences)} />
               </div>
             )}
-            {onHelp && <Item icon={<CircleHelp size={16} />} label="Hướng dẫn làm bài" onClick={run(onHelp)} />}
+            {onHelp && (
+              <div className="max-lg:hidden">
+                <Item icon={<CircleHelp size={16} />} label="Hướng dẫn làm bài" onClick={run(onHelp)} />
+              </div>
+            )}
             {onReport && <Item icon={<MessageSquareWarning size={16} />} label={reported ? "Đã báo cáo đáp án" : "Báo cáo đáp án sai"} disabled={reported} onClick={run(onReport)} />}
           </div>
         </>
