@@ -1,7 +1,7 @@
 import { ProtectedImg } from "@/shared/ui/ProtectedImg";
 import { useEffect, useRef, useState } from "react";
 import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
-import { BookOpen, Download, FileSearch, Loader2, FileArchive, MessageSquare, Timer, ZoomIn } from "lucide-react";
+import { BookOpen, Download, FileSearch, Loader2, FileArchive, Timer, ZoomIn } from "lucide-react";
 import { examApi } from "@/features/exam/exam.api";
 import { canPractice, type ExamAttachment, type ExamQuestionsPayload, type ImportedExam } from "@/features/exam/types";
 import { downloadUrl, ICONS, isImageFile, OPENABLE } from "@/features/exam-attachments/AttachmentList";
@@ -134,11 +134,6 @@ function Preview({ exam }: { exam: ImportedExam }) {
           <span className="absolute inset-0 flex items-center justify-center bg-primary/0 text-on-primary opacity-0 transition duration-200 group-hover:bg-primary/25 group-hover:opacity-100">
             <ZoomIn size={28} className="rounded-full bg-primary p-1.5 shadow-m3-2" aria-hidden />
           </span>
-          {commentsOf(s.question) > 0 && (
-            <span className="md-label-medium absolute right-2 top-2 flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-on-primary shadow-m3-1" aria-hidden>
-              <MessageSquare size={12} /> {commentsOf(s.question)}
-            </span>
-          )}
         </span>
         <span className="md-label-large block truncate px-1 pb-0.5 pt-2.5 text-center text-on-surface-variant" title={s.label}>
           {s.label}
@@ -151,7 +146,7 @@ function Preview({ exam }: { exam: ImportedExam }) {
     .filter((a) => a.kind !== "archive" && !isImageFile(a))
     .map((a) => (
       <li key={`a${a.id}`} className="relative">
-        <FileTile a={a} />
+        <FileTile a={a} onOpenPdf={() => setTalk(a)} />
         {talkButton(a, "absolute right-2 top-2")}
       </li>
     ));
@@ -257,7 +252,7 @@ function Preview({ exam }: { exam: ImportedExam }) {
       )}
 
       {zoomAt >= 0 && <ImageLightbox items={lightboxItems} index={zoomAt} onIndex={(i) => setZoom(shots[i]!.key)} onClose={closeViewer} discussion={comments.counts ? { examId: exam.id, examTitle: exam.title, counts: comments.counts, onChanged: comments.reload, focus } : undefined} />}
-      {talk && <CommentsDialog examId={exam.id} examTitle={exam.title} target={attachmentTarget(talk.id)} name={talk.name} onChanged={comments.reload} onClose={closeViewer} focusComment={focus?.question === attachmentTarget(talk.id) ? focus.comment : null} />}
+      {talk && <CommentsDialog examId={exam.id} examTitle={exam.title} target={attachmentTarget(talk.id)} name={talk.name} pdfUrl={talk.kind === "pdf" && canEmbedPdf() ? talk.url : undefined} onChanged={comments.reload} onClose={closeViewer} focusComment={focus?.question === attachmentTarget(talk.id) ? focus.comment : null} />}
     </>
   );
 }
@@ -297,16 +292,16 @@ const canEmbedPdf = () => typeof window !== "undefined" && window.matchMedia("(p
 const pdfSrc = (url: string, bar: boolean) => `${url}#${bar ? "" : "toolbar=0&navpanes=0&"}view=FitH`;
 
 // Tệp đính kèm: PDF hiện luôn trang đầu (bấm để xem lớn); loại khác là biểu tượng lớn trên nền nhạt, mở được thì mở tab mới, không thì tải về
-function FileTile({ a }: { a: ExamAttachment }) {
+function FileTile({ a, onOpenPdf }: { a: ExamAttachment; onOpenPdf: () => void }) {
   const Icon = ICONS[a.kind] ?? ICONS.other;
   const open = OPENABLE.has(a.kind);
   if (a.kind === "pdf" && canEmbedPdf()) {
-    // PDF: bấm là mở thẳng file .pdf ở tab mới (không xem trong trang); khung nhỏ chỉ là hình xem trước
+    // PDF: bấm là xem ngay trong trang, kèm bình luận (máy không vẽ được PDF trong khung thì rơi xuống nhánh dưới: mở tab mới)
     return (
-      <a href={a.url} target="_blank" rel="noopener noreferrer" aria-label={`Mở ${a.name}`} title={a.name} className={`${TILE} bg-surface-container-lowest`}>
+      <button type="button" onClick={onOpenPdf} aria-label={`Xem ${a.name}`} title={a.name} className={`${TILE} bg-surface-container-lowest`}>
         <iframe src={pdfSrc(a.url, false)} title={a.name} loading="lazy" tabIndex={-1} className="pointer-events-none h-full w-full border-0" />
         <span className={CAPTION}>{a.name}</span>
-      </a>
+      </button>
     );
   }
   return (
