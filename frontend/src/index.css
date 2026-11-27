@@ -373,6 +373,12 @@ h3 {
 }
 @media (max-width: 640px) { .mascot-chat { --mw: 68px; } }
 
+/* Đang đứng ở một ô tìm kiếm (input[data-search]): tạm dừng hiệu ứng trang trí lặp lại, nhường máy cho việc gõ */
+:root:has(input[data-search]:focus) :is(.mascot-chat-body, .mascot-travel, .mascot-hop, .free-shine, .pro-glow, .pro-float, .ci-float, .xmas-snow i, .xmas-twinkle, .reindeer-fly, .reindeer-bob, .reindeer-leg),
+:root:has(input[data-search]:focus) .pro-cta::after {
+  animation-play-state: paused;
+}
+
 /* Mở khóa giải thích cả đề: thẻ vào bằng hiệu ứng, quầng sáng trôi, pháo giấy khi mua xong */
 @keyframes bundle-in {
   from { opacity: 0; transform: translateY(-14px) scale(0.97); }
@@ -409,8 +415,8 @@ h3 {
   }
 }
 
-/* Dòng "trải nghiệm miễn phí" ở trang chủ: chữ màu chủ đạo, không nền; vệt sáng lướt qua lướt lại ngay trên chữ.
-   Chỉ chạy khi người dùng không tắt chuyển động (còn lại là chữ màu chủ đạo đứng yên) */
+/* Dòng "trải nghiệm miễn phí" ở trang chủ: chữ màu chủ đạo, không nền; vệt sáng lướt qua lại vài lượt rồi đứng yên
+   (hiệu ứng này vẽ lại chữ ở từng khung hình, chạy mãi thì máy yếu gõ bị khựng). Chỉ chạy khi người dùng không tắt chuyển động (còn lại là chữ màu chủ đạo đứng yên) */
 .free-shine { color: var(--md-sys-color-primary); }
 @keyframes free-shine { from { background-position: 100% 0; } to { background-position: 0 0; } }
 @media (prefers-reduced-motion: no-preference) {
@@ -420,7 +426,7 @@ h3 {
     background-clip: text;
     -webkit-background-clip: text;
     color: transparent;
-    animation: free-shine 2.4s ease-in-out infinite alternate;
+    animation: free-shine 2.4s ease-in-out 4 alternate both;
   }
 }
 
