@@ -51,6 +51,15 @@ section {
   to { transform: translateX(100%); }
 }
 
+/* Biểu tượng ô tìm (SearchStatusIcon): kính lúp và vòng xoay nằm chồng một chỗ, chỉ đổi sau 150ms chờ */
+.search-status { display: grid; }
+.search-status > * { grid-area: 1 / 1; display: flex; }
+.search-status > span { visibility: hidden; }
+.search-status.is-busy > svg { animation: search-status-hide 0s 150ms forwards; }
+.search-status.is-busy > span { animation: search-status-show 0s 150ms forwards; }
+@keyframes search-status-hide { to { visibility: hidden; } }
+@keyframes search-status-show { to { visibility: visible; } }
+
 /* Ngăn "Thêm" của thanh điều hướng dưới trượt vào từ cạnh phải */
 @keyframes md-drawer-in-right {
   from { transform: translateX(100%); }
