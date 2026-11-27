@@ -1,0 +1,17 @@
+# 0019. Post-moderated comments, answer votes and likes
+
+Supersedes the moderation part of [0015](0015-exam-comments-moderation.md). Access, plain-text safety and public row privacy from 0015 still apply.
+
+**Context.** With every comment waiting for an admin, comments showed up hours later and nobody discussed questions. Students also want to vote on an answer and like a question or a comment, mostly for exams without an official answer.
+
+**Decision.**
+- Comments are filtered on the server (`utils/comment-text.ts`, word lists in `constants/comment-words.ts`) and go live at once. Blocked words: HTTP 422 `COMMENT_BLOCKED`, nothing stored, the message never says which word matched. Held rules (doubtful words, links, contact details, a repeated character, the same long text on several questions, recent admin rejections, reports) store the comment as `PENDING` with `flag_reason`. No AI moderation (cost per comment).
+- Matching normalises to NFC lower case only for comparison, matches whole words and keeps Vietnamese diacritics (removing them would turn ordinary words into slurs). Repeated letters and letters split by separators are joined to catch evasion. Legitimate course words are kept out of the lists and covered by tests.
+- Limits are named constants in `backend/src/constants/exam-comment.ts`: `EXAM_COMMENT_PER_MINUTE` (memory), `EXAM_COMMENT_PER_DAY`, `EXAM_COMMENT_NEW_ACCOUNT_PER_DAY`, `EXAM_COMMENT_PER_QUESTION_PER_DAY`, `EXAM_COMMENT_MAX_LINES`, `EXAM_COMMENT_REPEAT_CHAR_MAX`, `EXAM_COMMENT_SPAM_*`, `EXAM_COMMENT_STRIKES`, `EXAM_COMMENT_REPORTS_PER_DAY`, `EXAM_COMMENT_AUTO_HIDE_REPORTS`, `EXAM_VOTE_PER_MINUTE`, `EXAM_LIKE_PER_MINUTE`. Daily checks are indexed `COUNT`s or bounded reads, never a full day of rows per post.
+- Migration `0096_comment_reactions` (additive): `exam_comments.flag_reason`, `exam_comment_likes`, `exam_comment_reports`, `exam_question_likes`, `exam_question_votes` (one row per user per item, cascade on delete).
+- A comment starting with uppercase answer letters (`A`, `B vì ...`, `A, C`) also sets the author's vote; voting never creates a comment. Votes and likes are returned as counts only.
+- Reports: one per user per comment, not on own comments, only on visible ones. Enough distinct reporters send an unreviewed comment back to `PENDING` (`REPORTED`); a comment an admin already approved stays visible and only enters the reported queue. Reviewing a comment deletes its reports.
+- Admin notices (same throttle as before) only for held or reported comments.
+- Everything on the exam preview can be discussed, for every exam kind: a target is `question_number`, positive for a question image and `-id` for an `ExamAttachment` (shortcut, no new key). Attachments get comments and likes but no answer poll; deleting or replacing an attachment row deletes its comments and likes in the same transaction.
+
+**Consequences.** Some evasive comments go live until reported; the report button and admin queue are the safety net. The word lists live in code, so changing them needs a deploy. Account deletion removes the user's report reasons; likes and votes stay as counts.
