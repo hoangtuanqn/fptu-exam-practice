@@ -9,6 +9,8 @@ import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { Segmented } from "@/shared/ui/Segmented";
 import { SubjectSearchInput } from "@/features/subject/SubjectSearchInput";
 import { SubjectTile } from "@/features/subject/SubjectTile";
+import { useSubjectSearch } from "@/features/subject/useSubjectSearch";
+import { useSlow } from "@/shared/hooks/useSlow";
 import { flashcardApi } from "./flashcard.api";
 
 const STEP = 24; // mỗi lần hiện thêm bấy nhiêu môn
@@ -21,25 +23,42 @@ export default function FlashcardSubjectsPage() {
   const [term, setTerm] = useState("");
   const [sort, setSort] = useState<Sort>("most");
   const [limit, setLimit] = useState(STEP);
-  useEffect(() => setLimit(STEP), [term, sort]); // đổi tìm kiếm hay cách sắp thì về đợt đầu
 
   const all = q.data?.items;
-  const list = useMemo(() => {
-    const t = term.trim().toLowerCase();
-    const found = (all ?? []).filter(
-      (s) =>
-        !t ||
-        s.code.toLowerCase().includes(t) ||
-        (s.name ?? "").toLowerCase().includes(t),
-    );
-    return [...found].sort((a, b) =>
-      sort === "az"
-        ? a.code.localeCompare(b.code)
-        : b.cardCount - a.cardCount || a.code.localeCompare(b.code),
-    );
-  }, [all, term, sort]);
-  const shown = list.slice(0, limit);
+  const { results, term: searched, stale } = useSubjectSearch(all, term);
+  const slow = useSlow(stale);
+  useEffect(() => setLimit(STEP), [searched, sort]); // đổi tìm kiếm hay cách sắp thì về đợt đầu
+  const list = useMemo(
+    () =>
+      [...results].sort((a, b) =>
+        sort === "az"
+          ? a.code.localeCompare(b.code)
+          : b.cardCount - a.cardCount || a.code.localeCompare(b.code),
+      ),
+    [results, sort],
+  );
+  const shown = useMemo(() => list.slice(0, limit), [list, limit]);
   const rest = list.length - shown.length;
+  // memo: lúc đang gõ, lưới ô môn chưa đổi thì không vẽ lại
+  const grid = useMemo(
+    () => (
+      <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        {shown.map((s) => (
+          <li key={s.code}>
+            <SubjectTile
+              subject={{
+                code: s.code,
+                name: s.name,
+                badge: `${s.cardCount} thẻ`,
+              }}
+              onPick={() => navigate(`/flashcard/${s.code.toLowerCase()}`)}
+            />
+          </li>
+        ))}
+      </ul>
+    ),
+    [shown, navigate],
+  );
 
   return (
     <div className="flex min-h-screen flex-col bg-surface">
@@ -70,7 +89,7 @@ export default function FlashcardSubjectsPage() {
         </section>
 
         <div className="mx-auto w-full max-w-5xl space-y-5 px-4 py-8">
-          <SubjectSearchInput value={term} onChange={setTerm} />
+          <SubjectSearchInput value={term} onChange={setTerm} busy={stale} />
 
           {q.loading && !all ? (
             <Loading />
@@ -83,7 +102,7 @@ export default function FlashcardSubjectsPage() {
                   className="md-body-medium text-on-surface-variant"
                   aria-live="polite"
                 >
-                  {term.trim()
+                  {searched
                     ? `Tìm thấy ${list.length}/${all?.length ?? 0} môn`
                     : `Hiển thị ${shown.length}/${list.length} môn`}
                 </p>
@@ -103,22 +122,7 @@ export default function FlashcardSubjectsPage() {
                   Thử mã môn khác.
                 </Empty>
               ) : (
-                <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                  {shown.map((s) => (
-                    <li key={s.code}>
-                      <SubjectTile
-                        subject={{
-                          code: s.code,
-                          name: s.name,
-                          badge: `${s.cardCount} thẻ`,
-                        }}
-                        onPick={() =>
-                          navigate(`/flashcard/${s.code.toLowerCase()}`)
-                        }
-                      />
-                    </li>
-                  ))}
-                </ul>
+                <div aria-busy={slow} className={`transition-opacity ${slow ? "opacity-60" : ""}`}>{grid}</div>
               )}
 
               {rest > 0 && (
