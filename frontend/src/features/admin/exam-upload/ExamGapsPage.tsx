@@ -9,7 +9,7 @@ import { Badge, type Tone } from "@/shared/ui/Badge";
 import { Button, buttonClass } from "@/shared/ui/Button";
 import { Card, PageHeader } from "@/shared/ui/Card";
 import { Empty } from "@/shared/ui/Feedback";
-import { inputClass, Select } from "@/shared/ui/Input";
+import { Select } from "@/shared/ui/Input";
 import { Modal, ModalTitle } from "@/shared/ui/Modal";
 import { QueryBoundary } from "@/shared/ui/QueryBoundary";
 import { Segmented } from "@/shared/ui/Segmented";
