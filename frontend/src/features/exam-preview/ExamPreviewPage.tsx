@@ -1,10 +1,10 @@
 import { ProtectedImg } from "@/shared/ui/ProtectedImg";
 import { useEffect, useRef, useState } from "react";
 import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
-import { BookOpen, Download, FileSearch, Loader2, FileArchive, Timer, ZoomIn } from "lucide-react";
+import { BookOpen, Download, FileSearch, Loader2, Timer, ZoomIn } from "lucide-react";
 import { examApi } from "@/features/exam/exam.api";
 import { canPractice, type ExamAttachment, type ExamQuestionsPayload, type ImportedExam } from "@/features/exam/types";
-import { downloadUrl, ICONS, isImageFile, OPENABLE } from "@/features/exam-attachments/AttachmentList";
+import { downloadUrl, ICONS, isImageFile } from "@/features/exam-attachments/AttachmentList";
 import { CommentCountButton, CommentsDialog } from "@/features/exam-comments/CommentsDialog";
 import { attachmentTarget } from "@/features/exam-comments/exam-comments.api";
 import { useCommentCounts } from "@/features/exam-comments/useCommentCounts";
@@ -32,8 +32,6 @@ import { ImageLightbox } from "./ImageLightbox";
 // Thẻ ảnh trang đề: nền tông nhạt cùng bảng màu với thẻ tệp; ảnh như tờ giấy trắng bo góc, rê chuột thì thẻ nhấc lên và hiện biểu tượng phóng to
 const CARD = "md-state group block w-full overflow-hidden rounded-m3-xl bg-surface-container-low p-2.5 text-left shadow-m3-1 outline-none transition duration-200 hover:-translate-y-0.5 hover:shadow-m3-3 focus-visible:ring-2 focus-visible:ring-primary";
 
-const TILE = "md-state group relative block aspect-[4/3] overflow-hidden rounded-m3-md bg-surface-container-lowest shadow-m3-1 outline-none focus-visible:ring-2 focus-visible:ring-primary";
-const CAPTION = "md-label-large absolute inset-x-0 bottom-0 truncate bg-inverse-surface/70 px-3 py-2 text-left text-inverse-on-surface";
 
 // Trang xem trước đề (/exam/:examId/preview): các trang ảnh và tệp đính kèm dạng lưới, nút Luyện đề / Thi nếu đề làm được trên web
 export default function ExamPreviewPage() {
@@ -141,15 +139,8 @@ function Preview({ exam }: { exam: ImportedExam }) {
       </button>
     </li>
   ));
-  const archives = attachments.filter((a) => a.kind === "archive");
-  const fileTiles = attachments
-    .filter((a) => a.kind !== "archive" && !isImageFile(a))
-    .map((a) => (
-      <li key={`a${a.id}`} className="relative">
-        <FileTile a={a} onOpenPdf={() => setTalk(a)} />
-        {talkButton(a, "absolute right-2 top-2")}
-      </li>
-    ));
+  // Mọi tệp không phải ảnh (pdf, zip, video...) là tệp đính kèm: một hàng ở đầu trang, bấm là tải về, kèm nút bình luận
+  const archives = attachments.filter((a) => !isImageFile(a));
   const lightboxItems = shots.map((s) => ({ src: s.src, name: s.label, question: s.question, poll: s.poll }));
   const zoomAt = zoom === null ? -1 : shots.findIndex((s) => s.key === zoom);
 
@@ -175,7 +166,7 @@ function Preview({ exam }: { exam: ImportedExam }) {
     setTalk(null);
     setFocus(null);
   };
-  const tiles = kind === "PE" ? [...fileTiles, ...pageTiles] : [...pageTiles, ...fileTiles];
+  const tiles = pageTiles;
 
   // Đề PE: gom mọi tài nguyên (tệp đính kèm + ảnh) vào một file zip mang tên đề
   const downloadAll = async () => {
@@ -203,7 +194,7 @@ function Preview({ exam }: { exam: ImportedExam }) {
           <h1 className="md-headline-small mt-2 break-words text-on-surface">{exam.title}</h1>
           {meta && <p className="md-body-medium mt-1 text-on-surface-variant">{meta}</p>}
         </div>
-        {kind === "PE" && tiles.length > 0 && (
+        {kind === "PE" && (tiles.length > 0 || archives.length > 0) && (
           <Button variant="filled" onClick={() => void downloadAll()} disabled={zipping || fetching}>
             {zipping ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} {zipping ? "Đang nén…" : "Download All"}
           </Button>
@@ -252,7 +243,7 @@ function Preview({ exam }: { exam: ImportedExam }) {
       )}
 
       {zoomAt >= 0 && <ImageLightbox items={lightboxItems} index={zoomAt} onIndex={(i) => setZoom(shots[i]!.key)} onClose={closeViewer} discussion={comments.counts ? { examId: exam.id, examTitle: exam.title, counts: comments.counts, onChanged: comments.reload, focus } : undefined} />}
-      {talk && <CommentsDialog examId={exam.id} examTitle={exam.title} target={attachmentTarget(talk.id)} name={talk.name} pdfUrl={talk.kind === "pdf" && canEmbedPdf() ? talk.url : undefined} onChanged={comments.reload} onClose={closeViewer} focusComment={focus?.question === attachmentTarget(talk.id) ? focus.comment : null} />}
+      {talk && <CommentsDialog examId={exam.id} examTitle={exam.title} target={attachmentTarget(talk.id)} name={talk.name} onChanged={comments.reload} onClose={closeViewer} focusComment={focus?.question === attachmentTarget(talk.id) ? focus.comment : null} />}
     </>
   );
 }
@@ -262,8 +253,9 @@ const pageLabel = (q: Question) => `Ảnh ${q.number}`;
 // Tên tệp ảnh của trang (phần cuối đường dẫn, bỏ query)
 const fileName = (q: Question) => decodeURIComponent(q.imageUrl.split("?")[0]!.split("/").pop() ?? `Q${q.number}`);
 
-// Tệp nén (zip, rar...): một hàng ở đầu trang, trước các ảnh: biểu tượng tròn, tên đậm, dung lượng, nút tải ở cuối hàng. Bấm cả hàng là tải về
+// Tệp đính kèm không phải ảnh (zip, pdf, video...): một hàng ở đầu trang, trước các ảnh: biểu tượng tròn, tên đậm, dung lượng, nút tải ở cuối hàng. Bấm cả hàng là tải về
 function ArchiveRow({ a }: { a: ExamAttachment }) {
+  const Icon = ICONS[a.kind] ?? ICONS.other;
   return (
     <a
       href={downloadUrl(a.url)}
@@ -272,7 +264,7 @@ function ArchiveRow({ a }: { a: ExamAttachment }) {
       className="md-state group flex items-center gap-3 rounded-m3-lg bg-surface-container-low px-3 py-2.5 shadow-m3-1 outline-none transition duration-200 hover:-translate-y-0.5 hover:shadow-m3-2 focus-visible:ring-2 focus-visible:ring-primary"
     >
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-container to-secondary-container text-on-primary-container ring-1 ring-primary/10">
-        <FileArchive size={20} strokeWidth={1.75} aria-hidden />
+        <Icon size={20} strokeWidth={1.75} aria-hidden />
       </span>
       <span className="min-w-0 flex-1">
         <span className="md-label-large block truncate font-semibold text-on-surface" title={a.name}>
@@ -283,39 +275,6 @@ function ArchiveRow({ a }: { a: ExamAttachment }) {
       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-on-surface-variant transition group-hover:bg-primary-container group-hover:text-on-primary-container">
         <Download size={16} aria-hidden />
       </span>
-    </a>
-  );
-}
-
-// Máy có chuột mới nhúng PDF làm hình xem trước: điện thoại thường không vẽ PDF trong khung, nên chỉ hiện biểu tượng và mở tab mới
-const canEmbedPdf = () => typeof window !== "undefined" && window.matchMedia("(pointer: fine)").matches;
-const pdfSrc = (url: string, bar: boolean) => `${url}#${bar ? "" : "toolbar=0&navpanes=0&"}view=FitH`;
-
-// Tệp đính kèm: PDF hiện luôn trang đầu (bấm để xem lớn); loại khác là biểu tượng lớn trên nền nhạt, mở được thì mở tab mới, không thì tải về
-function FileTile({ a, onOpenPdf }: { a: ExamAttachment; onOpenPdf: () => void }) {
-  const Icon = ICONS[a.kind] ?? ICONS.other;
-  const open = OPENABLE.has(a.kind);
-  if (a.kind === "pdf" && canEmbedPdf()) {
-    // PDF: bấm là xem ngay trong trang, kèm bình luận (máy không vẽ được PDF trong khung thì rơi xuống nhánh dưới: mở tab mới)
-    return (
-      <button type="button" onClick={onOpenPdf} aria-label={`Xem ${a.name}`} title={a.name} className={`${TILE} bg-surface-container-lowest`}>
-        <iframe src={pdfSrc(a.url, false)} title={a.name} loading="lazy" tabIndex={-1} className="pointer-events-none h-full w-full border-0" />
-        <span className={CAPTION}>{a.name}</span>
-      </button>
-    );
-  }
-  return (
-    <a
-      href={open ? a.url : downloadUrl(a.url)}
-      {...(open ? { target: "_blank", rel: "noopener noreferrer" } : { download: a.name })}
-      aria-label={`${open ? "Mở" : "Tải về"} ${a.name}`}
-      title={a.name}
-      className={`${TILE} bg-primary-container/40`}
-    >
-      <span className="flex h-full items-center justify-center pb-8">
-        <Icon size={72} strokeWidth={1.5} className="text-primary" aria-hidden />
-      </span>
-      <span className={CAPTION}>{a.name}</span>
     </a>
   );
 }
