@@ -1422,13 +1422,22 @@ model ExamComment {
   reviewedById   String?           @map("reviewed_by_id") @db.Char(36) // admin who reviewed it (soft reference, no FK)
   reviewNote     String?           @map("review_note") @db.VarChar(255)
   flagReason     String?           @map("flag_reason") @db.VarChar(20) // why it was held for review: WORDS, LINK, CONTACT, REPEATED, SPAM, STRIKES, REPORTED; null = not held
+  parentId       String?           @map("parent_id") @db.Char(36) // root comment of a reply (replies are flat under one root); null = root
+  replyToId      String?           @map("reply_to_id") @db.Char(36) // comment actually replied to (root or another reply); null = root or that comment was deleted
 
-  exam    Exam                @relation(fields: [examId], references: [id], onDelete: Cascade)
-  user    User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  likes   ExamCommentLike[]
-  reports ExamCommentReport[]
+  exam      Exam                @relation(fields: [examId], references: [id], onDelete: Cascade)
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent    ExamComment?        @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   ExamComment[]       @relation("CommentReplies")
+  replyTo   ExamComment?        @relation("CommentReplyTo", fields: [replyToId], references: [id], onDelete: SetNull)
+  repliedBy ExamComment[]       @relation("CommentReplyTo")
+  likes     ExamCommentLike[]
+  reports   ExamCommentReport[]
 
-  @@index([examId, questionNumber, status, createdAt]) // public list of one question, counts per question
+  @@index([examId, questionNumber, status, createdAt]) // counts per question
+  @@index([examId, questionNumber, parentId, status, createdAt]) // public list of the root comments of one question
+  @@index([parentId, status, createdAt]) // replies of one root, reply counts
+  @@index([replyToId])
   @@index([status, createdAt]) // admin queue
   @@index([userId, createdAt]) // daily limit, same text on other questions
   @@index([userId, examId, questionNumber, createdAt]) // per-question limit and duplicate check
@@ -1436,10 +1445,11 @@ model ExamComment {
   @@map("exam_comments")
 }
 
-// One like per member per comment
+// One reaction per member per comment: like or dislike (can be switched)
 model ExamCommentLike {
   commentId String   @map("comment_id") @db.Char(36)
   userId    String   @map("user_id") @db.Char(36)
+  isDislike Boolean  @default(false) @map("is_dislike")
   createdAt DateTime @default(now()) @map("created_at")
 
   comment ExamComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
