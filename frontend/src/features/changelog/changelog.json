@@ -1,6 +1,50 @@
 {
   "web": [
     {
+      "version": "1.15.0",
+      "date": "2026-11-27",
+      "title": "Trao đổi ngay trên đề thi",
+      "highlights": [
+        "Bình luận và bình chọn đáp án cho từng câu",
+        "Góc trao đổi chung dưới mỗi đề, có ảnh và định dạng chữ",
+        "Làm bài trên điện thoại gọn và rộng hơn"
+      ],
+      "changes": [
+        {
+          "type": "new",
+          "text": "Bình luận từng ảnh câu hỏi, bình chọn đáp án và xem mọi người chọn gì"
+        },
+        {
+          "type": "new",
+          "text": "Góc trao đổi chung dưới mỗi đề: định dạng chữ, nhắc tên bằng @, dẫn tới câu bằng #; bình luận có ảnh hoặc tệp hiện sau khi được duyệt"
+        },
+        {
+          "type": "new",
+          "text": "Trả lời, thích hoặc không thích bình luận; chuông báo khi có người phản hồi hay nhắc đến bạn"
+        },
+        {
+          "type": "new",
+          "text": "Viền ảnh đại diện riêng cho thành viên Pro"
+        },
+        {
+          "type": "improved",
+          "text": "Màn làm bài gọn hơn, xem đề rõ hơn trên điện thoại, kể cả khi xoay ngang"
+        },
+        {
+          "type": "improved",
+          "text": "Tìm môn và đề mượt hơn, gõ không dấu vẫn ra kết quả"
+        },
+        {
+          "type": "improved",
+          "text": "Đề chưa có đáp án mở thẳng trang xem trước"
+        },
+        {
+          "type": "fixed",
+          "text": "Hộp báo sai đáp án dễ điền trên điện thoại và không còn nhảy con trỏ khi đang gõ"
+        }
+      ]
+    },
+    {
       "version": "1.14.0",
       "date": "2026-11-25",
       "title": "Tự xoá tài khoản và trang chính sách",
