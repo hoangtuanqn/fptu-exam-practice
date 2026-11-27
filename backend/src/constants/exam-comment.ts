@@ -2,7 +2,7 @@
 
 // Độ dài tối đa của một bình luận (sau khi bỏ khoảng trắng đầu/cuối) và số dòng tối đa
 export const EXAM_COMMENT_MAX_LENGTH = 1000;
-export const EXAM_COMMENT_MAX_LINES = 15;
+export const EXAM_COMMENT_MAX_LINES = 50;
 
 // Chống spam theo tài khoản: số bình luận mỗi phút (bộ đếm trong bộ nhớ) và mỗi 24 giờ (đếm trong DB)
 export const EXAM_COMMENT_PER_MINUTE = 20;
