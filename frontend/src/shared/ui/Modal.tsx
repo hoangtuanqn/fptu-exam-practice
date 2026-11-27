@@ -17,24 +17,32 @@ export function Modal({ children, onClose, wide = false, blur = false, maxWidth,
   // top: hộp nằm gần mép trên (kiểu palette tìm kiếm); flush: không đệm trong để nội dung tự chia khoảng
   // blur: nền phủ tối hơn và nhòe nội dung phía sau, để không đọc được (ví dụ hộp chọn chế độ nằm đè lên đề đã mở: chưa chọn chế độ thì chưa xem được đề)
   const box = useRef<HTMLDivElement>(null);
+  // onClose thường là hàm mới ở mỗi lần trang vẽ lại (màn làm đề vẽ lại mỗi giây theo đồng hồ): giữ trong ref để effect
+  // quản lý focus chỉ chạy lúc mở và đóng hộp, nếu không con trỏ bị giật khỏi ô đang gõ
+  const close = useRef(onClose);
+  close.current = onClose;
+
+  // Tên cho hộp thoại (trình đọc màn hình): tiêu đề đầu tiên trong hộp, khi hộp chưa có aria-label. Chạy mỗi lần vẽ vì tiêu đề có thể hiện sau
+  useEffect(() => {
+    const node = box.current;
+    const heading = node?.querySelector<HTMLElement>("h1, h2, h3");
+    if (node && heading && !node.hasAttribute("aria-label")) {
+      heading.id ||= `modal-title-${++modalTitleSeq}`;
+      node.setAttribute("aria-labelledby", heading.id);
+    }
+  });
 
   useEffect(() => {
     const opener = document.activeElement as HTMLElement | null;
     const node = box.current;
     const token = {};
     openModals.push(token);
-    // Tên cho hộp thoại (trình đọc màn hình): tiêu đề đầu tiên trong hộp, khi hộp chưa có aria-label
-    const heading = node?.querySelector<HTMLElement>("h1, h2, h3");
-    if (node && heading && !node.hasAttribute("aria-label")) {
-      heading.id ||= `modal-title-${++modalTitleSeq}`;
-      node.setAttribute("aria-labelledby", heading.id);
-    }
     // Đưa focus vào hộp: React đã tự focus phần tử autoFocus lúc mount (không tạo thuộc tính [autofocus]) thì giữ nguyên, không thì khung hộp
     if (!node?.contains(document.activeElement)) (node?.querySelector<HTMLElement>("[autofocus]") ?? node)?.focus({ preventScroll: true });
 
     const onKey = (e: KeyboardEvent) => {
       if (openModals[openModals.length - 1] !== token) return;
-      if (e.key === "Escape" && onClose) return onClose();
+      if (e.key === "Escape" && close.current) return close.current();
       if (e.key !== "Tab" || !node) return;
       const items = Array.from(node.querySelectorAll<HTMLElement>(FOCUSABLE)).filter((el) => el.offsetParent !== null);
       if (items.length === 0) return e.preventDefault();
@@ -54,7 +62,7 @@ export function Modal({ children, onClose, wide = false, blur = false, maxWidth,
       openModals.splice(openModals.indexOf(token), 1);
       opener?.focus?.({ preventScroll: true });
     };
-  }, [onClose]);
+  }, []);
 
   return createPortal(
     <div
