@@ -47,7 +47,7 @@ export function FolderPicker({ onPick, disabled, error }: Props) {
         <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-container text-on-primary-container">
           <FolderOpen size={22} aria-hidden />
         </span>
-        <span className="md-title-medium mt-3 text-on-surface">Kéo thả thư mục đề vào đây, hoặc bấm để chọn</span>
+        <span className="md-title-medium mt-3 text-on-surface">Kéo thả thư mục đề (một hoặc nhiều) vào đây, hoặc bấm để chọn</span>
         <span className="md-body-small mt-0.5 break-words text-on-surface-variant">Thư mục gồm images/Q1.webp, Q2.webp… và ans.json nằm cạnh images</span>
         <input
           ref={input}
