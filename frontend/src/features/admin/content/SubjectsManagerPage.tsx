@@ -8,7 +8,9 @@ import {
 import { errorMessage } from "@/shared/api/errors";
 import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
+import { useUrlSearch } from "@/shared/hooks/useUrlSearch";
 import { useUrlState } from "@/shared/hooks/useUrlState";
+import { useSubjectSearch } from "@/features/subject/useSubjectSearch";
 import { Badge } from "@/shared/ui/Badge";
 import { Button } from "@/shared/ui/Button";
 import {
@@ -22,6 +24,7 @@ import { useConfirm } from "@/shared/ui/ConfirmDialog";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { Input, Select, inputClass } from "@/shared/ui/Input";
 import { Modal, ModalActions, ModalTitle } from "@/shared/ui/Modal";
+import { SearchStatusIcon } from "@/shared/ui/SearchStatusIcon";
 import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
 
 const PAGE_SIZE = 40;
@@ -322,16 +325,14 @@ function SubjectsTable({ initial }: { initial: SubjectRow[] }) {
     };
   }, [rows]);
 
-  const needle = url.q.trim().toLowerCase();
+  // Chữ trong ô nằm ở state (lọc ngay), địa chỉ chỉ cập nhật sau khi ngừng gõ
+  const [search, setSearch] = useUrlSearch(url.q, setUrl);
+  const { results, term, stale } = useSubjectSearch(rows, search);
   const filtered = useMemo(
-    () =>
-      rows.filter((s) => {
-        if (
-          needle &&
-          !s.code.toLowerCase().includes(needle) &&
-          !s.name.toLowerCase().includes(needle)
-        )
-          return false;
+    () => {
+      const hit = term ? new Set(results) : null; // lọc theo từ khoá nhưng giữ thứ tự của bảng
+      return rows.filter((s) => {
+        if (hit && !hit.has(s)) return false;
         if (
           url.ky === "none"
             ? s.semester !== null
@@ -339,8 +340,9 @@ function SubjectsTable({ initial }: { initial: SubjectRow[] }) {
         )
           return false;
         return true;
-      }),
-    [rows, needle, url.ky],
+      });
+    },
+    [rows, results, term, url.ky],
   );
   const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const page = Math.min(Math.max(1, Number(url.page) || 1), pages);
@@ -367,8 +369,55 @@ function SubjectsTable({ initial }: { initial: SubjectRow[] }) {
     }
   };
 
-  const filterChange = (patch: Partial<Record<"q" | "ky", string>>) =>
+  const filterChange = (patch: Partial<Record<"ky", string>>) =>
     setUrl({ ...patch, page: "1" });
+
+  // memo: gõ trong ô tìm mà danh sách chưa đổi thì không vẽ lại cả bảng
+  const tableRows = useMemo(
+    () =>
+      shown.map((s) => {
+        return (
+          <Tr key={s.code} onClick={() => setUrl({ mon: s.code })}>
+            <Td className="max-w-[18rem]">
+              <span className="md-title-small text-primary">
+                {s.code}
+              </span>
+              <span className="md-body-small block truncate text-on-surface-variant">
+                {s.name}
+              </span>
+            </Td>
+            <Td onClick={(e) => e.stopPropagation()}>
+              <select
+                aria-label={`Kỳ của ${s.code}`}
+                value={s.semester ?? ""}
+                disabled={busy === s.code}
+                onChange={(e) =>
+                  void setSemester(s.code, e.target.value)
+                }
+                className={`${inputClass()} !h-9 w-36`}
+              >
+                <option value="">Chưa phân loại</option>
+                {SEMESTERS.map((k) => (
+                  <option key={k} value={k}>
+                    Kỳ {k}
+                  </option>
+                ))}
+              </select>
+            </Td>
+            <Td className="tabular-nums">{s.credits ?? "—"}</Td>
+            <Td className="tabular-nums">
+              {s.inferredChapters > 0 && !s.chapters.hasNames
+                ? s.inferredChapters
+                : s.chapters.total}
+            </Td>
+            <Td className="tabular-nums">{s.exams}</Td>
+          </Tr>
+        );
+      }),
+    // setSemester chỉ dùng hàm cập nhật state nên bản cũ trong memo vẫn đúng
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [shown, busy, setUrl],
+  );
 
   return (
     <div className="space-y-4">
@@ -394,13 +443,16 @@ function SubjectsTable({ initial }: { initial: SubjectRow[] }) {
         />
         <div className="grid gap-3 border-b border-outline-variant p-4 sm:grid-cols-[1fr_12rem]">
           <div className="relative">
-            <Search
-              size={16}
-              className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant"
-            />
+            <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant">
+              <SearchStatusIcon busy={stale} />
+            </span>
             <input
-              value={url.q}
-              onChange={(e) => filterChange({ q: e.target.value })}
+              data-search
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                if (url.page !== "1") setUrl({ page: "1" });
+              }}
               placeholder="Tìm theo mã hoặc tên môn"
               aria-label="Tìm môn"
               className={`${inputClass()} !h-10 w-full pl-10`}
@@ -434,45 +486,7 @@ function SubjectsTable({ initial }: { initial: SubjectRow[] }) {
               <Th>Đề trong hệ thống</Th>
             </Thead>
             <tbody>
-              {shown.map((s) => {
-                return (
-                  <Tr key={s.code} onClick={() => setUrl({ mon: s.code })}>
-                    <Td className="max-w-[18rem]">
-                      <span className="md-title-small text-primary">
-                        {s.code}
-                      </span>
-                      <span className="md-body-small block truncate text-on-surface-variant">
-                        {s.name}
-                      </span>
-                    </Td>
-                    <Td onClick={(e) => e.stopPropagation()}>
-                      <select
-                        aria-label={`Kỳ của ${s.code}`}
-                        value={s.semester ?? ""}
-                        disabled={busy === s.code}
-                        onChange={(e) =>
-                          void setSemester(s.code, e.target.value)
-                        }
-                        className={`${inputClass()} !h-9 w-36`}
-                      >
-                        <option value="">Chưa phân loại</option>
-                        {SEMESTERS.map((k) => (
-                          <option key={k} value={k}>
-                            Kỳ {k}
-                          </option>
-                        ))}
-                      </select>
-                    </Td>
-                    <Td className="tabular-nums">{s.credits ?? "—"}</Td>
-                    <Td className="tabular-nums">
-                      {s.inferredChapters > 0 && !s.chapters.hasNames
-                        ? s.inferredChapters
-                        : s.chapters.total}
-                    </Td>
-                    <Td className="tabular-nums">{s.exams}</Td>
-                  </Tr>
-                );
-              })}
+              {tableRows}
             </tbody>
           </Table>
         )}
