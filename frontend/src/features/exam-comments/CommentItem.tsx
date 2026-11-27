@@ -5,6 +5,7 @@ import { IconButton } from "@/shared/ui/Button";
 import { timeAgo } from "@/shared/ui/NotificationBell";
 import { UserAvatar } from "@/shared/ui/UserAvatar";
 import { formatDateTime } from "@/shared/utils/formatters";
+import { CommentFiles } from "./CommentAttachments";
 import { CommentBody } from "./CommentBody";
 import { reactionOf, type ExamComment } from "./exam-comments.api";
 
@@ -49,7 +50,7 @@ export function CommentItem({ c, reported, highlight, onReact, onReply, onReport
 
   return (
     <li id={`comment-${c.id}`} className="flex gap-3">
-      <UserAvatar src={c.author.avatarUrl} alt="" className={reply ? "h-7 w-7" : "h-10 w-10"} />
+      <UserAvatar src={c.author.avatarUrl} alt="" tier={c.author.isAdmin ? "admin" : c.author.isPro ? "pro" : "free"} className={reply ? "h-7 w-7" : "h-10 w-10"} />
       <div className="min-w-0 flex-1">
         <div ref={body} className={`rounded-m3-lg transition-colors duration-500 ${highlight ? "-mx-2 bg-surface-container-high px-2 py-1 ring-1 ring-outline" : ""}`}>
           <div className="flex items-start gap-2">
@@ -74,7 +75,8 @@ export function CommentItem({ c, reported, highlight, onReact, onReply, onReport
               <span className="truncate">Trả lời {c.replyTo.name}</span>
             </p>
           )}
-          <CommentBody body={c.body} className="mt-1" />
+          <CommentBody body={c.body} mentions={c.mentions} className="mt-1" />
+          <CommentFiles items={c.attachments} className="mt-2" />
         </div>
 
         {approved && (

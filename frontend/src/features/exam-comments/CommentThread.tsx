@@ -6,7 +6,7 @@ import type { Paged } from "@/shared/types/api";
 import { Button } from "@/shared/ui/Button";
 import { CommentComposer } from "./CommentComposer";
 import { CommentItem } from "./CommentItem";
-import { commentApi, type ExamComment } from "./exam-comments.api";
+import { commentApi, type CommentInput, type ExamComment } from "./exam-comments.api";
 
 type Patch = (id: string, patch: Partial<ExamComment>) => void;
 
@@ -73,9 +73,9 @@ export function CommentThread({ root, examId, question, act, patch, onRemoved, h
 
   const startReply = (to: ExamComment) => act.gate() && setReplyTo(to);
 
-  const send = async (body: string) => {
+  const send = async (input: CommentInput) => {
     if (!replyTo) return;
-    const c = await commentApi.create(examId, question, body, replyTo.id);
+    const c = await commentApi.create(examId, question, input, replyTo.id);
     if (!replies) await load(1).catch(() => undefined); // để phản hồi mới nằm sau các phản hồi cũ
     setReplies((r) => (r?.items.some((x) => x.id === c.id) ? r : { page: r?.page ?? 1, totalPages: r?.totalPages ?? 1, items: [...(r?.items ?? []), c] }));
     setOpen(true);
@@ -125,7 +125,7 @@ export function CommentThread({ root, examId, question, act, patch, onRemoved, h
       )}
       {replyTo && (
         <div className="mt-2">
-          <CommentComposer key={replyTo.id} roomy={rich} onSend={send} hint={false} label={`Trả lời ${replyTo.author.name}`} autoFocus onCancel={() => setReplyTo(null)} />
+          <CommentComposer key={replyTo.id} roomy={rich} examId={examId} onSend={send} hint={false} label={`Trả lời ${replyTo.author.name}`} autoFocus onCancel={() => setReplyTo(null)} />
         </div>
       )}
     </>,

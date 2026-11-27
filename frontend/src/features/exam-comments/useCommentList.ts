@@ -8,7 +8,7 @@ import { useApi } from "@/shared/hooks/useApi";
 import { useConfirm } from "@/shared/ui/ConfirmDialog";
 import type { Paged } from "@/shared/types/api";
 import type { CommentActions } from "./CommentThread";
-import { commentApi, EXAM_TARGET, reactionOf, type CommentOrder, type ExamComment } from "./exam-comments.api";
+import { commentApi, EXAM_TARGET, reactionOf, type CommentInput, type CommentOrder, type ExamComment } from "./exam-comments.api";
 
 const FIND_REPLY_ROOTS = 10; // tìm phản hồi được nhắc tới trong phản hồi của chừng này bình luận gốc đầu tiên
 const HIGHLIGHT_MS = 4000;
@@ -110,8 +110,8 @@ export function useCommentList({ examId, question, order, focusComment, gateWhat
   const fail = (fallback: string) => (err: unknown) => toast.error(errorMessage(err, fallback));
   const patchItem = (id: string, patch: Partial<ExamComment>) => setList((l) => l && { ...l, items: l.items.map((c) => (c.id === id ? { ...c, ...patch } : c)) });
 
-  const post = async (body: string) => {
-    const c = await commentApi.create(examId, question, body);
+  const post = async (input: CommentInput) => {
+    const c = await commentApi.create(examId, question, input);
     const total = (l: List) => l.total + (c.status === "APPROVED" ? 1 : 0);
     setList((l) => l && { ...l, items: order === "oldest" ? [...l.items, c] : [c, ...l.items], total: total(l) });
     onPosted?.();

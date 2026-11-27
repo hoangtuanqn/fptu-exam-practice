@@ -1,11 +1,12 @@
 import { ProtectedImg } from "@/shared/ui/ProtectedImg";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
 import { FileSearch, Play } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { examApi } from "@/features/exam/exam.api";
 import { isFilesOnly, type ExamQuestionsPayload, type ImportedExam } from "@/features/exam/types";
 import { AttachmentList } from "@/features/exam-attachments/AttachmentList";
+import { QuestionLinks } from "@/features/exam-comments/CommentBody";
 import { ExamDiscussion } from "@/features/exam-comments/ExamDiscussion";
 import { useCommentCounts } from "@/features/exam-comments/useCommentCounts";
 import { ImageLightbox } from "@/features/exam-preview/ImageLightbox";
@@ -170,8 +171,10 @@ function ExamView({ exam }: { exam: ImportedExam }) {
     return () => clearTimeout(t);
   }, [highlight]);
 
+  const links = useMemo(() => ({ examId: exam.id, numbers: questions.map((q) => q.number) }), [exam.id, questions]);
+
   return (
-    <>
+    <QuestionLinks.Provider value={links}>
       <PageHeader
         title={exam.title}
         description={filesOnly ? `${attachments.length} tệp đính kèm` : `${fetching ? total : items.length} câu`}
@@ -245,6 +248,6 @@ function ExamView({ exam }: { exam: ImportedExam }) {
           discussion={comments.counts ? { examId: exam.id, examTitle: exam.title, counts: comments.counts, onChanged: comments.reload } : undefined}
         />
       )}
-    </>
+    </QuestionLinks.Provider>
   );
 }

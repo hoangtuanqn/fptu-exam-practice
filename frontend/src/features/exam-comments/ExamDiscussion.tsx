@@ -77,7 +77,7 @@ function Thread({ examId, focusComment, onChanged, onGone }: Props & { onGone: (
       </header>
 
       {canAct ? (
-        <CommentComposer roomy onSend={post} hint={false} />
+        <CommentComposer roomy examId={examId} onSend={post} hint={false} />
       ) : user ? (
         <VerifyEmailNotice variant="inline" message="Xác minh email để thích và bình luận." />
       ) : (
