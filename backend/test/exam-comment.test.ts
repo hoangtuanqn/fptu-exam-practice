@@ -19,6 +19,7 @@ import {
   listAdminCommentsQuery,
   listCommentsQuery,
   questionParam,
+  reactionBody,
   reportCommentBody,
   reviewCommentBody,
   voteBody,
@@ -83,6 +84,10 @@ describe("exam comment reaction validators", () => {
     for (const answers of [["I"], ["a"], "A", [1]]) assert.equal(voteBody.safeParse({ answers }).success, false);
     assert.equal(likeBody.safeParse({ liked: "yes" }).success, false);
     assert.deepEqual(reportCommentBody.parse(undefined), {});
+    assert.equal(createCommentBody.parse({ questionNumber: 1, body: "ok", replyToId: USER.toUpperCase() }).replyToId, USER);
+    assert.equal(createCommentBody.safeParse({ questionNumber: 1, body: "ok", replyToId: "x" }).success, false);
+    for (const reaction of ["like", "dislike", null]) assert.deepEqual(reactionBody.parse({ reaction }), { reaction });
+    for (const body of [{}, { reaction: "love" }, { reaction: true }]) assert.equal(reactionBody.safeParse(body).success, false);
     assert.deepEqual(reportCommentBody.parse({ reason: "  " }), { reason: null });
     assert.equal(reportCommentBody.safeParse({ reason: "x".repeat(256) }).success, false);
     assert.deepEqual(questionParam.parse({ id: EXAM, number: "3" }), { id: EXAM, number: 3 });
@@ -137,17 +142,28 @@ describe("exam comment rules", () => {
       createdAt: new Date(0),
       userId: USER,
       user: { fullName: "Nguyen Van A", avatarPath: "avatars/abc.webp", role: "USER" as const, proExpiresAt: new Date(Date.now() + 60_000) },
-      _count: { likes: 4 },
+      parentId: null as string | null,
+      replyToId: null as string | null,
+      replyTo: null as { user: { fullName: string } } | null,
     };
-    const mine = toPublicComment(row, USER, true);
+    const mine = toPublicComment(row, USER, { likes: 4, dislikes: 1, reaction: "like", replyCount: 2 });
     assert.equal(mine.mine, true);
     assert.equal(JSON.stringify(mine).includes(USER), false);
-    assert.deepEqual(Object.keys(mine).sort(), ["author", "body", "createdAt", "id", "liked", "likes", "mine", "questionNumber", "status"]);
+    assert.deepEqual(Object.keys(mine).sort(), [
+      "author", "body", "createdAt", "dislikes", "id", "liked", "likes", "mine", "parentId", "questionNumber", "reaction", "replyCount", "replyTo", "status",
+    ]);
     assert.deepEqual(Object.keys(mine.author).sort(), ["avatarUrl", "isAdmin", "isPro", "name"]);
     assert.equal(mine.author.name, "Nguyen Van A");
     assert.equal(mine.author.isPro, true);
     assert.equal(mine.author.isAdmin, false);
-    assert.deepEqual([mine.likes, mine.liked], [4, true]);
+    assert.deepEqual([mine.likes, mine.liked, mine.dislikes, mine.reaction, mine.replyCount, mine.replyTo], [4, true, 1, "like", 2, null]);
+    assert.deepEqual([toPublicComment(row, USER).likes, toPublicComment(row, USER).reaction], [0, null]);
+    // trả lời: không có replyCount; replyTo chỉ khi trả lời một trả lời khác (không phải bình luận gốc)
+    const reply = { ...row, parentId: "root", replyToId: "root", replyTo: { user: { fullName: "Root" } } };
+    assert.deepEqual([toPublicComment(reply, null, { likes: 0, dislikes: 0, reaction: "dislike", replyCount: 5 }).replyCount, toPublicComment(reply, null).replyTo], [0, null]);
+    assert.deepEqual(toPublicComment({ ...reply, replyToId: "r2", replyTo: { user: { fullName: "B" } } }, null).replyTo, { name: "B" });
+    assert.equal(toPublicComment({ ...reply, replyToId: null, replyTo: null }, null).replyTo, null); // bình luận được trả lời đã bị xoá
+    assert.equal(toPublicComment(reply, null, { likes: 0, dislikes: 0, reaction: "dislike", replyCount: 0 }).liked, false);
     assert.match(mine.author.avatarUrl ?? "", /\/api\/v1\/files\/avatars\/abc\.webp$/);
     assert.equal(toPublicComment(row, OTHER).mine, false);
     assert.equal(toPublicComment(row, null).liked, false);

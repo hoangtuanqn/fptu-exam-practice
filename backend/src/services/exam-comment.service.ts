@@ -16,18 +16,26 @@ import {
 } from "../constants/exam-comment";
 import { HTTP_STATUS } from "../constants/httpStatus";
 import { answerReportRepository } from "../repositories/answer-report.repository";
-import { examCommentRepository, type AdminCommentRow, type PublicCommentRow } from "../repositories/exam-comment.repository";
+import { examCommentRepository, type AdminCommentRow, type CommentReaction, type PublicCommentRow } from "../repositories/exam-comment.repository";
 import { examReactionRepository } from "../repositories/exam-reaction.repository";
 import { examAttachmentRepository } from "../repositories/exam-attachment.repository";
 import { examRepository } from "../repositories/exam.repository";
 import { AppError } from "../rules/error";
-import type { BulkReviewCommentsBody, CreateCommentBody, ListAdminCommentsQuery, ListCommentsQuery, ReviewCommentBody } from "../rules/requests/exam-comment.request";
+import type {
+  BulkReviewCommentsBody,
+  CreateCommentBody,
+  ListAdminCommentsQuery,
+  ListCommentsQuery,
+  ListRepliesQuery,
+  ReviewCommentBody,
+} from "../rules/requests/exam-comment.request";
 import type { Actor } from "../utils/actor";
 import { answerLettersOf, moderateComment } from "../utils/comment-text";
 import { fileUrlOf, toAttachmentDto } from "../utils/file-url";
 import { toMeta } from "../utils/pagination";
 import { isProUntil } from "../utils/pro";
 import { adminNoticeService } from "./admin-notice.service";
+import { commentNoticeService } from "./exam-comment-notice.service";
 import { examService } from "./exam.service";
 
 const COMMENT_NOT_FOUND = "Không tìm thấy bình luận này, có thể nó đã bị xoá.";
@@ -67,13 +75,21 @@ export function holdReason(text: CommentFlagReason | null, c: { sameElsewhere: n
 // Ảnh đại diện lưu theo tên avatars/<userId>-...: ảnh cũ còn mang id người dùng thì không trả ra (danh sách công khai không lộ id)
 const avatarUrlOf = (userId: string, avatarPath: string | null) => (avatarPath && !avatarPath.includes(userId) ? fileUrlOf(avatarPath) : null);
 
-/** Một dòng bình luận cho người xem: không có id/email người viết, không có lý do bị giữ; `mine` = của người xem. */
-export const toPublicComment = (row: PublicCommentRow, viewerId: string | null, liked = false) => ({
+type Extra = { likes: number; dislikes: number; reaction: CommentReaction | null; replyCount: number };
+const NO_EXTRA: Extra = { likes: 0, dislikes: 0, reaction: null, replyCount: 0 };
+
+/**
+ * Một dòng bình luận cho người xem: không có id/email người viết, không có lý do bị giữ; `mine` = của người xem.
+ * replyTo = tên người được trả lời (null khi trả lời thẳng bình luận gốc hoặc bình luận đó đã bị xoá); replyCount chỉ có ở bình luận gốc.
+ */
+export const toPublicComment = (row: PublicCommentRow, viewerId: string | null, x: Extra = NO_EXTRA) => ({
   id: row.id,
   questionNumber: row.questionNumber,
   body: row.body,
   status: row.status,
   createdAt: row.createdAt,
+  parentId: row.parentId,
+  replyTo: row.replyTo && row.replyToId !== row.parentId ? { name: row.replyTo.user.fullName } : null,
   author: {
     name: row.user.fullName,
     avatarUrl: avatarUrlOf(row.userId, row.user.avatarPath),
@@ -81,9 +97,25 @@ export const toPublicComment = (row: PublicCommentRow, viewerId: string | null, 
     isAdmin: row.user.role === "ADMIN",
   },
   mine: viewerId !== null && row.userId === viewerId,
-  likes: row._count.likes,
-  liked,
+  likes: x.likes,
+  liked: x.reaction === "like",
+  dislikes: x.dislikes,
+  reaction: x.reaction,
+  replyCount: row.parentId ? 0 : x.replyCount,
 });
+
+// Số thích/không thích, cảm xúc của người xem và số trả lời cho cả trang: ba truy vấn gộp, không truy vấn theo từng dòng
+async function decorate(rows: PublicCommentRow[], viewerId: string | null) {
+  const ids = rows.map((r) => r.id);
+  const [counts, mine, replies] = await Promise.all([
+    examCommentRepository.reactionCounts(ids),
+    viewerId ? examCommentRepository.viewerReactions(viewerId, ids) : new Map<string, CommentReaction>(),
+    examCommentRepository.replyCounts(rows.filter((r) => !r.parentId).map((r) => r.id)),
+  ]);
+  return rows.map((r) => toPublicComment(r, viewerId, { ...counts.get(r.id)!, reaction: mine.get(r.id) ?? null, replyCount: replies.get(r.id) ?? 0 }));
+}
+
+const byTime = (a: PublicCommentRow, b: PublicCommentRow) => a.createdAt.getTime() - b.createdAt.getTime() || a.id.localeCompare(b.id);
 
 // shortcut: chống báo trùng giữ trong bộ nhớ (mất khi khởi động lại, chỉ là báo thêm một lần); một tiến trình PM2 nên đủ
 const lastNotice = new Map<string, number>();
@@ -123,6 +155,16 @@ async function withImages(rows: AdminCommentRow[]) {
   });
 }
 
+// Duyệt/từ chối; trả lời vừa chuyển sang đã duyệt thì báo cho người được trả lời như lúc gửi
+async function reviewAndNotify(ids: string[], data: Parameters<typeof examCommentRepository.review>[1]) {
+  const held = data.status === "APPROVED" ? await examCommentRepository.repliesNotApproved(ids) : [];
+  const updated = await examCommentRepository.review(ids, data);
+  for (const r of held) {
+    commentNoticeService.reply({ examId: r.examId, questionNumber: r.questionNumber, commentId: r.id, body: r.body }, { id: r.userId, name: r.user.fullName }, [r.replyTo?.userId, r.parent?.userId]);
+  }
+  return updated;
+}
+
 async function approvedComment(actor: Actor, examId: string, commentId: string) {
   await examService.assertAccess(actor, examId);
   const comment = await examCommentRepository.findApproved(commentId, examId);
@@ -132,6 +174,7 @@ async function approvedComment(actor: Actor, examId: string, commentId: string) 
 
 export const examCommentService = {
   // ----- Người xem (khách hoặc thành viên); đề phải nằm trong kho của người xem như mọi API đề khác
+  // Chỉ bình luận gốc, mới nhất trước; trả lời lấy riêng theo từng bình luận gốc
   async list(actor: Actor, viewerId: string | null, examId: string, { question, ...page }: ListCommentsQuery) {
     await examService.assertAccess(actor, examId);
     const [{ items, total }, own] = await Promise.all([
@@ -139,9 +182,18 @@ export const examCommentService = {
       // Bình luận chưa duyệt của chính mình chỉ hiện ở đầu trang 1 (không tính vào total)
       viewerId && page.page === 1 ? examCommentRepository.listOwnUnapproved(examId, question, viewerId, EXAM_COMMENT_OWN_PENDING_MAX) : [],
     ]);
-    const rows = [...own, ...items];
-    const liked = new Set(viewerId ? await examCommentRepository.likedIds(viewerId, rows.map((r) => r.id)) : []);
-    return { items: rows.map((r) => toPublicComment(r, viewerId, liked.has(r.id))), meta: toMeta(page, total) };
+    return { items: await decorate([...own, ...items], viewerId), meta: toMeta(page, total) };
+  },
+
+  // Trả lời của một bình luận gốc đang hiện, cũ nhất trước; trả lời chưa duyệt của chính mình xen vào trang 1 theo thời gian
+  async replies(actor: Actor, viewerId: string | null, examId: string, rootId: string, page: ListRepliesQuery) {
+    await examService.assertAccess(actor, examId);
+    if (!(await examCommentRepository.findApprovedRoot(rootId, examId))) throw AppError.notFound(COMMENT_NOT_FOUND);
+    const [{ items, total }, own] = await Promise.all([
+      examCommentRepository.listReplies(rootId, page),
+      viewerId && page.page === 1 ? examCommentRepository.listOwnUnapprovedReplies(rootId, viewerId, EXAM_COMMENT_OWN_PENDING_MAX) : [],
+    ]);
+    return { items: await decorate([...own, ...items].sort(byTime), viewerId), meta: toMeta(page, total) };
   },
 
   async counts(actor: Actor, examId: string) {
@@ -150,10 +202,18 @@ export const examCommentService = {
     return { counts: Object.fromEntries(rows.map((r) => [String(r.questionNumber), r._count._all])) };
   },
 
-  /** Lọc rồi lưu: từ cấm -> 422 không lưu; nghi ngờ -> PENDING kèm flagReason; còn lại hiện ngay. Mở đầu bằng chữ đáp án thì tự bình chọn. */
-  async create(actor: Actor, author: { id: string; createdAt: Date }, examId: string, { questionNumber, body }: CreateCommentBody) {
+  /**
+   * Lọc rồi lưu: từ cấm -> 422 không lưu; nghi ngờ -> PENDING kèm flagReason; còn lại hiện ngay. Mở đầu bằng chữ đáp án thì tự bình chọn.
+   * Trả lời (replyToId) đi qua đúng các luật trên; trả lời một trả lời thì gắn vào cùng bình luận gốc (từ cấp 2 trở đi là phẳng).
+   */
+  async create(actor: Actor, author: { id: string; createdAt: Date; fullName: string }, examId: string, { questionNumber, body, replyToId }: CreateCommentBody) {
     await examService.assertAccess(actor, examId);
     await assertQuestion(examId, questionNumber);
+    const target = replyToId ? await examCommentRepository.findApproved(replyToId, examId) : null;
+    if (replyToId && (!target || (target.parent && target.parent.status !== "APPROVED"))) throw AppError.notFound(COMMENT_NOT_FOUND);
+    if (target && target.questionNumber !== questionNumber) {
+      throw new AppError("Bình luận bạn trả lời thuộc câu khác", HTTP_STATUS.UNPROCESSABLE_ENTITY, { replyToId: "Bình luận bạn trả lời thuộc câu khác" });
+    }
     const text = moderateComment(body);
     if (text === "BLOCKED") throw new AppError(COMMENT_BLOCKED_MESSAGE, HTTP_STATUS.UNPROCESSABLE_ENTITY, { body: COMMENT_BLOCKED_MESSAGE }, "COMMENT_BLOCKED");
 
@@ -173,7 +233,18 @@ export const examCommentService = {
     if (limit === "duplicate") throw AppError.conflict("Bạn đã gửi bình luận này cho câu này rồi", { body: "Bạn đã gửi bình luận này cho câu này rồi" });
 
     const flagReason = holdReason(text, { sameElsewhere, strikes });
-    const row = await examCommentRepository.create({ examId, questionNumber, userId, body, status: flagReason ? "PENDING" : "APPROVED", flagReason });
+    const row = await examCommentRepository.create({
+      examId,
+      questionNumber,
+      userId,
+      body,
+      status: flagReason ? "PENDING" : "APPROVED",
+      flagReason,
+      parentId: target ? (target.parentId ?? target.id) : null,
+      replyToId: target?.id ?? null,
+    });
+    // Trả lời bị giữ thì báo khi admin duyệt (review)
+    if (target && !flagReason) commentNoticeService.reply({ examId, questionNumber, commentId: row.id, body }, { id: userId, name: author.fullName }, [target.userId, target.parent?.userId]);
     const letters = questionNumber > 0 ? answerLettersOf(body) : null; // tệp đính kèm không có bình chọn
     // Bình luận bị giữ chưa có hiệu lực công khai nên không đổi phiếu
     if (letters && !flagReason) await examReactionRepository.setVote({ examId, questionNumber }, userId, letters.join(" "));
@@ -187,10 +258,23 @@ export const examCommentService = {
     return { id: commentId, deleted: true };
   },
 
-  // Thích / bỏ thích một bình luận đang hiện của đề (gọi lại cùng giá trị không đổi kết quả)
-  async like(actor: Actor, userId: string, examId: string, commentId: string, liked: boolean) {
+  /** Thích / không thích / bỏ (null) trên một bình luận đang hiện của đề; gọi lại cùng giá trị không đổi kết quả. */
+  async react(actor: Actor, user: { id: string; fullName: string }, examId: string, commentId: string, reaction: CommentReaction | null, onlyIf?: CommentReaction) {
     const comment = await approvedComment(actor, examId, commentId);
-    return { likes: await examCommentRepository.setLike(comment.id, userId, liked), liked };
+    const previous = await examCommentRepository.setReaction(comment.id, user.id, reaction, onlyIf);
+    // Chỉ báo khi vừa thêm hoặc đổi cảm xúc (bỏ thì không)
+    if (reaction && reaction !== previous) {
+      commentNoticeService.reaction({ examId, questionNumber: comment.questionNumber, commentId: comment.id, authorId: comment.userId, body: comment.body }, { id: user.id, name: user.fullName }, reaction);
+    }
+    const { likes, dislikes } = (await examCommentRepository.reactionCounts([comment.id])).get(comment.id)!;
+    const now = reaction ?? (previous && onlyIf && previous !== onlyIf ? previous : null);
+    return { likes, dislikes, reaction: now };
+  },
+
+  // API thích cũ: chỉ bật/tắt thích (tắt không đụng tới "không thích")
+  async like(actor: Actor, user: { id: string; fullName: string }, examId: string, commentId: string, liked: boolean) {
+    const { likes, reaction } = await this.react(actor, user, examId, commentId, liked ? "like" : null, "like");
+    return { likes, liked: reaction === "like" };
   },
 
   /** Báo cáo (mỗi người một lần, báo lại vẫn thành công). Đủ số người báo cáo thì tự ẩn, trừ bình luận admin đã duyệt tay. */
@@ -222,14 +306,14 @@ export const examCommentService = {
 
   /** Duyệt hoặc từ chối (gọi lại với cùng trạng thái không đổi kết quả), xử lý xong các báo cáo. Trả về đúng dạng một dòng của danh sách admin. */
   async review(adminId: string, id: string, { status, note }: ReviewCommentBody) {
-    if ((await examCommentRepository.review([id], { status, reviewedById: adminId, reviewNote: note || null })) === 0) throw AppError.notFound(COMMENT_NOT_FOUND);
+    if ((await reviewAndNotify([id], { status, reviewedById: adminId, reviewNote: note || null })) === 0) throw AppError.notFound(COMMENT_NOT_FOUND);
     const row = await examCommentRepository.findAdmin(id);
     if (!row) throw AppError.notFound(COMMENT_NOT_FOUND);
     return (await withImages([row]))[0]!;
   },
 
   async bulkReview(adminId: string, { ids, status }: BulkReviewCommentsBody) {
-    return { updated: await examCommentRepository.review([...new Set(ids)], { status, reviewedById: adminId, reviewNote: null }) };
+    return { updated: await reviewAndNotify([...new Set(ids)], { status, reviewedById: adminId, reviewNote: null }) };
   },
 
   async adminRemove(id: string) {

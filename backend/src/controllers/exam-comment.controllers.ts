@@ -7,6 +7,8 @@ import type {
   CreateCommentBody,
   LikeBody,
   ListCommentsQuery,
+  ListRepliesQuery,
+  ReactionBody,
   QuestionParam,
   ReportCommentBody,
   VoteBody,
@@ -44,7 +46,19 @@ export const examCommentController = {
   async like(req: Request, res: Response) {
     const { id, commentId } = getValidated<CommentParam>(res, "params");
     const { liked } = getValidated<LikeBody>(res);
-    res.json(new ResponseClient({ data: await examCommentService.like(actorOf(req), req.user!.id, id, commentId, liked) }));
+    res.json(new ResponseClient({ data: await examCommentService.like(actorOf(req), req.user!, id, commentId, liked) }));
+  },
+
+  async react(req: Request, res: Response) {
+    const { id, commentId } = getValidated<CommentParam>(res, "params");
+    const { reaction } = getValidated<ReactionBody>(res);
+    res.json(new ResponseClient({ data: await examCommentService.react(actorOf(req), req.user!, id, commentId, reaction) }));
+  },
+
+  async replies(req: Request, res: Response) {
+    const { id, commentId } = getValidated<CommentParam>(res, "params");
+    const { items, meta } = await examCommentService.replies(actorOf(req), req.user?.id ?? null, id, commentId, getValidated<ListRepliesQuery>(res, "query"));
+    res.json(new ResponseClient({ data: items, meta }));
   },
 
   async report(req: Request, res: Response) {

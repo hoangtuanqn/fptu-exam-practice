@@ -16,7 +16,9 @@ const page = { page: 1, limit: 20 };
 const status = (code: number) => (err: unknown) => (err as { status?: number }).status === code;
 const blocked = (err: unknown) => (err as { status?: number; code?: string }).status === 422 && (err as { code?: string }).code === "COMMENT_BLOCKED";
 const member = (userId: string) => ({ owner: { userId }, isAdmin: false });
-const old = (id: string) => ({ id, createdAt: new Date(0) }); // tài khoản cũ (không bị giới hạn tài khoản mới)
+const names = new Map<string, string>();
+const old = (id: string) => ({ id, createdAt: new Date(0), fullName: names.get(id) ?? "?" }); // tài khoản cũ (không bị giới hạn tài khoản mới)
+const who = (id: string) => ({ id, fullName: names.get(id) ?? "?" });
 
 describe("exam comments (MySQL)", { skip: DB_TESTS_ENABLED ? false : DB_SKIP_REASON }, () => {
   let db: ThrowawayDb;
@@ -26,7 +28,11 @@ describe("exam comments (MySQL)", { skip: DB_TESTS_ENABLED ? false : DB_SKIP_REA
   before(async () => {
     db = await createThrowawayDb();
     m = await loadModules();
-    const user = async (key: string) => (await m.prisma.user.create({ data: { email: `${key}@test.local`, fullName: key, password: "x" } })).id;
+    const user = async (key: string) => {
+      const { id } = await m.prisma.user.create({ data: { email: `${key}@test.local`, fullName: key, password: "x" } });
+      names.set(id, key);
+      return id;
+    };
     const mkExam = async (threadId: string) => {
       const e = await m.prisma.exam.create({ data: { threadId, title: `TST101 ${threadId}`, sourceUrl: "https://example.invalid", totalQuestions: 3, answerSource: "AI" } });
       await m.prisma.examQuestion.createMany({ data: [1, 2, 3].map((n) => ({ examId: e.id, number: n, name: `q${n}`, imagePath: `x/${n}.png`, sourceImage: "s" })) });
@@ -118,12 +124,12 @@ describe("exam comments (MySQL)", { skip: DB_TESTS_ENABLED ? false : DB_SKIP_REA
     assert.deepEqual(await m.reactions.reactions(member(other), other, exam, 1).then((r) => [r.likes, r.liked]), [1, true]);
 
     const [c] = (await m.svc.list(member(other), other, exam, { question: 1, ...page })).items;
-    assert.deepEqual(await m.svc.like(member(other), other, exam, c!.id, true), { likes: 1, liked: true });
+    assert.deepEqual(await m.svc.like(member(other), who(other), exam, c!.id, true), { likes: 1, liked: true });
     const after = (await m.svc.list(member(other), other, exam, { question: 1, ...page })).items.find((i) => i.id === c!.id)!;
     assert.deepEqual([after.likes, after.liked], [1, true]);
     const pending = await m.prisma.examComment.findFirst({ where: { status: "PENDING" } });
-    await assert.rejects(m.svc.like(member(me), me, exam, pending!.id, true), status(404)); // chỉ bình luận đang hiện
-    await assert.rejects(m.svc.like(member(me), me, notMine, c!.id, true), status(404));
+    await assert.rejects(m.svc.like(member(me), who(me), exam, pending!.id, true), status(404)); // chỉ bình luận đang hiện
+    await assert.rejects(m.svc.like(member(me), who(me), notMine, c!.id, true), status(404));
   });
 
   it("reports: once per user, not own, auto-hide at the threshold, reviewed comments only queue", async () => {
@@ -195,7 +201,7 @@ describe("exam comments (MySQL)", { skip: DB_TESTS_ENABLED ? false : DB_SKIP_REA
 
     const already = await m.prisma.examComment.count({ where: { userId: third } });
     await seed(third, m.c.EXAM_COMMENT_NEW_ACCOUNT_PER_DAY - already, (i) => 1 + (i % 3));
-    await assert.rejects(m.svc.create(member(third), { id: third, createdAt: new Date() }, exam, { questionNumber: 1, body: "tài khoản mới" }), status(429));
+    await assert.rejects(m.svc.create(member(third), { ...old(third), createdAt: new Date() }, exam, { questionNumber: 1, body: "tài khoản mới" }), status(429));
     await seed(third, m.c.EXAM_COMMENT_PER_DAY - m.c.EXAM_COMMENT_NEW_ACCOUNT_PER_DAY, () => 100); // câu ngoài đề: chỉ để đếm
     await assert.rejects(m.svc.create(member(third), old(third), exam, { questionNumber: 2, body: "đủ ngày" }), status(429));
   });
@@ -227,7 +233,7 @@ describe("exam comments (MySQL)", { skip: DB_TESTS_ENABLED ? false : DB_SKIP_REA
     assert.match(img.imageUrl ?? "", new RegExp(`/exams/${exam}/attachments/${png}\\?v=`));
     assert.equal((await m.svc.adminList({ status: "all", q: "Câu này hỏi về", ...page })).items[0]!.targetName, null); // câu hỏi thật
 
-    await m.svc.like(member(other), other, exam, c.id, true);
+    await m.svc.like(member(other), who(other), exam, c.id, true);
     await m.svc.report(member(other), other, exam, c.id, null);
     await files.remove(exam, pdf);
     assert.equal(await m.prisma.examComment.count({ where: { examId: exam, questionNumber: -pdf } }), 0);
@@ -251,5 +257,84 @@ describe("exam comments (MySQL)", { skip: DB_TESTS_ENABLED ? false : DB_SKIP_REA
     assert.equal(await m.prisma.examComment.count({ where: { examId: exam, questionNumber: { lt: 0 } } }), 0);
     assert.equal(await m.prisma.examQuestionLike.count({ where: { examId: exam, questionNumber: { lt: 0 } } }), 0);
     assert.ok((await m.prisma.examComment.count({ where: { examId: exam, questionNumber: { gt: 0 } } })) > 0); // câu hỏi thật không bị đụng
+  });
+
+  it("replies: two levels then flat, roots-only list, reactions and notices to authors", async () => {
+    const mk = async (key: string) => {
+      const { id } = await m.prisma.user.create({ data: { email: `${key}@test.local`, fullName: key, password: "x" } });
+      names.set(id, key);
+      await m.prisma.userExam.create({ data: { userId: id, examId: exam } });
+      return id;
+    };
+    const [ann, bob, cat] = [await mk("ann"), await mk("bob"), await mk("cat")];
+    // thông báo ghi nền (không chờ): đợi tới khi đủ số dòng
+    const notices = async (userId: string, kind: string, expected: number) => {
+      for (let i = 0; i < 40; i++) {
+        const rows = await m.prisma.userNotice.findMany({ where: { userId, kind }, orderBy: { createdAt: "asc" } });
+        if (rows.length >= expected) return rows;
+        await new Promise((r) => setTimeout(r, 50));
+      }
+      return m.prisma.userNotice.findMany({ where: { userId, kind } });
+    };
+
+    const root = await m.svc.create(member(ann), old(ann), exam, { questionNumber: 2, body: "gốc của ann" });
+    const r1 = await m.svc.create(member(bob), old(bob), exam, { questionNumber: 2, body: "bob trả lời", replyToId: root.id });
+    assert.deepEqual([r1.status, r1.parentId, r1.replyTo, r1.replyCount], ["APPROVED", root.id, null, 0]);
+    const r2 = await m.svc.create(member(cat), old(cat), exam, { questionNumber: 2, body: "cat trả lời bob", replyToId: r1.id });
+    assert.deepEqual([r2.parentId, r2.replyTo], [root.id, { name: "bob" }]); // cấp 3 trở đi gắn vào cùng gốc
+    await assert.rejects(m.svc.create(member(cat), old(cat), exam, { questionNumber: 3, body: "sai câu", replyToId: root.id }), status(422));
+    await assert.rejects(m.svc.create(member(cat), old(cat), exam, { questionNumber: 2, body: "không có", replyToId: "0190f5a2-1c3b-7000-8000-000000000000" }), status(404));
+    await assert.rejects(m.svc.create(member(cat), old(cat), notMine, { questionNumber: 2, body: "đề khác", replyToId: root.id }), status(404));
+    await assert.rejects(m.svc.create(member(cat), old(cat), exam, { questionNumber: 2, body: "đm", replyToId: root.id }), blocked); // cùng bộ lọc
+    const held = await m.svc.create(member(cat), old(cat), exam, { questionNumber: 2, body: "inbox mình nhé", replyToId: root.id });
+    assert.equal(held.status, "PENDING");
+    await assert.rejects(m.svc.create(member(bob), old(bob), exam, { questionNumber: 2, body: "trả lời bài chờ", replyToId: held.id }), status(404));
+
+    const roots = await m.svc.list(member(bob), bob, exam, { question: 2, ...page });
+    assert.ok(roots.items.every((i) => i.parentId === null));
+    assert.equal(roots.items.find((i) => i.id === root.id)?.replyCount, 2);
+    const forCat = await m.svc.replies(member(cat), cat, exam, root.id, page);
+    assert.deepEqual(forCat.items.map((i) => i.id), [r1.id, r2.id, held.id]); // trả lời chờ duyệt của mình xen theo thời gian
+    assert.equal(forCat.meta.total, 2);
+    assert.deepEqual((await m.svc.replies(member(bob), bob, exam, root.id, page)).items.map((i) => i.id), [r1.id, r2.id]);
+    await assert.rejects(m.svc.replies(member(bob), bob, exam, r1.id, page), status(404)); // trả lời không phải gốc
+    await assert.rejects(m.svc.replies(member(bob), bob, notMine, root.id, page), status(404));
+
+    // người được trả lời và người viết gốc nhận thông báo, không ai nhận của chính mình; bài bị giữ chỉ báo khi được duyệt
+    assert.equal((await notices(ann, "comment.replied", 2)).length, 2);
+    const toBob = await notices(bob, "comment.replied", 1);
+    assert.deepEqual(toBob.map((n) => [n.title, n.link]), [[`cat đã trả lời bình luận của bạn`, `/exam/${exam}/preview?target=2&comment=${r2.id}`]]);
+    assert.equal(await m.prisma.userNotice.count({ where: { userId: cat } }), 0);
+    await m.svc.review(admin, held.id, { status: "APPROVED" });
+    assert.equal((await notices(ann, "comment.replied", 3)).length, 3);
+    const again = await m.svc.review(admin, held.id, { status: "APPROVED" }); // duyệt lại: không báo lần nữa
+    await new Promise((r) => setTimeout(r, 200));
+    assert.equal(await m.prisma.userNotice.count({ where: { userId: ann, kind: "comment.replied" } }), 3);
+    assert.equal(again.parentId, root.id); // dòng admin có parentId
+
+    // cảm xúc: một người một cảm xúc, đổi được; API thích cũ chỉ đụng tới thích
+    assert.deepEqual(await m.svc.react(member(bob), who(bob), exam, root.id, "like"), { likes: 1, dislikes: 0, reaction: "like" });
+    assert.deepEqual(await m.svc.react(member(bob), who(bob), exam, root.id, "dislike"), { likes: 0, dislikes: 1, reaction: "dislike" });
+    assert.deepEqual(await m.svc.like(member(bob), who(bob), exam, root.id, false), { likes: 0, liked: false });
+    assert.equal((await m.svc.list(member(bob), bob, exam, { question: 2, ...page })).items.find((i) => i.id === root.id)?.reaction, "dislike");
+    assert.deepEqual(await m.svc.react(member(cat), who(cat), exam, root.id, "dislike"), { likes: 0, dislikes: 2, reaction: "dislike" });
+    await m.svc.react(member(ann), who(ann), exam, root.id, "like"); // của chính mình: không báo
+    assert.deepEqual(await m.svc.react(member(bob), who(bob), exam, root.id, null), { likes: 1, dislikes: 1, reaction: null });
+    assert.deepEqual(await m.svc.like(member(bob), who(bob), exam, root.id, true), { likes: 2, liked: true }); // trong giờ: không báo lại
+    const liked = await notices(ann, "comment.liked", 1);
+    const disliked = await notices(ann, "comment.disliked", 1);
+    await new Promise((r) => setTimeout(r, 200));
+    assert.deepEqual([liked.length, disliked.length], [1, 1]); // nhiều lượt trong giờ: một thông báo
+    assert.equal(liked[0]!.title, "bob đã thích bình luận của bạn");
+    assert.ok(!/bob|cat/.test(disliked[0]!.title)); // không lộ ai không thích
+    assert.equal(await m.prisma.userNotice.count({ where: { userId: ann, kind: "comment.liked" } }), 1);
+    const seen = (await m.svc.list(member(cat), cat, exam, { question: 2, ...page })).items.find((i) => i.id === root.id)!;
+    assert.deepEqual([seen.likes, seen.dislikes, seen.reaction, seen.liked], [2, 1, "dislike", false]);
+
+    // đếm theo câu gồm gốc và trả lời đã duyệt; xoá gốc thì xoá cả trả lời
+    assert.equal((await m.svc.counts(member(ann), exam)).counts["2"], await m.prisma.examComment.count({ where: { examId: exam, questionNumber: 2, status: "APPROVED" } }));
+    await m.svc.adminRemove(root.id);
+    assert.equal(await m.prisma.examComment.count({ where: { parentId: root.id } }), 0);
+    assert.equal(await m.prisma.examComment.count({ where: { id: { in: [r1.id, r2.id, held.id] } } }), 0);
   });
 });
