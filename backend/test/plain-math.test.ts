@@ -90,7 +90,7 @@ describe("explanation AI path returns sanitized text", () => {
     const ask = mock.method(Anthropic.Messages.prototype, "stream", () => ({ finalMessage: async () => ({ usage: {}, stop_reason: "end_turn", content: [{ type: "text", text }] }) }) as never);
     try {
       const base = { examTitle: "MAD101 - FA25 - FE", subjectCode: "MAD101", subjectName: null, questionNumber: 13, imageFile: file, correctAnswer: "B" };
-      assert.equal(await explainQuestion(config, { ...base, commentsText: null }), "Vì n ∈ ℕ nên f: ℕ → ℝ");
+      assert.equal(await explainQuestion(config, base), "Vì n ∈ ℕ nên f: ℕ → ℝ");
       const reply = await chatAboutQuestion(config, { ...base, explanation: "Vì $n \\ge 0$", messages: [{ role: "user", content: "tại sao?" }] });
       assert.equal(reply, "Vì n ∈ ℕ nên f: ℕ → ℝ");
       const sent = JSON.stringify((ask.mock.calls[1]!.arguments as unknown[])[0]);
