@@ -134,8 +134,8 @@ it("lets exactly one of two concurrent confirms win", async () => {
   1. Đọc góp ý (`userId, examId, questionNumber, helpful, updatedAt, exam.title`). Không có → 404.
   2. Có `answer`: `normalizeAnswer` phải khác đáp án hiện tại, không thì `AppError` 400 `"Đáp án mới trùng đáp án hiện tại"`.
   3. Có báo cáo `PENDING` của người này cho câu → 409 `"Người này đang có báo cáo đáp án cho câu này, hãy xử lý ở trang Báo cáo đáp án"`.
-  4. Chốt: `updateMany where {id, helpful:false, resolvedAt:null}` đặt `resolvedAt, resolvedById, reward`; `count !== 1` → 409 `"Góp ý này đã được xử lý"`.
-  5. Cổng một người thắng: `questionExplanation.deleteMany where {examId, questionNumber, createdAt: { lte: updatedAt đọc ở bước 1 }}`; `count !== 1` → 409 `"Lời giải đã được tạo lại hoặc đã xóa, bạn chỉ có thể đóng góp ý"`.
+  4. Góp ý là 👍 hoặc đã có `resolvedAt` → 409 `"Góp ý này đã được xử lý"`. Rồi cổng một người thắng, chạy trước mọi lệnh ghi khác (hai giao dịch xếp hàng ở đây, không deadlock): `questionExplanation.deleteMany where {examId, questionNumber, createdAt: { lte: updatedAt đọc ở bước 1 }}`; `count !== 1` → 409 `"Lời giải đã được tạo lại hoặc đã xóa, bạn chỉ có thể đóng góp ý"`.
+  5. Chốt: `updateMany where {id, helpful:false, resolvedAt:null}` đặt `resolvedAt, resolvedById, reward`; `count !== 1` → 409 `"Góp ý này đã được xử lý"`.
   6. Đóng các góp ý 👎 đang mở khác của câu (`resolvedAt, resolvedById`).
   7. Có `answer`: `examRepository.setQuestionAnswer`.
   8. `walletService.applyChange` loại `REPORT_REWARD`, `amount = answer ? ANSWER_REPORT_REWARD : EXPLAIN_FEEDBACK_REWARD`.
