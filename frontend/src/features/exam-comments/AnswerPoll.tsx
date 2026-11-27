@@ -49,11 +49,11 @@ export function AnswerPoll({ votes, busy, onVote }: { votes: Votes; busy: boolea
                 aria-label={`${l}: ${n} người, ${pct}%${on ? ", bạn đã chọn" : ""}`}
                 title={`${n} người chọn ${l}`}
                 onClick={() => pick(l)}
-                className={`md-state relative flex h-[4.5rem] w-full flex-col items-center justify-center overflow-hidden rounded-m3-md bg-surface-container-lowest outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-60 ${on ? "ring-2 ring-inset ring-primary" : "ring-1 ring-inset ring-outline-variant"}`}
+                className={`md-state relative flex h-[4.5rem] w-full flex-col items-center justify-center overflow-hidden rounded-m3-md bg-surface-container-lowest outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-60 ${on ? "ring-2 ring-inset ring-on-surface" : "ring-1 ring-inset ring-outline-variant"}`}
               >
                 {/* Cột màu dâng từ dưới theo tỉ lệ chọn; đáp án nhiều người chọn nhất đậm hơn */}
-                <span aria-hidden className={`absolute inset-x-0 bottom-0 transition-[height] duration-500 ${n > 0 && n === top ? "bg-primary-container" : "bg-secondary-container"}`} style={{ height: `${pct}%` }} />
-                {on && <Check size={14} className="absolute right-1 top-1 text-primary" aria-hidden />}
+                <span aria-hidden className={`absolute inset-x-0 bottom-0 transition-[height] duration-500 ${n > 0 && n === top ? "bg-surface-container-highest" : "bg-surface-container-high"}`} style={{ height: `${pct}%` }} />
+                {on && <Check size={14} className="absolute right-1 top-1 text-on-surface" aria-hidden />}
                 <span className="md-title-large relative font-bold leading-none text-on-surface">{l}</span>
                 <span className="md-label-small relative mt-1 tabular-nums text-on-surface-variant">{pct}%</span>
               </button>

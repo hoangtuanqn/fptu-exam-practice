@@ -69,7 +69,7 @@ export function DiscussionPanel({ examId, examTitle, question, position, poll, c
       {confirmDialog}
       <div className="flex items-start gap-2 border-b border-outline-variant px-4 py-3">
         <div className="min-w-0 flex-1">
-          <p className="md-label-small inline-block max-w-full truncate rounded-full bg-primary-container px-2.5 py-0.5 text-on-primary-container">{position}</p>
+          <p className="md-label-small inline-block max-w-full truncate rounded-m3-xs bg-surface-container-highest text-on-surface-variant px-1.5 py-0.5">{position}</p>
           <h2 className="md-title-small mt-1 line-clamp-2 break-words text-on-surface">{examTitle}</h2>
         </div>
         <IconButton label={closeAlways ? "Đóng" : "Ẩn thảo luận"} onClick={onHide} className={closeAlways ? "" : "lg:hidden"}>

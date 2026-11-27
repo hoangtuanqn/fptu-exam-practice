@@ -43,7 +43,7 @@ export function ExamDiscussion({ examId, focusComment, onChanged }: Props) {
 
   if (gone) return null;
   return (
-    <section ref={ref} id="binh-luan" aria-label="Bình luận" className="mt-10 scroll-mt-20 rounded-m3-xl bg-surface-container-low p-4 sm:p-6">
+    <section ref={ref} id="binh-luan" aria-label="Bình luận" className="mt-10 scroll-mt-20">
       {near ? <Thread examId={examId} focusComment={focusComment} onChanged={onChanged} onGone={() => setGone(true)} /> : <div className="min-h-40" />}
     </section>
   );
@@ -71,7 +71,7 @@ function Thread({ examId, focusComment, onChanged, onGone }: Props & { onGone: (
       <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h2 className="md-title-large flex items-center gap-2 text-on-surface">
           Góc trao đổi
-          {list && <span className="md-label-large rounded-full bg-primary-container px-2.5 py-0.5 tabular-nums text-on-primary-container">{list.total}</span>}
+          {list && <span className="md-title-medium font-normal tabular-nums text-on-surface-variant">· {list.total}</span>}
         </h2>
         {list && list.total > 1 && <Segmented label="Sắp xếp bình luận" value={order} options={ORDERS} onChange={setOrder} />}
       </header>
@@ -99,9 +99,10 @@ function Thread({ examId, focusComment, onChanged, onGone }: Props & { onGone: (
             Hãy là người đầu tiên chia sẻ cách giải hay thắc mắc về đề này.
           </Empty>
         ) : (
-          <ul aria-busy={first.loading} className={`divide-y divide-outline-variant/60 transition-opacity duration-200 [&>li]:py-4 [&>li:first-child]:pt-0 ${first.loading ? "opacity-60" : ""}`}>
+          <ul aria-busy={first.loading} className={`divide-y divide-outline-variant/60 rounded-m3-lg bg-surface-container-lowest ring-1 ring-outline-variant/60 transition-opacity duration-200 [&>li]:p-4 ${first.loading ? "opacity-60" : ""}`}>
             {list.items.map((c) => (
               <CommentThread
+                rich
                 key={preload?.rootId === c.id ? `${c.id}:open` : c.id}
                 root={c}
                 examId={examId}

@@ -1,15 +1,20 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
-import { ArrowUp, Loader2, Smile, X } from "lucide-react";
+import { ArrowUp, Eye, EyeOff, Loader2, Sigma, Smile, X } from "lucide-react";
 import { ApiError } from "@/shared/api/client";
 import { errorMessage } from "@/shared/api/errors";
 import { useToast } from "@/shared/context/ToastContext";
+import { Button } from "@/shared/ui/Button";
+import { CommentBody } from "./CommentBody";
 import { COMMENT_MAX_LENGTH } from "./exam-comments.api";
+import { applyFormat, type Format } from "./format";
+import { FormatToolbar, TOOL } from "./FormatToolbar";
 
 const EMOJI = ["😀", "😂", "🤣", "😊", "😍", "🥰", "😎", "🤔", "😅", "😭", "😢", "😡", "👍", "👎", "👏", "🙏", "💪", "🔥", "💯", "🎉", "❤️", "✅", "❌", "❓"];
+const SYMBOLS = ["∑", "∏", "√", "∫", "∞", "≈", "≠", "≤", "≥", "±", "×", "÷", "→", "⇒", "⇔", "∈", "∉", "⊂", "∪", "∩", "∀", "∃", "∅", "ℕ", "ℤ", "ℚ", "ℝ", "α", "β", "θ", "λ", "μ", "π", "σ", "Δ", "Ω"];
 const MAX_HEIGHT = 160;
 
 // Ô viết bình luận / phản hồi: khung chữ ở trên, thanh công cụ (emoji, gợi ý, nút gửi) ở dưới. Gửi lỗi thì giữ nguyên bản nháp.
-// Mặc định Enter để gửi, Shift+Enter xuống dòng. `roomy` (khu trao đổi cuối trang): ô nhiều dòng, Ctrl + Enter để gửi.
+// Mặc định Enter để gửi, Shift+Enter xuống dòng. `roomy` (khu trao đổi cuối trang): thanh định dạng, xem trước, Ctrl + Enter để gửi.
 interface Props {
   onSend: (body: string) => Promise<void>;
   hint: boolean;
@@ -24,7 +29,8 @@ export function CommentComposer({ onSend, hint, label = "Viết bình luận", a
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [emojiOpen, setEmojiOpen] = useState(false);
+  const [picker, setPicker] = useState<"emoji" | "math" | null>(null);
+  const [preview, setPreview] = useState(false);
   const box = useRef<HTMLTextAreaElement>(null);
   const wrap = useRef<HTMLDivElement>(null);
   const hintId = useId();
@@ -35,15 +41,15 @@ export function CommentComposer({ onSend, hint, label = "Viết bình luận", a
     if (!el) return;
     el.style.height = "auto";
     el.style.height = `${Math.min(el.scrollHeight, roomy ? MAX_HEIGHT * 2 : MAX_HEIGHT)}px`;
-  }, [draft]);
+  }, [draft, preview]);
 
   // Bấm ra ngoài thì đóng bảng emoji
   useEffect(() => {
-    if (!emojiOpen) return;
-    const onDown = (e: MouseEvent) => !wrap.current?.contains(e.target as Node) && setEmojiOpen(false);
+    if (!picker) return;
+    const onDown = (e: MouseEvent) => !wrap.current?.contains(e.target as Node) && setPicker(null);
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
-  }, [emojiOpen]);
+  }, [picker]);
 
   const send = async () => {
     const body = draft.trim();
@@ -53,6 +59,7 @@ export function CommentComposer({ onSend, hint, label = "Viết bình luận", a
     try {
       await onSend(body);
       setDraft("");
+      setPreview(false);
     } catch (err) {
       const field = err instanceof ApiError ? err.errors?.body : undefined;
       if (field) setError(field);
@@ -74,16 +81,26 @@ export function CommentComposer({ onSend, hint, label = "Viết bình luận", a
     }
   };
 
-  const insert = (emoji: string) => {
-    const el = box.current;
-    const start = el?.selectionStart ?? draft.length;
-    const end = el?.selectionEnd ?? start;
-    setDraft((d) => `${d.slice(0, start)}${emoji}${d.slice(end)}`.slice(0, COMMENT_MAX_LENGTH));
-    setEmojiOpen(false);
+  // Đổi nội dung rồi đặt lại con trỏ / vùng chọn
+  const edit = (value: string, start: number, end: number) => {
+    setDraft(value.slice(0, COMMENT_MAX_LENGTH));
+    setPicker(null);
     requestAnimationFrame(() => {
-      el?.focus();
-      el?.setSelectionRange(start + emoji.length, start + emoji.length);
+      box.current?.focus();
+      box.current?.setSelectionRange(start, end);
     });
+  };
+  const selection = () => {
+    const start = box.current?.selectionStart ?? draft.length;
+    return [start, box.current?.selectionEnd ?? start] as const;
+  };
+  const insert = (text: string) => {
+    const [start, end] = selection();
+    edit(draft.slice(0, start) + text + draft.slice(end), start + text.length, start + text.length);
+  };
+  const format = (kind: Format) => {
+    const r = applyFormat(draft, ...selection(), kind);
+    edit(r.value, r.start, r.end);
   };
 
   const counter = draft.length > COMMENT_MAX_LENGTH - 100 ? `${draft.length}/${COMMENT_MAX_LENGTH}` : null;
@@ -91,9 +108,21 @@ export function CommentComposer({ onSend, hint, label = "Viết bình luận", a
 
   return (
     <div ref={wrap} className="relative">
-      <div className={`rounded-m3-lg border bg-surface-container-lowest transition-colors focus-within:border-primary focus-within:ring-1 focus-within:ring-primary ${error ? "border-error" : "border-outline-variant"}`}>
+      <div className={`rounded-m3-lg border bg-surface-container-lowest transition-colors focus-within:border-outline ${error ? "border-error" : "border-outline-variant"}`}>
+        {roomy && (
+          <FormatToolbar disabled={preview} onFormat={format}>
+            <button type="button" onClick={() => setPicker((p) => (p === "math" ? null : "math"))} disabled={preview} aria-label="Chèn ký hiệu toán" title="Ký hiệu toán" aria-expanded={picker === "math"} className={TOOL}>
+              <Sigma size={17} />
+            </button>
+            <button type="button" onClick={() => setPreview((p) => !p)} disabled={!draft.trim()} aria-pressed={preview} className={`${TOOL} md-label-medium ml-auto w-auto gap-1.5 px-3`}>
+              {preview ? <EyeOff size={17} /> : <Eye size={17} />} {preview ? "Soạn tiếp" : "Xem trước"}
+            </button>
+          </FormatToolbar>
+        )}
+        {preview && <CommentBody body={draft} className="min-h-20 px-3 pt-3" />}
         <textarea
           ref={box}
+          hidden={preview}
           rows={roomy ? 2 : 1}
           value={draft}
           maxLength={COMMENT_MAX_LENGTH}
@@ -107,10 +136,10 @@ export function CommentComposer({ onSend, hint, label = "Viết bình luận", a
           autoFocus={autoFocus}
           aria-describedby={hintId}
           aria-invalid={!!error}
-          className={`md-body-medium block w-full resize-none bg-transparent px-3 pt-3 text-on-surface outline-none placeholder:text-on-surface-variant focus-visible:outline-none ${roomy ? "min-h-20" : "min-h-11"}`}
+          className={`md-body-medium ${preview ? "hidden" : "block"} w-full resize-none bg-transparent px-3 pt-3 text-on-surface outline-none placeholder:text-on-surface-variant focus-visible:outline-none ${roomy ? "min-h-28" : "min-h-11"}`}
         />
         <div className="flex items-center gap-1 px-1.5 pb-1.5">
-          <button type="button" onClick={() => setEmojiOpen((o) => !o)} aria-label="Chèn biểu tượng cảm xúc" aria-expanded={emojiOpen} className="md-state flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-on-surface-variant">
+          <button type="button" onClick={() => setPicker((p) => (p === "emoji" ? null : "emoji"))} disabled={preview} aria-label="Chèn biểu tượng cảm xúc" aria-expanded={picker === "emoji"} className="md-state flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-on-surface-variant">
             <Smile size={20} />
           </button>
           <p id={hintId} role={error ? "alert" : undefined} className={`md-body-small min-w-0 flex-1 ${error ? "text-error" : "text-on-surface-variant"}`}>
@@ -122,29 +151,35 @@ export function CommentComposer({ onSend, hint, label = "Viết bình luận", a
               <X size={18} />
             </button>
           )}
-          <button
-            type="button"
-            onClick={() => void send()}
-            disabled={busy || !draft.trim()}
-            aria-label={onCancel ? "Gửi trả lời" : "Gửi bình luận"}
-            className="md-state md-motion flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-on-primary disabled:bg-on-surface/12 disabled:text-on-surface/38"
-          >
-            {busy ? <Loader2 size={18} className="animate-spin" /> : <ArrowUp size={18} />}
-          </button>
+          {roomy ? (
+            <Button size="sm" variant="filled" onClick={() => void send()} disabled={busy || !draft.trim()}>
+              {busy && <Loader2 size={16} className="animate-spin" />} {onCancel ? "Trả lời" : "Gửi bình luận"}
+            </Button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => void send()}
+              disabled={busy || !draft.trim()}
+              aria-label={onCancel ? "Gửi trả lời" : "Gửi bình luận"}
+              className="md-state flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-on-surface disabled:text-on-surface/38"
+            >
+              {busy ? <Loader2 size={18} className="animate-spin" /> : <ArrowUp size={18} />}
+            </button>
+          )}
         </div>
       </div>
-      {emojiOpen && (
+      {picker && (
         <div
           role="group"
-          aria-label="Biểu tượng cảm xúc"
+          aria-label={picker === "emoji" ? "Biểu tượng cảm xúc" : "Ký hiệu toán"}
           onKeyDown={(e) => {
             if (e.key !== "Escape") return;
             e.stopPropagation(); // Esc chỉ đóng bảng emoji, không đóng trình xem ảnh
-            setEmojiOpen(false);
+            setPicker(null);
           }}
-          className={`absolute left-0 z-10 grid grid-cols-6 gap-1 rounded-m3-lg bg-surface-container-highest p-2 shadow-m3-2 ${roomy ? "top-full mt-1" : "bottom-14"}`}
+          className={`absolute left-0 z-10 grid grid-cols-6 gap-1 rounded-m3-lg bg-surface-container-highest p-2 shadow-m3-2 ${picker === "math" ? "top-12" : roomy ? "top-full mt-1" : "bottom-14"}`}
         >
-          {EMOJI.map((e) => (
+          {(picker === "emoji" ? EMOJI : SYMBOLS).map((e) => (
             <button key={e} type="button" onClick={() => insert(e)} aria-label={`Chèn ${e}`} className="md-state flex h-10 w-10 items-center justify-center rounded-full text-xl">
               {e}
             </button>

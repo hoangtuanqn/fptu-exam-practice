@@ -35,10 +35,11 @@ interface Props {
   onRemoved: () => void;
   highlightId?: string | null;
   preload?: Paged<ExamComment>; // mở từ thông báo tới một phản hồi: trang phản hồi đầu đã tải sẵn
+  rich?: boolean; // ô trả lời có thanh định dạng (khu trao đổi cuối trang)
 }
 
 // Bình luận gốc kèm phản hồi: mọi phản hồi (kể cả trả lời phản hồi) nằm phẳng một cấp thụt lề, cũ trước
-export function CommentThread({ root, examId, question, act, patch, onRemoved, highlightId, preload }: Props) {
+export function CommentThread({ root, examId, question, act, patch, onRemoved, highlightId, preload, rich }: Props) {
   const [replies, setReplies] = useState<Replies | null>(preload ? { items: preload.items, page: 1, totalPages: preload.meta?.totalPages ?? 1 } : null);
   const [open, setOpen] = useState(!!preload);
   const [loading, setLoading] = useState(false);
@@ -111,12 +112,12 @@ export function CommentThread({ root, examId, question, act, patch, onRemoved, h
     true,
     <>
       {count > 0 && (
-        <button type="button" onClick={toggle} aria-expanded={open} className="md-state md-label-medium inline-flex min-h-10 items-center gap-1 rounded-full px-3 font-semibold text-primary">
+        <button type="button" onClick={toggle} aria-expanded={open} className="md-state md-label-medium inline-flex min-h-10 items-center gap-1 rounded-full px-3 font-semibold text-on-surface-variant">
           {loading && !replies ? <Loader2 size={15} className="animate-spin" aria-hidden /> : open ? <ChevronUp size={15} aria-hidden /> : <ChevronDown size={15} aria-hidden />}
           {open ? "Ẩn phản hồi" : `Xem ${count} phản hồi`}
         </button>
       )}
-      {open && replies && replies.items.length > 0 && <ul className="mt-2 space-y-4 border-l-2 border-primary-container pl-3 sm:pl-4">{replies.items.map((r) => item(r, false))}</ul>}
+      {open && replies && replies.items.length > 0 && <ul className="mt-2 space-y-4 border-l-2 border-outline-variant pl-3 sm:pl-4">{replies.items.map((r) => item(r, false))}</ul>}
       {open && replies && replies.page < replies.totalPages && (
         <Button size="sm" variant="text" disabled={loading} onClick={() => void load(replies.page + 1).catch(() => undefined)}>
           {loading && <Loader2 size={16} className="animate-spin" />} Xem thêm phản hồi
@@ -124,7 +125,7 @@ export function CommentThread({ root, examId, question, act, patch, onRemoved, h
       )}
       {replyTo && (
         <div className="mt-2">
-          <CommentComposer key={replyTo.id} onSend={send} hint={false} label={`Trả lời ${replyTo.author.name}`} autoFocus onCancel={() => setReplyTo(null)} />
+          <CommentComposer key={replyTo.id} roomy={rich} onSend={send} hint={false} label={`Trả lời ${replyTo.author.name}`} autoFocus onCancel={() => setReplyTo(null)} />
         </div>
       )}
     </>,
