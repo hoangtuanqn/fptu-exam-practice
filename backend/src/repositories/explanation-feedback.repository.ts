@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "../configs/prisma";
+import type { Db } from "./wallet.repository";
 import { toSkipTake, type PaginationQuery } from "../utils/pagination";
 
 const adminSelect = {
@@ -12,16 +13,17 @@ const adminSelect = {
   updatedAt: true,
   resolvedAt: true,
   resolvedById: true,
+  reward: true,
   user: { select: { fullName: true, email: true } },
   exam: { select: { title: true, threadId: true } },
 } satisfies Prisma.ExplanationFeedbackSelect;
 
 export const explanationFeedbackRepository = {
   find: (userId: string, examId: string, questionNumber: number) =>
-    prisma.explanationFeedback.findUnique({ where: { userId_examId_questionNumber: { userId, examId, questionNumber } }, select: { helpful: true, reason: true, comment: true } }),
+    prisma.explanationFeedback.findUnique({ where: { userId_examId_questionNumber: { userId, examId, questionNumber } }, select: { helpful: true, reason: true, comment: true, updatedAt: true, resolvedAt: true } }),
 
   // Mỗi người một đánh giá cho mỗi câu: gửi lại thì ghi đè (lý do và góp ý cũ bị xóa nếu lần này là "hữu ích")
-  upsert: (userId: string, examId: string, questionNumber: number, data: { helpful: boolean; reason: string | null; comment: string | null; resolvedAt?: null; resolvedById?: null }) =>
+  upsert: (userId: string, examId: string, questionNumber: number, data: { helpful: boolean; reason: string | null; comment: string | null; resolvedAt?: null; resolvedById?: null; reward?: 0 }) =>
     prisma.explanationFeedback.upsert({
       where: { userId_examId_questionNumber: { userId, examId, questionNumber } },
       create: { userId, examId, questionNumber, ...data },
@@ -56,7 +58,23 @@ export const explanationFeedbackRepository = {
 
   // Nội dung lời giải đang lưu của các câu trong trang, để admin đọc ngay lời giải bị chê
   explanationsOf: (pairs: { examId: string; questionNumber: number }[]) =>
-    pairs.length === 0 ? Promise.resolve([]) : prisma.questionExplanation.findMany({ where: { OR: pairs }, select: { examId: true, questionNumber: true, content: true, model: true } }),
+    pairs.length === 0 ? Promise.resolve([]) : prisma.questionExplanation.findMany({ where: { OR: pairs }, select: { examId: true, questionNumber: true, content: true, model: true, createdAt: true } }),
+
+  // ----- Xác nhận 👎 đúng (gọi trong một transaction)
+  findForConfirm: (db: Db, id: string) =>
+    db.explanationFeedback.findUnique({ where: { id }, select: { userId: true, examId: true, questionNumber: true, helpful: true, updatedAt: true, resolvedAt: true, exam: { select: { title: true } } } }),
+
+  // Cổng một người thắng: xóa đúng bản lời giải bị chê (tạo trước lần góp ý cuối). Hai giao dịch cùng câu xếp hàng ở khóa dòng này; false = đã tạo lại hoặc đã xóa
+  claimExplanation: async (db: Db, examId: string, questionNumber: number, ratedAt: Date) =>
+    (await db.questionExplanation.deleteMany({ where: { examId, questionNumber, createdAt: { lte: ratedAt } } })).count === 1,
+
+  // Chốt góp ý bằng UPDATE có điều kiện (còn là 👎 đang mở)
+  settle: async (db: Db, id: string, adminId: string, reward: number) =>
+    (await db.explanationFeedback.updateMany({ where: { id, helpful: false, resolvedAt: null }, data: { resolvedAt: new Date(), resolvedById: adminId, reward } })).count === 1,
+
+  // Các 👎 đang mở khác của cùng câu: lời giải đã thưởng một lần, đóng không thưởng (index exam_id, question_number)
+  closeOthers: (db: Db, examId: string, questionNumber: number, adminId: string) =>
+    db.explanationFeedback.updateMany({ where: { examId, questionNumber, helpful: false, resolvedAt: null }, data: { resolvedAt: new Date(), resolvedById: adminId } }),
 
   async summary() {
     const rows = await prisma.explanationFeedback.groupBy({ by: ["helpful"], _count: { _all: true } });

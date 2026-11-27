@@ -33,6 +33,10 @@ export const answerReportRepository = {
       select: { id: true, examId: true, questionNumber: true, userId: true, proposedAnswer: true, exam: { select: { title: true } } },
     }),
 
+  // Người này còn báo cáo đáp án chờ duyệt cho câu này không (kể cả đã đóng: còn PENDING thì vẫn duyệt được)
+  hasPending: async (db: Db, userId: string, examId: string, questionNumber: number) =>
+    (await db.answerReport.count({ where: { userId, examId, questionNumber, status: "PENDING" } })) > 0,
+
   /** Chốt báo cáo bằng UPDATE có điều kiện (chỉ khi còn PENDING): hai admin duyệt cùng lúc thì chỉ một người thắng. */
   async review(db: Db, id: string, data: { status: Exclude<ReportStatus, "PENDING">; reward: number; reviewNote?: string; reviewedById: string }) {
     const { count } = await db.answerReport.updateMany({
@@ -72,7 +76,7 @@ export const answerReportRepository = {
       ? Promise.resolve([])
       : prisma.examQuestion.findMany({
           where: { OR: pairs.map((p) => ({ examId: p.examId, number: p.number })) },
-          select: { examId: true, number: true, imagePath: true },
+          select: { examId: true, number: true, imagePath: true, answer: true },
         }),
 
   // Thành viên xem báo cáo của chính mình
