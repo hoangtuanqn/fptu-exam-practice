@@ -7,6 +7,7 @@ import { Button, IconButton } from "@/shared/ui/Button";
 import { CommentComposer } from "./CommentComposer";
 import { CommentItem } from "./CommentItem";
 import { commentApi, type ExamComment } from "./exam-comments.api";
+import { ForumPost } from "./ForumPost";
 
 type Patch = (id: string, patch: Partial<ExamComment>) => void;
 
@@ -35,10 +36,13 @@ interface Props {
   onRemoved: () => void;
   highlightId?: string | null;
   preload?: Paged<ExamComment>; // mở từ thông báo tới một phản hồi: trang phản hồi đầu đã tải sẵn
+  variant?: "panel" | "forum"; // forum = bình luận chung cuối trang đề (thẻ hai cột, ô trả lời dạng thẻ)
 }
 
 // Bình luận gốc kèm phản hồi: mọi phản hồi (kể cả trả lời phản hồi) nằm phẳng một cấp thụt lề, cũ trước
-export function CommentThread({ root, examId, question, act, patch, onRemoved, highlightId, preload }: Props) {
+export function CommentThread({ root, examId, question, act, patch, onRemoved, highlightId, preload, variant = "panel" }: Props) {
+  const forum = variant === "forum";
+  const Item = forum ? ForumPost : CommentItem;
   const [replies, setReplies] = useState<Replies | null>(preload ? { items: preload.items, page: 1, totalPages: preload.meta?.totalPages ?? 1 } : null);
   const [open, setOpen] = useState(!!preload);
   const [loading, setLoading] = useState(false);
@@ -86,7 +90,7 @@ export function CommentThread({ root, examId, question, act, patch, onRemoved, h
   const patchReply: Patch = (id, p) => setReplies((r) => r && { ...r, items: r.items.map((c) => (c.id === id ? { ...c, ...p } : c)) });
 
   const item = (c: ExamComment, isRoot: boolean, children?: ReactNode) => (
-    <CommentItem
+    <Item
       key={c.id}
       c={c}
       reported={act.reported(c.id)}
@@ -103,7 +107,7 @@ export function CommentThread({ root, examId, question, act, patch, onRemoved, h
       }
     >
       {children}
-    </CommentItem>
+    </Item>
   );
 
   return item(
@@ -122,7 +126,12 @@ export function CommentThread({ root, examId, question, act, patch, onRemoved, h
           {loading && <Loader2 size={16} className="animate-spin" />} Xem thêm phản hồi
         </Button>
       )}
-      {replyTo && (
+      {replyTo && forum && (
+        <div className="mt-2">
+          <CommentComposer key={replyTo.id} variant="card" onSend={send} hint={false} label={`Trả lời ${replyTo.author.name}`} autoFocus onCancel={() => setReplyTo(null)} />
+        </div>
+      )}
+      {replyTo && !forum && (
         <div className="mt-2 space-y-1">
           <div className="md-body-small flex items-center gap-1 text-on-surface-variant">
             <span className="min-w-0 flex-1 truncate">
