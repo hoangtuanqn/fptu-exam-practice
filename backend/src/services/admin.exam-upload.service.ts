@@ -373,12 +373,12 @@ function runResource(adminId: string, { title, body, same, threadId }: ResourceP
       examId = await prisma.$transaction(
         async (tx) => {
           let id = same?.id;
-          if (id) await examAttachmentRepository.removeAll(id, tx);
+          if (id) await examAttachmentRepository.syncByName(id, rows, tx); // trùng tên thì giữ id để bình luận còn nguyên
           else
             id = (
               await examRepository.createUploaded(tx, { threadId, title, subjectCode: body.subjectCode, kind: body.kind ?? "FE", postedAt: null, sourceUrl: "", totalQuestions: 0, answerSource: "DEFAULT", createdById: adminId })
             ).id;
-          await examAttachmentRepository.add(id, rows, tx);
+          if (!same) await examAttachmentRepository.add(id, rows, tx);
           return id;
         },
         { timeout: EXAM_UPLOAD_TX_TIMEOUT_MS },
