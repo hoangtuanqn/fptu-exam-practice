@@ -17,22 +17,23 @@ export function tallyVotes(groups: readonly { answers: string; count: number }[]
   return { voters, counts, mine: mine ? mine.split(" ").filter(Boolean) : [] };
 }
 
-async function openQuestion(actor: Actor, examId: string, questionNumber: number): Promise<Question> {
+// exam = cho phép 0 (cả đề): chỉ để đọc; thích và bình chọn trên 0 là 422 như mục không tồn tại
+async function openQuestion(actor: Actor, examId: string, questionNumber: number, exam = false): Promise<Question> {
   await examService.assertAccess(actor, examId);
-  await assertQuestion(examId, questionNumber);
+  await assertQuestion(examId, questionNumber, exam);
   return { examId, questionNumber };
 }
 
-// Tệp đính kèm (số âm) không có bình chọn
+// Tệp đính kèm (số âm) và cả đề (0) không có bình chọn
 async function votesOf(q: Question, viewerId: string | null) {
-  if (q.questionNumber < 0) return tallyVotes([], null);
+  if (q.questionNumber <= 0) return tallyVotes([], null);
   const [groups, mine] = await Promise.all([examReactionRepository.voteGroups(q), viewerId ? examReactionRepository.myVote(q, viewerId) : null]);
   return tallyVotes(groups.map((g) => ({ answers: g.answers, count: g._count._all })), mine);
 }
 
 export const examReactionService = {
   async reactions(actor: Actor, viewerId: string | null, examId: string, questionNumber: number) {
-    const q = await openQuestion(actor, examId, questionNumber);
+    const q = await openQuestion(actor, examId, questionNumber, true);
     const [likes, liked, votes] = await Promise.all([
       examReactionRepository.countQuestionLikes(q),
       viewerId ? examReactionRepository.hasQuestionLike(q, viewerId) : false,

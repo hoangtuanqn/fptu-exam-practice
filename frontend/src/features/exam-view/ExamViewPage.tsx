@@ -6,6 +6,7 @@ import { useAuth } from "@/features/auth/AuthContext";
 import { examApi } from "@/features/exam/exam.api";
 import { isFilesOnly, type ExamQuestionsPayload, type ImportedExam } from "@/features/exam/types";
 import { AttachmentList } from "@/features/exam-attachments/AttachmentList";
+import { ExamDiscussion } from "@/features/exam-comments/ExamDiscussion";
 import { useCommentCounts } from "@/features/exam-comments/useCommentCounts";
 import { ImageLightbox } from "@/features/exam-preview/ImageLightbox";
 import { LoadingMoreBanner } from "@/features/practice/components/quiz/LoadingMoreBanner";
@@ -231,6 +232,9 @@ function ExamView({ exam }: { exam: ImportedExam }) {
           />
         ))}
       </ul>
+
+      {/* ?target=0&comment=ID (thông báo): cuộn tới bình luận chung này */}
+      {comments.counts && <ExamDiscussion examId={exam.id} focusComment={params.get("target") === "0" ? params.get("comment") : null} onChanged={comments.reload} />}
 
       {zoomAt >= 0 && (
         <ImageLightbox

@@ -7,6 +7,7 @@ import { canPractice, type ExamAttachment, type ExamQuestionsPayload, type Impor
 import { downloadUrl, ICONS, isImageFile } from "@/features/exam-attachments/AttachmentList";
 import { CommentCountButton, CommentsDialog } from "@/features/exam-comments/CommentsDialog";
 import { attachmentTarget } from "@/features/exam-comments/exam-comments.api";
+import { ExamDiscussion } from "@/features/exam-comments/ExamDiscussion";
 import { useCommentCounts } from "@/features/exam-comments/useCommentCounts";
 import { ExamKindBadge } from "@/features/exam-store/ExamKindBadge";
 import { NewExamBadge } from "@/features/exam-store/NewExamBadge";
@@ -241,6 +242,8 @@ function Preview({ exam }: { exam: ImportedExam }) {
           <Empty icon={FileSearch} title="Đề này chưa có trang nào" />
         </Card>
       )}
+
+      {comments.counts && <ExamDiscussion examId={exam.id} focusComment={params.get("target") === "0" ? comment : null} onChanged={comments.reload} />}
 
       {zoomAt >= 0 && <ImageLightbox items={lightboxItems} index={zoomAt} onIndex={(i) => setZoom(shots[i]!.key)} onClose={closeViewer} discussion={comments.counts ? { examId: exam.id, examTitle: exam.title, counts: comments.counts, onChanged: comments.reload, focus } : undefined} />}
       {talk && <CommentsDialog examId={exam.id} examTitle={exam.title} target={attachmentTarget(talk.id)} name={talk.name} onChanged={comments.reload} onClose={closeViewer} focusComment={focus?.question === attachmentTarget(talk.id) ? focus.comment : null} />}

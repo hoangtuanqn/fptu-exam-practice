@@ -25,7 +25,7 @@ import {
   voteBody,
   voteParam,
 } from "../src/rules/requests/exam-comment.request";
-import { commentLimitError, holdReason, toPublicComment } from "../src/services/exam-comment.service";
+import { commentLimitError, holdReason, rootIndexes, targetKindOf, toPublicComment } from "../src/services/exam-comment.service";
 import { tallyVotes } from "../src/services/exam-reaction.service";
 
 // Bình luận câu hỏi: validator, quy tắc gửi (giới hạn ngày, trùng), dạng dòng công khai (không lộ id người viết).
@@ -49,14 +49,16 @@ describe("exam comment validators", () => {
     assert.equal(createCommentBody.safeParse({ questionNumber: 1, body: "a".repeat(EXAM_COMMENT_MAX_LENGTH + 1) }).success, false);
     // dài vì khoảng trắng hai đầu nhưng nội dung vừa đủ: vẫn hợp lệ
     assert.equal(createCommentBody.safeParse({ questionNumber: 1, body: ` ${"a".repeat(EXAM_COMMENT_MAX_LENGTH)} ` }).success, true);
-    for (const questionNumber of [0, 1.5, "2", 2 ** 31]) assert.equal(createCommentBody.safeParse({ questionNumber, body: "ok" }).success, false);
+    for (const questionNumber of [1.5, "2", 2 ** 31]) assert.equal(createCommentBody.safeParse({ questionNumber, body: "ok" }).success, false);
     assert.equal(createCommentBody.parse({ questionNumber: -7, body: "ok" }).questionNumber, -7); // tệp đính kèm id 7
+    assert.equal(createCommentBody.parse({ questionNumber: 0, body: "ok" }).questionNumber, 0); // thảo luận chung của đề
   });
 
   it("parses list queries and params", () => {
-    assert.deepEqual(listCommentsQuery.parse({ question: "4" }), { question: 4, page: 1, limit: 20 });
+    assert.deepEqual(listCommentsQuery.parse({ question: "4" }), { question: 4, order: "newest", page: 1, limit: 20 });
     assert.equal(listCommentsQuery.safeParse({}).success, false);
-    assert.equal(listCommentsQuery.safeParse({ question: "0" }).success, false);
+    assert.deepEqual(listCommentsQuery.parse({ question: "0", order: "oldest" }), { question: 0, order: "oldest", page: 1, limit: 20 });
+    assert.equal(listCommentsQuery.safeParse({ question: "0", order: "top" }).success, false);
     assert.equal(listAdminCommentsQuery.parse({}).status, "PENDING");
     assert.equal(listAdminCommentsQuery.parse({ status: "all" }).status, "all");
     assert.equal(listAdminCommentsQuery.safeParse({ status: "DELETED" }).success, false);
@@ -91,7 +93,8 @@ describe("exam comment reaction validators", () => {
     assert.deepEqual(reportCommentBody.parse({ reason: "  " }), { reason: null });
     assert.equal(reportCommentBody.safeParse({ reason: "x".repeat(256) }).success, false);
     assert.deepEqual(questionParam.parse({ id: EXAM, number: "3" }), { id: EXAM, number: 3 });
-    assert.equal(questionParam.safeParse({ id: EXAM, number: "0" }).success, false);
+    assert.equal(questionParam.parse({ id: EXAM, number: "0" }).number, 0); // đọc được; thích trên 0 bị service trả 422
+    assert.equal(voteParam.safeParse({ id: EXAM, number: "0" }).success, false);
     assert.equal(questionParam.parse({ id: EXAM, number: "-4" }).number, -4);
     assert.equal(listCommentsQuery.parse({ question: "-4" }).question, -4);
     assert.equal(voteParam.safeParse({ id: EXAM, number: "-4" }).success, false); // tệp đính kèm không có bình chọn
@@ -128,6 +131,14 @@ describe("exam comment rules", () => {
     assert.equal(holdReason(null, { ...clean, strikes: EXAM_COMMENT_STRIKES - 1 }), null);
   });
 
+  it("numbers roots #1 = oldest from the page position and total, and labels targets", () => {
+    assert.deepEqual([...rootIndexes(["c", "b"], 0, 5, "newest")], [["c", 5], ["b", 4]]);
+    assert.deepEqual([...rootIndexes(["a"], 4, 5, "newest")], [["a", 1]]);
+    assert.deepEqual([...rootIndexes(["a", "b"], 0, 5, "oldest")], [["a", 1], ["b", 2]]);
+    assert.deepEqual([...rootIndexes(["e"], 4, 5, "oldest")], [["e", 5]]);
+    assert.deepEqual([0, 3, -2].map(targetKindOf), ["exam", "question", "file"]);
+  });
+
   it("tallies votes per letter without revealing voters", () => {
     assert.deepEqual(tallyVotes([{ answers: "A", count: 2 }, { answers: "A C", count: 1 }], "A C"), { voters: 3, counts: { A: 3, C: 1 }, mine: ["A", "C"] });
     assert.deepEqual(tallyVotes([], null), { voters: 0, counts: {}, mine: [] });
@@ -141,7 +152,7 @@ describe("exam comment rules", () => {
       status: "APPROVED" as const,
       createdAt: new Date(0),
       userId: USER,
-      user: { fullName: "Nguyen Van A", avatarPath: "avatars/abc.webp", role: "USER" as const, proExpiresAt: new Date(Date.now() + 60_000) },
+      user: { fullName: "Nguyen Van A", avatarPath: "avatars/abc.webp", role: "USER" as const, proExpiresAt: new Date(Date.now() + 60_000), createdAt: new Date(1) },
       parentId: null as string | null,
       replyToId: null as string | null,
       replyTo: null as { user: { fullName: string } } | null,
@@ -150,9 +161,12 @@ describe("exam comment rules", () => {
     assert.equal(mine.mine, true);
     assert.equal(JSON.stringify(mine).includes(USER), false);
     assert.deepEqual(Object.keys(mine).sort(), [
-      "author", "body", "createdAt", "dislikes", "id", "liked", "likes", "mine", "parentId", "questionNumber", "reaction", "replyCount", "replyTo", "status",
+      "author", "body", "createdAt", "dislikes", "id", "index", "liked", "likes", "mine", "parentId", "questionNumber", "reaction", "replyCount", "replyTo", "status",
     ]);
-    assert.deepEqual(Object.keys(mine.author).sort(), ["avatarUrl", "isAdmin", "isPro", "name"]);
+    assert.deepEqual(Object.keys(mine.author).sort(), ["avatarUrl", "commentCount", "isAdmin", "isPro", "joinedAt", "name"]);
+    assert.deepEqual([mine.author.joinedAt, mine.author.commentCount, mine.index], [new Date(1), 0, null]);
+    const full = toPublicComment(row, USER, { likes: 0, dislikes: 0, reaction: null, replyCount: 0, commentCount: 7, index: 3 });
+    assert.deepEqual([full.author.commentCount, full.index], [7, 3]);
     assert.equal(mine.author.name, "Nguyen Van A");
     assert.equal(mine.author.isPro, true);
     assert.equal(mine.author.isAdmin, false);

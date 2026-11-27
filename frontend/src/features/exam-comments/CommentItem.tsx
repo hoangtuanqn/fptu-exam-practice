@@ -7,7 +7,7 @@ import { reactionOf, type ExamComment } from "./exam-comments.api";
 
 const ACTION = "md-state inline-flex min-h-10 items-center gap-1 rounded-full px-2 font-medium outline-none focus-visible:ring-2 focus-visible:ring-primary";
 
-interface Props {
+export interface CommentItemProps {
   c: ExamComment;
   reported: boolean;
   highlight?: boolean; // mở từ thông báo: cuộn tới và làm nổi bật
@@ -19,7 +19,7 @@ interface Props {
 }
 
 // Một bình luận hoặc phản hồi: nội dung là văn bản thuần (giữ xuống dòng, không HTML, không biến link thành liên kết)
-export function CommentItem({ c, reported, highlight, onReact, onReply, onReport, onDelete, children }: Props) {
+export function CommentItem({ c, reported, highlight, onReact, onReply, onReport, onDelete, children }: CommentItemProps) {
   const approved = c.status === "APPROVED";
   const reaction = reactionOf(c);
   const likes = c.likes ?? 0;

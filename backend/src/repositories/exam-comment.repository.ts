@@ -13,7 +13,7 @@ const publicSelect = {
   userId: true,
   parentId: true,
   replyToId: true,
-  user: { select: { fullName: true, avatarPath: true, role: true, proExpiresAt: true } },
+  user: { select: { fullName: true, avatarPath: true, role: true, proExpiresAt: true, createdAt: true } },
   replyTo: { select: { user: { select: { fullName: true } } } },
 } satisfies Prisma.ExamCommentSelect;
 
@@ -69,15 +69,28 @@ export const examCommentRepository = {
   // Số bình luận bị admin từ chối từ `since` (index user_id, status, reviewed_at)
   countRejectedSince: (userId: string, since: Date) => prisma.examComment.count({ where: { userId, status: "REJECTED", reviewedAt: { gte: since } } }),
 
-  // Bình luận gốc đã duyệt của một câu, mới nhất trước (index exam_id, question_number, parent_id, status, created_at)
-  async listApproved(examId: string, questionNumber: number, query: PaginationQuery) {
+  // Bình luận gốc đã duyệt của một mục, mới nhất trước mặc định (index exam_id, question_number, parent_id, status, created_at)
+  async listApproved(examId: string, questionNumber: number, query: PaginationQuery, order: "newest" | "oldest" = "newest") {
     const where = { examId, questionNumber, parentId: null, status: "APPROVED" } satisfies Prisma.ExamCommentWhereInput;
     const [items, total] = await Promise.all([
-      prisma.examComment.findMany({ where, select: publicSelect, orderBy: newest, ...toSkipTake(query) }),
+      prisma.examComment.findMany({ where, select: publicSelect, orderBy: order === "oldest" ? oldest : newest, ...toSkipTake(query) }),
       prisma.examComment.count({ where }),
     ]);
     return { items, total };
   },
+
+  // Số bình luận gốc đã duyệt của một mục (số thứ tự của bình luận vừa đăng); cùng index với listApproved
+  countApprovedRoots: (examId: string, questionNumber: number) => prisma.examComment.count({ where: { examId, questionNumber, parentId: null, status: "APPROVED" } }),
+
+  // Số bình luận đã duyệt (gốc và trả lời) của mỗi người viết trong trang: một GROUP BY trên index (user_id, status, reviewed_at)
+  approvedCountsByUser: async (userIds: string[]) =>
+    new Map(
+      userIds.length
+        ? (await prisma.examComment.groupBy({ by: ["userId"], where: { userId: { in: [...new Set(userIds)] }, status: "APPROVED" }, _count: { _all: true } })).map(
+            (g) => [g.userId, g._count._all] as const,
+          )
+        : [],
+    ),
 
   // Bình luận gốc chưa được duyệt (chờ hoặc bị từ chối) của chính người xem trên câu này
   listOwnUnapproved: (examId: string, questionNumber: number, userId: string, take: number) =>

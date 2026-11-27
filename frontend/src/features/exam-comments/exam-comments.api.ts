@@ -5,6 +5,10 @@ export type CommentStatus = "APPROVED" | "PENDING" | "REJECTED";
 
 // Đích của bình luận: số dương = câu hỏi (ảnh trang đề), số âm = tệp đính kèm (-id của tệp)
 export const attachmentTarget = (attachmentId: number) => -attachmentId;
+// 0 = bình luận chung của cả đề (cuối trang xem trước / xem đề)
+export const EXAM_TARGET = 0;
+
+export type CommentOrder = "oldest" | "newest";
 
 export interface ExamComment {
   id: string;
@@ -12,7 +16,9 @@ export interface ExamComment {
   body: string; // văn bản thuần, hiển thị nguyên dạng (không HTML, không link)
   status: CommentStatus;
   createdAt: string;
-  author: { name: string; avatarUrl: string | null; isPro?: boolean; isAdmin?: boolean };
+  // joinedAt, commentCount: máy chủ cũ chưa gửi
+  author: { name: string; avatarUrl: string | null; isPro?: boolean; isAdmin?: boolean; joinedAt?: string; commentCount?: number };
+  index?: number | null; // số thứ tự #n của bình luận gốc trong bình luận chung (máy chủ cũ chưa gửi)
   mine: boolean;
   likes?: number; // máy chủ cũ chưa gửi
   liked?: boolean;
@@ -58,7 +64,7 @@ export const COMMENT_PAGE_SIZE = 20;
 const base = (examId: string) => `/exams/${examId}`;
 
 export const commentApi = {
-  list: (examId: string, question: number, page: number) => http.list<ExamComment>(`${base(examId)}/comments`, { question, page, limit: COMMENT_PAGE_SIZE }),
+  list: (examId: string, question: number, page: number, order?: CommentOrder) => http.list<ExamComment>(`${base(examId)}/comments`, { question, page, limit: COMMENT_PAGE_SIZE, order }),
   create: (examId: string, questionNumber: number, body: string, replyToId?: string) =>
     http.post<ExamComment>(`${base(examId)}/comments`, { questionNumber, body, ...(replyToId && { replyToId }) }),
   // Phản hồi của một bình luận gốc: phẳng, cũ trước
@@ -88,6 +94,7 @@ export interface AdminExamComment {
   reportCount: number;
   targetName?: string | null; // tên tệp khi bình luận thuộc tệp đính kèm (questionNumber âm)
   parentId?: string | null; // có = phản hồi của một bình luận
+  targetKind?: "question" | "file" | "exam"; // máy chủ cũ chưa gửi: suy ra từ questionNumber
   exam: { id: string; title: string };
   author: { id: string; email: string; fullName: string } | null;
   imageUrl: string | null;
