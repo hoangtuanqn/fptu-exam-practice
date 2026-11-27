@@ -39,6 +39,10 @@
           "text": "Đề chưa có đáp án mở thẳng trang xem trước"
         },
         {
+          "type": "improved",
+          "text": "Góp ý đúng về lời giải AI được thưởng credit, lời giải được làm lại"
+        },
+        {
           "type": "fixed",
           "text": "Hộp báo sai đáp án dễ điền trên điện thoại và không còn nhảy con trỏ khi đang gõ"
         }

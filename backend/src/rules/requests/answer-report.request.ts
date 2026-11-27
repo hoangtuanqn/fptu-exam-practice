@@ -6,7 +6,7 @@ import { uuidSchema } from "./admin.request";
 export const resolvedFilter = z.enum(["true", "false", ""]).optional();
 
 // Đáp án đề xuất: các chữ cái A-Z cách nhau dấu cách (A hoặc A C D). Gõ liền "ACD" cũng được chuẩn hóa.
-const proposedAnswer = z
+export const proposedAnswer = z
   .string("Vui lòng chọn đáp án đúng")
   .trim()
   .toUpperCase()

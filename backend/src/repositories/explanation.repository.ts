@@ -4,7 +4,7 @@ import type { Db } from "./wallet.repository";
 export const explanationRepository = {
   // Lời giải thích đã lưu của một câu (dùng chung cho mọi người dùng)
   find: (examId: string, questionNumber: number) =>
-    prisma.questionExplanation.findUnique({ where: { examId_questionNumber: { examId, questionNumber } }, select: { content: true } }),
+    prisma.questionExplanation.findUnique({ where: { examId_questionNumber: { examId, questionNumber } }, select: { content: true, createdAt: true } }),
 
   // Hai người cùng yêu cầu một câu chưa có: chỉ một bản được lưu, bản còn lại bị bỏ qua
   save: (data: { examId: string; questionNumber: number; content: string; model: string }) =>

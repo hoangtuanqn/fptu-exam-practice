@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { getValidated } from "../middlewares/validate.middlewares";
 import type { UuidParam } from "../rules/requests/admin.request";
-import type { ListFeedbackQuery } from "../rules/requests/explanation.request";
+import type { ConfirmFeedbackBody, ListFeedbackQuery } from "../rules/requests/explanation.request";
 import { ResponseClient } from "../rules/response";
 import { explanationFeedbackService } from "../services/explanation-feedback.service";
 
@@ -18,5 +18,11 @@ export const adminExplanationFeedbackController = {
   async resolve(req: Request, res: Response) {
     const { id } = getValidated<UuidParam>(res, "params");
     res.json(new ResponseClient({ message: "Đã đánh dấu đã giải quyết", data: await explanationFeedbackService.adminResolve(req.user!.id, id) }));
+  },
+
+  async confirm(req: Request, res: Response) {
+    const { id } = getValidated<UuidParam>(res, "params");
+    const data = await explanationFeedbackService.confirm(req.user!.id, id, getValidated<ConfirmFeedbackBody>(res));
+    res.json(new ResponseClient({ message: "Đã xác nhận, lời giải cũ đã xóa và người góp ý nhận thưởng", data }));
   },
 };
