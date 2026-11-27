@@ -80,6 +80,10 @@ model User {
   emailCampaignLogs  EmailCampaignLog[]
   savedQuestions     SavedQuestion[]
   examComments       ExamComment[]
+  examCommentLikes   ExamCommentLike[]
+  examCommentReports ExamCommentReport[]
+  examQuestionLikes  ExamQuestionLike[]
+  examQuestionVotes  ExamQuestionVote[]
   examContributions  ExamContribution[]
   userNotices        UserNotice[]
   badges             UserBadge[]
@@ -300,6 +304,8 @@ model Exam {
   explanationUnlocks ExplanationUnlock[]
   savedQuestions SavedQuestion[]
   comments       ExamComment[]
+  questionLikes  ExamQuestionLike[]
+  questionVotes  ExamQuestionVote[]
   attachments ExamAttachment[]
 
   @@index([subjectCode, answerSource])
@@ -1415,14 +1421,80 @@ model ExamComment {
   reviewedAt     DateTime?         @map("reviewed_at")
   reviewedById   String?           @map("reviewed_by_id") @db.Char(36) // admin who reviewed it (soft reference, no FK)
   reviewNote     String?           @map("review_note") @db.VarChar(255)
+  flagReason     String?           @map("flag_reason") @db.VarChar(20) // why it was held for review: WORDS, LINK, CONTACT, REPEATED, SPAM, STRIKES, REPORTED; null = not held
+
+  exam    Exam                @relation(fields: [examId], references: [id], onDelete: Cascade)
+  user    User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likes   ExamCommentLike[]
+  reports ExamCommentReport[]
+
+  @@index([examId, questionNumber, status, createdAt]) // public list of one question, counts per question
+  @@index([status, createdAt]) // admin queue
+  @@index([userId, createdAt]) // daily limit, same text on other questions
+  @@index([userId, examId, questionNumber, createdAt]) // per-question limit and duplicate check
+  @@index([userId, status, reviewedAt]) // comments rejected recently (strikes)
+  @@map("exam_comments")
+}
+
+// One like per member per comment
+model ExamCommentLike {
+  commentId String   @map("comment_id") @db.Char(36)
+  userId    String   @map("user_id") @db.Char(36)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  comment ExamComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([commentId, userId])
+  @@index([userId])
+  @@map("exam_comment_likes")
+}
+
+// One open report per member per comment; deleted when an admin reviews the comment
+model ExamCommentReport {
+  commentId String   @map("comment_id") @db.Char(36)
+  userId    String   @map("user_id") @db.Char(36)
+  reason    String?  @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  comment ExamComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([commentId, userId])
+  @@index([userId, createdAt]) // daily report limit
+  @@map("exam_comment_reports")
+}
+
+// One like per member per question image
+model ExamQuestionLike {
+  examId         String   @map("exam_id") @db.Char(36)
+  questionNumber Int      @map("question_number")
+  userId         String   @map("user_id") @db.Char(36)
+  createdAt      DateTime @default(now()) @map("created_at")
 
   exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([examId, questionNumber, status, createdAt]) // public list of one question, counts per question
-  @@index([status, createdAt]) // admin queue
-  @@index([userId, createdAt]) // rate limit and duplicate check
-  @@map("exam_comments")
+  @@id([examId, questionNumber, userId])
+  @@index([userId])
+  @@map("exam_question_likes")
+}
+
+// One answer vote per member per question, can be changed; answers = letters separated by spaces ("A C")
+model ExamQuestionVote {
+  examId         String   @map("exam_id") @db.Char(36)
+  questionNumber Int      @map("question_number")
+  userId         String   @map("user_id") @db.Char(36)
+  answers        String   @db.VarChar(20)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([examId, questionNumber, userId])
+  @@index([userId])
+  @@map("exam_question_votes")
 }
 
 // Flashcard of a subject: one question image (storage/flashcards/<SUBJECT CODE>/Q<number>.webp) plus its answer.

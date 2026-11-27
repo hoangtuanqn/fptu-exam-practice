@@ -58,6 +58,7 @@ export const accountDeletionRepository = {
     await db.userGrade.deleteMany({ where });
     await db.userExamSlot.deleteMany({ where });
     await db.userNotice.deleteMany({ where });
+    await db.examCommentReport.deleteMany({ where }); // lý do báo cáo là chữ người dùng viết; thích và bình chọn chỉ là số đếm nên giữ
     await db.materialUpload.deleteMany({ where }); // trang và chương xoá theo (cascade)
     await db.courseraOrder.updateMany({ where, data: { email: "", password: null, note: "" } });
     await db.chatLog.updateMany({ where, data: { question: "", ip: null } });

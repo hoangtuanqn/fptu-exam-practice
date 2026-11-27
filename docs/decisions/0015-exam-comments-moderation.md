@@ -1,5 +1,7 @@
 # Moderated comments on exam questions
 
+> Superseded in part by [0019](0019-comment-post-moderation.md): comments are now filtered automatically and go live at once; only suspicious or reported ones wait for an admin. Access and safety rules below still apply.
+
 - Context: students want to discuss one question of an exam (as on FuOverflow), but anything a user writes is shown to other users, so it must not go live unchecked.
 - Decision: new table `exam_comments` (migration `0084_exam_comments`, additive). A comment belongs to one question (`exam_id` + `question_number`) and starts `PENDING`; only `APPROVED` comments are listed to others and counted. The author still sees their own `PENDING`/`REJECTED` comments (at the top of page 1, with the status) and may delete them. Admins approve, reject (optional note), bulk-review or delete at `/admin/exam-comments`; `reviewed_by_id` is a soft reference like `answer_reports`.
 - Access follows the exam: list, counts and posting need the exam in the viewer's library (404 otherwise, admins bypass). Posting needs a verified email, is rate limited per account (per minute in memory, per 24 hours counted in the database) and rejects the same text on the same question within 24 hours. The limits are named constants in `backend/src/constants/exam-comment.ts`.

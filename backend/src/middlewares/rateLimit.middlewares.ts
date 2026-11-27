@@ -1,6 +1,6 @@
 import type { Request } from "express";
 import rateLimit, { type Options, type RateLimitInfo } from "express-rate-limit";
-import { EXAM_COMMENT_PER_MINUTE } from "../constants/exam-comment";
+import { EXAM_COMMENT_PER_MINUTE, EXAM_LIKE_PER_MINUTE, EXAM_VOTE_PER_MINUTE } from "../constants/exam-comment";
 import { waitText } from "../utils/format";
 
 export const TOO_FAST = "Bạn thao tác quá nhanh.";
@@ -86,4 +86,18 @@ export const examCommentLimiter = makeLimiter({
   keyGenerator: (req) => `user:${req.user?.id ?? "anon"}`,
   validate: { keyGeneratorIpFallback: false },
   message: "Bạn gửi bình luận quá nhanh.",
+});
+
+// Bình chọn đáp án và thích (ảnh câu hỏi, bình luận): theo tài khoản, mỗi loại một bộ đếm
+export const examVoteLimiter = makeLimiter({
+  limit: EXAM_VOTE_PER_MINUTE,
+  keyGenerator: (req) => `user:${req.user?.id ?? "anon"}`,
+  validate: { keyGeneratorIpFallback: false },
+  message: "Bạn bình chọn quá nhanh.",
+});
+export const examLikeLimiter = makeLimiter({
+  limit: EXAM_LIKE_PER_MINUTE,
+  keyGenerator: (req) => `user:${req.user?.id ?? "anon"}`,
+  validate: { keyGeneratorIpFallback: false },
+  message: "Bạn bấm thích quá nhanh.",
 });

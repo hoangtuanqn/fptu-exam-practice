@@ -487,7 +487,7 @@ export const adminExamUploadService = {
     return withThreadLock(exam.threadId, async () => {
       const a = await examAttachmentRepository.find(id, attachmentId);
       if (!a) throw attachmentNotFound();
-      await examAttachmentRepository.remove(attachmentId);
+      await examAttachmentRepository.remove(id, attachmentId);
       const abs = resolveInside(storageDir, a.filePath);
       if (abs) await removeFiles([abs]);
       console.log(`[admin] #${adminId} xoá tệp #${attachmentId} của đề #${id}`);

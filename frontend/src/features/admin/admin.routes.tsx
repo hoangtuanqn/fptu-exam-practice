@@ -13,6 +13,7 @@ import type { NavItem } from "@/shared/layout/PanelLayout";
  */
 const AdminCourseraPage = lazy(() => import("@/features/coursera/AdminCourseraPage"));
 const AdminContributionsPage = lazy(() => import("@/features/exam-contribution/AdminContributionsPage"));
+const AdminExamCommentsPage = lazy(() => import("@/features/exam-comments/AdminExamCommentsPage"));
 const DashboardPage = lazy(() => import("./overview/DashboardPage"));
 const UsersPage = lazy(() => import("./users/UsersPage"));
 const UserDetailPage = lazy(() => import("./users/UserDetailPage"));
@@ -68,6 +69,7 @@ export const ADMIN_NAV: NavItem[] = [
   { to: "/admin/crawl-jobs", label: "Lịch sử lấy đề", icon: NAV_ICON.history, group: "Kho đề" },
   { to: "/admin/reports", label: "Báo cáo đáp án", icon: NAV_ICON.report, group: "Chất lượng & AI" },
   { to: "/admin/explanation-feedback", label: "Đánh giá lời giải AI", icon: NAV_ICON.thumb, group: "Chất lượng & AI" },
+  { to: "/admin/exam-comments", label: "Bình luận đề", icon: NAV_ICON.chat, group: "Chất lượng & AI" },
   { to: "/admin/quality", label: "Chất lượng đề", icon: NAV_ICON.quality, group: "Chất lượng & AI" },
   { to: "/admin/ai", label: "AI giải đáp án", icon: NAV_ICON.bot, group: "Chất lượng & AI" },
   { to: "/admin/chatbot", label: "Chatbot hỗ trợ", icon: NAV_ICON.chat, group: "Chất lượng & AI" },
@@ -113,6 +115,7 @@ export const adminRoutes = (
     <Route path="reports" element={<ReportsPage />} />
     <Route path="explanation-feedback" element={<FeedbackPage />} />
     <Route path="contributions" element={<AdminContributionsPage />} />
+    <Route path="exam-comments" element={<AdminExamCommentsPage />} />
     <Route path="ai" element={<AiPage />} />
     <Route path="chatbot" element={<ChatbotPage />} />
     <Route path="funnel" element={<FunnelPage />} />

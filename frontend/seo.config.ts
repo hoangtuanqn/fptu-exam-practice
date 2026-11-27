@@ -128,6 +128,7 @@ export const PRIVATE_PAGES: Record<string, PageSeo> = {
   "/admin/exam-gaps": { title: "Quản trị: đề cần bổ sung", description: "Đề còn thiếu ảnh hoặc đáp án và bài chưa có đề." },
   "/admin/reports": { title: "Quản trị: báo cáo đáp án", description: "Xử lý báo cáo đáp án sai từ người dùng." },
   "/admin/contributions": { title: "Quản trị: đề đóng góp", description: "Xem và duyệt ảnh đề thi thành viên gửi lên." },
+  "/admin/exam-comments": { title: "Quản trị: bình luận đề", description: "Duyệt bình luận bị giữ lại hoặc bị báo cáo." },
   "/admin/explanation-feedback": { title: "Quản trị: đánh giá lời giải AI", description: "Xem đánh giá hữu ích hoặc chưa tốt của người dùng về lời giải AI." },
   "/admin/notifications": { title: "Quản trị: thông báo", description: "Hành vi của người dùng và các việc admin cần nắm." },
   "/admin/subjects": { title: "Quản trị: quản lý môn học", description: "Xem và chỉnh kỳ, chương, syllabus của từng môn." },

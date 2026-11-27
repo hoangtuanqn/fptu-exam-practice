@@ -6,6 +6,8 @@ import { useAuth } from "@/features/auth/AuthContext";
 import { examApi } from "@/features/exam/exam.api";
 import { isFilesOnly, type ExamQuestionsPayload, type ImportedExam } from "@/features/exam/types";
 import { AttachmentList } from "@/features/exam-attachments/AttachmentList";
+import { useCommentCounts } from "@/features/exam-comments/useCommentCounts";
+import { ImageLightbox } from "@/features/exam-preview/ImageLightbox";
 import { LoadingMoreBanner } from "@/features/practice/components/quiz/LoadingMoreBanner";
 import { useExamAttachmentsLive } from "@/features/practice/hooks/useExamAttachmentsLive";
 import { useExamQuestionsLive } from "@/features/practice/hooks/useExamQuestionsLive";
@@ -99,6 +101,11 @@ function ExamView({ exam }: { exam: ImportedExam }) {
   const items = questions.filter((q) => !q.isReference);
   const attachments = useExamAttachmentsLive(exam.id, exam.attachments);
   const filesOnly = isFilesOnly({ ...exam, attachments });
+  // Bấm ảnh câu: xem lớn kèm thảo luận và bình chọn đáp án
+  const [zoom, setZoom] = useState<number | null>(null); // số câu đang xem lớn
+  const comments = useCommentCounts(exam.id);
+  const shots = items.filter((q) => q.imageUrl);
+  const zoomAt = zoom === null ? -1 : shots.findIndex((q) => q.number === zoom);
 
   useExamQuestionsLive(
     exam.id,
@@ -220,9 +227,20 @@ function ExamView({ exam }: { exam: ImportedExam }) {
             highlighted={highlight === q.number}
             saved={isSaved(q.number)}
             onToggleSave={user ? () => void toggleSave(q.number) : undefined}
+            onOpen={() => setZoom(q.number)}
           />
         ))}
       </ul>
+
+      {zoomAt >= 0 && (
+        <ImageLightbox
+          items={shots.map((q) => ({ src: q.imageUrl, name: `Câu ${q.number}`, question: q.number, poll: true }))}
+          index={zoomAt}
+          onIndex={(i) => setZoom(shots[i]!.number)}
+          onClose={() => setZoom(null)}
+          discussion={comments.counts ? { examId: exam.id, examTitle: exam.title, counts: comments.counts, onChanged: comments.reload } : undefined}
+        />
+      )}
     </>
   );
 }
