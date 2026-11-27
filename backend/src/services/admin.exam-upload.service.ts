@@ -24,7 +24,7 @@ import { examRepository, isDuplicateThread, type AnswerSource } from "../reposit
 import { AppError } from "../rules/error";
 import type { ExamGapFilter, ExamGapsQuery, UpdateExamImagesBody, UploadExamBody } from "../rules/requests/exam-upload.request";
 import { isWebpSignature } from "../utils/exam-contribution";
-import { attachmentType } from "../utils/attachment";
+import { attachmentType, imageMimeOf } from "../utils/attachment";
 import { baseName, parseAnswersJson, planUploadNumbers, resourceFileNames } from "../utils/exam-upload";
 import { resolveInside } from "../utils/exam-zip";
 import { toAttachmentDto } from "../utils/file-url";
@@ -32,6 +32,7 @@ import { createKeyLock } from "../utils/key-lock";
 import type { StagedFile } from "../utils/upload-queue";
 import { toMeta } from "../utils/pagination";
 import { invalidateCatalogCache } from "./catalog.service";
+import { examCommentFileService } from "./exam-comment-file.service";
 import { examSolveService } from "./exam-solve.service";
 
 // Mọi lượt ghi cùng một đề (theo threadId) chạy lần lượt, không xoá hay ghi đè ảnh của nhau
@@ -246,7 +247,7 @@ export type ResourceUploadResult = Awaited<ReturnType<typeof runResource | typeo
 
 // multer 1.x đọc tên tệp theo latin1 còn trình duyệt gửi UTF-8: đổi lại để giữ tên tiếng Việt
 const utf8Name = (f: File) => baseName(Buffer.from(f.originalname, "latin1").toString("utf8"));
-const mimeOf = (name: string) => attachmentType(name)?.mime ?? "application/octet-stream";
+const mimeOf = (name: string) => imageMimeOf(name) ?? attachmentType(name)?.mime ?? "application/octet-stream";
 /** Tên lưu cho các tệp mới, không trùng (không phân biệt hoa thường) với tên đang có của đề */
 const freshNames = (existing: string[], raw: string[]) => resourceFileNames([...existing, ...raw], EXAM_RESOURCE_NAME_MAX_BYTES).slice(existing.length);
 const attachmentNotFound = () => AppError.notFound("Không tìm thấy tệp");
@@ -363,6 +364,7 @@ function runResource(adminId: string, { title, body, same, threadId }: ResourceP
     const names = resourceFileNames(files.map(utf8Name), EXAM_RESOURCE_NAME_MAX_BYTES);
     const old = same ? await examAttachmentRepository.listByExam(same.id) : [];
     const written: string[] = [];
+    const commentFiles: string[] = []; // tệp của bình luận trên các tệp đính kèm bị bỏ: xoá trên đĩa sau khi commit
     let examId: string;
     try {
       const rows = await writeResources(
@@ -373,7 +375,7 @@ function runResource(adminId: string, { title, body, same, threadId }: ResourceP
       examId = await prisma.$transaction(
         async (tx) => {
           let id = same?.id;
-          if (id) await examAttachmentRepository.syncByName(id, rows, tx); // trùng tên thì giữ id để bình luận còn nguyên
+          if (id) commentFiles.push(...(await examAttachmentRepository.syncByName(id, rows, tx))); // trùng tên thì giữ id để bình luận còn nguyên
           else
             id = (
               await examRepository.createUploaded(tx, { threadId, title, subjectCode: body.subjectCode, kind: body.kind ?? "FE", postedAt: null, sourceUrl: "", totalQuestions: 0, answerSource: "DEFAULT", createdById: adminId })
@@ -389,6 +391,7 @@ function runResource(adminId: string, { title, body, same, threadId }: ResourceP
       throw err;
     }
     await removeFiles(old.flatMap((a) => resolveInside(storageDir, a.filePath) ?? []));
+    await examCommentFileService.removeFiles(commentFiles);
     console.log(`[admin] #${adminId} tải tài liệu ${same ? "ghi đè " : ""}#${examId}: ${files.length} tệp`);
     published(examId);
     return { id: examId, title, files: files.length, overwritten: !!same, questions: 0, answered: 0 };
@@ -487,7 +490,7 @@ export const adminExamUploadService = {
     return withThreadLock(exam.threadId, async () => {
       const a = await examAttachmentRepository.find(id, attachmentId);
       if (!a) throw attachmentNotFound();
-      await examAttachmentRepository.remove(id, attachmentId);
+      await examCommentFileService.removeFiles(await examAttachmentRepository.remove(id, attachmentId));
       const abs = resolveInside(storageDir, a.filePath);
       if (abs) await removeFiles([abs]);
       console.log(`[admin] #${adminId} xoá tệp #${attachmentId} của đề #${id}`);

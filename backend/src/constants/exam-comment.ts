@@ -51,6 +51,33 @@ export const EXAM_COMMENT_NOTICE_EXCERPT = 150;
 // Duyệt hàng loạt tối đa chừng này bình luận một lần
 export const EXAM_COMMENT_BULK_MAX = 100;
 
-// Vì sao một bình luận bị giữ chờ duyệt (cột flag_reason)
-export const EXAM_COMMENT_FLAG_REASONS = ["WORDS", "LINK", "CONTACT", "REPEATED", "SPAM", "STRIKES", "REPORTED"] as const;
+// Tệp đính kèm của bình luận (decision 0020): storage/comments/<examId>/<tên ngẫu nhiên>, không công khai, chỉ phát qua link ký
+export const COMMENT_FILES_STORAGE_DIR = "comments";
+export const EXAM_COMMENT_FILES_MAX = 4; // mỗi bình luận
+export const EXAM_COMMENT_IMAGE_MAX_MB = 5;
+export const EXAM_COMMENT_IMAGE_MAX_BYTES = EXAM_COMMENT_IMAGE_MAX_MB * 1024 * 1024;
+export const EXAM_COMMENT_FILE_MAX_MB = 10; // pdf, zip, txt
+export const EXAM_COMMENT_FILE_MAX_BYTES = EXAM_COMMENT_FILE_MAX_MB * 1024 * 1024;
+// Tệp nằm trong RAM (multer memory storage): chặn tổng dung lượng theo Content-Length trước khi đọc thân (thêm 1 MB cho các trường chữ)
+export const EXAM_COMMENT_MAX_REQUEST_BYTES = EXAM_COMMENT_FILES_MAX * EXAM_COMMENT_FILE_MAX_BYTES + 1024 * 1024;
+// Số tệp mỗi tài khoản tải lên trong 24 giờ (giữ dung lượng đĩa); lời nhắn không nói con số
+export const EXAM_COMMENT_UPLOADS_PER_DAY = 20;
+// Ảnh được giải mã lại thành WebP (bỏ EXIF/GPS), thu nhỏ cạnh dài
+export const EXAM_COMMENT_IMAGE_MAX_SIDE = 2400;
+export const EXAM_COMMENT_IMAGE_INPUT_MAX_PIXELS = 50_000_000; // chặn ảnh "bom giải nén"
+export const EXAM_COMMENT_WEBP_QUALITY = 80;
+export const EXAM_COMMENT_FILE_NAME_MAX = 120; // tên hiển thị (ký tự)
+// Link ký của tệp: còn hạn ít nhất chừng này, làm tròn lên theo giờ để URL không đổi giữa các lần tải trang (ảnh dùng được cache)
+export const EXAM_COMMENT_FILE_URL_TTL_MS = 2 * 60 * 60_000;
+export const EXAM_COMMENT_FILE_VIEWS_PER_MINUTE = 600; // theo IP
+
+// Nhắc tên (@tên): tối đa chừng này người mỗi bình luận; gợi ý tên trả tối đa MENTION_SEARCH_MAX người
+export const EXAM_COMMENT_MENTIONS_MAX = 5;
+export const EXAM_COMMENT_MENTION_SEARCH_DEFAULT = 8;
+export const EXAM_COMMENT_MENTION_SEARCH_MAX = 20;
+export const EXAM_COMMENT_MENTION_QUERY_MAX = 50;
+export const EXAM_MENTION_SEARCH_PER_MINUTE = 60;
+
+// Vì sao một bình luận bị giữ chờ duyệt (cột flag_reason); UPLOAD = có tệp đính kèm
+export const EXAM_COMMENT_FLAG_REASONS = ["WORDS", "LINK", "CONTACT", "REPEATED", "SPAM", "STRIKES", "REPORTED", "UPLOAD"] as const;
 export type CommentFlagReason = (typeof EXAM_COMMENT_FLAG_REASONS)[number];

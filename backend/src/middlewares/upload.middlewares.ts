@@ -1,5 +1,6 @@
 import multer from "multer";
 import type { Request, Response, NextFunction, RequestHandler } from "express";
+import { EXAM_COMMENT_FILE_MAX_BYTES, EXAM_COMMENT_FILE_MAX_MB, EXAM_COMMENT_FILES_MAX, EXAM_COMMENT_MAX_LENGTH, EXAM_COMMENT_MAX_REQUEST_BYTES, EXAM_COMMENT_MENTIONS_MAX } from "../constants/exam-comment";
 import { CONTRIBUTION_MAX_FILE_BYTES, CONTRIBUTION_MAX_FILE_MB, CONTRIBUTION_MAX_IMAGES, CONTRIBUTION_MAX_REQUEST_BYTES } from "../constants/exam-contribution";
 import { EXAM_UPLOAD_ANSWERS_MAX_CHARS, EXAM_UPLOAD_MAX_FILE_BYTES, EXAM_UPLOAD_MAX_IMAGES, EXAM_UPLOAD_MAX_REQUEST_BYTES } from "../constants/exam-upload";
 import { MATERIAL_MAX_FILE_BYTES, MATERIAL_MAX_FILE_MB } from "../constants/materials";
@@ -108,3 +109,46 @@ const examFilesUpload = multer({
 export const uploadExamFiles = withBodyCap(examFilesUpload.array("files", EXAM_UPLOAD_MAX_IMAGES), EXAM_UPLOAD_MAX_REQUEST_BYTES);
 // Thay nội dung một tệp đính kèm: field "file", cùng giới hạn; service bắt đúng một tệp (báo lỗi rõ hơn lỗi multer)
 export const uploadExamFile = withBodyCap(examFilesUpload.array("file", EXAM_UPLOAD_MAX_IMAGES), EXAM_UPLOAD_MAX_REQUEST_BYTES);
+
+// ---- Tệp đính kèm của bình luận: field "files", nhiều tệp, cùng các trường chữ của bình luận. Không lọc mimetype; service xét đuôi và byte đầu ----
+// Yêu cầu JSON đi thẳng (express.json đã đọc thân); chỉ multipart mới qua multer
+const commentFilesUpload = multer({
+  storage, // RAM: tổng dung lượng bị chặn bởi Content-Length bên dưới
+  limits: { fileSize: EXAM_COMMENT_FILE_MAX_BYTES, files: EXAM_COMMENT_FILES_MAX, fields: 10 + EXAM_COMMENT_MENTIONS_MAX, fieldSize: EXAM_COMMENT_MAX_LENGTH * 16 },
+}).array("files", EXAM_COMMENT_FILES_MAX);
+
+const COMMENT_FILE_ERRORS: Partial<Record<multer.ErrorCode, string>> = {
+  LIMIT_FILE_SIZE: `Mỗi tệp tối đa ${EXAM_COMMENT_FILE_MAX_MB} MB`,
+  LIMIT_FILE_COUNT: `Mỗi bình luận đính kèm tối đa ${EXAM_COMMENT_FILES_MAX} tệp`,
+  LIMIT_UNEXPECTED_FILE: `Mỗi bình luận đính kèm tối đa ${EXAM_COMMENT_FILES_MAX} tệp`,
+};
+const UNREADABLE = "Không đọc được tệp tải lên. Hãy chọn lại tệp rồi thử lại.";
+
+// shortcut: danh sách trong bộ nhớ, đủ cho một tiến trình PM2; nhiều tiến trình thì chuyển sang khoá dùng chung
+const uploading = new Set<string>();
+
+export const uploadCommentFiles: RequestHandler = (req, res, next) => {
+  if (!req.is("multipart/form-data")) return next();
+  const length = Number(req.headers["content-length"]);
+  if (!Number.isFinite(length) || length <= 0) return next(new AppError(UNREADABLE, HTTP_STATUS.BAD_REQUEST, { files: UNREADABLE }));
+  if (length > EXAM_COMMENT_MAX_REQUEST_BYTES) {
+    const msg = "Tổng dung lượng tệp quá lớn, bạn bớt tệp rồi gửi lại nhé";
+    return next(new AppError(msg, HTTP_STATUS.PAYLOAD_TOO_LARGE, { files: msg }));
+  }
+  // Mỗi tài khoản một lượt tải tại một thời điểm: giới hạn RAM đệm tệp và để hạn mức ngày không bị gửi song song vượt qua
+  const uploader = req.user!.id;
+  if (uploading.has(uploader)) {
+    const msg = "Bạn đang gửi một bình luận có tệp, chờ gửi xong rồi thử lại nhé";
+    return next(new AppError(msg, HTTP_STATUS.TOO_MANY_REQUESTS, { files: msg }));
+  }
+  uploading.add(uploader);
+  res.once("close", () => uploading.delete(uploader));
+  commentFilesUpload(req, res, (err: unknown) => {
+    if (!err) return next();
+    if (err instanceof multer.MulterError) {
+      const msg = COMMENT_FILE_ERRORS[err.code];
+      return next(msg ? new AppError(msg, HTTP_STATUS.UNPROCESSABLE_ENTITY, { files: msg }) : new AppError(UNREADABLE, HTTP_STATUS.BAD_REQUEST));
+    }
+    next(err);
+  });
+};

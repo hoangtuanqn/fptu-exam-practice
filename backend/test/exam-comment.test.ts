@@ -147,6 +147,7 @@ describe("exam comment rules", () => {
   it("public rows never carry the author id, email or flag reason, and mark the viewer's own comment", () => {
     const row = {
       id: "c1",
+      examId: "e1",
       questionNumber: 2,
       body: "hi",
       status: "APPROVED" as const,
@@ -156,13 +157,19 @@ describe("exam comment rules", () => {
       parentId: null as string | null,
       replyToId: null as string | null,
       replyTo: null as { user: { fullName: string } } | null,
+      files: [{ id: "f1", name: "a.webp", mime: "image/webp", sizeBytes: 3, filePath: "comments/e1/abc.webp" }],
+      mentions: [{ user: { fullName: "B" } }],
     };
     const mine = toPublicComment(row, USER, { likes: 4, dislikes: 1, reaction: "like", replyCount: 2 });
     assert.equal(mine.mine, true);
     assert.equal(JSON.stringify(mine).includes(USER), false);
     assert.deepEqual(Object.keys(mine).sort(), [
-      "author", "body", "createdAt", "dislikes", "id", "index", "liked", "likes", "mine", "parentId", "questionNumber", "reaction", "replyCount", "replyTo", "status",
+      "attachments", "author", "body", "createdAt", "dislikes", "id", "index", "liked", "likes", "mentions", "mine", "parentId", "questionNumber", "reaction", "replyCount", "replyTo", "status",
     ]);
+    assert.deepEqual(mine.mentions, ["B"]);
+    assert.deepEqual(Object.keys(mine.attachments[0]!).sort(), ["id", "isImage", "mime", "name", "sizeBytes", "url"]); // không lộ đường dẫn trên đĩa
+    assert.equal(mine.attachments[0]!.isImage, true);
+    assert.match(mine.attachments[0]!.url, /\/api\/v1\/exams\/e1\/comment-files\/f1\?e=\d+&s=[0-9a-f]{32}$/);
     assert.deepEqual(Object.keys(mine.author).sort(), ["avatarUrl", "commentCount", "isAdmin", "isPro", "joinedAt", "name"]);
     assert.deepEqual([mine.author.joinedAt, mine.author.commentCount, mine.index], [new Date(1), 0, null]);
     const full = toPublicComment(row, USER, { likes: 0, dislikes: 0, reaction: null, replyCount: 0, commentCount: 7, index: 3 });
