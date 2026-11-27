@@ -14,6 +14,7 @@ import { Search } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useApi } from "@/shared/hooks/useApi";
 import { useDebounce } from "@/shared/hooks/useDebounce";
+import { useSlow } from "@/shared/hooks/useSlow";
 import { IconButton } from "@/shared/ui/Button";
 import { Kbd } from "@/shared/ui/Kbd";
 import { Modal } from "@/shared/ui/Modal";
@@ -112,6 +113,7 @@ function SearchDialog({ onClose }: { onClose: () => void }) {
   const fresh = cache.current.get(typed);
   const shown = ready ? (fresh ?? data) : null; // chưa có kết quả của chữ đang gõ thì tạm giữ kết quả trước (làm mờ)
   const pending = ready && !fresh && failed.current !== typed;
+  const slow = useSlow(pending);
   const [active, setActive] = useState(0);
 
   const options = useMemo<Option[]>(() => {
@@ -210,8 +212,8 @@ function SearchDialog({ onClose }: { onClose: () => void }) {
             id="search-results"
             role="listbox"
             aria-label="Kết quả tìm kiếm"
-            aria-busy={pending}
-            className={`transition-opacity duration-200 ${pending ? "opacity-60 delay-150" : ""}`}
+            aria-busy={slow}
+            className={`transition-opacity duration-200 ${slow ? "opacity-60" : ""}`}
           >
             {options.map((o, i) => (
               <Fragment key={o.key}>

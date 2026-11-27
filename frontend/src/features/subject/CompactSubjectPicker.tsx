@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Search } from "lucide-react";
 import { Badge } from "@/shared/ui/Badge";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
+import { useSlow } from "@/shared/hooks/useSlow";
 import { SubjectSearchInput } from "./SubjectSearchInput";
 import type { PickableSubject } from "./SubjectPicker";
 import { SubjectTile } from "./SubjectTile";
@@ -64,6 +65,7 @@ interface Props {
 export function CompactSubjectPicker({ subjects, loading, error, onRetry, onPick, quick = NO_QUICK, allHref }: Props) {
   const [q, setQ] = useState("");
   const { results, term, stale } = useSubjectSearch(subjects, q);
+  const slow = useSlow(stale);
   const searched = useRef(false);
   if (term) searched.current = true;
   const total = subjects?.length ?? 0;
@@ -80,7 +82,7 @@ export function CompactSubjectPicker({ subjects, loading, error, onRetry, onPick
         <>
           {/* Giữ chiều cao tối thiểu khi đang tìm để phần trang bên dưới không nhảy theo từng phím */}
           {term && (
-            <div aria-busy={stale} className={`min-h-80 transition-opacity ${stale ? "opacity-60 delay-150" : ""}`}>
+            <div aria-busy={slow} className={`min-h-80 transition-opacity ${slow ? "opacity-60" : ""}`}>
               {results.length === 0 ? (
                 <Empty icon={Search} title="Chưa có môn nào khớp">
                   Thử mã môn khác.
