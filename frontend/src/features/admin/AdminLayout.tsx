@@ -9,7 +9,7 @@ import { refreshReviewCounts, useReviewCounts } from "@/features/admin/review-co
 // Khung trang quản trị: menu kèm badge số báo cáo đáp án và đánh giá AI chưa xử lý
 export function AdminLayout() {
   const { pathname } = useLocation();
-  const { reports, feedback, contributions = 0 } = useReviewCounts();
+  const { reports, feedback, contributions = 0, comments = 0 } = useReviewCounts();
   useEffect(() => void refreshReviewCounts(), [pathname]);
 
   const items = useMemo(
@@ -21,9 +21,11 @@ export function AdminLayout() {
             ? { ...it, badge: { count: feedback, label: `${feedback} đánh giá chưa xử lý` } }
             : it.to === "/admin/contributions"
               ? { ...it, badge: { count: contributions, label: `${contributions} đề chờ duyệt` } }
-              : it,
+              : it.to === "/admin/exam-comments"
+                ? { ...it, badge: { count: comments, label: `${comments} bình luận chờ duyệt hoặc bị báo cáo` } }
+                : it,
       ),
-    [reports, feedback, contributions],
+    [reports, feedback, contributions, comments],
   );
 
   return <PanelLayout title="Quản trị" items={items} collapsible actions={<><AdminGuide /><NoticeBell /></>} />;
