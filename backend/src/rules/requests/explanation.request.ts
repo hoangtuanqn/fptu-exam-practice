@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { paginationQuery } from "../../utils/pagination";
-import { resolvedFilter } from "./answer-report.request";
+import { proposedAnswer, resolvedFilter } from "./answer-report.request";
 import { uuidSchema } from "./admin.request";
 import { CHAT_ASSISTANT_MAX_CHARS, CHAT_MAX_MESSAGES, CHAT_MESSAGE_MAX_CHARS } from "../../constants/ai";
 
@@ -49,6 +49,9 @@ export const explainFeedbackBody = z
 
 export const listFeedbackQuery = paginationQuery.extend({ helpful: z.enum(["up", "down"]).optional(), resolved: resolvedFilter, q: z.string().trim().max(100).optional() }); // tên đề, email hoặc nội dung nhận xét
 
+// Admin xác nhận 👎 đúng: answer (không bắt buộc) = đáp án đúng khi đáp án hiện tại cũng sai
+export const confirmFeedbackBody = z.object({ answer: proposedAnswer.optional() }).strict();
+
 export const examIdParam = z.object({ examId: uuidSchema });
 
 export type ExplainBody = z.infer<typeof explainBody>;
@@ -56,4 +59,5 @@ export type UnlockBody = z.infer<typeof unlockBody>;
 export type ExplainChatBody = z.infer<typeof explainChatBody>;
 export type ExplainFeedbackBody = z.infer<typeof explainFeedbackBody>;
 export type ListFeedbackQuery = z.infer<typeof listFeedbackQuery>;
+export type ConfirmFeedbackBody = z.infer<typeof confirmFeedbackBody>;
 export type ExamIdParam = z.infer<typeof examIdParam>;
