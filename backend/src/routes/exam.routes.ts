@@ -14,6 +14,8 @@ import {
   createCommentBody,
   likeBody,
   listCommentsQuery,
+  listRepliesQuery,
+  reactionBody,
   questionParam,
   reportCommentBody,
   voteBody,
@@ -40,6 +42,8 @@ examRouter.get("/:id/comment-counts", identify, validate(uuidParam, "params"), e
 examRouter.post("/:id/comments", authenticate, requireVerifiedMember, examCommentLimiter, validate(uuidParam, "params"), validate(createCommentBody), examCommentController.create);
 examRouter.delete("/:id/comments/:commentId", authenticate, validate(commentParam, "params"), examCommentController.remove);
 examRouter.put("/:id/comments/:commentId/like", authenticate, requireVerifiedMember, examLikeLimiter, validate(commentParam, "params"), validate(likeBody), examCommentController.like);
+examRouter.put("/:id/comments/:commentId/reaction", authenticate, requireVerifiedMember, examLikeLimiter, validate(commentParam, "params"), validate(reactionBody), examCommentController.react);
+examRouter.get("/:id/comments/:commentId/replies", identify, validate(commentParam, "params"), validate(listRepliesQuery, "query"), examCommentController.replies);
 examRouter.post("/:id/comments/:commentId/report", authenticate, requireVerifiedMember, validate(commentParam, "params"), validate(reportCommentBody), examCommentController.report);
 examRouter.get("/:id/questions/:number/reactions", identify, validate(questionParam, "params"), examCommentController.reactions);
 examRouter.put("/:id/questions/:number/vote", authenticate, requireVerifiedMember, examVoteLimiter, validate(voteParam, "params"), validate(voteBody), examCommentController.vote);

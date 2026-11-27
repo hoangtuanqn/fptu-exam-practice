@@ -1,6 +1,6 @@
 import { ProtectedImg } from "@/shared/ui/ProtectedImg";
-import { useEffect, useState } from "react";
-import { Link, Navigate, useParams } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, Navigate, useParams, useSearchParams } from "react-router-dom";
 import { BookOpen, Download, FileSearch, Loader2, FileArchive, MessageSquare, Timer, ZoomIn } from "lucide-react";
 import { examApi } from "@/features/exam/exam.api";
 import { canPractice, type ExamAttachment, type ExamQuestionsPayload, type ImportedExam } from "@/features/exam/types";
@@ -94,6 +94,7 @@ function Preview({ exam }: { exam: ImportedExam }) {
   const playable = canPractice(kind, total, exam.answerStatus);
   const comments = useCommentCounts(exam.id);
   const [talk, setTalk] = useState<ExamAttachment | null>(null); // tệp không phải ảnh đang mở thảo luận
+  const [focus, setFocus] = useState<{ question: number; comment: string | null } | null>(null); // mở từ thông báo (?target=N&comment=ID)
 
   // Đề vừa lấy về có thể còn đang tải ảnh: các trang mới hiện dần
   useExamQuestionsLive(
@@ -156,6 +157,29 @@ function Preview({ exam }: { exam: ImportedExam }) {
     ));
   const lightboxItems = shots.map((s) => ({ src: s.src, name: s.label, question: s.question, poll: s.poll }));
   const zoomAt = zoom === null ? -1 : shots.findIndex((s) => s.key === zoom);
+
+  // Liên kết từ thông báo: mở đúng ảnh (hoặc hộp bình luận của tệp) với khung thảo luận; ảnh hiện dần nên chờ tới khi có đích
+  const [params] = useSearchParams();
+  const target = Number(params.get("target"));
+  const comment = params.get("comment");
+  const handled = useRef("");
+  useEffect(() => {
+    const key = `${target}:${comment}`;
+    if (!Number.isInteger(target) || target === 0 || handled.current === key) return;
+    const shot = shots.find((s) => s.question === target);
+    const file = shot ? undefined : attachments.find((a) => attachmentTarget(a.id) === target);
+    if (!shot && !file) return;
+    handled.current = key;
+    setFocus({ question: target, comment });
+    if (shot) setZoom(shot.key);
+    else setTalk(file ?? null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- chạy lại khi địa chỉ đổi hoặc có thêm ảnh/tệp
+  }, [target, comment, shots.length, attachments.length]);
+  const closeViewer = () => {
+    setZoom(null);
+    setTalk(null);
+    setFocus(null);
+  };
   const tiles = kind === "PE" ? [...fileTiles, ...pageTiles] : [...pageTiles, ...fileTiles];
 
   // Đề PE: gom mọi tài nguyên (tệp đính kèm + ảnh) vào một file zip mang tên đề
@@ -232,8 +256,8 @@ function Preview({ exam }: { exam: ImportedExam }) {
         </Card>
       )}
 
-      {zoomAt >= 0 && <ImageLightbox items={lightboxItems} index={zoomAt} onIndex={(i) => setZoom(shots[i]!.key)} onClose={() => setZoom(null)} discussion={comments.counts ? { examId: exam.id, examTitle: exam.title, counts: comments.counts, onChanged: comments.reload } : undefined} />}
-      {talk && <CommentsDialog examId={exam.id} examTitle={exam.title} target={attachmentTarget(talk.id)} name={talk.name} onChanged={comments.reload} onClose={() => setTalk(null)} />}
+      {zoomAt >= 0 && <ImageLightbox items={lightboxItems} index={zoomAt} onIndex={(i) => setZoom(shots[i]!.key)} onClose={closeViewer} discussion={comments.counts ? { examId: exam.id, examTitle: exam.title, counts: comments.counts, onChanged: comments.reload, focus } : undefined} />}
+      {talk && <CommentsDialog examId={exam.id} examTitle={exam.title} target={attachmentTarget(talk.id)} name={talk.name} onChanged={comments.reload} onClose={closeViewer} focusComment={focus?.question === attachmentTarget(talk.id) ? focus.comment : null} />}
     </>
   );
 }

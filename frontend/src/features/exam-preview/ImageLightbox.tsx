@@ -19,6 +19,7 @@ export interface LightboxDiscussion {
   examTitle: string;
   counts: Record<string, number>;
   onChanged: () => void;
+  focus?: { question: number; comment: string | null } | null; // mở từ thông báo: mở khung thảo luận, cuộn tới bình luận
 }
 
 // Phím thuộc về ô đang gõ hoặc hộp thoại khác (báo cáo, xoá) mở chồng lên trình xem ảnh
@@ -40,7 +41,11 @@ export function ImageLightbox({ items, index, onIndex, onClose, discussion }: { 
   const strip = useRef<HTMLDivElement>(null);
   const root = useRef<HTMLDivElement>(null);
   // Máy tính: khung thảo luận mở sẵn bên phải; điện thoại: tấm kéo từ dưới lên, mở bằng nút trên thanh công cụ
-  const [panelOpen, setPanelOpen] = useState(() => window.matchMedia("(min-width: 1024px)").matches);
+  const focus = discussion?.focus ?? null;
+  const [panelOpen, setPanelOpen] = useState(() => !!focus || window.matchMedia("(min-width: 1024px)").matches);
+  useEffect(() => {
+    if (focus) setPanelOpen(true);
+  }, [focus]);
   const [unavailable, setUnavailable] = useState(false);
   const item = items[index]!;
   const last = items.length - 1;
@@ -188,6 +193,7 @@ export function ImageLightbox({ items, index, onIndex, onClose, discussion }: { 
             onChanged={discussion.onChanged}
             onUnavailable={() => setUnavailable(true)}
             onHide={() => setPanelOpen(false)}
+            focusComment={focus && focus.question === item.question ? focus.comment : null}
           />
         </aside>
       )}

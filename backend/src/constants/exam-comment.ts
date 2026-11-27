@@ -42,6 +42,12 @@ export const EXAM_COMMENT_OWN_PENDING_MAX = 20;
 // Admin chỉ nhận một thông báo bình luận (chờ duyệt / bị báo cáo) cho mỗi đề trong khoảng này (số thật xem ở badge)
 export const EXAM_COMMENT_NOTICE_THROTTLE_MS = 60 * 60_000;
 
+// Người viết nhận tối đa một thông báo thích (hoặc không thích) cho mỗi bình luận trong khoảng này; bộ nhớ chống báo trùng giữ tối đa chừng này khoá
+export const EXAM_COMMENT_REACTION_NOTICE_THROTTLE_MS = 60 * 60_000;
+export const EXAM_COMMENT_REACTION_NOTICE_KEYS_MAX = 5000;
+// Đoạn trích nội dung bình luận trong thông báo
+export const EXAM_COMMENT_NOTICE_EXCERPT = 150;
+
 // Duyệt hàng loạt tối đa chừng này bình luận một lần
 export const EXAM_COMMENT_BULK_MAX = 100;
 

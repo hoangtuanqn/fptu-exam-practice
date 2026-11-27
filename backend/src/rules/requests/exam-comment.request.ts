@@ -40,7 +40,14 @@ const target = (n: z.ZodNumber) =>
 export const createCommentBody = z.object({
   questionNumber: target(z.number("Câu không hợp lệ")),
   body: commentBody,
+  replyToId: uuidSchema.optional(), // trả lời bình luận này (cùng đề, cùng câu)
 });
+
+// Danh sách trả lời của một bình luận gốc
+export const listRepliesQuery = paginationQuery;
+
+// Cảm xúc trên bình luận: thích, không thích, hoặc null = bỏ
+export const reactionBody = z.object({ reaction: z.enum(["like", "dislike"], "Cảm xúc không hợp lệ").nullable() });
 
 export const listCommentsQuery = paginationQuery.extend({
   question: target(z.coerce.number("Câu không hợp lệ")),
@@ -94,6 +101,8 @@ export type CreateCommentBody = z.infer<typeof createCommentBody>;
 export type ListCommentsQuery = z.infer<typeof listCommentsQuery>;
 export type CommentParam = z.infer<typeof commentParam>;
 export type QuestionParam = z.infer<typeof questionParam>;
+export type ListRepliesQuery = z.infer<typeof listRepliesQuery>;
+export type ReactionBody = z.infer<typeof reactionBody>;
 export type VoteBody = z.infer<typeof voteBody>;
 export type LikeBody = z.infer<typeof likeBody>;
 export type ReportCommentBody = z.infer<typeof reportCommentBody>;

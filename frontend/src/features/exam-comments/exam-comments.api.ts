@@ -16,7 +16,24 @@ export interface ExamComment {
   mine: boolean;
   likes?: number; // máy chủ cũ chưa gửi
   liked?: boolean;
+  // Phản hồi (máy chủ cũ chưa gửi): parentId = bình luận gốc; replyTo = người được trả lời khi trả lời một phản hồi
+  parentId?: string | null;
+  replyTo?: { name: string } | null;
+  replyCount?: number;
+  dislikes?: number;
+  reaction?: CommentReaction;
 }
+
+export type CommentReaction = "like" | "dislike" | null;
+
+export interface ReactionState {
+  likes: number;
+  dislikes: number;
+  reaction: CommentReaction;
+}
+
+// Cảm xúc hiện tại của mình với một bình luận (máy chủ cũ chỉ có liked)
+export const reactionOf = (c: ExamComment): CommentReaction => c.reaction ?? (c.liked ? "like" : null);
 
 export interface Votes {
   voters: number;
@@ -42,9 +59,12 @@ const base = (examId: string) => `/exams/${examId}`;
 
 export const commentApi = {
   list: (examId: string, question: number, page: number) => http.list<ExamComment>(`${base(examId)}/comments`, { question, page, limit: COMMENT_PAGE_SIZE }),
-  create: (examId: string, questionNumber: number, body: string) => http.post<ExamComment>(`${base(examId)}/comments`, { questionNumber, body }),
+  create: (examId: string, questionNumber: number, body: string, replyToId?: string) =>
+    http.post<ExamComment>(`${base(examId)}/comments`, { questionNumber, body, ...(replyToId && { replyToId }) }),
+  // Phản hồi của một bình luận gốc: phẳng, cũ trước
+  replies: (examId: string, commentId: string, page: number) => http.list<ExamComment>(`${base(examId)}/comments/${commentId}/replies`, { page, limit: COMMENT_PAGE_SIZE }),
+  react: (examId: string, commentId: string, reaction: CommentReaction) => http.put<ReactionState>(`${base(examId)}/comments/${commentId}/reaction`, { reaction }),
   remove: (examId: string, commentId: string) => http.delete(`${base(examId)}/comments/${commentId}`),
-  like: (examId: string, commentId: string, liked: boolean) => http.put<LikeState>(`${base(examId)}/comments/${commentId}/like`, { liked }),
   report: (examId: string, commentId: string) => http.post<{ reported: true }>(`${base(examId)}/comments/${commentId}/report`, {}),
   counts: (examId: string) => http.get<{ counts: Record<string, number> }>(`${base(examId)}/comment-counts`),
   reactions: (examId: string, question: number) => http.get<Reactions>(`${base(examId)}/questions/${question}/reactions`),
@@ -67,6 +87,7 @@ export interface AdminExamComment {
   flagReason: FlagReason | null;
   reportCount: number;
   targetName?: string | null; // tên tệp khi bình luận thuộc tệp đính kèm (questionNumber âm)
+  parentId?: string | null; // có = phản hồi của một bình luận
   exam: { id: string; title: string };
   author: { id: string; email: string; fullName: string } | null;
   imageUrl: string | null;

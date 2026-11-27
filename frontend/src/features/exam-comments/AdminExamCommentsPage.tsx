@@ -148,6 +148,7 @@ export default function AdminExamCommentsPage() {
                   <div className="min-w-0 flex-1 space-y-1.5">
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge tone={STATUS[c.status].tone}>{STATUS[c.status].label}</Badge>
+                      {c.parentId && <Badge>Phản hồi</Badge>}
                       {c.flagReason && <Badge tone="warning">{FLAG[c.flagReason] ?? c.flagReason}</Badge>}
                       {c.reportCount > 0 && <Badge tone="danger">{c.reportCount} báo cáo</Badge>}
                     </div>

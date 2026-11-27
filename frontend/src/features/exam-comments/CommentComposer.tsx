@@ -9,7 +9,16 @@ const EMOJI = ["😀", "😂", "🤣", "😊", "😍", "🥰", "😎", "🤔", "
 const MAX_HEIGHT = 160;
 
 // Ô viết bình luận cố định cuối khung: Enter để gửi, Shift+Enter xuống dòng, bảng emoji nhỏ. Gửi lỗi thì giữ nguyên bản nháp.
-export function CommentComposer({ onSend, hint }: { onSend: (body: string) => Promise<void>; hint: boolean }) {
+// Dùng lại cho ô trả lời ngay dưới bình luận: label/placeholder riêng, tự focus, Esc để huỷ trả lời.
+interface Props {
+  onSend: (body: string) => Promise<void>;
+  hint: boolean;
+  label?: string;
+  autoFocus?: boolean;
+  onCancel?: () => void;
+}
+
+export function CommentComposer({ onSend, hint, label = "Viết bình luận", autoFocus, onCancel }: Props) {
   const toast = useToast();
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
@@ -57,6 +66,9 @@ export function CommentComposer({ onSend, hint }: { onSend: (body: string) => Pr
     if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
       void send();
+    } else if (e.key === "Escape" && onCancel) {
+      e.stopPropagation(); // Esc chỉ huỷ trả lời, không đóng hộp thoại / trình xem ảnh
+      onCancel();
     }
   };
 
@@ -85,8 +97,9 @@ export function CommentComposer({ onSend, hint }: { onSend: (body: string) => Pr
             if (error) setError(null);
           }}
           onKeyDown={onKeyDown}
-          placeholder="Viết bình luận về câu này…"
-          aria-label="Viết bình luận"
+          placeholder={`${label}…`}
+          aria-label={label}
+          autoFocus={autoFocus}
           aria-describedby={hintId}
           aria-invalid={!!error}
           className="md-body-medium min-h-10 flex-1 resize-none bg-transparent py-2 text-on-surface outline-none placeholder:text-on-surface-variant"
@@ -94,7 +107,7 @@ export function CommentComposer({ onSend, hint }: { onSend: (body: string) => Pr
         <button type="button" onClick={() => setEmojiOpen((o) => !o)} aria-label="Chèn biểu tượng cảm xúc" aria-expanded={emojiOpen} className="md-state flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-on-surface-variant">
           <Smile size={20} />
         </button>
-        <button type="button" onClick={() => void send()} disabled={busy || !draft.trim()} aria-label="Gửi bình luận" className="md-state flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-primary disabled:text-on-surface/38">
+        <button type="button" onClick={() => void send()} disabled={busy || !draft.trim()} aria-label={onCancel ? "Gửi trả lời" : "Gửi bình luận"} className="md-state flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-primary disabled:text-on-surface/38">
           {busy ? <Loader2 size={20} className="animate-spin" /> : <SendHorizontal size={20} />}
         </button>
       </div>

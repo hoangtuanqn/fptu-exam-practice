@@ -12,8 +12,9 @@ import { useConfirm } from "@/shared/ui/ConfirmDialog";
 import { ErrorBox, Spinner } from "@/shared/ui/Feedback";
 import { AnswerPoll } from "./AnswerPoll";
 import { CommentComposer } from "./CommentComposer";
-import { CommentItem } from "./CommentItem";
-import { commentApi, type ExamComment, type Reactions } from "./exam-comments.api";
+import { CommentThread, type CommentActions } from "./CommentThread";
+import { commentApi, reactionOf, type ExamComment, type Reactions } from "./exam-comments.api";
+import type { Paged } from "@/shared/types/api";
 
 interface Props {
   examId: string;
@@ -25,7 +26,11 @@ interface Props {
   onChanged: () => void; // số bình luận của câu đổi: trang tải lại bộ đếm
   onUnavailable: () => void; // 404 (không có quyền / máy chủ cũ): trình xem ảnh ẩn khung
   onHide: () => void;
+  focusComment?: string | null; // mở từ thông báo: cuộn tới bình luận / phản hồi này nếu tìm thấy
 }
+
+const FIND_REPLY_ROOTS = 10; // tìm phản hồi được nhắc tới trong phản hồi của chừng này bình luận gốc đầu tiên
+const HIGHLIGHT_MS = 4000;
 
 // 404 = khung thảo luận không dùng được ở đây
 async function orGone<T>(p: Promise<T>): Promise<T | "gone"> {
@@ -45,7 +50,7 @@ interface List {
 }
 
 // Khung thảo luận của MỘT câu (nơi gọi đặt key theo câu, nên đổi ảnh là trạng thái, bản nháp và phản hồi cũ đều bỏ)
-export function DiscussionPanel({ examId, examTitle, question, position, poll, closeAlways, onChanged, onUnavailable, onHide }: Props) {
+export function DiscussionPanel({ examId, examTitle, question, position, poll, closeAlways, onChanged, onUnavailable, onHide, focusComment }: Props) {
   const { user } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
@@ -61,6 +66,8 @@ export function DiscussionPanel({ examId, examTitle, question, position, poll, c
   const [voting, setVoting] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [reported, setReported] = useState<Set<string>>(new Set());
+  const [highlight, setHighlight] = useState<string | null>(null);
+  const [preload, setPreload] = useState<{ rootId: string; data: Paged<ExamComment> } | null>(null);
 
   useEffect(() => {
     if (reactions.data === "gone" || first.data === "gone") onUnavailable();
@@ -73,6 +80,33 @@ export function DiscussionPanel({ examId, examTitle, question, position, poll, c
     const d = first.data;
     if (d && d !== "gone") setList({ items: d.items, page: 1, totalPages: d.meta?.totalPages ?? 1, total: d.meta?.total ?? d.items.length });
   }, [first.data]);
+
+  // Mở từ thông báo: bình luận gốc ở trang đầu thì làm nổi bật luôn; không thì tìm trong phản hồi của vài bình luận gốc đầu (không thấy thì chỉ mở khung)
+  // shortcut: chưa có API tìm bình luận gốc của một phản hồi, nên dò phản hồi trang 1 của tối đa FIND_REPLY_ROOTS gốc; nâng cấp khi thông báo gửi kèm id gốc
+  const firstItems = first.data && first.data !== "gone" ? first.data.items : null;
+  useEffect(() => {
+    if (!focusComment || !firstItems) return;
+    let stop = false;
+    const done = () => {
+      setHighlight(focusComment);
+      setTimeout(() => setHighlight(null), HIGHLIGHT_MS);
+    };
+    if (firstItems.some((c) => c.id === focusComment)) return done();
+    void (async () => {
+      for (const root of firstItems.filter((c) => (c.replyCount ?? 0) > 0).slice(0, FIND_REPLY_ROOTS)) {
+        const data = await commentApi.replies(examId, root.id, 1).catch(() => null);
+        if (stop) return;
+        if (data?.items.some((c) => c.id === focusComment)) {
+          setPreload({ rootId: root.id, data });
+          return done();
+        }
+      }
+    })();
+    return () => {
+      stop = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- chỉ chạy một lần khi trang bình luận đầu về
+  }, [firstItems]);
 
   // Khách / chưa xác minh: chỉ xem; bấm thao tác thì nhắc đăng nhập hoặc xác minh
   const gate = () => {
@@ -107,9 +141,20 @@ export function DiscussionPanel({ examId, examTitle, question, position, poll, c
     else toast.success("Đã gửi, bình luận sẽ hiện với mọi người sau khi được duyệt");
   };
 
-  const likeComment = (c: ExamComment) => {
+  // Thích / không thích: đổi ngay trên giao diện, lỗi thì trả lại như cũ; bấm lại cái đang chọn là bỏ
+  const react: CommentActions["react"] = (c, kind, patch) => {
     if (!gate()) return;
-    commentApi.like(examId, c.id, !c.liked).then((res) => patchItem(c.id, res), fail("Chưa thích được bình luận"));
+    const prev = { likes: c.likes ?? 0, dislikes: c.dislikes ?? 0, reaction: reactionOf(c), liked: reactionOf(c) === "like" };
+    const next = prev.reaction === kind ? null : kind;
+    const bump = (k: "like" | "dislike") => (next === k ? 1 : 0) - (prev.reaction === k ? 1 : 0);
+    patch(c.id, { likes: prev.likes + bump("like"), dislikes: prev.dislikes + bump("dislike"), reaction: next, liked: next === "like" });
+    commentApi.react(examId, c.id, next).then(
+      (res) => patch(c.id, { ...res, liked: res.reaction === "like" }),
+      (err: unknown) => {
+        patch(c.id, prev);
+        fail("Chưa cập nhật được")(err);
+      },
+    );
   };
 
   const report = async (c: ExamComment) => {
@@ -124,12 +169,14 @@ export function DiscussionPanel({ examId, examTitle, question, position, poll, c
     }
   };
 
-  const remove = async (c: ExamComment) => {
-    if (!(await confirm({ title: "Xoá bình luận này?", message: "Bình luận sẽ bị xoá hẳn, không khôi phục được.", confirmLabel: "Xoá", tone: "danger" }))) return;
+  const remove = async (c: ExamComment, onRemoved: () => void) => {
+    const withReplies = !c.parentId && (c.replyCount ?? 0) > 0;
+    const message = withReplies ? "Bình luận và các phản hồi của nó sẽ bị xoá hẳn, không khôi phục được." : "Bình luận sẽ bị xoá hẳn, không khôi phục được.";
+    if (!(await confirm({ title: c.parentId ? "Xoá phản hồi này?" : "Xoá bình luận này?", message, confirmLabel: "Xoá", tone: "danger" }))) return;
     try {
       await commentApi.remove(examId, c.id);
-      setList((l) => l && { ...l, items: l.items.filter((x) => x.id !== c.id), total: l.total - (c.status === "APPROVED" ? 1 : 0) });
-      if (c.status === "APPROVED") onChanged();
+      onRemoved();
+      onChanged(); // số bình luận đã gồm cả phản hồi
     } catch (err) {
       fail("Chưa xoá được bình luận")(err);
     }
@@ -151,6 +198,17 @@ export function DiscussionPanel({ examId, examTitle, question, position, poll, c
       setLoadingMore(false);
     }
   };
+
+  const removeRoot = (c: ExamComment) => setList((l) => l && { ...l, items: l.items.filter((x) => x.id !== c.id), total: l.total - (c.status === "APPROVED" ? 1 : 0) });
+
+  // Phản hồi vừa gửi: số bình luận của câu đổi; chưa duyệt thì báo
+  const posted = (c: ExamComment) => {
+    if (poll) reactions.reload();
+    if (c.status === "APPROVED") onChanged();
+    else toast.success("Đã gửi, phản hồi sẽ hiện với mọi người sau khi được duyệt");
+  };
+
+  const act: CommentActions = { gate, react, report: (c) => void report(c), remove: (c, done) => void remove(c, done), posted, reported: (id) => reported.has(id) };
 
   const error = reactions.error ?? first.error;
   const retry = () => {
@@ -193,7 +251,17 @@ export function DiscussionPanel({ examId, examTitle, question, position, poll, c
               ) : (
                 <ul className="space-y-3">
                   {list.items.map((c) => (
-                    <CommentItem key={c.id} c={c} reported={reported.has(c.id)} onLike={() => likeComment(c)} onReport={() => void report(c)} onDelete={() => void remove(c)} />
+                    <CommentThread
+                      key={preload?.rootId === c.id ? `${c.id}:open` : c.id}
+                      root={c}
+                      examId={examId}
+                      question={question}
+                      act={act}
+                      patch={patchItem}
+                      onRemoved={() => removeRoot(c)}
+                      highlightId={highlight}
+                      preload={preload?.rootId === c.id ? preload.data : undefined}
+                    />
                   ))}
                 </ul>
               )}
