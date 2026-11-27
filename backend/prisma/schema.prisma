@@ -1281,6 +1281,7 @@ model ExplanationFeedback {
   updatedAt      DateTime @updatedAt @map("updated_at")
   resolvedAt     DateTime? @map("resolved_at") // admin marked it handled; reset when the member submits a new complaint
   resolvedById   String?      @map("resolved_by_id") @db.Char(36)
+  reward         Int       @default(0) // credit paid when an admin confirmed this dislike; back to 0 when it is reopened
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
