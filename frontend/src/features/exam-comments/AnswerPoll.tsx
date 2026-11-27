@@ -35,7 +35,7 @@ export function AnswerPoll({ votes, busy, onVote }: { votes: Votes; busy: boolea
           <Switch checked={multi} onChange={setMulti} label="Chọn nhiều đáp án" />
         </label>
       </div>
-      <ul className="grid grid-cols-4 gap-2">
+      <ul className="mx-auto grid max-w-sm grid-cols-4 gap-2">
         {LETTERS.slice(0, last + 1).map((l) => {
           const n = counts[l] ?? 0;
           const pct = votes.voters > 0 ? Math.round((n / votes.voters) * 100) : 0;
@@ -60,14 +60,12 @@ export function AnswerPoll({ votes, busy, onVote }: { votes: Votes; busy: boolea
             </li>
           );
         })}
-        {last < LETTERS.length - 1 && (
-          <li>
-            <button type="button" onClick={() => setAdded(LETTERS.length - 1)} aria-label="Thêm phương án" title="Thêm phương án" className="md-state flex h-[4.5rem] w-full items-center justify-center rounded-m3-md border border-dashed border-outline text-on-surface-variant outline-none focus-visible:ring-2 focus-visible:ring-primary">
-              <Plus size={20} aria-hidden />
-            </button>
-          </li>
-        )}
       </ul>
+      {last < LETTERS.length - 1 && (
+        <button type="button" onClick={() => setAdded(LETTERS.length - 1)} className="md-state md-label-large mx-auto flex items-center gap-1 rounded-full px-3 py-1.5 text-on-surface-variant outline-none focus-visible:ring-2 focus-visible:ring-primary">
+          <Plus size={16} aria-hidden /> Thêm phương án
+        </button>
+      )}
     </section>
   );
 }
