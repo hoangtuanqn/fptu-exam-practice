@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Gift, Plus, Search } from "lucide-react";
+import { Gift, Plus } from "lucide-react";
 import { adminApi } from "@/features/admin/api/admin.api";
 import { GiftCodeDialog } from "@/features/admin/finance/GiftCodeDialog";
 import { GiftCodeRedemptionsDialog } from "@/features/admin/finance/GiftCodeRedemptionsDialog";
@@ -7,7 +7,7 @@ import { GiftCodeStatusBadge } from "@/shared/components/StatusBadge";
 import { ExpandableText } from "@/shared/ui/ExpandableText";
 import { useToast } from "@/shared/context/ToastContext";
 import { useApi } from "@/shared/hooks/useApi";
-import { useDebounce } from "@/shared/hooks/useDebounce";
+import { useUrlSearch } from "@/shared/hooks/useUrlSearch";
 import { toPage, useUrlState } from "@/shared/hooks/useUrlState";
 import type { GiftCode } from "@/shared/types/api";
 import { Button } from "@/shared/ui/Button";
@@ -15,6 +15,7 @@ import { Card, PageHeader } from "@/shared/ui/Card";
 import { CopyButton } from "@/shared/ui/CopyButton";
 import { Empty, ErrorBox, Loading } from "@/shared/ui/Feedback";
 import { Segmented } from "@/shared/ui/Segmented";
+import { SearchStatusIcon } from "@/shared/ui/SearchStatusIcon";
 import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
 import { formatCredit, formatDate, formatMinutes } from "@/shared/utils/formatters";
 import { useClampPage } from "@/shared/hooks/useClampPage";
@@ -28,8 +29,7 @@ export default function GiftCodesPage() {
   const [url, setUrl] = useUrlState({ q: "", active: "", page: "1" });
   const active = url.active as ActiveFilter;
   const page = toPage(url.page);
-  const [search, setSearch] = useState(url.q);
-  const q = useDebounce(search.trim());
+  const [search, setSearch, q, searchPending] = useUrlSearch(url.q, setUrl);
 
   const { data, error, loading, reload } = useApi(() => adminApi.giftCodes(page, { q, active }), [page, q, active]);
   useClampPage(data?.meta, (p) => setUrl({ page: String(p) }));
@@ -98,13 +98,13 @@ export default function GiftCodesPage() {
       <Card>
         <div className="panel-filter-row">
           <label className="relative min-w-0 flex-1 sm:max-w-xs">
-            <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
+              <SearchStatusIcon busy={searchPending || loading} size={15} />
+            </span>
             <input
               value={search}
-              onChange={(e) => {
-                setSearch(e.target.value.toUpperCase());
-                setUrl({ q: e.target.value.trim().toUpperCase(), page: "1" });
-              }}
+              data-search
+              onChange={(e) => setSearch(e.target.value.toUpperCase())}
               placeholder="Tìm theo mã"
               aria-label="Tìm giftcode theo mã"
               className="w-full rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-sm outline-none transition focus:border-brand-500"

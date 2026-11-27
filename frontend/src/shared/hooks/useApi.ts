@@ -10,9 +10,11 @@ interface State<T> {
 
 // Gọi API khi mount và mỗi khi `deps` đổi. `reload()` để tải lại tay (sau khi sửa dữ liệu).
 // Bỏ qua kết quả của lần gọi cũ nếu đã có lần gọi mới hơn (tránh dữ liệu nhảy khi đổi trang nhanh).
-export function useApi<T>(fetcher: () => Promise<T>, deps: unknown[]) {
+// `fetcher` nhận tín hiệu huỷ: chuyển nó cho http.get thì lần gọi cũ được huỷ hẳn khi có lần mới.
+export function useApi<T>(fetcher: (signal: AbortSignal) => Promise<T>, deps: unknown[]) {
   const [state, setState] = useState<State<T>>({ data: null, error: null, loading: true });
   const ticket = useRef(0);
+  const abort = useRef<AbortController>();
   const fetcherRef = useRef(fetcher);
   fetcherRef.current = fetcher;
   const toast = useToast();
@@ -22,9 +24,11 @@ export function useApi<T>(fetcher: () => Promise<T>, deps: unknown[]) {
 
   const run = useCallback(() => {
     const mine = ++ticket.current;
+    abort.current?.abort(); // lần trước còn đang chạy thì huỷ; lỗi do huỷ bị bỏ qua vì ticket đã cũ
+    abort.current = new AbortController();
     setState((s) => ({ ...s, loading: true, error: null }));
     fetcherRef
-      .current()
+      .current(abort.current.signal)
       .then((data) => {
         if (mine !== ticket.current) return;
         hasData.current = true;

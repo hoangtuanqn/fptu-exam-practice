@@ -1,5 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
-import { BookOpen, Check, Search, X } from "lucide-react";
+import { BookOpen, Check, X } from "lucide-react";
+import { SearchStatusIcon } from "@/shared/ui/SearchStatusIcon";
+import { useSubjectSearch } from "./useSubjectSearch";
 
 export interface ComboSubject {
   code: string;
@@ -14,16 +16,6 @@ interface Props {
   error?: string;
   placeholder?: string;
 }
-
-// Bỏ dấu tiếng Việt và viết thường để gõ "mang may tinh" vẫn ra "Mạng máy tính"
-const fold = (s: string) =>
-  s
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/đ/g, "d")
-    .replace(/Đ/g, "D")
-    .toLowerCase()
-    .trim();
 
 const labelOf = (s: ComboSubject) => (s.name ? `${s.code} · ${s.name}` : s.code);
 
@@ -42,19 +34,7 @@ export function SubjectCombobox({ label, subjects, value, onChange, error, place
 
   const all = useMemo(() => subjects ?? [], [subjects]);
   const selected = useMemo(() => all.find((s) => s.code === value) ?? null, [all, value]);
-  const indexed = useMemo(() => all.map((s) => ({ s, code: fold(s.code), name: fold(s.name ?? "") })), [all]);
-
-  const term = fold(query);
-  const matches = useMemo(() => {
-    if (!term) return all;
-    const starts: ComboSubject[] = [];
-    const contains: ComboSubject[] = [];
-    for (const { s, code, name } of indexed) {
-      if (code.startsWith(term)) starts.push(s);
-      else if (code.includes(term) || name.includes(term)) contains.push(s);
-    }
-    return [...starts, ...contains];
-  }, [all, indexed, term]);
+  const { results: matches, term, stale } = useSubjectSearch(subjects, query);
 
   // Giữ ô đang sáng luôn nằm trong vùng nhìn thấy khi bấm mũi tên
   useEffect(() => {
@@ -67,6 +47,37 @@ export function SubjectCombobox({ label, subjects, value, onChange, error, place
     setQuery("");
     setOpen(false);
   };
+
+  // Danh sách memo nên lúc đang gõ (chưa lọc xong) không vẽ lại cả trăm dòng; gọi `pick` qua ref để luôn là bản mới nhất
+  const pickRef = useRef(pick);
+  pickRef.current = pick;
+  const options = useMemo(
+    () =>
+      matches.map((s, i) => {
+        const isActive = i === active;
+        const isSelected = s.code === value;
+        return (
+          <li
+            key={s.code}
+            id={`${id}-opt-${i}`}
+            data-index={i}
+            role="option"
+            aria-selected={isSelected}
+            onMouseDown={(e) => e.preventDefault()} // giữ focus ở ô nhập để không đóng danh sách trước khi chọn
+            onMouseEnter={() => setActive(i)}
+            onClick={() => pickRef.current(s)}
+            className={`flex cursor-pointer items-center gap-3 px-4 py-2.5 [contain-intrinsic-size:auto_44px] [content-visibility:auto] ${isActive ? "bg-secondary-container text-on-secondary-container" : "text-on-surface"}`}
+          >
+            <span className="md-title-small w-20 shrink-0 text-primary">{s.code}</span>
+            <span className="md-body-medium min-w-0 flex-1 truncate" title={s.name ?? undefined}>
+              {s.name || "—"}
+            </span>
+            {isSelected && <Check size={16} className="shrink-0 text-primary" />}
+          </li>
+        );
+      }),
+    [matches, active, value, id],
+  );
 
   const clear = () => {
     onChange("");
@@ -84,7 +95,7 @@ export function SubjectCombobox({ label, subjects, value, onChange, error, place
     } else if (e.key === "Enter") {
       if (open && matches[active]) {
         e.preventDefault(); // không gửi form khi đang chọn môn
-        pick(matches[active]);
+        if (!stale) pick(matches[active]); // chưa lọc xong: không chọn nhầm môn của chữ cũ
       }
     } else if (e.key === "Escape" && open) {
       e.preventDefault();
@@ -109,11 +120,12 @@ export function SubjectCombobox({ label, subjects, value, onChange, error, place
         } ${loading ? "opacity-60" : ""}`}
       >
         <span aria-hidden className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${selected && !open ? "bg-primary-container text-on-primary-container" : "bg-surface-container-high text-on-surface-variant"}`}>
-          {selected && !open ? <BookOpen size={16} /> : <Search size={16} />}
+          {selected && !open ? <BookOpen size={16} /> : <SearchStatusIcon busy={stale} />}
         </span>
         <input
           ref={inputRef}
           id={id}
+          data-search
           role="combobox"
           aria-expanded={showList}
           aria-controls={showList && matches.length > 0 ? listId : undefined}
@@ -160,29 +172,7 @@ export function SubjectCombobox({ label, subjects, value, onChange, error, place
           </p>
           {matches.length > 0 && (
             <ul ref={listRef} id={listId} role="listbox" aria-label={label} className="max-h-72 overflow-y-auto overscroll-contain py-1">
-              {matches.map((s, i) => {
-                const isActive = i === active;
-                const isSelected = s.code === value;
-                return (
-                  <li
-                    key={s.code}
-                    id={`${id}-opt-${i}`}
-                    data-index={i}
-                    role="option"
-                    aria-selected={isSelected}
-                    onMouseDown={(e) => e.preventDefault()} // giữ focus ở ô nhập để không đóng danh sách trước khi chọn
-                    onMouseEnter={() => setActive(i)}
-                    onClick={() => pick(s)}
-                    className={`flex cursor-pointer items-center gap-3 px-4 py-2.5 ${isActive ? "bg-secondary-container text-on-secondary-container" : "text-on-surface"}`}
-                  >
-                    <span className="md-title-small w-20 shrink-0 text-primary">{s.code}</span>
-                    <span className="md-body-medium min-w-0 flex-1 truncate" title={s.name ?? undefined}>
-                      {s.name || "—"}
-                    </span>
-                    {isSelected && <Check size={16} className="shrink-0 text-primary" />}
-                  </li>
-                );
-              })}
+              {options}
             </ul>
           )}
         </div>

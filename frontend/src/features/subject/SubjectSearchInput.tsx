@@ -1,13 +1,14 @@
-import { Search } from "lucide-react";
+import { SearchStatusIcon } from "@/shared/ui/SearchStatusIcon";
 
 // Ô tìm môn kiểu viên thuốc: kính lúp tròn vàng bóng bên trái, nền chuyển sắc, khi gõ thì viền vàng kèm vầng sáng.
-export function SubjectSearchInput({ value, onChange, placeholder = "Gõ mã môn hoặc tên môn, ví dụ PRO192" }: { value: string; onChange: (value: string) => void; placeholder?: string }) {
+export function SubjectSearchInput({ value, onChange, placeholder = "Gõ mã môn hoặc tên môn, ví dụ PRO192", busy }: { value: string; onChange: (value: string) => void; placeholder?: string; busy?: boolean }) {
   return (
     <label className="relative block">
       <span aria-hidden className="pointer-events-none absolute left-2.5 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-gradient-to-b from-[#ffe58a] via-[#ffc61f] to-[#e89a00] text-[#3a2600] shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_6px_14px_-6px_rgba(240,168,0,0.7)]">
-        <Search size={18} strokeWidth={2.4} />
+        <SearchStatusIcon busy={busy} size={18} strokeWidth={2.4} />
       </span>
       <input
+        data-search // đang gõ thì hiệu ứng trang trí tạm dừng (index.css)
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}

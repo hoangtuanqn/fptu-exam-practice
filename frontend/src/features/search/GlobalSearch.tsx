@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
@@ -13,11 +14,13 @@ import { Search } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useApi } from "@/shared/hooks/useApi";
 import { useDebounce } from "@/shared/hooks/useDebounce";
+import { useSlow } from "@/shared/hooks/useSlow";
 import { IconButton } from "@/shared/ui/Button";
 import { Kbd } from "@/shared/ui/Kbd";
 import { Modal } from "@/shared/ui/Modal";
+import { SearchStatusIcon } from "@/shared/ui/SearchStatusIcon";
 import { SkeletonList } from "@/shared/ui/Skeleton";
-import { searchApi } from "./search.api";
+import { searchApi, type SearchResult } from "./search.api";
 
 // Tìm kiếm chung kiểu palette: ô nhỏ trên header (hoặc Ctrl+K / ⌘K) mở popup ở phía trên, gõ để tìm môn, đề, flashcard.
 const SearchContext = createContext<{ open: () => void } | null>(null);
@@ -87,18 +90,36 @@ function SearchDialog({ onClose }: { onClose: () => void }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [text, setText] = useState("");
-  const q = useDebounce(text.trim(), 250); // chờ ngừng gõ một nhịp rồi mới gọi máy chủ
-  const ready = q.length >= MIN_CHARS;
-  const { data, error, loading } = useApi(
-    () => (ready ? searchApi.query(q) : Promise.resolve(null)),
+  const typed = text.trim(); // chữ đang gõ: quyết định thông báo hiện ra ngay
+  const q = useDebounce(typed, 250); // chờ ngừng gõ một nhịp rồi mới gọi máy chủ
+  const cache = useRef(new Map<string, SearchResult>()); // kết quả đã tải khi hộp đang mở: xoá lùi là hiện ngay
+  const failed = useRef<string | null>(null); // từ khoá vừa tìm lỗi: thôi quay vòng chờ
+  const { data, error } = useApi(
+    async (signal) => {
+      if (q.length < MIN_CHARS) return null;
+      failed.current = null;
+      try {
+        const result = cache.current.get(q) ?? (await searchApi.query(q, signal));
+        cache.current.set(q, result);
+        return result;
+      } catch (err) {
+        if (!signal.aborted) failed.current = q;
+        throw err;
+      }
+    },
     [q],
   );
+  const ready = typed.length >= MIN_CHARS;
+  const fresh = cache.current.get(typed);
+  const shown = ready ? (fresh ?? data) : null; // chưa có kết quả của chữ đang gõ thì tạm giữ kết quả trước (làm mờ)
+  const pending = ready && !fresh && failed.current !== typed;
+  const slow = useSlow(pending);
   const [active, setActive] = useState(0);
 
   const options = useMemo<Option[]>(() => {
-    if (!ready || !data) return [];
+    if (!shown) return [];
     return [
-      ...data.subjects.map((s) => ({
+      ...shown.subjects.map((s) => ({
         key: `s-${s.code}`,
         group: "Môn học",
         label: s.name ? `${s.code} · ${s.name}` : s.code,
@@ -106,7 +127,7 @@ function SearchDialog({ onClose }: { onClose: () => void }) {
         // Khách chưa có kho đề riêng: sang kho đề công khai thay vì bị đẩy tới trang đăng nhập
         to: `${user ? "/account/exams?tab=subject" : "/kho-de?"}&subject=${encodeURIComponent(s.code)}`.replace("?&", "?"),
       })),
-      ...data.exams.map((e) => ({
+      ...shown.exams.map((e) => ({
         key: `e-${e.examId}`,
         group: "Đề thi",
         label: e.title,
@@ -115,7 +136,7 @@ function SearchDialog({ onClose }: { onClose: () => void }) {
           .join(" · "),
         to: `/exam/${e.examId}`,
       })),
-      ...data.flashcards.map((f) => ({
+      ...shown.flashcards.map((f) => ({
         key: `f-${f.code}`,
         group: "Flashcard",
         label: f.name ? `${f.code} · ${f.name}` : f.code,
@@ -123,12 +144,12 @@ function SearchDialog({ onClose }: { onClose: () => void }) {
         to: `/flashcard/${encodeURIComponent(f.code)}`,
       })),
     ];
-  }, [data, ready, user]);
+  }, [shown, user]);
 
   // Kết quả mới thì quay về mục đầu tiên
-  useEffect(() => setActive(0), [data]);
+  useEffect(() => setActive(0), [shown]);
   const idx = Math.min(active, Math.max(0, options.length - 1));
-  const maybeMore = !!data && [data.subjects, data.exams, data.flashcards].some((g) => g.length >= PER_GROUP);
+  const maybeMore = !!shown && [shown.subjects, shown.exams, shown.flashcards].some((g) => g.length >= PER_GROUP);
 
   const go = (to: string) => {
     onClose();
@@ -144,7 +165,7 @@ function SearchDialog({ onClose }: { onClose: () => void }) {
       setActive(Math.max(idx - 1, 0));
     } else if (e.key === "Enter" && options[idx]) {
       e.preventDefault();
-      go(options[idx].to);
+      if (!pending) go(options[idx].to); // còn đang tìm: không mở nhầm kết quả của chữ cũ
     }
   };
 
@@ -153,13 +174,12 @@ function SearchDialog({ onClose }: { onClose: () => void }) {
     <Modal onClose={onClose} maxWidth="max-w-2xl" top flush>
       <h2 className="sr-only">Tìm kiếm</h2>
       <div className="flex items-center gap-3 border-b border-outline-variant px-5">
-        <Search
-          size={22}
-          aria-hidden
-          className="shrink-0 text-on-surface-variant"
-        />
+        <span className="shrink-0 text-on-surface-variant">
+          <SearchStatusIcon busy={pending} size={22} />
+        </span>
         <input
           autoFocus
+          data-search
           role="combobox"
           aria-label="Tìm môn học, tên đề, flashcard"
           aria-expanded={options.length > 0}
@@ -179,20 +199,21 @@ function SearchDialog({ onClose }: { onClose: () => void }) {
       <div className="max-h-[60vh] overflow-y-auto p-2">
         {!ready ? (
           <p className={note}>Nhập ít nhất {MIN_CHARS} ký tự để tìm</p>
-        ) : error && !data ? (
-          <p role="alert" className={`${note} !text-error`}>
-            {error}
-          </p>
-        ) : loading && !data ? (
+        ) : pending && options.length === 0 ? (
           <SkeletonList rows={3} label="Đang tìm…" />
-        ) : data && options.length === 0 ? (
-          <p className={note}>Không có kết quả cho “{q}”</p>
+        ) : !shown ? (
+          <p role="alert" className={`${note} !text-error`}>
+            {error ?? "Chưa tìm được, bạn thử gõ lại nhé"}
+          </p>
+        ) : options.length === 0 ? (
+          <p className={note}>Không có kết quả cho “{typed}”</p>
         ) : (
           <ul
             id="search-results"
             role="listbox"
             aria-label="Kết quả tìm kiếm"
-            className={`transition-opacity duration-200 ${loading ? "opacity-60" : ""}`}
+            aria-busy={slow}
+            className={`transition-opacity duration-200 ${slow ? "opacity-60" : ""}`}
           >
             {options.map((o, i) => (
               <Fragment key={o.key}>

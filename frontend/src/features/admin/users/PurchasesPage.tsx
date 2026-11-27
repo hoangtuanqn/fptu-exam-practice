@@ -21,7 +21,7 @@ export default function PurchasesPage() {
   const kind: Kind = url.kind === "single" ? "single" : "unlock";
   const page = toPage(url.page);
   const setPage = (p: number) => setUrl({ page: String(p) });
-  const [search, setSearch, q] = useUrlSearch(url.q, setUrl);
+  const [search, setSearch, q, searchPending] = useUrlSearch(url.q, setUrl);
   const filter = { page, search: q, userId: url.userId };
 
   const unlock = useApi(() => (kind === "unlock" ? adminApi.explanationUnlocks(filter) : Promise.resolve(null)), [kind, page, q, url.userId]);
@@ -116,7 +116,7 @@ export default function PurchasesPage() {
               { value: "single", label: "Giải thích mua lẻ" },
             ]}
           />
-          <SearchBox value={search} onChange={setSearch} placeholder="Tìm theo tên hoặc email" label="Tìm thành viên" />
+          <SearchBox busy={searchPending || cur.loading} value={search} onChange={setSearch} placeholder="Tìm theo tên hoặc email" label="Tìm thành viên" />
           <UserFilterChip userId={url.userId} label={who} onClear={() => setUrl({ userId: "", page: "1" })} />
         </div>
         <div className={cur.loading && cur.data ? "overflow-x-auto opacity-60 transition" : "overflow-x-auto transition"}>{body}</div>

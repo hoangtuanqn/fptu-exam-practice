@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import { FilePlus2, Pencil, Search, SearchCheck } from "lucide-react";
+import { FilePlus2, Pencil, SearchCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useApi } from "@/shared/hooks/useApi";
 import { useClampPage } from "@/shared/hooks/useClampPage";
@@ -9,10 +9,11 @@ import { Badge, type Tone } from "@/shared/ui/Badge";
 import { Button, buttonClass } from "@/shared/ui/Button";
 import { Card, PageHeader } from "@/shared/ui/Card";
 import { Empty } from "@/shared/ui/Feedback";
-import { inputClass, Select } from "@/shared/ui/Input";
+import { Select } from "@/shared/ui/Input";
 import { Modal, ModalTitle } from "@/shared/ui/Modal";
 import { QueryBoundary } from "@/shared/ui/QueryBoundary";
 import { Segmented } from "@/shared/ui/Segmented";
+import { SearchBox } from "@/shared/ui/SearchBox";
 import { Pagination, Table, Td, Th, Thead, Tr } from "@/shared/ui/Table";
 import { formatDate } from "@/shared/utils/formatters";
 import { SubjectCombobox } from "@/features/subject/SubjectCombobox";
@@ -38,7 +39,7 @@ export default function ExamGapsPage() {
   const kind = (KINDS.includes(url.kind as ExamKind) ? url.kind : "") as ExamKind | "";
   const page = toPage(url.page);
   const setPage = (p: number) => setUrl({ page: String(p) });
-  const [search, setSearch, q] = useUrlSearch(url.q, setUrl);
+  const [search, setSearch, q, searchPending] = useUrlSearch(url.q, setUrl);
 
   const list = useApi(() => examUploadApi.gaps({ gap, kind, subject: url.subject, q, page }), [gap, kind, url.subject, q, page]);
   const summary = useApi(() => examUploadApi.summary(), []);
@@ -89,10 +90,7 @@ export default function ExamGapsPage() {
         <div className="space-y-3 border-b border-outline-variant p-4">
           <Segmented<ExamGap | ""> label="Lọc theo phần còn thiếu" value={gap} onChange={(v) => setUrl({ gap: v, page: "1" })} options={tabs} />
           <div className="grid gap-3 sm:grid-cols-[1fr_14rem_10rem]">
-            <div className="relative self-end">
-              <Search size={16} aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
-              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Tìm theo tên đề" aria-label="Tìm theo tên đề" className={`${inputClass()} pl-9`} />
-            </div>
+            <SearchBox busy={searchPending || list.loading} value={search} onChange={setSearch} placeholder="Tìm theo tên đề" label="Tìm theo tên đề" className="self-end" />
             <SubjectCombobox label="Môn" subjects={subjects.error ? [] : (subjects.data ?? undefined)} value={url.subject} onChange={(v) => setUrl({ subject: v, page: "1" })} placeholder="Tất cả môn" />
             <Select label="Loại đề" value={kind} onChange={(e) => setUrl({ kind: e.target.value, page: "1" })}>
               <option value="">Tất cả</option>

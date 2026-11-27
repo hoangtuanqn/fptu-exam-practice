@@ -7,7 +7,10 @@ import { AuthProvider } from "@/features/auth/AuthContext";
 import { ToastProvider } from "@/shared/context/ToastContext";
 import { ThemeProvider } from "@/shared/theme/ThemeContext";
 import { SeasonProvider } from "@/shared/season/SeasonContext";
+import { watchSearchFocus } from "@/shared/utils/searchFocus";
 import "./index.css";
+
+watchSearchFocus();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

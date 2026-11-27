@@ -61,7 +61,7 @@ function ExamList({ code, onBack }: { code: string; onBack: () => void }) {
   return (
     <SubjectCard title={`Môn ${code}`} onBack={onBack}>
       <div className="space-y-3 border-b border-outline-variant px-5 py-4">
-        <ExamFilterBar query={query} terms={list.data?.terms} />
+        <ExamFilterBar query={query} terms={list.data?.terms} loading={list.loading} />
       </div>
 
       <QueryBoundary query={list}>

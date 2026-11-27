@@ -8,5 +8,5 @@ export interface SearchResult {
 }
 
 export const searchApi = {
-  query: (q: string) => http.get<SearchResult>("/search", { q }),
+  query: (q: string, signal?: AbortSignal) => http.get<SearchResult>("/search", { q }, signal),
 };

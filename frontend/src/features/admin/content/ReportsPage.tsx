@@ -33,7 +33,7 @@ const QUERY: Record<StatusFilter, [ReportStatus | "", ResolvedFilter]> = {
 // Báo cáo đáp án do người dùng gửi: mặc định hiện các báo cáo chờ duyệt chưa giải quyết
 export default function ReportsPage() {
   const [url, setUrl] = useUrlState({ status: "OPEN", page: "1", q: "" });
-  const [search, setSearch, q] = useUrlSearch(url.q, setUrl);
+  const [search, setSearch, q, searchPending] = useUrlSearch(url.q, setUrl);
   const status = (Object.prototype.hasOwnProperty.call(QUERY, url.status) ? url.status : "OPEN") as StatusFilter;
   const page = toPage(url.page);
   const setPage = (p: number) => setUrl({ page: String(p) });
@@ -62,7 +62,7 @@ export default function ReportsPage() {
       <PageHeader title="Báo cáo đáp án" description="Duyệt các đáp án người dùng cho là sai. Duyệt đúng sẽ sửa đáp án và thưởng credit." />
       <Card>
         <div className="flex flex-wrap gap-3 border-b border-slate-100 p-4">
-          <SearchBox value={search} onChange={setSearch} placeholder="Tìm theo tên đề, tên hoặc email người báo" label="Tìm báo cáo" />
+          <SearchBox busy={searchPending || loading} value={search} onChange={setSearch} placeholder="Tìm theo tên đề, tên hoặc email người báo" label="Tìm báo cáo" />
           <Segmented<StatusFilter>
             label="Lọc theo trạng thái"
             value={status}

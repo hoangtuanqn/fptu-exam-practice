@@ -25,7 +25,7 @@ export default function WalletHistoryPage() {
   const setPage = (p: number) => setUrl({ page: String(p) });
 
   // Ô tìm kiếm gõ trực tiếp, sau khi ngừng gõ mới đưa lên URL (và về trang 1)
-  const [search, setSearch, q] = useUrlSearch(url.q, setUrl);
+  const [search, setSearch, q, searchPending] = useUrlSearch(url.q, setUrl);
 
   const { data, error, loading, reload } = useApi(
     () => adminApi.walletTransactions({ page, search: q, type, userId: url.userId }),
@@ -39,7 +39,7 @@ export default function WalletHistoryPage() {
       <PageHeader title="Biến động số dư" description="Mọi lần cộng/trừ credit của thành viên: nạp tiền, phí, hoàn phí, thưởng, điều chỉnh." />
       <Card>
         <div className="panel-filter-row">
-          <SearchBox value={search} onChange={setSearch} placeholder="Tìm theo tên hoặc email" label="Tìm thành viên" />
+          <SearchBox busy={searchPending || loading} value={search} onChange={setSearch} placeholder="Tìm theo tên hoặc email" label="Tìm thành viên" />
           <select
             aria-label="Lọc theo loại giao dịch"
             value={type}

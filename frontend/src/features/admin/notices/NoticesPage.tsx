@@ -108,7 +108,7 @@ export default function NoticesPage() {
   const counts = useNoticeCounts();
   const arrived = useNoticeVersion();
   const [url, setUrl] = useUrlState({ tab: "unread", cat: "all", page: "1", q: "" });
-  const [search, setSearch, q] = useUrlSearch(url.q, setUrl);
+  const [search, setSearch, q, searchPending] = useUrlSearch(url.q, setUrl);
   const [busy, setBusy] = useState<string | null>(null);
 
   const tab: Tab =
@@ -207,7 +207,7 @@ export default function NoticesPage() {
       />
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <SearchBox value={search} onChange={setSearch} placeholder="Tìm theo tiêu đề hoặc nội dung" label="Tìm thông báo" />
+        <SearchBox busy={searchPending || list.loading} value={search} onChange={setSearch} placeholder="Tìm theo tiêu đề hoặc nội dung" label="Tìm thông báo" />
         <Segmented
           label="Lọc thông báo"
           value={tab}

@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useApi } from "@/shared/hooks/useApi";
-import { useDebounce } from "@/shared/hooks/useDebounce";
+import { useUrlSearch } from "@/shared/hooks/useUrlSearch";
+import { SearchStatusIcon } from "@/shared/ui/SearchStatusIcon";
 import { useUrlState, toPage } from "@/shared/hooks/useUrlState";
 import { ApiError } from "@/shared/api/client";
 import { errorMessage } from "@/shared/api/errors";
@@ -48,14 +49,14 @@ function CourseEditor({ course, onClose, onSaved }: { course: CourseraCourse | n
 
 export function CourseManager() {
   const [url, setUrl] = useUrlState({ q: "", coursePage: "1" });
-  const q = useDebounce(url.q);
+  const [search, setSearch, q, searchPending] = useUrlSearch(url.q, (patch) => setUrl({ q: patch.q, coursePage: "1" }));
   const page = toPage(url.coursePage);
   const query = useApi(() => courseraApi.courses(q, page, true), [q, page]);
   const [editor, setEditor] = useState<{ course: CourseraCourse | null } | null>(null);
   return <Card>
     <CardHeader title="Danh mục khóa học" action={<Button variant="primary" onClick={() => setEditor({ course: null })}>Thêm khóa học</Button>} />
     <div className="space-y-4 p-5">
-      <Input label="Tìm khóa học" placeholder="Mã môn hoặc tên khóa học" maxLength={100} value={url.q} onChange={(e) => setUrl({ q: e.target.value, coursePage: "1" })} />
+      <Input label="Tìm khóa học" placeholder="Mã môn hoặc tên khóa học" maxLength={100} data-search value={search} onChange={(e) => setSearch(e.target.value)} trailing={<span className="pr-2 text-on-surface-variant"><SearchStatusIcon busy={searchPending || query.loading} size={18} /></span>} />
       <QueryBoundary query={query}>{(data) => <>
         {data.items.length ? <ul className="divide-y divide-outline-variant">{data.items.map((course) => <li key={course.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
           <div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2">{course.code && <Badge>{course.code}</Badge>}<p className="break-words">{course.title}</p></div><p className="md-body-small text-on-surface-variant">{course.isActive ? "Đang nhận đơn" : "Tạm ngừng nhận đơn"}</p><p className="md-label-large">{course.price === undefined ? "Chưa có thông tin giá" : formatCredit(course.price)}</p></div>

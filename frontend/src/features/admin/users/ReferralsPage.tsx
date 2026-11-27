@@ -17,7 +17,7 @@ export default function ReferralsPage() {
   const summary = useApi(() => adminApi.referralSummary(), []);
 
   const [url, setUrl] = useUrlState({ page: "1", q: "" });
-  const [search, setSearch, q] = useUrlSearch(url.q, setUrl);
+  const [search, setSearch, q, searchPending] = useUrlSearch(url.q, setUrl);
   const page = toPage(url.page);
   const setPage = (p: number) => setUrl({ page: String(p) });
   const list = useApi(() => adminApi.referrals(page, q), [page, q]);
@@ -47,7 +47,7 @@ export default function ReferralsPage() {
         <Card>
           <CardHeader title="Danh sách được giới thiệu" />
           <div className="flex flex-wrap gap-3 border-b border-slate-100 p-4">
-            <SearchBox value={search} onChange={setSearch} placeholder="Tìm theo tên hoặc email (người giới thiệu hoặc được mời)" label="Tìm trong danh sách giới thiệu" />
+            <SearchBox busy={searchPending || list.loading} value={search} onChange={setSearch} placeholder="Tìm theo tên hoặc email (người giới thiệu hoặc được mời)" label="Tìm trong danh sách giới thiệu" />
           </div>
           {list.loading && !list.data ? (
             <Loading shape="table" />

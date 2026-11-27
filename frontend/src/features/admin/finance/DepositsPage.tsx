@@ -16,7 +16,7 @@ import { useClampPage } from "@/shared/hooks/useClampPage";
 
 export default function DepositsPage() {
   const [url, setUrl] = useUrlState({ status: "", userId: "", page: "1", q: "" });
-  const [search, setSearch, q] = useUrlSearch(url.q, setUrl);
+  const [search, setSearch, q, searchPending] = useUrlSearch(url.q, setUrl);
   const status = url.status as DepositStatus | "";
   const page = toPage(url.page);
   const setPage = (p: number) => setUrl({ page: String(p) });
@@ -30,7 +30,7 @@ export default function DepositsPage() {
       <PageHeader title="Lệnh nạp tiền" description="Tất cả lệnh nạp do thành viên tạo." />
       <Card>
         <div className="panel-filter-row">
-          <SearchBox value={search} onChange={setSearch} placeholder="Tìm theo mã nạp, tên hoặc email" label="Tìm lệnh nạp" />
+          <SearchBox busy={searchPending || loading} value={search} onChange={setSearch} placeholder="Tìm theo mã nạp, tên hoặc email" label="Tìm lệnh nạp" />
           <Segmented
             label="Lọc theo trạng thái"
             value={status}

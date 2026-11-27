@@ -28,7 +28,7 @@ export function PublicExamList({ code, pageSize }: { code: string; pageSize?: nu
   return (
     <div>
       <div className="space-y-3 border-b border-outline-variant px-5 py-4">
-        <ExamFilterBar query={query} terms={list.data?.terms} />
+        <ExamFilterBar query={query} terms={list.data?.terms} loading={list.loading} />
       </div>
       <QueryBoundary query={list}>
         {(res) => {

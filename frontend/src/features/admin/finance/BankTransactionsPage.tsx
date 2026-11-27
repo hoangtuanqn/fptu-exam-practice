@@ -15,7 +15,7 @@ import { useClampPage } from "@/shared/hooks/useClampPage";
 
 export default function BankTransactionsPage() {
   const [url, setUrl] = useUrlState({ status: "", page: "1", q: "" });
-  const [search, setSearch, q] = useUrlSearch(url.q, setUrl);
+  const [search, setSearch, q, searchPending] = useUrlSearch(url.q, setUrl);
   const status = url.status as BankTxStatus | "";
   const page = toPage(url.page);
   const setPage = (p: number) => setUrl({ page: String(p) });
@@ -32,7 +32,7 @@ export default function BankTransactionsPage() {
       />
       <Card>
         <div className="flex flex-wrap gap-3 border-b border-slate-100 p-4">
-          <SearchBox value={search} onChange={setSearch} placeholder="Tìm theo nội dung chuyển khoản hoặc mã giao dịch" label="Tìm giao dịch" />
+          <SearchBox busy={searchPending || loading} value={search} onChange={setSearch} placeholder="Tìm theo nội dung chuyển khoản hoặc mã giao dịch" label="Tìm giao dịch" />
           <Segmented
             label="Lọc theo trạng thái"
             value={status}

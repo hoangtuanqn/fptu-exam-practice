@@ -136,7 +136,7 @@ export function BroadcastsTab() {
       </div>
       <Card>
         <div className="border-b border-slate-100 p-4">
-          <SearchBox value={search} onChange={setSearch} placeholder="Tìm theo tiêu đề hoặc nội dung thư" label="Tìm thông báo marketing" />
+          <SearchBox busy={search.trim() !== q || list.loading} value={search} onChange={setSearch} placeholder="Tìm theo tiêu đề hoặc nội dung thư" label="Tìm thông báo marketing" />
         </div>
         <QueryBoundary query={list}>
           {({ items, meta }) =>
