@@ -1,7 +1,7 @@
 // Tìm môn theo mã hoặc tên ngay trên máy, không phân biệt dấu: gõ "mang may tinh" vẫn ra "Mạng máy tính"
 export const foldText = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").replace(/đ/g, "d").replace(/Đ/g, "d").toLowerCase().trim();
 
-type Searchable = { code: string; name?: string | null };
+export type Searchable = { code: string; name?: string | null };
 
 // Bỏ dấu sẵn một lần cho cả danh sách, để mỗi phím gõ chỉ còn việc so chuỗi
 export function buildSearchIndex<T extends Searchable>(items: readonly T[]) {
