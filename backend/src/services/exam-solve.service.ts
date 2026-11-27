@@ -5,6 +5,7 @@ import { storageDir } from "../configs/env";
 import { AI_REPORT_FAILED_PREFIX, aiReady, AI_RETRY_COOLDOWN_MS } from "../constants/ai";
 import { EXAM_STORAGE_DIR } from "../constants/crawler";
 import { AI_NOT_SOLVABLE_MESSAGE, isAiSolvable } from "../constants/exam";
+import { MANUAL_THREAD_PREFIX } from "../constants/exam-upload";
 import { realtimeHub } from "../realtime/hub";
 import { examRepository } from "../repositories/exam.repository";
 import { solveExam } from "./ai/exam-solver.service";
@@ -117,6 +118,8 @@ export const examSolveService = {
     if (this.isBusy(examId) || lastError.has(examId)) return false;
     const exam = await examRepository.findAnswerSource(examId);
     if (!exam || !isAiSolvable(exam) || (exam.answerSource !== "DEFAULT" && exam.answerSource !== "FAILED")) return false;
+    // Đề admin tải lên không kèm đáp án thì giữ nguyên là chưa có đáp án (chỉ xem trước); AI chỉ giải khi admin bấm
+    if (exam.answerSource === "DEFAULT" && exam.threadId.startsWith(MANUAL_THREAD_PREFIX)) return false;
     const ai = await aiSettingService.get();
     if (!aiReady(ai)) return false;
     await examRepository.markPending(examId);
