@@ -1,10 +1,11 @@
-// Kiểm tra thư mục đề trước khi tải lên: images/Q1.webp … Qn.webp và ans.json nằm cạnh images/. Thiếu một trong hai thì là thư mục tài liệu.
+// Kiểm tra thư mục đề trước khi tải lên: images/Q1.webp … Qn.webp, ans.json (không bắt buộc) nằm cạnh images/. Thư mục khác là thư mục tài liệu.
 // Không import gì để script kiểm tra (scripts/check-exam-folder.mjs) chạy thẳng bằng node. Máy chủ vẫn kiểm tra lại.
 export const MAX_FOLDER_IMAGES = 100;
 export const MAX_FOLDER_IMAGE_MB = 10;
 const MAX_BYTES = MAX_FOLDER_IMAGE_MB * 1024 * 1024;
 const NAME = /^Q(\d+)\.webp$/i;
 const LETTER = /^[A-H]$/;
+const SYSTEM_FILE = /(^|\/)(\.DS_Store|Thumbs\.db|desktop\.ini)$/i;
 
 export interface FolderEntry<F> {
   path: string; // đường dẫn tương đối, vd "rendered/images/Q1.webp"
@@ -58,10 +59,16 @@ export function findRoot(paths: string[]): { root: string | null; others: string
 
 export const ansPathOf = (root: string) => (root ? `${root}/ans.json` : "ans.json");
 
-/** Có images/ và ans.json ở thư mục gốc đề -> đề trắc nghiệm; còn lại lưu thành tài liệu. */
+/**
+ * Có ans.json cạnh images/ -> đề trắc nghiệm. Không có ans.json: vẫn là đề (chưa có đáp án) khi mọi tệp đều là images/Q<số>.webp.
+ * Còn tệp khác thì lưu thành tài liệu, để không tệp nào bị bỏ.
+ */
 export function isQuizFolder(paths: string[]): boolean {
   const { root } = findRoot(paths);
-  return root !== null && paths.includes(ansPathOf(root));
+  if (root === null) return false;
+  if (paths.includes(ansPathOf(root))) return true;
+  const images = root ? `${root}/images/` : "images/";
+  return paths.every((p) => SYSTEM_FILE.test(p) || (p.startsWith(images) && NAME.test(p.slice(images.length))));
 }
 
 export interface ResourceCheck<F> {
@@ -75,7 +82,7 @@ export function checkResources<F extends { size: number }>(entries: FolderEntry<
   const files = entries;
   const errors: string[] = [];
   const warnings: string[] = [];
-  if (findRoot(entries.map((e) => e.path)).root !== null) warnings.push("Thiếu ans.json nên sẽ lưu thành tài nguyên (giữ nguyên mọi tệp, kể cả ảnh).");
+  if (findRoot(entries.map((e) => e.path)).root !== null) warnings.push("Không có ans.json và còn tệp khác ngoài images/Q<số>.webp nên sẽ lưu thành tài nguyên (giữ nguyên mọi tệp, kể cả ảnh).");
   const tooBig = files.filter((e) => e.file.size > MAX_BYTES).map((e) => e.path);
   if (!files.length) errors.push("Thư mục không có tệp nào.");
   if (tooBig.length) errors.push(`Tệp nặng hơn ${MAX_FOLDER_IMAGE_MB} MB: ${tooBig.slice(0, 12).join(", ")}${tooBig.length > 12 ? "…" : ""}.`);
