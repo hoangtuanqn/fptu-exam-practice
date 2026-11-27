@@ -43,7 +43,7 @@ export function ExamDiscussion({ examId, focusComment, onChanged }: Props) {
 
   if (gone) return null;
   return (
-    <section ref={ref} id="binh-luan" aria-label="Bình luận" className="mt-10 max-w-4xl scroll-mt-20">
+    <section ref={ref} id="binh-luan" aria-label="Bình luận" className="mt-10 scroll-mt-20">
       {near ? <Thread examId={examId} focusComment={focusComment} onChanged={onChanged} onGone={() => setGone(true)} /> : <div className="min-h-40" />}
     </section>
   );
