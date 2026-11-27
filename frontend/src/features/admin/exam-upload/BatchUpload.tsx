@@ -151,7 +151,8 @@ export function BatchUpload({ groups, subjectCodes, onJob, onCancel }: Props) {
           const a = r.analysis;
           const summary = !a ? "Đang kiểm tra…" : a.quiz ? `Đề trắc nghiệm · ${a.count} câu` : `Tài liệu · ${a.count} tệp`;
           const st = status[i];
-          const msg = st ? (st.note ? `${STATUS_TEXT[st.kind]}: ${st.note}` : STATUS_TEXT[st.kind]) : r.include ? problem(r) : "Sẽ không tải";
+          // Lỗi của đề đã hiện ở danh sách lỗi bên dưới, dòng này không lặp lại
+          const msg = st ? (st.note ? `${STATUS_TEXT[st.kind]}: ${st.note}` : STATUS_TEXT[st.kind]) : !r.include ? "Sẽ không tải" : a?.errors.length ? undefined : problem(r);
           return (
             <li key={i} className="space-y-3 p-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
