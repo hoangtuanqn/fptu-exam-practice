@@ -80,10 +80,12 @@ export function Sidebar({ quiz, onSubmit, jump, flashcard, before, after, always
         )}
         <LayoutGrid size={16} />
         <span className="whitespace-nowrap tabular-nums lg:text-center">
-          Câu {quiz.current + 1}
+          {/* Xoay ngang: nút nằm đè lên thanh đáp án nên phải ngắn, chỉ còn "5/40" */}
+          <span className="land:sr-only">Câu </span>
+          {quiz.current + 1}
           <span className="lg:block">/{count}</span>
         </span>
-        <ChevronDown size={14} className={`lg:hidden ${open ? "rotate-180" : ""}`} />
+        <ChevronDown size={14} className={`lg:hidden land:hidden ${open ? "rotate-180" : ""}`} />
         <ChevronRight size={14} className={`hidden lg:block ${open ? "rotate-180" : ""}`} />
       </button>
 
