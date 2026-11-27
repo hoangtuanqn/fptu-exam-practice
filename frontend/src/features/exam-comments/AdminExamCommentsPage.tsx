@@ -99,8 +99,9 @@ export default function AdminExamCommentsPage() {
       if (!next.delete(id)) next.add(id);
       return next;
     });
-  // Số âm = tệp đính kèm: hiện tên tệp thay cho số câu
-  const targetOf = (c: AdminExamComment) => (c.questionNumber < 0 ? (c.targetName ?? "Tệp đính kèm") : `câu ${c.questionNumber}`);
+  // Số âm = tệp đính kèm: hiện tên tệp thay cho số câu; 0 = bình luận chung của đề
+  const targetOf = (c: AdminExamComment) =>
+    (c.targetKind ?? (c.questionNumber === 0 ? "exam" : null)) === "exam" ? "Bình luận chung" : c.questionNumber < 0 ? (c.targetName ?? "Tệp đính kèm") : `câu ${c.questionNumber}`;
   const allOn = items.length > 0 && items.every((c) => selected.has(c.id));
 
   return (
