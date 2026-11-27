@@ -122,7 +122,7 @@ interface Envelope<T> {
   code?: string;
 }
 
-async function send<T>(method: string, path: string, body?: unknown, query?: Query, keepalive = false, retried = false): Promise<Envelope<T>> {
+async function send<T>(method: string, path: string, body?: unknown, query?: Query, keepalive = false, retried = false, signal?: AbortSignal): Promise<Envelope<T>> {
   const qs = new URLSearchParams();
   for (const [k, v] of Object.entries(query ?? {})) if (v !== undefined && v !== null && v !== "") qs.set(k, String(v));
 
@@ -138,6 +138,7 @@ async function send<T>(method: string, path: string, body?: unknown, query?: Que
       },
       body: body !== undefined ? JSON.stringify(body) : undefined,
       keepalive, // cho phép request kịp gửi khi trang đang đóng/tải lại
+      signal, // lần gọi bị thay bằng lần mới hơn thì huỷ (ô tìm kiếm)
       credentials: "include", // gửi kèm cookie phiên đăng nhập (API khác domain với web)
     });
   } catch {
@@ -153,7 +154,7 @@ async function send<T>(method: string, path: string, body?: unknown, query?: Que
       else {
         // Request khác vừa làm mới xong thì dùng luôn token mới, không cần làm mới nữa
         const result = tokenStore.get() !== token ? "ok" : await refreshAccessToken();
-        if (result === "ok") return send<T>(method, path, body, query, keepalive, true);
+        if (result === "ok") return send<T>(method, path, body, query, keepalive, true, signal);
       }
     }
     throw toApiError(res, json);
@@ -176,7 +177,7 @@ export function toApiError(res: Response, json: { message?: string; errors?: Rec
 }
 
 export const http = {
-  get: async <T>(path: string, query?: Query) => (await send<T>("GET", path, undefined, query)).data as T,
+  get: async <T>(path: string, query?: Query, signal?: AbortSignal) => (await send<T>("GET", path, undefined, query, false, false, signal)).data as T,
   post: async <T>(path: string, body?: unknown) => (await send<T>("POST", path, body ?? {})).data as T,
   put: async <T>(path: string, body: unknown, keepalive = false) => (await send<T>("PUT", path, body, undefined, keepalive)).data as T,
   delete: async (path: string) => void (await send<unknown>("DELETE", path)),
