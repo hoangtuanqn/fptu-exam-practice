@@ -201,7 +201,7 @@ function Preview({ exam }: { exam: ImportedExam }) {
       {tiles.length > 0 && (
         <section className="mb-6">
           <ul className="grid grid-cols-2 items-start gap-4 sm:grid-cols-3 lg:grid-cols-4">{tiles}</ul>
-          {items > 0 && kind !== "PE" && (
+          {items > 0 && kind !== "PE" && exam.answerStatus !== "DEFAULT" && (
             <Link to={`/exam/${exam.id}/view`} className={buttonClass({ variant: "text", className: "mt-3" })}>
               Xem từng câu kèm đáp án
             </Link>
