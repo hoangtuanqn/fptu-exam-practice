@@ -16,9 +16,7 @@ import { adminNoticeService } from "./admin-notice.service";
 import { badgeService } from "./badge.service";
 import { notificationService } from "./notification.service";
 import { walletService } from "./wallet.service";
-
-// "ACD", "a c d", "C A" -> "A C D": cùng một tập đáp án thì cùng một chuỗi (để so với đáp án đang có)
-const normalize = (answer: string) => [...new Set(answer.toUpperCase().replace(/[^A-Z]/g, "").split(""))].sort().join(" ");
+import { normalizeAnswer as normalize } from "../utils/exam-answers";
 
 const imageUrlOf = fileUrlOf;
 

@@ -1,5 +1,8 @@
 import type { AnswerSource } from "../repositories/exam.repository";
 
+// "ACD", "a c d", "C A" -> "A C D": cùng một tập đáp án thì cùng một chuỗi (để so với đáp án đang có)
+export const normalizeAnswer = (answer: string) => [...new Set(answer.toUpperCase().replace(/[^A-Z]/g, "").split(""))].sort().join(" ");
+
 // Người dùng chỉ thấy lời nhắn chung; lý do kỹ thuật nằm ở báo cáo và log để admin xem
 export const failedMessage = (source: string) =>
   source === "FAILED" || source === "DEFAULT" ? "AI chưa phân tích được đáp án của đề này. Đề chỉ xem được cho tới khi có đáp án." : null;
