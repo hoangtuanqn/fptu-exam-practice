@@ -1,16 +1,31 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { EXAM_COMMENT_BULK_MAX, EXAM_COMMENT_MAX_LENGTH, EXAM_COMMENT_PER_DAY } from "../src/constants/exam-comment";
+import {
+  EXAM_COMMENT_BULK_MAX,
+  EXAM_COMMENT_MAX_LENGTH,
+  EXAM_COMMENT_MAX_LINES,
+  EXAM_COMMENT_NEW_ACCOUNT_PER_DAY,
+  EXAM_COMMENT_PER_DAY,
+  EXAM_COMMENT_PER_QUESTION_PER_DAY,
+  EXAM_COMMENT_SPAM_QUESTIONS,
+  EXAM_COMMENT_STRIKES,
+} from "../src/constants/exam-comment";
 import {
   bulkReviewCommentsBody,
   cleanCommentBody,
   commentParam,
   createCommentBody,
+  likeBody,
   listAdminCommentsQuery,
   listCommentsQuery,
+  questionParam,
+  reportCommentBody,
   reviewCommentBody,
+  voteBody,
+  voteParam,
 } from "../src/rules/requests/exam-comment.request";
-import { commentLimitError, toPublicComment } from "../src/services/exam-comment.service";
+import { commentLimitError, holdReason, toPublicComment } from "../src/services/exam-comment.service";
+import { tallyVotes } from "../src/services/exam-reaction.service";
 
 // Bình luận câu hỏi: validator, quy tắc gửi (giới hạn ngày, trùng), dạng dòng công khai (không lộ id người viết).
 
@@ -33,7 +48,8 @@ describe("exam comment validators", () => {
     assert.equal(createCommentBody.safeParse({ questionNumber: 1, body: "a".repeat(EXAM_COMMENT_MAX_LENGTH + 1) }).success, false);
     // dài vì khoảng trắng hai đầu nhưng nội dung vừa đủ: vẫn hợp lệ
     assert.equal(createCommentBody.safeParse({ questionNumber: 1, body: ` ${"a".repeat(EXAM_COMMENT_MAX_LENGTH)} ` }).success, true);
-    for (const questionNumber of [0, -1, 1.5, "2"]) assert.equal(createCommentBody.safeParse({ questionNumber, body: "ok" }).success, false);
+    for (const questionNumber of [0, 1.5, "2", 2 ** 31]) assert.equal(createCommentBody.safeParse({ questionNumber, body: "ok" }).success, false);
+    assert.equal(createCommentBody.parse({ questionNumber: -7, body: "ok" }).questionNumber, -7); // tệp đính kèm id 7
   });
 
   it("parses list queries and params", () => {
@@ -57,22 +73,62 @@ describe("exam comment validators", () => {
   });
 });
 
+describe("exam comment reaction validators", () => {
+  it("bounds lines, parses votes, likes, reports and question params", () => {
+    const lines = (n: number) => Array.from({ length: n }, (_, i) => `dòng ${i}`).join("\n");
+    assert.equal(createCommentBody.safeParse({ questionNumber: 1, body: lines(EXAM_COMMENT_MAX_LINES) }).success, true);
+    assert.equal(createCommentBody.safeParse({ questionNumber: 1, body: lines(EXAM_COMMENT_MAX_LINES + 1) }).success, false);
+    assert.deepEqual(voteBody.parse({ answers: ["C", "A", "C"] }), { answers: ["A", "C"] });
+    assert.deepEqual(voteBody.parse({ answers: [] }), { answers: [] });
+    for (const answers of [["I"], ["a"], "A", [1]]) assert.equal(voteBody.safeParse({ answers }).success, false);
+    assert.equal(likeBody.safeParse({ liked: "yes" }).success, false);
+    assert.deepEqual(reportCommentBody.parse(undefined), {});
+    assert.deepEqual(reportCommentBody.parse({ reason: "  " }), { reason: null });
+    assert.equal(reportCommentBody.safeParse({ reason: "x".repeat(256) }).success, false);
+    assert.deepEqual(questionParam.parse({ id: EXAM, number: "3" }), { id: EXAM, number: 3 });
+    assert.equal(questionParam.safeParse({ id: EXAM, number: "0" }).success, false);
+    assert.equal(questionParam.parse({ id: EXAM, number: "-4" }).number, -4);
+    assert.equal(listCommentsQuery.parse({ question: "-4" }).question, -4);
+    assert.equal(voteParam.safeParse({ id: EXAM, number: "-4" }).success, false); // tệp đính kèm không có bình chọn
+    assert.equal(voteParam.parse({ id: EXAM, number: "2" }).number, 2);
+    assert.equal(listAdminCommentsQuery.parse({ status: "REPORTED" }).status, "REPORTED");
+  });
+});
+
 describe("exam comment rules", () => {
-  const next = { examId: EXAM, questionNumber: 2, body: "Câu này đáp án C" };
+  const base = { today: 0, onQuestion: [] as string[], newAccount: false };
+  const body = "Câu này đáp án C";
 
-  it("blocks the daily limit before checking duplicates", () => {
-    const full = Array.from({ length: EXAM_COMMENT_PER_DAY }, (_, i) => ({ examId: EXAM, questionNumber: 100 + i, body: `b${i}` }));
-    assert.equal(commentLimitError(full, next), "daily");
-    assert.equal(commentLimitError(full.slice(1), next), null);
+  it("applies the daily limit (lower for new accounts) before anything else", () => {
+    assert.equal(commentLimitError({ ...base, today: EXAM_COMMENT_PER_DAY }, body), "daily");
+    assert.equal(commentLimitError({ ...base, today: EXAM_COMMENT_PER_DAY - 1 }, body), null);
+    assert.equal(commentLimitError({ ...base, today: EXAM_COMMENT_NEW_ACCOUNT_PER_DAY, newAccount: true }, body), "daily");
+    assert.equal(commentLimitError({ ...base, today: EXAM_COMMENT_NEW_ACCOUNT_PER_DAY }, body), null);
   });
 
-  it("rejects the same text on the same question (case and spacing ignored), not on another question", () => {
-    assert.equal(commentLimitError([{ ...next, body: "câu NÀY  đáp án c" }], next), "duplicate");
-    assert.equal(commentLimitError([{ ...next, questionNumber: 3 }], next), null);
-    assert.equal(commentLimitError([{ ...next, examId: OTHER }], next), null);
+  it("rejects the same text on the same question (case and spacing ignored) and too many comments on one question", () => {
+    assert.equal(commentLimitError({ ...base, onQuestion: ["câu NÀY  đáp án c"] }, body), "duplicate");
+    assert.equal(commentLimitError({ ...base, onQuestion: ["khác"] }, body), null);
+    const full = Array.from({ length: EXAM_COMMENT_PER_QUESTION_PER_DAY }, (_, i) => `b${i}`);
+    assert.equal(commentLimitError({ ...base, onQuestion: full }, body), "question");
   });
 
-  it("public rows never carry the author id or email, and mark the viewer's own comment", () => {
+  it("holds for content first, then repeated text elsewhere, then strikes", () => {
+    const clean = { sameElsewhere: 0, strikes: 0 };
+    assert.equal(holdReason(null, clean), null);
+    assert.equal(holdReason("LINK", { sameElsewhere: 9, strikes: 9 }), "LINK");
+    assert.equal(holdReason(null, { ...clean, sameElsewhere: EXAM_COMMENT_SPAM_QUESTIONS - 1 }), "SPAM");
+    assert.equal(holdReason(null, { ...clean, sameElsewhere: EXAM_COMMENT_SPAM_QUESTIONS - 2 }), null);
+    assert.equal(holdReason(null, { ...clean, strikes: EXAM_COMMENT_STRIKES }), "STRIKES");
+    assert.equal(holdReason(null, { ...clean, strikes: EXAM_COMMENT_STRIKES - 1 }), null);
+  });
+
+  it("tallies votes per letter without revealing voters", () => {
+    assert.deepEqual(tallyVotes([{ answers: "A", count: 2 }, { answers: "A C", count: 1 }], "A C"), { voters: 3, counts: { A: 3, C: 1 }, mine: ["A", "C"] });
+    assert.deepEqual(tallyVotes([], null), { voters: 0, counts: {}, mine: [] });
+  });
+
+  it("public rows never carry the author id, email or flag reason, and mark the viewer's own comment", () => {
     const row = {
       id: "c1",
       questionNumber: 2,
@@ -80,16 +136,22 @@ describe("exam comment rules", () => {
       status: "APPROVED" as const,
       createdAt: new Date(0),
       userId: USER,
-      user: { fullName: "Nguyen Van A", avatarPath: "avatars/abc.webp" },
+      user: { fullName: "Nguyen Van A", avatarPath: "avatars/abc.webp", role: "USER" as const, proExpiresAt: new Date(Date.now() + 60_000) },
+      _count: { likes: 4 },
     };
-    const mine = toPublicComment(row, USER);
+    const mine = toPublicComment(row, USER, true);
     assert.equal(mine.mine, true);
     assert.equal(JSON.stringify(mine).includes(USER), false);
-    assert.deepEqual(Object.keys(mine).sort(), ["author", "body", "createdAt", "id", "mine", "questionNumber", "status"]);
+    assert.deepEqual(Object.keys(mine).sort(), ["author", "body", "createdAt", "id", "liked", "likes", "mine", "questionNumber", "status"]);
+    assert.deepEqual(Object.keys(mine.author).sort(), ["avatarUrl", "isAdmin", "isPro", "name"]);
     assert.equal(mine.author.name, "Nguyen Van A");
+    assert.equal(mine.author.isPro, true);
+    assert.equal(mine.author.isAdmin, false);
+    assert.deepEqual([mine.likes, mine.liked], [4, true]);
     assert.match(mine.author.avatarUrl ?? "", /\/api\/v1\/files\/avatars\/abc\.webp$/);
     assert.equal(toPublicComment(row, OTHER).mine, false);
-    assert.equal(toPublicComment(row, null).mine, false);
+    assert.equal(toPublicComment(row, null).liked, false);
+    assert.equal(toPublicComment({ ...row, user: { ...row.user, role: "ADMIN", proExpiresAt: null } }, null).author.isAdmin, true);
     // ảnh cũ đặt tên theo id người dùng: không trả ra
     assert.equal(toPublicComment({ ...row, user: { ...row.user, avatarPath: `avatars/${USER}-x.webp` } }, null).author.avatarUrl, null);
   });

@@ -1,20 +1,50 @@
-// Bình luận theo câu hỏi của đề (admin duyệt trước khi người khác thấy)
+// Bình luận theo câu hỏi của đề: lọc tự động rồi hiện ngay, nghi ngờ thì chờ admin duyệt (decision 0019)
 
-// Độ dài tối đa của một bình luận (sau khi bỏ khoảng trắng đầu/cuối)
+// Độ dài tối đa của một bình luận (sau khi bỏ khoảng trắng đầu/cuối) và số dòng tối đa
 export const EXAM_COMMENT_MAX_LENGTH = 1000;
+export const EXAM_COMMENT_MAX_LINES = 15;
 
 // Chống spam theo tài khoản: số bình luận mỗi phút (bộ đếm trong bộ nhớ) và mỗi 24 giờ (đếm trong DB)
-export const EXAM_COMMENT_PER_MINUTE = 5;
-export const EXAM_COMMENT_PER_DAY = 30;
+export const EXAM_COMMENT_PER_MINUTE = 20;
+export const EXAM_COMMENT_PER_DAY = 500;
+// Tài khoản tạo chưa quá EXAM_COMMENT_NEW_ACCOUNT_MS chỉ được chừng này mỗi 24 giờ
+export const EXAM_COMMENT_NEW_ACCOUNT_PER_DAY = 100;
+export const EXAM_COMMENT_NEW_ACCOUNT_MS = 24 * 60 * 60_000;
+// Một người trên một câu trong 24 giờ
+export const EXAM_COMMENT_PER_QUESTION_PER_DAY = 20;
 
-// Cùng một người gửi lại đúng nội dung cũ trên cùng câu trong khoảng này thì bị từ chối
+// Cùng một người gửi lại đúng nội dung cũ trên cùng câu trong khoảng này thì bị từ chối (cũng là cửa sổ của các giới hạn theo ngày)
 export const EXAM_COMMENT_DUPLICATE_WINDOW_MS = 24 * 60 * 60_000;
+
+// Một ký tự lặp liền nhau quá chừng này lần -> chờ duyệt
+export const EXAM_COMMENT_REPEAT_CHAR_MAX = 15;
+// Cùng một nội dung dài từ SPAM_MIN_LENGTH ký tự ở từ SPAM_QUESTIONS câu khác nhau trong 24 giờ -> chờ duyệt
+export const EXAM_COMMENT_SPAM_MIN_LENGTH = 30;
+export const EXAM_COMMENT_SPAM_QUESTIONS = 3;
+// Bị admin từ chối từ STRIKES bình luận trong STRIKE_WINDOW_MS -> mọi bình luận mới đều chờ duyệt
+export const EXAM_COMMENT_STRIKES = 3;
+export const EXAM_COMMENT_STRIKE_WINDOW_MS = 7 * 24 * 60 * 60_000;
+
+// Báo cáo: số người khác nhau báo cáo thì bình luận tự về chờ duyệt; số báo cáo mỗi người trong 24 giờ
+export const EXAM_COMMENT_AUTO_HIDE_REPORTS = 3;
+export const EXAM_COMMENT_REPORTS_PER_DAY = 10;
+export const EXAM_COMMENT_REPORT_REASON_MAX = 255;
+
+// Bình chọn đáp án và thích (ảnh câu hỏi, bình luận): số thao tác mỗi phút mỗi tài khoản (bộ đếm trong bộ nhớ)
+export const EXAM_VOTE_PER_MINUTE = 60;
+export const EXAM_LIKE_PER_MINUTE = 60;
+// Chữ đáp án được bình chọn
+export const EXAM_VOTE_LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H"] as const;
 
 // Bình luận chờ duyệt của chính người xem hiện ở đầu trang 1, tối đa chừng này dòng
 export const EXAM_COMMENT_OWN_PENDING_MAX = 20;
 
-// Admin chỉ nhận một thông báo "có bình luận mới" cho mỗi đề trong khoảng này (số chờ duyệt thật xem ở badge)
+// Admin chỉ nhận một thông báo bình luận (chờ duyệt / bị báo cáo) cho mỗi đề trong khoảng này (số thật xem ở badge)
 export const EXAM_COMMENT_NOTICE_THROTTLE_MS = 60 * 60_000;
 
 // Duyệt hàng loạt tối đa chừng này bình luận một lần
 export const EXAM_COMMENT_BULK_MAX = 100;
+
+// Vì sao một bình luận bị giữ chờ duyệt (cột flag_reason)
+export const EXAM_COMMENT_FLAG_REASONS = ["WORDS", "LINK", "CONTACT", "REPEATED", "SPAM", "STRIKES", "REPORTED"] as const;
+export type CommentFlagReason = (typeof EXAM_COMMENT_FLAG_REASONS)[number];
