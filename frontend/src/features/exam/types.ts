@@ -33,10 +33,10 @@ export interface ExamAttachmentsPayload {
 // Đề chỉ có tệp đính kèm, không có câu hỏi để làm trên web
 export const isFilesOnly = (e: ImportedExam) => e.totalQuestions === 0 && e.questions.length === 0 && (e.attachments?.length ?? 0) > 0;
 
-// Đề FE có từ chừng này ảnh câu hỏi, hoặc đề có đáp án admin đưa vào (ans.json, nguồn MANUAL) thì luyện/thi được trên web; đề khác chỉ xem trước
+// Đề FE có từ chừng này ảnh câu hỏi, hoặc đề có đáp án admin đưa vào (ans.json, nguồn MANUAL) thì luyện/thi được trên web; đề khác, và đề chưa có đáp án (DEFAULT), chỉ xem trước
 export const MIN_PLAYABLE_QUESTIONS = 20;
 export const canPractice = (kind: ExamKind | undefined, totalQuestions: number, answerSource?: AnswerSource) =>
-  totalQuestions > 0 && (answerSource === "MANUAL" || ((kind ?? "FE") === "FE" && totalQuestions >= MIN_PLAYABLE_QUESTIONS));
+  totalQuestions > 0 && answerSource !== "DEFAULT" && (answerSource === "MANUAL" || ((kind ?? "FE") === "FE" && totalQuestions >= MIN_PLAYABLE_QUESTIONS));
 // Địa chỉ mở một đề: đề làm được trên web mở thẳng hộp chọn Luyện đề / Thi rồi làm bài; đề khác chỉ xem trước. Chưa biết nguồn đáp án (danh sách kho đề) mà có câu thì mở trang làm bài, trang đó tự chuyển sang xem trước nếu không làm được.
 export const examOpenPath = (e: { id: string; kind?: ExamKind; totalQuestions?: number | null; answerSource?: AnswerSource }) => {
   const total = e.totalQuestions ?? 0;

@@ -23,7 +23,7 @@ export type UploadTarget =
 const KINDS = Object.keys(KIND_LABEL) as ExamKind[];
 const FIELDS = ["title", "subjectCode", "kind", "images", "answers", "files"];
 
-// Tải đề từ một thư mục (images/Qn.webp + ans.json): tạo đề mới, hoặc bổ sung/thay ảnh cho đề đã có. Tạo mới từ thư mục khác thì lưu thành tài liệu
+// Tải đề từ một thư mục (images/Qn.webp, kèm ans.json nếu có đáp án): tạo đề mới, hoặc bổ sung/thay ảnh cho đề đã có. Tạo mới từ thư mục khác thì lưu thành tài liệu
 interface Props {
   target: UploadTarget;
   onDone: (job: UploadJob) => void; // máy chủ đã nhận đề, xử lý tiếp chạy nền
@@ -75,7 +75,7 @@ export function ExamUploadForm({ target, onDone, onBusy, onCancel }: Props) {
       }
       if (named.kind && !kindPicked.current) setKind(named.kind); // cả khi tên đề đã gõ sẵn: tên thư mục có loại thì theo
     }
-    // Tạo mới mà thiếu images/ hoặc ans.json: lưu thành tài liệu. Bổ sung ảnh luôn đi đường đề trắc nghiệm
+    // Tạo mới mà không phải thư mục đề (xem isQuizFolder): lưu thành tài liệu. Bổ sung ảnh luôn đi đường đề trắc nghiệm
     const asResource = create && !isQuizFolder(entries.map((e) => e.path));
     setResource(asResource ? checkResources(entries) : null);
     if (asResource) {
@@ -186,19 +186,19 @@ export function ExamUploadForm({ target, onDone, onBusy, onCancel }: Props) {
 
       {resource && (
         <p className="md-body-medium rounded-m3-sm bg-secondary-container px-4 py-3 text-on-secondary-container">
-          Thư mục này không phải đề trắc nghiệm (cần images/ và ans.json) nên sẽ lưu thành tài nguyên: sinh viên mở hoặc tải các tệp về, không làm bài và không chấm điểm.
+          Thư mục này không phải đề trắc nghiệm (cần images/Q&lt;số&gt;.webp, kèm ans.json nếu thư mục còn tệp khác) nên sẽ lưu thành tài nguyên: sinh viên mở hoặc tải các tệp về, không làm bài và không chấm điểm.
         </p>
       )}
 
       {create && resource && kind === "FE" && (
         <p role="status" className="md-body-medium rounded-m3-sm bg-warning-container px-4 py-3 text-on-warning-container">
-          Đề FE thường có thư mục images/ và ans.json, còn thư mục này thì không. Đây có phải đề PE không?{" "}
+          Đề FE thường là thư mục ảnh câu hỏi images/, còn thư mục này thì không. Đây có phải đề PE không?{" "}
           <button type="button" onClick={() => switchKind("PE")} className="font-semibold underline underline-offset-2">
             Đổi sang PE
           </button>
         </p>
       )}
-      {create && folder && kind === "PE" && (
+      {create && folder?.ansJson != null && kind === "PE" && (
         <p role="status" className="md-body-medium rounded-m3-sm bg-warning-container px-4 py-3 text-on-warning-container">
           Thư mục này có ảnh câu hỏi và ans.json giống đề FE (làm và chấm điểm trên web), nhưng loại đề đang là PE. Bạn chắc chứ?{" "}
           <button type="button" onClick={() => switchKind("FE")} className="font-semibold underline underline-offset-2">

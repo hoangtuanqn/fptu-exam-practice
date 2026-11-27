@@ -53,9 +53,13 @@ assert.deepEqual(upd.replaced, [2]);
 assert.ok(checkFolder([img("images/Q12.webp")], null, 10).errors.some((e) => e.includes("Thiếu ảnh câu: 11")));
 assert.deepEqual(checkFolder([img("images/Q3.webp")], null, 10).errors, []);
 
-// Mode: quiz only with images/ and ans.json at the root; anything else is a resource folder
+// Mode: quiz with ans.json at the root, or nothing but images/Q<n>.webp; anything else is a resource folder
 assert.equal(isQuizFolder(["x/images/Q1.webp", "x/ans.json"]), true);
-assert.equal(isQuizFolder(["images/Q1.webp"]), false);
+assert.equal(isQuizFolder(["images/Q1.webp"]), true);
+assert.equal(isQuizFolder(["d/images/Q1.webp", "d/images/q2.WEBP", "d/.DS_Store"]), true);
+assert.equal(isQuizFolder(["d/images/Q1.webp", "d/notes.pdf"]), false);
+assert.equal(isQuizFolder(["d/images/logo.png"]), false);
+assert.equal(isQuizFolder(["d/images/old/Q1.webp"]), false);
 assert.equal(isQuizFolder(["a.pdf", "ans.json"]), false);
 const res = checkResources([img("d/a.PDF"), img("d/b.zip"), img("d/c.exe"), img("d/.md"), img("d/big.mp4", 11 * 1024 * 1024)]);
 assert.deepEqual(res.files.map((f) => f.path), ["d/a.PDF", "d/b.zip", "d/c.exe", "d/.md", "d/big.mp4"]);
